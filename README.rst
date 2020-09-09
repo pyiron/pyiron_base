@@ -1,60 +1,31 @@
 pyiron
 ======
 
-.. image:: https://coveralls.io/repos/github/pyiron/pyiron/badge.svg?branch=master
-    :target: https://coveralls.io/github/pyiron/pyiron?branch=master
+.. image:: https://coveralls.io/repos/github/pyiron/pyiron_base/badge.svg?branch=master
+    :target: https://coveralls.io/github/pyiron/pyiron_base?branch=master
     :alt: Coverage Status
 
-.. image:: https://api.codacy.com/project/badge/Grade/c513254f10004df5a1f5c76425c6584b
-    :target: https://app.codacy.com/app/pyiron-runner/pyiron?utm_source=github.com&utm_medium=referral&utm_content=pyiron/pyiron&utm_campaign=Badge_Grade_Settings
-    :alt: Codacy Badge
-
-.. image:: https://anaconda.org/conda-forge/pyiron/badges/latest_release_date.svg
-    :target: https://anaconda.org/conda-forge/pyiron/
+.. image:: https://anaconda.org/conda-forge/pyiron_base/badges/latest_release_date.svg
+    :target: https://anaconda.org/conda-forge/pyiron_base/
     :alt: Release_Date
 
-.. image:: https://travis-ci.org/pyiron/pyiron.svg?branch=master
-    :target: https://travis-ci.org/pyiron/pyiron
+.. image:: https://travis-ci.org/pyiron/pyiron_base.svg?branch=master
+    :target: https://travis-ci.org/pyiron/pyiron_base
     :alt: Build Status
 
-.. image:: https://ci.appveyor.com/api/projects/status/wfdgqkxca1i19xcq/branch/master?svg=true
-    :target: https://ci.appveyor.com/project/pyiron-runner/pyiron/branch/master
-    :alt: Build status
-
-.. image:: https://anaconda.org/conda-forge/pyiron/badges/downloads.svg
-    :target: https://anaconda.org/conda-forge/pyiron/
+.. image:: https://anaconda.org/conda-forge/pyiron_base/badges/downloads.svg
+    :target: https://anaconda.org/conda-forge/pyiron_base/
     :alt: Downloads
 
-.. image:: https://readthedocs.org/projects/pyiron/badge/?version=latest
-    :target: https://pyiron.readthedocs.io/en/latest/?badge=latest
-    :alt: Documentation Status
 
-
-.. image:: docs/_static/screenshot.png
-    :align: center
-    :alt: Screenshot of pyiron running inside jupyterlab.
-
-
-pyiron - an integrated development environment (IDE) for computational materials science. It combines several tools in a common platform:
-
- - Atomic structure objects – compatible to the `Atomic Simulation Environment (ASE) <https://wiki.fysik.dtu.dk/ase/>`_.
- - Atomistic simulation codes – like `LAMMPS <http://lammps.sandia.gov>`_ and `VASP <https://www.vasp.at>`_.
- - Feedback Loops – to construct dynamic simulation life cycles.
- - Hierarchical data management – interfacing with storage resources like SQL and `HDF5 <https://support.hdfgroup.org/HDF5/>`_.
- - Integrated visualization – based on `NGLview <https://github.com/arose/nglview>`_.
- - Interactive simulation protocols - based on `Jupyter notebooks <http://jupyter.org>`_.
- - Object oriented job management – for scaling complex simulation protocols from single jobs to high-throughput simulations.
-
-pyiron (called pyron) is developed in the `Computational Materials Design department <https://www.mpie.de/CM>`_ of `Joerg Neugebauer <https://www.mpie.de/person/43010/2763386>`_ at the `Max Planck Institut für Eisenforschung (Max Planck Institute for iron research) <https://www.mpie.de/2281/en>`_. While its original focus was to provide a framework to develop and run complex simulation protocols as needed for ab initio thermodynamics it quickly evolved into a versatile tool to manage a wide variety of simulation tasks. In 2016 the `Interdisciplinary Centre for Advanced Materials Simulation (ICAMS) <http://www.icams.de>`_ joined the development of the framework with a specific focus on high throughput applications. In 2018 pyiron was released as open-source project.
-See the `Documentation <http://pyiron.org>`_ page for more details.
-
+pyiron - an integrated development environment (IDE) for computational materials science. While the general pyiron framework is focused on atomistic simulations, pyiron_base is independent of atomistic simulation. It can be used as a standalone workflow management combining a hierachical storage interface based on HDF5, support for HPC computing clusters and a user interface integrated in the Jupyter environment. 
 
 Installation
 ------------
-You can test pyiron on `Mybinder.org (beta) <https://mybinder.org/v2/gh/pyiron/pyiron/master?urlpath=lab>`_.
+You can test pyiron on `Mybinder.org (beta) <https://mybinder.org/v2/gh/pyiron/pyiron_base/master?urlpath=lab>`_.
 For a local installation we recommend to install pyiron inside an `anaconda <https://www.anaconda.com>`_  environment::
 
-    conda install -c conda-forge pyiron
+    conda install -c conda-forge pyiron_base
 
 
 After the installation of pyiron you need to configure pyiron. The default configuration can be generated automatically. Start a new Python session and import pyiron::
@@ -76,19 +47,11 @@ After the successful configuration you can start your first pyiron calculation. 
     cd ~/pyiron/projects
     jupyter notebook
 
-Open a new jupyter notebook and inside the notebook you can now validate your pyiron calculation by creating a test project, setting up an initial structure of bcc Fe and visualize it using NGLview::
+Open a new jupyter notebook and inside the notebook you can now validate your pyiron calculation by creating a test project::
 
     from pyiron import Project
     pr = Project('test')
-    structure = pr.create_structure('Fe', 'bcc', 2.78)
-    structure.plot3d()
-
-Finally a first lammps calculation can be executed by::
-
-    job = pr.create_job(job_type=pr.job_type.Lammps, job_name='lammpstestjob')
-    job.structure = structure
-    job.potential = job.list_potentials()[0]
-    job.run()
+    pr.path
 
 
 Getting started:
@@ -96,20 +59,20 @@ Getting started:
 For users - test pyiron with mybinder:
 
 .. image:: https://mybinder.org/badge_logo.svg
-     :target: https://mybinder.org/v2/gh/pyiron/pyiron/master
+     :target: https://mybinder.org/v2/gh/pyiron/pyiron_base/master
      :alt: mybinder
  
  
 For developers - browse the pyiron code with gitpod: 
 
 .. image:: https://gitpod.io/button/open-in-gitpod.svg
-     :target: https://gitpod.io/#https://github.com/pyiron/pyiron
+     :target: https://gitpod.io/#https://github.com/pyiron/pyiron_base
      :alt: Gitpod
 
 
 License and Acknowledgments
 ---------------------------
-``pyiron`` is licensed under the BSD license.
+``pyiron_base`` is licensed under the BSD license.
 
 If you use pyiron in your scientific work, `please consider citing <http://www.sciencedirect.com/science/article/pii/S0927025618304786>`_ ::
 
