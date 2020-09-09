@@ -822,7 +822,11 @@ class JobCore(PyironObject):
 
     def __getitem__(self, item):
         """
-        Get/ read data from the HDF5 file
+        Get/read data from the HDF5 file or access log files.
+
+        If the job is :method:`~.decompress`ed, item can also be a file name to
+        access the raw output file of that name of the job.  See available file
+        with :method:`~.list_files()`.
 
         Args:
             item (str, slice): path to the data or key of the data object
