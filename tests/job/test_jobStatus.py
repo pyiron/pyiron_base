@@ -292,11 +292,11 @@ class JobStatusIntegration(unittest.TestCase):
     def test_inspect_job(self):
         self.assertTrue(self.ham.status.initialized)
         self.assertEqual(self.ham.status, "initialized")
-        self.ham.run()
-        self.assertTrue(self.ham.status.finished)
-        self.assertEqual(self.ham.status, "finished")
+        self.ham.save()
+        self.assertTrue(self.ham.status.created)
+        self.assertEqual(self.ham.status, "created")
         job_inspect = self.project.inspect(self.ham.job_name)
-        self.assertEqual(job_inspect.status, "finished")
+        self.assertEqual(job_inspect.status, "created")
 
 
 if __name__ == "__main__":

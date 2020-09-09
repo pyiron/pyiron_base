@@ -16,7 +16,7 @@ class TestJobWrapperFunction(unittest.TestCase):
         cls.job = cls.project.create_job('ScriptJob', "job_test_run")
         cls.job.input["count"] = 12
         cls.job.server.run_mode.manual = True
-        cls.job.run()
+        cls.job.save()
 
     @classmethod
     def tearDownClass(cls):
@@ -34,4 +34,4 @@ class TestJobWrapperFunction(unittest.TestCase):
             file_path=self.job.project_hdf5.file_name + self.job.project_hdf5.h5_path,
             debug=False
         )
-        self.assertEqual(self.job['status'], 'finished')
+        self.assertEqual(self.job['status'], 'created')
