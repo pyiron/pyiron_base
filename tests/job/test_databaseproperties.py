@@ -5,8 +5,8 @@
 import unittest
 import datetime
 import os
-from pyiron.base.project.generic import Project
-from pyiron.base.job.core import DatabaseProperties
+from pyiron_base.project.generic import Project
+from pyiron_base.job.core import DatabaseProperties
 
 
 class TestDatabaseProperties(unittest.TestCase):

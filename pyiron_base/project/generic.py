@@ -12,11 +12,11 @@ import numpy as np
 import pkgutil
 from git import Repo, InvalidGitRepositoryError
 
-from pyiron.base.project.path import ProjectPath
-from pyiron.base.database.filetable import FileTable
-from pyiron.base.settings.generic import Settings
-from pyiron.base.settings.publications import list_publications
-from pyiron.base.database.jobtable import (
+from pyiron_base.project.path import ProjectPath
+from pyiron_base.database.filetable import FileTable
+from pyiron_base.settings.generic import Settings
+from pyiron_base.settings.publications import list_publications
+from pyiron_base.database.jobtable import (
     get_db_columns,
     get_job_ids,
     get_job_id,
@@ -27,10 +27,10 @@ from pyiron.base.database.jobtable import (
     get_job_working_directory,
     get_job_status
 )
-from pyiron.base.settings.logger import set_logging_level
-from pyiron.base.generic.hdfio import ProjectHDFio
-from pyiron.base.job.jobtype import JobType, JobTypeChoice
-from pyiron.base.server.queuestatus import (
+from pyiron_base.settings.logger import set_logging_level
+from pyiron_base.generic.hdfio import ProjectHDFio
+from pyiron_base.job.jobtype import JobType, JobTypeChoice
+from pyiron_base.server.queuestatus import (
     queue_delete_job,
     queue_is_empty,
     queue_table,
@@ -40,7 +40,7 @@ from pyiron.base.server.queuestatus import (
     queue_enable_reservation,
     queue_check_job_is_waiting_or_running,
 )
-from pyiron.base.job.external import Notebook
+from pyiron_base.job.external import Notebook
 
 """
 The project object is the central import point of pyiron - all other objects can be created from this one
@@ -756,7 +756,7 @@ class Project(ProjectPath):
         Returns:
             GenericJob, JobCore: Either the full GenericJob object or just a reduced JobCore object
         """
-        jobpath = getattr(importlib.import_module("pyiron.base.job.path"), "JobPath")
+        jobpath = getattr(importlib.import_module("pyiron_base.job.path"), "JobPath")
         if job_id:
             job = jobpath(db=self.db, job_id=job_id, user=self.user)
             job = job.load_object(
@@ -1182,7 +1182,7 @@ class Project(ProjectPath):
         Returns:
             GenericJob, JobCore: Either the full GenericJob object or just a reduced JobCore object
         """
-        job = getattr(importlib.import_module("pyiron.base.job.path"), "JobPathBase")(
+        job = getattr(importlib.import_module("pyiron_base.job.path"), "JobPathBase")(
             job_path=job_path
         )
         job = job.load_object(

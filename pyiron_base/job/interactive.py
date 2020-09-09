@@ -3,8 +3,7 @@
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
 import numpy as np
-from pyiron.base.job.generic import GenericJob
-import warnings
+from pyiron_base.job.generic import GenericJob
 
 """
 InteractiveBase class extends the Generic Job class with all the functionality to run the job object interactivley.

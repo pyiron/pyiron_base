@@ -29,7 +29,7 @@ def set_logging_level(level, channel=None):
         level (str): 'DEBUG, INFO, WARN'
         channel (int): 0: file_log, 1: stream, None: both
     """
-    from pyiron.base.settings.generic import Settings
+    from pyiron_base.settings.generic import Settings
 
     s = Settings()
     if channel:

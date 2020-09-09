@@ -9,8 +9,8 @@ import pandas
 import posixpath
 import warnings
 from ast import literal_eval
-from pyiron.base.settings.generic import Settings
-from pyiron.base.generic.template import PyironObject
+from pyiron_base.settings.generic import Settings
+from pyiron_base.generic.template import PyironObject
 
 """
 GenericParameters class defines the typical input file with a key value structure plus an additional column for comments.

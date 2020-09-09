@@ -21,7 +21,7 @@ __date__ = "Sep 1, 2017"
 def static_isinstance(obj, obj_type):
     """
     A static implementation of isinstance() - instead of comparing an object and a class, the object is compared to a
-    string, like 'pyiron.base.job.generic.GenericJob' or a list of strings.
+    string, like 'pyiron_base.job.generic.GenericJob' or a list of strings.
 
     Args:
         obj: the object to check

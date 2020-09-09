@@ -9,8 +9,8 @@ import posixpath
 import time
 import math
 import stat
-from pyiron.base.settings.generic import Settings
-from pyiron.base.generic.template import PyironObject
+from pyiron_base.settings.generic import Settings
+from pyiron_base.generic.template import PyironObject
 from tables import NoSuchNodeError
 import tarfile
 import shutil
@@ -182,7 +182,7 @@ class JobCore(PyironObject):
                                                                   aborted, collect, suspended, refresh, busy, finished]
 
         Returns:
-            (str/pyiron.base.job.jobstatus.JobStatus): status
+            (str/pyiron_base.job.jobstatus.JobStatus): status
         """
         return self._status
 

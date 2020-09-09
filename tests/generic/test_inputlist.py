@@ -1,8 +1,8 @@
 # Copyright (c) Max-Planck-Institut für Eisenforschung GmbH - Computational Materials Design (CM) Department
 # Distributed under the terms of "New BSD License", see the LICENSE file.
-from pyiron.base.generic.inputlist import InputList
-from pyiron.base.generic.hdfio import ProjectHDFio
-from pyiron.base.project.generic import Project
+from pyiron_base.generic.inputlist import InputList
+from pyiron_base.generic.hdfio import ProjectHDFio
+from pyiron_base.project.generic import Project
 import copy
 import os
 import unittest
@@ -303,7 +303,7 @@ class TestInputList(unittest.TestCase):
         self.assertEqual(self.hdf["input/OBJECT"],
                          "InputList")
         self.assertEqual(self.hdf["input/TYPE"],
-                         "<class 'pyiron.base.generic.inputlist.InputList'>")
+                         "<class 'pyiron_base.generic.inputlist.InputList'>")
         l = InputList(self.hdf["input/data"])
         self.assertEqual(self.pl, l)
 
@@ -314,7 +314,7 @@ class TestInputList(unittest.TestCase):
         self.assertEqual(self.hdf["OBJECT"],
                          "InputList")
         self.assertEqual(self.hdf["TYPE"],
-                         "<class 'pyiron.base.generic.inputlist.InputList'>")
+                         "<class 'pyiron_base.generic.inputlist.InputList'>")
         l = InputList(self.hdf["data"])
         self.assertEqual(pl, l)
 
@@ -323,7 +323,7 @@ class TestInputList(unittest.TestCase):
         self.assertEqual(self.hdf["test_group/NAME"],
                          "InputList")
         self.assertEqual(self.hdf["test_group/TYPE"],
-                         "<class 'pyiron.base.generic.inputlist.InputList'>")
+                         "<class 'pyiron_base.generic.inputlist.InputList'>")
         self.assertEqual(self.hdf["test_group/OBJECT"],
                          "InputList")
         l = InputList(self.hdf["test_group/data"])

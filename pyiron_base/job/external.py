@@ -6,8 +6,8 @@ from __future__ import print_function
 import json
 from pathlib2 import Path
 import warnings
-from pyiron.base.generic.hdfio import FileHDFio
-from pyiron.base.generic.parameters import GenericParameters
+from pyiron_base.generic.hdfio import FileHDFio
+from pyiron_base.generic.parameters import GenericParameters
 
 
 """

@@ -4,8 +4,8 @@
 
 import os
 import unittest
-from pyiron.base.project.generic import Project
-from pyiron.base.job.wrapper import job_wrapper_function
+from pyiron_base.project.generic import Project
+from pyiron_base.job.wrapper import job_wrapper_function
 
 
 class TestJobWrapperFunction(unittest.TestCase):

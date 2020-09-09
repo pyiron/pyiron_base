@@ -2,7 +2,7 @@
 # Copyright (c) Max-Planck-Institut für Eisenforschung GmbH - Computational Materials Design (CM) Department
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
-from pyiron.base.settings.generic import Settings
+from pyiron_base.settings.generic import Settings
 
 __author__ = "Joerg Neugebauer, Jan Janssen"
 __copyright__ = (

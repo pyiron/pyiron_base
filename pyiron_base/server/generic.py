@@ -3,9 +3,9 @@
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
 from collections import OrderedDict
-from pyiron.base.settings.generic import Settings
-from pyiron.base.generic.template import PyironObject
-from pyiron.base.server.runmode import Runmode
+from pyiron_base.settings.generic import Settings
+from pyiron_base.generic.template import PyironObject
+from pyiron_base.server.runmode import Runmode
 import socket
 
 """
@@ -36,7 +36,7 @@ class Server(
         host (str): hostname of the local machine
         queue (str): queue name of the currently selected queue
         cores (int): number of cores
-        run_mode (pyiron.base.server.runmode.Runmode): mode of the job ['modal', 'non_modal', 'queue', 'manual']
+        run_mode (pyiron_base.server.runmode.Runmode): mode of the job ['modal', 'non_modal', 'queue', 'manual']
         new_hdf (bool): create a new HDF5 file [True/False] - default=True
 
     Attributes:
@@ -320,7 +320,7 @@ class Server(
         Get the run mode of the job
 
         Returns:
-            (str/pyiron.base.server.runmode.Runmode): ['modal', 'non_modal', 'queue', 'manual']
+            (str/pyiron_base.server.runmode.Runmode): ['modal', 'non_modal', 'queue', 'manual']
         """
         return self._run_mode
 

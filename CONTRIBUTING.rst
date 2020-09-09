@@ -424,7 +424,7 @@ Make sure that the ``__init__.py`` of your module (here, ``pyiron_contrib``) ini
 .. code-block::
 
   from pyiron import Project
-  from pyiron.base.job.jobtype import JOB_CLASS_DICT
+  from pyiron_base.job.jobtype import JOB_CLASS_DICT
 
   # Make classes available for new pyiron version
   JOB_CLASS_DICT['ProtoMD'] = 'pyiron_contrib.protocol.compound.md'  # the path of your job class

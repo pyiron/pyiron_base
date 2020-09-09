@@ -3,8 +3,8 @@
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
 import inspect
-from pyiron.base.master.generic import GenericMaster
-from pyiron.base.job.jobstatus import job_status_finished_lst
+from pyiron_base.master.generic import GenericMaster
+from pyiron_base.job.jobstatus import job_status_finished_lst
 
 """
 The Flexible master uses a list of functions to connect multiple jobs in a series.

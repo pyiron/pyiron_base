@@ -4,8 +4,8 @@
 
 import pandas
 import numpy as np
-from pyiron.base.settings.generic import Settings
-from pyiron.base.database.filetable import FileTable
+from pyiron_base.settings.generic import Settings
+from pyiron_base.database.filetable import FileTable
 
 """
 The Jobtable module provides a set of top level functions to interact with the database.

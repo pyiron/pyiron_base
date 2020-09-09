@@ -4,7 +4,7 @@
 
 import unittest
 import os
-from pyiron.base.project.generic import Project
+from pyiron_base.project.generic import Project
 
 
 class TestGenericJob(unittest.TestCase):

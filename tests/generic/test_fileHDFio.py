@@ -4,7 +4,7 @@
 
 import os
 import numpy as np
-from pyiron.base.generic.hdfio import FileHDFio
+from pyiron_base.generic.hdfio import FileHDFio
 import unittest
 
 

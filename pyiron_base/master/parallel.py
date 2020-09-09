@@ -9,13 +9,13 @@ import numpy as np
 import pandas
 import multiprocessing
 import importlib
-from pyiron.base.job.generic import GenericJob
-from pyiron.base.master.generic import GenericMaster
-from pyiron.base.master.submissionstatus import SubmissionStatus
-from pyiron.base.generic.parameters import GenericParameters
-from pyiron.base.job.jobstatus import JobStatus
-from pyiron.base.settings.generic import Settings
-from pyiron.base.job.wrapper import job_wrapper_function
+from pyiron_base.job.generic import GenericJob
+from pyiron_base.master.generic import GenericMaster
+from pyiron_base.master.submissionstatus import SubmissionStatus
+from pyiron_base.generic.parameters import GenericParameters
+from pyiron_base.job.jobstatus import JobStatus
+from pyiron_base.settings.generic import Settings
+from pyiron_base.job.wrapper import job_wrapper_function
 
 """
 The parallel master class is a metajob consisting of a list of jobs which are executed in parallel.

@@ -3,8 +3,8 @@
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
 import six
-from pyiron.base.database.generic import DatabaseAccess
-from pyiron.base.database.filetable import FileTable
+from pyiron_base.database.generic import DatabaseAccess
+from pyiron_base.database.filetable import FileTable
 
 """
 The JobStatus class belongs to the GenericJob object.

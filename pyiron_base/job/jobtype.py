@@ -7,7 +7,7 @@ import importlib
 import inspect
 import os
 from six import with_metaclass
-from pyiron.base.job.jobstatus import job_status_finished_lst
+from pyiron_base.job.jobstatus import job_status_finished_lst
 
 """
 Jobtype class to create GenericJob type objects
@@ -26,41 +26,9 @@ __date__ = "Sep 1, 2017"
 
 
 JOB_CLASS_DICT = {
-    "Atoms": "pyiron.atomistics.structure.atoms",
-    "AtomisticExampleJob": "pyiron.testing.randomatomistic",
-    "ConvEncutParallel": "pyiron.dft.master.convergence_encut_parallel",
-    "ConvEncutSerial": "pyiron.dft.master.convergence_encut_serial",
-    "ConvergenceVolume": "pyiron.atomistics.master.convergence_volume",
-    "ConvKpointParallel": "pyiron.dft.master.convergence_kpoint_parallel",
-    "ExampleJob": "pyiron.testing.randomatomistic",
-    "FlexibleMaster": "pyiron.base.master.flexible",
-    "Gaussian": "pyiron.gaussian.gaussian",
-    "GpawJob": "pyiron.gpaw.gpaw",
-    "HessianJob": "pyiron.thermodynamics.hessian",
-    "Lammps": "pyiron.lammps.lammps",
-    "MapMaster": "pyiron.atomistics.master.parallel",
-    "Murnaghan": "pyiron.atomistics.master.murnaghan",
-    "MurnaghanDFT": "pyiron.dft.master.murnaghan_dft",
-    "PhonopyJob": "pyiron.atomistics.master.phonopy",
-    "QuickFF": "pyiron.quickff.quickff",
-    "ScipyMinimizer": "pyiron.interactive.scipy_minimizer",
-    "ScriptJob": "pyiron.base.job.script",
-    "SerialMaster": "pyiron.atomistics.master.serial",
-    "SerialMasterBase": "pyiron.base.master.serial",
-    "Sphinx": "pyiron.sphinx.sphinx",
-    "StructureContainer": "pyiron.atomistics.job.structurecontainer",
-    "StructureListMaster": "pyiron.atomistics.master.structure",
-    "SQSJob": "pyiron.atomistics.job.sqs",
-    "SxDynMat": "pyiron.thermodynamics.sxphonons",
-    "SxExtOptInteractive": "pyiron.interactive.sxextoptint",
-    "SxHarmPotTst": "pyiron.thermodynamics.sxphonons",
-    "SxPhonons": "pyiron.thermodynamics.sxphonons",
-    "SxUniqDispl": "pyiron.thermodynamics.sxphonons",
-    "TableJob": "pyiron.table.datamining",
-    "Vasp": "pyiron.vasp.vasp",
-    "VaspMetadyn": "pyiron.vasp.metadyn",
-    "VaspSol": "pyiron.vasp.vaspsol",
-    "Yaff": "pyiron.yaff.yaff",
+    "FlexibleMaster": "pyiron_base.master.flexible",
+    "ScriptJob": "pyiron_base.job.script",
+    "SerialMasterBase": "pyiron_base.master.serial",
 }
 
 

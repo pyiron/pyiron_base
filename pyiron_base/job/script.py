@@ -5,8 +5,8 @@
 from __future__ import print_function
 import os
 import shutil
-from pyiron.base.job.generic import GenericJob
-from pyiron.base.generic.parameters import GenericParameters
+from pyiron_base.job.generic import GenericJob
+from pyiron_base.generic.parameters import GenericParameters
 
 
 """

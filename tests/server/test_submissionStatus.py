@@ -3,8 +3,8 @@
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
 from datetime import datetime
-from pyiron.base.database.generic import DatabaseAccess
-from pyiron.base.master.submissionstatus import SubmissionStatus
+from pyiron_base.database.generic import DatabaseAccess
+from pyiron_base.master.submissionstatus import SubmissionStatus
 import unittest
 import os
 

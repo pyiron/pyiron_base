@@ -865,7 +865,7 @@ class FileHDFio(object):
         Returns:
             Project: pyiron project object
         """
-        from pyiron.base.project.generic import Project
+        from pyiron_base.project.generic import Project
 
         return Project(path=self.file_path)
 

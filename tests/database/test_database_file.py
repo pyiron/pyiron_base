@@ -13,7 +13,7 @@ Murat Han Celik
 import unittest
 import os
 from datetime import datetime
-from pyiron.base.database.filetable import FileTable
+from pyiron_base.database.filetable import FileTable
 
 
 class TestDatabaseAccess(unittest.TestCase):

@@ -4,9 +4,9 @@
 
 import os
 import logging
-from pyiron.base.project.generic import Project
-from pyiron.base.settings.generic import Settings
-from pyiron.base.database.filetable import get_hamilton_from_file, get_hamilton_version_from_file, \
+from pyiron_base.project.generic import Project
+from pyiron_base.settings.generic import Settings
+from pyiron_base.database.filetable import get_hamilton_from_file, get_hamilton_version_from_file, \
     get_job_status_from_file
 
 """

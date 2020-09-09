@@ -4,9 +4,9 @@
 
 import os
 import posixpath
-from pyiron.base.generic.hdfio import ProjectHDFio
-from pyiron.base.job.core import JobCore
-from pyiron.base.project.generic import Project
+from pyiron_base.generic.hdfio import ProjectHDFio
+from pyiron_base.job.core import JobCore
+from pyiron_base.project.generic import Project
 
 """
 The JobPath class enables quick access to the HDF5 data file without loading the full object

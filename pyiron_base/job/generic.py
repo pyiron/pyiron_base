@@ -13,14 +13,14 @@ import os
 import posixpath
 import psutil
 import multiprocessing
-from pyiron.base.job.wrapper import JobWrapper
-from pyiron.base.settings.generic import Settings
-from pyiron.base.job.executable import Executable
-from pyiron.base.job.jobstatus import JobStatus
-from pyiron.base.job.core import JobCore
-from pyiron.base.generic.util import static_isinstance
-from pyiron.base.server.generic import Server
-from pyiron.base.database.filetable import FileTable
+from pyiron_base.job.wrapper import JobWrapper
+from pyiron_base.settings.generic import Settings
+from pyiron_base.job.executable import Executable
+from pyiron_base.job.jobstatus import JobStatus
+from pyiron_base.job.core import JobCore
+from pyiron_base.generic.util import static_isinstance
+from pyiron_base.server.generic import Server
+from pyiron_base.database.filetable import FileTable
 import subprocess
 import shutil
 import warnings
@@ -211,7 +211,7 @@ class GenericJob(JobCore):
         Get the executable used to run the job - usually the path to an external executable.
 
         Returns:
-            (str/pyiron.base.job.executable.Executable): exectuable path
+            (str/pyiron_base.job.executable.Executable): exectuable path
         """
         self._executable_activate()
         return self._executable
@@ -1065,8 +1065,8 @@ class GenericJob(JobCore):
         if static_isinstance(
             obj=job.__class__,
             obj_type=[
-                "pyiron.base.master.parallel.ParallelMaster",
-                "pyiron.base.master.serial.SerialMasterBase",
+                "pyiron_base.master.parallel.ParallelMaster",
+                "pyiron_base.master.serial.SerialMasterBase",
             ],
         ):
             job.ref_job = self

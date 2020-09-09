@@ -4,9 +4,9 @@
 
 import os
 from datetime import datetime
-from pyiron.base.project.generic import Project
-from pyiron.base.database.generic import DatabaseAccess
-from pyiron.base.job.jobstatus import JobStatus
+from pyiron_base.project.generic import Project
+from pyiron_base.database.generic import DatabaseAccess
+from pyiron_base.job.jobstatus import JobStatus
 import unittest
 
 

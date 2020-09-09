@@ -4,9 +4,9 @@
 
 import pandas
 import time
-from pyiron.base.settings.generic import Settings
-from pyiron.base.generic.util import static_isinstance
-from pyiron.base.job.jobstatus import job_status_finished_lst
+from pyiron_base.settings.generic import Settings
+from pyiron_base.generic.util import static_isinstance
+from pyiron_base.job.jobstatus import job_status_finished_lst
 
 """
 Set of functions to interact with the queuing system directly from within pyiron - optimized for the Sun grid engine.
@@ -123,7 +123,7 @@ def queue_delete_job(item):
     Delete a job from the queuing system
 
     Args:
-        item (int, pyiron.base.job.generic.GenericJob): Provide either the job_ID or the full hamiltonian
+        item (int, pyiron_base.job.generic.GenericJob): Provide either the job_ID or the full hamiltonian
 
     Returns:
         str: Output from the queuing system as string - optimized for the Sun grid engine
@@ -140,7 +140,7 @@ def queue_enable_reservation(item):
     Enable a reservation for a particular job within the queuing system
 
     Args:
-        item (int, pyiron.base.job.generic.GenericJob): Provide either the job_ID or the full hamiltonian
+        item (int, pyiron_base.job.generic.GenericJob): Provide either the job_ID or the full hamiltonian
 
     Returns:
         str: Output from the queuing system as string - optimized for the Sun grid engine
@@ -160,7 +160,7 @@ def wait_for_job(job, interval_in_s=5, max_iterations=100):
     Sleep until the job is finished but maximum interval_in_s * max_iterations seconds.
 
     Args:
-        job (pyiron.base.job.generic.GenericJob): Job to wait for
+        job (pyiron_base.job.generic.GenericJob): Job to wait for
         interval_in_s (int): interval when the job status is queried from the database - default 5 sec.
         max_iterations (int): maximum number of iterations - default 100
     """
@@ -269,7 +269,7 @@ def _validate_que_request(item):
     Internal function to convert the job_ID or hamiltonian to the queuing system ID.
 
     Args:
-        item (int, pyiron.base.job.generic.GenericJob): Provide either the job_ID or the full hamiltonian
+        item (int, pyiron_base.job.generic.GenericJob): Provide either the job_ID or the full hamiltonian
 
     Returns:
         int: queuing system ID
@@ -277,7 +277,7 @@ def _validate_que_request(item):
 
     if isinstance(item, int):
         que_id = item
-    elif static_isinstance(item.__class__, "pyiron.base.master.generic.GenericMaster"):
+    elif static_isinstance(item.__class__, "pyiron_base.master.generic.GenericMaster"):
         if item.server.queue_id:
             que_id = item.server.queue_id
         else:
@@ -285,12 +285,12 @@ def _validate_que_request(item):
             que_id = [queue_id for queue_id in queue_id_lst if queue_id is not None]
             if len(que_id) == 0:
                 raise ValueError("This job does not have a queue ID.")
-    elif static_isinstance(item.__class__, "pyiron.base.job.generic.GenericJob"):
+    elif static_isinstance(item.__class__, "pyiron_base.job.generic.GenericJob"):
         if item.server.queue_id:
             que_id = item.server.queue_id
         else:
             raise ValueError("This job does not have a queue ID.")
-    elif static_isinstance(item.__class__, "pyiron.base.job.core.JobCore"):
+    elif static_isinstance(item.__class__, "pyiron_base.job.core.JobCore"):
         if "server" in item.project_hdf5.list_nodes():
             server_hdf_dict = item.project_hdf5["server"]
             if "qid" in server_hdf_dict.keys():

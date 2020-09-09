@@ -4,8 +4,8 @@
 
 import inspect
 import textwrap
-from pyiron.base.job.generic import GenericJob
-from pyiron.base.job.jobstatus import job_status_finished_lst
+from pyiron_base.job.generic import GenericJob
+from pyiron_base.job.jobstatus import job_status_finished_lst
 
 """
 The GenericMaster is the template class for all meta jobs

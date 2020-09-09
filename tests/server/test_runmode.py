@@ -3,7 +3,7 @@
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
 import unittest
-from pyiron.base.server.runmode import Runmode
+from pyiron_base.server.runmode import Runmode
 
 
 class TestRunmode(unittest.TestCase):
