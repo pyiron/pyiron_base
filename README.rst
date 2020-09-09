@@ -27,18 +27,7 @@ For a local installation we recommend to install pyiron inside an `anaconda <htt
 
     conda install -c conda-forge pyiron_base
 
-
-After the installation of pyiron you need to configure pyiron. The default configuration can be generated automatically. Start a new Python session and import pyiron::
-
-   > import pyiron
-   > pyiron.install()
-   >>> It appears that pyiron is not yet configured, do you want to create a default start configuration (recommended: yes). [yes/no]:
-   > yes
-   > exit()
-
-
 See the `Documentation-Installation <https://pyiron.github.io/source/installation.html>`_ page for more details.
-
 
 Example
 -------
