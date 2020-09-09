@@ -1,1 +1,1 @@
-pyiron/_version.py export-subst
+pyiron_base/_version.py export-subst
