@@ -897,7 +897,7 @@ class GenericJob(JobCore):
     #         self._logger.info("{}, status: {}, script: {}".format(self.job_info_str, self.status, file_name))
     #         with open(posixpath.join(self.project_hdf5.working_directory, 'out.txt'), mode='w') as f_out:
     #             with open(posixpath.join(self.project_hdf5.working_directory, 'error.txt'), mode='w') as f_err:
-    #                 self._process = subprocess.Popen(['python', '-m', 'pyiron.cli', 'wrapper', '-p',
+    #                 self._process = subprocess.Popen(['python', '-m', 'pyiron_base.cli', 'wrapper', '-p',
     #                                                   self.working_directory, '-j', str(self.job_id)],
     #                                                  cwd=self.project_hdf5.working_directory, shell=shell, stdout=f_out,
     #                                                  stderr=f_err, universal_newlines=True)
@@ -948,7 +948,7 @@ class GenericJob(JobCore):
             print(
                 "You have selected to start the job manually. "
                 + "To run it, go into the working directory {} and ".format(abs_working)
-                + "call 'python -m pyiron.cli wrapper -p {}".format(abs_working)
+                + "call 'python -m pyiron_base.cli wrapper -p {}".format(abs_working)
                 + " -j {} ' ".format(self.job_id)
             )
 
@@ -965,7 +965,7 @@ class GenericJob(JobCore):
         if s.queue_adapter.remote_flag:
             filename = s.queue_adapter.convert_path_to_remote(path=self.project_hdf5.file_name)
             working_directory = s.queue_adapter.convert_path_to_remote(path=self.working_directory)
-            command = "python -m pyiron.cli wrapper -p " \
+            command = "python -m pyiron_base.cli wrapper -p " \
                       + working_directory \
                       + " -f " + filename + self.project_hdf5.h5_path \
                       + " --submit"
@@ -974,11 +974,11 @@ class GenericJob(JobCore):
                 transfer_back=False
             )
         elif s.database_is_disabled:
-            command = "python -m pyiron.cli wrapper -p " \
+            command = "python -m pyiron_base.cli wrapper -p " \
                       + self.working_directory \
                       + " -f " + self.project_hdf5.file_name + self.project_hdf5.h5_path
         else:
-            command = "python -m pyiron.cli wrapper -p " \
+            command = "python -m pyiron_base.cli wrapper -p " \
                       + self.working_directory \
                       + " -j " + str(self.job_id)
         que_id = s.queue_adapter.submit_job(
