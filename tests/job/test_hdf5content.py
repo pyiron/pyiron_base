@@ -13,7 +13,7 @@ class DatabasePropertyIntegration(unittest.TestCase):
         cls.file_location = os.path.dirname(os.path.abspath(__file__))
         cls.project = Project(os.path.join(cls.file_location, "hdf5_content"))
         cls.ham = cls.project.create_job('ScriptJob', "job_test_run")
-        cls.ham.run()
+        cls.ham.save()
 
     @classmethod
     def tearDownClass(cls):
@@ -27,24 +27,17 @@ class DatabasePropertyIntegration(unittest.TestCase):
     def test_inspect_job(self):
         job_inspect = self.project.inspect(self.ham.job_name)
         self.assertIsNotNone(job_inspect)
+
         self.assertEqual(
-            job_inspect.content.input.input_inp.data_dict,
-            job_inspect["input/input_inp/data_dict"],
-        )
-        self.assertTrue(
-            job_inspect.content.output.generic.energy_tot[-1],
-            job_inspect["output/generic/energy_tot"][-1],
+            job_inspect.content.input.custom_dict.data_dict,
+            job_inspect["input/custom_dict/data_dict"],
         )
         self.assertEqual(
-            job_inspect.content.output.generic.volume[-1],
-            job_inspect["output/generic/volume"][-1],
+            sorted(dir(job_inspect.content.input)),
+            sorted(job_inspect["input"].list_nodes() + ['custom_dict']),
         )
         self.assertEqual(
-            sorted(dir(job_inspect.content.output.generic)),
-            sorted(job_inspect["output/generic"].list_nodes()),
-        )
-        self.assertEqual(
-            job_inspect.content.output.__repr__(), job_inspect["output"].__repr__()
+            job_inspect.content.input.__repr__(), job_inspect["input"].__repr__()
         )
 
     def test_setitem(self):
@@ -52,6 +45,7 @@ class DatabasePropertyIntegration(unittest.TestCase):
         self.assertEqual(self.ham['user/output/some_value'], 0.3)
         with self.assertRaises(ValueError):
             self.ham['input/value'] = 1
+
 
 if __name__ == "__main__":
     unittest.main()
