@@ -7,10 +7,10 @@ import versioneer
 setup(
     name='pyiron_base',
     version=versioneer.get_version(),
-    description='pyiron - an integrated development environment (IDE) for computational materials science.',
+    description='pyiron_base - an integrated development environment (IDE) for computational science.',
     long_description='http://pyiron.org',
 
-    url='https://github.com/pyiron/pyiron',
+    url='https://github.com/pyiron/pyiron_base',
     author='Max-Planck-Institut für Eisenforschung GmbH - Computational Materials Design (CM) Department',
     author_email='janssen@mpie.de',
     license='BSD',
@@ -46,4 +46,9 @@ setup(
     ],
     cmdclass=versioneer.get_cmdclass(),
 
+    entry_points = {
+            "console_scripts": [
+                'pyiron=pyiron_base.cli:main'
+            ]
+    }
     )
