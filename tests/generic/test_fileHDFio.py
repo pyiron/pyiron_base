@@ -15,7 +15,7 @@ class TestFileHDFio(unittest.TestCase):
         cls.empty_hdf5 = FileHDFio(file_name=cls.current_dir + "/filehdfio_empty.h5")
         cls.full_hdf5 = FileHDFio(file_name=cls.current_dir + "/filehdfio_full.h5")
         cls.es_hdf5 = FileHDFio(
-            file_name=cls.current_dir + "/../../static/dft/es_hdf.h5"
+            file_name=cls.current_dir + "/../static/dft/es_hdf.h5"
         )
         with cls.full_hdf5.open("content") as hdf:
             hdf["array"] = np.array([1, 2, 3, 4, 5, 6])
