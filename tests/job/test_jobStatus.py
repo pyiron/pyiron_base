@@ -278,7 +278,7 @@ class JobStatusIntegration(unittest.TestCase):
     def setUpClass(cls):
         cls.file_location = os.path.dirname(os.path.abspath(__file__))
         cls.project = Project(os.path.join(cls.file_location, "random_testing"))
-        cls.ham = cls.project.create_job("ExampleJob", "job_test_run")
+        cls.ham = cls.project.create_job('ScriptJob', "job_test_run")
 
     @classmethod
     def tearDownClass(cls):

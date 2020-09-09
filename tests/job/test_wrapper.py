@@ -13,7 +13,7 @@ class TestJobWrapperFunction(unittest.TestCase):
     def setUpClass(cls):
         cls.file_location = os.path.dirname(os.path.abspath(__file__))
         cls.project = Project(os.path.join(cls.file_location, "wrapper_testing"))
-        cls.job = cls.project.create_job("ExampleJob", "job_test_run")
+        cls.job = cls.project.create_job('ScriptJob', "job_test_run")
         cls.job.input["count"] = 12
         cls.job.server.run_mode.manual = True
         cls.job.run()
