@@ -477,15 +477,16 @@ class Settings(with_metaclass(Singleton)):
                 config["sql_file"] = "/".join(
                     [config["resource_paths"][0], "sqlite.db"]
                 )
+            sql_file = convert_path(path=config["sql_file"])
             if os.path.dirname(
-                config["sql_file"]
+                sql_file
             ) != "" and not os.path.exists(
-                os.path.dirname(config["sql_file"])
+                os.path.dirname(sql_file)
             ):
-                os.makedirs(os.path.dirname(config["sql_file"]))
+                os.makedirs(os.path.dirname(sql_file))
             config[
                 "sql_connection_string"
-            ] = "sqlite:///" + config["sql_file"].replace("\\", "/")
+            ] = "sqlite:///" + sql_file.replace("\\", "/")
         return config
 
     def _read_external_config(self, config):
