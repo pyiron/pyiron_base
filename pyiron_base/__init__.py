@@ -26,7 +26,7 @@ from pyiron_base.settings.install import install_dialog
 
 # optional API of the pyiron_base module
 try:
-    from pyiron_base import ProjectGUI
+    from pyiron_base.project.gui import ProjectGUI
 except (ImportError, TypeError, AttributeError):
     pass
 
