@@ -78,7 +78,7 @@ def queue_check_job_is_waiting_or_running(item):
     Returns:
         bool: [True/False]
     """
-    que_id = _validate_que_request(item)
+    que_id = validate_que_request(item)
     if s.queue_adapter is not None:
         return s.queue_adapter.get_status_of_job(process_id=que_id) in [
             "pending",
@@ -128,7 +128,7 @@ def queue_delete_job(item):
     Returns:
         str: Output from the queuing system as string - optimized for the Sun grid engine
     """
-    que_id = _validate_que_request(item)
+    que_id = validate_que_request(item)
     if s.queue_adapter is not None:
         return s.queue_adapter.delete_job(process_id=que_id)
     else:
@@ -145,7 +145,7 @@ def queue_enable_reservation(item):
     Returns:
         str: Output from the queuing system as string - optimized for the Sun grid engine
     """
-    que_id = _validate_que_request(item)
+    que_id = validate_que_request(item)
     if s.queue_adapter is not None:
         if isinstance(que_id, list):
             return [s.queue_adapter.enable_reservation(process_id=q) for q in que_id]
@@ -264,7 +264,7 @@ def update_from_remote(project, recursive=True):
                     job_object.transfer_from_remote()
 
 
-def _validate_que_request(item):
+def validate_que_request(item):
     """
     Internal function to convert the job_ID or hamiltonian to the queuing system ID.
 
