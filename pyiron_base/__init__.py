@@ -15,6 +15,7 @@ from pyiron_base.job.jobstatus import JobStatus, job_status_successful_lst, job_
 from pyiron_base.job.jobtype import JOB_CLASS_DICT, JobType, JobTypeChoice
 from pyiron_base.job.template import TemplateJob
 from pyiron_base.master.generic import GenericMaster, get_function_from_string
+from pyiron_base.master.list import ListMaster
 from pyiron_base.master.parallel import ParallelMaster, JobGenerator
 from pyiron_base.master.serial import SerialMasterBase
 from pyiron_base.project.generic import Project
