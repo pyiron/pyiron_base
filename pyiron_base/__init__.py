@@ -22,8 +22,6 @@ from pyiron_base.pyio.parser import Logstatus, extract_data_from_file
 from pyiron_base.server.queuestatus import _validate_que_request
 from pyiron_base.settings.generic import Settings
 from pyiron_base.settings.install import install_dialog
-
-
 from ._version import get_versions
 
 __version__ = get_versions()["version"]
