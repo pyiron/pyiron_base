@@ -17,11 +17,16 @@ from pyiron_base.master.generic import GenericMaster, get_function_from_string
 from pyiron_base.master.parallel import ParallelMaster, JobGenerator
 from pyiron_base.master.serial import SerialMasterBase
 from pyiron_base.project.generic import Project
-from pyiron_base.project.gui import ProjectGUI
 from pyiron_base.pyio.parser import Logstatus, extract_data_from_file
 from pyiron_base.server.queuestatus import validate_que_request
 from pyiron_base.settings.generic import Settings
 from pyiron_base.settings.install import install_dialog
+
+try:
+    from pyiron_base import ProjectGUI
+except (ImportError, TypeError, AttributeError):
+    pass
+
 from ._version import get_versions
 
 __version__ = get_versions()["version"]
