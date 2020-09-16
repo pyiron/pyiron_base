@@ -162,6 +162,10 @@ class Server(
         Args:
             new_scheduler (str): scheduler name
         """
+        if new_scheduler == None:
+            self._active_queue = None
+            self._run_mode.mode = "modal"
+            return
         if s.queue_adapter is not None:
             cores, run_time_max, memory_max = s.queue_adapter.check_queue_parameters(
                 queue=new_scheduler,
