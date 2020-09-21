@@ -157,37 +157,47 @@ class Server(
     @queue.setter
     def queue(self, new_scheduler):
         """
-        Set a que for the current simulation, by choosing one of the available que_names
+        Set a queue for the current simulation, by choosing one of the options
+        listed in :attribute:`~.queue_list`.
 
         Args:
-            new_scheduler (str): scheduler name
+            new_scheduler (str/None): scheduler name, None resets to default
+                                      run_mode modal
         """
-        if s.queue_adapter is not None:
-            cores, run_time_max, memory_max = s.queue_adapter.check_queue_parameters(
-                queue=new_scheduler,
-                cores=self.cores,
-                run_time_max=self.run_time,
-                memory_max=self.memory_limit,
-            )
-            if cores != self.cores:
-                self._cores = cores
-                s.logger.debug(
-                    "Updated the number of cores to: {}".format(cores)
-                )
-            if run_time_max != self.run_time:
-                self._run_time = run_time_max
-                s.logger.debug(
-                    "Updated the run time limit to: {}".format(run_time_max)
-                )
-            if memory_max != self.memory_limit:
-                self._memory_limit = memory_max
-                s.logger.debug(
-                    "Updated the memory limit to: {}".format(memory_max)
-                )
-            self._active_queue = new_scheduler
-            self.run_mode = "queue"
+        if new_scheduler is None:
+            self._active_queue = None
+            self.run_mode.modal = True
+            self.cores = 1
+            self.threads = 1
+            self._run_time = None
+            self.memory_limit = None
         else:
-            raise TypeError("No queue adapter defined.")
+            if s.queue_adapter is not None:
+                cores, run_time_max, memory_max = s.queue_adapter.check_queue_parameters(
+                    queue=new_scheduler,
+                    cores=self.cores,
+                    run_time_max=self.run_time,
+                    memory_max=self.memory_limit,
+                )
+                if cores != self.cores:
+                    self._cores = cores
+                    s.logger.debug(
+                        "Updated the number of cores to: {}".format(cores)
+                    )
+                if run_time_max != self.run_time:
+                    self._run_time = run_time_max
+                    s.logger.debug(
+                        "Updated the run time limit to: {}".format(run_time_max)
+                    )
+                if memory_max != self.memory_limit:
+                    self._memory_limit = memory_max
+                    s.logger.debug(
+                        "Updated the memory limit to: {}".format(memory_max)
+                    )
+                self._active_queue = new_scheduler
+                self.run_mode = "queue"
+            else:
+                raise TypeError("No queue adapter defined.")
 
     @property
     def queue_id(self):
