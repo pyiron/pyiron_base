@@ -31,7 +31,9 @@ def main(args):
 
     db_project_path = s.top_path(project_path)
     project = os.path.dirname(project_path)
-    db_project = (project + "/").replace(db_project_path, "")
+    db_project = (project + "/")
+    if db_project_path is not None:
+        db_project = db_project.replace(db_project_path, "")
     job_reload = Project(project).load_from_jobpath(
         job_id=None,
         db_entry={
