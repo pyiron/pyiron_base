@@ -169,7 +169,7 @@ class Server(
             self.run_mode.modal = True
             self.cores = 1
             self.threads = 1
-            self.run_time = None
+            self._run_time = None
             self.memory_limit = None
         else:
             if s.queue_adapter is not None:
