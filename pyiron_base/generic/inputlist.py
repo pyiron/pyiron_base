@@ -571,7 +571,7 @@ class InputList(MutableMapping):
         Iterator over keys to terminal nodes.
 
         Returns:
-            :class:`list`: list of all keys to nested lists.
+            :class:`list`: list of keys to normal values.
         """
         for k, v in self.items():
             if not isinstance(v, InputList):
@@ -582,7 +582,7 @@ class InputList(MutableMapping):
         Return a list of keys to terminal nodes.
 
         Returns:
-            :class:`list`: list of all keys to nested lists.
+            :class:`list`: list of keys to normal values.
         """
         return list(self.nodes())
 
