@@ -3,6 +3,7 @@
 from pyiron_base.generic.inputlist import InputList
 from pyiron_base.generic.hdfio import ProjectHDFio
 from pyiron_base.project.generic import Project
+from collections import Iterator
 import copy
 import os
 import unittest
@@ -341,6 +342,29 @@ class TestInputList(unittest.TestCase):
         l.from_hdf(hdf=self.hdf, group_name = "test_group")
         self.assertEqual(self.pl, l)
 
+    def test_groups_nodes(self):
+        self.assertTrue(isinstance(self.pl.nodes(), Iterator),
+                        "nodes does not return an Iterator")
+        self.assertTrue(isinstance(self.pl.groups(), Iterator),
+                        "groups does not return an Iterator")
+        self.assertTrue(isinstance(self.pl.list_nodes(), list),
+                        "nodes does not return an list")
+        self.assertTrue(isinstance(self.pl.list_groups(), list),
+                        "groups does not return an list")
+
+        for v1, v2 in zip(self.pl.list_groups(), self.pl.groups()):
+            self.assertEqual(v1, v2, "list and iterator over groups not the same")
+
+        for v1, v2 in zip(self.pl.list_nodes(), self.pl.nodes()):
+            self.assertEqual(v1, v2, "list and iterator over nodes not the same")
+
+        for g in self.pl.groups():
+            self.assertTrue(isinstance(self.pl[g], InputList),
+                            "groups returns a node")
+
+        for n in self.pl.nodes():
+            self.assertFalse(isinstance(self.pl[n], InputList),
+                            "nodes returns a group")
 
 if __name__ == "__main__":
     unittest.main()

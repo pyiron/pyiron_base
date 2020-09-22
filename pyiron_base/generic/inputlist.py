@@ -565,3 +565,43 @@ class InputList(MutableMapping):
 
         self.clear()
         self.update(data, wrap = True)
+
+    def nodes(self):
+        """
+        Iterator over keys to terminal nodes.
+
+        Returns:
+            :class:`list`: list of keys to normal values.
+        """
+        for k, v in self.items():
+            if not isinstance(v, InputList):
+                yield k
+
+    def list_nodes(self):
+        """
+        Return a list of keys to terminal nodes.
+
+        Returns:
+            :class:`list`: list of keys to normal values.
+        """
+        return list(self.nodes())
+
+    def groups(self):
+        """
+        Return a list of keys to nested lists.
+
+        Returns:
+            :class:`list`: list of all keys to elements of :class:`InputList`.
+        """
+        for k, v in self.items():
+            if isinstance(v, InputList):
+                yield k
+
+    def list_groups(self):
+        """
+        Return a list of keys to nested lists.
+
+        Returns:
+            :class:`list`: list of all keys to elements of :class:`InputList`.
+        """
+        return list(self.groups())
