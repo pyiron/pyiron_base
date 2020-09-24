@@ -99,6 +99,7 @@ class JobCore(PyironObject):
         self._parent_id = None
         self._master_id = None
         self._status = None
+        self._import_directory = None
         self._database_property = DatabaseProperties()
         self._hdf5_content = HDF5Content(project_hdf5=self._hdf5)
 
@@ -447,7 +448,10 @@ class JobCore(PyironObject):
         with self.project_hdf5.open("..") as hdf_parent:
             try:
                 del hdf_parent[self.job_name]
-                shutil.rmtree(str(self.working_directory))
+                if self._import_directory is None:
+                    shutil.rmtree(str(self.working_directory))
+                else:
+                    self._import_directory = None
             except (NoSuchNodeError, KeyError, OSError):
                 print(
                     "This group does not exist in the HDF5 file {}".format(
