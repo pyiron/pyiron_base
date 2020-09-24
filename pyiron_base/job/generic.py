@@ -159,7 +159,6 @@ class GenericJob(JobCore):
         self._server = Server()
         self._logger = s.logger
         self._executable = None
-        self._import_directory = None
         self._status = JobStatus(db=project.db, job_id=self.job_id)
         self.refresh_job_status()
         self._restart_file_list = list()
@@ -374,7 +373,7 @@ class GenericJob(JobCore):
         Returns:
             str: absolute path to the working directory
         """
-        if self._import_directory:
+        if self._import_directory is not None:
             return self._import_directory
         elif not self.project_hdf5.working_directory:
             self._create_working_directory()
