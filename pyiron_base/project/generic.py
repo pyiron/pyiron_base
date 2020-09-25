@@ -302,7 +302,7 @@ class Project(ProjectPath):
         Returns:
             list: list of child IDs
         """
-        if not project:
+        if project is None:
             project = self.project_path
         return get_child_ids(
             database=self.db,
@@ -408,7 +408,7 @@ class Project(ProjectPath):
             str: job status can be one of the following ['initialized', 'appended', 'created', 'submitted', 'running',
                  'aborted', 'collect', 'suspended', 'refresh', 'busy', 'finished']
         """
-        if not project:
+        if project is None:
             project = self.project_path
         return get_job_status(
             database=self.db,
@@ -429,7 +429,7 @@ class Project(ProjectPath):
         Returns:
             str: working directory as absolute path
         """
-        if not project:
+        if project is None:
             project = self.project_path
         return get_job_working_directory(
             sql_query=self.sql_query,
@@ -1070,7 +1070,7 @@ class Project(ProjectPath):
                          'running', 'aborted', 'collect', 'suspended', 'refresh', 'busy', 'finished']
             project (str): project path
         """
-        if not project:
+        if project is None:
             project = self.project_path
         set_job_status(
             database=self.db,

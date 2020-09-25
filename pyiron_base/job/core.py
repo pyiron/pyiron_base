@@ -195,7 +195,7 @@ class JobCore(PyironObject):
         Returns:
             int: job id
         """
-        if not self._job_id:
+        if self._job_id is None:
             self._job_id = self.get_job_id()
         return self._job_id
 

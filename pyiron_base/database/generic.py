@@ -47,7 +47,7 @@ class AutorestoredConnection:
 
     def execute(self, *args, **kwargs):
         try:
-            if not self._conn or self._conn.closed:
+            if self._conn is None or self._conn.closed:
                 self._conn = self.engine.connect()
             result = self._conn.execute(*args, **kwargs)
         except OperationalError:

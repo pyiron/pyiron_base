@@ -35,6 +35,7 @@ def queue_table(job_ids=[], project_only=True, full_table=False):
     Args:
         job_ids (list): check for a specific list of job IDs - empty list by default
         project_only (bool): Query only for jobs within the current project - True by default
+        full_table (bool): Return all entries from the queuing system without filtering - False by default
 
     Returns:
         pandas.DataFrame: Output from the queuing system - optimized for the Sun grid engine

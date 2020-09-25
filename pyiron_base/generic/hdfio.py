@@ -1027,7 +1027,7 @@ class ProjectHDFio(FileHDFio):
         self._file_name = file_name.replace("\\", "/")
         if ".h5" not in file_name:
             self._file_name += ".h5"
-        if not h5_path:
+        if h5_path is None:
             h5_path = "/"
         self._project = project.copy()
         super(ProjectHDFio, self).__init__(

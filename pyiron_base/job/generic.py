@@ -989,13 +989,12 @@ class GenericJob(JobCore):
             memory_max=self.server.memory_limit,
             command=command,
         )
-        if que_id != None:
+        if que_id is not None:
             self.server.queue_id = que_id
             self._server.to_hdf(self._hdf5)
             print("Queue system id: ", que_id)
         else:
             self._logger.warning("Job aborted")
-            self._logger.warning(e.output)
             self.status.aborted = True
             raise ValueError("run_queue.sh crashed")
         s.logger.debug("submitted %s", self.job_name)
@@ -1539,7 +1538,7 @@ class GenericJob(JobCore):
         """
         Internal helper function to koad the executable object, if it was not loaded already.
         """
-        if not self._executable or enforce:
+        if self._executable is None or enforce:
             if len(self.__module__.split(".")) > 1:
                 self._executable = Executable(
                     codename=self.__name__,

@@ -188,8 +188,8 @@ class ListMaster(GenericMaster):
             if job.status.created or job.status.initialized:
                 super(ListMaster, self).append(job=job)
             elif job.job_id and job.status.finished:
-                if not job.master_id:
-                    if not self.job_id:
+                if job.master_id is None:
+                    if self.job_id is None:
                         self._job_id = self.save()
                     child_db_entry = self.project.db.get_item_by_id(job.job_id)
                     self.project.db.delete_item(job.job_id)
