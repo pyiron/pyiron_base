@@ -45,18 +45,11 @@ Open a new jupyter notebook and inside the notebook you can now validate your py
 
 Getting started:
 ----------------
-For users - test pyiron with mybinder:
+Test pyiron with mybinder:
 
 .. image:: https://mybinder.org/badge_logo.svg
      :target: https://mybinder.org/v2/gh/pyiron/pyiron_base/master
      :alt: mybinder
- 
- 
-For developers - browse the pyiron code with gitpod: 
-
-.. image:: https://gitpod.io/button/open-in-gitpod.svg
-     :target: https://gitpod.io/#https://github.com/pyiron/pyiron_base
-     :alt: Gitpod
 
 
 License and Acknowledgments
