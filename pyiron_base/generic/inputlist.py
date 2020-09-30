@@ -7,6 +7,7 @@ Lists structure for versatile input handling.
 
 import copy
 from collections.abc import Sequence, Set, Mapping, MutableMapping
+import warnings
 import numpy as np
 
 __author__ = "Marvin Poul"
@@ -154,6 +155,7 @@ class InputList(MutableMapping):
         object.__setattr__(instance, "_store", [])
         object.__setattr__(instance, "_indices", {})
         object.__setattr__(instance, "table_name", None)
+        object.__setattr__(instance, "_read_only", False)
 
         return instance
 
@@ -198,6 +200,9 @@ class InputList(MutableMapping):
 
     def __setitem__(self, key, val):
 
+        if self.read_only:
+            self._read_only_error()
+
         key = _normalize(key)
 
         if isinstance(key, tuple):
@@ -222,6 +227,9 @@ class InputList(MutableMapping):
 
     def __delitem__(self, key):
 
+        if self.read_only:
+            self._read_only_error()
+
         key = _normalize(key)
 
         if isinstance(key, tuple):
@@ -244,19 +252,32 @@ class InputList(MutableMapping):
             )
 
     def __getattr__(self, name):
+        # this is only called when python doesn't find name in the instance
+        # or class variables, so we don't need to go through the same lengths
+        # here as in __setattr__
         try:
             return self[name]
         except KeyError:
             raise AttributeError(name) from None
 
+    @classmethod
+    def _is_class_var(cls, name):
+        return any(name in c.__dict__ for c in cls.__mro__)
+
     def __setattr__(self, name, val):
-        if name in self.__dict__:
+        # Search instance variables (self.__dict___) and class variables
+        # (self.__class__.__dict__ + iterating over mro to find variables on
+        #  all ancestors) first before we assign the value into our list.
+        # If we find name refers to a instance/class variable, we let
+        # object.__setattr__ do all the work for us.
+        if name in self.__dict__ or self._is_class_var(name):
             object.__setattr__(self, name, val)
         else:
             self[name] = val
 
     def __delattr__(self, name):
-        if name in self.__dict__:
+        # see __setattr__
+        if name in self.__dict__ or self._is_class_var(name):
             object.__delattr__(self, name)
         else:
             del self[name]
@@ -285,6 +306,28 @@ class InputList(MutableMapping):
             return cls(val)
         else:
             return val
+
+    @property
+    def read_only(self):
+        """
+        bool: if set, raise warning when attempts are made to modify the list
+        """
+        return self._read_only
+
+    @read_only.setter
+    def read_only(self, val):
+        # can't mark a read-only list as writeable
+        if self._read_only and not val:
+            self._read_only_error()
+        else:
+            self._read_only = bool(val)
+
+    @classmethod
+    def _read_only_error(cls):
+        warnings.warn(
+            "The input in {} changed, while the state of the job was already "
+            "finished.".format(cls.__name__)
+        )
 
     def to_builtin(self, stringify = False):
         """
