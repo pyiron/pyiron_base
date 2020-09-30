@@ -244,13 +244,22 @@ class InputList(MutableMapping):
             )
 
     def __getattr__(self, name):
+        # this is only called when python doesn't find name in the instance
+        # or class variables, so we don't need to go through the same lengths
+        # here as in __setattr__
         try:
             return self[name]
         except KeyError:
             raise AttributeError(name) from None
 
     def __setattr__(self, name, val):
-        if name in self.__dict__:
+        # Search instance variables (self.__dict___) and class variables
+        # (self.__class__.__dict__ + iterating over mro to find variables on
+        #  all ancestors) first before we assign the value into our list.
+        # If we find name refers to a instance/class variable, we let
+        # object.__setattr__ do all the work for us.
+        if name in self.__dict__ \
+                or any(name in c.__dict__ for c in self.__class__.__mro__):
             object.__setattr__(self, name, val)
         else:
             self[name] = val
