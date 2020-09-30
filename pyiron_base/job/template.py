@@ -46,3 +46,6 @@ class PythonTemplateJob(TemplateJob):
     def __init__(self, project, job_name):
         super().__init__(project, job_name)
         self._python_only_job = True
+
+    def _check_if_input_should_be_written(self):
+        return False
