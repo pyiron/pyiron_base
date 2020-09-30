@@ -922,6 +922,11 @@ class JobCore(PyironObject):
                 raise ValueError(
                     'Invalid name for a PyIron object (no "." or "#") allowed'
                 )
+            if len(job_name) > 50:
+                raise ValueError(
+                    'Invalid name for a PyIron object: must be less then or '
+                    'equal to 50 characters'
+                )
         except AttributeError:
             pass  # no name check in Python 2.7
 
