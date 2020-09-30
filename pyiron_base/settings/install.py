@@ -3,7 +3,7 @@
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
 import os
-from zipfile import ZipFile
+import tarfile
 from shutil import copytree, rmtree
 import tempfile
 import stat
@@ -23,9 +23,9 @@ __date__ = "Sep 1, 2017"
 
 
 def _download_resources(
-    zip_file="resources.zip",
+    zip_file="resources.tar.gz",
     resource_directory="~/pyiron/resources",
-    giturl_for_zip_file="https://github.com/pyiron/pyiron-resources/archive/master.zip",
+    giturl_for_zip_file="https://github.com/pyiron/pyiron-resources/releases/download/0.0.3/resources-0.0.3.tar.gz",
     git_folder_name="pyiron-resources-master",
 ):
     """
@@ -52,6 +52,8 @@ def _download_resources(
             "The resource directory exists already, therefore it can not be created: ",
             user_directory,
         )
+    with tarfile.open(temp_zip_file, "r:gz") as tar:
+        tar.extractall(self.working_directory)
     with ZipFile(temp_zip_file) as zip_file_object:
         zip_file_object.extractall(temp_directory)
     copytree(temp_extract_folder, user_directory)
