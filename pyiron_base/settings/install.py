@@ -26,7 +26,7 @@ def _download_resources(
     zip_file="resources.tar.gz",
     resource_directory="~/pyiron/resources",
     giturl_for_zip_file="https://github.com/pyiron/pyiron-resources/releases/download/0.0.3/resources-0.0.3.tar.gz",
-    git_folder_name="pyiron-resources-master",
+    git_folder_name="resources",
 ):
     """
     Download pyiron resources from Github
@@ -111,10 +111,10 @@ def install_dialog():
         if user_input.lower() == "yes" or user_input.lower() == "y":
             install_pyiron(
                 config_file_name="~/.pyiron",
-                zip_file="resources.zip",
+                zip_file="resources.tar.gz",
                 resource_directory="~/pyiron/resources",
-                giturl_for_zip_file="https://github.com/pyiron/pyiron-resources/archive/master.zip",
-                git_folder_name="pyiron-resources-master",
+                giturl_for_zip_file="https://github.com/pyiron/pyiron-resources/releases/download/0.0.3/resources-0.0.3.tar.gz",
+                git_folder_name="resources",
             )
         else:
             raise ValueError("pyiron was not installed!")
@@ -124,11 +124,11 @@ def install_dialog():
 
 def install_pyiron(
     config_file_name="~/.pyiron",
-    zip_file="resources.zip",
+    zip_file="resources.tar.gz",
     project_path="~/pyiron/projects",
     resource_directory="~/pyiron/resources",
-    giturl_for_zip_file="https://github.com/pyiron/pyiron-resources/archive/master.zip",
-    git_folder_name="pyiron-resources-master",
+    giturl_for_zip_file="https://github.com/pyiron/pyiron-resources/releases/download/0.0.3/resources-0.0.3.tar.gz",
+    git_folder_name="resources",
 ):
     """
     Function to configure the pyiron installation.
