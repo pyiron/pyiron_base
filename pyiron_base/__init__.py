@@ -13,7 +13,7 @@ from pyiron_base.job.generic import GenericJob
 from pyiron_base.job.interactive import InteractiveBase
 from pyiron_base.job.jobstatus import JobStatus, job_status_successful_lst, job_status_finished_lst, job_status_lst
 from pyiron_base.job.jobtype import JOB_CLASS_DICT, JobType, JobTypeChoice
-from pyiron_base.job.template import TemplateJob
+from pyiron_base.job.template import TemplateJob, PythonTemplateJob
 from pyiron_base.master.generic import GenericMaster, get_function_from_string
 from pyiron_base.master.list import ListMaster
 from pyiron_base.master.parallel import ParallelMaster, JobGenerator
