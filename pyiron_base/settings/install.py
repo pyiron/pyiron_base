@@ -53,9 +53,7 @@ def _download_resources(
             user_directory,
         )
     with tarfile.open(temp_zip_file, "r:gz") as tar:
-        tar.extractall(self.working_directory)
-    with ZipFile(temp_zip_file) as zip_file_object:
-        zip_file_object.extractall(temp_directory)
+        tar.extractall(temp_directory)
     copytree(temp_extract_folder, user_directory)
     if os.name != "nt":  #
         for root, dirs, files in os.walk(user_directory):
