@@ -40,3 +40,9 @@ class TemplateJob(GenericJob):
         )
         with self.project_hdf5.open("input") as h5in:
             self.input.from_hdf(h5in)
+
+
+class PythonTemplateJob(TemplateJob):
+    def __init__(self, project, job_name):
+        super().__init__(project, job_name)
+        self._python_only_job = True
