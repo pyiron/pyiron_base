@@ -260,20 +260,24 @@ class InputList(MutableMapping):
         except KeyError:
             raise AttributeError(name) from None
 
+    @classmethod
+    def _is_class_var(cls, name):
+        return any(name in c.__dict__ for c in cls.__mro__)
+
     def __setattr__(self, name, val):
         # Search instance variables (self.__dict___) and class variables
         # (self.__class__.__dict__ + iterating over mro to find variables on
         #  all ancestors) first before we assign the value into our list.
         # If we find name refers to a instance/class variable, we let
         # object.__setattr__ do all the work for us.
-        if name in self.__dict__ \
-                or any(name in c.__dict__ for c in self.__class__.__mro__):
+        if name in self.__dict__ or self._is_class_var(name):
             object.__setattr__(self, name, val)
         else:
             self[name] = val
 
     def __delattr__(self, name):
-        if name in self.__dict__:
+        # see __setattr__
+        if name in self.__dict__ or self._is_class_var(name):
             object.__delattr__(self, name)
         else:
             del self[name]
