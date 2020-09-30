@@ -7,6 +7,7 @@ Lists structure for versatile input handling.
 
 import copy
 from collections.abc import Sequence, Set, Mapping, MutableMapping
+import warnings
 import numpy as np
 
 __author__ = "Marvin Poul"
@@ -154,6 +155,7 @@ class InputList(MutableMapping):
         object.__setattr__(instance, "_store", [])
         object.__setattr__(instance, "_indices", {})
         object.__setattr__(instance, "table_name", None)
+        object.__setattr__(instance, "_read_only", False)
 
         return instance
 
@@ -198,6 +200,9 @@ class InputList(MutableMapping):
 
     def __setitem__(self, key, val):
 
+        if self.read_only:
+            self._read_only_error()
+
         key = _normalize(key)
 
         if isinstance(key, tuple):
@@ -221,6 +226,9 @@ class InputList(MutableMapping):
             )
 
     def __delitem__(self, key):
+
+        if self.read_only:
+            self._read_only_error()
 
         key = _normalize(key)
 
@@ -294,6 +302,28 @@ class InputList(MutableMapping):
             return cls(val)
         else:
             return val
+
+    @property
+    def read_only(self):
+        """
+        bool: if set, raise warning when attempts are made to modify the list
+        """
+        return self._read_only
+
+    @read_only.setter
+    def read_only(self, val):
+        # can't mark a read-only list as writeable
+        if self._read_only and not val:
+            self._read_only_error()
+        else:
+            self._read_only = bool(val)
+
+    @classmethod
+    def _read_only_error(cls):
+        warnings.warn(
+            "The input in {} changed, while the state of the job was already "
+            "finished.".format(cls.__name__)
+        )
 
     def to_builtin(self, stringify = False):
         """

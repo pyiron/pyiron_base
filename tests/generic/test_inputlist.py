@@ -7,6 +7,7 @@ from collections import Iterator
 import copy
 import os
 import unittest
+import warnings
 import numpy as np
 
 class TestInputList(unittest.TestCase):
@@ -365,6 +366,21 @@ class TestInputList(unittest.TestCase):
         for n in self.pl.nodes():
             self.assertFalse(isinstance(self.pl[n], InputList),
                             "nodes returns a group")
+
+
+    def test_read_only(self):
+        pl = self.pl.copy()
+        pl.read_only = True
+        with warnings.catch_warnings(record=True) as w:
+            pl[1] = 42
+            self.assertEqual(len(w), 1,
+                    "Writing to read-only list didn't raise warning.")
+
+        with warnings.catch_warnings(record=True) as w:
+            pl.read_only = False
+            self.assertEqual(len(w), 1,
+                    "Trying to change read-only flag back didn't raise warning.")
+
 
 if __name__ == "__main__":
     unittest.main()
