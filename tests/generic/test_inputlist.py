@@ -377,6 +377,11 @@ class TestInputList(unittest.TestCase):
                     "Writing to read-only list didn't raise warning.")
 
         with warnings.catch_warnings(record=True) as w:
+            del pl[0]
+            self.assertEqual(len(w), 1,
+                    "Writing to read-only list didn't raise warning.")
+
+        with warnings.catch_warnings(record=True) as w:
             pl.read_only = False
             self.assertEqual(len(w), 1,
                     "Trying to change read-only flag back didn't raise warning.")
