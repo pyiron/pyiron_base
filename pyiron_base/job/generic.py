@@ -1281,7 +1281,7 @@ class GenericJob(JobCore):
         Returns:
 
         """
-        if not self.job_id:
+        if self.job_id is None:
             self.save()
         if job_name is None:
             job_name = "{}_restart".format(self.job_name)
