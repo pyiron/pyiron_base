@@ -235,7 +235,7 @@ def update_from_remote(project, recursive=True):
         df_combined = df_project[df_project.status.isin(["running", "submitted"])]
         df_queue = s.queue_adapter.get_status_of_my_jobs()
         df_queue = df_queue[df_queue.jobname.str.startswith("pi_")]
-        if len(df_queue) > 0:
+        if len(df_queue) > 0 and len(df_queue[df_queue.jobname.str.startswith("pi_")]) > 0:
             df_queue["pyiron_id"] = df_queue.apply(
                 lambda x: int(x["jobname"].split("pi_")[1]),
                 axis=1
