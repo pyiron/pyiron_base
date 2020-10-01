@@ -57,12 +57,10 @@ class TestConfigSettingsStatic(unittest.TestCase):
 
     def test_resource_paths(self):
         self.assertEqual(
-            self.test_config.resource_paths,
-            [
-                os.path.abspath(
-                    os.path.join(self.resource_path, "../../../static")
-                ).replace("\\", "/")
-            ],
+            self.test_config.resource_paths[0],
+            os.path.abspath(
+                os.path.join(self.resource_path, "../../../static")
+            ).replace("\\", "/")
         )
 
     def test_login_user(self):
