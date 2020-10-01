@@ -495,7 +495,7 @@ class FileHDFio(object):
 
     def list_nodes(self):
         """
-        List all groups and nodes of the HDF5 file
+        List all nodes of the HDF5 file
 
         Returns:
             list: list of nodes
