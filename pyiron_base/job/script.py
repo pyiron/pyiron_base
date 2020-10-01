@@ -7,6 +7,7 @@ import os
 import shutil
 from pyiron_base.job.generic import GenericJob
 from pyiron_base.generic.parameters import GenericParameters
+from pyiron_base.generic.inputlist import InputList
 
 
 """
@@ -122,9 +123,10 @@ class ScriptJob(GenericJob):
     def __init__(self, project, job_name):
         super(ScriptJob, self).__init__(project, job_name)
         self.__version__ = "0.1"
+        self.__hdf_version__ = "0.2.0"
         self.__name__ = "Script"
         self._script_path = None
-        self.input = GenericParameters(table_name="custom_dict")
+        self.input = InputList(table_name="custom_dict")
 
     @property
     def script_path(self):
@@ -183,12 +185,30 @@ class ScriptJob(GenericJob):
             group_name (str): HDF5 subgroup name - optional
         """
         super(ScriptJob, self).from_hdf(hdf=hdf, group_name=group_name)
-        with self.project_hdf5.open("input") as hdf5_input:
-            try:
-                self.script_path = hdf5_input["path"]
+        if "HDF_VERSION" in self.project_hdf5.list_nodes():
+            version = self.project_hdf5["HDF_VERSION"]
+        else:
+            version = "0.1.0"
+        if version == "0.1.0":
+            with self.project_hdf5.open("input") as hdf5_input:
+                try:
+                    self.script_path = hdf5_input["path"]
+                    gp = GenericParameters(table_name="custom_dict")
+                    gp.from_hdf(hdf5_input)
+                    for k in gp.keys():
+                        self.input[k] = gp[k]
+                except TypeError:
+                    pass
+        elif version == "0.2.0":
+            with self.project_hdf5.open("input") as hdf5_input:
+                try:
+                    self.script_path = hdf5_input["path"]
+                except TypeError:
+                    pass
                 self.input.from_hdf(hdf5_input)
-            except TypeError:
-                pass
+        else:
+            raise ValueError("Cannot handle hdf version: {}".format(version))
+
 
     def write_input(self):
         """
