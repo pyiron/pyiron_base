@@ -64,8 +64,8 @@ class Settings(with_metaclass(Singleton)):
         # Default config dictionary
         self._configuration = {
             "user": "pyiron",
-            "resource_paths": ["~/pyiron/resources"],
-            "project_paths": ["~/pyiron/projects"],
+            "resource_paths": [],
+            "project_paths": [],
             "sql_connection_string": None,
             "sql_table_name": "jobs_pyiron",
             "sql_view_connection_string": None,
@@ -93,9 +93,8 @@ class Settings(with_metaclass(Singleton)):
                 config=self._configuration
             )
         else:
-            print("Fall back to default configuration: "
-                  "{'resource_paths': ['~/pyiron/resources'], "
-                  "'project_paths': ['~/pyiron/projects']}")
+            self._configuration["sql_file"] = "~/pyiron.db"
+            self._configuration["project_check_enabled"] = False
 
         # Take dictionary as primary source - overwrite everything
         self._read_external_config(config=config)
