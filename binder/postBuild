@@ -1,9 +1,6 @@
 # pip install master
 pip install .
 
-# pyiron setup
-printf "[DEFAULT]\nTOP_LEVEL_DIRS = ${HOME}\nRESOURCE_PATHS = ${HOME}" > ${HOME}/.pyiron
-
 # clean up
 if [ -d "notebooks" ]; then
     mv notebooks/* .
