@@ -98,9 +98,9 @@ class Settings(with_metaclass(Singleton)):
 
         # Take dictionary as primary source - overwrite everything
         self._read_external_config(config=config)
-        if "CONDA_PREFIX" in environment.keys():
+        if "CONDA_PREFIX" in environment.keys() and os.path.exists(os.path.join(environment["CONDA_PREFIX"], "share", "pyiron")):
             self._configuration["resource_paths"].append(os.path.join(environment["CONDA_PREFIX"], "share", "pyiron"))
-        elif "CONDA_DIR" in environment.keys():
+        elif "CONDA_DIR" in environment.keys() and os.path.exists(os.path.join(environment["CONDA_DIR"], "share", "pyiron")):
             self._configuration["resource_paths"].append(os.path.join(environment["CONDA_DIR"], "share", "pyiron"))
 
         self._configuration["project_paths"] = [
