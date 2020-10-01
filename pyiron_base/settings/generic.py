@@ -388,7 +388,7 @@ class Settings(with_metaclass(Singleton)):
         if parser.has_option(section, "RESOURCE_PATHS"):
             self._configuration["resource_paths"] = [
                 convert_path(c.strip())
-                for c in parser.get(section, "RESOURCE_PATHS").split(",")
+                for c in parser.get(section, "RESOURCE_PATHS").replace(",", ":").replace(";", ":").split(":")
             ]
         if self._configuration["sql_type"] in ["Postgres", "MySQL"]:
             if (
@@ -528,7 +528,7 @@ class Settings(with_metaclass(Singleton)):
                 if k in ["PYIRONPROJECTCHECKENABLED", "PYIRONDISABLE"]:
                     config[v] = environment[k].lower() in ['t', 'true', 'y', 'yes']
                 elif k in ["PYIRONRESOURCEPATHS", "PYIRONPROJECTPATHS"]:
-                    config[v] = environment[k].split(':')
+                    config[v] = environment[k].replace(",", ":").replace(";", ":").split(':')
                 else:
                     config[v] = environment[k]
         return config
