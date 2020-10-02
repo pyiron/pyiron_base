@@ -330,8 +330,7 @@ class InputList(MutableMapping):
         Convert the list back to builtin dict"s and list"s recursively.
 
         Args:
-            stringify (bool, optinal): convert all non-recursive elements to
-            str
+            stringify (bool, optional): convert all non-recursive elements to str
         """
 
         if self.has_keys():
