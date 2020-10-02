@@ -197,7 +197,8 @@ class Server(
                 self._active_queue = new_scheduler
                 self.run_mode = "queue"
             else:
-                raise TypeError("No queue adapter defined.")
+                raise TypeError("No queue adapter defined. Have you "
+                                "configured in $PYIRONRESOURCES_PATHS/queues?")
 
     @property
     def queue_id(self):
