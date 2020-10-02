@@ -477,9 +477,14 @@ class Settings(with_metaclass(Singleton)):
         else:
             # SQLite is raising ugly error messages when the database directory does not exist.
             if config["sql_file"] is None:
-                config["sql_file"] = "/".join(
-                    [config["resource_paths"][0], "sqlite.db"]
-                )
+                if len(config["resource_paths"]) > 1:
+                    config["sql_file"] = "/".join(
+                        [config["resource_paths"][0], "pyiron.db"]
+                    )
+                else:
+                    config["sql_file"] = "/".join(
+                        ["~", "pyiron.db"]
+                    )
             sql_file = convert_path(path=config["sql_file"])
             if os.path.dirname(
                 sql_file
