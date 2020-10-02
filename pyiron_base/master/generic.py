@@ -446,7 +446,10 @@ class GenericMaster(GenericJob):
         if item_from_get_item is not None:
             return item_from_get_item
         else:
-            raise AttributeError
+            raise AttributeError("{} tried to find child job {}, but getattr failed to find the item.".format(
+                self.job_name,
+                item
+            ))
 
     def _load_all_child_jobs(self, job_to_load):
         """
