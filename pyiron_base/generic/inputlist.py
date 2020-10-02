@@ -292,13 +292,9 @@ class InputList(MutableMapping):
     def __repr__(self):
         name = self.__class__.__name__
         if self.has_keys():
-            return name + "({" + \
-                    ", ".join("{!r}: {!r}".format(k, v) for k, v in self.items()) + \
-            "})"
+            return name + "({" + ", ".join("{!r}: {!r}".format(k, v) for k, v in self.items()) + "})"
         else:
-            return name + "([" + \
-                    ", ".join("{!r}".format(v) for v in self._store) + \
-            "])"
+            return name + "([" + ", ".join("{!r}".format(v) for v in self._store) + "])"
 
     @classmethod
     def _wrap_val(cls, val):
