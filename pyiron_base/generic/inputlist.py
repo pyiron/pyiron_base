@@ -21,6 +21,7 @@ __email__ = "poul@mpie.de"
 __status__ = "production"
 __date__ = "Jun 17, 2020"
 
+
 def _normalize(key):
     if isinstance(key, str):
         if key.isdecimal():
@@ -32,7 +33,6 @@ def _normalize(key):
         return _normalize(key[0])
 
     return key
-
 
 
 class InputList(MutableMapping):
@@ -159,10 +159,10 @@ class InputList(MutableMapping):
 
         return instance
 
-    def __init__(self, init = None, table_name = None):
+    def __init__(self, init=None, table_name=None):
         self.table_name = table_name
         if init != None:
-            self.update(init, wrap = True)
+            self.update(init, wrap=True)
 
     def __len__(self):
         return len(self._store)
@@ -182,17 +182,17 @@ class InputList(MutableMapping):
             return self[key[0]][key[1:]]
 
         elif isinstance(key, int):
-
             try:
                 return self._store[key]
             except IndexError:
                 raise IndexError("list index out of range") from None
-        elif isinstance(key, str):
 
+        elif isinstance(key, str):
             try:
                 return self._store[self._indices[key]]
             except KeyError:
                 raise KeyError(repr(key)) from None
+
         else:
             raise ValueError(
                     "{} is not a valid key, must be str or int".format(key)
@@ -329,7 +329,7 @@ class InputList(MutableMapping):
             "finished.".format(cls.__name__)
         )
 
-    def to_builtin(self, stringify = False):
+    def to_builtin(self, stringify=False):
         """
         Convert the list back to builtin dict"s and list"s recursively.
 
@@ -347,25 +347,25 @@ class InputList(MutableMapping):
                 # transparent for the rest of the module
                 k = str(k)
                 if isinstance(v, InputList):
-                    dd[k] = v.to_builtin(stringify = stringify)
+                    dd[k] = v.to_builtin(stringify=stringify)
                 else:
                     dd[k] = repr(v) if stringify else v
 
             return dd
         elif stringify:
-            return list(v.to_builtin(stringify = stringify)
-                            if isinstance(v, InputList) else repr(v)
-                                for v in self.values())
+            return list(v.to_builtin(stringify=stringify)
+                        if isinstance(v, InputList) else repr(v)
+                        for v in self.values())
         else:
-            return list(v.to_builtin(stringify = stringify)
-                            if isinstance(v, InputList) else v
-                                for v in self.values())
+            return list(v.to_builtin(stringify=stringify)
+                        if isinstance(v, InputList) else v
+                        for v in self.values())
 
     # allows "nice" displays in jupyter notebooks
     def _repr_json_(self):
-        return self.to_builtin(stringify = True)
+        return self.to_builtin(stringify=True)
 
-    def get(self, key, default = None, create = False):
+    def get(self, key, default=None, create=False):
         """
         If ``key`` exists, behave as generic, if not call create_group.
 
@@ -384,9 +384,9 @@ class InputList(MutableMapping):
         if create and key not in self:
             return self.create_group(key)
         else:
-            return super().get(key, default = default)
+            return super().get(key, default=default)
 
-    def update(self, init, wrap = False, **kwargs):
+    def update(self, init, wrap=False, **kwargs):
         """
         Add all elements or key-value pairs from init to this list.  If wrap is
         not given, behaves as the generic method.
@@ -444,7 +444,7 @@ class InputList(MutableMapping):
         for v in vals:
             self.append(v)
 
-    def insert(self, index, val, key = None):
+    def insert(self, index, val, key=None):
         """
         Add a new element to the list at the specified position, with an optional
         key.  If the key is already in the list it will be updated to point to
@@ -531,7 +531,7 @@ class InputList(MutableMapping):
         # same underlying data storage, so instead we have to do a shallow copy
         # of those manually
         copiee = type(self)()
-        copiee._store  = copy.copy(self._store)
+        copiee._store = copy.copy(self._store)
         copiee._indices = copy.copy(self._indices)
         copiee.table_name = self.table_name
         return copiee
@@ -607,7 +607,7 @@ class InputList(MutableMapping):
             data = hdf["data"]
 
         self.clear()
-        self.update(data, wrap = True)
+        self.update(data, wrap=True)
 
     def nodes(self):
         """
