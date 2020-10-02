@@ -161,7 +161,7 @@ class InputList(MutableMapping):
 
     def __init__(self, init=None, table_name=None):
         self.table_name = table_name
-        if init != None:
+        if init is not None:
             self.update(init, wrap=True)
 
     def __len__(self):
@@ -456,7 +456,7 @@ class InputList(MutableMapping):
             val:                    new element to add
             key (str, optional):    optional key to mark the new element
         """
-        if key != None:
+        if key is not None:
             for k, i in self._indices.items():
                 if i >= index:
                     self._indices[k] = i + 1
