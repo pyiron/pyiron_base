@@ -5,7 +5,7 @@
 # conda activate root
 # env
 
-pip install --force --ignore-installed --no-deps pyiron==0.1.20
+pip install --force --ignore-installed --no-deps pyiron==0.1.21
 echo "Before save";
 for t in tests/backwards/*save.py; do
     echo "Running $t";
