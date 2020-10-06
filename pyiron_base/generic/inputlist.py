@@ -568,6 +568,7 @@ class InputList(MutableMapping):
 
         self._type_to_hdf(hdf)
         hdf["data"] = self.to_builtin()
+        hdf["read_only"] = self.read_only
 
     def _type_to_hdf(self, hdf):
         """
@@ -598,11 +599,15 @@ class InputList(MutableMapping):
         if group_name:
             with hdf.open(group_name) as hdf_group:
                 data = hdf_group["data"]
+                read_only = hdf_group["read_only"]
         else:
             data = hdf["data"]
+            read_only = hdf_group["read_only"]
 
         self.clear()
+
         self.update(data, wrap=True)
+        self.read_only = bool(read_only)
 
     def nodes(self):
         """

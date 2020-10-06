@@ -331,6 +331,21 @@ class TestInputList(unittest.TestCase):
         l = InputList(self.hdf["test_group/data"])
         self.assertEqual(self.pl, l)
 
+    def test_to_hdf_readonly(self):
+        self.pl.to_hdf(hdf=self.hdf, group_name = "read_only_f")
+        self.assertTrue("read_only" in self.hdf.list_nodes(),
+                        "read-only parameter not saved in HDF")
+        self.assertEqual(self.pl.read_only,
+                         self.hdf[self.pl.table_name]["read_only"],
+                         "read-only parameter not correctly written to HDF")
+
+        pl = self.pl.copy()
+        pl.read_only = True
+        pl.to_hdf(hdf=self.hdf, group_name = "read_only_t")
+        self.assertEqual(pl.read_only,
+                         self.hdf["read_only_t/read_only"],
+                         "read-only parameter not correctly written to HDF")
+
     def test_from_hdf(self):
         self.pl.to_hdf(hdf=self.hdf)
         l = InputList(table_name = "input")
@@ -342,6 +357,19 @@ class TestInputList(unittest.TestCase):
         l = InputList(table_name = "input")
         l.from_hdf(hdf=self.hdf, group_name = "test_group")
         self.assertEqual(self.pl, l)
+
+    def test_from_hdf_readonly(self):
+        self.pl.to_hdf(hdf=self.hdf, group_name = "read_only_from")
+        pl = InputList()
+        pl.from_hdf(self.hdf, group_name = "read_only_from")
+        self.assertEqual(pl.read_only, self.hdf["read_only_from/read_only"],
+                         "read-only parameter not correctly read from HDF")
+
+        self.hdf["read_only_from/read_only"] = True
+        pl.from_hdf(self.hdf, group_name = "read_only_from")
+        self.assertEqual(pl.read_only, self.hdf["read_only_from/read_only"],
+                         "read-only parameter not correctly read from HDF")
+
 
     def test_groups_nodes(self):
         self.assertTrue(isinstance(self.pl.nodes(), Iterator),
