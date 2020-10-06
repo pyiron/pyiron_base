@@ -599,10 +599,16 @@ class InputList(MutableMapping):
         if group_name:
             with hdf.open(group_name) as hdf_group:
                 data = hdf_group["data"]
-                read_only = hdf_group["read_only"]
+                if "read_only" in hdf_group.list_nodes():
+                    read_only = hdf_group["read_only"]
+                else:
+                    read_only = False
         else:
             data = hdf["data"]
-            read_only = hdf_group["read_only"]
+            if "read_only" in hdf.list_nodes():
+                read_only = hdf["read_only"]
+            else:
+                read_only = False
 
         self.clear()
 
