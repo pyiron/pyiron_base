@@ -27,17 +27,13 @@ class DatabasePropertyIntegration(unittest.TestCase):
     def test_inspect_job(self):
         job_inspect = self.project.inspect(self.ham.job_name)
         self.assertIsNotNone(job_inspect)
-
         self.assertEqual(
-            job_inspect.content.input.custom_dict.data_dict,
-            job_inspect["input/custom_dict/data_dict"],
+            job_inspect.content.input.__repr__(), job_inspect["input"].__repr__()
         )
         self.assertEqual(
             sorted(dir(job_inspect.content.input)),
-            sorted(job_inspect["input"].list_nodes() + ['custom_dict']),
-        )
-        self.assertEqual(
-            job_inspect.content.input.__repr__(), job_inspect["input"].__repr__()
+            sorted(job_inspect["input"].list_nodes()
+                    + job_inspect["input"].list_groups())
         )
 
     def test_setitem(self):
