@@ -25,7 +25,6 @@ class TestScriptJob(unittest.TestCase):
         Notebook jobs c.f. `Notebook.get_custom_dict()`.
         """
         self.job.input['value'] = 300
-        self.job.script_path = 'job.ipynb'
         self.job.save()
         self.assertTrue("custom_dict" in self.job["input"].list_groups(),
                         "Input not saved in the 'custom_dict' group in HDF")
