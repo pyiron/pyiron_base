@@ -2,11 +2,10 @@
 # Copyright (c) Max-Planck-Institut für Eisenforschung GmbH - Computational Materials Design (CM) Department
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
-from __future__ import print_function
 import importlib
 import inspect
 import os
-from six import with_metaclass
+from pyiron_base.generic.util import Singleton
 from pyiron_base.job.jobstatus import job_status_finished_lst
 
 """
@@ -32,23 +31,7 @@ JOB_CLASS_DICT = {
 }
 
 
-class Singleton(type):
-    """
-    Implemented with suggestions from
-
-    http://stackoverflow.com/questions/6760685/creating-a-singleton-in-python
-
-    """
-
-    _instances = {}
-
-    def __call__(cls, *args, **kwargs):
-        if cls not in cls._instances:
-            cls._instances[cls] = super(Singleton, cls).__call__(*args, **kwargs)
-        return cls._instances[cls]
-
-
-class JobTypeChoice(with_metaclass(Singleton)):
+class JobTypeChoice(metaclass=Singleton):
     """
     Helper class to choose the job type directly from the project, autocompletion is enabled by overwriting the
     __dir__() function.

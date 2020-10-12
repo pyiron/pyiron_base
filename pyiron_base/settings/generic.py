@@ -5,7 +5,6 @@
 from builtins import input
 import os
 import importlib
-from six import with_metaclass
 import sys
 from configparser import ConfigParser
 from pathlib2 import Path
@@ -51,7 +50,7 @@ class Singleton(type):
         return cls._instances[cls]
 
 
-class Settings(with_metaclass(Singleton)):
+class Settings(metaclass=Singleton):
     """
     The settings object can either search for an configuration file and use the default configuration only when no
     other configuration file is found, or it can be forced to use the default configuration file.

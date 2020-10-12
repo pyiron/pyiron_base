@@ -2,13 +2,11 @@
 # Copyright (c) Max-Planck-Institut für Eisenforschung GmbH - Computational Materials Design (CM) Department
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
-from __future__ import print_function
 
 from copy import copy
 import os
 import posixpath
 from pyiron_base.settings.generic import Settings
-from six import string_types
 
 """
 Classes for representing the file system path in pyiron
@@ -364,7 +362,7 @@ class ProjectPath(GenericPath):
         """
         if isinstance(path, GenericPath):
             return path
-        elif isinstance(path, string_types):
+        elif isinstance(path, str):
             path = os.path.normpath(path)
             if not os.path.isabs(path):
                 path_local = self._windows_path_to_unix_path(
