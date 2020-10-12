@@ -12,9 +12,7 @@ print(coeff_tot['value'])
 class TestScriptJob(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.file_location = os.path.dirname(os.path.abspath(__file__)).replace(
-            "\\", "/"
-        )
+        cls.file_location = os.path.dirname(os.path.abspath(__file__))
         cls.job_location = os.path.join(cls.file_location, "job.py")
         cls.project = Project(os.path.join(cls.file_location, "test_notebook"))
         cls.job = cls.project.create_job(cls.project.job_type.ScriptJob,
