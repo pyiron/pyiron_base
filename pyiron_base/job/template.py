@@ -69,6 +69,7 @@ class PythonTemplateJob(TemplateJob):
 
     def save_output(self):
         self.output.to_hdf(hdf=self.project_hdf5, group_name=None)
+        self.status.finished=True
 
     def _check_if_input_should_be_written(self):
         return False
