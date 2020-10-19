@@ -451,6 +451,7 @@ class FileHDFio(object):
 
         Args:
             key (str, slice): path to the data or key of the data object
+            default (object): default value to return if key doesn't exist
 
         Returns:
             dict, list, float, int: data or data object
