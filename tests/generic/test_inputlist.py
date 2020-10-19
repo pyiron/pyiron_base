@@ -27,14 +27,12 @@ class TestInputList(unittest.TestCase):
         cls.pl["tail"] = InputList([2,4,8])
 
         file_location = os.path.dirname(os.path.abspath(__file__))
-        pr = Project(file_location)
-        cls.file_name = os.path.join(file_location, "input.h5")
-        cls.hdf = ProjectHDFio(project=pr, file_name=cls.file_name,
-                               h5_path="/test", mode="a")
+        cls.pr = Project(file_location)
+        cls.hdf = cls.pr.create_hdf(cls.pr.path, "test")
 
     @classmethod
     def tearDownClass(cls):
-        os.remove(cls.file_name)
+        os.remove(cls.hdf.file_name)
 
     ## Init tests
     def test_init_none(self):
@@ -297,8 +295,11 @@ class TestInputList(unittest.TestCase):
         self.assertTrue(rec(self.pl._repr_json_()),
                 "_repr_json_ output not all str")
 
-    # hdf tests
-    def test_to_hdf(self):
+
+    def test_to_hdf_type(self):
+        """
+        Should write correct type information.
+        """
         self.pl.to_hdf(hdf=self.hdf)
         self.assertEqual(self.hdf["input/NAME"],
                          "InputList")
@@ -306,21 +307,34 @@ class TestInputList(unittest.TestCase):
                          "InputList")
         self.assertEqual(self.hdf["input/TYPE"],
                          "<class 'pyiron_base.generic.inputlist.InputList'>")
-        l = InputList(self.hdf["input/data"])
-        self.assertEqual(self.pl, l)
 
-        pl = InputList(self.pl)
-        pl.to_hdf(hdf=self.hdf)
-        self.assertEqual(self.hdf["NAME"],
-                         "InputList")
-        self.assertEqual(self.hdf["OBJECT"],
-                         "InputList")
-        self.assertEqual(self.hdf["TYPE"],
-                         "<class 'pyiron_base.generic.inputlist.InputList'>")
-        l = InputList(self.hdf["data"])
-        self.assertEqual(pl, l)
+    def test_to_hdf_items(self):
+        """
+        Should write all sublists to HDF groups and simple items to HDF
+        datasets.
+        """
+        self.pl.to_hdf(hdf=self.hdf)
+        for i, (k, v) in enumerate(self.pl.items()):
+            k = "{}__index_{}".format(k if isinstance(k, str) else "", i)
+            if isinstance(v, InputList):
+                self.assertTrue(k in self.hdf["input"].list_groups(),
+                                "Sublist '{}' not a sub group in hdf!".format(k))
+            else:
+                self.assertTrue(k in self.hdf["input"].list_nodes(),
+                                "Item '{}' not a dataset in hdf!".format(k))
+
+    def test_to_hdf_name(self):
+        """
+        Should raise error if clashing names are given.
+        """
+        with self.assertRaises(ValueError,
+                msg="Cannot have names clashing with index mangling."):
+            InputList({'__index_0': 42}).to_hdf(hdf=self.hdf)
 
     def test_to_hdf_group(self):
+        """
+        Should be possible to give a custom group name.
+        """
         self.pl.to_hdf(hdf=self.hdf, group_name = "test_group")
         self.assertEqual(self.hdf["test_group/NAME"],
                          "InputList")
@@ -328,47 +342,73 @@ class TestInputList(unittest.TestCase):
                          "<class 'pyiron_base.generic.inputlist.InputList'>")
         self.assertEqual(self.hdf["test_group/OBJECT"],
                          "InputList")
-        l = InputList(self.hdf["test_group/data"])
-        self.assertEqual(self.pl, l)
 
     def test_to_hdf_readonly(self):
+        """
+        Read-only property should be stored.
+        """
         self.pl.to_hdf(hdf=self.hdf, group_name = "read_only_f")
-        self.assertTrue("read_only" in self.hdf.list_nodes(),
+        self.assertTrue("READ_ONLY" in self.hdf["read_only_f"].list_nodes(),
                         "read-only parameter not saved in HDF")
         self.assertEqual(self.pl.read_only,
-                         self.hdf[self.pl.table_name]["read_only"],
+                         self.hdf[self.pl.table_name]["READ_ONLY"],
                          "read-only parameter not correctly written to HDF")
 
         pl = self.pl.copy()
         pl.read_only = True
         pl.to_hdf(hdf=self.hdf, group_name = "read_only_t")
         self.assertEqual(pl.read_only,
-                         self.hdf["read_only_t/read_only"],
+                         self.hdf["read_only_t/READ_ONLY"],
                          "read-only parameter not correctly written to HDF")
 
     def test_from_hdf(self):
+        """
+        Reading from HDF should give back the same list as written.
+        """
         self.pl.to_hdf(hdf=self.hdf)
         l = InputList(table_name = "input")
         l.from_hdf(hdf=self.hdf)
         self.assertEqual(self.pl, l)
 
     def test_from_hdf_group(self):
+        """
+        Reading from HDF should give back the same list as written even with
+        custom group name.
+        """
         self.pl.to_hdf(hdf=self.hdf, group_name = "test_group")
         l = InputList(table_name = "input")
         l.from_hdf(hdf=self.hdf, group_name = "test_group")
         self.assertEqual(self.pl, l)
 
     def test_from_hdf_readonly(self):
+        """
+        Reading from HDF should restore the read-only property.
+        """
         self.pl.to_hdf(hdf=self.hdf, group_name = "read_only_from")
         pl = InputList()
         pl.from_hdf(self.hdf, group_name = "read_only_from")
-        self.assertEqual(pl.read_only, self.hdf["read_only_from/read_only"],
+        self.assertEqual(pl.read_only, self.hdf["read_only_from/READ_ONLY"],
                          "read-only parameter not correctly read from HDF")
 
-        self.hdf["read_only_from/read_only"] = True
+        self.hdf["read_only_from/READ_ONLY"] = True
         pl.from_hdf(self.hdf, group_name = "read_only_from")
-        self.assertEqual(pl.read_only, self.hdf["read_only_from/read_only"],
+        self.assertEqual(pl.read_only, self.hdf["read_only_from/READ_ONLY"],
                          "read-only parameter not correctly read from HDF")
+
+    def test_hdf_complex_members(self):
+        """
+        Values that implement to_hdf/from_hdf, should write themselves to the
+        HDF file correctly.
+        """
+        pl = InputList(table_name="complex")
+        pl.append(self.pr.create_job(self.pr.job_type.ScriptJob, "dummy1"))
+        pl.append(self.pr.create_job(self.pr.job_type.ScriptJob, "dummy2"))
+        pl.append(42)
+        pl["foo"] = "bar"
+        pl.to_hdf(hdf=self.hdf)
+        pl2 = self.hdf["complex"].to_object()
+        self.assertEqual(type(pl[0]), type(pl2[0]))
+        self.assertEqual(type(pl[1]), type(pl2[1]))
 
 
     def test_groups_nodes(self):

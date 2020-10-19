@@ -21,6 +21,16 @@ __email__ = "poul@mpie.de"
 __status__ = "production"
 __date__ = "Jun 17, 2020"
 
+_internal_hdf_nodes = [
+        "NAME",
+        "TYPE",
+        "OBJECT",
+        "VERSION",
+        "HDF_VERSION",
+        "READ_ONLY"
+]
+
+
 
 def _normalize(key):
     if isinstance(key, str):
@@ -145,6 +155,7 @@ class InputList(MutableMapping):
     """
 
     __version__ = "0.1.0"
+    __hdf_version__ = "0.2.0"
 
     def __new__(cls, *args, **kwargs):
 
@@ -567,8 +578,19 @@ class InputList(MutableMapping):
             hdf = hdf.create_group(group_name)
 
         self._type_to_hdf(hdf)
-        hdf["data"] = self.to_builtin()
-        hdf["read_only"] = self.read_only
+        hdf["READ_ONLY"] = self.read_only
+        for i, (k, v) in enumerate(self.items()):
+            if isinstance(k, str) and "__index_" in k:
+                raise ValueError("Key {} clashes with internal use!".format(k))
+
+            k = "{}__index_{}".format(k if isinstance(k, str) else "", i)
+
+            if hasattr(v, "to_hdf"):
+                v.to_hdf(hdf=hdf, group_name=k)
+            else:
+                # if the value doesn't know how to serialize itself, assume
+                # that h5py knows how to
+                hdf[k] = v
 
     def _type_to_hdf(self, hdf):
         """
@@ -580,6 +602,7 @@ class InputList(MutableMapping):
         hdf["NAME"] = self.__class__.__name__
         hdf["TYPE"] = str(type(self))
         hdf["VERSION"] = self.__version__
+        hdf["HDF_VERSION"] = self.__hdf_version__
         hdf["OBJECT"] = "InputList"
 
     def from_hdf(self, hdf, group_name=None):
@@ -596,24 +619,37 @@ class InputList(MutableMapping):
         """
 
         group_name = group_name or self.table_name
-        if group_name:
-            with hdf.open(group_name) as hdf_group:
-                data = hdf_group["data"]
-                if "read_only" in hdf_group.list_nodes():
-                    read_only = hdf_group["read_only"]
-                else:
-                    read_only = False
-        else:
-            data = hdf["data"]
-            if "read_only" in hdf.list_nodes():
-                read_only = hdf["read_only"]
-            else:
-                read_only = False
+        hdf = hdf.open(group_name) if group_name else hdf
+
+        version = hdf.get("HDF_VERSION", "0.1.0")
 
         self.clear()
 
-        self.update(data, wrap=True)
-        self.read_only = bool(read_only)
+        if version == "0.1.0":
+            self.read_only = bool(hdf.get("read_only", False))
+            self.update(hdf["data"], wrap=True)
+        else:
+            self.read_only = bool(hdf.get("READ_ONLY", False))
+
+            def normalize_key(name):
+                # split a dataset/group name into the position in the list and
+                # the key
+                k, i = name.split("__index_", maxsplit=1)
+                i = int(i)
+                if k == "":
+                    return i, i
+                else:
+                    return i, k
+
+            items = []
+            for n in hdf.list_nodes():
+                if n in _internal_hdf_nodes:
+                    continue
+                items.append( (*normalize_key(n), hdf[n]))
+            for g in hdf.list_groups():
+                items.append( (*normalize_key(g), hdf[g].to_object()))
+            for _, k, v in sorted(items, key=lambda x: x[0]):
+                self[k] = v
 
     def nodes(self):
         """
