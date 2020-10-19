@@ -445,7 +445,7 @@ class FileHDFio(object):
             df = pandas.DataFrame(val)
             return df
 
-    def get(self, key):
+    def get(self, key, default = None):
         """
         Internal wrapper function for __getitem__() - self[name]
 
@@ -455,7 +455,13 @@ class FileHDFio(object):
         Returns:
             dict, list, float, int: data or data object
         """
-        return self.__getitem__(key)
+        try:
+            return self.__getitem__(key)
+        except ValueError:
+            if default is not None:
+                return default
+            else:
+                raise
 
     def put(self, key, value):
         """
