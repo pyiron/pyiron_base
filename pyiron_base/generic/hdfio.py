@@ -445,17 +445,24 @@ class FileHDFio(object):
             df = pandas.DataFrame(val)
             return df
 
-    def get(self, key):
+    def get(self, key, default = None):
         """
         Internal wrapper function for __getitem__() - self[name]
 
         Args:
             key (str, slice): path to the data or key of the data object
+            default (object): default value to return if key doesn't exist
 
         Returns:
             dict, list, float, int: data or data object
         """
-        return self.__getitem__(key)
+        try:
+            return self.__getitem__(key)
+        except ValueError:
+            if default is not None:
+                return default
+            else:
+                raise
 
     def put(self, key, value):
         """
