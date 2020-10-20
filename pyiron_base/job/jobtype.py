@@ -53,7 +53,7 @@ class JobTypeChoice(metaclass=Singleton):
         if name in self._job_class_dict.keys():
             return name
         else:
-            raise AttributeError
+            raise AttributeError("no job class named '{}' defined".format(name))
 
     def __dir__(self):
         """
