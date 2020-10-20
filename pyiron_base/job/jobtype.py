@@ -48,8 +48,12 @@ class JobTypeChoice(metaclass=Singleton):
     @job_class_dict.setter
     def job_class_dict(self, job_class_dict):
         self._job_class_dict = job_class_dict
-        for item in list(self._job_class_dict.keys()):
-            self.__setattr__(item, item)
+
+    def __getattr__(self, name):
+        if name in self._job_class_dict.keys():
+            return name
+        else:
+            raise AttributeError("no job class named '{}' defined".format(name))
 
     def __dir__(self):
         """
