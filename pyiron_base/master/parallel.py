@@ -678,7 +678,7 @@ class ParallelMaster(GenericMaster):
                 "{} child project {}".format(self.job_name, self.project.__str__())
             )
             job = next(self._job_generator, None)
-            if (self.server.run_mode.non_modal or self.server.run_mode.queue) \
+            if (self.server.run_mode.non_modal or self.server.run_mode.queue or self.server.run_mode.modal) \
                     and job.server.run_mode.interactive:
                 self.run_if_interactive()
             elif self.server.run_mode.queue:
