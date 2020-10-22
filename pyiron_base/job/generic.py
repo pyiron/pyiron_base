@@ -1144,7 +1144,7 @@ class GenericJob(JobCore):
         if hdf is not None:
             self._hdf5 = hdf
         if group_name is not None:
-            self._hdf5.open(group_name)
+            self._hdf5 = self._hdf5.open(group_name)
         self._executable_activate_mpi()
         self._type_to_hdf()
         self._hdf5["status"] = self.status.string
