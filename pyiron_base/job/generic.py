@@ -674,7 +674,7 @@ class GenericJob(JobCore):
                 self._logger.info("run repair " + str(self.job_id))
                 status = "initialized"
                 master_id, parent_id = self.master_id, self.parent_id
-                self.remove()
+                self.remove(_protect_childs=False)
                 self.reset_job_id()
                 self.master_id, self.parent_id = master_id, parent_id
             if repair and self.job_id and not self.status.finished:
