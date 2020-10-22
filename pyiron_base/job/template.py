@@ -46,8 +46,16 @@ class TemplateJob(GenericJob):
 class PythonTemplateJob(TemplateJob):
     def __init__(self, project, job_name):
         super().__init__(project, job_name)
-        self.output = InputList(table_name="output")
+        self._output = InputList(table_name="output")
         self._python_only_job = True
+
+    @property
+    def output(self):
+        return self._output
+
+    @output.setter
+    def output(self, output):
+        self._output = InputList(output, table_name="output")
 
     def from_hdf(self, hdf=None, group_name=None):
         super().from_hdf(
@@ -56,7 +64,7 @@ class PythonTemplateJob(TemplateJob):
         )
         if hdf is None:
             hdf = self.project_hdf5
-        self.output.from_hdf(hdf=hdf, group_name=None)
+        self._output.from_hdf(hdf=hdf, group_name=None)
 
     def to_hdf(self, hdf=None, group_name=None):
         super().to_hdf(
@@ -65,10 +73,10 @@ class PythonTemplateJob(TemplateJob):
         )
         if hdf is None:
             hdf = self.project_hdf5
-        self.output.to_hdf(hdf=hdf, group_name=None)
+        self._output.to_hdf(hdf=hdf, group_name=None)
 
     def save_output(self):
-        self.output.to_hdf(hdf=self.project_hdf5, group_name=None)
+        self._output.to_hdf(hdf=self.project_hdf5, group_name=None)
         self.status.finished=True
 
     def _check_if_input_should_be_written(self):
