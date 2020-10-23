@@ -24,23 +24,33 @@ __date__ = "May 15, 2020"
 class TemplateJob(GenericJob):
     def __init__(self, project, job_name):
         super().__init__(project, job_name)
-        self.input = GenericParameters(table_name="input")
+        self._input = InputList(table_name="input")
+
+    @property
+    def input(self):
+        return self._input
+
+    @input.setter
+    def input(self, input):
+        self._input = InputList(input, table_name="input")
 
     def to_hdf(self, hdf=None, group_name=None):
         super().to_hdf(
             hdf=hdf,
             group_name=group_name
         )
-        with self.project_hdf5.open("input") as h5in:
-            self.input.to_hdf(h5in)
+        if hdf is None:
+            hdf = self.project_hdf5
+        self._input.to_hdf(hdf=hdf, group_name=None)
 
     def from_hdf(self, hdf=None, group_name=None):
         super().from_hdf(
             hdf=hdf,
             group_name=group_name
         )
-        with self.project_hdf5.open("input") as h5in:
-            self.input.from_hdf(h5in)
+        if hdf is None:
+            hdf = self.project_hdf5
+        self._input.from_hdf(hdf=hdf, group_name=None)
 
 
 class PythonTemplateJob(TemplateJob):
@@ -77,7 +87,7 @@ class PythonTemplateJob(TemplateJob):
 
     def save_output(self):
         self._output.to_hdf(hdf=self.project_hdf5, group_name=None)
-        self.status.finished=True
+        self.status.finished = True
 
     def _check_if_input_should_be_written(self):
         return False
