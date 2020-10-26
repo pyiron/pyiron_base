@@ -39,18 +39,14 @@ class TemplateJob(GenericJob):
             hdf=hdf,
             group_name=group_name
         )
-        if hdf is None:
-            hdf = self.project_hdf5
-        self._input.to_hdf(hdf=hdf, group_name=None)
+        self._input.to_hdf(hdf=self._hdf5, group_name=None)
 
     def from_hdf(self, hdf=None, group_name=None):
         super().from_hdf(
             hdf=hdf,
             group_name=group_name
         )
-        if hdf is None:
-            hdf = self.project_hdf5
-        self._input.from_hdf(hdf=hdf, group_name=None)
+        self._input.from_hdf(hdf=self._hdf5, group_name=None)
 
 
 class PythonTemplateJob(TemplateJob):
@@ -72,21 +68,17 @@ class PythonTemplateJob(TemplateJob):
             hdf=hdf,
             group_name=group_name
         )
-        if hdf is None:
-            hdf = self.project_hdf5
-        self._output.from_hdf(hdf=hdf, group_name=None)
+        self._output.from_hdf(hdf=self._hdf5, group_name=None)
 
     def to_hdf(self, hdf=None, group_name=None):
         super().to_hdf(
             hdf=hdf,
             group_name=group_name
         )
-        if hdf is None:
-            hdf = self.project_hdf5
-        self._output.to_hdf(hdf=hdf, group_name=None)
+        self._output.to_hdf(hdf=self._hdf5, group_name=None)
 
     def save_output(self):
-        self._output.to_hdf(hdf=self.project_hdf5, group_name=None)
+        self._output.to_hdf(hdf=self._hdf5, group_name=None)
         self.status.finished = True
 
     def _check_if_input_should_be_written(self):
