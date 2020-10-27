@@ -1207,15 +1207,15 @@ class Project(ProjectPath):
         return inputdict
 
     @staticmethod
-    def list_publications(bib_format="dict"):
+    def list_publications(bib_format="pandas"):
         """
         List the publications used in this project.
 
         Args:
-            bib_format (str): ['dict', 'bibtex', 'apa']
+            bib_format (str): ['pandas', 'dict', 'bibtex', 'apa']
 
         Returns:
-            list: list of publications in Bibtex format.
+            pandas.DataFrame/ list: list of publications in Bibtex format.
         """
         return list_publications(bib_format=bib_format)
 
