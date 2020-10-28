@@ -1146,10 +1146,7 @@ class Project(ProjectPath):
         Returns:
             str: Output from the queuing system as string - optimized for the Sun grid engine
         """
-        if isinstance(item, int):
-            self.remove_job(job_specifier=item)
-        else:
-            item.remove()
+        self._queue_delete_job(item)
 
     @staticmethod
     def create_hdf(path, job_name):
