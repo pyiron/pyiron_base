@@ -443,7 +443,7 @@ class JobCore(PyironObject):
                 and str(self.status) in ["submitted", "running", "collect"]
                 and server_hdf_dict["qid"] is not None
             ):
-                self.project._queue_delete_job(server_hdf_dict["qid"])
+                self.project.queue_delete_job(server_hdf_dict["qid"])
         with self.project_hdf5.open("..") as hdf_parent:
             try:
                 del hdf_parent[self.job_name]
