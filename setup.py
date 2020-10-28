@@ -39,7 +39,7 @@ setup(
         'pathlib2>=2.3.5',
         'psutil>=5.7.0',
         'pyfileindex>=0.0.4',
-        'pysqa>=0.0.11',
+        'pysqa>=0.0.12',
         'sqlalchemy>=1.3.14',
         'tables>=3.6.1'
     ],
