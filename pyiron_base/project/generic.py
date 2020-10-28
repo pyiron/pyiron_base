@@ -1146,10 +1146,10 @@ class Project(ProjectPath):
         Returns:
             str: Output from the queuing system as string - optimized for the Sun grid engine
         """
-        if isinstance(item, int):
-            self.remove_job(job_specifier=item)
+        if not self.view_mode:
+            return queue_delete_job(item)
         else:
-            item.remove()
+            raise EnvironmentError("copy_to: is not available in Viewermode !")
 
     @staticmethod
     def create_hdf(path, job_name):
@@ -1439,21 +1439,6 @@ class Project(ProjectPath):
             for f in glob.glob(pattern):
                 s.logger.info("remove file {}".format(posixpath.basename(f)))
                 os.remove(f)
-        else:
-            raise EnvironmentError("copy_to: is not available in Viewermode !")
-
-    def _queue_delete_job(self, item):
-        """
-        Delete a job from the queuing system
-
-        Args:
-            item (int, GenericJob): Provide either the job_ID or the full hamiltonian
-
-        Returns:
-            str: Output from the queuing system as string - optimized for the Sun grid engine
-        """
-        if not self.view_mode:
-            return queue_delete_job(item)
         else:
             raise EnvironmentError("copy_to: is not available in Viewermode !")
 
