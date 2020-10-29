@@ -857,7 +857,7 @@ class GenericParameters(PyironObject):
                     continue
 
             for col in self._dataset:
-                self._dataset[col] = np.array(self._dataset[col]).tolist()
+                self._dataset[col] = np.array(self._dataset[col], dtype=object).tolist()
 
             comment = ""
             if isinstance(val, tuple):
