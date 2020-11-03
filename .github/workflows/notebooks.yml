@@ -26,5 +26,5 @@ jobs:
     - run: conda config --set always_yes yes --set changeps1 no
     - run: conda env update --name root --file .ci_support/environment.yml
     - run: pip install -e .
-    - run: conda env update --file .ci_support/environment-notebooks.yml
+    - run: conda env update --name root --file .ci_support/environment-notebooks.yml
     - run: ./.ci_support/build_notebooks.sh
