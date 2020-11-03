@@ -835,10 +835,11 @@ class GenericJob(JobCore):
                 })
             _ = [self.project.db.add_item_dict(d) for d in db_dict_lst]
         self.status.string = self.project_hdf5["status"]
-        self._reload_update_master(
-            project=self.project,
-            master_id=self.master_id
-        )
+        if self.master_id is not None:
+            self._reload_update_master(
+                project=self.project,
+                master_id=self.master_id
+            )
 
     def run_if_interactive(self):
         """
