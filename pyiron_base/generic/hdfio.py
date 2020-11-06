@@ -329,13 +329,15 @@ class FileHDFio(object):
                             del f_target["/tmp"]
         return destination
 
-    def create_group(self, name):
+    def create_group(self, name, track_order=False):
         """
         Create an HDF5 group - similar to a folder in the filesystem - the HDF5 groups allow the users to structure
         their data.
 
         Args:
             name (str): name of the HDF5 group
+            track_order (bool): if False this groups tracks its elements in
+                alphanumeric order, if True in insertion order
 
         Returns:
             FileHDFio: FileHDFio object pointing to the new group
@@ -343,7 +345,7 @@ class FileHDFio(object):
         full_name = posixpath.join(self.h5_path, name)
         with h5py.File(self.file_name, mode="a", libver="latest", swmr=True) as h:
             try:
-                h.create_group(full_name)
+                h.create_group(full_name, track_order=track_order)
             except ValueError:
                 pass
         h_new = self[name].copy()
