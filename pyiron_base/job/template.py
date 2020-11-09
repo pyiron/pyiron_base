@@ -25,6 +25,7 @@ class TemplateJob(GenericJob):
     def __init__(self, project, job_name):
         super().__init__(project, job_name)
         self._input = InputList(table_name="input")
+        self._output = InputList(table_name="output")
 
     @property
     def input(self):
@@ -34,27 +35,6 @@ class TemplateJob(GenericJob):
     def input(self, input):
         self._input = InputList(input, table_name="input")
 
-    def to_hdf(self, hdf=None, group_name=None):
-        super().to_hdf(
-            hdf=hdf,
-            group_name=group_name
-        )
-        self._input.to_hdf(hdf=self._hdf5, group_name=None)
-
-    def from_hdf(self, hdf=None, group_name=None):
-        super().from_hdf(
-            hdf=hdf,
-            group_name=group_name
-        )
-        self._input.from_hdf(hdf=self._hdf5, group_name=None)
-
-
-class PythonTemplateJob(TemplateJob):
-    def __init__(self, project, job_name):
-        super().__init__(project, job_name)
-        self._output = InputList(table_name="output")
-        self._python_only_job = True
-
     @property
     def output(self):
         return self._output
@@ -63,19 +43,28 @@ class PythonTemplateJob(TemplateJob):
     def output(self, output):
         self._output = InputList(output, table_name="output")
 
-    def from_hdf(self, hdf=None, group_name=None):
-        super().from_hdf(
-            hdf=hdf,
-            group_name=group_name
-        )
-        self._output.from_hdf(hdf=self._hdf5, group_name=None)
 
     def to_hdf(self, hdf=None, group_name=None):
         super().to_hdf(
             hdf=hdf,
             group_name=group_name
         )
+        self._input.to_hdf(hdf=self._hdf5, group_name=None)
         self._output.to_hdf(hdf=self._hdf5, group_name=None)
+
+    def from_hdf(self, hdf=None, group_name=None):
+        super().from_hdf(
+            hdf=hdf,
+            group_name=group_name
+        )
+        self._input.from_hdf(hdf=self._hdf5, group_name=None)
+        self._output.from_hdf(hdf=self._hdf5, group_name=None)
+
+
+class PythonTemplateJob(TemplateJob):
+    def __init__(self, project, job_name):
+        super().__init__(project, job_name)
+        self._python_only_job = True
 
     def save_output(self):
         self._output.to_hdf(hdf=self._hdf5, group_name=None)
