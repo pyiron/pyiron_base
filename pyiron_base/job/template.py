@@ -65,5 +65,19 @@ class PythonTemplateJob(TemplateJob):
         super().__init__(project, job_name)
         self._python_only_job = True
 
+    def run_static(self):
+        self.run_python_job()
+        self.status.collect = True
+        self.run()
+
+    def run_python_job(self):
+        raise NotImplementedError(
+            "This function needs to be implemented in the specific class."
+        )
+
+    def _run_if_collect(self):
+        self._output.to_hdf(hdf=self._hdf5, group_name=None)
+        self.status.finished = True
+
     def _check_if_input_should_be_written(self):
         return False

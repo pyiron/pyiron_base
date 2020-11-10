@@ -10,10 +10,8 @@ class ToyJob(PythonTemplateJob):
         super(ToyJob, self).__init__(project, job_name)
         self.input['input_energy'] = 100
 
-    def run_static(self):
+    def run_python_job(self):
         self.output["energy_tot"] = self.input["input_energy"]
-        self.to_hdf()
-        self.status.finished = True
 
 class TestTemplateJob(unittest.TestCase):
     @classmethod
