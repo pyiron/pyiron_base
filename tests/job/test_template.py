@@ -12,7 +12,8 @@ class ToyJob(PythonTemplateJob):
 
     def run_static(self):
         self.output["energy_tot"] = self.input["input_energy"]
-        self.save_output()
+        self.to_hdf()
+        self.status.finished = True
 
 class TestTemplateJob(unittest.TestCase):
     @classmethod
