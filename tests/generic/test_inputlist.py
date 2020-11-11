@@ -410,6 +410,30 @@ class TestInputList(unittest.TestCase):
         self.assertEqual(type(pl[0]), type(pl2[0]))
         self.assertEqual(type(pl[1]), type(pl2[1]))
 
+    def test_hdf_empty_group(self):
+        """
+        Writing a list without table_name or group_name should only work if the
+        HDF group is empty.
+        """
+        l = InputList([1,2,3])
+        with self.assertRaises(ValueError,
+                               msg="No exception when writing to full "
+                                   "hdf group."):
+            l.to_hdf(self.hdf)
+        h = self.hdf.create_group("empty_group")
+        l.to_hdf(h)
+        self.assertEqual(l, h.to_object())
+
+    def test_hdf_empty_list(self):
+        """
+        Writing and reading an empty list should work.
+        """
+        l = InputList(table_name="empty_list")
+        l.to_hdf(self.hdf)
+        l.from_hdf(self.hdf)
+        self.assertEqual(len(l), 0,
+                         "Empty list read from HDF not empty.")
+
 
     def test_groups_nodes(self):
         self.assertTrue(isinstance(self.pl.nodes(), Iterator),

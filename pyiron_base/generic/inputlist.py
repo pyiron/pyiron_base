@@ -576,6 +576,12 @@ class InputList(MutableMapping):
         group_name = group_name or self.table_name
         if group_name:
             hdf = hdf.create_group(group_name)
+        elif len(hdf.list_dirs()) > 0:
+            raise ValueError(
+                    "HDF group must be empty when neither table_name nor "
+                    "group_name are set."
+            )
+
 
         self._type_to_hdf(hdf)
         hdf["READ_ONLY"] = self.read_only
@@ -619,7 +625,8 @@ class InputList(MutableMapping):
         """
 
         group_name = group_name or self.table_name
-        hdf = hdf.open(group_name) if group_name else hdf
+        if group_name:
+            hdf = hdf.open(group_name)
 
         version = hdf.get("HDF_VERSION", "0.1.0")
 
