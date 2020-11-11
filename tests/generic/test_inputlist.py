@@ -161,6 +161,12 @@ class TestInputList(unittest.TestCase):
                          "append via index broken on empty list")
         self.assertEqual(pl[1], 2,
                          "append via index broken on non-empty list")
+        pl.append([])
+        self.assertTrue(isinstance(pl[-1], list),
+                        "append wraps sequences as InputList, but should not")
+        pl.append({})
+        self.assertTrue(isinstance(pl[-1], dict),
+                        "append wraps mappings as InputList, but should not")
 
     def test_update(self):
         pl = InputList()

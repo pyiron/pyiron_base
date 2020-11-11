@@ -437,7 +437,7 @@ class InputList(MutableMapping):
         Args:
             val: new element
         """
-        self._store.append(self._wrap_val(val))
+        self._store.append(val)
 
     def extend(self, vals):
         """
