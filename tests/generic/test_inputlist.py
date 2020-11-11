@@ -440,6 +440,23 @@ class TestInputList(unittest.TestCase):
         self.assertEqual(len(l), 0,
                          "Empty list read from HDF not empty.")
 
+    def test_hdf_no_wrap(self):
+        """
+        Nested mappings should not be wrapped as InputLists after reading.
+        """
+        l = InputList(table_name="mappings")
+        l.append({"foo": "bar"})
+        l.append([1,2,3])
+        l.to_hdf(self.hdf)
+        m = l.copy()
+        m.from_hdf(self.hdf, group_name="mappings")
+        self.assertEqual(l, m,
+                         "List with nested mappings not restored from HDF.")
+        self.assertTrue(isinstance(m[0], dict),
+                         "dicts wrapped after reading from HDF.")
+        self.assertTrue(isinstance(m[1], list),
+                         "lists wrapped after reading from HDF.")
+
 
     def test_groups_nodes(self):
         self.assertTrue(isinstance(self.pl.nodes(), Iterator),
