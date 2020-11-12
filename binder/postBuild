@@ -6,6 +6,6 @@ if [ -d "notebooks" ]; then
     mv notebooks/* .
 fi
 if [ -d "${HOME}/pyiron_base" ]; then
-    rm -r ${HOME}/binder ${HOME}/.ci_support ${HOME}/pyiron_base ${HOME}/tests ${HOME}/notebooks
-    rm ${HOME}/.travis.yml ${HOME}/azure-pipelines.yml ${HOME}/appveyor.yml ${HOME}/LICENSE ${HOME}/MANIFEST.in ${HOME}/setup.cfg ${HOME}/setup.py ${HOME}/versioneer.py ${HOME}/CONTRIBUTING.rst ${HOME}/README.rst ${HOME}/CODE_OF_CONDUCT.md
+    rm -r ${HOME}/binder ${HOME}/.ci_support ${HOME}/.github ${HOME}/pyiron_base ${HOME}/tests ${HOME}/notebooks
+    rm ${HOME}/LICENSE ${HOME}/MANIFEST.in ${HOME}/setup.cfg ${HOME}/setup.py ${HOME}/versioneer.py ${HOME}/CONTRIBUTING.rst ${HOME}/README.rst ${HOME}/CODE_OF_CONDUCT.md
 fi
