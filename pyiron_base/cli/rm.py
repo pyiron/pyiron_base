@@ -5,7 +5,7 @@ Remove jobs from pyiron project or whole project.
 """
 
 import os
-import pyiron
+from pyiron_base import Project
 
 __author__ = "Marvin Poul"
 __copyright__ = (
@@ -34,7 +34,7 @@ def register(parser):
 
 def main(args):
 
-    pr = pyiron.Project(args.project)
+    pr = Project(args.project)
     if args.jobs_only:
         pr.remove_jobs_silently(recursive = args.recursive)
     else:
