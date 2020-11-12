@@ -1,16 +1,15 @@
 # coding: utf-8
 # Copyright (c) Max-Planck-Institut für Eisenforschung GmbH - Computational Materials Design (CM) Department
 # Distributed under the terms of "New BSD License", see the LICENSE file.
+"""
+Server object class which is connected to each job containing the technical details how the job is executed.
+"""
 
 from collections import OrderedDict
 from pyiron_base.settings.generic import Settings
 from pyiron_base.generic.template import PyironObject
 from pyiron_base.server.runmode import Runmode
 import socket
-
-"""
-Server object class which is connected to each job containing the technical details how the job is executed.
-"""
 
 __author__ = "Jan Janssen"
 __copyright__ = (

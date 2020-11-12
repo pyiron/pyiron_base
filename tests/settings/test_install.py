@@ -4,7 +4,6 @@
 
 import os
 import shutil
-import subprocess
 from pyiron_base.settings.install import install_pyiron
 import unittest
 

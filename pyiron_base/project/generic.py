@@ -1,6 +1,9 @@
 # coding: utf-8
 # Copyright (c) Max-Planck-Institut für Eisenforschung GmbH - Computational Materials Design (CM) Department
 # Distributed under the terms of "New BSD License", see the LICENSE file.
+"""
+The project object is the central import point of pyiron - all other objects can be created from this one
+"""
 
 import os
 import posixpath
@@ -40,10 +43,6 @@ from pyiron_base.server.queuestatus import (
     queue_check_job_is_waiting_or_running,
 )
 from pyiron_base.job.external import Notebook
-
-"""
-The project object is the central import point of pyiron - all other objects can be created from this one
-"""
 
 __author__ = "Joerg Neugebauer, Jan Janssen"
 __copyright__ = (

@@ -1,16 +1,15 @@
 # coding: utf-8
 # Copyright (c) Max-Planck-Institut für Eisenforschung GmbH - Computational Materials Design (CM) Department
 # Distributed under the terms of "New BSD License", see the LICENSE file.
+"""
+The ListMaster behaves like a list, just for job objects.
+"""
 
 from pyiron_base.generic.parameters import GenericParameters
 from pyiron_base.job.core import JobCore
 from pyiron_base.job.generic import GenericJob
 from pyiron_base.master.generic import GenericMaster
 from pyiron_base.master.submissionstatus import SubmissionStatus
-
-"""
-The ListMaster behaves like a list, just for job objects.
-"""
 
 __author__ = "Jan Janssen"
 __copyright__ = (

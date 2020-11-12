@@ -1,7 +1,9 @@
 # coding: utf-8
 # Copyright (c) Max-Planck-Institut für Eisenforschung GmbH - Computational Materials Design (CM) Department
 # Distributed under the terms of "New BSD License", see the LICENSE file.
-
+"""
+Generic Job class extends the JobCore class with all the functionality to run the job object.
+"""
 
 # import copy
 import signal
@@ -23,10 +25,6 @@ from pyiron_base.database.filetable import FileTable
 import subprocess
 import shutil
 import warnings
-
-"""
-Generic Job class extends the JobCore class with all the functionality to run the job object.
-"""
 
 __author__ = "Joerg Neugebauer, Jan Janssen"
 __copyright__ = (
@@ -1374,8 +1372,8 @@ class GenericJob(JobCore):
         if _manually_print:
             print(
                 "You have selected to start the job manually. "
-                + "To run it, go into the working directory {} and "
-                + "call 'python run_job.py' ".format(
+                "To run it, go into the working directory {} and "
+                "call 'python run_job.py' ".format(
                     posixpath.abspath(self.project_hdf5.working_directory)
                 )
             )

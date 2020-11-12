@@ -1,15 +1,14 @@
 # coding: utf-8
 # Copyright (c) Max-Planck-Institut für Eisenforschung GmbH - Computational Materials Design (CM) Department
 # Distributed under the terms of "New BSD License", see the LICENSE file.
+"""
+The Jobtable module provides a set of top level functions to interact with the database.
+"""
 
 import pandas
 import numpy as np
 from pyiron_base.settings.generic import Settings
 from pyiron_base.database.filetable import FileTable
-
-"""
-The Jobtable module provides a set of top level functions to interact with the database.
-"""
 
 __author__ = "Jan Janssen"
 __copyright__ = (
