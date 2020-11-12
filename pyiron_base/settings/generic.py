@@ -2,15 +2,11 @@
 # Copyright (c) Max-Planck-Institut für Eisenforschung GmbH - Computational Materials Design (CM) Department
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
-from builtins import input
 import os
 import importlib
-import sys
 from configparser import ConfigParser
-from pathlib2 import Path
 from pyiron_base.settings.logger import setup_logger
 from pyiron_base.database.generic import DatabaseAccess
-from pyiron_base.settings.install import install_pyiron
 
 """
 The settings file provides the attributes of the configuration as properties.

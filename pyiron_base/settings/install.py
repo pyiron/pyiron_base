@@ -7,7 +7,6 @@ import tarfile
 from shutil import copytree, rmtree
 import tempfile
 import stat
-import sys
 import urllib.request as urllib2
 
 __author__ = "Jan Janssen"

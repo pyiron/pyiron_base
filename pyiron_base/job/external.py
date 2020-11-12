@@ -6,7 +6,6 @@ import json
 from pathlib2 import Path
 import warnings
 from pyiron_base.generic.hdfio import FileHDFio
-from pyiron_base.generic.parameters import GenericParameters
 
 
 """
