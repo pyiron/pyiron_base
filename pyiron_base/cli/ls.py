@@ -9,8 +9,8 @@ import datetime
 import re
 import sys
 import pandas as pd
-import pyiron
 import pyiron_base.job.jobstatus
+from pyiron_base import Project
 
 __author__ = "Marvin Poul"
 __copyright__ = (
@@ -122,7 +122,7 @@ def main(args):
                 file = sys.stderr)
             sys.exit(1)
 
-    table = pyiron.Project(args.project).job_table(
+    table = Project(args.project).job_table(
         full_table = True, recursive = args.recursive,
         columns = args.columns, all_columns = args.all,
         element_lst = args.elements,
