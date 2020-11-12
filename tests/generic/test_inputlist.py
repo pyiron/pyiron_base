@@ -303,9 +303,7 @@ class TestInputList(unittest.TestCase):
 
 
     def test_to_hdf_type(self):
-        """
-        Should write correct type information.
-        """
+        """Should write correct type information."""
         self.pl.to_hdf(hdf=self.hdf)
         self.assertEqual(self.hdf["input/NAME"],
                          "InputList")
@@ -315,10 +313,7 @@ class TestInputList(unittest.TestCase):
                          "<class 'pyiron_base.generic.inputlist.InputList'>")
 
     def test_to_hdf_items(self):
-        """
-        Should write all sublists to HDF groups and simple items to HDF
-        datasets.
-        """
+        """Should write all sublists to HDF groups and simple items to HDF datasets."""
         self.pl.to_hdf(hdf=self.hdf)
         for i, (k, v) in enumerate(self.pl.items()):
             k = "{}__index_{}".format(k if isinstance(k, str) else "", i)
@@ -330,17 +325,13 @@ class TestInputList(unittest.TestCase):
                                 "Item '{}' not a dataset in hdf!".format(k))
 
     def test_to_hdf_name(self):
-        """
-        Should raise error if clashing names are given.
-        """
+        """Should raise error if clashing names are given."""
         with self.assertRaises(ValueError,
                 msg="Cannot have names clashing with index mangling."):
             InputList({'__index_0': 42}).to_hdf(hdf=self.hdf)
 
     def test_to_hdf_group(self):
-        """
-        Should be possible to give a custom group name.
-        """
+        """Should be possible to give a custom group name."""
         self.pl.to_hdf(hdf=self.hdf, group_name = "test_group")
         self.assertEqual(self.hdf["test_group/NAME"],
                          "InputList")
@@ -350,9 +341,7 @@ class TestInputList(unittest.TestCase):
                          "InputList")
 
     def test_to_hdf_readonly(self):
-        """
-        Read-only property should be stored.
-        """
+        """Read-only property should be stored."""
         self.pl.to_hdf(hdf=self.hdf, group_name = "read_only_f")
         self.assertTrue("READ_ONLY" in self.hdf["read_only_f"].list_nodes(),
                         "read-only parameter not saved in HDF")
@@ -368,28 +357,21 @@ class TestInputList(unittest.TestCase):
                          "read-only parameter not correctly written to HDF")
 
     def test_from_hdf(self):
-        """
-        Reading from HDF should give back the same list as written.
-        """
+        """Reading from HDF should give back the same list as written."""
         self.pl.to_hdf(hdf=self.hdf)
         l = InputList(table_name = "input")
         l.from_hdf(hdf=self.hdf)
         self.assertEqual(self.pl, l)
 
     def test_from_hdf_group(self):
-        """
-        Reading from HDF should give back the same list as written even with
-        custom group name.
-        """
+        """Reading from HDF should give back the same list as written even with custom group name."""
         self.pl.to_hdf(hdf=self.hdf, group_name = "test_group")
         l = InputList(table_name = "input")
         l.from_hdf(hdf=self.hdf, group_name = "test_group")
         self.assertEqual(self.pl, l)
 
     def test_from_hdf_readonly(self):
-        """
-        Reading from HDF should restore the read-only property.
-        """
+        """Reading from HDF should restore the read-only property."""
         self.pl.to_hdf(hdf=self.hdf, group_name = "read_only_from")
         pl = InputList()
         pl.from_hdf(self.hdf, group_name = "read_only_from")
@@ -402,10 +384,7 @@ class TestInputList(unittest.TestCase):
                          "read-only parameter not correctly read from HDF")
 
     def test_hdf_complex_members(self):
-        """
-        Values that implement to_hdf/from_hdf, should write themselves to the
-        HDF file correctly.
-        """
+        """Values that implement to_hdf/from_hdf, should write themselves to the HDF file correctly."""
         pl = InputList(table_name="complex")
         pl.append(self.pr.create_job(self.pr.job_type.ScriptJob, "dummy1"))
         pl.append(self.pr.create_job(self.pr.job_type.ScriptJob, "dummy2"))
@@ -417,10 +396,7 @@ class TestInputList(unittest.TestCase):
         self.assertEqual(type(pl[1]), type(pl2[1]))
 
     def test_hdf_empty_group(self):
-        """
-        Writing a list without table_name or group_name should only work if the
-        HDF group is empty.
-        """
+        """Writing a list without table_name or group_name should only work if the HDF group is empty."""
         l = InputList([1,2,3])
         with self.assertRaises(ValueError,
                                msg="No exception when writing to full "
@@ -431,9 +407,7 @@ class TestInputList(unittest.TestCase):
         self.assertEqual(l, h.to_object())
 
     def test_hdf_empty_list(self):
-        """
-        Writing and reading an empty list should work.
-        """
+        """Writing and reading an empty list should work."""
         l = InputList(table_name="empty_list")
         l.to_hdf(self.hdf)
         l.from_hdf(self.hdf)
@@ -441,9 +415,7 @@ class TestInputList(unittest.TestCase):
                          "Empty list read from HDF not empty.")
 
     def test_hdf_no_wrap(self):
-        """
-        Nested mappings should not be wrapped as InputLists after reading.
-        """
+        """Nested mappings should not be wrapped as InputLists after reading."""
         l = InputList(table_name="mappings")
         l.append({"foo": "bar"})
         l.append([1,2,3])
