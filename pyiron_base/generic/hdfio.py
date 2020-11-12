@@ -1,7 +1,9 @@
 # coding: utf-8
 # Copyright (c) Max-Planck-Institut für Eisenforschung GmbH - Computational Materials Design (CM) Department
 # Distributed under the terms of "New BSD License", see the LICENSE file.
-
+"""
+Classes to map the Python objects to HDF5 data structures
+"""
 
 import h5py
 import os
@@ -12,10 +14,6 @@ import h5io
 import numpy as np
 from tables.exceptions import NoSuchNodeError, HDF5ExtError
 import sys
-
-"""
-Classes to map the Python objects to HDF5 data structures
-"""
 
 __author__ = "Joerg Neugebauer, Jan Janssen"
 __copyright__ = (

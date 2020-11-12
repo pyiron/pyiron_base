@@ -1,6 +1,9 @@
 # coding: utf-8
 # Copyright (c) Max-Planck-Institut für Eisenforschung GmbH - Computational Materials Design (CM) Department
 # Distributed under the terms of "New BSD License", see the LICENSE file.
+"""
+GenericParameters class defines the typical input file with a key value structure plus an additional column for comments.
+"""
 
 from collections import OrderedDict
 import numpy as np
@@ -11,10 +14,6 @@ import warnings
 from ast import literal_eval
 from pyiron_base.settings.generic import Settings
 from pyiron_base.generic.template import PyironObject
-
-"""
-GenericParameters class defines the typical input file with a key value structure plus an additional column for comments.
-"""
 
 __author__ = "Joerg Neugebauer"
 __copyright__ = (

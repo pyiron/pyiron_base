@@ -1,6 +1,9 @@
 # coding: utf-8
 # Copyright (c) Max-Planck-Institut für Eisenforschung GmbH - Computational Materials Design (CM) Department
 # Distributed under the terms of "New BSD License", see the LICENSE file.
+"""
+The JobCore the most fundamental pyiron job class.
+"""
 
 import copy
 import os
@@ -13,10 +16,6 @@ from pyiron_base.generic.template import PyironObject
 from tables import NoSuchNodeError
 import tarfile
 import shutil
-
-"""
-The JobCore the most fundamental pyiron job class.
-"""
 
 __author__ = "Jan Janssen"
 __copyright__ = (

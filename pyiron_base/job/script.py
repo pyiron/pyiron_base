@@ -1,17 +1,15 @@
 # coding: utf-8
 # Copyright (c) Max-Planck-Institut für Eisenforschung GmbH - Computational Materials Design (CM) Department
 # Distributed under the terms of "New BSD License", see the LICENSE file.
+"""
+Jobclass to execute python scripts and jupyter notebooks
+"""
 
 import os
 import shutil
 from pyiron_base.job.generic import GenericJob
 from pyiron_base.generic.parameters import GenericParameters
 from pyiron_base.generic.inputlist import InputList
-
-
-"""
-Jobclass to execute python scripts and jupyter notebooks
-"""
 
 __author__ = "Jan Janssen"
 __copyright__ = (

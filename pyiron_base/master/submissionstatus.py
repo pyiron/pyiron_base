@@ -1,13 +1,12 @@
 # coding: utf-8
 # Copyright (c) Max-Planck-Institut für Eisenforschung GmbH - Computational Materials Design (CM) Department
 # Distributed under the terms of "New BSD License", see the LICENSE file.
-
-from pyiron_base.database.generic import DatabaseAccess
-from pyiron_base.database.filetable import FileTable
-
 """
 The SubmissionStatus class belongs to the GenericJob object. It is presently used only for the parallel master class.
 """
+
+from pyiron_base.database.generic import DatabaseAccess
+from pyiron_base.database.filetable import FileTable
 
 __author__ = "Joerg Neugebauer, Jan Janssen"
 __copyright__ = (

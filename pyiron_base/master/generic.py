@@ -1,15 +1,14 @@
 # coding: utf-8
 # Copyright (c) Max-Planck-Institut für Eisenforschung GmbH - Computational Materials Design (CM) Department
 # Distributed under the terms of "New BSD License", see the LICENSE file.
+"""
+The GenericMaster is the template class for all meta jobs
+"""
 
 import inspect
 import textwrap
 from pyiron_base.job.generic import GenericJob
 from pyiron_base.job.jobstatus import job_status_finished_lst
-
-"""
-The GenericMaster is the template class for all meta jobs
-"""
 
 __author__ = "Jan Janssen"
 __copyright__ = (

@@ -1,16 +1,14 @@
 # coding: utf-8
 # Copyright (c) Max-Planck-Institut für Eisenforschung GmbH - Computational Materials Design (CM) Department
 # Distributed under the terms of "New BSD License", see the LICENSE file.
+"""
+Load input parameters for jupyter notebooks from external HDF5 or JSON file
+"""
 
 import json
 from pathlib2 import Path
 import warnings
 from pyiron_base.generic.hdfio import FileHDFio
-
-
-"""
-Load input parameters for jupyter notebooks from external HDF5 or JSON file
-"""
 
 __author__ = "Osamu Waseda"
 __copyright__ = (

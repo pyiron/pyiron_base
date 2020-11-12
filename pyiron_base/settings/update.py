@@ -1,12 +1,11 @@
 # coding: utf-8
 # Copyright (c) Max-Planck-Institut für Eisenforschung GmbH - Computational Materials Design (CM) Department
 # Distributed under the terms of "New BSD License", see the LICENSE file.
-
-from pyiron_base.settings.generic import Settings
-
 """
 Functions to update existing pyiron installations - mainly modify the database columns. 
 """
+
+from pyiron_base.settings.generic import Settings
 
 __author__ = "Joerg Neugebauer, Jan Janssen"
 __copyright__ = (

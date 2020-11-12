@@ -1,16 +1,14 @@
 # coding: utf-8
 # Copyright (c) Max-Planck-Institut für Eisenforschung GmbH - Computational Materials Design (CM) Department
 # Distributed under the terms of "New BSD License", see the LICENSE file.
-
+"""
+Classes for representing the file system path in pyiron
+"""
 
 from copy import copy
 import os
 import posixpath
 from pyiron_base.settings.generic import Settings
-
-"""
-Classes for representing the file system path in pyiron
-"""
 
 __author__ = "Jan Janssen, Joerg Neugebauer"
 __copyright__ = (

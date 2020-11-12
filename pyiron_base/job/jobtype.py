@@ -1,16 +1,15 @@
 # coding: utf-8
 # Copyright (c) Max-Planck-Institut für Eisenforschung GmbH - Computational Materials Design (CM) Department
 # Distributed under the terms of "New BSD License", see the LICENSE file.
+"""
+Jobtype class to create GenericJob type objects
+"""
 
 import importlib
 import inspect
 import os
 from pyiron_base.generic.util import Singleton
 from pyiron_base.job.jobstatus import job_status_finished_lst
-
-"""
-Jobtype class to create GenericJob type objects
-"""
 
 __author__ = "Joerg Neugebauer, Jan Janssen"
 __copyright__ = (

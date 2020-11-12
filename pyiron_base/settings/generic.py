@@ -1,16 +1,15 @@
 # coding: utf-8
 # Copyright (c) Max-Planck-Institut für Eisenforschung GmbH - Computational Materials Design (CM) Department
 # Distributed under the terms of "New BSD License", see the LICENSE file.
+"""
+The settings file provides the attributes of the configuration as properties.
+"""
 
 import os
 import importlib
 from configparser import ConfigParser
 from pyiron_base.settings.logger import setup_logger
 from pyiron_base.database.generic import DatabaseAccess
-
-"""
-The settings file provides the attributes of the configuration as properties.
-"""
 
 __author__ = "Jan Janssen"
 __copyright__ = (

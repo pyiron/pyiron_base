@@ -1,6 +1,9 @@
 # coding: utf-8
 # Copyright (c) Max-Planck-Institut für Eisenforschung GmbH - Computational Materials Design (CM) Department
 # Distributed under the terms of "New BSD License", see the LICENSE file.
+"""
+The job wrapper is called from the run_job.py script, it restores the job from hdf5 and executes it.
+"""
 
 import os
 import logging
@@ -8,10 +11,6 @@ from pyiron_base.project.generic import Project
 from pyiron_base.settings.generic import Settings
 from pyiron_base.database.filetable import get_hamilton_from_file, get_hamilton_version_from_file, \
     get_job_status_from_file
-
-"""
-The job wrapper is called from the run_job.py script, it restores the job from hdf5 and executes it.
-"""
 
 __author__ = "Joerg Neugebauer"
 __copyright__ = (

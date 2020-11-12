@@ -1,6 +1,9 @@
 # coding: utf-8
 # Copyright (c) Max-Planck-Institut für Eisenforschung GmbH - Computational Materials Design (CM) Department
 # Distributed under the terms of "New BSD License", see the LICENSE file.
+"""
+The parallel master class is a metajob consisting of a list of jobs which are executed in parallel.
+"""
 
 from collections import OrderedDict
 from datetime import datetime
@@ -15,10 +18,6 @@ from pyiron_base.generic.parameters import GenericParameters
 from pyiron_base.job.jobstatus import JobStatus
 from pyiron_base.settings.generic import Settings
 from pyiron_base.job.wrapper import job_wrapper_function
-
-"""
-The parallel master class is a metajob consisting of a list of jobs which are executed in parallel.
-"""
 
 __author__ = "Joerg Neugebauer, Jan Janssen"
 __copyright__ = (
