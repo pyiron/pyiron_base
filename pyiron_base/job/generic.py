@@ -1374,8 +1374,8 @@ class GenericJob(JobCore):
         if _manually_print:
             print(
                 "You have selected to start the job manually. "
-                + "To run it, go into the working directory {} and "
-                + "call 'python run_job.py' ".format(
+                "To run it, go into the working directory {} and "
+                "call 'python run_job.py' ".format(
                     posixpath.abspath(self.project_hdf5.working_directory)
                 )
             )
