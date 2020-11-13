@@ -2,7 +2,7 @@ import os
 import pandas 
 import numpy as np
 from shutil import copytree
-from pyiron_base import Project
+#from pyiron_base import Project
 
 def getdir(path): 
     path_base_name = os.path.basename(path)
@@ -21,13 +21,14 @@ def update_id_lst(record_lst, job_id_lst):
             masterid_lst.append(job_id_lst[masterid])
     return masterid_lst
 
-def import_jobs(directory_to_import_to, archive_directory, df):
+def import_jobs(project_instance, directory_to_import_to, archive_directory, df):
     # Copy HDF5 files
     archive_name = getdir(path=archive_directory)
     copytree(archive_directory, directory_to_import_to) 
     
     # Update Database
-    pr_import = Project(directory_to_import_to)
+    pr_import = project_instance.open(directory_to_import_to)
+    #pr_import = Project(directory_to_import_to)
     df["project"] = [os.path.join(pr_import.project_path, os.path.relpath(p, archive_name)) for p in df["project"].values]
     df['projectpath'] = len(df) * [pr_import.root_path]
     

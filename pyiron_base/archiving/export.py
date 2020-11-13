@@ -2,7 +2,7 @@ import os
 import numpy as np
 from shutil import copyfile
 from pyfileindex import PyFileIndex 
-from pyiron_base import Project
+#from pyiron_base import Project
 
 def new_job_id(job_id, job_translate_dict):
     if isinstance(job_id, float) and not np.isnan(job_id):
@@ -19,8 +19,9 @@ def getdir(path):
     else: 
         return path_base_name
 
-def update_project(directory_to_transfer, archive_directory, df):
-    pr_transfer = Project(directory_to_transfer)
+def update_project(project_instance, directory_to_transfer, archive_directory, df):
+    pr_transfer = project_instance.open(directory_to_transfer)
+    #pr_transfer = Project(directory_to_transfer)
     dir_name_transfer = getdir(path=directory_to_transfer)
     dir_name_archive = getdir(path=archive_directory)
     path_rel_lst = [os.path.relpath(p, pr_transfer.project_path) for p in df["project"].values]
