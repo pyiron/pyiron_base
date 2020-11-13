@@ -49,8 +49,9 @@ def copy_files_to_archive(directory_to_transfer, archive_directory):
     for f in df_files.path.values:
         copyfile(f, os.path.join(archive_directory, dir_name_transfer, os.path.relpath(f, directory_to_transfer)))
 
-def export_database(directory_to_transfer, archive_directory):
-    pr = Project(directory_to_transfer)
+def export_database(project_instance,directory_to_transfer, archive_directory):
+    #pr = Project(directory_to_transfer)
+    pr = project_instance.open(directory_to_transfer)
     df = pr.job_table()
     job_ids_sorted = sorted(df.id.values)
     new_job_ids = list(range(len(job_ids_sorted)))
@@ -58,7 +59,7 @@ def export_database(directory_to_transfer, archive_directory):
     df['id'] = [new_job_id(job_id=job_id, job_translate_dict=job_translate_dict) for job_id in df.id]
     df['masterid'] = [new_job_id(job_id=job_id, job_translate_dict=job_translate_dict) for job_id in df.masterid]
     df['parentid'] = [new_job_id(job_id=job_id, job_translate_dict=job_translate_dict) for job_id in df.parentid]
-    df['project'] = update_project(directory_to_transfer=directory_to_transfer, archive_directory=archive_directory, df=df)
+    df['project'] = update_project(project_instance,directory_to_transfer=directory_to_transfer, archive_directory=archive_directory, df=df)
     del df["projectpath"]
     return df
 
