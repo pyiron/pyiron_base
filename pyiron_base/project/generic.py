@@ -1465,8 +1465,8 @@ class Project(ProjectPath):
         export_archive.copy_files_to_archive(self.project_path, destination_path)
         df = export_archive.export_database(self,self.project_path,destination_path)
         df.to_csv(csv_file_name)
-        
+
     def import_from_archive(self,origin_path,csv_file_name='export.csv'):
-        csv_path = origin_path + csv_file_name
+        csv_path = csv_file_name
         df = pandas.read_csv(csv_path, index_col=0)
         import_archive.import_jobs(self,self.project_path,archive_directory=origin_path, df=df)
