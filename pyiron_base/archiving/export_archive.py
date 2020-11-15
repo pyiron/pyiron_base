@@ -20,8 +20,8 @@ def getdir(path):
         return path_base_name
 
 def update_project(project_instance, directory_to_transfer, archive_directory, df):
-    pr_transfer = project_instance.open(directory_to_transfer)
-    #pr_transfer = Project(directory_to_transfer)
+    directory_to_transfer = directory_to_transfer.split("/")[1]+'/'
+    pr_transfer = project_instance.open('.')
     dir_name_transfer = getdir(path=directory_to_transfer)
     dir_name_archive = getdir(path=archive_directory)
     path_rel_lst = [os.path.relpath(p, pr_transfer.project_path) for p in df["project"].values]
@@ -36,11 +36,13 @@ def generate_list_of_directories(df_files, directory_to_transfer, archive_direct
     return [os.path.join(archive_directory, dir_name_transfer, p) if p != "." else os.path.join(archive_directory, dir_name_transfer) for p in path_rel_lst]
 
 def copy_files_to_archive(directory_to_transfer, archive_directory):
+    directory_to_transfer = directory_to_transfer.split("/")[1]+'/'
     pfi = PyFileIndex(path=directory_to_transfer, filter_function=filter_function)
     df_files = pfi.dataframe[~pfi.dataframe.is_directory]
     
     # Create directories 
     dir_lst = generate_list_of_directories(df_files=df_files, directory_to_transfer=directory_to_transfer, archive_directory=archive_directory)
+    print(dir_lst)
     for d in dir_lst: 
         os.makedirs(d, exist_ok=True)
     
@@ -50,8 +52,8 @@ def copy_files_to_archive(directory_to_transfer, archive_directory):
         copyfile(f, os.path.join(archive_directory, dir_name_transfer, os.path.relpath(f, directory_to_transfer)))
 
 def export_database(project_instance,directory_to_transfer, archive_directory):
-    #pr = Project(directory_to_transfer)
-    pr = project_instance.open(directory_to_transfer)
+    directory_to_transfer = directory_to_transfer.split("/")[1]+'/'
+    pr = project_instance.open('.')
     df = pr.job_table()
     job_ids_sorted = sorted(df.id.values)
     new_job_ids = list(range(len(job_ids_sorted)))
