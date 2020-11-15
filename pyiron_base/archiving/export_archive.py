@@ -42,7 +42,6 @@ def copy_files_to_archive(directory_to_transfer, archive_directory):
     
     # Create directories 
     dir_lst = generate_list_of_directories(df_files=df_files, directory_to_transfer=directory_to_transfer, archive_directory=archive_directory)
-    print(dir_lst)
     for d in dir_lst: 
         os.makedirs(d, exist_ok=True)
     

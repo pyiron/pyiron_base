@@ -34,7 +34,6 @@ def import_jobs(project_instance, directory_to_import_to, archive_directory, df)
     pr_import = project_instance.open('.')
     df["project"] = [os.path.join(pr_import.project_path, os.path.relpath(p, archive_name)) for p in df["project"].values]
     df['projectpath'] = len(df) * [pr_import.root_path]
-    print(df)
     # Add jobs to database 
     job_id_lst = []
     for entry in df.to_dict(orient="records"):
