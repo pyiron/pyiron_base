@@ -24,14 +24,17 @@ def update_id_lst(record_lst, job_id_lst):
 def import_jobs(project_instance, directory_to_import_to, archive_directory, df):
     # Copy HDF5 files
     archive_name = getdir(path=archive_directory)
-    copytree(archive_directory, directory_to_import_to) 
-    
+    cwd = os.getcwd()
+    directory_to_import_to = directory_to_import_to.split("/")[1]
+    src = cwd+"/"+archive_directory
+    des = cwd+"/"+directory_to_import_to
+    copytree(src, des, dirs_exist_ok=True)
+
     # Update Database
-    pr_import = project_instance.open(directory_to_import_to)
-    #pr_import = Project(directory_to_import_to)
+    pr_import = project_instance.open('.')
     df["project"] = [os.path.join(pr_import.project_path, os.path.relpath(p, archive_name)) for p in df["project"].values]
     df['projectpath'] = len(df) * [pr_import.root_path]
-    
+    print(df)
     # Add jobs to database 
     job_id_lst = []
     for entry in df.to_dict(orient="records"):
