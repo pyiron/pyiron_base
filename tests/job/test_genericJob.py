@@ -106,6 +106,27 @@ class TestGenericJob(unittest.TestCase):
         pr_a.remove(enable=True)
         pr_b.remove(enable=True)
 
+    def test_copy_to(self):
+        job = self.project.create_job("ScriptJob", "template")
+        job.save()
+        job_copy = job.copy_to(new_job_name="template_copy", input_only=False, new_database_entry=False)
+        job_copy.save()
+        job_copy.status.finished = True
+        df = self.project.job_table()
+        self.assertEqual("template", sorted(df.job.values)[0])
+        self.assertEqual("template_copy", sorted(df.job.values)[1])
+        # Load job if copied with same name
+        job_copy_again = job.copy_to(new_job_name="template_copy", input_only=False, new_database_entry=False)
+        self.assertEqual(job_copy["input/generic_dict"], job_copy_again["input/generic_dict"])
+        self.assertTrue(job_copy_again.status.finished)
+        # Completely new job name
+        job_new = job.copy_to(new_job_name="template_new", input_only=False, new_database_entry=False)
+        self.assertTrue(job_new.status.initialized)
+        # Check if new database entry implemented
+        _ = job.copy_to(new_job_name="template_last", input_only=False, new_database_entry=True)
+        df = self.project.job_table()
+        self.assertEqual(len(df[df.job == "template"]), 2)
+
     # def test_sub_job_name(self):
     #     pass
 
