@@ -1461,12 +1461,12 @@ class Project(ProjectPath):
                 for entry in db_entry_in_old_format:
                     self.db.item_update({"project": self.project_path}, entry["id"])
 
-    def export_to_archive(self,destination_path,csv_file_name='export.csv'):
-        export_archive.copy_files_to_archive(self.project_path, destination_path)
+    def export_to_archive(self,destination_path,csv_file_name='export.csv', compress=True):
+        export_archive.copy_files_to_archive(self.project_path, destination_path,compressed=compress)
         df = export_archive.export_database(self,self.project_path,destination_path)
         df.to_csv(csv_file_name)
 
-    def import_from_archive(self,origin_path,csv_file_name='export.csv'):
+    def import_from_archive(self,origin_path,csv_file_name='export.csv',compress=True):
         csv_path = csv_file_name
         df = pandas.read_csv(csv_path, index_col=0)
-        import_archive.import_jobs(self,self.project_path,archive_directory=origin_path, df=df)
+        import_archive.import_jobs(self,self.project_path,archive_directory=origin_path, df=df, compressed=compress)
