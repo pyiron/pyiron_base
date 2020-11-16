@@ -1,8 +1,9 @@
 # coding: utf-8
 # Copyright (c) Max-Planck-Institut für Eisenforschung GmbH - Computational Materials Design (CM) Department
 # Distributed under the terms of "New BSD License", see the LICENSE file.
-
-from __future__ import print_function
+"""
+Classes to map the Python objects to HDF5 data structures
+"""
 
 import h5py
 import os
@@ -13,10 +14,6 @@ import h5io
 import numpy as np
 from tables.exceptions import NoSuchNodeError, HDF5ExtError
 import sys
-
-"""
-Classes to map the Python objects to HDF5 data structures
-"""
 
 __author__ = "Joerg Neugebauer, Jan Janssen"
 __copyright__ = (
@@ -330,13 +327,15 @@ class FileHDFio(object):
                             del f_target["/tmp"]
         return destination
 
-    def create_group(self, name):
+    def create_group(self, name, track_order=False):
         """
         Create an HDF5 group - similar to a folder in the filesystem - the HDF5 groups allow the users to structure
         their data.
 
         Args:
             name (str): name of the HDF5 group
+            track_order (bool): if False this groups tracks its elements in
+                alphanumeric order, if True in insertion order
 
         Returns:
             FileHDFio: FileHDFio object pointing to the new group
@@ -344,7 +343,7 @@ class FileHDFio(object):
         full_name = posixpath.join(self.h5_path, name)
         with h5py.File(self.file_name, mode="a", libver="latest", swmr=True) as h:
             try:
-                h.create_group(full_name)
+                h.create_group(full_name, track_order=track_order)
             except ValueError:
                 pass
         h_new = self[name].copy()
@@ -446,17 +445,24 @@ class FileHDFio(object):
             df = pandas.DataFrame(val)
             return df
 
-    def get(self, key):
+    def get(self, key, default = None):
         """
         Internal wrapper function for __getitem__() - self[name]
 
         Args:
             key (str, slice): path to the data or key of the data object
+            default (object): default value to return if key doesn't exist
 
         Returns:
             dict, list, float, int: data or data object
         """
-        return self.__getitem__(key)
+        try:
+            return self.__getitem__(key)
+        except ValueError:
+            if default is not None:
+                return default
+            else:
+                raise
 
     def put(self, key, value):
         """

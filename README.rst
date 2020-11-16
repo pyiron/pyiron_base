@@ -9,8 +9,8 @@ pyiron
     :target: https://anaconda.org/conda-forge/pyiron_base/
     :alt: Release_Date
 
-.. image:: https://travis-ci.org/pyiron/pyiron_base.svg?branch=master
-    :target: https://travis-ci.org/pyiron/pyiron_base
+.. image:: https://github.com/pyiron/pyiron_base/workflows/Python%20package/badge.svg
+    :target: https://github.com/pyiron//pyiron_base/actions
     :alt: Build Status
 
 .. image:: https://anaconda.org/conda-forge/pyiron_base/badges/downloads.svg

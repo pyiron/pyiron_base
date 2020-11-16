@@ -1,14 +1,12 @@
 # coding: utf-8
 # Copyright (c) Max-Planck-Institut für Eisenforschung GmbH - Computational Materials Design (CM) Department
 # Distributed under the terms of "New BSD License", see the LICENSE file.
-
-import six
-from pyiron_base.database.generic import DatabaseAccess
-from pyiron_base.database.filetable import FileTable
-
 """
 The JobStatus class belongs to the GenericJob object.
 """
+
+from pyiron_base.database.generic import DatabaseAccess
+from pyiron_base.database.filetable import FileTable
 
 __author__ = "Jan Janssen"
 __copyright__ = (
@@ -171,7 +169,7 @@ class JobStatus(object):
                           refresh, busy, finished, warning]
         """
         self._reset()
-        if isinstance(status, six.string_types) and status in self._status_dict.keys():
+        if isinstance(status, str) and status in self._status_dict.keys():
             self._status_dict[status] = True
             self._status_write()
         else:

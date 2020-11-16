@@ -1,14 +1,13 @@
 # coding: utf-8
 # Copyright (c) Max-Planck-Institut für Eisenforschung GmbH - Computational Materials Design (CM) Department
 # Distributed under the terms of "New BSD License", see the LICENSE file.
+"""
+The Flexible master uses a list of functions to connect multiple jobs in a series.
+"""
 
 import inspect
 from pyiron_base.master.generic import GenericMaster
 from pyiron_base.job.jobstatus import job_status_finished_lst
-
-"""
-The Flexible master uses a list of functions to connect multiple jobs in a series.
-"""
 
 __author__ = "Jan Janssen, Liam Huber"
 __copyright__ = (

@@ -7,7 +7,6 @@ import tarfile
 from shutil import copytree, rmtree
 import tempfile
 import stat
-import sys
 import urllib.request as urllib2
 
 __author__ = "Jan Janssen"
@@ -25,7 +24,7 @@ __date__ = "Sep 1, 2017"
 def _download_resources(
     zip_file="resources.tar.gz",
     resource_directory="~/pyiron/resources",
-    giturl_for_zip_file="https://github.com/pyiron/pyiron-resources/releases/download/0.0.3/resources-0.0.3.tar.gz",
+    giturl_for_zip_file="https://github.com/pyiron/pyiron-resources/releases/download/0.0.5/resources-0.0.5.tar.gz",
     git_folder_name="resources",
 ):
     """
@@ -111,7 +110,7 @@ def install_dialog():
                 config_file_name="~/.pyiron",
                 zip_file="resources.tar.gz",
                 resource_directory="~/pyiron/resources",
-                giturl_for_zip_file="https://github.com/pyiron/pyiron-resources/releases/download/0.0.3/resources-0.0.3.tar.gz",
+                giturl_for_zip_file="https://github.com/pyiron/pyiron-resources/releases/download/0.0.5/resources-0.0.5.tar.gz",
                 git_folder_name="resources",
             )
         else:
@@ -125,7 +124,7 @@ def install_pyiron(
     zip_file="resources.tar.gz",
     project_path="~/pyiron/projects",
     resource_directory="~/pyiron/resources",
-    giturl_for_zip_file="https://github.com/pyiron/pyiron-resources/releases/download/0.0.3/resources-0.0.3.tar.gz",
+    giturl_for_zip_file="https://github.com/pyiron/pyiron-resources/releases/download/0.0.5/resources-0.0.5.tar.gz",
     git_folder_name="resources",
 ):
     """

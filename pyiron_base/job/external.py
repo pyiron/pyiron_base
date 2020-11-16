@@ -1,18 +1,14 @@
 # coding: utf-8
 # Copyright (c) Max-Planck-Institut für Eisenforschung GmbH - Computational Materials Design (CM) Department
 # Distributed under the terms of "New BSD License", see the LICENSE file.
+"""
+Load input parameters for jupyter notebooks from external HDF5 or JSON file
+"""
 
-from __future__ import print_function
 import json
 from pathlib2 import Path
 import warnings
 from pyiron_base.generic.hdfio import FileHDFio
-from pyiron_base.generic.parameters import GenericParameters
-
-
-"""
-Load input parameters for jupyter notebooks from external HDF5 or JSON file
-"""
 
 __author__ = "Osamu Waseda"
 __copyright__ = (
@@ -39,12 +35,7 @@ class Notebook(object):
         hdf_file = str(hdf_file) + ".h5"
         if Path(hdf_file).exists():
             hdf = FileHDFio(hdf_file)
-            custom_dict = GenericParameters()
-            for k, v in zip(
-                hdf[folder + "/input/custom_dict/data_dict"]["Parameter"],
-                hdf[folder + "/input/custom_dict/data_dict"]["Value"],
-            ):
-                custom_dict[k] = v
+            custom_dict = hdf[folder + '/input/custom_dict/data']
             custom_dict["project_dir"] = str(project_folder)
             return custom_dict
         elif Path("input.json").exists():

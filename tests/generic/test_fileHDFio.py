@@ -66,6 +66,12 @@ class TestFileHDFio(unittest.TestCase):
                 )
             )
         )
+        self.assertEqual(self.full_hdf5.get("doesnotexist", default=42), 42,
+                         "default value not returned when value doesn't exist.")
+        self.assertTrue(np.array_equal(
+                            self.full_hdf5.get("content/array", default=42),
+                            np.array([1, 2, 3, 4, 5, 6])
+                        ), "default value returned when value doesn't exist.")
 
     def test_file_name(self):
         self.assertEqual(

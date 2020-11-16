@@ -1,8 +1,9 @@
 # coding: utf-8
 # Copyright (c) Max-Planck-Institut für Eisenforschung GmbH - Computational Materials Design (CM) Department
 # Distributed under the terms of "New BSD License", see the LICENSE file.
-
-from __future__ import print_function
+"""
+Generic Job class extends the JobCore class with all the functionality to run the job object.
+"""
 
 # import copy
 import signal
@@ -24,10 +25,6 @@ from pyiron_base.database.filetable import FileTable
 import subprocess
 import shutil
 import warnings
-
-"""
-Generic Job class extends the JobCore class with all the functionality to run the job object.
-"""
 
 __author__ = "Joerg Neugebauer, Jan Janssen"
 __copyright__ = (
@@ -675,7 +672,7 @@ class GenericJob(JobCore):
                 self._logger.info("run repair " + str(self.job_id))
                 status = "initialized"
                 master_id, parent_id = self.master_id, self.parent_id
-                self.remove()
+                self.remove(_protect_childs=False)
                 self.reset_job_id()
                 self.master_id, self.parent_id = master_id, parent_id
             if repair and self.job_id and not self.status.finished:
@@ -836,6 +833,11 @@ class GenericJob(JobCore):
                 })
             _ = [self.project.db.add_item_dict(d) for d in db_dict_lst]
         self.status.string = self.project_hdf5["status"]
+        if self.master_id is not None:
+            self._reload_update_master(
+                project=self.project,
+                master_id=self.master_id
+            )
 
     def run_if_interactive(self):
         """
@@ -1145,7 +1147,7 @@ class GenericJob(JobCore):
         if hdf is not None:
             self._hdf5 = hdf
         if group_name is not None:
-            self._hdf5.open(group_name)
+            self._hdf5 = self._hdf5.open(group_name)
         self._executable_activate_mpi()
         self._type_to_hdf()
         self._hdf5["status"] = self.status.string
@@ -1370,8 +1372,8 @@ class GenericJob(JobCore):
         if _manually_print:
             print(
                 "You have selected to start the job manually. "
-                + "To run it, go into the working directory {} and "
-                + "call 'python run_job.py' ".format(
+                "To run it, go into the working directory {} and "
+                "call 'python run_job.py' ".format(
                     posixpath.abspath(self.project_hdf5.working_directory)
                 )
             )

@@ -1,4 +1,3 @@
-import sys
 from pyiron_base import Project, __version__
 pr = Project(
             "tests/static/backwards/V{}".format(__version__).replace(".", "_")

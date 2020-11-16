@@ -1,14 +1,12 @@
 # coding: utf-8
 # Copyright (c) Max-Planck-Institut für Eisenforschung GmbH - Computational Materials Design (CM) Department
 # Distributed under the terms of "New BSD License", see the LICENSE file.
-
-from __future__ import print_function
-import ast
-import numpy as np
-
 """
 General purpose output parser
 """
+
+import ast
+import numpy as np
 
 __author__ = "Joerg Neugebauer"
 __copyright__ = (

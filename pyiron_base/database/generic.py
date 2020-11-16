@@ -1,6 +1,9 @@
 # coding: utf-8
 # Copyright (c) Max-Planck-Institut für Eisenforschung GmbH - Computational Materials Design (CM) Department
 # Distributed under the terms of "New BSD License", see the LICENSE file.
+"""
+DatabaseAccess class deals with accessing the database
+"""
 
 import numpy as np
 import re
@@ -23,10 +26,6 @@ from sqlalchemy import (
 from sqlalchemy.pool import NullPool
 from sqlalchemy.sql import select
 from sqlalchemy.exc import OperationalError, DatabaseError
-
-"""
-DatabaseAccess class deals with accessing the database
-"""
 
 __author__ = "Murat Han Celik"
 __copyright__ = (

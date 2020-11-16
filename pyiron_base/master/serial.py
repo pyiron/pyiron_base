@@ -1,18 +1,16 @@
 # coding: utf-8
 # Copyright (c) Max-Planck-Institut für Eisenforschung GmbH - Computational Materials Design (CM) Department
 # Distributed under the terms of "New BSD License", see the LICENSE file.
+"""
+The serial master class is a metajob consisting of a dynamic list of jobs which are executed in serial mode.
+"""
 
-from __future__ import print_function
 from collections import OrderedDict
 import inspect
 import time
 import numpy as np
 from pyiron_base.master.generic import GenericMaster, get_function_from_string
 from pyiron_base.generic.parameters import GenericParameters
-
-"""
-The serial master class is a metajob consisting of a dynamic list of jobs which are executed in serial mode.
-"""
 
 __author__ = "Jan Janssen"
 __copyright__ = (

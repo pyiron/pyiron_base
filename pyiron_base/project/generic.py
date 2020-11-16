@@ -1,8 +1,10 @@
 # coding: utf-8
 # Copyright (c) Max-Planck-Institut für Eisenforschung GmbH - Computational Materials Design (CM) Department
 # Distributed under the terms of "New BSD License", see the LICENSE file.
+"""
+The project object is the central import point of pyiron - all other objects can be created from this one
+"""
 
-from __future__ import print_function
 import os
 import posixpath
 import shutil
@@ -41,10 +43,6 @@ from pyiron_base.server.queuestatus import (
     queue_check_job_is_waiting_or_running,
 )
 from pyiron_base.job.external import Notebook
-
-"""
-The project object is the central import point of pyiron - all other objects can be created from this one
-"""
 
 __author__ = "Joerg Neugebauer, Jan Janssen"
 __copyright__ = (
@@ -1147,10 +1145,10 @@ class Project(ProjectPath):
         Returns:
             str: Output from the queuing system as string - optimized for the Sun grid engine
         """
-        if isinstance(item, int):
-            self.remove_job(job_specifier=item)
+        if not self.view_mode:
+            return queue_delete_job(item)
         else:
-            item.remove()
+            raise EnvironmentError("copy_to: is not available in Viewermode !")
 
     @staticmethod
     def create_hdf(path, job_name):
@@ -1208,15 +1206,15 @@ class Project(ProjectPath):
         return inputdict
 
     @staticmethod
-    def list_publications(bib_format="dict"):
+    def list_publications(bib_format="pandas"):
         """
         List the publications used in this project.
 
         Args:
-            bib_format (str): ['dict', 'bibtex', 'apa']
+            bib_format (str): ['pandas', 'dict', 'bibtex', 'apa']
 
         Returns:
-            list: list of publications in Bibtex format.
+            pandas.DataFrame/ list: list of publications in Bibtex format.
         """
         return list_publications(bib_format=bib_format)
 
@@ -1440,21 +1438,6 @@ class Project(ProjectPath):
             for f in glob.glob(pattern):
                 s.logger.info("remove file {}".format(posixpath.basename(f)))
                 os.remove(f)
-        else:
-            raise EnvironmentError("copy_to: is not available in Viewermode !")
-
-    def _queue_delete_job(self, item):
-        """
-        Delete a job from the queuing system
-
-        Args:
-            item (int, GenericJob): Provide either the job_ID or the full hamiltonian
-
-        Returns:
-            str: Output from the queuing system as string - optimized for the Sun grid engine
-        """
-        if not self.view_mode:
-            return queue_delete_job(item)
         else:
             raise EnvironmentError("copy_to: is not available in Viewermode !")
 

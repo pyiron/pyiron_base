@@ -1,21 +1,15 @@
 # coding: utf-8
 # Copyright (c) Max-Planck-Institut für Eisenforschung GmbH - Computational Materials Design (CM) Department
 # Distributed under the terms of "New BSD License", see the LICENSE file.
-
-from builtins import input
-import os
-import importlib
-from six import with_metaclass
-import sys
-from configparser import ConfigParser
-from pathlib2 import Path
-from pyiron_base.settings.logger import setup_logger
-from pyiron_base.database.generic import DatabaseAccess
-from pyiron_base.settings.install import install_pyiron
-
 """
 The settings file provides the attributes of the configuration as properties.
 """
+
+import os
+import importlib
+from configparser import ConfigParser
+from pyiron_base.settings.logger import setup_logger
+from pyiron_base.database.generic import DatabaseAccess
 
 __author__ = "Jan Janssen"
 __copyright__ = (
@@ -51,7 +45,7 @@ class Singleton(type):
         return cls._instances[cls]
 
 
-class Settings(with_metaclass(Singleton)):
+class Settings(metaclass=Singleton):
     """
     The settings object can either search for an configuration file and use the default configuration only when no
     other configuration file is found, or it can be forced to use the default configuration file.

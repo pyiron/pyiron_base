@@ -3,31 +3,15 @@ import os
 import pandas
 import datetime
 import h5io
-from six import with_metaclass
 from pyfileindex import PyFileIndex
-
-
-class Singleton(type):
-    """
-    Implemented with suggestions from
-
-    http://stackoverflow.com/questions/6760685/creating-a-singleton-in-python
-
-    """
-
-    _instances = {}
-
-    def __call__(cls, *args, **kwargs):
-        if cls not in cls._instances:
-            cls._instances[cls] = super(Singleton, cls).__call__(*args, **kwargs)
-        return cls._instances[cls]
+from pyiron_base.generic.util import Singleton
 
 
 def filter_function(file_name):
     return '.h5' in file_name
 
 
-class FileTable(with_metaclass(Singleton)):
+class FileTable(metaclass=Singleton):
     def __init__(self, project):
         self._fileindex = None
         self._job_table = None

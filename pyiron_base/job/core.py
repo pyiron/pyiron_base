@@ -1,8 +1,10 @@
 # coding: utf-8
 # Copyright (c) Max-Planck-Institut für Eisenforschung GmbH - Computational Materials Design (CM) Department
 # Distributed under the terms of "New BSD License", see the LICENSE file.
+"""
+The JobCore the most fundamental pyiron job class.
+"""
 
-from __future__ import print_function
 import copy
 import os
 import posixpath
@@ -14,10 +16,6 @@ from pyiron_base.generic.template import PyironObject
 from tables import NoSuchNodeError
 import tarfile
 import shutil
-
-"""
-The JobCore the most fundamental pyiron job class.
-"""
 
 __author__ = "Jan Janssen"
 __copyright__ = (
@@ -444,7 +442,7 @@ class JobCore(PyironObject):
                 and str(self.status) in ["submitted", "running", "collect"]
                 and server_hdf_dict["qid"] is not None
             ):
-                self.project._queue_delete_job(server_hdf_dict["qid"])
+                self.project.queue_delete_job(server_hdf_dict["qid"])
         with self.project_hdf5.open("..") as hdf_parent:
             try:
                 del hdf_parent[self.job_name]

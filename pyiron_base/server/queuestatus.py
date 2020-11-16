@@ -1,16 +1,15 @@
 # coding: utf-8
 # Copyright (c) Max-Planck-Institut für Eisenforschung GmbH - Computational Materials Design (CM) Department
 # Distributed under the terms of "New BSD License", see the LICENSE file.
+"""
+Set of functions to interact with the queuing system directly from within pyiron - optimized for the Sun grid engine.
+"""
 
 import pandas
 import time
 from pyiron_base.settings.generic import Settings
 from pyiron_base.generic.util import static_isinstance
 from pyiron_base.job.jobstatus import job_status_finished_lst
-
-"""
-Set of functions to interact with the queuing system directly from within pyiron - optimized for the Sun grid engine.
-"""
 
 __author__ = "Jan Janssen"
 __copyright__ = (
@@ -236,6 +235,7 @@ def update_from_remote(project, recursive=True):
         df_combined = df_project[df_project.status.isin(["running", "submitted"])]
         df_queue = s.queue_adapter.get_status_of_my_jobs()
         if len(df_queue) > 0 and len(df_queue[df_queue.jobname.str.startswith("pi_")]) > 0:
+            df_queue = df_queue[df_queue.jobname.str.startswith("pi_")]
             df_queue["pyiron_id"] = df_queue.apply(
                 lambda x: int(x["jobname"].split("pi_")[1]),
                 axis=1
