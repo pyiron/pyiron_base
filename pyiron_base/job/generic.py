@@ -512,8 +512,10 @@ class GenericJob(JobCore):
         # Get new hdf location
         project = project or self.project
         new_job_name = new_job_name or self.job_name
-        if new_job_name in project.job_table(recursive=False).job.tolist():
-            return project[new_job_name]
+        job_table = project.job_table(recursive=False)
+        if len(job_table) > 0:
+            if new_job_name in job_table.job.tolist():
+                return project[new_job_name]
         if in_same_project and len(self.project_hdf5.h5_path.split("/")) > 2:
             new_location = self.project_hdf5.open("../" + new_job_name)
         else:
