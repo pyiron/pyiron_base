@@ -15,7 +15,6 @@ import pkgutil
 from git import Repo, InvalidGitRepositoryError
 
 from pyiron_base.project.path import ProjectPath
-from pyiron_base.project.factory import Creator
 from pyiron_base.database.filetable import FileTable
 from pyiron_base.settings.generic import Settings
 from pyiron_base.settings.publications import list_publications
@@ -32,7 +31,7 @@ from pyiron_base.database.jobtable import (
 )
 from pyiron_base.settings.logger import set_logging_level
 from pyiron_base.generic.hdfio import ProjectHDFio
-from pyiron_base.job.jobtype import JobType, JobTypeChoice
+from pyiron_base.job.jobtype import JobType, JobTypeChoice, JobCreator
 from pyiron_base.server.queuestatus import (
     queue_delete_job,
     queue_is_empty,
@@ -1464,3 +1463,12 @@ class Project(ProjectPath):
             elif db_entry_in_old_format:
                 for entry in db_entry_in_old_format:
                     self.db.item_update({"project": self.project_path}, entry["id"])
+
+
+class Creator(object):
+    def __init__(self, project):
+        self._job_creator = JobCreator(project=project)
+
+    @property
+    def job(self):
+        return self._job_creator
