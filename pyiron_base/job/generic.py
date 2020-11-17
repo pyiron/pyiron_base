@@ -478,7 +478,8 @@ class GenericJob(JobCore):
         copied_self._job_id = None
         return copied_self
 
-    def copy_to(self, project=None, new_job_name=None, input_only=False, new_database_entry=True, delete_existing_job=False):
+    def copy_to(self, project=None, new_job_name=None, input_only=False, new_database_entry=True,
+                delete_existing_job=False):
         """
         Copy the content of the job including the HDF5 file to a new location.
 
@@ -515,9 +516,11 @@ class GenericJob(JobCore):
         new_job_name = new_job_name or self.job_name
         job_table = project.job_table(recursive=False)
         if len(job_table) > 0 and new_job_name in job_table.job.values:
+            print("checkpoint 1", delete_existing_job)
             if not delete_existing_job:
                 return project.load(new_job_name)
             else:
+                print("checkpoint 2")
                 project.remove_job(new_job_name)
         if in_same_project and len(self.project_hdf5.h5_path.split("/")) > 2:
             new_location = self.project_hdf5.open("../" + new_job_name)
