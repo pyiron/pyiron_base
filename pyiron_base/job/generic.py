@@ -519,7 +519,6 @@ class GenericJob(JobCore):
             if not delete_existing_job:
                 return project.load(new_job_name)
             else:
-                print("checkpoint 2")
                 project.remove_job(new_job_name)
         if in_same_project and len(self.project_hdf5.h5_path.split("/")) > 2:
             new_location = self.project_hdf5.open("../" + new_job_name)
