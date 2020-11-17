@@ -15,6 +15,7 @@ import pkgutil
 from git import Repo, InvalidGitRepositoryError
 
 from pyiron_base.project.path import ProjectPath
+from pyiron_base.project.factory import Creator
 from pyiron_base.database.filetable import FileTable
 from pyiron_base.settings.generic import Settings
 from pyiron_base.settings.publications import list_publications
@@ -136,6 +137,7 @@ class Project(ProjectPath):
         self._filter = ["groups", "nodes", "objects"]
         self._inspect_mode = False
         self._store = None
+        self._creator = Creator(project=self)
 
         if not s.database_is_disabled:
             s.open_connection()
@@ -176,6 +178,10 @@ class Project(ProjectPath):
             str: name of the current project folder
         """
         return self.base_name
+
+    @property
+    def create(self):
+        return self._creator
 
     def copy(self):
         """

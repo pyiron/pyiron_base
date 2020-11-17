@@ -18,6 +18,7 @@ from pyiron_base.master.generic import GenericMaster, get_function_from_string
 from pyiron_base.master.list import ListMaster
 from pyiron_base.master.parallel import ParallelMaster, JobGenerator
 from pyiron_base.master.serial import SerialMasterBase
+from pyiron_base.project.factory import Creator
 from pyiron_base.project.generic import Project
 from pyiron_base.pyio.parser import Logstatus, extract_data_from_file
 from pyiron_base.server.queuestatus import validate_que_request
