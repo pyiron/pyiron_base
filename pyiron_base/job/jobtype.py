@@ -30,37 +30,6 @@ JOB_CLASS_DICT = {
 }
 
 
-class JobTypeChoice(metaclass=Singleton):
-    """
-    Helper class to choose the job type directly from the project, autocompletion is enabled by overwriting the
-    __dir__() function.
-    """
-
-    def __init__(self):
-        self._job_class_dict = None
-        self.job_class_dict = JOB_CLASS_DICT
-
-    @property
-    def job_class_dict(self):
-        return self._job_class_dict
-
-    @job_class_dict.setter
-    def job_class_dict(self, job_class_dict):
-        self._job_class_dict = job_class_dict
-
-    def __getattr__(self, name):
-        if name in self._job_class_dict.keys():
-            return name
-        else:
-            raise AttributeError("no job class named '{}' defined".format(name))
-
-    def __dir__(self):
-        """
-        Enable autocompletion by overwriting the __dir__() function.
-        """
-        return list(self.job_class_dict.keys())
-
-
 class JobType(object):
     """
     The JobTypeBase class creates a new object of a given class type.
@@ -137,3 +106,107 @@ class JobType(object):
             class_name,
             [job for job in list(job_class_dict.keys())],
         )
+
+
+class JobCreator(metaclass=Singleton):
+    """
+    The job creator is used to create job objects using pr.create.job.Code() where Code can be any external code
+    which is wrapped as pyiron job type.
+    """
+    def __init__(self, project):
+        self._job_class_dict = JOB_CLASS_DICT
+        self._project = project
+
+    def __dir__(self):
+        """
+        Enable autocompletion by overwriting the __dir__() function.
+        """
+        return list(self._job_class_dict.keys())
+
+    def __getattr__(self, name):
+        if name in self._job_class_dict.keys():
+            def wrapper(job_name, delete_existing_job=False):
+                """
+                Create one of the following jobs:
+                - 'ExampleJob': example job just generating random number
+                - 'SerialMaster': series of jobs run in serial
+                - 'ParallelMaster': series of jobs run in parallel
+                - 'ScriptJob': Python script or jupyter notebook job container
+                - 'ListMaster': list of jobs
+
+                Args:
+                    job_name (str): name of the job
+                    delete_existing_job (bool): delete an existing job - default false
+
+                Returns:
+                    GenericJob: job object depending on the job_type selected
+                """
+                job = JobClass(
+                    class_name=name,
+                    project=self._project,
+                    job_class_dict=self._job_class_dict
+                )
+                return job.create(job_name=job_name, delete_existing_job=delete_existing_job)
+            return wrapper
+        else:
+            raise AttributeError("no job class named '{}' defined".format(name))
+
+
+class JobClass(object):
+    """
+    Small wrapper class to create object instances of any job type using pr.create.job.Code()
+    """
+    def __init__(self, class_name, project, job_class_dict):
+        self._class_name = class_name
+        self._project = project
+        self._job_class_dict = job_class_dict
+
+    def create(self, job_name, delete_existing_job=False):
+        """
+        Internal helper function for pr.create.job.Code()
+
+        Args:
+            job_name (str): name of the job
+            delete_existing_job (bool): delete an existing job - default false
+
+        Returns:
+            GenericJob: job object depending on the job_type selected
+        """
+        return JobType(
+            class_name=self._class_name,
+            project=self._project,
+            job_name=job_name,
+            job_class_dict=self._job_class_dict,
+            delete_existing_job=delete_existing_job
+        )
+
+
+class JobTypeChoice(metaclass=Singleton):
+    """
+    Helper class to choose the job type directly from the project, autocompletion is enabled by overwriting the
+    __dir__() function. This class is only required for pr.job_type.Code which is only used in pr.create_job().
+    As a consequence this class can be removed once the pr.create_job() function is replaced by pr.create.job.Code().
+    """
+    def __init__(self):
+        self._job_class_dict = None
+        self.job_class_dict = JOB_CLASS_DICT
+
+    @property
+    def job_class_dict(self):
+        return self._job_class_dict
+
+    @job_class_dict.setter
+    def job_class_dict(self, job_class_dict):
+        self._job_class_dict = job_class_dict
+
+    def __getattr__(self, name):
+        if name in self._job_class_dict.keys():
+            return name
+        else:
+            raise AttributeError("no job class named '{}' defined".format(name))
+
+    def __dir__(self):
+        """
+        Enable autocompletion by overwriting the __dir__() function.
+        """
+        return list(self.job_class_dict.keys())

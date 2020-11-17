@@ -31,7 +31,7 @@ from pyiron_base.database.jobtable import (
 )
 from pyiron_base.settings.logger import set_logging_level
 from pyiron_base.generic.hdfio import ProjectHDFio
-from pyiron_base.job.jobtype import JobType, JobTypeChoice
+from pyiron_base.job.jobtype import JobType, JobTypeChoice, JobCreator
 from pyiron_base.server.queuestatus import (
     queue_delete_job,
     queue_is_empty,
@@ -136,6 +136,7 @@ class Project(ProjectPath):
         self._filter = ["groups", "nodes", "objects"]
         self._inspect_mode = False
         self._store = None
+        self._creator = Creator(project=self)
 
         if not s.database_is_disabled:
             s.open_connection()
@@ -176,6 +177,10 @@ class Project(ProjectPath):
             str: name of the current project folder
         """
         return self.base_name
+
+    @property
+    def create(self):
+        return self._creator
 
     def copy(self):
         """
@@ -1458,3 +1463,12 @@ class Project(ProjectPath):
             elif db_entry_in_old_format:
                 for entry in db_entry_in_old_format:
                     self.db.item_update({"project": self.project_path}, entry["id"])
+
+
+class Creator(object):
+    def __init__(self, project):
+        self._job_creator = JobCreator(project=project)
+
+    @property
+    def job(self):
+        return self._job_creator

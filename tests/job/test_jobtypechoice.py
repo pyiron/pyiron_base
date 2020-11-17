@@ -3,8 +3,9 @@
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
 import unittest
-from pyiron_base.job.jobtype import JobTypeChoice
+from pyiron_base.job.jobtype import JobTypeChoice, JobCreator
 from pyiron_base import JOB_CLASS_DICT
+
 
 class TestJobTypeChoice(unittest.TestCase):
 
@@ -47,3 +48,31 @@ class TestJobTypeChoice(unittest.TestCase):
         except AttributeError:
             self.fail("new job class added to JOB_CLASS_DICT, but not defined "
                       "JobTypeChoice")
+
+
+class TestJobCreator(unittest.TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        cls.jobcreator = JobCreator(project=None)
+
+    def test_dir(self):
+        """
+        All job types in JOB_CLASS_DICT need to be returned in __dir__ for
+        autocompletion.
+        """
+        self.assertTrue(all(k in dir(self.jobcreator)
+                            for k in JOB_CLASS_DICT),
+                        "Not all job classes returned by dir()")
+
+    def test_attr(self):
+        """
+        All job types in JOB_CLASS_DICT need to be available as attributes and
+        should have their string names as values.
+        """
+        try:
+            for k in JOB_CLASS_DICT:
+                getattr(self.jobcreator, k)
+        except AttributeError:
+            self.fail("job class {} in JOB_CLASS_DICT, but not on "
+                      "JobTypeChoice".format(k))
