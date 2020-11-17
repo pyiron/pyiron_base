@@ -516,7 +516,6 @@ class GenericJob(JobCore):
         new_job_name = new_job_name or self.job_name
         job_table = project.job_table(recursive=False)
         if len(job_table) > 0 and new_job_name in job_table.job.values:
-            print("checkpoint 1", delete_existing_job)
             if not delete_existing_job:
                 return project.load(new_job_name)
             else:
