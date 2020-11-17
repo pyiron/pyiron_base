@@ -517,7 +517,7 @@ class GenericJob(JobCore):
         if len(job_table) > 0 and new_job_name in job_table.job.values:
             if not delete_existing_job:
                 return project.load(new_job_name)
-            else: 
+            else:
                 project.remove_job(new_job_name)
         if in_same_project and len(self.project_hdf5.h5_path.split("/")) > 2:
             new_location = self.project_hdf5.open("../" + new_job_name)
