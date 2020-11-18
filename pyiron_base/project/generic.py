@@ -1465,7 +1465,7 @@ class Project(ProjectPath):
                     self.db.item_update({"project": self.project_path}, entry["id"])
 
 
-class Creator(object):
+class Creator:
     def __init__(self, project):
         self._job_creator = JobCreator(project=project)
 
