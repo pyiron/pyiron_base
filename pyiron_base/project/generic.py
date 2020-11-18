@@ -1461,12 +1461,33 @@ class Project(ProjectPath):
                 for entry in db_entry_in_old_format:
                     self.db.item_update({"project": self.project_path}, entry["id"])
 
-    def export_to_archive(self, destination_path, csv_file_name='export.csv', compress=True):
+
+    def packing(self, destination_path, csv_file_name='export.csv', compress=True):
+        """
+        by this funtion, the job table is exported to a csv file
+        and the project directory is copied and compressed (by default) to a file.
+        
+        Args:
+        destination_path (str) gives the ralative path, in which the project folder is copied and the compressed
+        csv_file_name (str) is the name of the csv file used to store the project table.
+        compress (boolian), if true, the function will compress the destination_path to a tar.gz file 
+        """
         export_archive.copy_files_to_archive(self.project_path, destination_path,compressed=compress)
         df = export_archive.export_database(self,self.project_path,destination_path)
         df.to_csv(csv_file_name)
 
-    def import_from_archive(self, origin_path, csv_file_name='export.csv', compress=True):
+
+    def unpacking(self, origin_path, csv_file_name='export.csv', compress=True):
+        """
+        by this function, job table is imported from a given csv file, 
+        and also the content of project directory is copied from a given path
+        
+        Args:
+            origin_path (str): the relative path of a directory (or a compressed file without the tar.gz exention)
+                            from which the project directory is copied.
+        
+            csv_file_name (str): the csv file from which the job_table is copied to the current project
+        """
         csv_path = csv_file_name
         df = pandas.read_csv(csv_path, index_col=0)
         import_archive.import_jobs(self,self.project_path,archive_directory=origin_path, df=df, compressed=compress)
