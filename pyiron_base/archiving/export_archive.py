@@ -14,6 +14,7 @@ def new_job_id(job_id, job_translate_dict):
     else:
         return None
 
+
 def getdir(path): 
     path_base_name = os.path.basename(path)
     if path_base_name == "":
