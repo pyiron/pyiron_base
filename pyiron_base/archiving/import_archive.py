@@ -4,12 +4,14 @@ import numpy as np
 from shutil import copytree, rmtree
 import tarfile
 
+
 def getdir(path): 
     path_base_name = os.path.basename(path)
     if path_base_name == "":
         return os.path.basename(os.path.dirname(path))
     else: 
         return path_base_name
+
 
 def update_id_lst(record_lst, job_id_lst):
     masterid_lst = []
@@ -21,11 +23,13 @@ def update_id_lst(record_lst, job_id_lst):
             masterid_lst.append(job_id_lst[masterid])
     return masterid_lst
 
+
 def extract_archive(archive_directory):
     fname = archive_directory+".tar.gz" 
     tar = tarfile.open(fname, "r:gz")
     tar.extractall()
     tar.close()
+
 
 def import_jobs(project_instance, directory_to_import_to, archive_directory, df, compressed=True):
     # Copy HDF5 files
