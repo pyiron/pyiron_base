@@ -4,6 +4,8 @@ from shutil import copyfile
 from pyfileindex import PyFileIndex 
 import tarfile
 from shutil import rmtree
+
+
 def new_job_id(job_id, job_translate_dict):
     if isinstance(job_id, float) and not np.isnan(job_id):
         job_id = int(job_id)
@@ -73,4 +75,3 @@ def export_database(project_instance,directory_to_transfer, archive_directory):
     df['project'] = update_project(project_instance,directory_to_transfer=directory_to_transfer, archive_directory=archive_directory, df=df)
     del df["projectpath"]
     return df
-
