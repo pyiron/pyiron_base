@@ -1472,8 +1472,8 @@ class Project(ProjectPath):
         csv_file_name (str) is the name of the csv file used to store the project table.
         compress (boolian), if true, the function will compress the destination_path to a tar.gz file 
         """
-        export_archive.copy_files_to_archive(self.project_path, destination_path,compressed=compress)
-        df = export_archive.export_database(self,self.project_path,destination_path)
+        export_archive.copy_files_to_archive(self.path, destination_path,compressed=compress)
+        df = export_archive.export_database(self,self.path,destination_path)
         df.to_csv(csv_file_name)
 
 
@@ -1490,4 +1490,4 @@ class Project(ProjectPath):
         """
         csv_path = csv_file_name
         df = pandas.read_csv(csv_path, index_col=0)
-        import_archive.import_jobs(self,self.project_path,archive_directory=origin_path, df=df, compressed=compress)
+        import_archive.import_jobs(self,self.path,archive_directory=origin_path, df=df, compressed=compress)
