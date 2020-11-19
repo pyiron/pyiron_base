@@ -54,7 +54,7 @@ def copy_files_to_archive(directory_to_transfer, archive_directory, compressed=T
     directory_to_transfer = directory_to_transfer.split("/")[1]+'/'
     pfi = PyFileIndex(path=directory_to_transfer, filter_function=filter_function)
     df_files = pfi.dataframe[~pfi.dataframe.is_directory]
-    
+
     # Create directories
     dir_lst = generate_list_of_directories(df_files=df_files, directory_to_transfer=directory_to_transfer, archive_directory=archive_directory)
     print(dir_lst)
