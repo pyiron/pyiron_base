@@ -31,7 +31,7 @@ from pyiron_base.database.jobtable import (
 )
 from pyiron_base.settings.logger import set_logging_level
 from pyiron_base.generic.hdfio import ProjectHDFio
-from pyiron_base.job.jobtype import JobType, JobTypeChoice
+from pyiron_base.job.jobtype import JobType, JobTypeChoice, JobCreator
 from pyiron_base.server.queuestatus import (
     queue_delete_job,
     queue_is_empty,
@@ -138,6 +138,7 @@ class Project(ProjectPath):
         self._filter = ["groups", "nodes", "objects"]
         self._inspect_mode = False
         self._store = None
+        self._creator = Creator(project=self)
 
         if not s.database_is_disabled:
             s.open_connection()
@@ -178,6 +179,10 @@ class Project(ProjectPath):
             str: name of the current project folder
         """
         return self.base_name
+
+    @property
+    def create(self):
+        return self._creator
 
     def copy(self):
         """
@@ -1491,3 +1496,12 @@ class Project(ProjectPath):
         csv_path = csv_file_name
         df = pandas.read_csv(csv_path, index_col=0)
         import_archive.import_jobs(self,self.path,archive_directory=origin_path, df=df, compressed=compress)
+
+        
+class Creator(object):
+    def __init__(self, project):
+        self._job_creator = JobCreator(project=project)
+
+    @property
+    def job(self):
+        return self._job_creator
