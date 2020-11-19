@@ -1466,11 +1466,11 @@ class Project(ProjectPath):
         """
         by this funtion, the job table is exported to a csv file
         and the project directory is copied and compressed (by default) to a file.
-        
+
         Args:
         destination_path (str) gives the ralative path, in which the project folder is copied and the compressed
         csv_file_name (str) is the name of the csv file used to store the project table.
-        compress (boolian), if true, the function will compress the destination_path to a tar.gz file 
+        compress (boolian), if true, the function will compress the destination_path to a tar.gz file.
         """
         export_archive.copy_files_to_archive(self.path, destination_path,compressed=compress)
         df = export_archive.export_database(self,self.path,destination_path)
@@ -1479,7 +1479,7 @@ class Project(ProjectPath):
 
     def unpacking(self, origin_path, csv_file_name='export.csv', compress=True):
         """
-        by this function, job table is imported from a given csv file, 
+        by this function, job table is imported from a given csv file,
         and also the content of project directory is copied from a given path
         
         Args:

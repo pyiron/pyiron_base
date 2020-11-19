@@ -1,15 +1,15 @@
 import os
-import pandas 
+import pandas
 import numpy as np
 from shutil import copytree, rmtree
 import tarfile
 
 
-def getdir(path): 
+def getdir(path):
     path_base_name = os.path.basename(path)
     if path_base_name == "":
         return os.path.basename(os.path.dirname(path))
-    else: 
+    else:
         return path_base_name
 
 
@@ -25,7 +25,7 @@ def update_id_lst(record_lst, job_id_lst):
 
 
 def extract_archive(archive_directory):
-    fname = archive_directory+".tar.gz" 
+    fname = archive_directory+".tar.gz"
     tar = tarfile.open(fname, "r:gz")
     tar.extractall()
     tar.close()
@@ -47,7 +47,7 @@ def import_jobs(project_instance, directory_to_import_to, archive_directory, df,
     pr_import = project_instance.open('.')
     df["project"] = [os.path.join(pr_import.project_path, os.path.relpath(p, archive_name)) for p in df["project"].values]
     df['projectpath'] = len(df) * [pr_import.root_path]
-    # Add jobs to database 
+    # Add jobs to database
     job_id_lst = []
     for entry in df.to_dict(orient="records"):
         del entry['id']
@@ -57,8 +57,8 @@ def import_jobs(project_instance, directory_to_import_to, archive_directory, df,
         entry["timestop"] = pandas.to_datetime(entry["timestop"])
         job_id = pr_import.db.add_item_dict(par_dict=entry)
         job_id_lst.append(job_id)
-        
-    # Update parent and master ids 
+
+    # Update parent and master ids
     for job_id, masterid, parentid in zip(job_id_lst, update_id_lst(record_lst=df['masterid'].values, job_id_lst=job_id_lst), update_id_lst(record_lst=df['parentid'].values, job_id_lst=job_id_lst)):
         if not np.isnan(masterid) or not np.isnan(parentid):
             pr_import.db.item_update(item_id=job_id, par_dict={'parentid': parentid, 'masterid': masterid})

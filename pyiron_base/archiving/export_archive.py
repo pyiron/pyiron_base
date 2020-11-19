@@ -1,7 +1,7 @@
 import os
 import numpy as np
 from shutil import copyfile
-from pyfileindex import PyFileIndex 
+from pyfileindex import PyFileIndex
 import tarfile
 from shutil import rmtree
 
@@ -15,11 +15,11 @@ def new_job_id(job_id, job_translate_dict):
         return None
 
 
-def getdir(path): 
+def getdir(path):
     path_base_name = os.path.basename(path)
     if path_base_name == "":
         return os.path.basename(os.path.dirname(path))
-    else: 
+    else:
         return path_base_name
 
 
@@ -55,13 +55,13 @@ def copy_files_to_archive(directory_to_transfer, archive_directory, compressed=T
     pfi = PyFileIndex(path=directory_to_transfer, filter_function=filter_function)
     df_files = pfi.dataframe[~pfi.dataframe.is_directory]
     
-    # Create directories 
+    # Create directories
     dir_lst = generate_list_of_directories(df_files=df_files, directory_to_transfer=directory_to_transfer, archive_directory=archive_directory)
     print(dir_lst)
-    for d in dir_lst: 
+    for d in dir_lst:
         os.makedirs(d, exist_ok=True)
     
-    # Copy files 
+    # Copy files
     dir_name_transfer = getdir(path=directory_to_transfer)
     for f in df_files.path.values:
         copyfile(f, os.path.join(archive_directory, dir_name_transfer, os.path.relpath(f, directory_to_transfer)))
