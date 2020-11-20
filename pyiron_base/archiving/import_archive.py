@@ -33,6 +33,12 @@ def extract_archive(archive_directory):
 
 def import_jobs(project_instance, directory_to_import_to, archive_directory, df, compressed=True):
     # Copy HDF5 files
+    if isinstance(archive_directory,str):
+        archive_directory = os.path.basename(archive_directory)
+    elif hasattr(archive_directory,'path'):
+        archive_directory = archive_directory.path
+    else:
+        raise RuntimeError('the given path for importing from, does not have the correct format\n paths as string or pyiron Project objects are expected')
     if compressed:
         extract_archive(archive_directory)
     archive_name = getdir(path=archive_directory)
