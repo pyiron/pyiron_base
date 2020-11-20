@@ -110,7 +110,7 @@ class JobType(object):
         )
 
 
-class JobCreator(IterableFactory):
+class JobFactory(IterableFactory):
     """
     The job creator is used to create job objects using pr.create.job.Code() where Code can be any external code
     which is wrapped as pyiron job type.

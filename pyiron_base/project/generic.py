@@ -31,7 +31,7 @@ from pyiron_base.database.jobtable import (
 )
 from pyiron_base.settings.logger import set_logging_level
 from pyiron_base.generic.hdfio import ProjectHDFio
-from pyiron_base.job.jobtype import JobType, JobTypeChoice, JobCreator
+from pyiron_base.job.jobtype import JobType, JobTypeChoice, JobFactory
 from pyiron_base.server.queuestatus import (
     queue_delete_job,
     queue_is_empty,
@@ -1467,8 +1467,8 @@ class Project(ProjectPath):
 
 class Creator:
     def __init__(self, project):
-        self._job_creator = JobCreator(project=project)
+        self._job_factory = JobFactory(project=project)
 
     @property
     def job(self):
-        return self._job_creator
+        return self._job_factory
