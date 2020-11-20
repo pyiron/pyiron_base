@@ -27,13 +27,3 @@ class PyironFactory(ABC):
 
     def __getitem__(self, key):
         return getattr(self, key)
-
-
-class IterableFactory(PyironFactory, ABC):
-    """
-    A base class for factories which can sensibly be put in a for-loop.
-    """
-
-    @abstractmethod
-    def __iter__(self):
-        pass

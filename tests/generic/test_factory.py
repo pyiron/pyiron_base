@@ -3,7 +3,7 @@
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
 import unittest
-from pyiron_base.generic.factory import PyironFactory, IterableFactory
+from pyiron_base.generic.factory import PyironFactory
 
 
 class TestFactories(unittest.TestCase):
@@ -11,9 +11,6 @@ class TestFactories(unittest.TestCase):
         factory = PyironFactory()
         factory.foo = "foo"
         self.assertEqual(factory.foo, factory['foo'])
-
-    def test_iterable_factory(self):
-        self.assertRaises(TypeError, IterableFactory)
 
 
 if __name__ == "__main__":

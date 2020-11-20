@@ -10,7 +10,7 @@ import inspect
 import os
 from pyiron_base.generic.hdfio import ProjectHDFio
 from pyiron_base.generic.util import Singleton
-from pyiron_base.generic.factory import IterableFactory
+from pyiron_base.generic.factory import PyironFactory
 from pyiron_base.job.jobstatus import job_status_finished_lst
 
 __author__ = "Joerg Neugebauer, Jan Janssen"
@@ -110,7 +110,7 @@ class JobType(object):
         )
 
 
-class JobFactory(IterableFactory):
+class JobFactory(PyironFactory):
     """
     The job creator is used to create job objects using pr.create.job.Code() where Code can be any external code
     which is wrapped as pyiron job type.
@@ -152,9 +152,6 @@ class JobFactory(IterableFactory):
             return wrapper
         else:
             raise AttributeError("no job class named '{}' defined".format(name))
-
-    def __iter__(self):
-        raise NotImplementedError
 
 
 class JobClass(object):
