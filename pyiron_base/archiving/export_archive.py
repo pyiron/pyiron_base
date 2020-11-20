@@ -24,7 +24,7 @@ def getdir(path):
 
 
 def update_project(project_instance, directory_to_transfer, archive_directory, df):
-    directory_to_transfer = directory_to_transfer.split("/")[1]+'/'
+    directory_to_transfer = os.path.basename(directory_to_transfer)
     pr_transfer = project_instance.open('.')
     dir_name_transfer = getdir(path=directory_to_transfer)
     dir_name_archive = getdir(path=archive_directory)
@@ -60,7 +60,6 @@ def copy_files_to_archive(directory_to_transfer, archive_directory, compressed=T
     print(dir_lst)
     for d in dir_lst:
         os.makedirs(d, exist_ok=True)
-    
     # Copy files
     dir_name_transfer = getdir(path=directory_to_transfer)
     for f in df_files.path.values:
@@ -70,7 +69,14 @@ def copy_files_to_archive(directory_to_transfer, archive_directory, compressed=T
 
 
 def export_database(project_instance,directory_to_transfer, archive_directory):
-    directory_to_transfer = directory_to_transfer.split("/")[1]+'/'
+    ## here we first check wether the archive directory is a path or a project object
+    if type(archive_directory) == str:
+        archive_directory = os.path.basename(archive_directory)
+    elif hasattr(archive_directory,'path'): # in the case that the input argument is a project object
+        archive_directory = archive_directory.path
+    else:
+        raise RuntimeError('the given path for exporting to, does not have the correct format\n paths as string or pyiron Project objects are expected')
+    directory_to_transfer = os.path.basename(directory_to_transfer)
     pr = project_instance.open('.')
     df = pr.job_table()
     job_ids_sorted = sorted(df.id.values)

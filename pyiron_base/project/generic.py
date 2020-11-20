@@ -1490,7 +1490,6 @@ class Project(ProjectPath):
         Args:
             origin_path (str): the relative path of a directory (or a compressed file without the tar.gz exention)
                             from which the project directory is copied.
-        
             csv_file_name (str): the csv file from which the job_table is copied to the current project
         """
         csv_path = csv_file_name
