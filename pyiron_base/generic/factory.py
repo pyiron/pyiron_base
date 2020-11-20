@@ -3,7 +3,7 @@
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
 """
-Abstract classes for factories that instantiate other pyiron objects
+Abstract classes for factories that instantiate other pyiron objects.
 """
 
 from abc import ABC
