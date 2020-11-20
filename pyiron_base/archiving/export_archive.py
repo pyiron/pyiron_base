@@ -70,7 +70,7 @@ def copy_files_to_archive(directory_to_transfer, archive_directory, compressed=T
 
 def export_database(project_instance,directory_to_transfer, archive_directory):
     ## here we first check wether the archive directory is a path or a project object
-    if type(archive_directory) == str:
+    if isinstance(archive_directory,str):
         archive_directory = os.path.basename(archive_directory)
     elif hasattr(archive_directory,'path'): # in the case that the input argument is a project object
         archive_directory = archive_directory.path
