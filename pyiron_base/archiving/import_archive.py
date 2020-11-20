@@ -42,7 +42,7 @@ def import_jobs(project_instance, directory_to_import_to, archive_directory, df,
     if compressed:
         extract_archive(archive_directory)
     archive_name = getdir(path=archive_directory)
-    directory_to_import_to = directory_to_import_to.split("/")[1]
+    directory_to_import_to = os.path.basename(directory_to_import_to)
     des = os.path.abspath(os.path.join(os.curdir, directory_to_import_to)) #destination folder
     src = os.path.abspath(os.path.join(os.curdir, archive_directory)) #source folder; archive folder
     copytree(src, des, dirs_exist_ok=True)
