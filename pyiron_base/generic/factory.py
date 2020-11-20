@@ -6,7 +6,7 @@
 Abstract classes for factories that instantiate other pyiron objects
 """
 
-from abc import ABC, abstractmethod
+from abc import ABC
 
 __author__ = "Liam Huber"
 __copyright__ = (
