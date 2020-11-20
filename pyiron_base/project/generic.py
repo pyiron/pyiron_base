@@ -1496,7 +1496,7 @@ class Project(ProjectPath):
         df = pandas.read_csv(csv_path, index_col=0)
         import_archive.import_jobs(self,self.path,archive_directory=origin_path, df=df, compressed=compress)
 
-        
+
 class Creator(object):
     def __init__(self, project):
         self._job_creator = JobCreator(project=project)
