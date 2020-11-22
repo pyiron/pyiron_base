@@ -294,6 +294,25 @@ class Project(ProjectPath):
             job.user = self.user
         return job
 
+    def create_table(self, job_name="table", delete_existing_job=False):
+        """
+        Create pyiron table
+
+        Args:
+            job_name (str): job name of the pyiron table job
+            delete_existing_job (bool): Delete the existing table and run the analysis again.
+
+        Returns:
+            pyiron.table.datamining.TableJob
+        """
+        table = self.create_job(
+            job_type=self.job_type.TableJob,
+            job_name=job_name,
+            delete_existing_job=delete_existing_job
+        )
+        table.analysis_project = self
+        return table
+
     def get_child_ids(self, job_specifier, project=None):
         """
         Get the childs for a specific job
