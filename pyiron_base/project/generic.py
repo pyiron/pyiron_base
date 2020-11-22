@@ -1487,7 +1487,26 @@ class Project(ProjectPath):
 class Creator:
     def __init__(self, project):
         self._job_factory = JobFactory(project=project)
+        self._project = project
 
     @property
     def job(self):
         return self._job_factory
+
+    def table(self, job_name="table", delete_existing_job=False):
+        """
+        Create pyiron table
+
+        Args:
+            job_name (str): job name of the pyiron table job
+            delete_existing_job (bool): Delete the existing table and run the analysis again.
+
+        Returns:
+            pyiron_base.table.datamining.TableJob
+        """
+        table = self.job.TableJob(
+            job_name=job_name,
+            delete_existing_job=delete_existing_job
+        )
+        table.analysis_project = self._project
+        return table
