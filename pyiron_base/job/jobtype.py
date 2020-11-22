@@ -29,6 +29,7 @@ JOB_CLASS_DICT = {
     "FlexibleMaster": "pyiron_base.master.flexible",
     "ScriptJob": "pyiron_base.job.script",
     "SerialMasterBase": "pyiron_base.master.serial",
+    "TableJob": "pyiron_base.table.datamining"
 }
 
 
