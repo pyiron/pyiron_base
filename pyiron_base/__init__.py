@@ -24,6 +24,7 @@ from pyiron_base.pyio.parser import Logstatus, extract_data_from_file
 from pyiron_base.server.queuestatus import validate_que_request
 from pyiron_base.settings.generic import Settings
 from pyiron_base.settings.install import install_dialog
+from pyiron_base.table.datamining import PyironTable, TableJob
 
 # optional API of the pyiron_base module
 try:
