@@ -139,7 +139,8 @@ class PyironTable(object):
         self._filter_function = always_true
         self._filter_function_str = inspect.getsource(always_true)
         self._filter = JobFilters()
-        self.add = FunctionContainer(system_function_lst=system_function_lst)
+        self._system_function_lst = system_function_lst
+        self.add = FunctionContainer(system_function_lst=self._system_function_lst)
         self._csv_file = None
         if self._is_file():
             self.load()
@@ -387,7 +388,10 @@ class PyironTable(object):
             for i in range(1, max_level):
                 rename_dict["col_{}".format(i)] = "col_{}".format(i - 1)
 
-            new_table = PyironTable(self._project[item])
+            new_table = PyironTable(
+                project=self._project[item],
+                system_function_lst=self._system_function_lst
+            )
             new_table._df = self._df.drop("col_0", axis=1)
             new_table._df.rename(index=str, columns=rename_dict, inplace=True)
             return new_table
@@ -516,7 +520,11 @@ class TableJob(GenericJob):
         self.__version__ = "0.1"
         self.__name__ = "TableJob"
         self._analysis_project = None
-        self._pyiron_table = PyironTable(project=None, system_function_lst=None)
+        self._system_function_lst = None
+        self._pyiron_table = PyironTable(
+            project=None,
+            system_function_lst=self._system_function_lst
+        )
         self._enforce_update = False
         self._project_level = 0
         self.analysis_project = project.project
@@ -568,7 +576,10 @@ class TableJob(GenericJob):
     @analysis_project.setter
     def analysis_project(self, project):
         self._analysis_project = project
-        self._pyiron_table = PyironTable(project=self._analysis_project)
+        self._pyiron_table = PyironTable(
+            project=self._analysis_project,
+            system_function_lst=self._system_function_lst
+        )
 
     @property
     def add(self):
