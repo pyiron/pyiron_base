@@ -246,7 +246,7 @@ class GenericMaster(GenericJob):
         Copy the content of the job including the HDF5 file to a new location
 
         Args:
-            project (ProjectHDFio): project to copy the job to
+            project (JobCore/ProjectHDFio/Project/None): project to copy the job to
             new_job_name (str): to duplicate the job within the same porject it is necessary to modify the job name
                                 - optional
             input_only (bool): [True/False] to copy only the input - default False

@@ -661,7 +661,7 @@ class JobCore(PyironObject):
         Copy the content of the job including the HDF5 file to a new location
 
         Args:
-            project (ProjectHDFio): project to copy the job to
+            project (JobCore/ProjectHDFio/Project): project to copy the job to
             new_database_entry (bool): [True/False] to create a new database entry - default True
             copy_files (bool): [True/False] copy the files inside the working directory - default True
 
