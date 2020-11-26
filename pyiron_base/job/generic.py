@@ -484,7 +484,7 @@ class GenericJob(JobCore):
         Copy the content of the job including the HDF5 file to a new location.
 
         Args:
-            project (ProjectHDFio): The project to copy the job to. (Default is None, use the same project.)
+            project (Project): The project to copy the job to. (Default is None, use the same project.)
             new_job_name (str): The new name to assign the duplicate job. Required if the project is `None` or the same
                 project as the copied job. (Default is None, try to keep the same name.)
             input_only (bool): [True/False] Whether to copy only the input. (Default is False.)
