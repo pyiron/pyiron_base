@@ -22,12 +22,12 @@ class TestCopyTo(unittest.TestCase):
         sub_project = project.open("sub_project")
         sub_project.remove(enable=True)
 
-    # def test_copy_to_job(self):
-    #     job_ser = self.project.create_job("SerialMaster", "sequence_single")
-    #     ham = self.project.create_job('ScriptJob', "job_single")
-    #     ham.copy_to(job_ser)
-    #     self.assertTrue(job_ser['job_single/input/input_inp'])
-    #     job_ser.remove()
+    def test_copy_to_job(self):
+        job_ser = self.project.create_job("SerialMaster", "sequence_single")
+        ham = self.project.create_job('ScriptJob', "job_single")
+        ham.copy_to(job_ser)
+        self.assertTrue(job_ser['job_single/input/data_dict'])
+        job_ser.remove()
 
     def test_copy_to_project(self):
         sub_project = self.project.copy()
@@ -40,14 +40,14 @@ class TestCopyTo(unittest.TestCase):
             )
         )
 
-    # def test_copy_to_job_ex(self):
-    #     job_ser = self.project.create_job("SerialMaster", "sequence_single_ex")
-    #     ham = self.project.create_job('ScriptJob', "job_single_ex")
-    #     ham.to_hdf()
-    #     ham.copy_to(job_ser)
-    #     self.assertTrue(job_ser['job_single_ex/input/input_inp'])
-    #     ham.remove()
-    #     job_ser.remove()
+    def test_copy_to_job_ex(self):
+        job_ser = self.project.create_job("SerialMaster", "sequence_single_ex")
+        ham = self.project.create_job('ScriptJob', "job_single_ex")
+        ham.to_hdf()
+        ham.copy_to(job_ser)
+        self.assertTrue(job_ser['job_single_ex/input/data_dict'])
+        ham.remove()
+        job_ser.remove()
 
     def test_copy_to_project_ex(self):
         sub_project = self.project.copy()
