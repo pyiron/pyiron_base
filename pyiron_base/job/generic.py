@@ -510,6 +510,7 @@ class GenericJob(JobCore):
             project = project or self.project
             job_table = project.project.job_table(recursive=False)
         elif project is None:
+            project = self.project
             in_same_project = True
             job_table = self.project.job_table(recursive=False)
         else:
