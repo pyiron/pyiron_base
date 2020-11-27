@@ -26,7 +26,7 @@ class TestCopyTo(unittest.TestCase):
         job_ser = self.project.create_job("SerialMasterBase", "sequence_single")
         ham = self.project.create_job('ScriptJob', "job_single")
         ham.copy_to(job_ser)
-        self.assertTrue(job_ser['job_single/input/data_dict'])
+        self.assertTrue(job_ser['job_single/input/custom_dict'])
         job_ser.remove()
 
     def test_copy_to_project(self):
@@ -45,7 +45,7 @@ class TestCopyTo(unittest.TestCase):
         ham = self.project.create_job('ScriptJob', "job_single_ex")
         ham.to_hdf()
         ham.copy_to(job_ser)
-        self.assertTrue(job_ser['job_single_ex/input/data_dict'])
+        self.assertTrue(job_ser['job_single_ex/input/custom_dict'])
         ham.remove()
         job_ser.remove()
 

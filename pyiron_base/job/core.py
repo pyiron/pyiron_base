@@ -686,6 +686,7 @@ class JobCore(PyironObject):
         new_job_core._parent_id = self._parent_id
         new_job_core._master_id = self._master_id
         new_job_core._status = self._status
+        print("core copy_to: ", self.project_hdf5.file_name, self.project_hdf5.h5_path, project.file_name, project.h5_path)
         self.project_hdf5.copy_to(destination=project)
         if self.job_id:
             self._copy_database_entry(
@@ -709,12 +710,13 @@ class JobCore(PyironObject):
         """
         if new_database_entry:
             db_entry = self.project.db.get_item_by_id(self.job_id)
-            db_entry["project"] = new_job_core.project_hdf5.project_path
-            db_entry["projectpath"] = new_job_core.project_hdf5.root_path
-            db_entry["subjob"] = new_job_core.project_hdf5.h5_path
-            del db_entry["id"]
-            job_id = self.project.db.add_item_dict(db_entry)
-            new_job_core._job_id = job_id
+            if db_entry is not None:
+                db_entry["project"] = new_job_core.project_hdf5.project_path
+                db_entry["projectpath"] = new_job_core.project_hdf5.root_path
+                db_entry["subjob"] = new_job_core.project_hdf5.h5_path
+                del db_entry["id"]
+                job_id = self.project.db.add_item_dict(db_entry)
+                new_job_core._job_id = job_id
         else:
             new_job_core._job_id = None
 

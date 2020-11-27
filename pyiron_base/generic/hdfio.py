@@ -292,6 +292,7 @@ class FileHDFio(object):
                        FileHDFio object.
         """
         def _internal_copy(source, target, dest, h5_path):
+            print("internal_copy: ", source==target, dest.h5_path, h5_path)
             if dest.h5_path[0] == "/":
                 dest_path = dest.h5_path[1:]
             else:
@@ -302,7 +303,10 @@ class FileHDFio(object):
                 except ValueError:
                     pass
             if dest.is_root:
-                source.copy(h5_path, target)
+                if source == target:
+                    source.copy(h5_path, "/")
+                else:
+                    source.copy(h5_path, target)
             else:
                 if maintain_name:
                     source.copy(h5_path, target[dest_path])
