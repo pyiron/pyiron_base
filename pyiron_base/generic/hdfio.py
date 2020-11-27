@@ -312,7 +312,10 @@ class FileHDFio(object):
                 source.copy(target_path, "/") if source == target else source.copy(target_path, target)
             else:
                 if maintain_flag:
-                    source.copy(source_path, target[dest_path])
+                    if dest_path != "":
+                        source.copy(source_path, target[dest_path])
+                    else:
+                        source.copy(source_path, target)
                 else:
                     group_name_old = source_path.split("/")[-1]
                     try:
@@ -335,10 +338,12 @@ class FileHDFio(object):
             if self.file_name != file_name:
                 with h5py.File(self.file_name, mode="r") as f_source:
                     with h5py.File(file_name, mode="a") as f_target:
-                        _internal_copy(source=f_source, source_path=self._h5_path, target=f_target, target_path=dest_path, maintain_flag=maintain_name)
+                        _internal_copy(source=f_source, source_path=self._h5_path, target=f_target,
+                                       target_path=dest_path, maintain_flag=maintain_name)
             else:
                 with h5py.File(file_name, mode="a") as f_target:
-                    _internal_copy(source=f_target, source_path=self._h5_path, target=f_target, target_path=dest_path, maintain_flag=maintain_name)
+                    _internal_copy(source=f_target, source_path=self._h5_path, target=f_target,
+                                   target_path=dest_path, maintain_flag=maintain_name)
 
         return destination
 

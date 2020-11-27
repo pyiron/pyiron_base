@@ -496,59 +496,43 @@ class GenericJob(JobCore):
         Returns:
             GenericJob: GenericJob object pointing to the new location.
         """
+        # Update flags
         if input_only and new_database_entry:
             new_database_entry = False
-        if project is None and new_job_name is None:
-            raise ValueError("copy_to requires either a new project or a new_job_name.")
 
-        new_job_name = new_job_name or self.job_name
-        file_project, hdf5_project = self._get_project_for_copy(
-            project=project,
-            new_job_name=new_job_name
-        )
-
+        # Store all job arguments in the HDF5 file
         if not self.project_hdf5.file_exists:
             self.to_hdf()
             delete_file_after_copy = True
         else:
             delete_file_after_copy = False
 
-        # Delete existing job
-        job_return = self._copy_to_delete_existing(
-            project_class=file_project,
-            job_name=new_job_name,
-            delete_job=delete_existing_job
+        # Call the copy_to() function defined in the JobCore
+        new_job_core, file_project, hdf5_project, reload_flag = self._internal_copy_to(
+            project=project,
+            new_job_name=new_job_name,
+            new_database_entry=new_database_entry,
+            copy_files=False,
+            delete_existing_job=delete_existing_job
         )
-        if job_return is not None:
-            return job_return
+        if reload_flag:
+            return new_job_core
 
-        # Copy job
-        new_generic_job = self.copy()
-        new_generic_job._name = new_job_name
-        new_generic_job.project_hdf5.copy_to(
-            destination=hdf5_project,
-            maintain_name=False
-        )
-        new_generic_job.project_hdf5 = hdf5_project
-        self._copy_database_entry(
-            new_job_core=new_generic_job,
-            new_database_entry=new_database_entry
-        )
-        if self._job_id is not None:
-            new_generic_job.refresh_job_status()
-        else:
-            self._status = JobStatus(db=self.project.db, initial_status=self._status.string)
+        # Reload object from HDF5 file
+        new_job_core.from_hdf()
 
+        # Remove output if it should not be copied
         if input_only:
-            if "output" in new_generic_job.project_hdf5.list_groups():
-                del new_generic_job.project_hdf5[
-                    posixpath.join(new_generic_job.project_hdf5.h5_path, "output")
+            if "output" in new_job_core.project_hdf5.list_groups():
+                del new_job_core.project_hdf5[
+                    posixpath.join(new_job_core.project_hdf5.h5_path, "output")
                 ]
 
+        # Remove HDF5 file if it did not exist before
         if delete_file_after_copy:
             self.project_hdf5.remove_file()
 
-        return new_generic_job
+        return new_job_core
 
     def copy_file_to_working_directory(self, file):
         """
@@ -1730,27 +1714,6 @@ class GenericJob(JobCore):
         else:
             raise ValueError("Project should be JobCore/ProjectHDFio/Project/None")
         return file_project, hdf5_project
-
-    @staticmethod
-    def _copy_to_delete_existing(project_class, job_name, delete_job):
-        """
-        Args:
-            project_class (Project): The project to copy the job to.
-                (Default is None, use the same project.)
-            job_name (str): The new name to assign the duplicate job. Required if the project is `None` or the same
-                project as the copied job. (Default is None, try to keep the same name.)
-            delete_job (bool): Delete job if it exists already
-
-        Returns:
-            GenericJob/ None
-        """
-        job_table = project_class.job_table(recursive=False)
-        if len(job_table) > 0 and job_name in job_table.job.values:
-            if not delete_job:
-                return project_class.load(job_name)
-            else:
-                project_class.remove_job(job_name)
-                return None
 
 
 class GenericError(object):

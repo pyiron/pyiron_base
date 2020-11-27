@@ -656,7 +656,74 @@ class JobCore(PyironObject):
         copied_self._job_id = None
         return copied_self
 
-    def copy_to(self, project, new_database_entry=True, copy_files=True):
+    def _internal_copy_to(self, project=None, new_job_name=None, new_database_entry=True,
+                          copy_files=True, delete_existing_job=False):
+        """
+        Internal helper function for copy_to() which returns more
+
+        Args:
+            project (JobCore/ProjectHDFio/Project/None): The project to copy the job to.
+                (Default is None, use the same project.)
+            new_job_name (str): The new name to assign the duplicate job. Required if the project is `None` or the same
+                project as the copied job. (Default is None, try to keep the same name.)
+            new_database_entry (bool): [True/False] to create a new database entry - default True
+            copy_files (bool): [True/False] copy the files inside the working directory - default True
+            delete_existing_job (bool): [True/False] Delete existing job in case it exists already (Default is False.)
+
+        """
+        # Check either a new project, a new job_name or both were specified.
+        if project is None and new_job_name is None:
+            raise ValueError("copy_to requires either a new project or a new_job_name.")
+
+        # Set the new job name
+        new_job_name = new_job_name or self.job_name
+
+        # The project variable can be JobCore/ProjectHDFio/Project,
+        # get a Project and a ProjectHDFio object.
+        file_project, hdf5_project = self._get_project_for_copy(
+            project=project,
+            new_job_name=new_job_name
+        )
+
+        # Check if the job exists already and either delete it or return it
+        job_return = self._copy_to_delete_existing(
+            project_class=file_project,
+            job_name=new_job_name,
+            delete_job=delete_existing_job
+        )
+        if job_return is not None:
+            return job_return, file_project, hdf5_project, True
+
+        # Create a new job by copying the current python object, move the content
+        # of the HDF5 file and then attach the new HDF5 link to the new python object.
+        new_job_core = self.copy()
+        new_job_core.reset_job_id()
+        new_job_core._name = new_job_name
+        new_job_core._hdf5 = hdf5_project
+        new_job_core._master_id = self._master_id
+        new_job_core._parent_id = self._parent_id
+        new_job_core._master_id = self._master_id
+        new_job_core._status = self._status
+        if new_job_name == self.job_name:
+            self.project_hdf5.copy_to(destination=hdf5_project.open(".."))
+        else:
+            self.project_hdf5.copy_to(destination=hdf5_project, maintain_name=False)
+        # Update the database entry
+        if self.job_id:
+            self._copy_database_entry(
+                new_job_core=new_job_core,
+                new_database_entry=new_database_entry
+            )
+
+        # Copy files outside the HDF5 file
+        if copy_files and os.path.exists(self.working_directory):
+            shutil.copytree(
+                self.working_directory,
+                new_job_core.working_directory,
+            )
+        return new_job_core, file_project, hdf5_project, False
+
+    def copy_to(self, project, new_job_name=None, new_database_entry=True, copy_files=True):
         """
         Copy the content of the job including the HDF5 file to a new location
 
@@ -668,35 +735,12 @@ class JobCore(PyironObject):
         Returns:
             JobCore: JobCore object pointing to the new location.
         """
-        if isinstance(project, JobCore):
-            try:
-                project = project.project_hdf5.copy()
-            except OSError:
-                time.sleep(5)
-                project = project.project_hdf5.copy()
-        elif isinstance(project, self.project.__class__):
-            project = self.project_hdf5.__class__(project, self.job_name)
-        elif isinstance(project, self.project_hdf5.__class__):
-            project = project.copy()
-        else:
-            raise ValueError("Project type not supported. ", type(project))
-        new_job_core = self.copy()
-        new_job_core._hdf5 = project.open(self.job_name)
-        new_job_core._master_id = self._master_id
-        new_job_core._parent_id = self._parent_id
-        new_job_core._master_id = self._master_id
-        new_job_core._status = self._status
-        self.project_hdf5.copy_to(destination=project)
-        if self.job_id:
-            self._copy_database_entry(
-                new_job_core=new_job_core,
-                new_database_entry=new_database_entry
-            )
-        if os.path.exists(self.working_directory):
-            shutil.copytree(
-                self.working_directory,
-                os.path.join(project.working_directory, self.job_name),
-            )
+        new_job_core, _, _, _ = self._internal_copy_to(
+            project=project,
+            new_job_name=new_job_name,
+            new_database_entry=new_database_entry,
+            copy_files=copy_files
+        )
         return new_job_core
 
     def _copy_database_entry(self, new_job_core, new_database_entry):
@@ -770,17 +814,15 @@ class JobCore(PyironObject):
         """
         self.job_name = new_job_name
 
-    def reset_job_id(self, job_id):
+    def reset_job_id(self, job_id=None):
         """
         The reset_job_id function has to be implemented by the derived classes - usually the GenericJob class
 
         Args:
-            job_id (int):
+            job_id (int/ None):
 
         """
-        raise NotImplementedError(
-            "reset_job_id() should be implemented in the derived class"
-        )
+        self._job_id = job_id
 
     def save(self):
         """
@@ -1026,6 +1068,58 @@ class JobCore(PyironObject):
         return os.path.isfile(
             os.path.join(self.project_hdf5.file_path, self.job_name + ".tar.bz2")
         )
+
+    def _get_project_for_copy(self, project, new_job_name):
+        """
+        Internal helper function to generate a project and hdf5 project for copying
+
+        Args:
+            project (JobCore/ProjectHDFio/Project/None): The project to copy the job to.
+                (Default is None, use the same project.)
+            new_job_name (str): The new name to assign the duplicate job. Required if the project is `None` or the same
+                project as the copied job. (Default is None, try to keep the same name.)
+
+        Returns:
+            Project, ProjectHDFio
+        """
+        if isinstance(project, JobCore):
+            project = project.project_hdf5
+        if isinstance(project, self.project.__class__):
+            print("Project")
+            file_project = project
+            hdf5_project = self.project_hdf5.__class__(project, new_job_name, h5_path="/" + new_job_name)
+        elif isinstance(project, self.project_hdf5.__class__):
+            print("ProjectHDF")
+            file_project = project.project
+            hdf5_project = project.open(new_job_name)
+        elif project is None:
+            print("ProjectNONE")
+            file_project = self.project
+            hdf5_project = self.project_hdf5.__class__(file_project, new_job_name, h5_path="/" + new_job_name)
+        else:
+            raise ValueError("Project should be JobCore/ProjectHDFio/Project/None")
+        return file_project, hdf5_project
+
+    @staticmethod
+    def _copy_to_delete_existing(project_class, job_name, delete_job):
+        """
+        Args:
+            project_class (Project): The project to copy the job to.
+                (Default is None, use the same project.)
+            job_name (str): The new name to assign the duplicate job. Required if the project is `None` or the same
+                project as the copied job. (Default is None, try to keep the same name.)
+            delete_job (bool): Delete job if it exists already
+
+        Returns:
+            GenericJob/ None
+        """
+        job_table = project_class.job_table(recursive=False)
+        if len(job_table) > 0 and job_name in job_table.job.values:
+            if not delete_job:
+                return project_class.load(job_name)
+            else:
+                project_class.remove_job(job_name)
+                return None
 
 
 class DatabaseProperties(object):
