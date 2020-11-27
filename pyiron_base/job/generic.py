@@ -501,16 +501,14 @@ class GenericJob(JobCore):
         if project is None and new_job_name is None:
             raise ValueError("copy_to requires either a new project or a new_job_name.")
 
+        project = project or self.project
         if isinstance(project, self.project.__class__):
-            in_same_project = project.path == self.project.path
-            project = project or self.project
+            in_same_project = project.path == self.project.path   
             job_table = project.job_table(recursive=False)
         elif isinstance(project, self.project_hdf5.__class__):
             in_same_project = project.path == self.project_hdf5.path
-            project = project or self.project
             job_table = project.project.job_table(recursive=False)
         elif project is None:
-            project = self.project
             in_same_project = True
             job_table = self.project.job_table(recursive=False)
         else:
