@@ -41,7 +41,7 @@ class TestCopyTo(unittest.TestCase):
         )
 
     def test_copy_to_job_ex(self):
-        job_ser = self.project.create_job("SerialMasterBase", "sequence_single_ex")
+        job_ser = self.project.create.job.SerialMasterBase("sequence_single_ex")
         ham = self.project.create.job.ScriptJob("job_single_ex")
         ham.to_hdf()
         ham.copy_to(job_ser)
