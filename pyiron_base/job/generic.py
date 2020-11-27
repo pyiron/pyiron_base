@@ -19,7 +19,7 @@ from pyiron_base.settings.generic import Settings
 from pyiron_base.job.executable import Executable
 from pyiron_base.job.jobstatus import JobStatus
 from pyiron_base.job.core import JobCore
-from pyiron_base.generic.util import static_isinstance
+from pyiron_base.generic.util import static_isinstance, deprecate
 from pyiron_base.server.generic import Server
 from pyiron_base.database.filetable import FileTable
 import subprocess
@@ -1671,6 +1671,7 @@ class GenericJob(JobCore):
                 self._before_successor_calc(child)
                 child.run()
 
+    @deprecate("Use job.save()")
     def _create_job_structure(self, debug=False):
         """
         Internal helper function to create the input directories, save the job in the database and write the wrapper.
@@ -1678,7 +1679,6 @@ class GenericJob(JobCore):
         Args:
             debug (bool): Debug Mode
         """
-        warnings.warn("Use job.save() instead of job._create_job_structure().", self.s.DeprecationWarning)
         self.save()
 
     def _check_if_input_should_be_written(self):
