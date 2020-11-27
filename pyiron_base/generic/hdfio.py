@@ -331,7 +331,7 @@ class FileHDFio(object):
             file_name = destination.file_name
 
         if self.file_exists:
-            dest_path = destination.h5_path[1:] if destination.h5_path[0] == "/" else dest_path = destination.h5_path
+            dest_path = destination.h5_path[1:] if destination.h5_path[0] == "/" else destination.h5_path
             if self.file_name != file_name:
                 with h5py.File(self.file_name, mode="r") as f_source:
                     with h5py.File(file_name, mode="a") as f_target:
