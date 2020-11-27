@@ -478,6 +478,35 @@ class GenericJob(JobCore):
         copied_self._job_id = None
         return copied_self
 
+    def _internal_copy_to(self, project=None, new_job_name=None, new_database_entry=True,
+                          copy_files=True, delete_existing_job=False):
+        # Store all job arguments in the HDF5 file
+        if not self.project_hdf5.file_exists:
+            self.to_hdf()
+            delete_file_after_copy = True
+        else:
+            delete_file_after_copy = False
+
+        # Call the copy_to() function defined in the JobCore
+        new_job_core, file_project, hdf5_project, reload_flag = super(GenericJob, self)._internal_copy_to(
+            project=project,
+            new_job_name=new_job_name,
+            new_database_entry=new_database_entry,
+            copy_files=copy_files,
+            delete_existing_job=delete_existing_job
+        )
+        if reload_flag:
+            return new_job_core, file_project, hdf5_project, reload_flag
+
+        # Reload object from HDF5 file
+        new_job_core.from_hdf()
+
+        # Remove HDF5 file if it did not exist before
+        if delete_file_after_copy:
+            self.project_hdf5.remove_file()
+
+        return new_job_core, file_project, hdf5_project, reload_flag
+
     def copy_to(self, project=None, new_job_name=None, input_only=False, new_database_entry=True,
                 delete_existing_job=False):
         """
@@ -496,77 +525,29 @@ class GenericJob(JobCore):
         Returns:
             GenericJob: GenericJob object pointing to the new location.
         """
-        def _delete_existing(project_class, job_name, delete_job):
-            job_table = project_class.job_table(recursive=False)
-            if len(job_table) > 0 and job_name in job_table.job.values:
-                if not delete_job:
-                    return project_class.load(job_name)
-                else:
-                    project_class.remove_job(job_name)
-
+        # Update flags
         if input_only and new_database_entry:
             new_database_entry = False
-        if project is None and new_job_name is None:
-            raise ValueError("copy_to requires either a new project or a new_job_name.")
 
-        if isinstance(project, JobCore):
-            project = project.project_hdf5
-        new_job_name = new_job_name or self.job_name
-        if isinstance(project, self.project.__class__):
-            file_project = project
-            hdf5_project = self.project_hdf5.__class__(project, new_job_name, h5_path="/" + new_job_name)
-        elif isinstance(project, self.project_hdf5.__class__):
-            file_project = project.project
-            hdf5_project = project.open(new_job_name)
-        elif project is None:
-            file_project = self.project
-            if len(self.project_hdf5.h5_path.split("/")) > 2:
-                hdf5_project = self.project_hdf5.open("../" + new_job_name)
-            else:
-                hdf5_project = self.project_hdf5.__class__(file_project, new_job_name, h5_path="/" + new_job_name)
-        else:
-            raise ValueError("Project should be JobCore/ProjectHDFio/Project/None")
-
-        if not self.project_hdf5.file_exists:
-            self.to_hdf()
-            delete_file_after_copy = True
-        else:
-            delete_file_after_copy = False
-
-        # Delete existing job
-        _delete_existing(
-            project_class=file_project,
-            job_name=new_job_name,
-            delete_job=delete_existing_job
+        # Call the copy_to() function defined in the JobCore
+        new_job_core, file_project, hdf5_project, reload_flag = self._internal_copy_to(
+            project=project,
+            new_job_name=new_job_name,
+            new_database_entry=new_database_entry,
+            copy_files=False,
+            delete_existing_job=delete_existing_job
         )
+        if reload_flag:
+            return new_job_core
 
-        # Copy job
-        new_generic_job = self.copy()
-        new_generic_job._name = new_job_name
-        new_generic_job.project_hdf5.copy_to(
-            destination=hdf5_project,
-            maintain_name=False
-        )
-        new_generic_job.project_hdf5 = hdf5_project
-        self._copy_database_entry(
-            new_job_core=new_generic_job,
-            new_database_entry=new_database_entry
-        )
-        if self._job_id is not None:
-            new_generic_job.refresh_job_status()
-        else:
-            self._status = JobStatus(db=self.project.db, initial_status=self._status.string)
-
+        # Remove output if it should not be copied
         if input_only:
-            if "output" in new_generic_job.project_hdf5.list_groups():
-                del new_generic_job.project_hdf5[
-                    posixpath.join(new_generic_job.project_hdf5.h5_path, "output")
+            if "output" in new_job_core.project_hdf5.list_groups():
+                del new_job_core.project_hdf5[
+                    posixpath.join(new_job_core.project_hdf5.h5_path, "output")
                 ]
-
-        if delete_file_after_copy:
-            self.project_hdf5.remove_file()
-
-        return new_generic_job
+            new_job_core.status.initialized = True
+        return new_job_core
 
     def copy_file_to_working_directory(self, file):
         """
@@ -1717,6 +1698,37 @@ class GenericJob(JobCore):
                 "busy master: {} {}".format(master_id, self.get_job_id())
             )
             del self
+
+    def _get_project_for_copy(self, project, new_job_name):
+        """
+        Internal helper function to generate a project and hdf5 project for copying
+
+        Args:
+            project (JobCore/ProjectHDFio/Project/None): The project to copy the job to.
+                (Default is None, use the same project.)
+            new_job_name (str): The new name to assign the duplicate job. Required if the project is `None` or the same
+                project as the copied job. (Default is None, try to keep the same name.)
+
+        Returns:
+            Project, ProjectHDFio
+        """
+        if isinstance(project, JobCore):
+            project = project.project_hdf5
+        if isinstance(project, self.project.__class__):
+            file_project = project
+            hdf5_project = self.project_hdf5.__class__(project, new_job_name, h5_path="/" + new_job_name)
+        elif isinstance(project, self.project_hdf5.__class__):
+            file_project = project.project
+            hdf5_project = project.open(new_job_name)
+        elif project is None:
+            file_project = self.project
+            if len(self.project_hdf5.h5_path.split("/")) > 2:
+                hdf5_project = self.project_hdf5.open("../" + new_job_name)
+            else:
+                hdf5_project = self.project_hdf5.__class__(file_project, new_job_name, h5_path="/" + new_job_name)
+        else:
+            raise ValueError("Project should be JobCore/ProjectHDFio/Project/None")
+        return file_project, hdf5_project
 
 
 class GenericError(object):

@@ -121,7 +121,7 @@ class TestGenericJob(unittest.TestCase):
         self.assertTrue(job_copy_again.status.finished)
         # Completely new job name
         job_new = job.copy_to(new_job_name="template_new", input_only=False, new_database_entry=False)
-        self.assertTrue(job_new.status.created)
+        self.assertTrue(job_new.status.initialized)
         # Check if new database entry implemented
         _ = job.copy_to(new_job_name="template_last", input_only=False, new_database_entry=True)
         df = self.project.job_table()
