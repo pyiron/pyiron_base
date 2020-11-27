@@ -306,9 +306,9 @@ class FileHDFio(object):
                 try:
                     target.create_group(target_path)
                 except ValueError:
-                    pass
+                    pass  # In case the copy_to() function failed previously and the group already exists. 
             if target_path == "/":
-                source.copy(h5_path, "/") if if source == target else source.copy(h5_path, target)
+                source.copy(h5_path, "/") if source == target else source.copy(h5_path, target)
                     source.copy(source_path, "/")
                 else:
                     source.copy(source_path, target)
