@@ -333,17 +333,12 @@ class FileHDFio(object):
             file_name = destination.file_name
         if self.file_exists:
             dest_path = destination.h5_path[1:] if destination.h5_path[0] == "/" else dest_path = destination.h5_path
-                dest_path = destination.h5_path[1:]
-            else:
-                dest_path = destination.h5_path
             if self.file_name != file_name:
-                with h5py.File(
-                    self.file_name, mode="r", libver="latest", swmr=True
-                ) as f_source:
-                    with h5py.File(file_name, mode="a", libver="latest", swmr=True) as f_target:
+                with h5py.File(self.file_name, mode="r") as f_source:
+                    with h5py.File(file_name, mode="a") as f_target:
                         _internal_copy(source=f_source, source_path=self._h5_path, target=f_target, target_path=dest_path, maintain_flag=maintain_name)
             else:
-                with h5py.File(file_name, mode="a", libver="latest", swmr=True) as f_target:
+                with h5py.File(file_name, mode="a") as f_target:
                     _internal_copy(source=f_target, source_path=self._h5_path, target=f_target, target_path=dest_path, maintain_flag=maintain_name)
         return destination
 
