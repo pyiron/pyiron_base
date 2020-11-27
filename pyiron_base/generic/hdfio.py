@@ -308,7 +308,7 @@ class FileHDFio(object):
                 except ValueError:
                     pass
             if target_path == "/":
-                if source == target:
+                source.copy(h5_path, "/") if if source == target else source.copy(h5_path, target)
                     source.copy(source_path, "/")
                 else:
                     source.copy(source_path, target)
