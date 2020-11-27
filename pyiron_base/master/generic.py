@@ -240,32 +240,52 @@ class GenericMaster(GenericJob):
         super(GenericMaster, self).move_to(project)
 
     def copy_to(
-        self, project=None, new_job_name=None, input_only=False, new_database_entry=True
+        self, project=None, new_job_name=None, input_only=False, new_database_entry=True, delete_existing_job=False
     ):
         """
-        Copy the content of the job including the HDF5 file to a new location
+        Copy the content of the job including the HDF5 file to a new location.
 
         Args:
-            project (JobCore/ProjectHDFio/Project/None): project to copy the job to
-            new_job_name (str): to duplicate the job within the same porject it is necessary to modify the job name
-                                - optional
-            input_only (bool): [True/False] to copy only the input - default False
-            new_database_entry (bool): [True/False] to create a new database entry - default True
+            project (JobCore/ProjectHDFio/Project/None): The project to copy the job to.
+                (Default is None, use the same project.)
+            new_job_name (str): The new name to assign the duplicate job. Required if the project is `None` or the same
+                project as the copied job. (Default is None, try to keep the same name.)
+            input_only (bool): [True/False] Whether to copy only the input. (Default is False.)
+            new_database_entry (bool): [True/False] Whether to create a new database entry. If input_only is True then
+                new_database_entry is False. (Default is True.)
+            delete_existing_job (bool): [True/False] Delete existing job in case it exists already (Default is False.)
 
         Returns:
             GenericJob: GenericJob object pointing to the new location.
         """
+        new_job_name = new_job_name or self.job_name
+        file_project, hdf5_project = self._get_project_for_copy(
+            project=project,
+            new_job_name=new_job_name
+        )
+
+        # Delete existing job
+        job_return = self._copy_to_delete_existing(
+            project_class=file_project,
+            job_name=new_job_name,
+            delete_job=delete_existing_job
+        )
+        if job_return is not None:
+            return job_return
+
         new_generic_job = super(GenericMaster, self).copy_to(
             project=project,
             new_job_name=new_job_name,
             input_only=input_only,
             new_database_entry=new_database_entry,
+            delete_existing_job=delete_existing_job
         )
+
         if new_generic_job.job_id and new_database_entry and self._job_id:
             for child_id in self.child_ids:
                 child = self.project.load(child_id)
                 new_child = child.copy_to(
-                    project=project.open(self.job_name + "_hdf5"),
+                    project=file_project.open(new_generic_job.job_name + "_hdf5"),
                     new_database_entry=new_database_entry,
                 )
                 if new_database_entry and child.parent_id:

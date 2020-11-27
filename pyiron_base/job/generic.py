@@ -496,36 +496,16 @@ class GenericJob(JobCore):
         Returns:
             GenericJob: GenericJob object pointing to the new location.
         """
-        def _delete_existing(project_class, job_name, delete_job):
-            job_table = project_class.job_table(recursive=False)
-            if len(job_table) > 0 and job_name in job_table.job.values:
-                if not delete_job:
-                    return project_class.load(job_name)
-                else:
-                    project_class.remove_job(job_name)
-
         if input_only and new_database_entry:
             new_database_entry = False
         if project is None and new_job_name is None:
             raise ValueError("copy_to requires either a new project or a new_job_name.")
 
-        if isinstance(project, JobCore):
-            project = project.project_hdf5
         new_job_name = new_job_name or self.job_name
-        if isinstance(project, self.project.__class__):
-            file_project = project
-            hdf5_project = self.project_hdf5.__class__(project, new_job_name, h5_path="/" + new_job_name)
-        elif isinstance(project, self.project_hdf5.__class__):
-            file_project = project.project
-            hdf5_project = project.open(new_job_name)
-        elif project is None:
-            file_project = self.project
-            if len(self.project_hdf5.h5_path.split("/")) > 2:
-                hdf5_project = self.project_hdf5.open("../" + new_job_name)
-            else:
-                hdf5_project = self.project_hdf5.__class__(file_project, new_job_name, h5_path="/" + new_job_name)
-        else:
-            raise ValueError("Project should be JobCore/ProjectHDFio/Project/None")
+        file_project, hdf5_project = self._get_project_for_copy(
+            project=project,
+            new_job_name=new_job_name
+        )
 
         if not self.project_hdf5.file_exists:
             self.to_hdf()
@@ -534,11 +514,13 @@ class GenericJob(JobCore):
             delete_file_after_copy = False
 
         # Delete existing job
-        _delete_existing(
+        job_return = self._copy_to_delete_existing(
             project_class=file_project,
             job_name=new_job_name,
             delete_job=delete_existing_job
         )
+        if job_return is not None:
+            return job_return
 
         # Copy job
         new_generic_job = self.copy()
@@ -1717,6 +1699,58 @@ class GenericJob(JobCore):
                 "busy master: {} {}".format(master_id, self.get_job_id())
             )
             del self
+
+    def _get_project_for_copy(self, project, new_job_name):
+        """
+        Internal helper function to generate a project and hdf5 project for copying
+
+        Args:
+            project (JobCore/ProjectHDFio/Project/None): The project to copy the job to.
+                (Default is None, use the same project.)
+            new_job_name (str): The new name to assign the duplicate job. Required if the project is `None` or the same
+                project as the copied job. (Default is None, try to keep the same name.)
+
+        Returns:
+            Project, ProjectHDFio
+        """
+        if isinstance(project, JobCore):
+            project = project.project_hdf5
+        if isinstance(project, self.project.__class__):
+            file_project = project
+            hdf5_project = self.project_hdf5.__class__(project, new_job_name, h5_path="/" + new_job_name)
+        elif isinstance(project, self.project_hdf5.__class__):
+            file_project = project.project
+            hdf5_project = project.open(new_job_name)
+        elif project is None:
+            file_project = self.project
+            if len(self.project_hdf5.h5_path.split("/")) > 2:
+                hdf5_project = self.project_hdf5.open("../" + new_job_name)
+            else:
+                hdf5_project = self.project_hdf5.__class__(file_project, new_job_name, h5_path="/" + new_job_name)
+        else:
+            raise ValueError("Project should be JobCore/ProjectHDFio/Project/None")
+        return file_project, hdf5_project
+
+    @staticmethod
+    def _copy_to_delete_existing(project_class, job_name, delete_job):
+        """
+        Args:
+            project_class (Project): The project to copy the job to.
+                (Default is None, use the same project.)
+            job_name (str): The new name to assign the duplicate job. Required if the project is `None` or the same
+                project as the copied job. (Default is None, try to keep the same name.)
+            delete_job (bool): Delete job if it exists already
+
+        Returns:
+            GenericJob/ None
+        """
+        job_table = project_class.job_table(recursive=False)
+        if len(job_table) > 0 and job_name in job_table.job.values:
+            if not delete_job:
+                return project_class.load(job_name)
+            else:
+                project_class.remove_job(job_name)
+                return None
 
 
 class GenericError(object):
