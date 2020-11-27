@@ -526,7 +526,6 @@ class GenericJob(JobCore):
                 hdf5_project = self.project_hdf5.__class__(file_project, new_job_name, h5_path="/" + new_job_name)
         else:
             raise ValueError("Project should be JobCore/ProjectHDFio/Project/None")
-        in_same_project = hdf5_project.path == self.project_hdf5.path
 
         if not self.project_hdf5.file_exists:
             self.to_hdf()
@@ -542,26 +541,21 @@ class GenericJob(JobCore):
         )
 
         # Copy job
-        if in_same_project:
-            new_generic_job = self.copy()
-            new_generic_job.reset_job_id()
-            new_generic_job._name = new_job_name
-            new_generic_job.project_hdf5.copy_to(
-                destination=hdf5_project,
-                maintain_name=False
-            )
-            new_generic_job.project_hdf5 = hdf5_project
-            self._copy_database_entry(
-                new_job_core=new_generic_job,
-                new_database_entry=new_database_entry
-            )
+        new_generic_job = self.copy()
+        new_generic_job._name = new_job_name
+        new_generic_job.project_hdf5.copy_to(
+            destination=hdf5_project,
+            maintain_name=False
+        )
+        new_generic_job.project_hdf5 = hdf5_project
+        self._copy_database_entry(
+            new_job_core=new_generic_job,
+            new_database_entry=new_database_entry
+        )
+        if self._job_id is not None:
+            new_generic_job.refresh_job_status()
         else:
-            new_generic_job = super(GenericJob, self).copy_to(
-                project=project,
-                new_database_entry=new_database_entry
-            )
-            new_generic_job.reset_job_id(job_id=new_generic_job.job_id)
-            new_generic_job.from_hdf()
+            self._status = JobStatus(db=self.project.db, initial_status=self._status.string)
 
         if input_only:
             if "output" in new_generic_job.project_hdf5.list_groups():
