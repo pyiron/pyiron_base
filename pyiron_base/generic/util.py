@@ -114,18 +114,14 @@ class Deprecator:
 
         Args
         ----
-            message (str):
-                default deprecation message
-            version (str):
-                default version after which the function will be removed
-            pending (bool):
-                only warn about future deprecation, warning category will be
-                PendingDeprecationWarning instead of DeprecationWarning
+            message (str): default deprecation message
+            version (str): default version after which the function will be removed
+            pending (bool): only warn about future deprecation, warning category will be PendingDeprecationWarning
+                instead of DeprecationWarning
         """
         self.message = message
         self.version = version
-        self.category = PendingDeprecationWarning \
-                            if pending else DeprecationWarning
+        self.category = PendingDeprecationWarning if pending else DeprecationWarning
 
     def __call__(self, message, version = None):
         if isinstance(message, types.FunctionType):
@@ -137,13 +133,12 @@ class Deprecator:
 
     def wrap(self, function):
         """
-        Wrap the given function to emit a DeprecationWarning at call time.  The
-        warning message is constructed from the given message and version.
+        Wrap the given function to emit a DeprecationWarning at call time.  The warning message is constructed from the
+        given message and version.
 
         Args
         ----
-            function (function):
-                function to mark as deprecated
+            function (function): function to mark as deprecated
         Return
         ------
             function: raises DeprecationWarning when given function is called
@@ -154,16 +149,13 @@ class Deprecator:
             message_format =  "{}.{} will be deprecated"
         message = message_format.format(function.__module__, function.__name__)
 
-        if self.message:
+        if self.message is not None:
             message += ": {}.".format(self.message)
         else:
             message += "."
 
-        if self.version:
-            message += \
-                " It is not guaranteed to be in service in vers. {}".format(
-                        self.version
-                )
+        if self.version is not None:
+            message += " It is not guaranteed to be in service in vers. {}".format(self.version)
 
         @functools.wraps(function)
         def decorated(*args, **kwargs):
