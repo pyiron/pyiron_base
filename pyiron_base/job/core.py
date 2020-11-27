@@ -686,7 +686,6 @@ class JobCore(PyironObject):
         new_job_core._parent_id = self._parent_id
         new_job_core._master_id = self._master_id
         new_job_core._status = self._status
-        print("core copy_to: ", self.project_hdf5.file_name, self.project_hdf5.h5_path, project.file_name, project.h5_path)
         self.project_hdf5.copy_to(destination=project)
         if self.job_id:
             self._copy_database_entry(

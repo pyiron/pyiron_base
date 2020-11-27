@@ -51,7 +51,6 @@ class TestCopyTo(unittest.TestCase):
 
     def test_copy_to_project_ex(self):
         sub_project = self.project.copy()
-        print(sub_project.project_path)
         sub_project = sub_project.open("sub_project_ex")
         ham = self.project.create_job("ScriptJob", "job_single_pr_ex")
         ham.to_hdf()
