@@ -332,7 +332,7 @@ class FileHDFio(object):
         if file_name is None:
             file_name = destination.file_name
         if self.file_exists:
-            if destination.h5_path[0] == "/":
+            dest_path = destination.h5_path[1:] if destination.h5_path[0] == "/" else dest_path = destination.h5_path
                 dest_path = destination.h5_path[1:]
             else:
                 dest_path = destination.h5_path
