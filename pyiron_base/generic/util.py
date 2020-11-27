@@ -112,8 +112,7 @@ class Deprecator:
         """
         Initialize default values for deprecation message and version.
 
-        Args
-        ----
+        Args:
             message (str): default deprecation message
             version (str): default version after which the function might be removed
             pending (bool): only warn about future deprecation, warning category will be PendingDeprecationWarning
@@ -136,11 +135,10 @@ class Deprecator:
         Wrap the given function to emit a DeprecationWarning at call time.  The warning message is constructed from the
         given message and version.
 
-        Args
-        ----
+        Args:
             function (function): function to mark as deprecated
-        Return
-        ------
+
+        Return:
             function: raises DeprecationWarning when given function is called
         """
         if self.category == PendingDeprecationWarning:
