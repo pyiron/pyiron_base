@@ -759,9 +759,9 @@ class JobCore(PyironObject):
                 db_entry["subjob"] = new_job_core.project_hdf5.h5_path
                 del db_entry["id"]
                 job_id = self.project.db.add_item_dict(db_entry)
-                new_job_core._job_id = job_id
+                new_job_core.reset_job_id(job_id=job_id)
         else:
-            new_job_core._job_id = None
+            new_job_core.reset_job_id(job_id=None)
 
     def move_to(self, project):
         """

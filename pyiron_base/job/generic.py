@@ -546,7 +546,7 @@ class GenericJob(JobCore):
                 del new_job_core.project_hdf5[
                     posixpath.join(new_job_core.project_hdf5.h5_path, "output")
                 ]
-
+            new_job_core.status.initialized = True
         return new_job_core
 
     def copy_file_to_working_directory(self, file):
