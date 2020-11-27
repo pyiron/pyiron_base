@@ -309,7 +309,7 @@ class FileHDFio(object):
                     pass  # In case the copy_to() function failed previously and the group already exists. 
 
             if target_path == "/":
-                source.copy(h5_path, "/") if source == target else source.copy(h5_path, target)
+                source.copy(target_path, "/") if source == target else source.copy(target_path, target)
             else:
                 if maintain_flag:
                     source.copy(source_path, target[dest_path])
