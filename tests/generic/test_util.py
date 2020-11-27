@@ -5,7 +5,7 @@
 import unittest
 import warnings
 from pyiron_base.generic.util import static_isinstance
-from pyiron_base.generic.util import Deprecator, deprecate
+from pyiron_base.generic.util import deprecate, deprecate_soon
 
 
 class TestJobType(unittest.TestCase):
@@ -54,6 +54,17 @@ class TestJobType(unittest.TestCase):
                            "service in vers. 0.2.0"
         self.assertTrue( w[0].message.args[0].endswith(expected_message),
                         "Warning message does not reflect decorator arguments.")
+
+        @deprecate_soon
+        def baz(a):
+            return 3*a
+
+        with warnings.catch_warnings(record=True) as w:
+            self.assertEqual(baz(1), 3,
+                             "Decorated function does not return original "
+                             "return value")
+        self.assertEqual(w[0].category, PendingDeprecationWarning,
+                        "Raised warning is not a PendingDeprecationWarning")
 
 if __name__ == "__main__":
     unittest.main()

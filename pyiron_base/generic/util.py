@@ -72,6 +72,10 @@ class Deprecator:
         {function_name} is deprecated: {message}. It is not guaranteed to be in
         service after {version}.
 
+    unless `pending=True` was given.  Then the message will be
+
+        {function_name} will be deprecated in a future version: {message}.
+
     If message and version are not initialized or given during the decorating
     call the respective parts are left out from the message.
 
@@ -104,12 +108,24 @@ class Deprecator:
     guaranteed to be in service in vers. 0.5.0
     """
 
-    def __init__(self, message = None, version = None):
+    def __init__(self, message=None, version=None, pending=False):
         """
         Initialize default values for deprecation message and version.
+
+        Args
+        ----
+            message (str):
+                default deprecation message
+            version (str):
+                default version after which the function will be removed
+            pending (bool):
+                only warn about future deprecation, warning category will be
+                PendingDeprecationWarning instead of DeprecationWarning
         """
         self.message = message
         self.version = version
+        self.category = PendingDeprecationWarning \
+                            if pending else DeprecationWarning
 
     def __call__(self, message, version = None):
         if isinstance(message, types.FunctionType):
@@ -132,23 +148,32 @@ class Deprecator:
         ------
             function: raises DeprecationWarning when given function is called
         """
-        message = "{}.{} is deprecated".format(
-                    function.__module__, function.__name__)
+        if self.category == PendingDeprecationWarning:
+            message_format =  "{}.{} is deprecated"
+        else:
+            message_format =  "{}.{} will be deprecated"
+        message = message_format.format(function.__module__, function.__name__)
+
         if self.message:
             message += ": {}.".format(self.message)
+        else:
+            message += "."
+
         if self.version:
             message += \
                 " It is not guaranteed to be in service in vers. {}".format(
                         self.version
                 )
+
         @functools.wraps(function)
         def decorated(*args, **kwargs):
             warnings.warn(
                 message,
-                category=DeprecationWarning,
+                category=self.category,
                 stacklevel=2
             )
             return function(*args, **kwargs)
         return decorated
 
 deprecate = Deprecator()
+deprecate_soon = Deprecator(pending=True)
