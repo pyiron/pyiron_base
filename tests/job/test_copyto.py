@@ -24,7 +24,7 @@ class TestCopyTo(unittest.TestCase):
 
     def test_copy_to_job(self):
         job_ser = self.project.create_job("SerialMasterBase", "sequence_single")
-        ham = self.project.create_job('ScriptJob', "job_single")
+        ham = self.project.create.job.ScriptJob("job_single")
         ham.copy_to(job_ser)
         self.assertTrue(job_ser['job_single/input/custom_dict'])
         job_ser.remove()
