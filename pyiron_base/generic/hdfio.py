@@ -310,11 +310,9 @@ class FileHDFio(object):
 
             if target_path == "/":
                 source.copy(h5_path, "/") if source == target else source.copy(h5_path, target)
-
             else:
                 if maintain_flag:
                     source.copy(source_path, target[dest_path])
-
                 else:
                     group_name_old = source_path.split("/")[-1]
                     try:
@@ -331,6 +329,7 @@ class FileHDFio(object):
 
         if file_name is None:
             file_name = destination.file_name
+
         if self.file_exists:
             dest_path = destination.h5_path[1:] if destination.h5_path[0] == "/" else dest_path = destination.h5_path
             if self.file_name != file_name:
@@ -340,6 +339,7 @@ class FileHDFio(object):
             else:
                 with h5py.File(file_name, mode="a") as f_target:
                     _internal_copy(source=f_target, source_path=self._h5_path, target=f_target, target_path=dest_path, maintain_flag=maintain_name)
+
         return destination
 
     def create_group(self, name, track_order=False):
