@@ -115,7 +115,7 @@ class Deprecator:
         Args
         ----
             message (str): default deprecation message
-            version (str): default version after which the function will be removed
+            version (str): default version after which the function might be removed
             pending (bool): only warn about future deprecation, warning category will be PendingDeprecationWarning
                 instead of DeprecationWarning
         """
