@@ -130,6 +130,12 @@ class TestGenericJob(unittest.TestCase):
                         delete_existing_job=True)
         df = self.project.job_table()
         self.assertTrue("template_copy" not in df.job.values)
+        # Check that new name and new project can both be provided at once
+        parent_job = self.project.create.job.ScriptJob('parent')
+        new_job_name = 'parents_child'
+        job_copy = job.copy_template(project=parent_job._hdf5, new_job_name=new_job_name)
+        self.assertEqual(job_copy.project_hdf5.path.split('/')[-2], parent_job.job_name)
+        self.assertEqual(job_copy.job_name, new_job_name)
 
     # def test_sub_job_name(self):
     #     pass
