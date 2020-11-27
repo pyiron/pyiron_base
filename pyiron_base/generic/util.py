@@ -133,7 +133,7 @@ class Deprecator:
         else:
             self.message = message
             self.version = version
-            return lambda f: self.wrap(f)
+            return self.wrap
 
     def wrap(self, function):
         """

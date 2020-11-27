@@ -26,9 +26,7 @@ class TestJobType(unittest.TestCase):
         self.assertRaises(TypeError, static_isinstance, list(), 1)
 
     def test_deprecate(self):
-        """
-        Function decorated with `deprecate` should raise a warning.
-        """
+        """ Function decorated with `deprecate` should raise a warning.  """
         @deprecate
         def foo(a):
             return 2*a
