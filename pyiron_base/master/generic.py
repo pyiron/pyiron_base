@@ -258,41 +258,33 @@ class GenericMaster(GenericJob):
         Returns:
             GenericJob: GenericJob object pointing to the new location.
         """
-        new_job_name = new_job_name or self.job_name
-        file_project, hdf5_project = self._get_project_for_copy(
-            project=project,
-            new_job_name=new_job_name
-        )
+        # Update flags
+        if input_only and new_database_entry:
+            new_database_entry = False
 
-        # Delete existing job
-        job_return = self._copy_to_delete_existing(
-            project_class=file_project,
-            job_name=new_job_name,
-            delete_job=delete_existing_job
-        )
-        if job_return is not None:
-            return job_return
-
-        new_generic_job = super(GenericMaster, self).copy_to(
+        # Call the copy_to() function defined in the JobCore
+        new_job_core, file_project, hdf5_project, reload_flag = self._internal_copy_to(
             project=project,
             new_job_name=new_job_name,
-            input_only=input_only,
             new_database_entry=new_database_entry,
+            copy_files=False,
             delete_existing_job=delete_existing_job
         )
+        if reload_flag:
+            return new_job_core
 
-        if new_generic_job.job_id and new_database_entry and self._job_id:
+        if new_job_core.job_id and new_database_entry and self._job_id:
             for child_id in self.child_ids:
                 child = self.project.load(child_id)
                 new_child = child.copy_to(
-                    project=file_project.open(new_generic_job.job_name + "_hdf5"),
+                    project=file_project.open(new_job_core.job_name + "_hdf5"),
                     new_database_entry=new_database_entry,
                 )
                 if new_database_entry and child.parent_id:
-                    new_child.parent_id = new_generic_job.job_id
+                    new_child.parent_id = new_job_core.job_id
                 if new_database_entry and child.master_id:
-                    new_child.master_id = new_generic_job.job_id
-        return new_generic_job
+                    new_child.master_id = new_job_core.job_id
+        return new_job_core
 
     def update_master(self):
         """

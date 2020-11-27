@@ -478,6 +478,35 @@ class GenericJob(JobCore):
         copied_self._job_id = None
         return copied_self
 
+    def _internal_copy_to(self, project=None, new_job_name=None, new_database_entry=True,
+                          copy_files=True, delete_existing_job=False):
+        # Store all job arguments in the HDF5 file
+        if not self.project_hdf5.file_exists:
+            self.to_hdf()
+            delete_file_after_copy = True
+        else:
+            delete_file_after_copy = False
+
+        # Call the copy_to() function defined in the JobCore
+        new_job_core, file_project, hdf5_project, reload_flag = super(GenericJob, self)._internal_copy_to(
+            project=project,
+            new_job_name=new_job_name,
+            new_database_entry=new_database_entry,
+            copy_files=copy_files,
+            delete_existing_job=delete_existing_job
+        )
+        if reload_flag:
+            return new_job_core, file_project, hdf5_project, reload_flag
+
+        # Reload object from HDF5 file
+        new_job_core.from_hdf()
+
+        # Remove HDF5 file if it did not exist before
+        if delete_file_after_copy:
+            self.project_hdf5.remove_file()
+
+        return new_job_core, file_project, hdf5_project, reload_flag
+
     def copy_to(self, project=None, new_job_name=None, input_only=False, new_database_entry=True,
                 delete_existing_job=False):
         """
@@ -500,13 +529,6 @@ class GenericJob(JobCore):
         if input_only and new_database_entry:
             new_database_entry = False
 
-        # Store all job arguments in the HDF5 file
-        if not self.project_hdf5.file_exists:
-            self.to_hdf()
-            delete_file_after_copy = True
-        else:
-            delete_file_after_copy = False
-
         # Call the copy_to() function defined in the JobCore
         new_job_core, file_project, hdf5_project, reload_flag = self._internal_copy_to(
             project=project,
@@ -518,19 +540,12 @@ class GenericJob(JobCore):
         if reload_flag:
             return new_job_core
 
-        # Reload object from HDF5 file
-        new_job_core.from_hdf()
-
         # Remove output if it should not be copied
         if input_only:
             if "output" in new_job_core.project_hdf5.list_groups():
                 del new_job_core.project_hdf5[
                     posixpath.join(new_job_core.project_hdf5.h5_path, "output")
                 ]
-
-        # Remove HDF5 file if it did not exist before
-        if delete_file_after_copy:
-            self.project_hdf5.remove_file()
 
         return new_job_core
 
