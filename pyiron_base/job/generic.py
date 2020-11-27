@@ -484,7 +484,8 @@ class GenericJob(JobCore):
         Copy the content of the job including the HDF5 file to a new location.
 
         Args:
-            project (ProjectHDFio): The project to copy the job to. (Default is None, use the same project.)
+            project (JobCore/ProjectHDFio/Project/None): The project to copy the job to.
+                (Default is None, use the same project.)
             new_job_name (str): The new name to assign the duplicate job. Required if the project is `None` or the same
                 project as the copied job. (Default is None, try to keep the same name.)
             input_only (bool): [True/False] Whether to copy only the input. (Default is False.)
@@ -500,7 +501,18 @@ class GenericJob(JobCore):
         if project is None and new_job_name is None:
             raise ValueError("copy_to requires either a new project or a new_job_name.")
 
-        in_same_project = project is None or project.path == self.project.path
+        project = project or self.project
+        if isinstance(project, self.project.__class__):
+            in_same_project = project.path == self.project.path   
+            job_table = project.job_table(recursive=False)
+        elif isinstance(project, self.project_hdf5.__class__):
+            in_same_project = project.path == self.project_hdf5.path
+            job_table = project.project.job_table(recursive=False)
+        elif project is None:
+            in_same_project = True
+            job_table = self.project.job_table(recursive=False)
+        else:
+            raise ValueError("Project should be JobCore/ProjectHDFio/Project/None")
         has_new_name = new_job_name is not None
         if in_same_project and not has_new_name:
             raise ValueError("When copying to the same project, new_job_name must be provided.")
@@ -512,9 +524,7 @@ class GenericJob(JobCore):
             delete_file_after_copy = False
 
         # Get new hdf location
-        project = project or self.project
         new_job_name = new_job_name or self.job_name
-        job_table = project.job_table(recursive=False)
         if len(job_table) > 0 and new_job_name in job_table.job.values:
             if not delete_existing_job:
                 return project.load(new_job_name)
