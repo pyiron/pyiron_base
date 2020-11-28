@@ -5,25 +5,26 @@
 Generic Job class extends the JobCore class with all the functionality to run the job object.
 """
 
-# import copy
 import signal
 from datetime import datetime
 import os
 
-# import sys
 import posixpath
-import psutil
 import multiprocessing
 from pyiron_base.job.wrapper import JobWrapper
 from pyiron_base.settings.generic import Settings
 from pyiron_base.job.executable import Executable
 from pyiron_base.job.jobstatus import JobStatus
 from pyiron_base.job.core import JobCore
+from pyiron_base.job.util import \
+    _copy_restart_files, \
+    _kill_child, \
+    _job_store_before_copy, \
+    _job_reload_after_copy
 from pyiron_base.generic.util import static_isinstance, deprecate
 from pyiron_base.server.generic import Server
 from pyiron_base.database.filetable import FileTable
 import subprocess
-import shutil
 import warnings
 
 __author__ = "Joerg Neugebauer, Jan Janssen"
@@ -463,29 +464,30 @@ class GenericJob(JobCore):
         Returns:
             GenericJob: New GenericJob object pointing to the same job
         """
-        if not self.project_hdf5.file_exists:
-            delete_file_after_copy = True
-        else:
-            delete_file_after_copy = False
-        self.to_hdf()
-        self_class = self.__class__
-        copied_self = self_class(
+        # Store all job arguments in the HDF5 file
+        delete_file_after_copy = _job_store_before_copy(
+            job=self
+        )
+
+        # Copy Python object - super().copy() causes recursion error for serial master
+        copied_self = self.__class__(
             job_name=self.job_name, project=self.project_hdf5.open("..")
         )
-        copied_self.from_hdf()
-        if delete_file_after_copy:
-            self.project_hdf5.remove_file()
-        copied_self._job_id = None
+        copied_self.reset_job_id()
+
+        # Reload object from HDF5 file
+        _job_reload_after_copy(
+            job=copied_self,
+            delete_file_after_copy=delete_file_after_copy
+        )
         return copied_self
 
     def _internal_copy_to(self, project=None, new_job_name=None, new_database_entry=True,
                           copy_files=True, delete_existing_job=False):
         # Store all job arguments in the HDF5 file
-        if not self.project_hdf5.file_exists:
-            self.to_hdf()
-            delete_file_after_copy = True
-        else:
-            delete_file_after_copy = False
+        delete_file_after_copy = _job_store_before_copy(
+            job=self
+        )
 
         # Call the copy_to() function defined in the JobCore
         new_job_core, file_project, hdf5_project, reload_flag = super(GenericJob, self)._internal_copy_to(
@@ -499,12 +501,16 @@ class GenericJob(JobCore):
             return new_job_core, file_project, hdf5_project, reload_flag
 
         # Reload object from HDF5 file
-        new_job_core.from_hdf()
-
-        # Remove HDF5 file if it did not exist before
+        if not static_isinstance(
+            obj=project.__class__,
+            obj_type="pyiron_base.job.core.JobCore"
+        ):
+            _job_reload_after_copy(
+                job=new_job_core,
+                delete_file_after_copy=delete_file_after_copy
+            )
         if delete_file_after_copy:
             self.project_hdf5.remove_file()
-
         return new_job_core, file_project, hdf5_project, reload_flag
 
     def copy_to(self, project=None, new_job_name=None, input_only=False, new_database_entry=True,
@@ -561,14 +567,15 @@ class GenericJob(JobCore):
         else:
             self.restart_file_list.append(file)
 
-    def copy_template(self, project, new_job_name=None):
+    def copy_template(self, project=None, new_job_name=None):
         """
         Copy the content of the job including the HDF5 file but without the output data to a new location
 
         Args:
-            project (ProjectHDFio): project to copy the job to
-            new_job_name (str): to duplicate the job within the same porject it is necessary to modify the job name
-                                - optional
+            project (JobCore/ProjectHDFio/Project/None): The project to copy the job to.
+                (Default is None, use the same project.)
+            new_job_name (str): The new name to assign the duplicate job. Required if the project is `None` or the same
+                project as the copied job. (Default is None, try to keep the same name.)
 
         Returns:
             GenericJob: GenericJob object pointing to the new location.
@@ -580,31 +587,12 @@ class GenericJob(JobCore):
             new_database_entry=False,
         )
 
-    def _kill_child(self):
-        """
-        Internal helper function to kill a child process.
-        """
-        if not self.server.run_mode.queue and (
-            self.status.running or self.status.submitted
-        ):
-            for proc in psutil.process_iter():
-                try:
-                    pinfo = proc.as_dict(attrs=["pid", "cwd"])
-                except psutil.NoSuchProcess:
-                    pass
-                else:
-                    if pinfo["cwd"] is not None and pinfo["cwd"].startswith(
-                        self.working_directory
-                    ):
-                        job_process = psutil.Process(pinfo["pid"])
-                        job_process.kill()
-
     def remove_child(self):
         """
         internal function to remove command that removes also child jobs.
         Do never use this command, since it will destroy the integrity of your project.
         """
-        self._kill_child()
+        _kill_child(job=self)
         super(GenericJob, self).remove_child()
 
     def kill(self):
@@ -885,30 +873,6 @@ class GenericJob(JobCore):
         raise NotImplementedError(
             "This function needs to be implemented in the specific class."
         )
-
-    # def run_if_non_modal(self):
-    #     """
-    #     The run if non modal function is called by run to execute the simulation in the background. For this we use
-    #     subprocess.Popen()
-    #     """
-    #     shell = (os.name == 'nt')
-    #     try:
-    #         file_name = posixpath.join(self.project_hdf5.working_directory, "run_job.py")
-    #         self._logger.info("{}, status: {}, script: {}".format(self.job_info_str, self.status, file_name))
-    #         with open(posixpath.join(self.project_hdf5.working_directory, 'out.txt'), mode='w') as f_out:
-    #             with open(posixpath.join(self.project_hdf5.working_directory, 'error.txt'), mode='w') as f_err:
-    #                 self._process = subprocess.Popen(['python', '-m', 'pyiron_base.cli', 'wrapper', '-p',
-    #                                                   self.working_directory, '-j', str(self.job_id)],
-    #                                                  cwd=self.project_hdf5.working_directory, shell=shell, stdout=f_out,
-    #                                                  stderr=f_err, universal_newlines=True)
-    #         self._logger.info("{}, status: {}, job submitted".format(self.job_info_str, self.status))
-    #     except subprocess.CalledProcessError as e:
-    #         self._logger.warn("Job aborted")
-    #         self._logger.warn(e.output)
-    #         self.status.aborted = True
-    #         raise ValueError("run_job.py crashed")
-    #     s.logger.info('submitted run %s', self.job_name)
-    #     self._logger.info('job status: %s', self.status)
 
     def run_if_non_modal(self):
         """
@@ -1224,7 +1188,7 @@ class GenericJob(JobCore):
         if self._check_if_input_should_be_written():
             self.project_hdf5.create_working_directory()
             self.write_input()
-            self._copy_restart_files()
+            _copy_restart_files(job=self)
         self.status.created = True
         self._calculate_predecessor()
         print(
@@ -1340,26 +1304,6 @@ class GenericJob(JobCore):
         self.refresh_job_status()
         if not (self.status.finished or self.status.suspended):
             self.status.aborted = True
-
-    def _copy_restart_files(self):
-        """
-        Internal helper function to copy the files required for the restart job.
-        """
-        if not (os.path.isdir(self.working_directory)):
-            raise ValueError(
-                "The working directory is not yet available to copy restart files"
-            )
-        for i, actual_name in enumerate(
-            [os.path.basename(f) for f in self._restart_file_list]
-        ):
-            if actual_name in self.restart_file_dict.keys():
-                new_name = self.restart_file_dict[actual_name]
-                shutil.copy(
-                    self.restart_file_list[i],
-                    posixpath.join(self.working_directory, new_name),
-                )
-            else:
-                shutil.copy(self.restart_file_list[i], self.working_directory)
 
     def _run_manually(self, _manually_print=True):
         """
@@ -1699,37 +1643,6 @@ class GenericJob(JobCore):
             )
             del self
 
-    def _get_project_for_copy(self, project, new_job_name):
-        """
-        Internal helper function to generate a project and hdf5 project for copying
-
-        Args:
-            project (JobCore/ProjectHDFio/Project/None): The project to copy the job to.
-                (Default is None, use the same project.)
-            new_job_name (str): The new name to assign the duplicate job. Required if the project is `None` or the same
-                project as the copied job. (Default is None, try to keep the same name.)
-
-        Returns:
-            Project, ProjectHDFio
-        """
-        if isinstance(project, JobCore):
-            project = project.project_hdf5
-        if isinstance(project, self.project.__class__):
-            file_project = project
-            hdf5_project = self.project_hdf5.__class__(project, new_job_name, h5_path="/" + new_job_name)
-        elif isinstance(project, self.project_hdf5.__class__):
-            file_project = project.project
-            hdf5_project = project.open(new_job_name)
-        elif project is None:
-            file_project = self.project
-            if len(self.project_hdf5.h5_path.split("/")) > 2:
-                hdf5_project = self.project_hdf5.open("../" + new_job_name)
-            else:
-                hdf5_project = self.project_hdf5.__class__(file_project, new_job_name, h5_path="/" + new_job_name)
-        else:
-            raise ValueError("Project should be JobCore/ProjectHDFio/Project/None")
-        return file_project, hdf5_project
-
 
 class GenericError(object):
     def __init__(self, job):
@@ -1754,10 +1667,3 @@ def multiprocess_wrapper(job_id, working_dir, debug=False, connection_string=Non
         working_directory=str(working_dir), job_id=int(job_id), debug=debug, connection_string=connection_string
     )
     job_wrap.job.run_static()
-
-
-# def multiprocess_master(job_id, working_dir, is_thread_mode=False, debug=False):
-#     job_wrap = JobWrapper(working_directory=str(working_dir), job_id=int(job_id), debug=debug)
-#     job_wrap.job._run_if_refresh()
-#     if is_thread_mode and job_wrap.job._process:
-#         job_wrap.job._process.communicate()
