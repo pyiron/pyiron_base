@@ -497,10 +497,16 @@ class GenericJob(JobCore):
             return new_job_core, file_project, hdf5_project, reload_flag
 
         # Reload object from HDF5 file
-        _job_reload_after_copy(
-            job=new_job_core,
-            delete_file_after_copy=delete_file_after_copy
-        )
+        if not static_isinstance(
+                obj=project.__class__,
+                obj_type="pyiron_base.job.core.JobCore"
+        ):
+            _job_reload_after_copy(
+                job=new_job_core,
+                delete_file_after_copy=delete_file_after_copy
+            )
+        if delete_file_after_copy:
+            self.project_hdf5.remove_file()
         return new_job_core, file_project, hdf5_project, reload_flag
 
     def copy_to(self, project=None, new_job_name=None, input_only=False, new_database_entry=True,
