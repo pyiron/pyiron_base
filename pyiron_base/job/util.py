@@ -360,13 +360,23 @@ def _job_delete_files(job):
     Args:
         job (JobCore): job object to delete
     """
-    if job._import_directory is None:
-        shutil.rmtree(str(job.working_directory))
+    working_directory = str(job.working_directory)
+    if job._import_directory is None and os.path.exists(working_directory):
+        shutil.rmtree(working_directory)
     else:
         job._import_directory = None
 
 
 def _job_store_before_copy(job):
+    """
+    Store job in HDF5 file for copying
+
+    Args:
+        job (GenericJob): job object to copy
+
+    Returns:
+        bool: [True/False] if the HDF5 file of the job exists already
+    """
     if not job.project_hdf5.file_exists:
         delete_file_after_copy = True
     else:
@@ -376,6 +386,13 @@ def _job_store_before_copy(job):
 
 
 def _job_reload_after_copy(job, delete_file_after_copy):
+    """
+    Reload job from HDF5 file after copying
+
+    Args:
+        job (GenericJob): copied job object
+        delete_file_after_copy (bool): delete HDF5 file after reload
+    """
     job.from_hdf()
     if delete_file_after_copy:
         job.project_hdf5.remove_file()

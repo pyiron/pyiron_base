@@ -34,11 +34,6 @@ class TestCopyTo(unittest.TestCase):
         sub_project = sub_project.open("sub_project")
         ham = self.project.create_job("ScriptJob", "job_single_pr")
         ham.copy_to(project=sub_project)
-        os.remove(
-            os.path.join(
-                self.file_location, "testing_copyto/sub_project/job_single_pr.h5"
-            )
-        )
 
     def test_copy_to_job_ex(self):
         job_ser = self.project.create.job.SerialMasterBase("sequence_single_ex")
