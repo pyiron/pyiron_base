@@ -469,7 +469,11 @@ class GenericJob(JobCore):
             job=self
         )
 
-        copied_self = super(GenericJob, self).copy()
+        # Copy Python object - super().copy() causes recursion error for serial master
+        copied_self = self.__class__(
+            job_name=self.job_name, project=self.project_hdf5.open("..")
+        )
+        copied_self.reset_job_id()
 
         # Reload object from HDF5 file
         _job_reload_after_copy(
