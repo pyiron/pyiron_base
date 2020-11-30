@@ -147,6 +147,36 @@ class Deprecator:
 
         return message_format
 
+    def __deprecate_function(self, function):
+        message = self._build_message().format(
+                "{}.{}".format(function.__module__, function.__name__)
+        )
+
+        @functools.wraps(function)
+        def decorated(*args, **kwargs):
+            warnings.warn(
+                message,
+                category=self.category,
+                stacklevel=2
+            )
+            return function(*args, **kwargs)
+        return decorated
+
+    def __deprecate_argument(self, function):
+        message_format = self._build_message()
+
+        @functools.wraps(function)
+        def decorated(*args, **kwargs):
+            for kw in kwargs:
+                if kw in self.arguments:
+                    warnings.warn(
+                        message_format.format("Argument '{}'".format(kw)),
+                        category=self.category,
+                        stacklevel=2
+                    )
+            return function(*args, **kwargs)
+        return decorated
+
     def wrap(self, function):
         """
         Wrap the given function to emit a DeprecationWarning at call time.  The warning message is constructed from the
@@ -159,33 +189,9 @@ class Deprecator:
             function: raises DeprecationWarning when given function is called
         """
         if not self.arguments:
-            message = self._build_message().format(
-                    "{}.{}".format(function.__module__, function.__name__)
-            )
-
-            @functools.wraps(function)
-            def decorated(*args, **kwargs):
-                warnings.warn(
-                    message,
-                    category=self.category,
-                    stacklevel=2
-                )
-                return function(*args, **kwargs)
-            return decorated
+            return self.__deprecate_function(function)
         else:
-            message_format = self._build_message()
-
-            @functools.wraps(function)
-            def decorated(*args, **kwargs):
-                for kw in kwargs:
-                    if kw in self.arguments:
-                        warnings.warn(
-                            message_format.format("Argument '{}'".format(kw)),
-                            category=self.category,
-                            stacklevel=2
-                        )
-                return function(*args, **kwargs)
-            return decorated
+            return self.__deprecate_argument(function)
 
 
 deprecate = Deprecator()
