@@ -122,7 +122,7 @@ class Deprecator:
         self.version = version
         self.category = PendingDeprecationWarning if pending else DeprecationWarning
 
-    def __call__(self, message, version = None):
+    def __call__(self, message, version=None):
         if isinstance(message, types.FunctionType):
             return self.wrap(message)
         else:
@@ -130,17 +130,7 @@ class Deprecator:
             self.version = version
             return self.wrap
 
-    def wrap(self, function):
-        """
-        Wrap the given function to emit a DeprecationWarning at call time.  The warning message is constructed from the
-        given message and version.
-
-        Args:
-            function (function): function to mark as deprecated
-
-        Return:
-            function: raises DeprecationWarning when given function is called
-        """
+    def _build_message(self, function):
         if self.category == PendingDeprecationWarning:
             message_format =  "{}.{} is deprecated"
         else:
@@ -154,6 +144,21 @@ class Deprecator:
 
         if self.version is not None:
             message += " It is not guaranteed to be in service in vers. {}".format(self.version)
+
+        return message
+
+    def wrap(self, function):
+        """
+        Wrap the given function to emit a DeprecationWarning at call time.  The warning message is constructed from the
+        given message and version.
+
+        Args:
+            function (function): function to mark as deprecated
+
+        Return:
+            function: raises DeprecationWarning when given function is called
+        """
+        message = self._build_message(function)
 
         @functools.wraps(function)
         def decorated(*args, **kwargs):
