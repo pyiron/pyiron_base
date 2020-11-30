@@ -64,5 +64,23 @@ class TestJobType(unittest.TestCase):
         self.assertEqual(w[0].category, PendingDeprecationWarning,
                         "Raised warning is not a PendingDeprecationWarning")
 
+    def test_deprecate_args(self):
+        """DeprecationWarning should only be raised when the given arguments occur."""
+        @deprecate(arguments={"bar": "use foo instead"})
+        def foo(a, foo=None, bar=None):
+            return 2*a
+
+        with warnings.catch_warnings(record=True) as w:
+            self.assertEqual(foo(1, bar=True), 2,
+                             "Decorated function does not return original "
+                             "return value")
+        self.assertTrue(len(w) > 0, "No warning raised!")
+
+        with warnings.catch_warnings(record=True) as w:
+            self.assertEqual(foo(1, foo=True), 2,
+                             "Decorated function does not return original "
+                             "return value")
+        self.assertEqual(len(w), 0, "Warning raised, but deprecated argument was not given.")
+
 if __name__ == "__main__":
     unittest.main()

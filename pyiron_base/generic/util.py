@@ -122,7 +122,8 @@ class Deprecator:
         self.version = version
         self.category = PendingDeprecationWarning if pending else DeprecationWarning
 
-    def __call__(self, message, version=None):
+    def __call__(self, message=None, version=None, arguments={}):
+        self.arguments = arguments
         if isinstance(message, types.FunctionType):
             return self.wrap(message)
         else:
@@ -157,19 +158,35 @@ class Deprecator:
         Return:
             function: raises DeprecationWarning when given function is called
         """
-        message = self._build_message().format(
-                "{}.{}".format(function.__module__, function.__name__)
-        )
-
-        @functools.wraps(function)
-        def decorated(*args, **kwargs):
-            warnings.warn(
-                message,
-                category=self.category,
-                stacklevel=2
+        if not self.arguments:
+            message = self._build_message().format(
+                    "{}.{}".format(function.__module__, function.__name__)
             )
-            return function(*args, **kwargs)
-        return decorated
+
+            @functools.wraps(function)
+            def decorated(*args, **kwargs):
+                warnings.warn(
+                    message,
+                    category=self.category,
+                    stacklevel=2
+                )
+                return function(*args, **kwargs)
+            return decorated
+        else:
+            message_format = self._build_message()
+
+            @functools.wraps(function)
+            def decorated(*args, **kwargs):
+                for kw in kwargs:
+                    if kw in self.arguments:
+                        warnings.warn(
+                            message_format.format("Argument '{}'".format(kw)),
+                            category=self.category,
+                            stacklevel=2
+                        )
+                return function(*args, **kwargs)
+            return decorated
+
 
 deprecate = Deprecator()
 deprecate_soon = Deprecator(pending=True)
