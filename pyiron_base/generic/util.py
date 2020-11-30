@@ -133,9 +133,9 @@ class Deprecator:
 
     def _build_message(self):
         if self.category == PendingDeprecationWarning:
-            message_format =  "{} is deprecated"
-        else:
             message_format =  "{} will be deprecated"
+        else:
+            message_format =  "{} is deprecated"
 
         if self.message is not None:
             message_format += ": {}.".format(self.message)
