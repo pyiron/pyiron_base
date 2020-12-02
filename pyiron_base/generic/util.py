@@ -118,6 +118,16 @@ class Deprecator:
     >>> foo(baz=True)
     >>> foo(bar=True)
     DeprecationWarning: bar is deprecated: use baz instead.
+
+    As a short cut, it is also possible to pass the values in the arguments dict directly as keyword arguments to the
+    decorator.
+
+    >>> @deprecate(bar="use baz instead.")
+    ... def foo(bar=None, baz=None):
+    ...     pass
+    >>> foo(baz=True)
+    >>> foo(bar=True)
+    DeprecationWarning: bar is deprecated: use baz instead.
     """
 
     def __init__(self, message=None, version=None, pending=False):
