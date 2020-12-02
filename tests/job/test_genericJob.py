@@ -312,6 +312,7 @@ class TestGenericJob(unittest.TestCase):
         ham = self.project.create.job.ScriptJob("job_single_debug")
         self.assertEqual(ham.error.print_queue(), '')
         self.assertEqual(ham.error.print_message(), '')
+        self.assertTrue('no error' in ham.error.__repr__())
 
 
 if __name__ == "__main__":
