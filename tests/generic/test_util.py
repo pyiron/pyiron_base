@@ -82,5 +82,23 @@ class TestJobType(unittest.TestCase):
                              "return value")
         self.assertEqual(len(w), 0, "Warning raised, but deprecated argument was not given.")
 
+    def test_deprecate_kwargs(self):
+        """DeprecationWarning should only be raised when the given arguments occur, also when given via kwargs."""
+        @deprecate(bar="use baz instead")
+        def foo(a, bar=None, baz=None):
+            return 2*a
+
+        with warnings.catch_warnings(record=True) as w:
+            self.assertEqual(foo(1, bar=True), 2,
+                             "Decorated function does not return original "
+                             "return value")
+        self.assertTrue(len(w) > 0, "No warning raised!")
+
+        with warnings.catch_warnings(record=True) as w:
+            self.assertEqual(foo(1, baz=True), 2,
+                             "Decorated function does not return original "
+                             "return value")
+        self.assertEqual(len(w), 0, "Warning raised, but deprecated argument was not given.")
+
 if __name__ == "__main__":
     unittest.main()
