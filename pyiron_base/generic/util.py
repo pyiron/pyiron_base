@@ -144,13 +144,13 @@ class Deprecator:
         self.version = version
         self.category = PendingDeprecationWarning if pending else DeprecationWarning
 
-    def __call__(self, message=None, version=None, arguments={}, **kwargs):
+    def __call__(self, message=None, version=None, arguments=None, **kwargs):
         if isinstance(message, types.FunctionType):
             return self.__deprecate_function(message)
         else:
             self.message = message
             self.version = version
-            self.arguments = arguments
+            self.arguments = arguments if arguments is not None else {}
             self.arguments.update(kwargs)
             return self.wrap
 
