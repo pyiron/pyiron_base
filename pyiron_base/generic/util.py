@@ -106,6 +106,18 @@ class Deprecator:
     >>> foo(1, 2)
     DeprecationWarning: __main__.foo is deprecated: pyiron says no!  It is not
     guaranteed to be in service in vers. 0.5.0
+
+    Alternatively the decorator can also be called with `arguments` set to a dictionary mapping names of keyword
+    arguments to deprecation messages.  In this case the warning will only be emitted when the decorated function is
+    called with arguments in that dictionary.
+
+    >>> deprecate = Deprecator()
+    >>> @deprecate(arguments={"bar": "use baz instead."})
+    ... def foo(bar=None, baz=None):
+    ...     pass
+    >>> foo(baz=True)
+    >>> foo(bar=True)
+    DeprecationWarning: bar is deprecated: use baz instead.
     """
 
     def __init__(self, message=None, version=None, pending=False):
@@ -180,7 +192,8 @@ class Deprecator:
     def wrap(self, function):
         """
         Wrap the given function to emit a DeprecationWarning at call time.  The warning message is constructed from the
-        given message and version.
+        given message and version.  If :attr:`.arguments` is set then the warning is only emitted, when the decorated
+        function is called with keyword arguments found in that dictionary.
 
         Args:
             function (function): function to mark as deprecated
