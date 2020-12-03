@@ -1648,6 +1648,15 @@ class GenericError(object):
     def __init__(self, job):
         self._job = job
 
+    def __repr__(self):
+        all_messages = ''
+        for message in [self.print_message(), self.print_queue()]:
+            if message is True:
+                all_messages += message
+        if len(all_messages)==0:
+            all_messages = 'There is no error/warning'
+        return all_messages
+
     def print_message(self, string=''):
         return self._print_error(file_name='error.msg', string=string)
 
@@ -1656,10 +1665,9 @@ class GenericError(object):
 
     def _print_error(self, file_name, string='', print_yes=True):
         if self._job[file_name] is None:
-            return False
+            return ''
         elif print_yes:
-            print(string.join(self._job[file_name]))
-        return True
+            return string.join(self._job[file_name])
 
 
 def multiprocess_wrapper(job_id, working_dir, debug=False, connection_string=None):
