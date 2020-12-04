@@ -106,6 +106,28 @@ class Deprecator:
     >>> foo(1, 2)
     DeprecationWarning: __main__.foo is deprecated: pyiron says no!  It is not
     guaranteed to be in service in vers. 0.5.0
+
+    Alternatively the decorator can also be called with `arguments` set to a dictionary mapping names of keyword
+    arguments to deprecation messages.  In this case the warning will only be emitted when the decorated function is
+    called with arguments in that dictionary.
+
+    >>> deprecate = Deprecator()
+    >>> @deprecate(arguments={"bar": "use baz instead."})
+    ... def foo(bar=None, baz=None):
+    ...     pass
+    >>> foo(baz=True)
+    >>> foo(bar=True)
+    DeprecationWarning: __main__.foo(bar=True) is deprecated: use baz instead.
+
+    As a short cut, it is also possible to pass the values in the arguments dict directly as keyword arguments to the
+    decorator.
+
+    >>> @deprecate(bar="use baz instead.")
+    ... def foo(bar=None, baz=None):
+    ...     pass
+    >>> foo(baz=True)
+    >>> foo(bar=True)
+    DeprecationWarning: __main__.foo(bar=True)  is deprecated: use baz instead.
     """
 
     def __init__(self, message=None, version=None, pending=False):
@@ -122,38 +144,36 @@ class Deprecator:
         self.version = version
         self.category = PendingDeprecationWarning if pending else DeprecationWarning
 
-    def __call__(self, message, version = None):
+    def __call__(self, message=None, version=None, arguments=None, **kwargs):
         if isinstance(message, types.FunctionType):
-            return self.wrap(message)
+            return self.__deprecate_function(message)
         else:
             self.message = message
             self.version = version
+            self.arguments = arguments if arguments is not None else {}
+            self.arguments.update(kwargs)
             return self.wrap
 
-    def wrap(self, function):
-        """
-        Wrap the given function to emit a DeprecationWarning at call time.  The warning message is constructed from the
-        given message and version.
-
-        Args:
-            function (function): function to mark as deprecated
-
-        Return:
-            function: raises DeprecationWarning when given function is called
-        """
+    def _build_message(self):
         if self.category == PendingDeprecationWarning:
-            message_format =  "{}.{} is deprecated"
+            message_format =  "{} will be deprecated"
         else:
-            message_format =  "{}.{} will be deprecated"
-        message = message_format.format(function.__module__, function.__name__)
+            message_format =  "{} is deprecated"
 
         if self.message is not None:
-            message += ": {}.".format(self.message)
+            message_format += ": {}.".format(self.message)
         else:
-            message += "."
+            message_format += "."
 
         if self.version is not None:
-            message += " It is not guaranteed to be in service in vers. {}".format(self.version)
+            message_format += " It is not guaranteed to be in service in vers. {}".format(self.version)
+
+        return message_format
+
+    def __deprecate_function(self, function):
+        message = self._build_message().format(
+                "{}.{}".format(function.__module__, function.__name__)
+        )
 
         @functools.wraps(function)
         def decorated(*args, **kwargs):
@@ -164,6 +184,45 @@ class Deprecator:
             )
             return function(*args, **kwargs)
         return decorated
+
+    def __deprecate_argument(self, function):
+        message_format = self._build_message()
+
+        @functools.wraps(function)
+        def decorated(*args, **kwargs):
+            for kw in kwargs:
+                if kw in self.arguments:
+                    warnings.warn(
+                        message_format.format(
+                            "{}.{}({}={})".format(
+                                function.__module__,
+                                function.__name__,
+                                kw,
+                                kwargs[kw])
+                        ),
+                        category=self.category,
+                        stacklevel=2
+                    )
+            return function(*args, **kwargs)
+        return decorated
+
+    def wrap(self, function):
+        """
+        Wrap the given function to emit a DeprecationWarning at call time.  The warning message is constructed from the
+        given message and version.  If :attr:`.arguments` is set then the warning is only emitted, when the decorated
+        function is called with keyword arguments found in that dictionary.
+
+        Args:
+            function (function): function to mark as deprecated
+
+        Return:
+            function: raises DeprecationWarning when given function is called
+        """
+        if not self.arguments:
+            return self.__deprecate_function(function)
+        else:
+            return self.__deprecate_argument(function)
+
 
 deprecate = Deprecator()
 deprecate_soon = Deprecator(pending=True)
