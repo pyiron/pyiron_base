@@ -117,7 +117,7 @@ class Deprecator:
     ...     pass
     >>> foo(baz=True)
     >>> foo(bar=True)
-    DeprecationWarning: bar is deprecated: use baz instead.
+    DeprecationWarning: __main__.foo(bar=True) is deprecated: use baz instead.
 
     As a short cut, it is also possible to pass the values in the arguments dict directly as keyword arguments to the
     decorator.
@@ -127,7 +127,7 @@ class Deprecator:
     ...     pass
     >>> foo(baz=True)
     >>> foo(bar=True)
-    DeprecationWarning: bar is deprecated: use baz instead.
+    DeprecationWarning: __main__.foo(bar=True)  is deprecated: use baz instead.
     """
 
     def __init__(self, message=None, version=None, pending=False):
@@ -193,7 +193,13 @@ class Deprecator:
             for kw in kwargs:
                 if kw in self.arguments:
                     warnings.warn(
-                        message_format.format("Argument '{}'".format(kw)),
+                        message_format.format(
+                            "{}.{}({}={})".format(
+                                function.__module__,
+                                function.__name__,
+                                kw,
+                                kwargs[kw])
+                        ),
                         category=self.category,
                         stacklevel=2
                     )
