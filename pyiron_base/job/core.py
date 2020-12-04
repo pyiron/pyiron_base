@@ -25,7 +25,8 @@ from pyiron_base.job.util import \
     _job_compress, \
     _job_decompress, \
     _job_delete_files, \
-    _job_delete_hdf
+    _job_delete_hdf, \
+    _job_remove_folder
 from tables import NoSuchNodeError
 import shutil
 
@@ -459,6 +460,8 @@ class JobCore(PyironObject):
                             self.job_name
                         )
                     )
+
+        _job_remove_folder(job=self)
 
         # Delete database entry
         if self.job_id:
