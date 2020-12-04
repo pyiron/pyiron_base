@@ -401,10 +401,7 @@ class JobCore(PyironObject):
                                     - default=True
         """
         # When the Job is a GenericMaster, try to delete its children first.
-        if static_isinstance(
-            obj=self.__class__,
-            obj_type="pyiron_base.master.GenericMaster"
-        ):
+        if len(self.child_ids) > 0:
             if _protect_childs:
                 if self._master_id is not None and not math.isnan(self._master_id):
                     s.logger.error(
