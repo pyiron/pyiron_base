@@ -926,8 +926,7 @@ class JobGenerator(object):
         """
         raise NotImplementedError("Implement in derived class")
 
-    @staticmethod
-    def job_name(parameter):
+    def job_name(self, parameter):
         """
         Return new job name from parameter object.  The next child job created
         will have this name.  Subclasses may override this to give custom job
