@@ -920,6 +920,22 @@ class JobGenerator(object):
         """
         raise NotImplementedError("Implement in derived class")
 
+    @staticmethod
+    def job_name(parameter):
+        """
+        Return new job name from paramter object.  The next child job created
+        will have this name.  Subclasses may override this to give custom job
+        names.
+
+        Args:
+            parameter (type):
+                current parameter object drawn from :attr:`.parameter_list`.
+
+        Returns:
+            str: job name for the next child job
+        """
+        return self._job.ref_job.job_name + "_" + str(self._childcounter)
+
     def __iter__(self):
         return self
 
@@ -938,14 +954,9 @@ class JobGenerator(object):
         """
         if len(self.parameter_list_cached) > self._childcounter:
             current_paramenter = self.parameter_list_cached[self._childcounter]
-            if hasattr(self, "job_name"):
-                job = self._job.create_child_job(
-                    self.job_name(parameter=current_paramenter)
-                )
-            else:
-                job = self._job.create_child_job(
-                    self._job.ref_job.job_name + "_" + str(self._childcounter)
-                )
+            job = self._job.create_child_job(
+                self.job_name(parameter=current_paramenter)
+            )
             if job is not None:
                 self._childcounter += 1
                 job = self.modify_job(job=job, parameter=current_paramenter)
