@@ -895,10 +895,29 @@ class JobGenerator(object):
 
     @property
     def parameter_list(self):
+        """
+        list:
+            parameter objects passed to :method:`.modify_job()` when the next
+            job is requested.
+        """
         raise NotImplementedError("Implement in derived class")
 
     @staticmethod
     def modify_job(job, parameter):
+        """
+        Modify next job with the parameter object.  job is already the newly
+        created job object cloned from the template job, so this function has
+        to return the same instance, but may (and should) modify it.
+
+        Args:
+            job (:class:`.GenericJob`):
+                new job instance
+            parameter (type):
+                current parameter object drawn from :attr:`.parameter_list`.
+
+        Returns:
+            :class:`.GenericJob`: must be the given job
+        """
         raise NotImplementedError("Implement in derived class")
 
     def __iter__(self):
