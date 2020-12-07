@@ -875,11 +875,20 @@ class GenericOutput(OrderedDict):
 
 class JobGenerator(object):
     """
-    JobGenerator - this class implements the functions to generate the parameter list, modify the individual jobs
-    according to the parameter list and generate the new job names according to the parameter list.
+    Implements the functions to generate the parameter list, modify the individual jobs according to the parameter list
+    and generate the new job names according to the parameter list.
+
+    Subclasses have to override :method:`.parameter_list()` to provide a list of (arbitrary) parameter objects and
+    :method:`.modify_job()` and may override :method:`.job_name()` to provide custom job names.
+
+    The generated jobs are created as child job from the given template job.
     """
 
     def __init__(self, job):
+        """
+        Args:
+            job (:class:`.GenericJob`): template job from which children are created
+        """
         self._job = job
         self._childcounter = 0
         self._parameter_lst_cached = []
@@ -910,7 +919,7 @@ class JobGenerator(object):
             job (:class:`.GenericJob`):
                 new job instance
             parameter (type):
-                current parameter object drawn from :attr:`.parameter_list`.
+                current parameter object drawn from :attribute:`.parameter_list`.
 
         Returns:
             :class:`.GenericJob`: must be the given job
@@ -920,13 +929,13 @@ class JobGenerator(object):
     @staticmethod
     def job_name(parameter):
         """
-        Return new job name from paramter object.  The next child job created
+        Return new job name from parameter object.  The next child job created
         will have this name.  Subclasses may override this to give custom job
         names.
 
         Args:
             parameter (type):
-                current parameter object drawn from :attr:`.parameter_list`.
+                current parameter object drawn from :attribute:`.parameter_list`.
 
         Returns:
             str: job name for the next child job
