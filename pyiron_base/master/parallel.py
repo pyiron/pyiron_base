@@ -879,12 +879,9 @@ class JobGenerator(object):
     according to the parameter list and generate the new job names according to the parameter list.
     """
 
-    def __init__(self, job, no_job_checks=False):
+    def __init__(self, job):
         self._job = job
-        if no_job_checks:
-            self._childcounter = len(self._job.child_ids)
-        else:
-            self._childcounter = 0
+        self._childcounter = 0
         self._parameter_lst_cached = []
 
     @property
