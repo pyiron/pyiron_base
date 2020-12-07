@@ -881,15 +881,16 @@ class JobGenerator(object):
     Subclasses have to override :method:`.parameter_list()` to provide a list of (arbitrary) parameter objects and
     :method:`.modify_job()` and may override :method:`.job_name()` to provide custom job names.
 
-    The generated jobs are created as child job from the given template job.
+    The generated jobs are created as child job from the given master.
     """
 
-    def __init__(self, job):
+    def __init__(self, master):
         """
         Args:
-            job (:class:`.GenericJob`): template job from which children are created
+            master (:class:`.ParallelMaster`): master job from which child jobs are created with
+            :method:`.ParallelMaster.create_child_job()`.
         """
-        self._job = job
+        self._master = master
         self._childcounter = 0
         self._parameter_lst_cached = []
 
@@ -939,7 +940,7 @@ class JobGenerator(object):
         Returns:
             str: job name for the next child job
         """
-        return self._job.ref_job.job_name + "_" + str(self._childcounter)
+        return self._master.ref_job.job_name + "_" + str(self._childcounter)
 
     def __iter__(self):
         return self
@@ -959,7 +960,7 @@ class JobGenerator(object):
         """
         if len(self.parameter_list_cached) > self._childcounter:
             current_paramenter = self.parameter_list_cached[self._childcounter]
-            job = self._job.create_child_job(
+            job = self._master.create_child_job(
                 self.job_name(parameter=current_paramenter)
             )
             if job is not None:
@@ -969,5 +970,5 @@ class JobGenerator(object):
             else:
                 raise StopIteration()
         else:
-            self._job.refresh_job_status()
+            self._master.refresh_job_status()
             raise StopIteration()
