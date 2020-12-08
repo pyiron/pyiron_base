@@ -38,11 +38,14 @@ class TestGenericJob(unittest.TestCase):
         cls.master.ref_job = cls.project.create_job(cls.project.job_type.ScriptJob, "ref")
 
     def test_jobgenerator_name(self):
-        """Generated jobs have to be in order, the correct name and correct parameters."""
+        """Generated jobs have to be unique instances, in order, the correct name and correct parameters."""
         self.assertEqual(len(self.master._job_generator), TestGenerator.test_length,
                          "Incorrect length.")
+        job_set = set()
         for i, j in zip(self.master._job_generator.parameter_list,
                         self.master._job_generator):
+            self.assertTrue(j not in job_set,
+                            "Returned job instance is not a copy.")
             self.assertEqual(j.name, "test_{}".format(i),
                              "Incorrect job name.")
             self.assertEqual(j.input['parameter'], i,
