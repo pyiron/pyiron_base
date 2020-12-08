@@ -1,7 +1,8 @@
 import os
 import pandas
 import numpy as np
-from shutil import copytree, rmtree
+from shutil import rmtree
+from distutils.dir_util import copy_tree
 import tarfile
 
 
@@ -33,9 +34,9 @@ def extract_archive(archive_directory):
 
 def import_jobs(project_instance, directory_to_import_to, archive_directory, df, compressed=True):
     # Copy HDF5 files
-    if isinstance(archive_directory,str):
+    if isinstance(archive_directory,str):#if the archive_directory is a path
         archive_directory = os.path.basename(archive_directory)
-    elif hasattr(archive_directory,'path'):
+    elif hasattr(archive_directory,'path'):#if the archive_directory is a project
         archive_directory = archive_directory.path
     else:
         raise RuntimeError('the given path for importing from, does not have the correct format\n paths as string or pyiron Project objects are expected')
@@ -48,12 +49,12 @@ def import_jobs(project_instance, directory_to_import_to, archive_directory, df,
         directory_to_import_to = os.path.basename(directory_to_import_to[:-1])
     des = os.path.abspath(os.path.join(os.curdir, directory_to_import_to)) #destination folder
     src = os.path.abspath(os.path.join(os.curdir, archive_directory)) #source folder; archive folder
-    copytree(src, des, dirs_exist_ok=True)
+    copy_tree(src, des)
     if compressed:
         rmtree(archive_directory)
 
     # Update Database
-    pr_import = project_instance.open('.')
+    pr_import = project_instance.open(os.curdir)
     df["project"] = [os.path.join(pr_import.project_path, os.path.relpath(p, archive_name)) for p in df["project"].values]
     df['projectpath'] = len(df) * [pr_import.root_path]
     # Add jobs to database
