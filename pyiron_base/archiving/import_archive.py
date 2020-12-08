@@ -42,7 +42,10 @@ def import_jobs(project_instance, directory_to_import_to, archive_directory, df,
     if compressed:
         extract_archive(archive_directory)
     archive_name = getdir(path=archive_directory)
-    directory_to_import_to = os.path.basename(directory_to_import_to)
+    if(directory_to_import_to[-1] != '/'):
+        directory_to_import_to = os.path.basename(directory_to_import_to)
+    else:
+        directory_to_import_to = os.path.basename(directory_to_import_to[:-1])
     des = os.path.abspath(os.path.join(os.curdir, directory_to_import_to)) #destination folder
     src = os.path.abspath(os.path.join(os.curdir, archive_directory)) #source folder; archive folder
     copytree(src, des, dirs_exist_ok=True)
@@ -55,12 +58,17 @@ def import_jobs(project_instance, directory_to_import_to, archive_directory, df,
     df['projectpath'] = len(df) * [pr_import.root_path]
     # Add jobs to database
     job_id_lst = []
-    for entry in df.to_dict(orient="records"):
-        del entry['id']
-        del entry['parentid']
-        del entry['masterid']
-        entry["timestart"] = pandas.to_datetime(entry["timestart"])
-        entry["timestop"] = pandas.to_datetime(entry["timestop"])
+    for entry in df.dropna(axis=1).to_dict(orient="records"):
+        if 'id' in entry:
+            del entry['id']
+        if 'parentid' in entry:
+            del entry['parentid']
+        if 'masterid' in entry:
+            del entry['masterid']
+        if 'timestart' in entry:
+            entry["timestart"] = pandas.to_datetime(entry["timestart"])
+        if 'timestop' in entry:
+            entry["timestop"] = pandas.to_datetime(entry["timestop"])
         job_id = pr_import.db.add_item_dict(par_dict=entry)
         job_id_lst.append(job_id)
 

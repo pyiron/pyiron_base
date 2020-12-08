@@ -51,7 +51,7 @@ def compress_dir(archive_directory):
 
 
 def copy_files_to_archive(directory_to_transfer, archive_directory, compressed=True):
-    directory_to_transfer = directory_to_transfer.split("/")[1]+'/'
+    directory_to_transfer = os.path.basename(directory_to_transfer)
     pfi = PyFileIndex(path=directory_to_transfer, filter_function=filter_function)
     df_files = pfi.dataframe[~pfi.dataframe.is_directory]
 
