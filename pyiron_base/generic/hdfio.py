@@ -291,40 +291,60 @@ class FileHDFio(object):
             FileHDFio: FileHDFio object pointing to a file which now contains the same content as file of the current
                        FileHDFio object.
         """
+        def _internal_copy(source, source_path, target, target_path, maintain_flag):
+            """
+            Internal function to copy content of one HDF5 file to another or copy a group within the same HDF5 file. 
+            
+            Args:
+                source (h5py.File): HDF5 File object 
+                source_path (str): Path inside the source HDF5 file 
+                target (h5py.File): HDF5 File object
+                target_path (str): Path inside the target HDF5 file 
+                maintain_flag (bool): Maintain the same group name 
+            """
+            if maintain_flag:
+                try:
+                    target.create_group(target_path)
+                except ValueError:
+                    pass  # In case the copy_to() function failed previously and the group already exists. 
+
+            if target_path == "/":
+                source.copy(target_path, "/") if source == target else source.copy(target_path, target)
+            else:
+                if maintain_flag:
+                    if dest_path != "":
+                        source.copy(source_path, target[dest_path])
+                    else:
+                        source.copy(source_path, target)
+                else:
+                    group_name_old = source_path.split("/")[-1]
+                    try:
+                        target.create_group("/tmp")
+                    except ValueError:
+                        pass
+                    source.copy(source_path, target["/tmp"])
+                    try:
+                        target.move("/tmp/" + group_name_old, target_path)
+                    except ValueError:
+                        del target[dest_path]
+                        target.move("/tmp/" + group_name_old, target_path)
+                    del target["/tmp"]
+
         if file_name is None:
             file_name = destination.file_name
+
         if self.file_exists:
-            with h5py.File(
-                self.file_name, mode="r", libver="latest", swmr=True
-            ) as f_source:
-                with h5py.File(file_name, mode="a", libver="latest", swmr=True) as f_target:
-                    if destination.h5_path[0] == "/":
-                        dest_path = destination.h5_path[1:]
-                    else:
-                        dest_path = destination.h5_path
-                    if maintain_name:
-                        try:
-                            f_target.create_group(dest_path)
-                        except ValueError:
-                            pass
-                    if destination.is_root:
-                        f_source.copy(self._h5_path, f_target)
-                    else:
-                        if maintain_name:
-                            f_source.copy(self._h5_path, f_target[dest_path])
-                        else:
-                            group_name_old = self._h5_path.split("/")[-1]
-                            try:
-                                f_target.create_group("/tmp")
-                            except ValueError:
-                                pass
-                            f_source.copy(self._h5_path, f_target["/tmp"])
-                            try:
-                                f_target.move("/tmp/" + group_name_old, dest_path)
-                            except ValueError:
-                                del f_target[dest_path]
-                                f_target.move("/tmp/" + group_name_old, dest_path)
-                            del f_target["/tmp"]
+            dest_path = destination.h5_path[1:] if destination.h5_path[0] == "/" else destination.h5_path
+            if self.file_name != file_name:
+                with h5py.File(self.file_name, mode="r") as f_source:
+                    with h5py.File(file_name, mode="a") as f_target:
+                        _internal_copy(source=f_source, source_path=self._h5_path, target=f_target,
+                                       target_path=dest_path, maintain_flag=maintain_name)
+            else:
+                with h5py.File(file_name, mode="a") as f_target:
+                    _internal_copy(source=f_target, source_path=self._h5_path, target=f_target,
+                                   target_path=dest_path, maintain_flag=maintain_name)
+
         return destination
 
     def create_group(self, name, track_order=False):

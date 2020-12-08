@@ -31,7 +31,7 @@ from pyiron_base.database.jobtable import (
 )
 from pyiron_base.settings.logger import set_logging_level
 from pyiron_base.generic.hdfio import ProjectHDFio
-from pyiron_base.job.jobtype import JobType, JobTypeChoice, JobCreator
+from pyiron_base.job.jobtype import JobType, JobTypeChoice, JobFactory
 from pyiron_base.server.queuestatus import (
     queue_delete_job,
     queue_is_empty,
@@ -295,6 +295,25 @@ class Project(ProjectPath):
         if self.user is not None:
             job.user = self.user
         return job
+
+    def create_table(self, job_name="table", delete_existing_job=False):
+        """
+        Create pyiron table
+
+        Args:
+            job_name (str): job name of the pyiron table job
+            delete_existing_job (bool): Delete the existing table and run the analysis again.
+
+        Returns:
+            pyiron.table.datamining.TableJob
+        """
+        table = self.create_job(
+            job_type=self.job_type.TableJob,
+            job_name=job_name,
+            delete_existing_job=delete_existing_job
+        )
+        table.analysis_project = self
+        return table
 
     def get_child_ids(self, job_specifier, project=None):
         """
@@ -1497,10 +1516,29 @@ class Project(ProjectPath):
         import_archive.import_jobs(self,self.path,archive_directory=origin_path, df=df, compressed=compress)
 
 
-class Creator(object):
+class Creator:
     def __init__(self, project):
-        self._job_creator = JobCreator(project=project)
+        self._job_factory = JobFactory(project=project)
+        self._project = project
 
     @property
     def job(self):
-        return self._job_creator
+        return self._job_factory
+
+    def table(self, job_name="table", delete_existing_job=False):
+        """
+        Create pyiron table
+
+        Args:
+            job_name (str): job name of the pyiron table job
+            delete_existing_job (bool): Delete the existing table and run the analysis again.
+
+        Returns:
+            pyiron_base.table.datamining.TableJob
+        """
+        table = self.job.TableJob(
+            job_name=job_name,
+            delete_existing_job=delete_existing_job
+        )
+        table.analysis_project = self._project
+        return table

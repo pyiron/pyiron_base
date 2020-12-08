@@ -8,13 +8,26 @@ The JobCore the most fundamental pyiron job class.
 import copy
 import os
 import posixpath
-import time
 import math
-import stat
 from pyiron_base.settings.generic import Settings
 from pyiron_base.generic.template import PyironObject
+from pyiron_base.generic.util import static_isinstance
+from pyiron_base.job.util import \
+    _get_project_for_copy, \
+    _copy_database_entry, \
+    _copy_to_delete_existing, \
+    _rename_job, \
+    _is_valid_job_name, \
+    _job_is_archived, \
+    _job_archive, \
+    _job_unarchive, \
+    _job_is_compressed, \
+    _job_compress, \
+    _job_decompress, \
+    _job_delete_files, \
+    _job_delete_hdf, \
+    _job_remove_folder
 from tables import NoSuchNodeError
-import tarfile
 import shutil
 
 __author__ = "Jan Janssen"
@@ -90,7 +103,7 @@ class JobCore(PyironObject):
     """
 
     def __init__(self, project, job_name):
-        self._is_valid_job_name(job_name)
+        _is_valid_job_name(job_name)
         self._name = job_name
         self._hdf5 = project.open(self._name)
         self._job_id = None
@@ -145,34 +158,7 @@ class JobCore(PyironObject):
         Args:
             new_job_name (str): new job name
         """
-        new_job_name = new_job_name.replace(".", "_")
-        self._is_valid_job_name(job_name=new_job_name)
-        child_ids = self.child_ids
-        if child_ids:
-            for child_id in child_ids:
-                ham = self.project.load(child_id)
-                ham.move_to(self.project.open(new_job_name + "_hdf5"))
-        old_working_directory = self.working_directory
-        if len(self.project_hdf5.h5_path.split("/")) > 2:
-            new_location = self.project_hdf5.open("../" + new_job_name)
-        else:
-            new_location = self.project_hdf5.__class__(
-                self.project, new_job_name, h5_path="/" + new_job_name
-            )
-        if self.job_id:
-            self.project.db.item_update(
-                {"job": new_job_name, "subjob": new_location.h5_path}, self.job_id
-            )
-        self._name = new_job_name
-        self.project_hdf5.copy_to(
-            destination=new_location,
-            maintain_name=False
-        )
-        self.project_hdf5.remove_file()
-        self.project_hdf5 = new_location
-        if os.path.exists(old_working_directory):
-            shutil.move(old_working_directory, self.working_directory)
-            os.rmdir("/".join(old_working_directory.split("/")[:-1]))
+        _rename_job(job=self, new_job_name=new_job_name)
 
     @property
     def status(self):
@@ -414,20 +400,24 @@ class JobCore(PyironObject):
             _protect_childs (bool): [True/False] by default child jobs can not be deleted, to maintain the consistency
                                     - default=True
         """
-        if _protect_childs:
-            if self._master_id is not None and not math.isnan(self._master_id):
-                s.logger.error(
-                    "Job {0} is a child of a master job and cannot be deleted!".format(
-                        str(self.job_id)
+        # When the Job is a GenericMaster, try to delete its children first.
+        if len(self.child_ids) > 0:
+            if _protect_childs:
+                if self._master_id is not None and not math.isnan(self._master_id):
+                    s.logger.error(
+                        "Job {0} is a child of a master job and cannot be deleted!".format(
+                            str(self.job_id)
+                        )
                     )
-                )
-                raise ValueError("Child jobs are protected and cannot be deleted!")
-        for job_id in self.child_ids:
-            job = self.project.load(job_id, convert_to_object=False)
-            if len(job.child_ids) > 0:
-                job.remove(_protect_childs=False)
-            else:
-                self.project_hdf5.remove_job(job_id, _unprotect=True)
+                    raise ValueError("Child jobs are protected and cannot be deleted!")
+            for job_id in self.child_ids:
+                job = self.project.load(job_id, convert_to_object=False)
+                if len(job.child_ids) > 0:
+                    job.remove(_protect_childs=False)
+                else:
+                    self.project_hdf5.remove_job(job_id, _unprotect=True)
+
+        # After all children are deleted, remove the job itself.
         self.remove_child()
 
     def remove_child(self):
@@ -435,33 +425,42 @@ class JobCore(PyironObject):
         internal function to remove command that removes also child jobs.
         Do never use this command, since it will destroy the integrity of your project.
         """
-        if "server" in self.project_hdf5.list_nodes():
+        # Delete job from HPC-computing-queue if it is still running.
+        job_status = str(self.status)
+        if (
+            job_status in ["submitted", "running", "collect"]
+            and "server" in self.project_hdf5.list_nodes()
+        ):
             server_hdf_dict = self.project_hdf5["server"]
             if (
                 "qid" in server_hdf_dict.keys()
-                and str(self.status) in ["submitted", "running", "collect"]
                 and server_hdf_dict["qid"] is not None
             ):
                 self.project.queue_delete_job(server_hdf_dict["qid"])
+
+        # Delete working directory:
+        _job_delete_files(job=self)
+
+        # Delete HDF5 file
         with self.project_hdf5.open("..") as hdf_parent:
-            try:
-                del hdf_parent[self.job_name]
-                if self._import_directory is None:
-                    shutil.rmtree(str(self.working_directory))
-                else:
-                    self._import_directory = None
-            except (NoSuchNodeError, KeyError, OSError):
-                print(
-                    "This group does not exist in the HDF5 file {}".format(
-                        self.job_name
+            hdf_groups = hdf_parent.list_groups()
+
+        if self.job_name in hdf_groups and len(hdf_groups) < 2:
+            _job_delete_hdf(job=self)
+        else:
+            with self.project_hdf5.open("..") as hdf_parent:
+                try:
+                    del hdf_parent[self.job_name]
+                except (NoSuchNodeError, KeyError, OSError):
+                    print(
+                        "This group does not exist in the HDF5 file {}".format(
+                            self.job_name
+                        )
                     )
-                )
-        if self.project_hdf5.is_empty:
-            if os.path.isfile(self.project_hdf5.file_name):
-                os.remove(self.project_hdf5.file_name)
-                dir_name = self.project_hdf5.file_name.split(".h5")[0] + "_hdf5"
-                if os.path.isdir(dir_name):
-                    os.rmdir(dir_name)
+
+        _job_remove_folder(job=self)
+
+        # Delete database entry
         if self.job_id:
             self.project.db.delete_item(self.job_id)
 
@@ -504,7 +503,8 @@ class JobCore(PyironObject):
             GenericJob, JobCore: Either the full GenericJob object or just a reduced JobCore object
         """
         return self.project.load(
-            job_specifier=job_specifier, convert_to_object=convert_to_object
+            job_specifier=job_specifier,
+            convert_to_object=convert_to_object
         )
 
     def inspect(self, job_specifier):
@@ -517,7 +517,10 @@ class JobCore(PyironObject):
         Returns:
             JobCore: Access to the HDF5 object - not a GenericJob object - use load() instead.
         """
-        return self.project.load(job_specifier=job_specifier)
+        return self.project.load(
+            job_specifier=job_specifier,
+            convert_to_object=False
+        )
 
     def load_object(self, convert_to_object=True, project=None):
         """
@@ -653,70 +656,97 @@ class JobCore(PyironObject):
             JobCore: New FileHDFio object pointing to the same HDF5 file
         """
         copied_self = copy.copy(self)
-        copied_self._job_id = None
+        copied_self.reset_job_id()
         return copied_self
 
-    def copy_to(self, project, new_database_entry=True, copy_files=True):
+    def _internal_copy_to(self, project=None, new_job_name=None, new_database_entry=True,
+                          copy_files=True, delete_existing_job=False):
+        """
+        Internal helper function for copy_to() which returns more
+
+        Args:
+            project (JobCore/ProjectHDFio/Project/None): The project to copy the job to.
+                (Default is None, use the same project.)
+            new_job_name (str): The new name to assign the duplicate job. Required if the project is `None` or the same
+                project as the copied job. (Default is None, try to keep the same name.)
+            new_database_entry (bool): [True/False] to create a new database entry - default True
+            copy_files (bool): [True/False] copy the files inside the working directory - default True
+            delete_existing_job (bool): [True/False] Delete existing job in case it exists already (Default is False.)
+
+        """
+        # Check either a new project, a new job_name or both were specified.
+        if project is None and new_job_name is None:
+            raise ValueError("copy_to requires either a new project or a new_job_name.")
+
+        # Set the new job name
+        new_job_name = new_job_name or self.job_name
+
+        # The project variable can be JobCore/ProjectHDFio/Project,
+        # get a Project and a ProjectHDFio object.
+        file_project, hdf5_project = _get_project_for_copy(
+            job=self,
+            project=project,
+            new_job_name=new_job_name
+        )
+
+        # Check if the job exists already and either delete it or return it
+        job_return = _copy_to_delete_existing(
+            project_class=file_project,
+            job_name=new_job_name,
+            delete_job=delete_existing_job
+        )
+        if job_return is not None:
+            return job_return, file_project, hdf5_project, True
+
+        # Create a new job by copying the current python object, move the content
+        # of the HDF5 file and then attach the new HDF5 link to the new python object.
+        new_job_core = self.copy()
+        new_job_core._name = new_job_name
+        new_job_core._hdf5 = hdf5_project
+        new_job_core._master_id = self._master_id
+        new_job_core._parent_id = self._parent_id
+        new_job_core._master_id = self._master_id
+        new_job_core._status = self._status
+        if new_job_name == self.job_name:
+            self.project_hdf5.copy_to(destination=hdf5_project.open(".."))
+        else:
+            self.project_hdf5.copy_to(destination=hdf5_project, maintain_name=False)
+
+        # Update the database entry
+        if self.job_id:
+            _copy_database_entry(
+                new_job_core=new_job_core,
+                job_copied_id=self.job_id,
+                new_database_entry=new_database_entry
+            )
+
+        # Copy files outside the HDF5 file
+        if copy_files and os.path.exists(self.working_directory):
+            shutil.copytree(
+                self.working_directory,
+                new_job_core.working_directory,
+            )
+        return new_job_core, file_project, hdf5_project, False
+
+    def copy_to(self, project, new_job_name=None, new_database_entry=True, copy_files=True):
         """
         Copy the content of the job including the HDF5 file to a new location
 
         Args:
-            project (ProjectHDFio): project to copy the job to
+            project (JobCore/ProjectHDFio/Project): project to copy the job to
             new_database_entry (bool): [True/False] to create a new database entry - default True
             copy_files (bool): [True/False] copy the files inside the working directory - default True
 
         Returns:
             JobCore: JobCore object pointing to the new location.
         """
-        if isinstance(project, JobCore):
-            try:
-                project = project.project_hdf5.copy()
-            except OSError:
-                time.sleep(5)
-                project = project.project_hdf5.copy()
-        elif isinstance(project, self.project.__class__):
-            project = self.project_hdf5.__class__(project, self.job_name)
-        elif isinstance(project, self.project_hdf5.__class__):
-            project = project.copy()
-        else:
-            raise ValueError("Project type not supported. ", type(project))
-        new_job_core = self.copy()
-        new_job_core._hdf5 = project.open(self.job_name)
-        new_job_core._master_id = self._master_id
-        new_job_core._parent_id = self._parent_id
-        new_job_core._master_id = self._master_id
-        new_job_core._status = self._status
-        self.project_hdf5.copy_to(destination=project)
-        if self.job_id:
-            self._copy_database_entry(
-                new_job_core=new_job_core,
-                new_database_entry=new_database_entry
-            )
-        if os.path.exists(self.working_directory):
-            shutil.copytree(
-                self.working_directory,
-                os.path.join(project.working_directory, self.job_name),
-            )
+        new_job_core, _, _, _ = self._internal_copy_to(
+            project=project,
+            new_job_name=new_job_name,
+            new_database_entry=new_database_entry,
+            copy_files=copy_files
+        )
         return new_job_core
-
-    def _copy_database_entry(self, new_job_core, new_database_entry):
-        """
-        Copy database entry from previous job
-
-        Args:
-            new_job_core (GenericJob): Copy of the job object
-            new_database_entry (bool): [True/False] to create a new database entry - default True
-        """
-        if new_database_entry:
-            db_entry = self.project.db.get_item_by_id(self.job_id)
-            db_entry["project"] = new_job_core.project_hdf5.project_path
-            db_entry["projectpath"] = new_job_core.project_hdf5.root_path
-            db_entry["subjob"] = new_job_core.project_hdf5.h5_path
-            del db_entry["id"]
-            job_id = self.project.db.add_item_dict(db_entry)
-            new_job_core._job_id = job_id
-        else:
-            new_job_core._job_id = None
 
     def move_to(self, project):
         """
@@ -769,17 +799,15 @@ class JobCore(PyironObject):
         """
         self.job_name = new_job_name
 
-    def reset_job_id(self, job_id):
+    def reset_job_id(self, job_id=None):
         """
         The reset_job_id function has to be implemented by the derived classes - usually the GenericJob class
 
         Args:
-            job_id (int):
+            job_id (int/ None):
 
         """
-        raise NotImplementedError(
-            "reset_job_id() should be implemented in the derived class"
-        )
+        self._job_id = job_id
 
     def save(self):
         """
@@ -907,27 +935,6 @@ class JobCore(PyironObject):
         childs = self.list_childs()
         return list(set(childs) - set(nodes))
 
-    @staticmethod
-    def _is_valid_job_name(job_name):
-        """
-        internal function to validate the job_name - only available in Python 3.4 <
-
-        Args:
-            job_name (str): job name
-        """
-        try:
-            if not job_name.isidentifier():
-                raise ValueError(
-                    'Invalid name for a PyIron object (no "." or "#") allowed'
-                )
-            if len(job_name) > 50:
-                raise ValueError(
-                    'Invalid name for a PyIron object: must be less then or '
-                    'equal to 50 characters'
-                )
-        except AttributeError:
-            pass  # no name check in Python 2.7
-
     def compress(self, files_to_compress=None):
         """
         Compress the output files of a job object.
@@ -935,44 +942,13 @@ class JobCore(PyironObject):
         Args:
             files_to_compress (list):
         """
-        if not any([".tar.bz2" in file for file in self.list_files()]):
-            if files_to_compress is None:
-                files_to_compress = list(self.list_files())
-            cwd = os.getcwd()
-            try:
-                os.chdir(self.working_directory)
-                with tarfile.open(
-                    os.path.join(self.working_directory, self.job_name + ".tar.bz2"),
-                    "w:bz2",
-                ) as tar:
-                    for name in files_to_compress:
-                        if "tar" not in name and not stat.S_ISFIFO(os.stat(name).st_mode):
-                            tar.add(name)
-                for name in files_to_compress:
-                    if "tar" not in name:
-                        fullname = os.path.join(self.working_directory, name)
-                        if os.path.isfile(fullname):
-                            os.remove(fullname)
-                        elif os.path.isdir(fullname):
-                            os.removedirs(fullname)
-            finally:
-                os.chdir(cwd)
-        else:
-            print("The files are already compressed!")
+        _job_compress(job=self, files_to_compress=files_to_compress)
 
     def decompress(self):
         """
         Decompress the output files of a compressed job object.
         """
-        try:
-            tar_file_name = os.path.join(
-                self.working_directory, self.job_name + ".tar.bz2"
-            )
-            with tarfile.open(tar_file_name, "r:bz2") as tar:
-                tar.extractall(self.working_directory)
-            os.remove(tar_file_name)
-        except IOError:
-            pass
+        _job_decompress(job=self)
 
     def is_compressed(self):
         """
@@ -981,50 +957,28 @@ class JobCore(PyironObject):
         Returns:
             bool: [True/False]
         """
-        compressed_name = self.job_name + ".tar.bz2"
-        for name in self.list_files():
-            if compressed_name in name:
-                return True
-        return False
+        return _job_is_compressed(job=self)
 
     def self_archive(self):
-        fpath = self.project_hdf5.file_path
-        jname = self.job_name
-        h5_dir_name = jname + "_hdf5"
-        h5_file_name = jname + ".h5"
-        # assert os.path.isdir(h5_dir_name)
-        # assert os.path.isfile(h5_file_name)
-        try:
-            cwd = os.getcwd()
-            os.chdir(fpath)
-            with tarfile.open(
-                os.path.join(fpath, self.job_name + ".tar.bz2"), "w:bz2"
-            ) as tar:
-                for name in [h5_dir_name, h5_file_name]:
-                    tar.add(name)
-            for name in [h5_dir_name, h5_file_name]:
-                fullname = os.path.join(fpath, name)
-                if os.path.isfile(fullname):
-                    os.remove(fullname)
-                elif os.path.isdir(fullname):
-                    shutil.rmtree(fullname)
-        finally:
-            os.chdir(cwd)
+        """
+        Compress HDF5 file of the job object to tar-archive
+        """
+        _job_archive(job=self)
 
     def self_unarchive(self):
-        fpath = self.project_hdf5.file_path
-        try:
-            tar_name = os.path.join(fpath, self.job_name + ".tar.bz2")
-            with tarfile.open(tar_name, "r:bz2") as tar:
-                tar.extractall(fpath)
-            os.remove(tar_name)
-        finally:
-            pass
+        """
+        Decompress HDF5 file of the job object from tar-archive
+        """
+        _job_unarchive(job=self)
 
     def is_self_archived(self):
-        return os.path.isfile(
-            os.path.join(self.project_hdf5.file_path, self.job_name + ".tar.bz2")
-        )
+        """
+        Check if the HDF5 file of the Job is compressed as tar-archive
+
+        Returns:
+            bool: [True/False]
+        """
+        return _job_is_archived(job=self)
 
 
 class DatabaseProperties(object):

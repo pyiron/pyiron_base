@@ -3,7 +3,7 @@
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
 import unittest
-from pyiron_base.job.jobtype import JobTypeChoice, JobCreator
+from pyiron_base.job.jobtype import JobTypeChoice, JobFactory
 from pyiron_base import JOB_CLASS_DICT
 
 
@@ -54,14 +54,14 @@ class TestJobCreator(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.jobcreator = JobCreator(project=None)
+        cls.job_factory = JobFactory(project=None)
 
     def test_dir(self):
         """
         All job types in JOB_CLASS_DICT need to be returned in __dir__ for
         autocompletion.
         """
-        self.assertTrue(all(k in dir(self.jobcreator)
+        self.assertTrue(all(k in dir(self.job_factory)
                             for k in JOB_CLASS_DICT),
                         "Not all job classes returned by dir()")
 
@@ -72,7 +72,7 @@ class TestJobCreator(unittest.TestCase):
         """
         try:
             for k in JOB_CLASS_DICT:
-                getattr(self.jobcreator, k)
+                getattr(self.job_factory, k)
         except AttributeError:
             self.fail("job class {} in JOB_CLASS_DICT, but not on "
                       "JobTypeChoice".format(k))

@@ -8,7 +8,9 @@ Jobtype class to create GenericJob type objects
 import importlib
 import inspect
 import os
+from pyiron_base.generic.hdfio import ProjectHDFio
 from pyiron_base.generic.util import Singleton
+from pyiron_base.generic.factory import PyironFactory
 from pyiron_base.job.jobstatus import job_status_finished_lst
 
 __author__ = "Joerg Neugebauer, Jan Janssen"
@@ -27,6 +29,7 @@ JOB_CLASS_DICT = {
     "FlexibleMaster": "pyiron_base.master.flexible",
     "ScriptJob": "pyiron_base.job.script",
     "SerialMasterBase": "pyiron_base.master.serial",
+    "TableJob": "pyiron_base.table.datamining"
 }
 
 
@@ -108,7 +111,7 @@ class JobType(object):
         )
 
 
-class JobCreator(metaclass=Singleton):
+class JobFactory(PyironFactory):
     """
     The job creator is used to create job objects using pr.create.job.Code() where Code can be any external code
     which is wrapped as pyiron job type.
@@ -174,7 +177,7 @@ class JobClass(object):
         """
         return JobType(
             class_name=self._class_name,
-            project=self._project,
+            project=ProjectHDFio(project=self._project.copy(), file_name=job_name),
             job_name=job_name,
             job_class_dict=self._job_class_dict,
             delete_existing_job=delete_existing_job
