@@ -475,6 +475,12 @@ class JobCore(PyironObject):
         Returns:
             GenericJob: pyiron object
         """
+        if self.project_hdf5.is_empty:
+            raise ValueError(
+                "The HDF5 file of this job with the job_name: \""
+                + self.job_name
+                + "\" is empty, so it can not be loaded."
+            )
         return self.project_hdf5.to_object(object_type, **qwargs)
 
     def get(self, name):
