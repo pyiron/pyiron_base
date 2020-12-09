@@ -774,6 +774,25 @@ class ParallelMaster(GenericMaster):
         self.status.collect = True
         self.run()
 
+    def child_hdf(self, job_name):
+        """
+        Find correct HDF for new children.  Depending on `self.server.new_hdf` this creates a new hdf file or creates
+        the group in the file of this job.
+
+        Args:
+            job_name (str): name of the new job
+
+        Returns:
+            :class:`.ProjectHDFio`: HDF file for new child job, can be assigned to its
+            :attribute:`~.Generic.project_hdf5`
+        """
+        if self.server.new_hdf:
+            return self.project_hdf5.create_hdf(
+                path=self.child_project.path, job_name=job_name
+            )
+        else:
+            return self.project_hdf5.open(job_name)
+
     def create_child_job(self, job_name):
         """
         Internal helper function to create the next child job from the reference job template - usually this is called
@@ -816,12 +835,7 @@ class ParallelMaster(GenericMaster):
 
         job = self.ref_job.copy()
         job = self._load_all_child_jobs(job_to_load=job)
-        if self.server.new_hdf:
-            job.project_hdf5 = self.project_hdf5.create_hdf(
-                path=self.child_project.path, job_name=job_name
-            )
-        else:
-            job.project_hdf5 = self.project_hdf5.open(job_name)
+        job.project_hdf5 = self.child_hdf(job_name)
         if isinstance(job, GenericMaster):
             for sub_job in job._job_object_dict.values():
                 self._child_job_update_hdf(parent_job=job, child_job=sub_job)
