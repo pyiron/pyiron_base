@@ -171,13 +171,6 @@ class GenericMaster(GenericJob):
         """
         return self.project.db.get_item_by_id(self.child_ids[0])["job"]
 
-    def validate_ready_to_run(self):
-        """
-        Validate that the calculation is ready to be executed. By default no generic checks are performed, but one could
-        check that the input information is complete or validate the consistency of the input at this point.
-        """
-        pass
-
     def append(self, job):
         """
         Append a job to the GenericMaster - just like you would append an element to a list.
