@@ -345,7 +345,7 @@ class SerialMasterBase(GenericMaster):
         job._master_id = self.job_id
         if self.server.new_hdf:
             job._hdf5 = self.project_hdf5.create_hdf(
-                path=self.project.open(self.job_name + "_hdf5").path,
+                path=self.child_project.path,
                 job_name=job.job_name,
             )
         else:
