@@ -5,6 +5,7 @@
 import unittest
 import os
 from pyiron_base.project.generic import Project
+from pyiron_base.job.generic import GenericJob
 
 
 class TestGenericJob(unittest.TestCase):
@@ -31,6 +32,18 @@ class TestGenericJob(unittest.TestCase):
         self.assertEqual(db_entry["job"], ham.job_name)
         ham.save()
         ham.remove()
+
+    def test_reload_empty_job(self):
+        job_empty = self.project.create_job(
+            job_type=GenericJob,
+            job_name="empty_reload"
+        )
+        job_id = job_empty.project.db.add_item_dict(job_empty.db_entry())
+        job_empty_inspect = self.project.inspect(job_id)
+        self.assertEqual(len(job_empty_inspect.list_nodes()), 0)
+        self.assertTrue(job_empty_inspect.project_hdf5.is_empty)
+        with self.assertRaises(ValueError):
+            self.project.load(job_id)
 
     def test_id(self):
         pass
