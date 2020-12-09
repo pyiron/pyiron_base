@@ -18,6 +18,7 @@ from pyiron_base.generic.parameters import GenericParameters
 from pyiron_base.job.jobstatus import JobStatus
 from pyiron_base.settings.generic import Settings
 from pyiron_base.job.wrapper import job_wrapper_function
+from pyiron_base.generic.util import deprecate
 
 __author__ = "Joerg Neugebauer, Jan Janssen"
 __copyright__ = (
@@ -893,6 +894,15 @@ class JobGenerator(object):
         self._master = master
         self._childcounter = 0
         self._parameter_lst_cached = []
+
+    @property
+    def master(self):
+        return self._master
+
+    @property
+    @deprecate('use self.master instead')
+    def _job(self):
+        return self.master
 
     @property
     def parameter_list_cached(self):
