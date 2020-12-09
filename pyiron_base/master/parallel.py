@@ -897,6 +897,9 @@ class JobGenerator(object):
 
     @property
     def master(self):
+        """
+        :class:`.ParallelMaster`: the parallel master job with which this generator was initialized
+        """
         return self._master
 
     @property
