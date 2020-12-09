@@ -332,6 +332,10 @@ class GenericMaster(GenericJob):
             job_list_tmp = hdf5_input["job_list"]
             self._from_hdf_child_function(hdf=hdf5_input)
             self._job_name_lst = job_list_tmp
+            self._job_object_dict = {
+                job_name: self._load_job_from_cache(job_name=job_name)
+                for job_name in job_list_tmp
+            }
 
     def set_child_id_func(self, child_id_func):
         """
