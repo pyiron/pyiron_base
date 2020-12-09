@@ -774,17 +774,6 @@ class ParallelMaster(GenericMaster):
         self.status.collect = True
         self.run()
 
-    @property
-    def child_project(self):
-        """
-            :class:`.Project`: project which holds the created child jobs
-        """
-        if not self.server.new_hdf:
-            return self.project
-        else:
-            return self.project.open(self.job_name + "_hdf5")
-
-
     def create_child_job(self, job_name):
         """
         Internal helper function to create the next child job from the reference job template - usually this is called

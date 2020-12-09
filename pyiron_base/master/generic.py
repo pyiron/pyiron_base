@@ -153,6 +153,17 @@ class GenericMaster(GenericJob):
             return super(GenericMaster, self).child_ids
 
     @property
+    def child_project(self):
+        """
+            :class:`.Project`: project which holds the created child jobs
+        """
+        if not self.server.new_hdf:
+            return self.project
+        else:
+            return self.project.open(self.job_name + "_hdf5")
+
+
+    @property
     def job_object_dict(self):
         """
         internal cache of currently loaded jobs
