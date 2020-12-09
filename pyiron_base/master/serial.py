@@ -343,13 +343,7 @@ class SerialMasterBase(GenericMaster):
         self._logger.info("run serial master {}".format(self.job_info_str))
         job = self.pop(-1)
         job._master_id = self.job_id
-        if self.server.new_hdf:
-            job._hdf5 = self.project_hdf5.create_hdf(
-                path=self.child_project.path,
-                job_name=job.job_name,
-            )
-        else:
-            job._hdf5 = self.project_hdf5.open(job.job_name)
+        job._hdf5 = self.child_hdf(job.job_name)
         self._logger.info("SerialMaster: run job {}".format(job.job_name))
         return job
 
