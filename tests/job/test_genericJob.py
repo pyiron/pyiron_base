@@ -35,7 +35,7 @@ class TestGenericJob(unittest.TestCase):
 
     def test_reload_empty_job(self):
         job_empty = self.project.create_job(
-            job_type=GenericJob, 
+            job_type=GenericJob,
             job_name="empty_reload"
         )
         job_id = job_empty.project.db.add_item_dict(job_empty.db_entry())
