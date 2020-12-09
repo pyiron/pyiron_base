@@ -40,7 +40,8 @@ class TestGenericJob(unittest.TestCase):
         )
         job_id = job_empty.project.db.add_item_dict(job_empty.db_entry())
         job_empty_inspect = self.project.inspect(job_id)
-        self.assertTrue(job_empty.project_hdf5.is_empty)
+        self.assertEqual(len(job_empty_inspect.list_nodes()), 0)
+        self.assertTrue(job_empty_inspect.project_hdf5.is_empty)
         with self.assertRaises(ValueError):
             self.project.load(job_id)
 
