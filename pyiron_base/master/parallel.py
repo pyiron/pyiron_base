@@ -940,7 +940,7 @@ class JobGenerator(object):
         Returns:
             str: job name for the next child job
         """
-        return self._master.ref_job.job_name + "_" + str(self._childcounter)
+        return '_'.join([self._master.job_name, self._master.ref_job.job_name, str(self._childcounter)])
 
     def __iter__(self):
         return self
