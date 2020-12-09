@@ -333,7 +333,7 @@ class GenericMaster(GenericJob):
             self._from_hdf_child_function(hdf=hdf5_input)
             self._job_name_lst = job_list_tmp
             self._job_object_dict = {
-                job_name:self._load_job_from_cache(job_name=job_name)
+                job_name: self._load_job_from_cache(job_name=job_name)
                 for job_name in job_list_tmp
             }
 
