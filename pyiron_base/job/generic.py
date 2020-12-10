@@ -610,6 +610,9 @@ class GenericJob(JobCore):
         """
         Validate that the calculation is ready to be executed. By default no generic checks are performed, but one could
         check that the input information is complete or validate the consistency of the input at this point.
+
+        Raises:
+            ValueError: if ready check is unsuccessful
         """
         pass
 
