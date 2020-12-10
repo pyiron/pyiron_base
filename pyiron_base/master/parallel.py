@@ -785,8 +785,8 @@ class ParallelMaster(GenericMaster):
         Returns:
             GenericJob: next job
         """
+        project = self.child_project
         if not self.server.new_hdf:
-            project = self.project
             where_dict = {
                 "job": str(job_name),
                 "project": str(self.project_hdf5.project_path),
@@ -800,7 +800,6 @@ class ParallelMaster(GenericMaster):
             else:
                 job_id = None
         else:
-            project = self.project.open(self.job_name + "_hdf5")
             job_id = project.get_job_id(job_specifier=job_name)
         if job_id is not None:
             ham = project.load(job_id)
@@ -817,12 +816,7 @@ class ParallelMaster(GenericMaster):
 
         job = self.ref_job.copy()
         job = self._load_all_child_jobs(job_to_load=job)
-        if self.server.new_hdf:
-            job.project_hdf5 = self.project_hdf5.create_hdf(
-                path=self.project.open(self.job_name + "_hdf5").path, job_name=job_name
-            )
-        else:
-            job.project_hdf5 = self.project_hdf5.open(job_name)
+        job.project_hdf5 = self.child_hdf(job_name)
         if isinstance(job, GenericMaster):
             for sub_job in job._job_object_dict.values():
                 self._child_job_update_hdf(parent_job=job, child_job=sub_job)
