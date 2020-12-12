@@ -406,39 +406,6 @@ class GenericMaster(GenericJob):
             "read procedure must be defined for derived Hamilton!"
         )
 
-    def run_if_interactive(self):
-        """
-        For jobs which executables are available as Python library, those can also be executed with a library call
-        instead of calling an external executable. This is usually faster than a single core python job.
-        """
-        raise NotImplementedError(
-            "This function needs to be implemented in the specific class."
-        )
-
-    def interactive_close(self):
-        """
-        interactive close is not implemtned for MetaJobs
-        """
-        pass
-
-    def interactive_fetch(self):
-        """
-        interactive fetch is not implemtned for MetaJobs
-        """
-        pass
-
-    def interactive_flush(self, path="generic", include_last_step=True):
-        """
-        interactive flush is not implemtned for MetaJobs
-        """
-        pass
-
-    def run_if_interactive_non_modal(self):
-        """
-        Run if interactive non modal is not implemented for MetaJobs
-        """
-        pass
-
     def __len__(self):
         """
         Length of the GenericMaster equal the number of childs appended.
