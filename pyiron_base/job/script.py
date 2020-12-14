@@ -153,6 +153,10 @@ class ScriptJob(GenericJob):
                 "path should be a string, but ", path, " is a ", type(path), " instead."
             )
 
+    def validate_ready_to_run(self):
+        if self.script_path is None:
+            raise AssertionError('script_path not set (set it via job.script_path = script_path')
+
     def set_input_to_read_only(self):
         """
         This function enforces read-only mode for the input classes, but it has to be implement in the individual
