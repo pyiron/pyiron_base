@@ -226,3 +226,39 @@ class Deprecator:
 
 deprecate = Deprecator()
 deprecate_soon = Deprecator(pending=True)
+
+
+class ImportAlarm:
+    """
+    In many places we have try/except loops around imports. This class is meant to accompany that code so that users
+    get an early warning when they instantiate a job that won't work when run.
+
+    Example:
+    >>> try:
+    ...     from mystery_package import Enigma, Puzzle, Conundrum
+    ...     import_alarm = ImportAlarm()
+    >>> except ImportError:
+    >>>     import_alarm = ImportAlarm(
+    ...         "MysteryJob relies on mystery_package, but this was unavailable. Please ensure your python environment "
+    ...         "has access to mystery_package, e.g. with `conda install -c conda-forge mystery_package`"
+    ...     )
+    ...
+    >>> class MysteryJob(GenericJob):
+    ...     @import_alarm
+    ...     def __init__(self, project, job_name)
+    ...         super().__init__()
+    ...         self.riddles = [Enigma(), Puzzle(), Conundrum()]
+    """
+    def __init__(self, message=None):
+        self.message = message
+
+    def __call__(self, func):
+        return self.wrapper(func)
+
+    def wrapper(self, function):
+        @functools.wraps(function)
+        def decorator(*args, **kwargs):
+            if self.message is not None:
+                warnings.warn(self.message, category=ImportWarning)
+            return function(*args, **kwargs)
+        return decorator
