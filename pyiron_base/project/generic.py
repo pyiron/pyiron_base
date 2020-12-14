@@ -1287,6 +1287,9 @@ class Project(ProjectPath):
             job (GenericJob): Job to wait for
             interval_in_s (int): interval when the job status is queried from the database - default 5 sec.
             max_iterations (int): maximum number of iterations - default 100
+
+        Raise:
+            ValueError: max_iterations reached, job still running
         """
         wait_for_job(
             job=job, interval_in_s=interval_in_s, max_iterations=max_iterations
@@ -1300,6 +1303,9 @@ class Project(ProjectPath):
             interval_in_s (int): interval when the job status is queried from the database - default 5 sec.
             max_iterations (int): maximum number of iterations - default 100
             recursive (bool): search subprojects [True/False] - default=True
+
+        Raise:
+            ValueError: max_iterations reached, but jobs still running
         """
         wait_for_jobs(
             project=self,
