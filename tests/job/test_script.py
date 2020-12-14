@@ -7,7 +7,7 @@ import os
 from pyiron_base.project.generic import Project
 
 
-class TestGenericJob(unittest.TestCase):
+class TestScriptJob(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.file_location = os.path.dirname(os.path.abspath(__file__)).replace(
