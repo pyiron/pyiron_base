@@ -164,7 +164,7 @@ def wait_for_job(job, interval_in_s=5, max_iterations=100):
         interval_in_s (int): interval when the job status is queried from the database - default 5 sec.
         max_iterations (int): maximum number of iterations - default 100
 
-    Raise:
+    Raises:
         ValueError: max_iterations reached, job still running
     """
     if job.status.string not in job_status_finished_lst:
@@ -212,7 +212,7 @@ def wait_for_jobs(project, interval_in_s=5, max_iterations=100, recursive=True):
         max_iterations (int): maximum number of iterations - default 100
         recursive (bool): search subprojects [True/False] - default=True
 
-    Raise:
+    Raises:
         ValueError: max_iterations reached, but jobs still running
     """
     finished = False
