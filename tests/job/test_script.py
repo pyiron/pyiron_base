@@ -17,7 +17,6 @@ class TestScriptJob(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
-        file_location = os.path.dirname(os.path.abspath(__file__))
         cls.project.remove(enable=True)
 
     def test_script_path(self):
