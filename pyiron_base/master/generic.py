@@ -153,6 +153,35 @@ class GenericMaster(GenericJob):
             return super(GenericMaster, self).child_ids
 
     @property
+    def child_project(self):
+        """
+            :class:`.Project`: project which holds the created child jobs
+        """
+        if not self.server.new_hdf:
+            return self.project
+        else:
+            return self.project.open(self.job_name + "_hdf5")
+
+    def child_hdf(self, job_name):
+        """
+        Find correct HDF for new children.  Depending on `self.server.new_hdf` this creates a new hdf file or creates
+        the group in the file of this job.
+
+        Args:
+            job_name (str): name of the new job
+
+        Returns:
+            :class:`.ProjectHDFio`: HDF file for new child job, can be assigned to its
+            :attribute:`~.Generic.project_hdf5`
+        """
+        if self.server.new_hdf:
+            return self.project_hdf5.create_hdf(
+                path=self.child_project.path, job_name=job_name
+            )
+        else:
+            return self.project_hdf5.open(job_name)
+
+    @property
     def job_object_dict(self):
         """
         internal cache of currently loaded jobs
@@ -170,13 +199,6 @@ class GenericMaster(GenericJob):
             str: name of the first child job
         """
         return self.project.db.get_item_by_id(self.child_ids[0])["job"]
-
-    def validate_ready_to_run(self):
-        """
-        Validate that the calculation is ready to be executed. By default no generic checks are performed, but one could
-        check that the input information is complete or validate the consistency of the input at this point.
-        """
-        pass
 
     def append(self, job):
         """
@@ -332,6 +354,10 @@ class GenericMaster(GenericJob):
             job_list_tmp = hdf5_input["job_list"]
             self._from_hdf_child_function(hdf=hdf5_input)
             self._job_name_lst = job_list_tmp
+            self._job_object_dict = {
+                job_name: self._load_job_from_cache(job_name=job_name)
+                for job_name in job_list_tmp
+            }
 
     def set_child_id_func(self, child_id_func):
         """

@@ -25,7 +25,8 @@ from pyiron_base.job.util import \
     _job_compress, \
     _job_decompress, \
     _job_delete_files, \
-    _job_delete_hdf
+    _job_delete_hdf, \
+    _job_remove_folder
 from tables import NoSuchNodeError
 import shutil
 
@@ -400,10 +401,7 @@ class JobCore(PyironObject):
                                     - default=True
         """
         # When the Job is a GenericMaster, try to delete its children first.
-        if static_isinstance(
-            obj=self.__class__,
-            obj_type="pyiron_base.master.GenericMaster"
-        ):
+        if len(self.child_ids) > 0:
             if _protect_childs:
                 if self._master_id is not None and not math.isnan(self._master_id):
                     s.logger.error(
@@ -460,6 +458,8 @@ class JobCore(PyironObject):
                         )
                     )
 
+        _job_remove_folder(job=self)
+
         # Delete database entry
         if self.job_id:
             self.project.db.delete_item(self.job_id)
@@ -475,6 +475,12 @@ class JobCore(PyironObject):
         Returns:
             GenericJob: pyiron object
         """
+        if self.project_hdf5.is_empty:
+            raise ValueError(
+                "The HDF5 file of this job with the job_name: \""
+                + self.job_name
+                + "\" is empty, so it can not be loaded."
+            )
         return self.project_hdf5.to_object(object_type, **qwargs)
 
     def get(self, name):

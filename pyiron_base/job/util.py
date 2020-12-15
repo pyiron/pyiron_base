@@ -355,7 +355,7 @@ def _job_delete_hdf(job):
 
 def _job_delete_files(job):
     """
-    Delete working directory of job object
+    Delete files in the working directory of job object
 
     Args:
         job (JobCore): job object to delete
@@ -365,6 +365,18 @@ def _job_delete_files(job):
         shutil.rmtree(working_directory)
     else:
         job._import_directory = None
+
+
+def _job_remove_folder(job):
+    """
+    Delete the working directory of the job object
+
+    Args:
+        job (JobCore): job object to delete
+    """
+    working_directory = os.path.abspath(os.path.join(str(job.working_directory), ".."))
+    if os.path.exists(working_directory) and len(os.listdir(working_directory)) == 0:
+        shutil.rmtree(working_directory)
 
 
 def _job_store_before_copy(job):

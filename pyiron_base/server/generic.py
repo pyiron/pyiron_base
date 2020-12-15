@@ -443,7 +443,7 @@ class Server(
         hdf_dict["memory_limit"] = self.memory_limit
         hdf_dict["accept_crash"] = self.accept_crash
 
-        if group_name:
+        if group_name is not None:
             with hdf.open(group_name) as hdf_group:
                 hdf_group["server"] = hdf_dict
         else:
@@ -458,7 +458,7 @@ class Server(
             group_name: node name in the HDF5 file
 
         """
-        if group_name:
+        if group_name is not None:
             with hdf.open(group_name) as hdf_group:
                 hdf_dict = hdf_group["server"]
         else:

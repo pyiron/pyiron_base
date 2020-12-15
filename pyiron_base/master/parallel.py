@@ -18,6 +18,7 @@ from pyiron_base.generic.parameters import GenericParameters
 from pyiron_base.job.jobstatus import JobStatus
 from pyiron_base.settings.generic import Settings
 from pyiron_base.job.wrapper import job_wrapper_function
+from pyiron_base.generic.util import deprecate
 
 __author__ = "Joerg Neugebauer, Jan Janssen"
 __copyright__ = (
@@ -784,8 +785,8 @@ class ParallelMaster(GenericMaster):
         Returns:
             GenericJob: next job
         """
+        project = self.child_project
         if not self.server.new_hdf:
-            project = self.project
             where_dict = {
                 "job": str(job_name),
                 "project": str(self.project_hdf5.project_path),
@@ -799,7 +800,6 @@ class ParallelMaster(GenericMaster):
             else:
                 job_id = None
         else:
-            project = self.project.open(self.job_name + "_hdf5")
             job_id = project.get_job_id(job_specifier=job_name)
         if job_id is not None:
             ham = project.load(job_id)
@@ -816,12 +816,7 @@ class ParallelMaster(GenericMaster):
 
         job = self.ref_job.copy()
         job = self._load_all_child_jobs(job_to_load=job)
-        if self.server.new_hdf:
-            job.project_hdf5 = self.project_hdf5.create_hdf(
-                path=self.project.open(self.job_name + "_hdf5").path, job_name=job_name
-            )
-        else:
-            job.project_hdf5 = self.project_hdf5.open(job_name)
+        job.project_hdf5 = self.child_hdf(job_name)
         if isinstance(job, GenericMaster):
             for sub_job in job._job_object_dict.values():
                 self._child_job_update_hdf(parent_job=job, child_job=sub_job)
@@ -875,17 +870,36 @@ class GenericOutput(OrderedDict):
 
 class JobGenerator(object):
     """
-    JobGenerator - this class implements the functions to generate the parameter list, modify the individual jobs
-    according to the parameter list and generate the new job names according to the parameter list.
+    Implements the functions to generate the parameter list, modify the individual jobs according to the parameter list
+    and generate the new job names according to the parameter list.
+
+    Subclasses have to override :method:`.parameter_list()` to provide a list of (arbitrary) parameter objects and
+    :method:`.modify_job()` and may override :method:`.job_name()` to provide custom job names.
+
+    The generated jobs are created as child job from the given master.
     """
 
-    def __init__(self, job, no_job_checks=False):
-        self._job = job
-        if no_job_checks:
-            self._childcounter = len(self._job.child_ids)
-        else:
-            self._childcounter = 0
+    def __init__(self, master):
+        """
+        Args:
+            master (:class:`.ParallelMaster`): master job from which child jobs are created with
+            :method:`.ParallelMaster.create_child_job()`.
+        """
+        self._master = master
+        self._childcounter = 0
         self._parameter_lst_cached = []
+
+    @property
+    def master(self):
+        """
+        :class:`.ParallelMaster`: the parallel master job with which this generator was initialized
+        """
+        return self._master
+
+    @property
+    @deprecate('use self.master instead')
+    def _job(self):
+        return self.master
 
     @property
     def parameter_list_cached(self):
@@ -895,11 +909,45 @@ class JobGenerator(object):
 
     @property
     def parameter_list(self):
+        """
+        list:
+            parameter objects passed to :method:`.modify_job()` when the next
+            job is requested.
+        """
         raise NotImplementedError("Implement in derived class")
 
     @staticmethod
     def modify_job(job, parameter):
+        """
+        Modify next job with the parameter object.  job is already the newly
+        created job object cloned from the template job, so this function has
+        to return the same instance, but may (and should) modify it.
+
+        Args:
+            job (:class:`.GenericJob`):
+                new job instance
+            parameter (type):
+                current parameter object drawn from :attribute:`.parameter_list`.
+
+        Returns:
+            :class:`.GenericJob`: must be the given job
+        """
         raise NotImplementedError("Implement in derived class")
+
+    def job_name(self, parameter):
+        """
+        Return new job name from parameter object.  The next child job created
+        will have this name.  Subclasses may override this to give custom job
+        names.
+
+        Args:
+            parameter (type):
+                current parameter object drawn from :attribute:`.parameter_list`.
+
+        Returns:
+            str: job name for the next child job
+        """
+        return self._master.ref_job.job_name + "_" + str(self._childcounter)
 
     def __iter__(self):
         return self
@@ -919,14 +967,9 @@ class JobGenerator(object):
         """
         if len(self.parameter_list_cached) > self._childcounter:
             current_paramenter = self.parameter_list_cached[self._childcounter]
-            if hasattr(self, "job_name"):
-                job = self._job.create_child_job(
-                    self.job_name(parameter=current_paramenter)
-                )
-            else:
-                job = self._job.create_child_job(
-                    self._job.ref_job.job_name + "_" + str(self._childcounter)
-                )
+            job = self._master.create_child_job(
+                self.job_name(parameter=current_paramenter)
+            )
             if job is not None:
                 self._childcounter += 1
                 job = self.modify_job(job=job, parameter=current_paramenter)
@@ -934,5 +977,5 @@ class JobGenerator(object):
             else:
                 raise StopIteration()
         else:
-            self._job.refresh_job_status()
+            self._master.refresh_job_status()
             raise StopIteration()

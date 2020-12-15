@@ -371,7 +371,7 @@ class PyironTable(object):
     def _apply_function_on_job(funct, job):
         try:
             return funct(job)
-        except ValueError:
+        except (ValueError, TypeError):
             return {}
 
     @staticmethod

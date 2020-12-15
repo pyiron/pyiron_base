@@ -129,12 +129,16 @@ class FlexibleMaster(GenericMaster):
 
     def validate_ready_to_run(self):
         """
-        Validate that the calculation is ready to be executed. By default no generic checks are performed, but one could
-        check that the input information is complete or validate the consistency of the input at this point.
+        Checks that the number of job names is matching the number of given step functions.
+
+        Raises:
+            ValueError: if number of names is not matching number of functions
         """
         super(FlexibleMaster, self).validate_ready_to_run()
-        if len(self._job_name_lst) != len(self._step_function_lst) + 1:
-            raise ValueError
+        if len(self._job_name_lst) < len(self._step_function_lst) + 1:
+            raise ValueError("Not enough job names set.")
+        elif len(self._job_name_lst) > len(self._step_function_lst) + 1:
+            raise ValueError("Not enough step functions set.")
 
     def is_finished(self):
         """

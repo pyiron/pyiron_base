@@ -610,6 +610,9 @@ class GenericJob(JobCore):
         """
         Validate that the calculation is ready to be executed. By default no generic checks are performed, but one could
         check that the input information is complete or validate the consistency of the input at this point.
+
+        Raises:
+            ValueError: if ready check is unsuccessful
         """
         pass
 
@@ -630,6 +633,8 @@ class GenericJob(JobCore):
         self._job_id = job_id
         self._status = JobStatus(db=self.project.db, job_id=self._job_id)
 
+    @deprecate(run_again="Either delete the job via job.remove() or use delete_existing_job=True.",
+               version="0.4.0")
     def run(self, delete_existing_job=False, repair=False, debug=False, run_mode=None, run_again=False):
         """
         This is the main run function, depending on the job status ['initialized', 'created', 'submitted', 'running',
@@ -643,10 +648,6 @@ class GenericJob(JobCore):
             run_again (bool): Same as delete_existing_job (deprecated)
         """
         if run_again:
-            warnings.warn('run_again is deprecated as of vers. 0.3.0.'
-                          + 'It is not guaranteed to be in service in vers. 0.4.0.'
-                          + 'Either delete the job via job.remove() or via pr.create_job(delete_existing_job=True).',
-                          DeprecationWarning)
             delete_existing_job=True
         try:
             self._logger.info(
@@ -1452,6 +1453,8 @@ class GenericJob(JobCore):
         self.status.refresh = True
         self.run()
 
+    @deprecate(run_again="Either delete the job via job.remove() or use delete_existing_job=True.",
+               version="0.4.0")
     def _run_if_finished(self, delete_existing_job=False, run_again=False):
         """
         Internal helper function the run if finished function is called when the job status is 'finished'. It loads
@@ -1462,10 +1465,7 @@ class GenericJob(JobCore):
             run_again (bool): Same as delete_existing_job (deprecated)
         """
         if run_again:
-            warnings.warn('run_again is deprecated as of vers. 0.3.0.'
-                          + 'It is not guaranteed to be in service in vers. 0.4.0.'
-                          + 'Use delete_existing_job instead',
-                          DeprecationWarning)
+            delete_existing_job=True
         if delete_existing_job:
             parent_id = self.parent_id
             self.parent_id = None
