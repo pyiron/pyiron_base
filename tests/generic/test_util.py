@@ -6,6 +6,7 @@ import unittest
 import warnings
 from pyiron_base.generic.util import static_isinstance
 from pyiron_base.generic.util import deprecate, deprecate_soon
+from pyiron_base.generic.util import ImportAlarm
 
 
 class TestJobType(unittest.TestCase):
@@ -99,6 +100,31 @@ class TestJobType(unittest.TestCase):
                              "Decorated function does not return original "
                              "return value")
         self.assertEqual(len(w), 0, "Warning raised, but deprecated argument was not given.")
+
+
+class TestImportAlarm(unittest.TestCase):
+
+    def setUp(self):
+        self.import_alarm = ImportAlarm()
+
+        @self.import_alarm
+        def add_one(x):
+            return x + 1
+
+        self.add_one = add_one
+
+    def test_no_warning(self):
+        with warnings.catch_warnings(record=True) as w:
+            self.add_one(0)
+        self.assertEqual(len(w), 0, "Expected no warnings, but got {} warnings.".format(len(w)))
+
+    def test_has_warning(self):
+        self.import_alarm.message = "Now add_one should throw an ImportWarning"
+
+        with warnings.catch_warnings(record=True, ) as w:
+            self.add_one(1)
+        self.assertEqual(len(w), 1, "Expected one warning, but got {} warnings.".format(len(w)))
+
 
 if __name__ == "__main__":
     unittest.main()
