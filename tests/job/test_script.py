@@ -22,7 +22,7 @@ class TestScriptJob(unittest.TestCase):
 
     def test_script_path(self):
         job = self.project.create_job('ScriptJob', 'script')
-        with self.assertRaises(AssertionError):
+        with self.assertRaises(TypeError):
             job.run()
 
 if __name__ == "__main__":
