@@ -250,6 +250,13 @@ class ImportAlarm:
     ...         self.riddles = [Enigma(), Puzzle(), Conundrum()]
     """
     def __init__(self, message=None):
+        """
+        Initialize message value.
+
+        Args:
+            message (str): What to say alongside your ImportError when the decorated function is called. (Default is
+                None, which says nothing and raises no error.)
+        """
         self.message = message
 
     def __call__(self, func):
