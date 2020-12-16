@@ -975,7 +975,7 @@ class GenericJob(JobCore):
         if self.server.send_to_db:
             pass
 
-    def create_job(self, job_type, job_name):
+    def create_job(self, job_type, job_name, delete_existing_job=False):
         """
         Create one of the following jobs:
         - 'StructureContainer’:
@@ -1021,11 +1021,14 @@ class GenericJob(JobCore):
                                              ’TransformationPath’, ‘ThermoIntEamQh’, ‘ThermoIntDftEam’, ‘ScriptJob’,
                                              ‘ListMaster']
             job_name (str): name of the job
+            delete_existing_job (bool): delete an existing job - default false
 
         Returns:
             GenericJob: job object depending on the job_type selected
         """
-        job = self.project.create_job(job_type=job_type, job_name=job_name)
+        job = self.project.create_job(
+            job_type=job_type, job_name=job_name, delete_existing_job=delete_existing_job
+        )
         if static_isinstance(
             obj=job.__class__,
             obj_type=[
