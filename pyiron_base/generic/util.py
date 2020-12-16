@@ -248,6 +248,10 @@ class ImportAlarm:
     ...     def __init__(self, project, job_name)
     ...         super().__init__()
     ...         self.riddles = [Enigma(), Puzzle(), Conundrum()]
+
+    This class is also a context manager that can be used as a short-cut, like this:
+    >>> with ImportAlarm("MysteryJob relies on mystery_package, but this was unavailable.") as import_alarm:
+    ...     import mystery_package
     """
     def __init__(self, message=None):
         """
@@ -269,3 +273,18 @@ class ImportAlarm:
                 warnings.warn(self.message, category=ImportWarning)
             return function(*args, **kwargs)
         return decorator
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        if exc_type == exc_value == traceback == None:
+            # import successful, so silence our warning
+            self.message = None
+            return
+        if issubclass(exc_type, ImportError):
+            # import broken; retain message, but suppress error
+            return True
+        else:
+            # unrelated error during import, re-raise
+            return False
