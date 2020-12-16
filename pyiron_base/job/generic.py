@@ -1021,6 +1021,7 @@ class GenericJob(JobCore):
                                              ’TransformationPath’, ‘ThermoIntEamQh’, ‘ThermoIntDftEam’, ‘ScriptJob’,
                                              ‘ListMaster']
             job_name (str): name of the job
+            delete_existing_job (bool): delete an existing job - default false
 
         Returns:
             GenericJob: job object depending on the job_type selected
