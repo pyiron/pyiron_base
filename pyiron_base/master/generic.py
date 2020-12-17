@@ -181,6 +181,13 @@ class GenericMaster(GenericJob):
         else:
             return self.project_hdf5.open(job_name)
 
+    def validate_ready_to_run(self):
+        """
+        Validate that the calculation is ready to be executed. By default no generic checks are performed, but one could
+        check that the input information is complete or validate the consistency of the input at this point.
+        """
+        pass
+
     @property
     def job_object_dict(self):
         """
