@@ -6,6 +6,7 @@
 Utility functions used in pyiron.
 """
 
+from copy import copy
 import functools
 import types
 import warnings
@@ -144,15 +145,21 @@ class Deprecator:
         self.version = version
         self.category = PendingDeprecationWarning if pending else DeprecationWarning
 
+    def __copy__(self):
+        cp = type(self)(message=self.message, version=self.version)
+        cp.category = self.category
+        return cp
+
     def __call__(self, message=None, version=None, arguments=None, **kwargs):
+        depr = copy(self)
         if isinstance(message, types.FunctionType):
-            return self.__deprecate_function(message)
+            return depr.__deprecate_function(message)
         else:
-            self.message = message
-            self.version = version
-            self.arguments = arguments if arguments is not None else {}
-            self.arguments.update(kwargs)
-            return self.wrap
+            depr.message = message
+            depr.version = version
+            depr.arguments = arguments if arguments is not None else {}
+            depr.arguments.update(kwargs)
+            return depr.wrap
 
     def _build_message(self):
         if self.category == PendingDeprecationWarning:
