@@ -26,6 +26,8 @@ class TestJobType(unittest.TestCase):
         )
         self.assertRaises(TypeError, static_isinstance, list(), 1)
 
+
+class TestDeprecator(unittest.TestCase):
     def test_deprecate(self):
         """Function decorated with `deprecate` should raise a warning."""
         @deprecate
@@ -101,6 +103,21 @@ class TestJobType(unittest.TestCase):
                              "return value")
         self.assertEqual(len(w), 0, "Warning raised, but deprecated argument was not given.")
 
+    def test_instances(self):
+        """Subsequent calls to a Deprecator instance must not interfere with each other."""
+
+        @deprecate(bar="use baz instead")
+        def foo(bar=None, baz=None):
+            pass
+
+        @deprecate(baz="use bar instead")
+        def food(bar=None, baz=None):
+            pass
+
+        with warnings.catch_warnings(record=True) as w:
+            foo(bar=True)
+            food(baz=True)
+        self.assertEqual(len(w), 2, "Not all warnings preserved.")
 
 class TestImportAlarm(unittest.TestCase):
 
