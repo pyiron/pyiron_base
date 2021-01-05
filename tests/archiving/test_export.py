@@ -1,3 +1,4 @@
+import os
 import unittest
 from pyiron_base import Project
 from pyiron_base.archiving.export_archive import export_database
@@ -15,7 +16,7 @@ class TestPacking(unittest.TestCase):
         cls.pr.remove_jobs_silently(recursive=True)
         cls.job = cls.pr.create_job(job_type=ToyJob, job_name="toy")
         cls.job.run()
-        cls.pr.packing(destination_path='archive_folder',compress=false)
+        cls.pr.packing(destination_path='archive_folder',compress=False)
     
     def test_exportedCSV(self):
         ## in the first test, the csv file from the packing function is read
@@ -34,7 +35,12 @@ class TestPacking(unittest.TestCase):
         assert_frame_equal(df_known,df_read) 
     
     def test_HDF5(self):
-        pass
+        ## first we check whether the toy.h5 file exists in the exported directory
+        file_path = "archive_folder/toy.h5"
+        self.assertTrue(os.path.exists(file_path))
+        ## second test, check whether the sample_hdf.h5 is the same as toy.h5
+        self.assertEqual(os.system("h5diff sample_hdf.h5 archive_folder/toy.h5"),0)
+
 
 if __name__ == "__main__":
     unittest.main()
