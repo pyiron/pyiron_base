@@ -36,7 +36,9 @@ class TestPacking(unittest.TestCase):
         ## in the first test, the csv file from the packing function is read
         ## and is compared with the return dataframe from export_database function   
         self.pr.packing(destination_path=self.arch_path,compress=False)
-        df_read = pd.read_csv('export.csv')
+        cwd = os.getcwd()
+        csv_file_path = cwd + '/export.csv'
+        df_read = pd.read_csv(csv_file_path)
         df_read.drop(df_read.keys()[0],inplace=True,axis = 1)
         df_read.dropna(inplace = True, axis=1) ## this remove the "None/NaN/empty" cells as well as the unnamed column
         df_read['timestart'] = pd.to_datetime(df_read['timestart'])
@@ -46,8 +48,10 @@ class TestPacking(unittest.TestCase):
         assert_frame_equal(df_exp,df_read)
         ## In the second test, an examplary.csv file is read and compared with the
         ## one produced by the packing function
-        df_known = pd.read_csv("exemplary.csv")
-        df_read = pd.read_csv('export.csv')
+        csv_file_path = cwd + '/exemplary.csv'
+        df_known = pd.read_csv(csv_file_path)
+        csv_file_path = cwd + '/export.csv'
+        df_read = pd.read_csv(csv_file_path)
         df_known.dropna(inplace = True, axis= 1)
         df_known.drop(["timestart","computer"],inplace=True,axis=1)
         df_read.dropna(inplace = True, axis= 1)
