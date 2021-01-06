@@ -3,10 +3,22 @@ import unittest
 from pyiron_base import Project
 from pyiron_base.archiving.export_archive import export_database
 from pyiron_base.archiving import export_archive
-from sample_job import ToyJob
 import pandas as pd
 from pandas._testing import assert_frame_equal
 from filecmp import dircmp
+from pyiron_base import PythonTemplateJob
+
+class ToyJob(PythonTemplateJob):
+    def __init__(self, project, job_name):
+        super(ToyJob, self).__init__(project, job_name)
+        self.input['input_energy'] = 100
+    
+    # This function is executed 
+    def run_static(self):
+        with self.project_hdf5.open("output/generic") as h5out:
+            h5out["energy_tot"] = self.input["input_energy"]
+        self.status.finished = True
+
 
 class TestPacking(unittest.TestCase):
     
@@ -40,7 +52,7 @@ class TestPacking(unittest.TestCase):
         df_known.drop(["timestart","computer"],inplace=True,axis=1)
         df_read.dropna(inplace = True, axis= 1)
         df_read.drop(["timestart","computer"],inplace=True,axis=1)
-        assert_frame_equal(df_known,df_read) 
+        assert_frame_equal(df_known,df_read)
     
     def test_HDF5(self):
         ## first we check whether the toy.h5 file exists in the exported directory
