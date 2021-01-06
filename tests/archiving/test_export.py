@@ -6,6 +6,7 @@ from pyiron_base.archiving import export_archive
 from sample_job import ToyJob
 import pandas as pd
 from pandas._testing import assert_frame_equal
+from filecmp import dircmp
 
 class TestPacking(unittest.TestCase):
     
@@ -41,6 +42,16 @@ class TestPacking(unittest.TestCase):
         ## second test, check whether the sample_hdf.h5 is the same as toy.h5
         self.assertEqual(os.system("h5diff sample_hdf.h5 archive_folder/toy.h5"),0)
 
+    def test_compress(self):
+        ## here we check whether the packing function does the compressibility right
+        self.pr.packing(destination_path='archive_folder_comp',compress=True)
+        file_path = 'archive_folder_comp.tar.gz'
+        self.assertTrue(os.path.exists(file_path))
+    
+    def test_content(self):
+        ## here we test the content of the archive_folder and compare it with the content of the project directory
+        compare_obj = dircmp("archive_folder",self.pr.path)
+        self.assertEqual(len(compare_obj.diff_files),0)
 
 if __name__ == "__main__":
     unittest.main()
