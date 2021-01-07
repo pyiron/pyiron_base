@@ -26,8 +26,8 @@ class TestPacking(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.arch_dir = 'archive_folder'
-        cls.arch_dir_comp = cls.arch_dir+'_comp'
+        cls.arch_dir = 'archive_folder' ## this is used to create a folder/a compressed file, are not path
+        cls.arch_dir_comp = cls.arch_dir+'_comp' ## this is used to create a folder/a compressed file, are not path
         cls.pr = Project('test')
         cls.pr.remove_jobs_silently(recursive=True)
         cls.job = cls.pr.create_job(job_type=ToyJob, job_name='toy')
@@ -39,13 +39,14 @@ class TestPacking(unittest.TestCase):
     def test_exportedCSV(self):
         ## in the first test, the csv file from the packing function is read
         ## and is compared with the return dataframe from export_database function
+        directory_to_transfer = os.path.basename(self.pr.path[:-1])
         self.pr.packing(destination_path=self.arch_dir,compress=False)
         df_read = pd.read_csv('export.csv')
         df_read.drop(df_read.keys()[0],inplace=True,axis = 1)
         df_read.dropna(inplace = True, axis=1) ## this remove the "None/NaN/empty" cells as well as the unnamed column
         df_read['timestart'] = pd.to_datetime(df_read['timestart'])
         df_read["hamversion"]= float(df_read["hamversion"])
-        df_exp = export_database(self.pr, self.pr.path,'archive_folder').dropna(axis=1)
+        df_exp = export_database(self.pr, directory_to_transfer,'archive_folder').dropna(axis=1)
         df_exp["hamversion"]= float(df_exp["hamversion"])
         assert_frame_equal(df_exp,df_read)
 
