@@ -46,24 +46,11 @@ class TestPacking(unittest.TestCase):
         df_exp = export_database(self.pr, self.pr.path,'archive_folder').dropna(axis=1)
         df_exp["hamversion"]= float(df_exp["hamversion"])
         assert_frame_equal(df_exp,df_read)
-        ## In the second test, an examplary.csv file is read and compared with the
-        ## one produced by the packing function
-        csv_file_path = self.file_location + '/exemplary.csv'
-        df_known = pd.read_csv(csv_file_path)
-        df_read = pd.read_csv('export.csv')
-        df_known.dropna(inplace = True, axis= 1)
-        df_known.drop(["timestart","computer"],inplace=True,axis=1)
-        df_read.dropna(inplace = True, axis= 1)
-        df_read.drop(["timestart","computer"],inplace=True,axis=1)
-        assert_frame_equal(df_known,df_read)
     
     def test_HDF5(self):
         ## first we check whether the toy.h5 file exists in the exported directory
         h5_file_path = self.arch_path+'/'+self.pr.name+"/toy.h5"
         self.assertTrue(os.path.exists(h5_file_path))
-        ## second test, check whether the sample_hdf.h5 is the same as toy.h5
-        sample_path = self.file_location+'/sample_hdf.h5'
-        self.assertEqual(os.system("h5diff {} {}".format(sample_path,h5_file_path)),0)
 
     def test_compress(self):
         ## here we check whether the packing function does the compressibility right
@@ -75,8 +62,6 @@ class TestPacking(unittest.TestCase):
         ## here we test the content of the archive_folder and compare it with the content of the project directory
         path_to_compare = self.arch_path + "/" + self.pr.name
         compare_obj = dircmp(path_to_compare,self.pr.path)
-        print("first path: " + self.arch_path)
-        print("2nd path: " + self.pr.path)
         self.assertEqual(len(compare_obj.diff_files),0)
 
 if __name__ == "__main__":
