@@ -2,7 +2,6 @@ import os
 import unittest
 from pyiron_base import Project
 from pyiron_base.archiving.export_archive import export_database
-from pyiron_base.archiving import export_archive
 import pandas as pd
 from pandas._testing import assert_frame_equal
 from filecmp import dircmp
@@ -10,10 +9,12 @@ from pyiron_base import PythonTemplateJob
 
 class ToyJob(PythonTemplateJob):
     def __init__(self, project, job_name):
+        """
+        a toyjob to test export/import functionalities
+        """
         super(ToyJob, self).__init__(project, job_name)
         self.input['input_energy'] = 100
-    
-    # This function is executed 
+    # This function is executed
     def run_static(self):
         with self.project_hdf5.open("output/generic") as h5out:
             h5out["energy_tot"] = self.input["input_energy"]
@@ -21,7 +22,7 @@ class ToyJob(PythonTemplateJob):
 
 
 class TestPacking(unittest.TestCase):
-    
+
     @classmethod
     def setUpClass(cls):
         cls.arch_path = 'archive_folder'
@@ -36,7 +37,7 @@ class TestPacking(unittest.TestCase):
         )
     def test_exportedCSV(self):
         ## in the first test, the csv file from the packing function is read
-        ## and is compared with the return dataframe from export_database function   
+        ## and is compared with the return dataframe from export_database function
         self.pr.packing(destination_path=self.arch_path,compress=False)
         df_read = pd.read_csv('export.csv')
         df_read.drop(df_read.keys()[0],inplace=True,axis = 1)
