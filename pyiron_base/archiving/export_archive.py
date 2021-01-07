@@ -25,7 +25,7 @@ def getdir(path):
 
 def update_project(project_instance, directory_to_transfer, archive_directory, df):
     directory_to_transfer = os.path.basename(directory_to_transfer)
-    pr_transfer = project_instance.open('.')
+    pr_transfer = project_instance.open(os.curdir)
     dir_name_transfer = getdir(path=directory_to_transfer)
     dir_name_archive = getdir(path=archive_directory)
     path_rel_lst = [os.path.relpath(p, pr_transfer.project_path) for p in df["project"].values]
@@ -55,13 +55,13 @@ def copy_files_to_archive(directory_to_transfer, archive_directory, compressed=T
         directory_to_transfer = os.path.basename(directory_to_transfer)
     else:
         directory_to_transfer = os.path.basename(directory_to_transfer[:-1])
-    print("directory to transfer: "+directory_to_transfer)
+    #print("directory to transfer: "+directory_to_transfer)
     pfi = PyFileIndex(path=directory_to_transfer, filter_function=filter_function)
     df_files = pfi.dataframe[~pfi.dataframe.is_directory]
 
     # Create directories
     dir_lst = generate_list_of_directories(df_files=df_files, directory_to_transfer=directory_to_transfer, archive_directory=archive_directory)
-    print(dir_lst)
+    #print(dir_lst)
     for d in dir_lst:
         os.makedirs(d, exist_ok=True)
     # Copy files
@@ -81,7 +81,7 @@ def export_database(project_instance,directory_to_transfer, archive_directory):
     else:
         raise RuntimeError('the given path for exporting to, does not have the correct format\n paths as string or pyiron Project objects are expected')
     directory_to_transfer = os.path.basename(directory_to_transfer)
-    pr = project_instance.open('.')
+    pr = project_instance.open(os.curdir)
     df = pr.job_table()
     job_ids_sorted = sorted(df.id.values)
     new_job_ids = list(range(len(job_ids_sorted)))
