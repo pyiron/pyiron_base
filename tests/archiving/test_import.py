@@ -19,6 +19,7 @@ class ToyJob(PythonTemplateJob):
             h5out["energy_tot"] = self.input["input_energy"]
         self.status.finished = True
 
+
 class TestUnpacking(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
