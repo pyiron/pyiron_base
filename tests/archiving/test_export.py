@@ -9,12 +9,7 @@ from pyiron_base import PythonTemplateJob
 
 class ToyJob(PythonTemplateJob):
     def __init__(self, project, job_name):
-        """
-        a toyjob to test export/import functionalities
-        which has just I/O to HDF5 file.
-
-        It is a line to test whether codacy stops nagging about this docstring
-        """
+        '''a toyjob to test export/import functionalities.'''
         super(ToyJob, self).__init__(project, job_name)
         self.input['input_energy'] = 100
     # This function is executed

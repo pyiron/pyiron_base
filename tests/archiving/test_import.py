@@ -2,19 +2,13 @@ import os
 import unittest
 from pyiron_base import Project
 from pyiron_base.archiving.import_archive import getdir
-import pandas as pd
 from pandas._testing import assert_frame_equal
 from filecmp import dircmp
 from pyiron_base import PythonTemplateJob
 
 class ToyJob(PythonTemplateJob):
     def __init__(self, project, job_name):
-        """
-        a toyjob to test export/import functionalities
-        which has just I/O to HDF5 file.
-
-        It is a line to test whether codacy stops nagging about this docstring
-        """
+        '''a toyjob to test export/import functionalities.'''
         super(ToyJob, self).__init__(project, job_name)
         self.input['input_energy'] = 100
     
