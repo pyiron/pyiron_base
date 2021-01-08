@@ -565,7 +565,7 @@ class GenericJob(JobCore):
         if os.path.isabs(file):
             self.restart_file_list.append(file)
         else:
-            self.restart_file_list.append(file)
+            self.restart_file_list.append(os.path.abspath(file))
 
     def copy_template(self, project=None, new_job_name=None):
         """
