@@ -30,15 +30,12 @@ class TestUnpacking(unittest.TestCase):
         cls.file_location = os.path.dirname(os.path.abspath(__file__)).replace(
             "\\", "/"
         )
-    
     def setUp(self):
         self.imp_pr = Project('imported')
         self.imp_pr.remove_jobs_silently(recursive=True)
         self.imp_pr.unpacking(origin_path=self.arch_dir_comp,compress=True)
-
     def tearDown(self):
         self.imp_pr.remove_jobs_silently(recursive=True)
-
     def test_import_csv(self):
         df_original = self.pr.job_table()
         df_import = self.imp_pr.job_table()
@@ -51,7 +48,6 @@ class TestUnpacking(unittest.TestCase):
         df_import["hamversion"] = float(df_import["hamversion"])
         df_original["hamversion"] = float(df_original["hamversion"])
         assert_frame_equal(df_original,df_import)
-
     def test_import_compressed(self):
         path_original = self.pr.path
         path_import = self.imp_pr.path
@@ -59,7 +55,6 @@ class TestUnpacking(unittest.TestCase):
         path_import = getdir(path_import)
         compare_obj = dircmp(path_original,path_import)
         self.assertEqual(len(compare_obj.diff_files),0)
-
     def test_import_uncompress(self):
         self.pr.packing(destination_path=self.arch_dir,compress=False)
         self.imp_pr.remove_jobs_silently(recursive=True)
