@@ -37,6 +37,7 @@ class TestUnpacking(unittest.TestCase):
 
     def tearDown(self):
         self.imp_pr.remove_jobs_silently(recursive=True)
+
     def test_import_csv(self):
         df_original = self.pr.job_table()
         df_import = self.imp_pr.job_table()
