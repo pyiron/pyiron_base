@@ -6,6 +6,7 @@ from pandas._testing import assert_frame_equal
 from filecmp import dircmp
 from pyiron_base import PythonTemplateJob
 
+
 class ToyJob(PythonTemplateJob):
     def __init__(self, project, job_name):
         """A toyjob to test export/import functionalities."""
