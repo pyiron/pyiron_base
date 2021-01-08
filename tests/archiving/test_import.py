@@ -71,5 +71,6 @@ class TestUnpacking(unittest.TestCase):
         compare_obj = dircmp(path_original,path_import)
         self.assertEqual(len(compare_obj.diff_files),0)
 
+
 if __name__ == "__main__":
     unittest.main()
