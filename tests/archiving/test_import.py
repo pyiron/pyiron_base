@@ -31,6 +31,7 @@ class TestUnpacking(unittest.TestCase):
         cls.file_location = os.path.dirname(os.path.abspath(__file__)).replace(
             "\\", "/"
         )
+
     def setUp(self):
         self.imp_pr = Project('imported')
         self.imp_pr.remove_jobs_silently(recursive=True)
