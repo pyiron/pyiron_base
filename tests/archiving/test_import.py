@@ -48,6 +48,7 @@ class TestUnpacking(unittest.TestCase):
         df_import["hamversion"] = float(df_import["hamversion"])
         df_original["hamversion"] = float(df_original["hamversion"])
         assert_frame_equal(df_original,df_import)
+
     def test_import_compressed(self):
         path_original = self.pr.path
         path_import = self.imp_pr.path
