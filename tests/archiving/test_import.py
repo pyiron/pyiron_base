@@ -34,6 +34,7 @@ class TestUnpacking(unittest.TestCase):
         self.imp_pr = Project('imported')
         self.imp_pr.remove_jobs_silently(recursive=True)
         self.imp_pr.unpacking(origin_path=self.arch_dir_comp,compress=True)
+
     def tearDown(self):
         self.imp_pr.remove_jobs_silently(recursive=True)
     def test_import_csv(self):
