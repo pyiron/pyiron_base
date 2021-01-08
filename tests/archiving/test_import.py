@@ -55,6 +55,7 @@ class TestUnpacking(unittest.TestCase):
         path_import = getdir(path_import)
         compare_obj = dircmp(path_original,path_import)
         self.assertEqual(len(compare_obj.diff_files),0)
+
     def test_import_uncompress(self):
         self.pr.packing(destination_path=self.arch_dir,compress=False)
         self.imp_pr.remove_jobs_silently(recursive=True)
