@@ -12,6 +12,7 @@ class ToyJob(PythonTemplateJob):
         """A toyjob to test export/import functionalities."""
         super(ToyJob, self).__init__(project, job_name)
         self.input['input_energy'] = 100
+
     # This function is executed
     def run_static(self):
         with self.project_hdf5.open("output/generic") as h5out:
