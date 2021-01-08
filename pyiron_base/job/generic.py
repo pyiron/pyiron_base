@@ -1047,7 +1047,7 @@ class GenericJob(JobCore):
         elif static_isinstance(
             obj=job.__class__,
             obj_type=[
-                "pyiron.atomistics.job.interactivewrapper.InteractiveWrapper",
+                "pyiron_base.job.interactivewrapper.InteractiveWrapper",
             ],
         ):
             job.ref_job = self
