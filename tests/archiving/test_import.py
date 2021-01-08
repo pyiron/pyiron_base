@@ -66,7 +66,7 @@ class TestUnpacking(unittest.TestCase):
     def test_import_uncompress(self):
         self.pr.packing(destination_path=self.arch_dir,compress=False)
         self.imp_pr.remove_jobs_silently(recursive=True)
-        self.imp_pr.unpacking(origin_path=self.arch_dir,compress=False)
+        self.imp_pr.unpacking(origin_path=self.arch_dir, compress=False)
         path_original = self.pr.path
         path_import = self.imp_pr.path
         path_original = getdir(path_original)
