@@ -11,7 +11,9 @@ class ToyJob(PythonTemplateJob):
     def __init__(self, project, job_name):
         """
         a toyjob to test export/import functionalities
-        which just has just I/O to HDF5 file.
+        which has just I/O to HDF5 file.
+
+        It is a line to test whether codacy stops nagging about this docstring
         """
         super(ToyJob, self).__init__(project, job_name)
         self.input['input_energy'] = 100
@@ -60,7 +62,6 @@ class TestPacking(unittest.TestCase):
         self.pr.packing(destination_path=self.arch_dir_comp,compress=True)
         file_path = self.arch_dir_comp+".tar.gz"
         self.assertTrue(os.path.exists(file_path))
-    
     def test_content(self):
         ## here we test the content of the archive_folder and compare it with the content of the project directory
         path_to_compare = self.arch_dir + "/" + self.pr.name
