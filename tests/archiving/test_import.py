@@ -8,7 +8,7 @@ from pyiron_base import PythonTemplateJob
 
 class ToyJob(PythonTemplateJob):
     def __init__(self, project, job_name):
-        """a toyjob to test export/import functionalities."""
+        """A toyjob to test export/import functionalities."""
         super(ToyJob, self).__init__(project, job_name)
         self.input['input_energy'] = 100
     # This function is executed
@@ -18,7 +18,6 @@ class ToyJob(PythonTemplateJob):
         self.status.finished = True
 
 class TestUnpacking(unittest.TestCase):
-    
     @classmethod
     def setUpClass(cls):
         cls.arch_dir = 'archive_folder' ## this is used to create a folder/a compressed file, are not path
