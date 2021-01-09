@@ -114,16 +114,24 @@ def export_database(
 ):
     # here we first check wether the archive directory is a path
     # or a project object
-    if isinstance(archive_directory, str):
+    if static_isinstance(
+        obj=archive_directory,
+        obj_type='builtins.str'
+    ):
         archive_directory = os.path.basename(archive_directory)
-    elif hasattr(archive_directory, 'path'):
-        # in the case that the input argument is a project object
+    # if the archive_directory is a project
+    elif static_isinstance(
+        obj=archive_directory.__class__,
+        obj_type=[
+            "pyiron_base.project.generic.Project",
+        ]
+    ):
         archive_directory = archive_directory.path
     else:
         raise RuntimeError(
-            'the given path for exporting to, \
-            does not have the correct format\n paths as string\
-            or pyiron Project objects are expected'
+            """the given path for exporting to,
+            does not have the correct format paths as string
+            or pyiron Project objects are expected"""
         )
     directory_to_transfer = os.path.basename(directory_to_transfer)
     pr = project_instance.open(os.curdir)
