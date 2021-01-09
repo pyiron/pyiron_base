@@ -76,6 +76,19 @@ class TestUnpacking(unittest.TestCase):
         compare_obj = dircmp(path_original, path_import)
         self.assertEqual(len(compare_obj.diff_files), 0)
 
+    def test_import_from_proj(self):
+        self.pr.packing(destination_path=self.arch_dir, compress=False)
+        self.imp_pr.remove_jobs_silently(recursive=True)
+        aux_proj = Project(self.arch_dir)  # an auxilary project
+        aux_proj.open(os.curdir)
+        self.imp_pr.unpacking(aux_proj, compress=False)
+        path_original = self.pr.path
+        path_import = self.imp_pr.path
+        path_original = getdir(path_original)
+        path_import = getdir(path_import)
+        compare_obj = dircmp(path_original, path_import)
+        self.assertEqual(len(compare_obj.diff_files), 0)
+
 
 if __name__ == "__main__":
     unittest.main()
