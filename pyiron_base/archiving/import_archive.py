@@ -32,30 +32,44 @@ def extract_archive(archive_directory):
     tar.close()
 
 
-def import_jobs(project_instance, directory_to_import_to, archive_directory, df, compressed=True):
+def import_jobs(
+    project_instance, directory_to_import_to, archive_directory,
+    df, compressed=True
+):
     # Copy HDF5 files
-    if isinstance(archive_directory,str):#if the archive_directory is a path
+    # if the archive_directory is a path
+    if isinstance(archive_directory, str):
         archive_directory = os.path.basename(archive_directory)
-    elif hasattr(archive_directory,'path'):#if the archive_directory is a project
+    # if the archive_directory is a project
+    elif hasattr(archive_directory, 'path'):
         archive_directory = archive_directory.path
     else:
-        raise RuntimeError('the given path for importing from, does not have the correct format\n paths as string or pyiron Project objects are expected')
+        raise RuntimeError(
+            'the given path for importing from, \
+            does not have the correct format\n paths \
+            as string or pyiron Project objects are expected'
+        )
     if compressed:
         extract_archive(archive_directory)
     archive_name = getdir(path=archive_directory)
-    if(directory_to_import_to[-1] != '/'):
+    if directory_to_import_to[-1] != '/':
         directory_to_import_to = os.path.basename(directory_to_import_to)
     else:
         directory_to_import_to = os.path.basename(directory_to_import_to[:-1])
-    des = os.path.abspath(os.path.join(os.curdir, directory_to_import_to)) #destination folder
-    src = os.path.abspath(os.path.join(os.curdir, archive_directory)) #source folder; archive folder
+    # destination folder
+    des = os.path.abspath(os.path.join(os.curdir, directory_to_import_to))
+    # source folder; archive folder
+    src = os.path.abspath(os.path.join(os.curdir, archive_directory))
     copy_tree(src, des)
     if compressed:
         rmtree(archive_directory)
 
     # Update Database
     pr_import = project_instance.open(os.curdir)
-    df["project"] = [os.path.join(pr_import.project_path, os.path.relpath(p, archive_name)) for p in df["project"].values]
+    df["project"] = [os.path.join(
+        pr_import.project_path, os.path.relpath(p, archive_name))
+        for p in df["project"].values
+    ]
     df['projectpath'] = len(df) * [pr_import.root_path]
     # Add jobs to database
     job_id_lst = []
@@ -74,6 +88,15 @@ def import_jobs(project_instance, directory_to_import_to, archive_directory, df,
         job_id_lst.append(job_id)
 
     # Update parent and master ids
-    for job_id, masterid, parentid in zip(job_id_lst, update_id_lst(record_lst=df['masterid'].values, job_id_lst=job_id_lst), update_id_lst(record_lst=df['parentid'].values, job_id_lst=job_id_lst)):
+    for job_id, masterid, parentid in zip(
+        job_id_lst,
+        update_id_lst(record_lst=df["masterid"].values, job_id_lst=job_id_lst),
+        update_id_lst(record_lst=df["parentid"].values, job_id_lst=job_id_lst),
+    ):
         if not np.isnan(masterid) or not np.isnan(parentid):
-            pr_import.db.item_update(item_id=job_id, par_dict={'parentid': parentid, 'masterid': masterid})
+            pr_import.db.item_update(
+                item_id=job_id,
+                par_dict={
+                    "parentid": parentid, "masterid": masterid
+                }
+            )
