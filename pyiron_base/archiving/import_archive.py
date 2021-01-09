@@ -4,6 +4,7 @@ import numpy as np
 from shutil import rmtree
 from distutils.dir_util import copy_tree
 import tarfile
+from pyiron_base.generic.util import static_isinstance
 
 
 def getdir(path):
@@ -37,17 +38,25 @@ def import_jobs(
     df, compressed=True
 ):
     # Copy HDF5 files
-    # if the archive_directory is a path
-    if isinstance(archive_directory, str):
+    # if the archive_directory is a path(string)/name of the compressed file
+    if static_isinstance(
+        obj=archive_directory,
+        obj_type='builtins.str'
+    ):
         archive_directory = os.path.basename(archive_directory)
     # if the archive_directory is a project
-    elif hasattr(archive_directory, 'path'):
+    elif static_isinstance(
+        obj=archive_directory.__class__,
+        obj_type=[
+            "pyiron_base.project.generic.Project",
+        ]
+    ):
         archive_directory = archive_directory.path
     else:
         raise RuntimeError(
-            'the given path for importing from, \
-            does not have the correct format\n paths \
-            as string or pyiron Project objects are expected'
+            """the given path for importing from,
+            does not have the correct format paths
+            as string or pyiron Project objects are expected"""
         )
     if compressed:
         extract_archive(archive_directory)
