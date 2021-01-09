@@ -1497,8 +1497,10 @@ class Project(ProjectPath):
         compress (boolian), if true, the function will compress the destination_path to a tar.gz file.
         """
         directory_to_transfer = os.path.basename(self.path[:-1])
-        export_archive.copy_files_to_archive(directory_to_transfer, destination_path,compressed=compress)
-        df = export_archive.export_database(self,directory_to_transfer,destination_path)
+        export_archive.copy_files_to_archive(
+            directory_to_transfer, destination_path, compressed=compress
+        )
+        df = export_archive.export_database(self, directory_to_transfer, destination_path)
         df.to_csv(csv_file_name)
 
 
@@ -1514,7 +1516,9 @@ class Project(ProjectPath):
         """
         csv_path = csv_file_name
         df = pandas.read_csv(csv_path, index_col=0)
-        import_archive.import_jobs(self,self.path,archive_directory=origin_path, df=df, compressed=compress)
+        import_archive.import_jobs(
+            self, self.path, archive_directory=origin_path, df=df, compressed=compress
+        )
 
 
 class Creator:
