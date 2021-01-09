@@ -4,6 +4,7 @@ from shutil import copyfile
 from pyfileindex import PyFileIndex
 import tarfile
 from shutil import rmtree
+from pyiron_base.generic.util import static_isinstance
 
 
 def new_job_id(job_id, job_translate_dict):
