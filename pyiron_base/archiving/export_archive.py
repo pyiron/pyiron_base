@@ -115,10 +115,7 @@ def export_database(
 ):
     # here we first check wether the archive directory is a path
     # or a project object
-    if static_isinstance(
-        obj=archive_directory,
-        obj_type='builtins.str'
-    ):
+    if isinstance(archive_directory, str):
         archive_directory = os.path.basename(archive_directory)
     # if the archive_directory is a project
     elif static_isinstance(
