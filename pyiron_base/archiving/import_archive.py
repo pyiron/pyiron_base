@@ -39,10 +39,7 @@ def import_jobs(
 ):
     # Copy HDF5 files
     # if the archive_directory is a path(string)/name of the compressed file
-    if static_isinstance(
-        obj=archive_directory,
-        obj_type='builtins.str'
-    ):
+    if isinstance(archive_directory, str):
         archive_directory = os.path.basename(archive_directory)
     # if the archive_directory is a project
     elif static_isinstance(
