@@ -1492,7 +1492,7 @@ class Project(ProjectPath):
                     self.db.item_update({"project": self.project_path}, entry["id"])
 
 
-    def packing(self, destination_path, csv_file_name='export.csv', compress=True):
+    def pack(self, destination_path, csv_file_name='export.csv', compress=True):
         """
         by this funtion, the job table is exported to a csv file
         and the project directory is copied and compressed (by default) to a file.
@@ -1510,7 +1510,7 @@ class Project(ProjectPath):
         df.to_csv(csv_file_name)
 
 
-    def unpacking(self, origin_path, csv_file_name='export.csv', compress=True):
+    def unpack(self, origin_path, csv_file_name='export.csv', compress=True):
         """
         by this function, job table is imported from a given csv file,
         and also the content of project directory is copied from a given path
