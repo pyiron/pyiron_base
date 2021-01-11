@@ -975,6 +975,38 @@ class GenericJob(JobCore):
         if self.server.send_to_db:
             pass
 
+    def _init_child_job(self, parent):
+        """
+        Finalize job initialization when job instance is created as a child from another one.
+
+        Master jobs use this to set their own reference job, when created from that reference job.
+
+        Args:
+            parent (:class:`.GenericJob`): job instance that this job was created from
+        """
+        if static_isinstance(
+            obj=self.__class__,
+            obj_type=[
+                "pyiron_base.master.parallel.ParallelMaster",
+                "pyiron_base.master.serial.SerialMasterBase",
+            ],
+        ):
+            self.ref_job = parent
+            if parent.server.run_mode.non_modal:
+                self.server.run_mode.non_modal = True
+            elif (
+                parent.server.run_mode.interactive
+                or parent.server.run_mode.interactive_non_modal
+            ):
+                self.server.run_mode.interactive = True
+        elif static_isinstance(
+            obj=self.__class__,
+            obj_type=[
+                "pyiron_base.job.interactivewrapper.InteractiveWrapper",
+            ],
+        ):
+            self.ref_job = parent
+
     def create_job(self, job_type, job_name, delete_existing_job=False):
         """
         Create one of the following jobs:
@@ -1029,28 +1061,7 @@ class GenericJob(JobCore):
         job = self.project.create_job(
             job_type=job_type, job_name=job_name, delete_existing_job=delete_existing_job
         )
-        if static_isinstance(
-            obj=job.__class__,
-            obj_type=[
-                "pyiron_base.master.parallel.ParallelMaster",
-                "pyiron_base.master.serial.SerialMasterBase",
-            ],
-        ):
-            job.ref_job = self
-            if self.server.run_mode.non_modal:
-                job.server.run_mode.non_modal = True
-            elif (
-                self.server.run_mode.interactive
-                or self.server.run_mode.interactive_non_modal
-            ):
-                job.server.run_mode.interactive = True
-        elif static_isinstance(
-            obj=job.__class__,
-            obj_type=[
-                "pyiron_base.job.interactivewrapper.InteractiveWrapper",
-            ],
-        ):
-            job.ref_job = self
+        job._init_child_job(self)
         return job
 
     def create_pipeline(self, step_lst, delete_existing_job=False):
