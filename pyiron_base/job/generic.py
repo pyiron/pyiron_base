@@ -984,28 +984,7 @@ class GenericJob(JobCore):
         Args:
             parent (:class:`.GenericJob`): job instance that this job was created from
         """
-        if static_isinstance(
-            obj=self.__class__,
-            obj_type=[
-                "pyiron_base.master.parallel.ParallelMaster",
-                "pyiron_base.master.serial.SerialMasterBase",
-            ],
-        ):
-            self.ref_job = parent
-            if parent.server.run_mode.non_modal:
-                self.server.run_mode.non_modal = True
-            elif (
-                parent.server.run_mode.interactive
-                or parent.server.run_mode.interactive_non_modal
-            ):
-                self.server.run_mode.interactive = True
-        elif static_isinstance(
-            obj=self.__class__,
-            obj_type=[
-                "pyiron_base.job.interactivewrapper.InteractiveWrapper",
-            ],
-        ):
-            self.ref_job = parent
+        pass
 
     def create_job(self, job_type, job_name, delete_existing_job=False):
         """

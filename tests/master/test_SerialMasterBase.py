@@ -5,7 +5,7 @@
 import unittest
 import os
 from pyiron_base.project.generic import Project
-
+from pyiron_base.master.serial import SerialMasterBase
 
 class TestGenericJob(unittest.TestCase):
     @classmethod
@@ -50,6 +50,12 @@ class TestGenericJob(unittest.TestCase):
         job_ser.remove()
         ham.remove()
 
+    def test_child_creation(self):
+        """When creating an interactive wrapper from another job, that should be set as the wrapper's reference job."""
+        j = self.project.create.job.ScriptJob("test_parent")
+        j.server.run_mode = 'interactive'
+        i = j.create_job(SerialMasterBase, "test_child")
+        self.assertEqual(i.ref_job, j, "Reference job of interactive wrapper to set after creation.")
 
 if __name__ == "__main__":
     unittest.main()
