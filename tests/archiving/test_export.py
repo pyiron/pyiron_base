@@ -21,7 +21,7 @@ class ToyJob(PythonTemplateJob):
         self.status.finished = True
 
 
-class TestPacking(unittest.TestCase):
+class TestPack(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
@@ -33,7 +33,7 @@ class TestPacking(unittest.TestCase):
         cls.pr.remove_jobs_silently(recursive=True)
         cls.job = cls.pr.create_job(job_type=ToyJob, job_name='toy')
         cls.job.run()
-        cls.pr.packing(destination_path=cls.arch_dir, compress=False)
+        cls.pr.pack(destination_path=cls.arch_dir, compress=False)
         cls.file_location = os.path.dirname(os.path.abspath(__file__)).replace(
             "\\", "/"
         )
@@ -42,7 +42,7 @@ class TestPacking(unittest.TestCase):
         # in the first test, the csv file from the packing function is read
         # and is compared with the return dataframe from export_database
         directory_to_transfer = os.path.basename(self.pr.path[:-1])
-        self.pr.packing(destination_path=self.arch_dir, compress=False)
+        self.pr.pack(destination_path=self.arch_dir, compress=False)
         df_read = pd.read_csv('export.csv')
         df_read.drop(df_read.keys()[0], inplace=True, axis=1)
         # this removes the "None/NaN/empty" cells as well as the unnamed column
@@ -64,7 +64,7 @@ class TestPacking(unittest.TestCase):
     def test_compress(self):
         # here we check whether the packing function
         # does the compressibility right
-        self.pr.packing(destination_path=self.arch_dir_comp, compress=True)
+        self.pr.pack(destination_path=self.arch_dir_comp, compress=True)
         file_path = self.arch_dir_comp + ".tar.gz"
         self.assertTrue(os.path.exists(file_path))
 

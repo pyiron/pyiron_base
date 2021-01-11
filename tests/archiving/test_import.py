@@ -31,7 +31,7 @@ class TestUnpacking(unittest.TestCase):
         cls.pr.remove_jobs_silently(recursive=True)
         cls.job = cls.pr.create_job(job_type=ToyJob, job_name='toy')
         cls.job.run()
-        cls.pr.packing(destination_path=cls.arch_dir_comp, compress=True)
+        cls.pr.pack(destination_path=cls.arch_dir_comp, compress=True)
         cls.file_location = os.path.dirname(os.path.abspath(__file__)).replace(
             "\\", "/"
         )
@@ -39,7 +39,7 @@ class TestUnpacking(unittest.TestCase):
     def setUp(self):
         self.imp_pr = Project('imported')
         self.imp_pr.remove_jobs_silently(recursive=True)
-        self.imp_pr.unpacking(origin_path=self.arch_dir_comp, compress=True)
+        self.imp_pr.unpack(origin_path=self.arch_dir_comp, compress=True)
 
     def tearDown(self):
         self.imp_pr.remove_jobs_silently(recursive=True)
@@ -66,9 +66,9 @@ class TestUnpacking(unittest.TestCase):
         self.assertEqual(len(compare_obj.diff_files), 0)
 
     def test_import_uncompress(self):
-        self.pr.packing(destination_path=self.arch_dir, compress=False)
+        self.pr.pack(destination_path=self.arch_dir, compress=False)
         self.imp_pr.remove_jobs_silently(recursive=True)
-        self.imp_pr.unpacking(origin_path=self.arch_dir, compress=False)
+        self.imp_pr.unpack(origin_path=self.arch_dir, compress=False)
         path_original = self.pr.path
         path_import = self.imp_pr.path
         path_original = getdir(path_original)
@@ -77,11 +77,11 @@ class TestUnpacking(unittest.TestCase):
         self.assertEqual(len(compare_obj.diff_files), 0)
 
     def test_import_from_proj(self):
-        self.pr.packing(destination_path=self.arch_dir, compress=False)
+        self.pr.pack(destination_path=self.arch_dir, compress=False)
         self.imp_pr.remove_jobs_silently(recursive=True)
         aux_proj = Project(self.arch_dir)  # an auxilary project
         aux_proj.open(os.curdir)
-        self.imp_pr.unpacking(aux_proj, compress=False)
+        self.imp_pr.unpack(aux_proj, compress=False)
         path_original = self.pr.path
         path_import = self.imp_pr.path
         path_original = getdir(path_original)
