@@ -34,17 +34,6 @@ __date__ = "Sep 1, 2017"
 s = Settings()
 
 
-def job_wrap_function(parameters):
-    working_directory, job_id, file_path, submit_on_remote, debug = parameters
-    job_wrapper_function(
-        working_directory=working_directory,
-        job_id=job_id,
-        file_path=file_path,
-        submit_on_remote=submit_on_remote,
-        debug=debug,
-    )
-
-
 class ParallelMaster(GenericMaster):
     """
     MasterJob that handles the creation and analysis of several parallel jobs (including master and
@@ -658,7 +647,7 @@ class ParallelMaster(GenericMaster):
                         False
                     )
                 )
-        pool.map(job_wrap_function, job_lst)
+        pool.starmap(job_wrapper_function, job_lst)
         if s.database_is_disabled:
             self.project.db.update()
         self.status.collect = True
