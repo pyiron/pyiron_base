@@ -145,5 +145,5 @@ def job_wrapper_function(working_directory, job_id=None, file_path=None, submit_
             debug=debug
         )
     else:
-        raise ValueError
+        raise ValueError("Either job_id or file_path have to be not None.")
     job.run()
