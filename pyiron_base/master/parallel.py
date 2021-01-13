@@ -50,9 +50,8 @@ class ParallelMaster(GenericMaster):
     MasterJob that handles the creation and analysis of several parallel jobs (including master and
     continuation jobs), Examples are Murnaghan or Phonon calculations
 
-    Subclasses *must* implement :method:`.parameter_list()`, :method:`.modify_job()` and :method:`.collect_output()`.
-    Additionally :attribute:`._job_generator` must be initialized with an instance of :class:`.JobGenerator` in the
-    subclasses' `__init__`.
+    Subclasses *must* implement :method:`.collect_output()`.  Additionally :attribute:`._job_generator` must be
+    initialized with an instance of :class:`.JobGenerator` in the subclasses' `__init__`.
 
     Args:
         project (ProjectHDFio): ProjectHDFio instance which points to the HDF5 file the job is stored in
