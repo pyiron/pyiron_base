@@ -351,10 +351,11 @@ class ParallelMaster(GenericMaster):
         Copy the GenericJob object which links to the job and its HDF5 file
 
         Returns:
-            GenericJob: New GenericJob object pointing to the same job
+            :class:`.GenericJob`: New object pointing to the same job
         """
         new_job = super(ParallelMaster, self).copy()
-        new_job.ref_job = self.ref_job
+        if self.ref_job is not None:
+            new_job.ref_job = self.ref_job
         return new_job
 
     def copy_to(
