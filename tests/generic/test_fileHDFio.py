@@ -23,6 +23,14 @@ class TestFileHDFio(unittest.TestCase):
             hdf["traj"] = np.array([[[1, 2, 3], [4, 5, 6]], [[7, 8, 9]]])
             hdf["dict"] = {"key_1": 1, "key_2": "hallo"}
             hdf["dict_numpy"] = {"key_1": 1, "key_2": np.array([1, 2, 3, 4, 5, 6])}
+            with hdf.open('group') as grp:
+                grp['some_entry'] = 'present'
+        # Open and store value in a hdf file to use test_remove_file on it, do not use otherwise
+        cls.to_be_removed_hdf = FileHDFio(file_name=cls.current_dir + '/filehdfio_tbr.h5')
+        with cls.to_be_removed_hdf.open('content') as hdf:
+            hdf['value'] = 1
+        # Remains open to be closed by test_close, do not use otherwise
+        cls.opened_hdf = cls.full_hdf5.open("content")
 
     @classmethod
     def tearDownClass(cls):
@@ -72,6 +80,35 @@ class TestFileHDFio(unittest.TestCase):
                             self.full_hdf5.get("content/array", default=42),
                             np.array([1, 2, 3, 4, 5, 6])
                         ), "default value returned when value doesn't exist.")
+        # Test leaving to pyiron Project at hdf file location:
+        pr = self.full_hdf5.get('..')
+        from pyiron_base import Project
+        self.assertIsInstance(pr, Project)
+        self.assertEqual(pr.path, self.full_hdf5.file_path + '/')
+        # Test leaving to pyiron Project at other than hdf file location:
+        pr = self.full_hdf5.get('../..')
+        self.assertIsInstance(pr, Project)
+        self.assertEqual(pr.path.replace("\\", "/"),
+                         os.path.normpath(
+                                os.path.join(self.full_hdf5.file_path, '..')
+                             ).replace("\\", "/") + '/'
+                         )
+        # Test getting a new FileHDFio object:
+        group_hdf = self.full_hdf5.get('content/group')
+        self.assertIsInstance(group_hdf, FileHDFio)
+        self.assertEqual(group_hdf.h5_path, '/content/group')
+        # Test getting the parent FileHDFio object:
+        content_hdf = group_hdf.get('..')
+        self.assertIsInstance(content_hdf, FileHDFio)
+        self.assertEqual(content_hdf.h5_path, self.full_hdf5.h5_path + 'content')
+        # Test getting the parent's parent FileHDFio object, aka a copy of self.full_hdf5:
+        new_full_hdf = content_hdf.get('..')
+        self.assertIsInstance(new_full_hdf, FileHDFio)
+        self.assertEqual(new_full_hdf.h5_path, self.full_hdf5.h5_path)
+        # Test getting the same object directly:
+        new_full_hdf = group_hdf.get('../..')
+        self.assertIsInstance(new_full_hdf, FileHDFio)
+        self.assertEqual(new_full_hdf.h5_path, self.full_hdf5.h5_path)
 
     def test_file_name(self):
         self.assertEqual(
@@ -82,16 +119,21 @@ class TestFileHDFio(unittest.TestCase):
         )
 
     def test_h5_path(self):
-        pass
+        self.assertEqual(self.full_hdf5.h5_path, '/')
 
     def test_open(self):
-        pass
+        opened_hdf = self.full_hdf5.open('content')
+        self.assertEqual(opened_hdf.h5_path, '/content')
+        self.assertEqual(opened_hdf.history[-1], 'content')
 
     def test_close(self):
-        pass
+        self.opened_hdf.close()
+        self.assertEqual(self.opened_hdf.h5_path, '/')
 
     def test_remove_file(self):
-        pass
+        path = self.to_be_removed_hdf.file_name
+        self.to_be_removed_hdf.remove_file()
+        self.assertFalse(os.path.isfile(path))
 
     def test_get_from_table(self):
         pass
@@ -151,7 +193,9 @@ class TestFileHDFio(unittest.TestCase):
         self.assertTrue(self.es_hdf5.get_size(self.es_hdf5) > 0)
 
     def test_copy(self):
-        self.assertIsInstance(self.es_hdf5.copy(), FileHDFio)
+        copy = self.es_hdf5.copy()
+        self.assertIsInstance(copy, FileHDFio)
+        self.assertEqual(copy.h5_path, self.es_hdf5.h5_path)
 
 
 if __name__ == "__main__":
