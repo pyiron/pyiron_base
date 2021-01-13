@@ -29,7 +29,7 @@ class TestMaster(ParallelMaster):
         super().__init__(job_name, project)
         self._job_generator = TestGenerator(self)
 
-class TestGenericJob(unittest.TestCase):
+class TestParallelMaster(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.file_location = os.path.dirname(os.path.abspath(__file__))
@@ -50,6 +50,13 @@ class TestGenericJob(unittest.TestCase):
                              "Incorrect job name.")
             self.assertEqual(j.input['parameter'], i,
                              "Incorrect parameter set on job.")
+
+    def test_child_creation(self):
+        """When creating an interactive wrapper from another job, that should be set as the wrapper's reference job."""
+        j = self.project.create.job.ScriptJob("test_parent")
+        j.server.run_mode = 'interactive'
+        i = j.create_job(TestMaster, "test_child")
+        self.assertEqual(i.ref_job, j, "Reference job of interactive wrapper to set after creation.")
 
 
 if __name__ == "__main__":

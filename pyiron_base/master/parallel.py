@@ -858,6 +858,21 @@ class ParallelMaster(GenericMaster):
         else:
             return db_entry + "#" + str(self.submission_status.submitted_jobs)
 
+    def _init_child_job(self, parent):
+        """
+        Update our reference job and copy their run mode.
+
+        Args:
+            parent (:class:`.GenericJob`): job instance that this job was created from
+        """
+        self.ref_job = parent
+        if parent.server.run_mode.non_modal:
+            self.server.run_mode.non_modal = True
+        elif (
+            parent.server.run_mode.interactive
+            or parent.server.run_mode.interactive_non_modal
+        ):
+            self.server.run_mode.interactive = True
 
 class GenericOutput(OrderedDict):
     """
