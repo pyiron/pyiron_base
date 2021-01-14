@@ -184,6 +184,14 @@ class Project(ProjectPath):
     def create(self):
         return self._creator
 
+    def _new_instance(self, path="", user=None, sql_query=None, default_working_directory=False):
+        new = self.__class__(path=path,
+                             user=user,
+                             sql_query=sql_query,
+                             default_working_directory=default_working_directory
+                             )
+        return new
+
     def copy(self):
         """
         Copy the project object - copying just the Python object but maintaining the same pyiron path
@@ -191,7 +199,7 @@ class Project(ProjectPath):
         Returns:
             Project: copy of the project object
         """
-        new = Project(path=self.path, user=self.user, sql_query=self.sql_query)
+        new = self._new_instance(path=self.path, user=self.user, sql_query=self.sql_query)
         new._filter = self._filter
         new._inspect_mode = self._inspect_mode
         return new
