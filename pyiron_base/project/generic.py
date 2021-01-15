@@ -191,7 +191,7 @@ class Project(ProjectPath):
         Returns:
             Project: copy of the project object
         """
-        new = Project(path=self.path, user=self.user, sql_query=self.sql_query)
+        new = self.__class__(path=self.path, user=self.user, sql_query=self.sql_query)
         new._filter = self._filter
         new._inspect_mode = self._inspect_mode
         return new
