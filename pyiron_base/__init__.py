@@ -8,6 +8,7 @@ from pyiron_base.generic.hdfio import FileHDFio, ProjectHDFio
 from pyiron_base.generic.inputlist import InputList
 from pyiron_base.generic.parameters import GenericParameters
 from pyiron_base.generic.template import PyironObject
+from pyiron_base.generic.user_dir import mangle_dir, user_facing
 from pyiron_base.generic.util import deprecate, deprecate_soon, ImportAlarm
 from pyiron_base.job.executable import Executable
 from pyiron_base.job.external import Notebook

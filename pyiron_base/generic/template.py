@@ -23,6 +23,17 @@ class PyironObject(object):
     Template class to list the required properties and functions for every pyiron object.
     """
 
+    def __init__(self):
+        self._user_dir_active = True
+
+    def __dir__(self):
+        # accessing via __class__ makes sure we get the class attribute defined by the class decorator and cannot be
+        # overridden by instances
+        if not self._user_dir_active or len(self.__class__._user_dir) == 0:
+            return object.__dir__(self)
+        else:
+            return self.__class__._user_dir
+
     @property
     def id(self):
         """
