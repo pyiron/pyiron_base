@@ -103,6 +103,7 @@ class JobCore(PyironObject):
     """
 
     def __init__(self, project, job_name):
+        super(JobCore, self).__init__()
         _is_valid_job_name(job_name)
         self._name = job_name
         self._hdf5 = project.open(self._name)
