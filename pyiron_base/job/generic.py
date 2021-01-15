@@ -168,6 +168,21 @@ class GenericJob(JobCore):
         self._python_only_job = False
         self.interactive_cache = None
         self.error = GenericError(job=self)
+        self.function_black_lst = [
+            "exclude_nodes_hdf",
+            "exclude_groups_hdf",
+            "copy_file_to_working_directory",
+            "run_if_interactive",
+            "run_if_interactive_non_modal",
+            "run_if_manually",
+            "run_if_scheduler",
+            "update_master",
+            "job_file_name",
+            "db_entry",
+            "drop_status_to_aborted",
+            "run_if_refresh",
+            "set_input_to_read_only"
+        ]
 
         for sig in intercepted_signals:
             signal.signal(sig, self.signal_intercept)

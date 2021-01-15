@@ -22,6 +22,26 @@ class PyironObject(object):
     """
     Template class to list the required properties and functions for every pyiron object.
     """
+    def __init__(self):
+        self._function_black_lst = [
+            "to_hdf",
+            "from_hdf",
+            "id",
+            "master_id",
+            "parent_id",
+            "child_ids",
+            "load",
+            "inspect",
+            "function_black_lst"
+        ]
+
+    @property
+    def function_black_lst(self):
+        return self._function_black_lst
+
+    @function_black_lst.setter
+    def function_black_lst(self, black_lst):
+        self._function_black_lst += black_lst
 
     @property
     def id(self):
@@ -194,3 +214,6 @@ class PyironObject(object):
         raise NotImplementedError(
             "from_hdf() should be implemented in the derived class"
         )
+
+    def __dir__(self):
+        return [el for el in object.__dir__(self) if el not in self._function_black_lst]

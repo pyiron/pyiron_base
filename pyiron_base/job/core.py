@@ -113,6 +113,15 @@ class JobCore(PyironObject):
         self._import_directory = None
         self._database_property = DatabaseProperties()
         self._hdf5_content = HDF5Content(project_hdf5=self._hdf5)
+        self.function_black_lst = [
+            "database_entry",
+            "child_ids",
+            "job_info_str",
+            "check_if_job_exists",
+            "remove_child",
+            "is_master_id",
+            "reset_job_id",
+        ]
 
     @property
     def content(self):
