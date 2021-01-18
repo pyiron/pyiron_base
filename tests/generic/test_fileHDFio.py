@@ -101,14 +101,15 @@ class TestFileHDFio(unittest.TestCase):
         content_hdf = group_hdf.get('..')
         self.assertIsInstance(content_hdf, FileHDFio)
         self.assertEqual(content_hdf.h5_path, self.full_hdf5.h5_path + 'content')
-        # Test getting the parent's parent FileHDFio object, aka a copy of self.full_hdf5:
-        new_full_hdf = content_hdf.get('..')
-        self.assertIsInstance(new_full_hdf, FileHDFio)
-        self.assertEqual(new_full_hdf.h5_path, self.full_hdf5.h5_path)
+        # Getting the '/' of the hdf would result in a path which already belongs to the project.
+        # Therefore, the project is returned instead.
+        pr = content_hdf.get('..')
+        self.assertIsInstance(pr, Project)
+        self.assertEqual(pr.path, self.full_hdf5.file_path + '/')
         # Test getting the same object directly:
-        new_full_hdf = group_hdf.get('../..')
-        self.assertIsInstance(new_full_hdf, FileHDFio)
-        self.assertEqual(new_full_hdf.h5_path, self.full_hdf5.h5_path)
+        pr = group_hdf.get('../..')
+        self.assertIsInstance(pr, Project)
+        self.assertEqual(pr.path, self.full_hdf5.file_path + '/')
 
     def test_file_name(self):
         self.assertEqual(
