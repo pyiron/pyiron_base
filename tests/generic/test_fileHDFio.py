@@ -3,6 +3,8 @@
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
 import os
+import sys
+from io import StringIO
 import numpy as np
 from pyiron_base.generic.hdfio import FileHDFio
 import unittest
@@ -14,6 +16,7 @@ class TestFileHDFio(unittest.TestCase):
         cls.current_dir = os.path.dirname(os.path.abspath(__file__)).replace("\\", "/")
         cls.empty_hdf5 = FileHDFio(file_name=cls.current_dir + "/filehdfio_empty.h5")
         cls.full_hdf5 = FileHDFio(file_name=cls.current_dir + "/filehdfio_full.h5")
+        cls.i_o_hdf5 = FileHDFio(file_name=cls.current_dir + "/filehdfio_io.h5")
         cls.es_hdf5 = FileHDFio(
             file_name=cls.current_dir + "/../static/dft/es_hdf.h5"
         )
@@ -25,6 +28,8 @@ class TestFileHDFio(unittest.TestCase):
             hdf["dict_numpy"] = {"key_1": 1, "key_2": np.array([1, 2, 3, 4, 5, 6])}
             with hdf.open('group') as grp:
                 grp['some_entry'] = 'present'
+        with cls.i_o_hdf5.open("content") as hdf:
+            hdf["exists"] = True
         # Open and store value in a hdf file to use test_remove_file on it, do not use otherwise
         cls.to_be_removed_hdf = FileHDFio(file_name=cls.current_dir + '/filehdfio_tbr.h5')
         with cls.to_be_removed_hdf.open('content') as hdf:
@@ -36,15 +41,16 @@ class TestFileHDFio(unittest.TestCase):
     def tearDownClass(cls):
         cls.current_dir = os.path.dirname(os.path.abspath(__file__)).replace("\\", "/")
         os.remove(cls.current_dir + "/filehdfio_full.h5")
+        os.remove(cls.current_dir + "/filehdfio_io.h5")
 
-    def test_get_item(self):
+    def _check_full_hdf_values(self, hdf):
         self.assertTrue(
-            all(np.equal(self.full_hdf5["content/array"], np.array([1, 2, 3, 4, 5, 6])))
+            all(np.equal(hdf["content/array"], np.array([1, 2, 3, 4, 5, 6])))
         )
         self.assertTrue(
             all(
                 np.equal(
-                    self.full_hdf5["content"]["array_3d"],
+                    hdf["content"]["array_3d"],
                     np.array([[1, 2, 3], [4, 5, 6]]),
                 ).flatten()
             )
@@ -52,41 +58,39 @@ class TestFileHDFio(unittest.TestCase):
         self.assertTrue(
             all(
                 np.equal(
-                    self.full_hdf5["content/traj"][0], np.array([[1, 2, 3], [4, 5, 6]])
+                    hdf["content/traj"][0], np.array([[1, 2, 3], [4, 5, 6]])
                 ).flatten()
             )
         )
         self.assertTrue(
             all(
                 np.equal(
-                    self.full_hdf5["content/traj"][1], np.array([[7, 8, 9]])
+                    hdf["content/traj"][1], np.array([[7, 8, 9]])
                 ).flatten()
             )
         )
-        self.assertEqual(self.full_hdf5["content/dict"]["key_1"], 1)
-        self.assertEqual(self.full_hdf5["content/dict"]["key_2"], "hallo")
-        self.assertEqual(self.full_hdf5["content/dict_numpy"]["key_1"], 1)
+        self.assertEqual(hdf["content/dict"]["key_1"], 1)
+        self.assertEqual(hdf["content/dict"]["key_2"], "hallo")
+        self.assertEqual(hdf["content/dict_numpy"]["key_1"], 1)
         self.assertTrue(
             all(
                 np.equal(
-                    self.full_hdf5["content/dict_numpy"]["key_2"],
+                    hdf["content/dict_numpy"]["key_2"],
                     np.array([1, 2, 3, 4, 5, 6]),
                 )
             )
         )
-        self.assertEqual(self.full_hdf5.get("doesnotexist", default=42), 42,
-                         "default value not returned when value doesn't exist.")
-        self.assertTrue(np.array_equal(
-                            self.full_hdf5.get("content/array", default=42),
-                            np.array([1, 2, 3, 4, 5, 6])
-                        ), "default value returned when value doesn't exist.")
+        self.assertEqual(hdf['content/group/some_entry'], 'present')
+
+    def test_get_item(self):
+        self._check_full_hdf_values(self.full_hdf5)
         # Test leaving to pyiron Project at hdf file location:
-        pr = self.full_hdf5.get('content/..')
+        pr = self.full_hdf5['content/..']
         from pyiron_base import Project
         self.assertIsInstance(pr, Project)
         self.assertEqual(pr.path, self.full_hdf5.file_path + '/')
         # Test leaving to pyiron Project at other than hdf file location:
-        pr = self.full_hdf5.get('..')
+        pr = self.full_hdf5['..']
         self.assertIsInstance(pr, Project)
         self.assertEqual(pr.path.replace("\\", "/"),
                          os.path.normpath(
@@ -94,20 +98,20 @@ class TestFileHDFio(unittest.TestCase):
                              ).replace("\\", "/") + '/'
                          )
         # Test getting a new FileHDFio object:
-        group_hdf = self.full_hdf5.get('content/group')
+        group_hdf = self.full_hdf5['content/group']
         self.assertIsInstance(group_hdf, FileHDFio)
         self.assertEqual(group_hdf.h5_path, '/content/group')
         # Test getting the parent FileHDFio object:
-        content_hdf = group_hdf.get('..')
+        content_hdf = group_hdf['..']
         self.assertIsInstance(content_hdf, FileHDFio)
         self.assertEqual(content_hdf.h5_path, self.full_hdf5.h5_path + 'content')
         # Getting the '/' of the hdf would result in a path which already belongs to the project.
         # Therefore, the project is returned instead.
-        pr = content_hdf.get('..')
+        pr = content_hdf['..']
         self.assertIsInstance(pr, Project)
         self.assertEqual(pr.path, self.full_hdf5.file_path + '/')
         # Test getting the same object directly:
-        pr = group_hdf.get('../..')
+        pr = group_hdf['../..']
         self.assertIsInstance(pr, Project)
         self.assertEqual(pr.path, self.full_hdf5.file_path + '/')
 
@@ -143,6 +147,28 @@ class TestFileHDFio(unittest.TestCase):
         pass
 
     def test_get(self):
+        self.assertEqual(self.full_hdf5.get("doesnotexist", default=42), 42,
+                         "default value not returned when value doesn't exist.")
+        self.assertTrue(np.array_equal(
+            self.full_hdf5.get("content/array", default=42),
+            np.array([1, 2, 3, 4, 5, 6])
+        ), "default value returned when value does exist.")
+        with self.assertRaises(ValueError):
+            self.empty_hdf5.get('non_existing_key')
+
+    def test_hd_copy(self):
+        new_hdf_file = os.path.join(self.current_dir, 'copy_full.h5')
+        new_hdf = FileHDFio(file_name=new_hdf_file)
+        new_hdf = self.full_hdf5.hd_copy(self.full_hdf5, new_hdf)
+        self._check_full_hdf_values(new_hdf)
+        os.remove(new_hdf_file)
+
+    def test_groups(self):
+        groups = self.full_hdf5.groups()
+        self.assertIsInstance(groups, FileHDFio)
+
+
+    def test_rewrite_hdf5(self):
         pass
 
     def test_to_object(self):
@@ -181,7 +207,17 @@ class TestFileHDFio(unittest.TestCase):
         self.assertEqual(self.es_hdf5.listdirs(), ["es_new", "es_old"])
 
     def test_show_hdf(self):
-        pass
+        sys_stdout = sys.stdout
+        result = StringIO()
+        sys.stdout = result
+        self.full_hdf5.show_hdf()
+        result_string = result.getvalue()
+        sys.stdout = sys_stdout
+        self.assertEqual(result_string,
+                         'group:  content\n  node array\n  node array_3d\n  node dict\n  node dict_numpy\n' +
+                         '  node traj\n  group:  group\n    node some_entry\n'
+                         )
+
 
     def test_is_empty(self):
         self.assertTrue(self.empty_hdf5.is_empty)
