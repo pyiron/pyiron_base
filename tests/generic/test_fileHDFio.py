@@ -165,8 +165,8 @@ class TestFileHDFio(unittest.TestCase):
 
     def test_groups(self):
         groups = self.full_hdf5.groups()
+        # _filter is actually a project property, thus groups does not do anything.
         self.assertIsInstance(groups, FileHDFio)
-
 
     def test_rewrite_hdf5(self):
         pass
@@ -175,7 +175,8 @@ class TestFileHDFio(unittest.TestCase):
         pass
 
     def test_put(self):
-        pass
+        self.i_o_hdf5.put('answer', 42)
+        self.assertEqual(self.i_o_hdf5['answer'], 42)
 
     def test_list_all(self):
         empty_file_dict = self.empty_hdf5.list_all()
@@ -217,7 +218,6 @@ class TestFileHDFio(unittest.TestCase):
                          'group:  content\n  node array\n  node array_3d\n  node dict\n  node dict_numpy\n' +
                          '  node traj\n  group:  group\n    node some_entry\n'
                          )
-
 
     def test_is_empty(self):
         self.assertTrue(self.empty_hdf5.is_empty)
