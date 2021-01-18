@@ -838,11 +838,11 @@ class FileHDFio(object):
                     )
                 # print('h5_path=', self.h5_path, 'item=', item, 'item_abs_lst=', item_abs_lst)
                 if (
-                        (item_abs_lst[0] == ".." or item_abs_lst[0] == ".") and len(item_abs_lst) == 1
+                        item_abs_lst[0] == "." and len(item_abs_lst) == 1
                 ):  # leaving the HDF5 file
                     return self._create_project_from_hdf5()
                 elif item_abs_lst[0] == "..":
-                    return self._create_project_from_hdf5()["/".join(item_abs_lst[1:])]
+                    return self._create_project_from_hdf5()["/".join(item_abs_lst)]
                 else:
                     hdf_object = self.copy()
                     hdf_object.h5_path = "/".join(item_abs_lst[:-1])
