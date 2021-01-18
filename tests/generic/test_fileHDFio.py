@@ -81,12 +81,12 @@ class TestFileHDFio(unittest.TestCase):
                             np.array([1, 2, 3, 4, 5, 6])
                         ), "default value returned when value doesn't exist.")
         # Test leaving to pyiron Project at hdf file location:
-        pr = self.full_hdf5.get('..')
+        pr = self.full_hdf5.get('content/..')
         from pyiron_base import Project
         self.assertIsInstance(pr, Project)
         self.assertEqual(pr.path, self.full_hdf5.file_path + '/')
         # Test leaving to pyiron Project at other than hdf file location:
-        pr = self.full_hdf5.get('../..')
+        pr = self.full_hdf5.get('..')
         self.assertIsInstance(pr, Project)
         self.assertEqual(pr.path.replace("\\", "/"),
                          os.path.normpath(
