@@ -165,7 +165,7 @@ class TestFileHDFio(unittest.TestCase):
 
     def test_groups(self):
         groups = self.full_hdf5.groups()
-        # _filter is actually a project property, thus groups does not do anything.
+        # _filter is actually relies on the _filter property of the Project, thus groups does not do anything.
         self.assertIsInstance(groups, FileHDFio)
 
     def test_rewrite_hdf5(self):
@@ -223,6 +223,16 @@ class TestFileHDFio(unittest.TestCase):
         self.assertTrue(self.empty_hdf5.is_empty)
         self.assertFalse(self.full_hdf5.is_empty)
 
+    def test_is_root(self):
+        self.assertTrue(self.full_hdf5.is_root)
+        hdf = self.full_hdf5['content']
+        self.assertFalse(hdf.is_root)
+
+    def test_base_name(self):
+        self.assertEqual(self.full_hdf5.base_name, 'filehdfio_full')
+        self.assertEqual(self.empty_hdf5.base_name, 'filehdfio_empty')
+        self.assertEqual(self.i_o_hdf5.base_name, 'filehdfio_io')
+
     def test_file_size(self):
         self.assertTrue(self.es_hdf5.file_size(self.es_hdf5) > 0)
 
@@ -233,6 +243,37 @@ class TestFileHDFio(unittest.TestCase):
         copy = self.es_hdf5.copy()
         self.assertIsInstance(copy, FileHDFio)
         self.assertEqual(copy.h5_path, self.es_hdf5.h5_path)
+
+    # results in an Error
+    #   File "C:\Users\Siemer\pyiron_git\pyiron_base\tests\generic\test_fileHDFio.py", line 249, in test_copy_to
+    #     copy = self.full_hdf5.copy_to(destination)
+    #   File "C:\Users\Siemer\pyiron_git\pyiron_base\pyiron_base\generic\hdfio.py", line 355, in copy_to
+    #     _internal_copy(source=f_source, source_path=self._h5_path, target=f_target,
+    #   File "C:\Users\Siemer\pyiron_git\pyiron_base\pyiron_base\generic\hdfio.py", line 332, in _internal_copy
+    #     source.copy(source_path, target, name=target_path)
+    #   File "C:\Users\Siemer\anaconda3\envs\pyiron_git\lib\site-packages\h5py\_hl\group.py", line 494, in copy
+    #     h5o.copy(source.id, self._e(source_path), dest.id, self._e(dest_path),
+    #   File "h5py\_objects.pyx", line 54, in h5py._objects.with_phil.wrapper
+    #   File "h5py\_objects.pyx", line 55, in h5py._objects.with_phil.wrapper
+    #   File "h5py\h5o.pyx", line 217, in h5py.h5o.copy
+    #   ValueError: No destination name specified (no destination name specified)
+    #def test_copy_to(self):
+    #    file_name = self.current_dir + '/filehdfio_tmp'
+    #    destination = FileHDFio(file_name=file_name)
+    #    copy = self.full_hdf5.copy_to(destination)
+    #    self._check_full_hdf_values(copy)
+    #    os.remove(file_name)
+
+    def test_remove_group(self):
+        grp = 'group_to_be_removed'
+        hdf = self.i_o_hdf5.create_group(grp)
+        # If nothing is written to the group, the creation is not reflected by the HDF5 file
+        hdf['key'] = 1
+        self.assertTrue(grp in self.i_o_hdf5.list_groups())
+        hdf.remove_group()
+        self.assertFalse(grp in self.i_o_hdf5.list_nodes())
+        # This should not raise an error, albeit the group of hdf is removed
+        hdf.remove_group()
 
 
 if __name__ == "__main__":
