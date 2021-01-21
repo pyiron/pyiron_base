@@ -1,6 +1,6 @@
 # Copyright (c) Max-Planck-Institut für Eisenforschung GmbH - Computational Materials Design (CM) Department
 # Distributed under the terms of "New BSD License", see the LICENSE file.
-from pyiron_base.generic.inputlist import InputList
+from pyiron_base.generic.datacontainer import DataContainer
 from pyiron_base.generic.hdfio import ProjectHDFio
 from pyiron_base.project.generic import Project
 from collections import Iterator
@@ -10,11 +10,11 @@ import unittest
 import warnings
 import numpy as np
 
-class TestInputList(unittest.TestCase):
+class TestDataContainer(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.pl = InputList([
+        cls.pl = DataContainer([
                 {"foo": "bar"},
                 2,
                 42,
@@ -24,7 +24,7 @@ class TestInputList(unittest.TestCase):
                     ]
                 }
         ], table_name = "input")
-        cls.pl["tail"] = InputList([2,4,8])
+        cls.pl["tail"] = DataContainer([2,4,8])
 
         file_location = os.path.dirname(os.path.abspath(__file__))
         pr = Project(file_location)
@@ -38,12 +38,12 @@ class TestInputList(unittest.TestCase):
 
     ## Init tests
     def test_init_none(self):
-        pl = InputList()
+        pl = DataContainer()
         self.assertEqual(len(pl), 0, "not empty after initialized with None")
 
     def test_init_list(self):
         l = [1, 2, 3, 4]
-        pl = InputList(l)
+        pl = DataContainer(l)
         self.assertEqual(len(pl), len(l),
                 "not the same length as source list")
         self.assertEqual(list(pl.values()), l,
@@ -51,7 +51,7 @@ class TestInputList(unittest.TestCase):
 
     def test_init_tuple(self):
         t = (1, 2, 3, 4)
-        pl = InputList(t)
+        pl = DataContainer(t)
         self.assertEqual(len(pl), len(t),
                 "not the same length as source tuple")
         self.assertEqual(tuple(pl.values()), t,
@@ -59,7 +59,7 @@ class TestInputList(unittest.TestCase):
 
     def test_init_set(self):
         s = {1, 2, 3, 4}
-        pl = InputList(s)
+        pl = DataContainer(s)
         self.assertEqual(len(pl), len(s),
                 "not the same length as source set")
         self.assertEqual(set(pl.values()), s,
@@ -67,12 +67,12 @@ class TestInputList(unittest.TestCase):
 
     def test_init_dict(self):
         d = {"foo": 23, "test case": "bar"}
-        pl = InputList(d)
+        pl = DataContainer(d)
         self.assertEqual(tuple(pl.items()), tuple(d.items()),
                 "source dict items not preserved")
         with self.assertRaises(ValueError,
                                msg = "no ValueError on invalid initializer"):
-            pl = InputList({2: 0, 1: 1})
+            pl = DataContainer({2: 0, 1: 1})
 
 
     # access tests
@@ -87,13 +87,13 @@ class TestInputList(unittest.TestCase):
                     ]
                 }
         ]
-        pl = InputList(n)
-        self.assertEqual(type(pl[0]), InputList,
-                "nested dict not converted to InputList")
-        self.assertEqual(type(pl["3/next"]), InputList,
-                "nested list not converted to InputList")
+        pl = DataContainer(n)
+        self.assertEqual(type(pl[0]), DataContainer,
+                "nested dict not converted to DataContainer")
+        self.assertEqual(type(pl["3/next"]), DataContainer,
+                "nested list not converted to DataContainer")
         self.assertEqual(type(pl["0/foo"]), str,
-                "nested str converted to InputList")
+                "nested str converted to DataContainer")
 
     def test_get_item(self):
         self.assertEqual(self.pl[0], {"foo": "bar"},
@@ -108,9 +108,9 @@ class TestInputList(unittest.TestCase):
             print(self.pl[{}])
 
     def test_get_attr(self):
-        self.assertEqual(self.pl.tail, InputList([2, 4, 8]),
+        self.assertEqual(self.pl.tail, DataContainer([2, 4, 8]),
                 "attribute access does not give correct element")
-        self.assertEqual(self.pl[3].next, InputList([0, InputList({"depth": 23})]),
+        self.assertEqual(self.pl[3].next, DataContainer([0, DataContainer({"depth": 23})]),
                 "nested attribute access does not give correct element")
 
     def test_get_sempath(self):
@@ -150,12 +150,12 @@ class TestInputList(unittest.TestCase):
             self.pl[{}] = 42
 
     def test_set_some_keys(self):
-        pl = InputList([1,2])
+        pl = DataContainer([1,2])
         pl["end"] = 3
-        self.assertEqual(pl, InputList({0: 1, 1: 2, "end": 3}))
+        self.assertEqual(pl, DataContainer({0: 1, 1: 2, "end": 3}))
 
     def test_set_append(self):
-        pl = InputList()
+        pl = DataContainer()
         # should not raise and exception
         pl[0] = 1
         pl[1] = 2
@@ -165,7 +165,7 @@ class TestInputList(unittest.TestCase):
                          "append via index broken on non-empty list")
 
     def test_update(self):
-        pl = InputList()
+        pl = DataContainer()
         d = self.pl.to_builtin()
         pl.update(d, wrap = True)
         self.assertEqual(pl, self.pl,
@@ -185,13 +185,13 @@ class TestInputList(unittest.TestCase):
                 "update without options does not call generic method")
 
     def test_extend(self):
-        pl = InputList()
+        pl = DataContainer()
         pl.extend([1,2,3])
         self.assertEqual(list(pl.values()), [1,2,3],
                 "extend from list does not set values")
 
     def test_insert(self):
-        pl = InputList([1,2,3])
+        pl = DataContainer([1,2,3])
         pl.insert(1, 42, key = "foo")
         self.assertTrue(pl[0] == 1 and pl[1] == 42 and pl[2] == 2,
                 "insert does not properly set value")
@@ -203,7 +203,7 @@ class TestInputList(unittest.TestCase):
                 "insert does not handle out of bounds gracefully")
 
     def test_mark(self):
-        pl = InputList([1,2,3])
+        pl = DataContainer([1,2,3])
         pl.mark(1, "foo")
         self.assertEqual(pl[1], pl.foo,
                 "marked element does not refer to correct element")
@@ -244,7 +244,7 @@ class TestInputList(unittest.TestCase):
                 "copy not equal to original")
 
     def test_del_item(self):
-        pl = InputList({0: 1, "a": 2, "foo": 3})
+        pl = DataContainer({0: 1, "a": 2, "foo": 3})
 
         with self.assertRaises(ValueError,
                                msg = "no ValueError on invalid index type"):
@@ -256,16 +256,16 @@ class TestInputList(unittest.TestCase):
         self.assertTrue(pl[0] != 1, "delitem does not delete with index")
 
     def test_del_attr(self):
-        class SubInputList(InputList):
+        class SubDataContainer(DataContainer):
             def __init__(self):
                 object.__setattr__(self, "attr", 42)
-        s = SubInputList()
+        s = SubDataContainer()
         del s.attr
         self.assertFalse(hasattr(s, "attr"),
                 "delattr does not work with instance attributes")
 
     def test_numpy_array(self):
-        pl = InputList([1,2,3])
+        pl = DataContainer([1,2,3])
         self.assertTrue((np.array(pl) == np.array([1,2,3])).all(),
                 "conversion to numpy array broken")
 
@@ -301,34 +301,34 @@ class TestInputList(unittest.TestCase):
     def test_to_hdf(self):
         self.pl.to_hdf(hdf=self.hdf)
         self.assertEqual(self.hdf["input/NAME"],
-                         "InputList")
+                         "DataContainer")
         self.assertEqual(self.hdf["input/OBJECT"],
-                         "InputList")
+                         "DataContainer")
         self.assertEqual(self.hdf["input/TYPE"],
-                         "<class 'pyiron_base.generic.inputlist.InputList'>")
-        l = InputList(self.hdf["input/data"])
+                         "<class 'pyiron_base.generic.datacontainer.DataContainer'>")
+        l = DataContainer(self.hdf["input/data"])
         self.assertEqual(self.pl, l)
 
-        pl = InputList(self.pl)
+        pl = DataContainer(self.pl)
         pl.to_hdf(hdf=self.hdf)
         self.assertEqual(self.hdf["NAME"],
-                         "InputList")
+                         "DataContainer")
         self.assertEqual(self.hdf["OBJECT"],
-                         "InputList")
+                         "DataContainer")
         self.assertEqual(self.hdf["TYPE"],
-                         "<class 'pyiron_base.generic.inputlist.InputList'>")
-        l = InputList(self.hdf["data"])
+                         "<class 'pyiron_base.generic.datacontainer.DataContainer'>")
+        l = DataContainer(self.hdf["data"])
         self.assertEqual(pl, l)
 
     def test_to_hdf_group(self):
         self.pl.to_hdf(hdf=self.hdf, group_name = "test_group")
         self.assertEqual(self.hdf["test_group/NAME"],
-                         "InputList")
+                         "DataContainer")
         self.assertEqual(self.hdf["test_group/TYPE"],
-                         "<class 'pyiron_base.generic.inputlist.InputList'>")
+                         "<class 'pyiron_base.generic.datacontainer.DataContainer'>")
         self.assertEqual(self.hdf["test_group/OBJECT"],
-                         "InputList")
-        l = InputList(self.hdf["test_group/data"])
+                         "DataContainer")
+        l = DataContainer(self.hdf["test_group/data"])
         self.assertEqual(self.pl, l)
 
     def test_to_hdf_readonly(self):
@@ -348,19 +348,19 @@ class TestInputList(unittest.TestCase):
 
     def test_from_hdf(self):
         self.pl.to_hdf(hdf=self.hdf)
-        l = InputList(table_name = "input")
+        l = DataContainer(table_name = "input")
         l.from_hdf(hdf=self.hdf)
         self.assertEqual(self.pl, l)
 
     def test_from_hdf_group(self):
         self.pl.to_hdf(hdf=self.hdf, group_name = "test_group")
-        l = InputList(table_name = "input")
+        l = DataContainer(table_name = "input")
         l.from_hdf(hdf=self.hdf, group_name = "test_group")
         self.assertEqual(self.pl, l)
 
     def test_from_hdf_readonly(self):
         self.pl.to_hdf(hdf=self.hdf, group_name = "read_only_from")
-        pl = InputList()
+        pl = DataContainer()
         pl.from_hdf(self.hdf, group_name = "read_only_from")
         self.assertEqual(pl.read_only, self.hdf["read_only_from/read_only"],
                          "read-only parameter not correctly read from HDF")
@@ -388,11 +388,11 @@ class TestInputList(unittest.TestCase):
             self.assertEqual(v1, v2, "list and iterator over nodes not the same")
 
         for g in self.pl.groups():
-            self.assertTrue(isinstance(self.pl[g], InputList),
+            self.assertTrue(isinstance(self.pl[g], DataContainer),
                             "groups returns a node")
 
         for n in self.pl.nodes():
-            self.assertFalse(isinstance(self.pl[n], InputList),
+            self.assertFalse(isinstance(self.pl[n], DataContainer),
                             "nodes returns a group")
 
 

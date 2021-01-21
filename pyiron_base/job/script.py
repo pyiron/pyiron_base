@@ -9,7 +9,7 @@ import os
 import shutil
 from pyiron_base.job.generic import GenericJob
 from pyiron_base.generic.parameters import GenericParameters
-from pyiron_base.generic.inputlist import InputList
+from pyiron_base.generic.datacontainer import DataContainer
 
 __author__ = "Jan Janssen"
 __copyright__ = (
@@ -123,7 +123,7 @@ class ScriptJob(GenericJob):
         self.__hdf_version__ = "0.2.0"
         self.__name__ = "Script"
         self._script_path = None
-        self.input = InputList(table_name="custom_dict")
+        self.input = DataContainer(table_name="custom_dict")
 
     @property
     def script_path(self):

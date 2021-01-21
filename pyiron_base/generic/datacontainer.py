@@ -1,5 +1,5 @@
 """
-Lists structure for versatile input handling.
+Data structure for versatile data handling.
 """
 
 # Copyright (c) Max-Planck-Institut für Eisenforschung GmbH - Computational Materials Design (CM) Department
@@ -15,7 +15,7 @@ __copyright__ = (
     "Copyright 2020, Max-Planck-Institut für Eisenforschung GmbH - "
     "Computational Materials Design (CM) Department"
 )
-__version__ = "1.0"
+__version__ = "1.1"
 __maintainer__ = "Marvin Poul"
 __email__ = "poul@mpie.de"
 __status__ = "production"
@@ -35,16 +35,16 @@ def _normalize(key):
     return key
 
 
-class InputList(MutableMapping):
+class DataContainer(MutableMapping):
     """
     Mutable sequence with optional keys.
 
-    If no argument is given, the constructor creates a new empty InputList.  If
+    If no argument is given, the constructor creates a new empty DataContainer.  If
     specified init maybe a Sequence, Set or Mapping and all recursive
-    occurrences of these are also wrapped by InputList.
+    occurrences of these are also wrapped by DataContainer.
 
-    >>> pl = InputList([3, 2, 1, 0])
-    >>> pm = InputList({"foo": 24, "bar": 42})
+    >>> pl = DataContainer([3, 2, 1, 0])
+    >>> pm = DataContainer({"foo": 24, "bar": 42})
 
     Access can be like a normal list with integers or optionally with strings
     as keys.
@@ -58,23 +58,23 @@ class InputList(MutableMapping):
 
     Keys do not have to be present for all elements.
 
-    >>> pl2 = InputList([1,2])
+    >>> pl2 = DataContainer([1,2])
     >>> pl2["end"] = 3
     >>> pl2
-    InputList({0: 1, 1: 2, "end": 3})
+    DataContainer({0: 1, 1: 2, "end": 3})
 
-    It is also allowed to set an item one past the length of the InputList,
+    It is also allowed to set an item one past the length of the DataContainer,
     this is then equivalent to appending that element.  This allows to use the
-    update method also with other InputLists
+    update method also with other DataContainers
 
     >>> pl[len(pl)] = -1
     >>> pl
-    InputList([3, 2, 1, 0, -1])
+    DataContainer([3, 2, 1, 0, -1])
     >>> pl.pop(-1)
     -1
 
     Where strings are used they may also be used as attributes.  Getting keys
-    which clash with methods of InputList must be done with item access, but
+    which clash with methods of DataContainer must be done with item access, but
     setting them works without overwriting the instance methods, but is not
     recommended for readability.
 
@@ -82,13 +82,13 @@ class InputList(MutableMapping):
     24
     >>> pm.append = 23
     >>> pm
-    InputList({"foo": 24, "bar": 42, "append": 23})
+    DataContainer({"foo": 24, "bar": 42, "append": 23})
 
-    Keys and indices can be tuples to traverse nested InputLists.
+    Keys and indices can be tuples to traverse nested DataContainers.
 
-    >>> pn = InputList({"foo": {"bar": [4, 2]}})
+    >>> pn = DataContainer({"foo": {"bar": [4, 2]}})
     >>> pn["foo", "bar"]
-    InputList([4, 2])
+    DataContainer([4, 2])
     >>> pn["foo", "bar", 0]
     4
 
@@ -106,7 +106,7 @@ class InputList(MutableMapping):
 
     >>> pl["0"] == pl[0]
     True
-    >>> InputList({1: 42})
+    >>> DataContainer({1: 42})
     Traceback (most recent call last):
         File "<stdin>", line 1, in <module>
         File "proplist.py", line 126, in __init__
@@ -115,11 +115,11 @@ class InputList(MutableMapping):
 
     When initializing from a dict, it may not have integers or decimal strings
     as keys unless they match their position in the insertion order.  This is
-    to avoid ambiguities in the final order of the InputList.
+    to avoid ambiguities in the final order of the DataContainer.
 
-    >>> InputList({0: "foo", 1: "bar", 2: 42})
-    InputList(["foo", "bar", 42])
-    >>> InputList({0: "foo", 2: 42, 1: "bar"})
+    >>> DataContainer({0: "foo", 1: "bar", 2: 42})
+    DataContainer(["foo", "bar", 42])
+    >>> DataContainer({0: "foo", 2: 42, 1: "bar"})
     Traceback (most recent call last):
         File "<stdin>", line 1, in <module>
         File "proplist.py", line 132, in __init__
@@ -127,7 +127,7 @@ class InputList(MutableMapping):
     ValueError: keys in initializer must not be int or str of decimal digits or in correct order, is 2
 
 
-    Using keys is completely optional, InputList can always be treated as a
+    Using keys is completely optional, DataContainer can always be treated as a
     list, with the exception that `iter()` iterates of the keys and indices.
     This is to correctly implement the MutableMapping protocol, to convert to a
     normal list and discard the keys use `values()`.
@@ -341,7 +341,7 @@ class InputList(MutableMapping):
                 # _normalize calls int() on all digit string keys this is
                 # transparent for the rest of the module
                 k = str(k)
-                if isinstance(v, InputList):
+                if isinstance(v, DataContainer):
                     dd[k] = v.to_builtin(stringify=stringify)
                 else:
                     dd[k] = repr(v) if stringify else v
@@ -349,11 +349,11 @@ class InputList(MutableMapping):
             return dd
         elif stringify:
             return list(v.to_builtin(stringify=stringify)
-                        if isinstance(v, InputList) else repr(v)
+                        if isinstance(v, DataContainer) else repr(v)
                         for v in self.values())
         else:
             return list(v.to_builtin(stringify=stringify)
-                        if isinstance(v, InputList) else v
+                        if isinstance(v, DataContainer) else v
                         for v in self.values())
 
     # allows "nice" displays in jupyter notebooks
@@ -389,7 +389,7 @@ class InputList(MutableMapping):
         Args:
             init (Sequence, Set, Mapping): container to draw new elements from
             wrap (bool): if True wrap all encountered Sequences and Mappings in
-                        InputLists recursively
+                        DataContainers recursively
             **kwargs: update from this mapping as well
         """
         if wrap:
@@ -430,7 +430,7 @@ class InputList(MutableMapping):
 
     def extend(self, vals):
         """
-        Append vals to the end of this InputList.
+        Append vals to the end of this DataContainer.
 
         Args:
             vals (Sequence): any python sequence to draw new elements from
@@ -471,7 +471,7 @@ class InputList(MutableMapping):
         Raises:
             IndexError: if index > len(self)
 
-        >>> pl = InputList([42])
+        >>> pl = DataContainer([42])
         >>> pl.mark(0, "head")
         >>> pl.head == 42
         True
@@ -487,7 +487,7 @@ class InputList(MutableMapping):
 
     def clear(self):
         """
-        Remove all items from InputList.
+        Remove all items from DataContainer.
         """
         self._store.clear()
         self._indices.clear()
@@ -500,11 +500,11 @@ class InputList(MutableMapping):
             name (str): key under which to store the new sublist in this list
 
         Returns:
-            InputList: the newly created sublist
+            DataContainer: the newly created sublist
 
-        >>> pl = InputList({})
+        >>> pl = DataContainer({})
         >>> pl.create_group("group_name")
-        InputList([])
+        DataContainer([])
         >>> list(pl.group_name)
         []
         """
@@ -537,9 +537,9 @@ class InputList(MutableMapping):
         copy module.
 
         Returns:
-            InputList: deep copy of itself
+            DataContainer: deep copy of itself
 
-        >>> pl = InputList([[1,2,3]])
+        >>> pl = DataContainer([[1,2,3]])
         >>> pl.copy() == pl
         True
         >>> pl.copy() is pl
@@ -551,7 +551,7 @@ class InputList(MutableMapping):
 
     def to_hdf(self, hdf, group_name=None):
         """
-        Store the InputList in an HDF5 file.  If ``group_name`` or
+        Store the DataContainer in an HDF5 file.  If ``group_name`` or
         *self.table_name* are not `None`, create a sub group in hdf prior to
         writing if not save directly to hdf.  group_name overrides
         self.table_name if both are not None.
@@ -580,11 +580,11 @@ class InputList(MutableMapping):
         hdf["NAME"] = self.__class__.__name__
         hdf["TYPE"] = str(type(self))
         hdf["VERSION"] = self.__version__
-        hdf["OBJECT"] = "InputList"
+        hdf["OBJECT"] = "DataContainer"
 
     def from_hdf(self, hdf, group_name=None):
         """
-        Restore the InputList from an HDF5 file.  If group_name or
+        Restore the DataContainer from an HDF5 file.  If group_name or
         self.table_name are not None, open a sub group in hdf prior to reading
         if not read directly from hdf.  group_name overrides self.table_name if
         both are not None.
@@ -623,7 +623,7 @@ class InputList(MutableMapping):
             :class:`list`: list of keys to normal values.
         """
         for k, v in self.items():
-            if not isinstance(v, InputList):
+            if not isinstance(v, DataContainer):
                 yield k
 
     def list_nodes(self):
@@ -640,10 +640,10 @@ class InputList(MutableMapping):
         Return a list of keys to nested lists.
 
         Returns:
-            :class:`list`: list of all keys to elements of :class:`InputList`.
+            :class:`list`: list of all keys to elements of :class:`DataContainer`.
         """
         for k, v in self.items():
-            if isinstance(v, InputList):
+            if isinstance(v, DataContainer):
                 yield k
 
     def list_groups(self):
@@ -651,6 +651,9 @@ class InputList(MutableMapping):
         Return a list of keys to nested lists.
 
         Returns:
-            :class:`list`: list of all keys to elements of :class:`InputList`.
+            :class:`list`: list of all keys to elements of :class:`DataContainer`.
         """
         return list(self.groups())
+
+class InputList(DataContainer):
+    pass
