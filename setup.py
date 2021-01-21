@@ -43,7 +43,8 @@ setup(
         'pysqa>=0.0.13',
         'sqlalchemy>=1.3.14',
         'tables>=3.6.1',
-        'tqdm>=4.35.0'
+        'tqdm>=4.35.0',
+        'xmltodict>=0.11.0'
     ],
     cmdclass=versioneer.get_cmdclass(),
 

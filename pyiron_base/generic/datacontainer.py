@@ -9,8 +9,8 @@ import copy
 from collections.abc import Sequence, Set, Mapping, MutableMapping
 import warnings
 import numpy as np
-import os
 import yaml
+import xmltodict
 
 __author__ = "Marvin Poul"
 __copyright__ = (
@@ -689,7 +689,19 @@ class DataContainer(MutableMapping):
         self.update(input_dict, wrap=wrap)
 
     def parse_xml(self, file_name, wrap=False):
-        pass
+        """
+        parse a XML file and update the datacontainer with a dictionary
+
+        Args:
+        file_name(str): path to the input file; it should be a YAML file.
+        wrap(bool): if wrap is set to true, the inputed data will be pass to the datacontainer, as a datacontainer itself.
+        """
+        with open(file_name, 'r') as input_src:
+            try:
+                input_dict = xmltodict.parse(input_src.read())
+            except Exception as message:
+                warnings.warn(message)
+        self.update(input_dict, wrap=wrap)
 
 
 class InputList(DataContainer):
