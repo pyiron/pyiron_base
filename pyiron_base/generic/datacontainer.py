@@ -9,6 +9,8 @@ import copy
 from collections.abc import Sequence, Set, Mapping, MutableMapping
 import warnings
 import numpy as np
+import os
+import yaml
 
 __author__ = "Marvin Poul"
 __copyright__ = (
@@ -654,6 +656,26 @@ class DataContainer(MutableMapping):
             :class:`list`: list of all keys to elements of :class:`DataContainer`.
         """
         return list(self.groups())
+
+    def read(self, file_name, wrap=False):
+        if file_name[-4:] == '.yml' or file_name[-5:] == '.yaml':
+            self.parse_yaml(file_name, wrap)
+        elif self.input_file[-4:] == '.xml':
+            self.parse_xml(file_name, wrap=wrap)
+        else:
+            raise RuntimeError("The input file is not supported; expected\
+                *.yml, *.yaml, or *.xml")
+
+    def parse_yaml(self, file_name, wrap=False):
+        with open(file_name, 'r') as input_src:
+            try:
+                input_dict = yaml.safe_load(input_src)
+            except yaml.YAMLError as exc:
+                warnings.warn(exc)
+        self.update(input_dict, wrap=wrap)
+
+    def parse_xml(self, file_name, wrap=False):
+        pass
 
 class InputList(DataContainer):
     pass
