@@ -658,6 +658,13 @@ class DataContainer(MutableMapping):
         return list(self.groups())
 
     def read(self, file_name, wrap=False):
+        """
+        read an input file and add it as a dictionary to the data container
+
+        Args:
+        file_name(str): path to the input file; it should be a YAML or a XML file.
+        wrap(bool), if set to true will wrap the inputed data itself as a datacontainer inside the datacontainer
+        """
         if file_name[-4:] == '.yml' or file_name[-5:] == '.yaml':
             self.parse_yaml(file_name, wrap)
         elif self.input_file[-4:] == '.xml':
@@ -667,6 +674,13 @@ class DataContainer(MutableMapping):
                 *.yml, *.yaml, or *.xml")
 
     def parse_yaml(self, file_name, wrap=False):
+        """
+        parse a YAML file and update the datacontainer with a dictionary
+
+        Args:
+        file_name(str): path to the input file; it should be a YAML file.
+        wrap(bool): if wrap is set to true, the inputed data will be pass to the datacontainer, as a datacontainer itself.
+        """
         with open(file_name, 'r') as input_src:
             try:
                 input_dict = yaml.safe_load(input_src)
@@ -676,6 +690,7 @@ class DataContainer(MutableMapping):
 
     def parse_xml(self, file_name, wrap=False):
         pass
+
 
 class InputList(DataContainer):
     pass
