@@ -667,7 +667,7 @@ class DataContainer(MutableMapping):
         """
         if file_name[-4:] == '.yml' or file_name[-5:] == '.yaml':
             self.parse_yaml(file_name, wrap)
-        elif self.input_file[-4:] == '.xml':
+        elif file_name[-4:] == '.xml':
             self.parse_xml(file_name, wrap=wrap)
         else:
             raise RuntimeError("The input file is not supported; expected\
@@ -693,10 +693,10 @@ class DataContainer(MutableMapping):
         parse a XML file and update the datacontainer with a dictionary
 
         Args:
-        file_name(str): path to the input file; it should be a YAML file.
+        file_name(str): path to the input file; it should be a XML file.
         wrap(bool): if wrap is set to true, the inputed data will be pass to the datacontainer, as a datacontainer itself.
         """
-        with open(file_name, 'r') as input_src:
+        with open(file_name) as input_src:
             try:
                 input_dict = xmltodict.parse(input_src.read())
             except Exception as message:
