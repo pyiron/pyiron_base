@@ -8,6 +8,7 @@ Data structure for versatile data handling.
 import copy
 from collections.abc import Sequence, Set, Mapping, MutableMapping
 import warnings
+import os.path
 import numpy as np
 import yaml
 import xmltodict
@@ -36,6 +37,39 @@ def _normalize(key):
 
     return key
 
+def _parse_yaml(file_name):
+    """
+    Parse a YAML file as a dict.  Errors during reading raise a warning and return an empty dict.
+
+    Args:
+        file_name(str): path to the input file; it should be a YAML file.
+
+    Returns:
+        dict: parsed file contents
+    """
+    with open(file_name, 'r') as input_src:
+        try:
+            return yaml.safe_load(input_src)
+        except yaml.YAMLError as exc:
+            warnings.warn(exc)
+            return {}
+
+def _parse_xml(self, file_name, wrap=False):
+    """
+    Parse a XML file and update the datacontainer with a dictionary
+
+    Args:
+        file_name(str): path to the input file; it should be a XML file.
+
+    Returns:
+        dict: parsed file contents
+    """
+    with open(file_name) as input_src:
+        try:
+            return xmltodict.parse(input_src.read())
+        except Exception as message:
+            warnings.warn(message)
+            return {}
 
 class DataContainer(MutableMapping):
     """
@@ -659,46 +693,26 @@ class DataContainer(MutableMapping):
 
     def read(self, file_name, wrap=False):
         """
-        read an input file and add it as a dictionary to the data container
+        Parse file as dictionary and add its keys to this container.
+
+        Only yaml (*.yml, *.yaml) and xml (*.xml) files are supported.
+
+        Errors during reading of the files generate a warning, but leave the container unchanged.
 
         Args:
-        file_name(str): path to the input file; it should be a YAML or a XML file.
-        wrap(bool), if set to true will wrap the inputed data itself as a datacontainer inside the datacontainer
-        """
-        if file_name[-4:] == '.yml' or file_name[-5:] == '.yaml':
-            self.parse_yaml(file_name, wrap)
-        elif file_name[-4:] == '.xml':
-            self.parse_xml(file_name, wrap=wrap)
-        else:
-            raise RuntimeError("The input file is not supported; expected\
-                *.yml, *.yaml, or *.xml")
+            file_name(str): path to the input file
+            wrap(bool), if set to true will wrap the inputed data itself as a datacontainer inside the datacontainer
 
-    def parse_yaml(self, file_name, wrap=False):
+        Raises:
+            :class:`ValueError`: if file extension doesn't match one of the supported ones
         """
-        parse a YAML file and update the datacontainer with a dictionary
+        ext = os.path.splitext(file_name)[1]
+        try:
+            parser = {
+                    'yml': _parse_yaml, 'yaml': _parse_yaml,
+                    'xml': _parse_xml
+            }[ext]
+        except KeyError:
+            raise ValueError("The input file is not supported; expected *.yml, *.yaml, or *.xml") from None
 
-        Args:
-        file_name(str): path to the input file; it should be a YAML file.
-        wrap(bool): if wrap is set to true, the inputed data will be pass to the datacontainer, as a datacontainer itself.
-        """
-        with open(file_name, 'r') as input_src:
-            try:
-                input_dict = yaml.safe_load(input_src)
-            except yaml.YAMLError as exc:
-                warnings.warn(exc)
-        self.update(input_dict, wrap=wrap)
-
-    def parse_xml(self, file_name, wrap=False):
-        """
-        parse a XML file and update the datacontainer with a dictionary
-
-        Args:
-        file_name(str): path to the input file; it should be a XML file.
-        wrap(bool): if wrap is set to true, the inputed data will be pass to the datacontainer, as a datacontainer itself.
-        """
-        with open(file_name) as input_src:
-            try:
-                input_dict = xmltodict.parse(input_src.read())
-            except Exception as message:
-                warnings.warn(message)
-        self.update(input_dict, wrap=wrap)
+        self.update(parser(file_name), wrap=wrap)
