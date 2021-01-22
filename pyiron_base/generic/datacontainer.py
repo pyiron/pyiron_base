@@ -702,7 +702,3 @@ class DataContainer(MutableMapping):
             except Exception as message:
                 warnings.warn(message)
         self.update(input_dict, wrap=wrap)
-
-
-class InputList(DataContainer):
-    pass
