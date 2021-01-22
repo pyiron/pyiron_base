@@ -145,7 +145,7 @@ class DataContainer(MutableMapping):
     >>> DataContainer({1: 42})
     Traceback (most recent call last):
         File "<stdin>", line 1, in <module>
-        File "proplist.py", line 126, in __init__
+        File "datacontainer.py", line 126, in __init__
             raise ValueError(
     ValueError: keys in initializer must not be int or str of decimal digits or in correct order, is 1
 
@@ -158,7 +158,7 @@ class DataContainer(MutableMapping):
     >>> DataContainer({0: "foo", 2: 42, 1: "bar"})
     Traceback (most recent call last):
         File "<stdin>", line 1, in <module>
-        File "proplist.py", line 132, in __init__
+        File "datacontainer.py", line 132, in __init__
             raise ValueError(
     ValueError: keys in initializer must not be int or str of decimal digits or in correct order, is 2
 
@@ -303,7 +303,7 @@ class DataContainer(MutableMapping):
     def __setattr__(self, name, val):
         # Search instance variables (self.__dict___) and class variables
         # (self.__class__.__dict__ + iterating over mro to find variables on
-        #  all ancestors) first before we assign the value into our list.
+        #  all ancestors) first before we assign the value into our container.
         # If we find name refers to a instance/class variable, we let
         # object.__setattr__ do all the work for us.
         if name in self.__dict__ or self._is_class_var(name):
@@ -342,7 +342,7 @@ class DataContainer(MutableMapping):
     @property
     def read_only(self):
         """
-        bool: if set, raise warning when attempts are made to modify the list
+        bool: if set, raise warning when attempts are made to modify the container
         """
         return self._read_only
 
@@ -363,7 +363,7 @@ class DataContainer(MutableMapping):
 
     def to_builtin(self, stringify=False):
         """
-        Convert the list back to builtin dict"s and list"s recursively.
+        Convert the container back to builtin dict's and list's recursively.
 
         Args:
             stringify (bool, optional): convert all non-recursive elements to str
@@ -403,14 +403,14 @@ class DataContainer(MutableMapping):
         Args:
             key (str):               key to search
             default (optional):      return this instead if nothing found
-            create (bool, optional): create empty list at key if nothing found
+            create (bool, optional): create empty container at key if nothing found
 
         Raise:
-            IndexError: if key is not in the list and neither ``default`` not
+            IndexError: if key is not in the container and neither ``default`` not
             ``create`` are given
 
         Returns:
-            object: element at ``key`` or new empty sublist
+            object: element at ``key`` or new empty subcontainer
         """
         if create and key not in self:
             return self.create_group(key)
@@ -419,7 +419,7 @@ class DataContainer(MutableMapping):
 
     def update(self, init, wrap=False, **kwargs):
         """
-        Add all elements or key-value pairs from init to this list.  If wrap is
+        Add all elements or key-value pairs from init to this container.  If wrap is
         not given, behaves as the generic method.
 
         Args:
@@ -457,7 +457,7 @@ class DataContainer(MutableMapping):
 
     def append(self, val):
         """
-        Add new value to the list without a key.
+        Add new value to the container without a key.
 
         Args:
             val: new element
@@ -477,9 +477,9 @@ class DataContainer(MutableMapping):
 
     def insert(self, index, val, key=None):
         """
-        Add a new element to the list at the specified position, with an optional
-        key.  If the key is already in the list it will be updated to point to
-        the new element at the new index.  If index is larger than list, append
+        Add a new element to the container at the specified position, with an optional
+        key.  If the key is already in the container it will be updated to point to
+        the new element at the new index.  If index is larger than container, append
         instead.
 
         Args:
@@ -530,13 +530,13 @@ class DataContainer(MutableMapping):
 
     def create_group(self, name):
         """
-        Add a new empty sublist under the given key.
+        Add a new empty subcontainer under the given key.
 
         Args:
-            name (str): key under which to store the new sublist in this list
+            name (str): key under which to store the new subcontainer in this container
 
         Returns:
-            DataContainer: the newly created sublist
+            DataContainer: the newly created subcontainer
 
         >>> pl = DataContainer({})
         >>> pl.create_group("group_name")
@@ -549,7 +549,7 @@ class DataContainer(MutableMapping):
 
     def has_keys(self):
         """
-        Check if the list has keys set or not.
+        Check if the container has keys set or not.
 
         Returns:
             bool: True if there is at least one key set
@@ -673,7 +673,7 @@ class DataContainer(MutableMapping):
 
     def groups(self):
         """
-        Return a list of keys to nested lists.
+        Return a list of keys to nested containers.
 
         Returns:
             :class:`list`: list of all keys to elements of :class:`DataContainer`.
@@ -684,7 +684,7 @@ class DataContainer(MutableMapping):
 
     def list_groups(self):
         """
-        Return a list of keys to nested lists.
+        Return a list of keys to nested containers.
 
         Returns:
             :class:`list`: list of all keys to elements of :class:`DataContainer`.
