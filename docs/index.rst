@@ -93,16 +93,17 @@ Read more about `citing individual modules/ plugins of pyiron and the implemente
 .. toctree::
    :hidden:
 
-   source/about.rst
-   source/installation.rst
-   source/examples.rst
+   About source/about.rst
+   Installation source/installation.rst
+   FAQ source/faq.rst
+   Examples source/examples.rst
    Team <https://pyiron.org/team/>
    Collaborators <https://pyiron.org/collaborators/>
    source/commandline.rst
    source/citation.rst
-   source/faq.rst
    source/developers.rst
    License (BSD) <https://github.com/pyiron/pyiron/blob/master/LICENSE>
    Module index <https://pyiron.readthedocs.io/en/latest/py-modindex.html>
+   source/indices.rst
    Imprint <https://www.mpie.de/impressum>
    Data protection <https://www.mpie.de/3392182/data-protection>
