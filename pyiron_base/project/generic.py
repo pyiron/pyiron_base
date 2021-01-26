@@ -168,7 +168,7 @@ class Project(ProjectPath):
         if not isinstance(self.db, FileTable):
             return self.db.viewer_mode
         else:
-            return None
+            return False
 
     @property
     def name(self):
