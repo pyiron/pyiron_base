@@ -7,7 +7,7 @@ FAQ
 How to cite pyiron?
 ===================
 
-To cite pyiron and the corresponding codes, please follow the instructions on the `publication page <citation.html>`_.
+To cite pyiron and the corresponding codes, please follow the instructions on the `publication page <https://pyiron.readthedocs.io/en/latest/source/citation.html>`_.
 
 
 How to install pyiron?
@@ -20,12 +20,12 @@ instructions on the `installation page <installation.html>`_.
 How to link your own executable?
 ================================
 
-The linking of executables is explained as part of the installation in the section of advanced configuarion options. By
+The linking of executables is explained as part of the installation `here <installation.html#custom-executables-and-parameter-files>`_. By
 default pyiron links to the executables provided by conda but you can accelerate you calculation by compiling your own
-version of a given simulation code which is optimized for your hardware. 
+version of a given simulation code which is optimized for your hardware.
 
-How to send a calculation to the background ?
-=============================================
+How to send a calculation to the background?
+============================================
 
 While most examples execute calculations inline or in modal mode, it is also possible to send calculation in the
 background. 

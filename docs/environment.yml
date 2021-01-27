@@ -1,6 +1,7 @@
 channels:
 - conda-forge
 dependencies:
+- sphinx-rtd-theme
 - ipywidgets
 - pyiron_base
 - nbsphinx
