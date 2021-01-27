@@ -93,9 +93,11 @@ If you use pyiron in your research, please consider citing the following work:
    Team <https://pyiron.org/team/>
    Collaborators <https://pyiron.org/collaborators/>
    source/commandline.rst
+   source/hdf5.rst
    Contributing <https://pyiron.readthedocs.io/en/latest/source/developers.html>
    Citing <https://pyiron.readthedocs.io/en/latest/source/citation.html>
    License (BSD) <https://github.com/pyiron/pyiron/blob/master/LICENSE>
    apidoc/modules.rst
+   source/indices.rst
    Imprint <https://www.mpie.de/impressum>
    Data protection <https://www.mpie.de/3392182/data-protection>
