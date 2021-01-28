@@ -31,6 +31,7 @@ from pyiron_base.database.jobtable import (
 )
 from pyiron_base.settings.logger import set_logging_level
 from pyiron_base.generic.hdfio import ProjectHDFio
+from pyiron_base.generic.filedata import load_file
 from pyiron_base.job.jobtype import JobType, JobTypeChoice, JobFactory
 from pyiron_base.server.queuestatus import (
     queue_delete_job,
@@ -139,6 +140,7 @@ class Project(ProjectPath):
         self._inspect_mode = False
         self._store = None
         self._creator = Creator(project=self)
+        self._project_browser = None
 
         if not s.database_is_disabled:
             s.open_connection()
@@ -183,6 +185,16 @@ class Project(ProjectPath):
     @property
     def create(self):
         return self._creator
+
+    @property
+    def browser(self):
+        """Provides a browser to inspect the data system of the project."""
+        if self._project_browser is None:
+            from pyiron_base.project.project_browser import ProjectBrowser
+            self._project_browser = ProjectBrowser(project=self,
+                                                   show_files=False,
+                                                   Vbox=None)
+        return self._project_browser
 
     def copy(self):
         """
@@ -1450,8 +1462,7 @@ class Project(ProjectPath):
             return ProjectHDFio(project=self, file_name=file_name)
         if item in self.list_files():
             file_name = posixpath.join(self.path, "{}".format(item))
-            with open(file_name) as f:
-                return f.readlines()
+            return load_file(file_name)
         if item in self.list_dirs():
             with self.open(item) as new_item:
                 return new_item.copy()
