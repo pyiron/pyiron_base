@@ -119,6 +119,7 @@ class Project(ProjectPath):
         self._inspect_mode = False
         self._store = None
         self._creator = Creator(project=self)
+        self._project_browser = None
 
         if not s.database_is_disabled:
             s.open_connection()
@@ -173,6 +174,16 @@ class Project(ProjectPath):
     @property
     def create(self):
         return self._creator
+
+    @property
+    def browser(self):
+        """Provides a browser to inspect the data system of the project."""
+        if self._project_browser is None:
+            from pyiron_base.project.project_browser import ProjectBrowser
+            self._project_browser = ProjectBrowser(project=self,
+                                                   show_files=False,
+                                                   Vbox=None)
+        return self._project_browser
 
     @property
     def data(self):
