@@ -36,7 +36,7 @@ high throughput applications. In 2018 pyiron was released as open-source project
     **pyiron_base**: This is the documentation page for the basic infrastructure moduls of pyiron.  If you're new to
     pyiron and want to get an overview head over to `pyiron <https://pyiron.readthedocs.io/en/latest/>`_.  If you're
     looking for the API docs of the atomistic simulation packages check `pyiron_atomistics
-    <https://pyiron_base.readthedocs.io/en/latest/>`_.
+    <https://pyiron_atomistics.readthedocs.io/en/latest/>`_.
 
 **************
 Explore pyiron
