@@ -38,7 +38,7 @@ setup(
         'numpy==1.18.1',
         'pandas==1.0.1',
         'pathlib2==2.3.5',
-        'psutil==5.7.0',
+        'psutil==5.8.0',
         'pyfileindex==0.0.4',
         'pysqa==0.0.13',
         'sqlalchemy==1.3.14',
