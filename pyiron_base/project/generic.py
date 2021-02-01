@@ -163,9 +163,9 @@ class Project(ProjectPath):
         Get viewer_mode - if viewer_mode is enable pyiron has read only access to the database.
 
         Change it via
-        `Project('my_project').db.switch_to_viewer_mode()`
+        `Project('my_project').switch_to_viewer_mode()`
         and
-        `Project('my_project').db.switch_to_user_mode()`
+        `Project('my_project').switch_to_user_mode()`
 
         Returns:
             bool: returns TRUE when viewer_mode is enabled
