@@ -31,6 +31,39 @@ class ScriptJob(GenericJob):
         project (ProjectHDFio): ProjectHDFio instance which points to the HDF5 file the job is stored in
         job_name (str): name of the job, which has to be unique within the project
 
+    Example:
+        To submit a notebook as a ScriptJob job to the puiron job management system,
+
+            1. Create the notebook to be submitted, for ex. 'example.ipynb', and save it -- Can contain any code like:
+                ```
+                from pyiron import Project
+                pr = Project('.')
+                job = pr.create_job(pr.job_type.Lammps, 'job')
+                job.structure = pr.create_ase_bulk('Fe')
+                job.run()
+                print(job.status)
+                print(job.output.energy_pot[-1])
+                ```
+
+            2. Create the notebook which submits the notebook created in 1, for ex. 'sumbit_example_job.ipynb',
+                which can have the following code:
+                ```
+                from pyiron import Project
+                pr = Project('scriptjob_example')  # save the ScriptJob in the 'scriptjob_example' project
+                scriptjob = pr.create_job(pr.job_type.ScriptJob, 'scriptjob')  # create a ScriptJob named 'scriptjob'
+                scriptjob.script_path = 'example.ipynb'  # specify the PATH to the notebook you want to submit.
+                                                         # In this example case, 'example.ipynb' is in the same
+                                                         # directory as 'sumbit_example_job.ipynb'
+
+                # to submit the notebook to a queueing system
+                scriptjob.server.queue = 'cmfe'  # specify the queue to which the ScriptJob job is to be submitted
+                scriptjob.server.cores = 4  # specify the number of cores to be used
+                scriptjob.server.run_time = 120  # specify the runtime limit for the ScriptJob job in seconds
+
+                # run the ScriptJob job
+                scriptjob.run()
+                ```
+
     Attributes:
 
         attribute: job_name
