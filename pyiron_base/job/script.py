@@ -32,7 +32,7 @@ class ScriptJob(GenericJob):
         job_name (str): name of the job, which has to be unique within the project
 
     Example:
-        To submit a notebook as a ScriptJob job to the puiron job management system,
+        To submit a notebook as a ScriptJob job to the pyiron job management system,
 
             1. Create the notebook to be submitted, for ex. 'example.ipynb', and save it -- Can contain any code like:
                 ```
@@ -45,7 +45,7 @@ class ScriptJob(GenericJob):
                 print(job.output.energy_pot[-1])
                 ```
 
-            2. Create the notebook which submits the notebook created in 1, for ex. 'sumbit_example_job.ipynb',
+            2. Create the notebook which submits the notebook created in 1, for ex. 'submit_example_job.ipynb',
                 which can have the following code:
                 ```
                 from pyiron import Project
@@ -53,7 +53,7 @@ class ScriptJob(GenericJob):
                 scriptjob = pr.create_job(pr.job_type.ScriptJob, 'scriptjob')  # create a ScriptJob named 'scriptjob'
                 scriptjob.script_path = 'example.ipynb'  # specify the PATH to the notebook you want to submit.
                                                          # In this example case, 'example.ipynb' is in the same
-                                                         # directory as 'sumbit_example_job.ipynb'
+                                                         # directory as 'submit_example_job.ipynb'
 
                 # to submit the notebook to a queueing system
                 scriptjob.server.queue = 'cmfe'  # specify the queue to which the ScriptJob job is to be submitted
