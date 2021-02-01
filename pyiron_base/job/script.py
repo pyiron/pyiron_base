@@ -35,34 +35,54 @@ class ScriptJob(GenericJob):
         To submit a notebook as a ScriptJob job to the pyiron job management system,
 
             1. Create the notebook to be submitted, for ex. 'example.ipynb', and save it -- Can contain any code like:
-                ```
-                from pyiron import Project
-                pr = Project('.')
-                job = pr.create_job(pr.job_type.Lammps, 'job')
-                job.structure = pr.create_ase_bulk('Fe')
-                job.run()
-                print(job.status)
-                print(job.output.energy_pot[-1])
-                ```
+                    ```
+                    from pyiron import Project
+                    pr = Project('example')
+                    job = pr.create_job(job_type=pr.job_type.Lammps, job_name='job')  # we name the job 'job'
+                    job.structure = pr.create_ase_bulk('Fe')  # specify structure
+                    job.server.cores = 4  # Optional: use 4 cores to run this job
+                    job.run()  # run the job
 
-            2. Create the notebook which submits the notebook created in 1, for ex. 'submit_example_job.ipynb',
+                    # save a custom output
+                    job['user/my_custom_output'] = 16
+                    ```
+
+            2. Create the notebook which submits the notebook created in 1., for ex. 'submit_example_job.ipynb',
                 which can have the following code:
-                ```
-                from pyiron import Project
-                pr = Project('scriptjob_example')  # save the ScriptJob in the 'scriptjob_example' project
-                scriptjob = pr.create_job(pr.job_type.ScriptJob, 'scriptjob')  # create a ScriptJob named 'scriptjob'
-                scriptjob.script_path = 'example.ipynb'  # specify the PATH to the notebook you want to submit.
-                                                         # In this example case, 'example.ipynb' is in the same
-                                                         # directory as 'submit_example_job.ipynb'
+                    ```
+                    from pyiron import Project
+                    pr = Project('scriptjob_example')  # save the ScriptJob in the 'scriptjob_example' project
+                    scriptjob = pr.create_job(pr.job_type.ScriptJob, 'scriptjob')  # create a ScriptJob named 'scriptjob'
+                    scriptjob.script_path = 'example.ipynb'  # specify the PATH to the notebook you want to submit.
+                                                             # In this example case, 'example.ipynb' is in the same
+                                                             # directory as 'submit_example_job.ipynb'
 
-                # to submit the notebook to a queueing system
-                scriptjob.server.queue = 'cmfe'  # specify the queue to which the ScriptJob job is to be submitted
-                scriptjob.server.cores = 4  # specify the number of cores to be used
-                scriptjob.server.run_time = 120  # specify the runtime limit for the ScriptJob job in seconds
+                    # Optional: to submit the notebook to a queueing system
+                    scriptjob.server.queue = 'cmfe'  # specify the queue to which the ScriptJob job is to be submitted
+                    scriptjob.server.cores = 4  # specify the number of cores to be used
+                    scriptjob.server.run_time = 120  # specify the runtime limit for the ScriptJob job in seconds
 
-                # run the ScriptJob job
-                scriptjob.run()
-                ```
+                    # run the ScriptJob job
+                    scriptjob.run()
+                    ```
+
+            3. Take a look at the job table by running the following code in the 'submit_example_job.ipynb' notebook:
+                    ```
+                    pr.job_table()
+                    ```
+                this gives a dataframe containing the details of all the child 'job/s' that were submitted within
+                the 'example.ipynb' notebook, and their respective job 'status'.
+
+            4. Reload and analyse the child 'job/s': If the status of a child 'job' is 'finished', it can be loaded
+                into the 'submit_example_job.ipynb' notebook using:
+                    ```
+                    job = pr.load('job')  # remember in 1., we wanted to run a job named 'job', which has now 'finished'
+                    ```
+                this loads 'job' into the 'submit_example_job.ipynb' notebook, which can be then used for analysis,
+                    ```
+                    job.output.energy_pot[-1]  # via the auto-complete
+                    job['user/my_custom_output']  # the custom output, directly from the hdf5 file
+                    ```
 
     Attributes:
 
