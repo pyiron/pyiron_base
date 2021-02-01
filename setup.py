@@ -30,20 +30,20 @@ setup(
     keywords='pyiron',
     packages=find_packages(exclude=["*tests*", "*docs*", "*binder*", "*conda*", "*notebooks*", "*.ci_support*"]),
     install_requires=[
-        'dill==0.3.1.1',
+        'dill==0.3.3',
         'future==0.18.2',
-        'gitpython==3.1.0',
+        'gitpython==3.1.12',
         'h5io==0.1.1',
-        'h5py==2.10.0',
+        'h5py==3.1.0',
         'numpy==1.20.0',
-        'pandas==1.0.1',
+        'pandas==1.2.1',
         'pathlib2==2.3.5',
-        'psutil==5.7.0',
+        'psutil==5.8.0',
         'pyfileindex==0.0.4',
         'pysqa==0.0.13',
-        'sqlalchemy==1.3.14',
+        'sqlalchemy==1.3.22',
         'tables==3.6.1',
-        'tqdm==4.35.0'
+        'tqdm==4.56.0'
     ],
     cmdclass=versioneer.get_cmdclass(),
 
