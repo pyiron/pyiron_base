@@ -40,10 +40,15 @@ class ScriptJob(GenericJob):
                     pr = Project('example')
                     job = pr.create_job(job_type=pr.job_type.Lammps, job_name='job')  # we name the job 'job'
                     job.structure = pr.create_ase_bulk('Fe')  # specify structure
-                    job.server.cores = 4  # Optional: use 4 cores to run this job
+
+                    # Optional: get an input value from 'submit_example_job.ipynb', the notebook which submits
+                    #   'example.ipynb'
+                    external_input = pr.get_external_input()
+                    job.server.cores = external_input['number_of_cores']
+
                     job.run()  # run the job
 
-                    # save a custom output
+                    # save a custom output, that can be used by the notebook 'submit_example_job.ipynb'
                     job['user/my_custom_output'] = 16
                     ```
 
@@ -58,9 +63,13 @@ class ScriptJob(GenericJob):
                                                              # directory as 'submit_example_job.ipynb'
 
                     # Optional: to submit the notebook to a queueing system
+                    number_of_cores = 4  # number of cores to be used
+                    scriptjob.server.cores = number_of_cores
                     scriptjob.server.queue = 'cmfe'  # specify the queue to which the ScriptJob job is to be submitted
-                    scriptjob.server.cores = 4  # specify the number of cores to be used
                     scriptjob.server.run_time = 120  # specify the runtime limit for the ScriptJob job in seconds
+
+                    # Optional: save an input, such that it can be accessed by 'example.ipynb'
+                    scriptjob.input['number_of_cores'] = number_of_cores
 
                     # run the ScriptJob job
                     scriptjob.run()
