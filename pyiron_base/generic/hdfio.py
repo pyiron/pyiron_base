@@ -828,9 +828,13 @@ class FileHDFio(object):
                         return obj
                 raise ValueError("Unknown item: {}".format(item))
             else:
-                if item_lst[0] == "":  # absoute HDF5 path
+                if item_lst[0] == "":  # item starting with '/', thus we have an absoute HDF5 path
                     item_abs_lst = os.path.normpath(item).replace("\\", "/").split("/")
                 else:  # relative HDF5 path
+                    # The self.h5_path is an absolute path (/h5_path/in/h5/file), however, to
+                    # reach any directory super to root, we start with a
+                    # relative path = ./h5_path/in/h5/file and add whatever we get as item.
+                    # The normpath finally returns a path to the item which is relative to the hdf-root.
                     item_abs_lst = (
                         os.path.normpath(os.path.join('.' + self.h5_path, item))
                         .replace("\\", "/")
@@ -838,15 +842,15 @@ class FileHDFio(object):
                     )
                 # print('h5_path=', self.h5_path, 'item=', item, 'item_abs_lst=', item_abs_lst)
                 if (
-                    item_abs_lst[0] == ".." and len(item_abs_lst) == 1
-                ):  # leaving the HDF5 file
+                        item_abs_lst[0] == "." and len(item_abs_lst) == 1
+                ):
+                    # Here, we are asked to return the root of the HDF5-file. The resulting self.path would be the
+                    # same as the self.file_path and, thus, the path of the pyiron Project this HDF5-file belongs to:
                     return self._create_project_from_hdf5()
                 elif item_abs_lst[0] == "..":
-                    return self._create_project_from_hdf5()["/".join(item_abs_lst[1:])]
-                elif item_abs_lst[0] == '.':
-                    hdf_object = self.copy()
-                    hdf_object.h5_path = "/"
-                    return hdf_object
+                    # Here, we are asked to return a path super to the root of the HDF5-file, a.k.a. the path of it's
+                    # pyiron Project, thus we pass the relative path to the pyiron Project to handle it:
+                    return self._create_project_from_hdf5()["/".join(item_abs_lst)]
                 else:
                     hdf_object = self.copy()
                     hdf_object.h5_path = "/".join(item_abs_lst[:-1])
