@@ -46,6 +46,7 @@ class ScriptJob(GenericJob):
                 pr = Project('scriptjob_example')  # save the ScriptJob in the 'scriptjob_example' project
                 scriptjob = pr.create.job.ScriptJob('scriptjob')  # create a ScriptJob named 'scriptjob'
                 scriptjob.script_path = 'example.ipynb'  # specify the PATH to the notebook you want to submit.
+                ```
 
         Step 3. Check the job table to get details about 'scriptjob' by using:
                 ```
@@ -114,7 +115,8 @@ class ScriptJob(GenericJob):
         Step 4. Reload and analyse the child 'job/s': If the status of a child 'job' is 'finished', it can be loaded
                 into the 'submit_example_job.ipynb' notebook using:
                 ```
-                job = pr.load('job')  # remember in 1., we wanted to run a job named 'job', which has now 'finished'
+                job = pr.load('job')  # remember in Step 1., we wanted to run a job named 'job', which has now
+                                      # 'finished'
                 ```
                 this loads 'job' into the 'submit_example_job.ipynb' notebook, which can be then used for analysis,
                 ```
