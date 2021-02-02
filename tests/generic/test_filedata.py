@@ -87,7 +87,7 @@ class TestFileData(unittest.TestCase):
         self.assertEqual(self.data.filename, "test_data.txt")
         self.assertEqual(self.data.filetype, "txt")
         print('everything fine so far!')
-        #self.assertRaises(ValueError, FileData())
+        # self.assertRaises(ValueError, FileData())
         try:
             FileData()
         except ValueError:
@@ -101,7 +101,7 @@ class TestFileData(unittest.TestCase):
         self.assertEqual(data.metadata["some"], "dict")
         with open(self.filepath) as f:
             some_data = f.readlines()
-        #self.assertRaises(ValueError, FileData(data=some_data))
+        # self.assertRaises(ValueError, FileData(data=some_data))
         try:
             FileData(data=some_data)
         except ValueError:
@@ -119,6 +119,34 @@ class TestFileData(unittest.TestCase):
         with open(self.filepath) as f:
             some_data = f.readlines()
         self.assertEqual(self.data.data, some_data)
+
+
+class TestDisplayItem(unittest.TestCase):
+    """Test non ipywidget features, i.e. load a file or give back the object."""
+    @classmethod
+    def setUpClass(cls):
+        cls.current_dir = os.path.dirname(os.path.abspath(__file__)).replace("\\", "/")
+        cls.filepath = os.path.join(cls.current_dir, 'test_data.txt').replace("\\", "/")
+        with open(cls.filepath, 'w') as f:
+            f.write("some text")
+        cls.data = FileData(source=cls.filepath)
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.current_dir = os.path.dirname(os.path.abspath(__file__)).replace("\\", "/")
+        cls.filepath = os.path.join(cls.current_dir, 'test_data.txt').replace("\\", "/")
+        os.remove(cls.filepath)
+
+    def test_display(self):
+        display_item = DisplayItem(self.filepath)
+        self.assertEqual(display_item.display(), ["some text"])
+        some_list = ['one', 2, '3', True]
+        self.assertTrue(display_item.display(some_list) is some_list)
+        hdf = FileHDFio(self.current_dir+'/some_filename.h5')
+        self.assertTrue(display_item.display(hdf) is hdf)
+        some_string = 'some random string'
+        self.assertTrue(display_item.display(some_string) is some_string)
+        self.assertEqual(display_item.display(self.filepath), ['some text'])
 
 
 if __name__ == '__main__':
