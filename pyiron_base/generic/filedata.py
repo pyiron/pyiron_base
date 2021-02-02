@@ -4,6 +4,18 @@ import pandas
 
 from pyiron_base import ImportAlarm, FileHDFio
 
+__author__ = "Niklas Siemer"
+__copyright__ = (
+    "Copyright 2020, Max-Planck-Institut für Eisenforschung GmbH - "
+    "Computational Materials Design (CM) Department"
+)
+__version__ = "0.1"
+__maintainer__ = "Niklas Siemer"
+__email__ = "siemer@mpie.de"
+__status__ = "development"
+__date__ = "Feb 02, 2021"
+
+
 _has_imported = {}
 import_alarm = ImportAlarm()
 _not_imported = ''
