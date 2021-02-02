@@ -94,8 +94,7 @@ class FileData:
         """
         if (source is None) and (data is None):
             raise ValueError("No data given")
-        if data is not None:
-            self._data = data
+        self._data = data
         if source is not None:
             self.filename = os.path.split(source)[1]
             self.source = source
