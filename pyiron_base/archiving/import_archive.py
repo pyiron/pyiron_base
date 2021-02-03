@@ -37,16 +37,15 @@ def extract_archive(archive_directory):
     tar.close()
 
 
-def update_project_paths(project_instance, archive_directory, df):
+def update_project_paths(receiving_project, archive_directory, df):
     """Update project paths in given dataframe to point to new project."""
-    pr_import = project_instance.open(os.curdir)
     archive_name = getdir(path=archive_directory)
     df["project"] = [os.path.join(
-        pr_import.project_path, os.path.relpath(p, archive_name))
+        receiving_project.project_path, os.path.relpath(p, archive_name))
         for p in df["project"].values
     ]
-    df['projectpath'] = len(df) * [pr_import.root_path]
-    return pr_import, df
+    df['projectpath'] = len(df) * [receiving_project.root_path]
+    return df
 
 def import_jobs(
     project_instance, directory_to_import_to, archive_directory,
@@ -84,7 +83,7 @@ def import_jobs(
     if compressed:
         rmtree(archive_directory)
 
-    pr_import, df = update_project_paths(project_instance, archive_directory, df)
+    df = update_project_paths(project_instance, archive_directory, df)
 
     # Add jobs to database
     job_id_lst = []
@@ -101,7 +100,7 @@ def import_jobs(
             entry["timestop"] = pandas.to_datetime(entry["timestop"])
         if 'username' not in entry: 
             entry["username"] = s.login_user
-        job_id = pr_import.db.add_item_dict(par_dict=entry)
+        job_id = project_instance.db.add_item_dict(par_dict=entry)
         job_id_lst.append(job_id)
 
     # Update parent and master ids
@@ -111,7 +110,7 @@ def import_jobs(
         update_id_lst(record_lst=df["parentid"].values, job_id_lst=job_id_lst),
     ):
         if not np.isnan(masterid) or not np.isnan(parentid):
-            pr_import.db.item_update(
+            project_instance.db.item_update(
                 item_id=job_id,
                 par_dict={
                     "parentid": parentid, "masterid": masterid
