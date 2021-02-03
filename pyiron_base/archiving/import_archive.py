@@ -37,6 +37,17 @@ def extract_archive(archive_directory):
     tar.close()
 
 
+def update_project_paths(project_instance, archive_directory, df):
+    """Update project paths in given dataframe to point to new project."""
+    pr_import = project_instance.open(os.curdir)
+    archive_name = getdir(path=archive_directory)
+    df["project"] = [os.path.join(
+        pr_import.project_path, os.path.relpath(p, archive_name))
+        for p in df["project"].values
+    ]
+    df['projectpath'] = len(df) * [pr_import.root_path]
+    return pr_import, df
+
 def import_jobs(
     project_instance, directory_to_import_to, archive_directory,
     df, compressed=True
@@ -61,7 +72,6 @@ def import_jobs(
         )
     if compressed:
         extract_archive(archive_directory)
-    archive_name = getdir(path=archive_directory)
     if directory_to_import_to[-1] != '/':
         directory_to_import_to = os.path.basename(directory_to_import_to)
     else:
@@ -74,13 +84,8 @@ def import_jobs(
     if compressed:
         rmtree(archive_directory)
 
-    # Update Database
-    pr_import = project_instance.open(os.curdir)
-    df["project"] = [os.path.join(
-        pr_import.project_path, os.path.relpath(p, archive_name))
-        for p in df["project"].values
-    ]
-    df['projectpath'] = len(df) * [pr_import.root_path]
+    pr_import, df = update_project_paths(project_instance, archive_directory, df)
+
     # Add jobs to database
     job_id_lst = []
     for entry in df.dropna(axis=1).to_dict(orient="records"):
