@@ -19,6 +19,7 @@ class ToyJob(PythonTemplateJob):
             h5out["energy_tot"] = self.input["input_energy"]
         self.status.finished = True
 
+TEST_JOB_NAME="toy"
 
 class TestUnpacking(unittest.TestCase):
     @classmethod
@@ -29,7 +30,7 @@ class TestUnpacking(unittest.TestCase):
         cls.arch_dir_comp = cls.arch_dir+'_comp'
         cls.pr = Project('test')
         cls.pr.remove_jobs_silently(recursive=True)
-        cls.job = cls.pr.create_job(job_type=ToyJob, job_name='toy')
+        cls.job = cls.pr.create_job(job_type=ToyJob, job_name=TEST_JOB_NAME)
         cls.job.run()
         cls.pr.pack(destination_path=cls.arch_dir_comp, compress=True)
         cls.file_location = os.path.dirname(os.path.abspath(__file__)).replace(
@@ -88,6 +89,14 @@ class TestUnpacking(unittest.TestCase):
         path_import = getdir(path_import)
         compare_obj = dircmp(path_original, path_import)
         self.assertEqual(len(compare_obj.diff_files), 0)
+
+    def test_load_job(self):
+        """Jobs should be able to load from the imported project."""
+
+        try:
+            j = self.imp_pr.load(TEST_JOB_NAME)
+        except Exception as e:
+            self.fail(msg="Loading job fails with {}".format(str(e)))
 
 
 if __name__ == "__main__":
