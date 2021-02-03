@@ -93,11 +93,26 @@ class TestUnpacking(unittest.TestCase):
     def test_load_job(self):
         """Jobs should be able to load from the imported project."""
 
+        self.imp_pr.remove_jobs_silently(recursive=True)
+        self.pr.pack(destination_path=self.arch_dir_comp, compress=True)
+        self.imp_pr.unpack(origin_path=self.arch_dir_comp, compress=True)
         try:
             j = self.imp_pr.load(TEST_JOB_NAME)
         except Exception as e:
             self.fail(msg="Loading job fails with {}".format(str(e)))
 
+    def test_check_job_parameters(self):
+        """Imported jobs should be equal to their originals in all their parameters."""
+
+        self.imp_pr.remove_jobs_silently(recursive=True)
+        self.pr.pack(destination_path=self.arch_dir_comp, compress=True)
+        self.imp_pr.unpack(origin_path=self.arch_dir_comp, compress=True)
+
+        j = self.imp_pr.load(TEST_JOB_NAME)
+        self.assertEqual(self.job.input["input_energy"], j.input["input_energy"],
+                         "Input values not properly copied to imported job.")
+        self.assertEqual(self.job["output/energy_tot"], j["output/energy_tot"],
+                         "Input values not properly copied to imported job.")
 
 if __name__ == "__main__":
     unittest.main()
