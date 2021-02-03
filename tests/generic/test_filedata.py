@@ -54,7 +54,7 @@ class TestLoadFile(unittest.TestCase):
         """Test default load for text file and h5 file without extension"""
         filename = self.current_dir + '/test_data'
         default = load_file(filename)
-        # For some reason linux handles this different than windows:
+        # For some reason on linux handles this different than windows:
         self.assertTrue(filename == default or default[0] == '‰HDF\n')
         filename = self.current_dir + '/test_data2'
         default = load_file(filename)
@@ -87,7 +87,7 @@ class TestFileData(unittest.TestCase):
         self.assertEqual(self.data.filename, "test_data.txt")
         self.assertEqual(self.data.filetype, "txt")
         print('everything fine so far!')
-        self.assertRaises(ValueError, FileData())
+        self.assertRaises(ValueError, FileData)
         data = FileData(source=self.filepath, metadata={"some": "dict"})
         self.assertFalse(data._hasdata)
         self.assertEqual(data.filename, "test_data.txt")
@@ -95,7 +95,7 @@ class TestFileData(unittest.TestCase):
         self.assertEqual(data.metadata["some"], "dict")
         with open(self.filepath) as f:
             some_data = f.readlines()
-        self.assertRaises(ValueError, FileData(data=some_data))
+        self.assertRaises(ValueError, FileData, data=some_data)
         data = FileData(data=some_data, filename="test_data.dat")
         self.assertTrue(data._hasdata)
         self.assertEqual(data.filetype, "dat")
