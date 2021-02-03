@@ -473,7 +473,7 @@ class JobPath(JobPathBase):
             job_path = db_entry["projectpath"]
         else:
             job_path = ''
-        job_path += db_entry["project"] + hdf5_file + db_entry["subjob"]
+        job_path = os.path.join(job_path, db_entry["project"], hdf5_file) + db_entry["subjob"]
         super(JobPath, self).__init__(job_path=job_path)
 
         if "hamilton" in db_entry.keys():
