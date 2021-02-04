@@ -77,7 +77,7 @@ def import_jobs(
     # Update Database
     pr_import = project_instance.open(os.curdir)
     df["project"] = [os.path.join(
-        pr_import.project_path, os.path.relpath(p, archive_name))
+        pr_import.project_path, os.path.relpath(p, archive_name)) + "/"
         for p in df["project"].values
     ]
     df['projectpath'] = len(df) * [pr_import.root_path]
