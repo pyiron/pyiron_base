@@ -79,7 +79,7 @@ class ProjectBrowser:
     def _busy_check(self, busy=True):
         """Function to disable widget interaction while another update is ongoing"""
         if self._busy and busy:
-            return
+            return True
         else:
             self._busy = busy
 
@@ -137,7 +137,8 @@ class ProjectBrowser:
     def _update_optionbox(self, optionbox):
 
         def click_option_button(b):
-            self._busy_check()
+            if self._busy_check():
+                return
             self._click_option_button(b)
             self._busy_check(False)
 
@@ -209,7 +210,8 @@ class ProjectBrowser:
         home_color = '#999999'
 
         def on_click(b):
-            self._busy_check()
+            if self._busy_check():
+                return
             self._update_project(b.path)
             self._busy_check(False)
 
@@ -297,13 +299,15 @@ class ProjectBrowser:
             dirs = self.dirs
 
         def on_click_group(b):
-            self._busy_check()
+            if self._busy_check():
+                return
             path = os.path.join(self.path, b.description)
             self._update_project(path)
             self._busy_check(False)
 
         def on_click_file(b):
-            self._busy_check()
+            if self._busy_check():
+                return
             self._on_click_file(b.description)
             self._update_filebox(filebox)
             self._busy_check(False)
