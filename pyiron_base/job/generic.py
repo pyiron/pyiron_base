@@ -1472,15 +1472,21 @@ class GenericJob(JobCore):
                                 "'delete_existing_job=True in create_job'".format(self.job_name))
             self.from_hdf()
 
-    def _executable_activate(self, enforce=False):
+    def _executable_activate(self, enforce=False, module=None):
         """
-        Internal helper function to koad the executable object, if it was not loaded already.
+        Internal helper function to load the executable object, if it was not loaded already.
+
+        Args:
+            enforce (bool, optional): set executable instance even if defined already
+            module (str, optional): name of the folder in pyiron resources where the binary will be looked up; if not
+                                    given then deduce from the name of the top level module within pyiron where this job
+                                    is located
         """
         if self._executable is None or enforce:
             if len(self.__module__.split(".")) > 1:
                 self._executable = Executable(
                     codename=self.__name__,
-                    module=self.__module__.split(".")[1],
+                    module=self.__module__.split(".")[1] if module is None else module,
                     path_binary_codes=s.resource_paths,
                 )
             else:
