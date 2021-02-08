@@ -268,17 +268,17 @@ class InteractiveBase(GenericJob):
 
     def interactive_open(self):
         """
+        Set the run mode to interactive.
 
-        Returns:
-
+        Must be called before :method:`.run()` is called.
         """
         self.server.run_mode.interactive = True
 
     def interactive_close(self):
         """
+        Stop interactive execution and sync interactive output cache.
 
-        Returns:
-
+        Sets the job status to finished, :method:`.run()` cannot be called after this.
         """
         if (
             len(list(self.interactive_cache.keys())) > 0
