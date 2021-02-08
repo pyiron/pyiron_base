@@ -270,6 +270,8 @@ class InteractiveBase(GenericJob):
         """
         Set the run mode to interactive.
 
+        This is the same as setting :attribute:`.run_mode.interactive`.
+
         Must be called before :method:`.run()` is called.
         """
         self.server.run_mode.interactive = True
