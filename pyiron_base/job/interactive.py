@@ -280,7 +280,7 @@ class InteractiveBase(GenericJob):
         """
         Stop interactive execution and sync interactive output cache.
 
-        Sets the job status to finished, :method:`.run()` cannot be called after this.
+        Sets the job status to :attribute:`~.JobStatus.finished`, :method:`.run()` cannot be called after this.
         """
         if (
             len(list(self.interactive_cache.keys())) > 0
