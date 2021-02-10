@@ -162,13 +162,18 @@ class Project(ProjectPath):
         """
         Get viewer_mode - if viewer_mode is enable pyiron has read only access to the database.
 
+        Change it via
+        `Project('my_project').switch_to_viewer_mode()`
+        and
+        `Project('my_project').switch_to_user_mode()`
+
         Returns:
             bool: returns TRUE when viewer_mode is enabled
         """
         if not isinstance(self.db, FileTable):
             return self.db.viewer_mode
         else:
-            return None
+            return False
 
     @property
     def name(self):
@@ -199,6 +204,7 @@ class Project(ProjectPath):
     def copy_to(self, destination):
         """
         Copy the project object to a different pyiron path - including the content of the project (all jobs).
+        In order to move individual jobs, use `copy_to` from the job objects.
 
         Args:
             destination (Project): project path to copy the project content to
@@ -805,7 +811,7 @@ class Project(ProjectPath):
     def move_to(self, destination):
         """
         Similar to the copy_to() function move the project object to a different pyiron path - including the content of
-        the project (all jobs).
+        the project (all jobs). In order to move individual jobs, use `move_to` from the job objects.
 
         Args:
             destination (Project): project path to move the project content to
