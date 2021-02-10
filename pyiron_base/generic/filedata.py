@@ -43,50 +43,46 @@ else:
 
 
 def load_file(filename):
-    """
-        Load the file and return an appropriate object containing the data.
-
-        Args:
-            filename (str): path to the file to be displayed.
-    """
-    _, filetype = os.path.splitext(filename)
-    if filetype.lower() in ['.h5', '.hdf']:
-        return FileHDFio(file_name=filename)
-    if filetype.lower() in ['.json']:
-        return _load_json(filename)
-    elif filetype.lower() in ['.txt']:
-        return _load_txt(filename)
-    elif filetype.lower() in ['.csv']:
-        return _load_csv(filename)
-    elif _has_imported['PIL'] and filetype.lower() in Image.registered_extensions():
-        return _load_img(filename)
-    else:
-        return _load_default(filename)
-
-
-def _load_txt(file):
-    with open(file) as f:
-        return f.readlines()
-
-
-def _load_json(file):
-    with open(file) as f:
-        return json.load(f)
-
-
-def _load_csv(file):
-    return pandas.read_csv(file)
-
-
-def _load_img(file):
-    return Image.open(file)
-
-
-def _load_default(file):
-    try:
-        return _load_txt(file)
-    except UnicodeDecodeError:
-        return file
+      """
+          Load the file and return an appropriate object containing the data.
+ 
+          Args:
+              filename (str): path to the file to be displayed.
+      """
+      def _load_txt(file):
+          with open(file) as f:
+              return f.readlines()
+      
+      def _load_json(file):
+          with open(file) as f:
+              return json.load(f)
+      
+      def _load_csv(file):
+          return pandas.read_csv(file)
+ 
+      def _load_img(file):
+          return Image.open(file)
+ 
+ 
+      def _load_default(file):
+          try:
+              return _load_txt(file)
+          except UnicodeDecodeError:
+              return file
+     
+      _, filetype = os.path.splitext(filename)
+      if filetype.lower() in ['.h5', '.hdf']:
+          return FileHDFio(file_name=filename)
+      if filetype.lower() in ['.json']:
+          return _load_json(filename)
+      elif filetype.lower() in ['.txt']:
+          return _load_txt(filename)
+      elif filetype.lower() in ['.csv']:
+          return _load_csv(filename)
+      elif _has_imported['PIL'] and filetype.lower() in Image.registered_extensions():
+          return _load_img(filename)
+      else:
+          return _load_default(filename)
 
 
 class FileData:
