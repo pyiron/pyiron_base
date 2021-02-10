@@ -110,7 +110,7 @@ class TestUnpacking(unittest.TestCase):
         self.assertEqual(self.job.input["input_energy"], j.input["input_energy"],
                          "Input values not properly copied to imported job.")
         self.assertEqual(self.job["output/energy_tot"], j["output/energy_tot"],
-                         "Input values not properly copied to imported job.")
+                         "Output values not properly copied to imported job.")
 
 if __name__ == "__main__":
     unittest.main()
