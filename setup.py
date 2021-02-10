@@ -32,18 +32,18 @@ setup(
     install_requires=[
         'dill==0.3.3',
         'future==0.18.2',
-        'gitpython==3.1.12',
+        'gitpython==3.1.13',
         'h5io==0.1.1',
         'h5py==3.1.0',
         'numpy==1.20.1',
-        'pandas==1.2.1',
+        'pandas==1.2.2',
         'pathlib2==2.3.5',
         'psutil==5.8.0',
         'pyfileindex==0.0.6',
         'pysqa==0.0.15',
         'sqlalchemy==1.3.23',
         'tables==3.6.1',
-        'tqdm==4.56.0'
+        'tqdm==4.56.1'
     ],
     cmdclass=versioneer.get_cmdclass(),
 
