@@ -14,6 +14,7 @@ import yaml
 import xmltodict
 from dicttoxml import dicttoxml
 from defusedxml.minidom import parseString
+from warnings import warn
 
 __author__ = "Marvin Poul"
 __copyright__ = (
@@ -723,6 +724,14 @@ class DataContainer(MutableMapping):
         self.update(parser(file_name), wrap=wrap)
 
     def _dictify(self):
+        """
+        cast the DataContainer to a dictionary. It is important to note
+        that if the DataContainer contains a list or an array, it is converted
+        to a dictionary with the indices used as their keys.
+
+        Args:
+            --
+        """
         out_dict = {}
         if self.has_keys():
             for key, val in zip(self.keys(), self.values()):
@@ -737,11 +746,33 @@ class DataContainer(MutableMapping):
         return out_dict
 
     def write_yml(self, file_name):
+        """
+        Writes the DataContainer to a yaml file.
+
+        Args:
+            file_name(str): the name of the file to be writen to.
+        """
+        ext = os.path.splitext(file_name)[1]
+        if ext != 'yml' or ext != 'yaml':
+            warn("The extension of the given file_name is not yaml or yml"
+                 "Despite of the inconsistent file extension,"
+                 "the writen data has yaml encoding!")
         dictified_data = self._dictify()
         with open(file_name, 'w') as output:
             yaml.dump(dictified_data, output, default_flow_style=False)
 
     def write_xml(self, file_name, attr_flag=False):
+        """
+        Writes the DataContainer to an xml file.
+
+        Args:
+            file_name(str): the name of the file to be writen to.
+        """
+        ext = os.path.splitext(file_name)[1]
+        if ext != 'xml':
+            warn("The extension of the given file_name is not ext"
+                 "Despite of the inconsistent file extension,"
+                 "the writen data has xml encoding!")
         dictified_data = self._dictify()
         xml_data = dicttoxml(dictified_data, attr_type=attr_flag)
         with open(file_name, 'w') as xmlfile:
