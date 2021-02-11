@@ -6,6 +6,7 @@
 import json
 import os
 import pandas
+from functools import lru_cache
 
 from pyiron_base import ImportAlarm, FileHDFio
 
@@ -42,15 +43,31 @@ else:
     )
 
 
-def load_file(filename):
+@import_alarm
+def load_file(filename, filetype=None):
     """
         Load the file and return an appropriate object containing the data.
 
         Args:
             filename (str): path to the file to be displayed.
+            filetype (str/None): File extension, if given this overwrites the assumption based on the filename.
+
+            Supported file types are:
+            '.h5', '.hdf'
+            '.json'
+            '.txt'
+            '.csv'
+            Image extensions supported by PIL
+
+        Returns:
+            :class:`FileHDFio`: pointing to the file of filetype = '.h5'
+            dict: containing data from file of filetype = '.json'
+            list: of all lines from file for filetype = '.txt'
+            :class:`pandas.DataFrame`: containing data from file of filetype = '.csv'
+
     """
     def _load_txt(file):
-        with open(file) as f:
+        with open(file, encoding='utf8') as f:
             return f.readlines()
 
     def _load_json(file):
@@ -66,10 +83,14 @@ def load_file(filename):
     def _load_default(file):
         try:
             return _load_txt(file)
-        except UnicodeDecodeError:
-            return file
+        except Exception as e:
+            raise IOError("File could not be loaded.") from e
 
-    _, filetype = os.path.splitext(filename)
+    if filetype is None:
+        _, filetype = os.path.splitext(filename)
+    elif filetype[0] != '.':
+        filetype = '.' + filetype
+
     if filetype.lower() in ['.h5', '.hdf']:
         return FileHDFio(file_name=filename)
     if filetype.lower() in ['.json']:
@@ -86,30 +107,27 @@ def load_file(filename):
 
 class FileData:
     """FileData stores an instance of a data file, e.g. a single Image from a measurement."""
-    def __init__(self, source=None, data=None, filename=None, metadata=None, filetype=None):
+    def __init__(self, file, data=None, metadata=None, filetype=None):
         """FileData class to store data and associated metadata.
 
             Args:
-                source (str/None): path to the data file
+                file (str): path to the data file (if data is None) or filename associated with the data.
                 data (object/None): object containing data
-                filename (str/None): filename associated with the data object, Not used if source is given!
                 metadata (dict/InputList): Dictionary of metadata associated with the data
                 filetype (str): File extension associated with the type data,
                                 If provided this overwrites the assumption based on the extension of the filename.
         """
-        if (source is None) and (data is None):
-            raise ValueError("No data given")
-        self._data = data
-        if source is not None:
-            self.filename = os.path.split(source)[1]
-            self.source = source
-        elif filename is None:
-            raise ValueError("No filename given")
+        if data is None:
+            self.filename = os.path.split(file)[1]
+            self.source = file
+            self._data = None
         else:
-            self.filename = filename
-        if (filetype is None) and (self.filename is not None):
+            self.filename = file
+            self.source = None
+            self._data = data
+        if filetype is None:
             filetype = os.path.splitext(self.filename)[1]
-            if len(filetype[1:]) == 0:
+            if filetype == '' or filetype == '.':
                 self.filetype = None
             else:
                 self.filetype = filetype[1:]
@@ -122,9 +140,10 @@ class FileData:
         self._hasdata = True if self._data is not None else False
 
     @property
+    @lru_cache
     def data(self):
         """Return the associated data."""
         if self._hasdata:
             return self._data
         else:
-            return load_file(self.source)
+            return load_file(self.source, filetype=self.filetype)
