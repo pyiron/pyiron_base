@@ -13,7 +13,7 @@ import numpy as np
 import yaml
 import xmltodict
 from dicttoxml import dicttoxml
-from xml.dom.minidom import parseString
+from defusedxml.minidom import parseString
 
 __author__ = "Marvin Poul"
 __copyright__ = (
@@ -723,8 +723,8 @@ class DataContainer(MutableMapping):
         with open(file_name, 'w') as output:
             yaml.dump(self, output, default_flow_style=False)
 
-    def write_xml(self, file_name):
-        xml_data = dicttoxml(self, attr_type=False)
+    def write_xml(self, file_name, attr_flag=False):
+        xml_data = dicttoxml(self, attr_type=attr_flag)
         xmlfile = open(file_name, "w")
         xmlfile.write(parseString(xml_data).toprettyxml())
         xmlfile.close()
