@@ -59,7 +59,7 @@ def load_file(filename):
 
     def _load_csv(file):
         return pandas.read_csv(file)
- 
+
     def _load_img(file):
         return Image.open(file)
  
@@ -85,10 +85,9 @@ def load_file(filename):
 
 
 class FileData:
-    """ FileData stores an instance of a data file, e.g. a single Image from a measurement """
+    """FileData stores an instance of a data file, e.g. a single Image from a measurement."""
     def __init__(self, source=None, data=None, filename=None, metadata=None, filetype=None):
-        """
-            FileData class to store data and associated metadata.
+        """FileData class to store data and associated metadata.
 
             Args:
                 source (str/None): path to the data file

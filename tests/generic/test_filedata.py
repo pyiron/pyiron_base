@@ -51,7 +51,7 @@ class TestLoadFile(unittest.TestCase):
         self.assertEqual(hdf['content/key'], 'value')
 
     def test_load_file_default(self):
-        """Test default load for text file and h5 file without extension"""
+        """Test default load for text file and h5 file without extension."""
         filename = self.current_dir + '/test_data'
         default = load_file(filename)
         # For some reason on linux handles this different than windows:
@@ -81,7 +81,7 @@ class TestFileData(unittest.TestCase):
         os.remove(filepath)
 
     def test___init__(self):
-        """Test init of data class"""
+        """Test init of data class."""
         # Test if init from setUpClass is as expected
         self.assertFalse(self.data._hasdata)
         self.assertEqual(self.data.filename, "test_data.txt")
@@ -108,7 +108,7 @@ class TestFileData(unittest.TestCase):
         self.assertTrue(data.filetype is None)
 
     def test_data(self):
-        """Test data property of FileData"""
+        """Test data property of FileData."""
         with open(self.filepath) as f:
             some_data = f.readlines()
         self.assertEqual(self.data.data, some_data)
