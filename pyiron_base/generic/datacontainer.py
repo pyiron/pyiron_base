@@ -12,6 +12,8 @@ import os.path
 import numpy as np
 import yaml
 import xmltodict
+from dicttoxml import dicttoxml
+from xml.dom.minidom import parseString
 
 __author__ = "Marvin Poul"
 __copyright__ = (
@@ -716,3 +718,13 @@ class DataContainer(MutableMapping):
             raise ValueError("The input file is not supported; expected *.yml, *.yaml, or *.xml") from None
 
         self.update(parser(file_name), wrap=wrap)
+
+    def write_yml(self, file_name):
+        with open(file_name, 'w') as output:
+            yaml.dump(self, output, default_flow_style=False)
+
+    def write_xml(self, file_name):
+        xml_data = dicttoxml(self, attr_type=False)
+        xmlfile = open(file_name, "w")
+        xmlfile.write(parseString(xml_data).toprettyxml())
+        xmlfile.close()
