@@ -23,23 +23,14 @@ __date__ = "Feb 02, 2021"
 
 
 _has_imported = {}
-import_alarm = ImportAlarm()
-_not_imported = ''
 try:
     from PIL import Image
     _has_imported['PIL'] = True
+    import_alarm = ImportAlarm()
 except ImportError:
     _has_imported['PIL'] = False
-if all(_has_imported.values()):
-    pass
-else:
-    for k, j in _has_imported.items():
-        if j and len(_not_imported) > 0:
-            _not_imported += ', '
-        if j:
-            _not_imported += k
     import_alarm = ImportAlarm(
-        "Reduced functionality, since " + _not_imported + " could not be imported."
+        "Reduced functionality, since " + 'PIL' + " could not be imported."
     )
 
 
