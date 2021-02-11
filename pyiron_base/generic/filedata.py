@@ -1,6 +1,4 @@
-"""
-Generic File Object.
-"""
+"""Generic File Object."""
 
 # Copyright (c) Max-Planck-Institut für Eisenforschung GmbH - Computational Materials Design (CM) Department
 # Distributed under the terms of "New BSD License", see the LICENSE file.
@@ -31,11 +29,6 @@ try:
     _has_imported['PIL'] = True
 except ImportError:
     _has_imported['PIL'] = False
-try:
-    from IPython.core.display import display
-    _has_imported['IPython'] = True
-except ImportError:
-    _has_imported['IPython'] = False
 if all(_has_imported.values()):
     pass
 else:
@@ -52,7 +45,7 @@ else:
 def load_file(filename):
     """
         Load the file and return an appropriate object containing the data.
- 
+
         Args:
             filename (str): path to the file to be displayed.
     """
@@ -92,7 +85,6 @@ def load_file(filename):
 
 
 class FileData:
-
     """ FileData stores an instance of a data file, e.g. a single Image from a measurement """
     def __init__(self, source=None, data=None, filename=None, metadata=None, filetype=None):
         """
