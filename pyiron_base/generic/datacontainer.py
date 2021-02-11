@@ -39,6 +39,7 @@ def _normalize(key):
 
     return key
 
+
 def _parse_yaml(file_name):
     """
     Parse a YAML file as a dict.  Errors during reading raise a warning and return an empty dict.
@@ -56,6 +57,7 @@ def _parse_yaml(file_name):
             warnings.warn(exc)
             return {}
 
+
 def _parse_xml(self, file_name, wrap=False):
     """
     Parse a XML file and update the datacontainer with a dictionary
@@ -72,6 +74,7 @@ def _parse_xml(self, file_name, wrap=False):
         except Exception as message:
             warnings.warn(message)
             return {}
+
 
 class DataContainer(MutableMapping):
     """
@@ -719,11 +722,27 @@ class DataContainer(MutableMapping):
 
         self.update(parser(file_name), wrap=wrap)
 
+    def _dictify(self):
+        out_dict = {}
+        if self.has_keys():
+            for key, val in zip(self.keys(), self.values()):
+                try:
+                    val.has_keys()
+                    out_dict[key] = val._dictify()
+                except AttributeError:
+                    out_dict[key] = val
+        else:
+            for i, val in enumerate(self):
+                out_dict[str(i)] = val
+        return out_dict
+
     def write_yml(self, file_name):
+        dictified_data = self._dictify()
         with open(file_name, 'w') as output:
-            yaml.dump(self, output, default_flow_style=False)
+            yaml.dump(dictified_data, output, default_flow_style=False)
 
     def write_xml(self, file_name, attr_flag=False):
-        xml_data = dicttoxml(self, attr_type=attr_flag)
-        with open(file_name, "w") as xmlfile:
+        dictified_data = self._dictify()
+        xml_data = dicttoxml(dictified_data, attr_type=attr_flag)
+        with open(file_name, 'w') as xmlfile:
             xmlfile.write(parseString(xml_data).toprettyxml())
