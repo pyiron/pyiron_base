@@ -77,8 +77,8 @@ class TestFileData(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
         cls.current_dir = os.path.dirname(os.path.abspath(__file__)).replace("\\", "/")
-        cls.filepath = os.path.join(cls.current_dir, 'test_data.txt').replace("\\", "/")
-        os.remove(cls.filepath)
+        filepath = os.path.join(cls.current_dir, 'test_data.txt').replace("\\", "/")
+        os.remove(filepath)
 
     def test___init__(self):
         """Test init of data class"""
@@ -86,27 +86,34 @@ class TestFileData(unittest.TestCase):
         self.assertFalse(self.data._hasdata)
         self.assertEqual(self.data.filename, "test_data.txt")
         self.assertEqual(self.data.filetype, "txt")
-        print('everything fine so far!')
+
         self.assertRaises(ValueError, FileData)
         data = FileData(source=self.filepath, metadata={"some": "dict"})
         self.assertFalse(data._hasdata)
         self.assertEqual(data.filename, "test_data.txt")
         self.assertEqual(data.filetype, "txt")
         self.assertEqual(data.metadata["some"], "dict")
+
         with open(self.filepath) as f:
             some_data = f.readlines()
         self.assertRaises(ValueError, FileData, data=some_data)
         data = FileData(data=some_data, filename="test_data.dat")
         self.assertTrue(data._hasdata)
         self.assertEqual(data.filetype, "dat")
+
         data = FileData(data=some_data, filename="test_data.dat", filetype="txt")
         self.assertEqual(data.filetype, "txt")
+
+        data = FileData(data=some_data, filename='foo')
+        self.assertTrue(data.filetype is None)
 
     def test_data(self):
         """Test data property of FileData"""
         with open(self.filepath) as f:
             some_data = f.readlines()
         self.assertEqual(self.data.data, some_data)
+        data = FileData(data=b'some string', filename='foo.txt')
+        self.assertEqual(data.data, b'some string')
 
 
 if __name__ == '__main__':
