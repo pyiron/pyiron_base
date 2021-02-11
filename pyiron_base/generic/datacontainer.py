@@ -725,6 +725,5 @@ class DataContainer(MutableMapping):
 
     def write_xml(self, file_name, attr_flag=False):
         xml_data = dicttoxml(self, attr_type=attr_flag)
-        xmlfile = open(file_name, "w")
-        xmlfile.write(parseString(xml_data).toprettyxml())
-        xmlfile.close()
+        with open(file_name, "w") as xmlfile:
+            xmlfile.write(parseString(xml_data).toprettyxml())
