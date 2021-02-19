@@ -43,6 +43,7 @@ from pyiron_base.server.queuestatus import (
     queue_check_job_is_waiting_or_running,
 )
 from pyiron_base.job.external import Notebook
+from pyiron_base.project.data import ProjectData
 
 from pyiron_base.archiving import import_archive, export_archive
 
@@ -147,6 +148,13 @@ class Project(ProjectPath):
             self.db = FileTable(project=path)
         self.job_type = JobTypeChoice()
 
+        self._data = ProjectData(project=self, table_name="data")
+        # Auto-loading existing data -- Explodes atm, but why?!
+        # try:
+        #     self._data.read()
+        # except (KeyError, AttributeError):
+        #     pass  # Don't worry if it's empty
+
     @property
     def parent_group(self):
         """
@@ -188,6 +196,10 @@ class Project(ProjectPath):
     @property
     def create(self):
         return self._creator
+
+    @property
+    def data(self):
+        return self._data
 
     def copy(self):
         """
