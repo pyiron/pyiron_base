@@ -15,8 +15,8 @@ __copyright__ = (
     "Computational Materials Design (CM) Department"
 )
 __version__ = "0.1"
-__maintainer__ = "Jan Janssen"
-__email__ = "janssen@mpie.de"
+__maintainer__ = "Liam Huber"
+__email__ = "huber@mpie.de"
 __status__ = "production"
 __date__ = "Feb 19, 2021"
 
