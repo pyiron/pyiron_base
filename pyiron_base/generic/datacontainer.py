@@ -58,7 +58,7 @@ def _parse_yaml(file_name):
             return {}
 
 
-def _parse_xml(self, file_name, wrap=False):
+def _parse_xml(file_name, wrap=False):
     """
     Parse a XML file and update the datacontainer with a dictionary
 
