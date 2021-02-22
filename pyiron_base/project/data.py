@@ -3,8 +3,7 @@
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
 """
-A modified data container for storing associating data with a project. Here is more worthless text trying to see what
-it takes to get codacy to shut up.
+A modified data container for storing associating data with a project.
 
 Spec:
     The `Project` class should have data associated with it which can be stored to-file in our supported format(s)
@@ -39,8 +38,7 @@ class ProjectData(InputList):
 
     def __init__(self, *args, project=None, **kwargs):
         """
-        A data storage container which can store itself to/retrieve itself from file at the project level. This is some
-        extra text to try to get Codacy to shut up.
+        A data storage container which can store itself to/retrieve itself from file at the project level.
 
         Args:
             project (pyiron_base.Project): The project instance the storage is attached to.
