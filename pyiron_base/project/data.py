@@ -12,7 +12,7 @@ now just hdf5). This should meet the following requirements:
 
 - Data storage is immediately accessible, i.e. appearing in the project tab-completion module
 - Data stored there should be readable and writeable with a single parameter-free call
-- When instantiated, new projects should automatically read any available data
+- When instantiated, new projects should automatically read any available data (not *quite* satisfied right now!)
 - The `Project` tab completion menu should not get cluttered (i.e. nest everything under `Project.foo`)
 """
 
@@ -38,14 +38,26 @@ class ProjectData(InputList):
         return instance
 
     def __init__(self, *args, project=None, **kwargs):
+        """
+        A data storage container which can store itself to/retrieve itself from file at the project level.
+
+        Args:
+            project (pyiron_base.Project): The project instance the storage is attached to.
+        """
         super().__init__(*args, **kwargs)
         self._project = project
 
     def read(self):
+        """
+        Read existing data from project-level storage.
+        """
         hdf = ProjectHDFio(self._project, file_name="project_data")
         if self.table_name not in hdf.list_groups():
             raise KeyError(f"Table name {self.table_name} was not found -- Project data is empty.")
         self.from_hdf(hdf=hdf)
 
     def write(self):
+        """
+        Write data to project-level storage.
+        """
         self.to_hdf(ProjectHDFio(self._project, file_name="project_data"))
