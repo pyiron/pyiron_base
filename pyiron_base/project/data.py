@@ -7,14 +7,13 @@ A modified data container for storing associating data with a project. Here is m
 it takes to get codacy to shut up.
 
 Spec:
+    The `Project` class should have data associated with it which can be stored to-file in our supported format(s)
+    (right now just hdf5). This should meet the following requirements:
 
-The `Project` class should have data associated with it which can be stored to-file in our supported format(s) (right
-now just hdf5). This should meet the following requirements:
-
-- Data storage is immediately accessible, i.e. appearing in the project tab-completion module
-- Data stored there should be readable and writeable with a single parameter-free call
-- When instantiated, new projects should automatically read any available data (not *quite* satisfied right now!)
-- The `Project` tab completion menu should not get cluttered (i.e. nest everything under `Project.foo`)
+    - Data storage is immediately accessible, i.e. appearing in the project tab-completion module
+    - Data stored there should be readable and writeable with a single parameter-free call
+    - When instantiated, new projects should automatically read any available data (not *quite* satisfied right now!)
+    - The `Project` tab completion menu should not get cluttered (i.e. nest everything under `Project.foo`)
 """
 
 from pyiron_base.generic.inputlist import InputList
