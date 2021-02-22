@@ -34,18 +34,18 @@ __date__ = "Feb 19, 2021"
 class ProjectData(InputList):
     def __new__(cls, *args, **kwargs):
         instance = super().__new__(cls, *args, **kwargs)
-        object.__setattr__(instance, "project", None)
+        object.__setattr__(instance, "_project", None)
         return instance
 
     def __init__(self, *args, project=None, **kwargs):
         super().__init__(*args, **kwargs)
-        self.project = project
+        self._project = project
 
     def read(self):
-        hdf = ProjectHDFio(self.project, file_name="project_data")
+        hdf = ProjectHDFio(self._project, file_name="project_data")
         if self.table_name not in hdf.list_groups():
             raise KeyError(f"Table name {self.table_name} was not found -- Project data is empty.")
         self.from_hdf(hdf=hdf)
 
     def write(self):
-        self.to_hdf(ProjectHDFio(self.project, file_name="project_data"))
+        self.to_hdf(ProjectHDFio(self._project, file_name="project_data"))
