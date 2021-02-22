@@ -16,7 +16,10 @@ class TestProjectData(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
-        remove(join(cls.file_location, "pyiron.log"))
+        try:
+            remove(join(cls.file_location, "pyiron.log"))
+        except FileNotFoundError:
+            pass
 
     def setUp(self):
         self.project = Project(self.project_name)

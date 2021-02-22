@@ -20,8 +20,11 @@ class TestScriptJob(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
         cls.project.remove(enable=True)
-        remove(cls.simple_script)
-        remove(cls.complex_script)
+        for file in [cls.simple_script, cls.complex_script]:
+            try:
+                remove(file)
+            except FileNotFoundError:
+                continue
 
     def setUp(self):
         self.job = self.project.create.job.ScriptJob('script')
