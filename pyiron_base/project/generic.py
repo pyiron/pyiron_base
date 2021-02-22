@@ -88,6 +88,18 @@ class Project(ProjectPath):
         job_type (): Job Type object with all the available job types: ['ExampleJob', 'SerialMaster', 'ParallelMaster',
                         'ScriptJob', 'ListMaster'].
         view_mode (): If viewer_mode is enable pyiron has read only access to the database.
+        data (pyiron_base.project.data.ProjectData): A storage container for project-level data.
+
+    Examples:
+
+        Storing data:
+            >>> pr = Project('example')
+            >>> pr.data.foo = 42
+            >>> pr.data.write()
+            Some time later or in a different notebook, but in the same file location...
+            >>> other_pr_instance = Project('example')
+            >>> print(pr.data)
+            {'foo': 42}
     """
 
     def __init__(self, path="", user=None, sql_query=None, default_working_directory=False):
