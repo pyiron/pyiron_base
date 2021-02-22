@@ -12,7 +12,7 @@ class TestScriptJob(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.file_location = dirname(abspath(__file__)).replace("\\", "/")
-        cls.project_name = join(cls.file_location, "test_sriptjob")
+        cls.project_name = join(cls.file_location, "test_sriptjob").replace("\\", "/")
         cls.project = Project(cls.project_name)
         cls.simple_script = join(cls.file_location, 'simple.py')
         cls.complex_script = join(cls.file_location, 'complex.py')
