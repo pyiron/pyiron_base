@@ -49,7 +49,6 @@ class TestProjectData(unittest.TestCase):
         self.assertEqual(2, len(self.data.baz[-1]))
 
         data2 = ProjectData(project=self.project, table_name="data")
-        data2.read()
         self.assertEqual(3, len(data2.baz))
         self.assertEqual(2, len(data2.baz[-1]))
 
