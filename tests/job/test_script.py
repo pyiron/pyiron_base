@@ -47,7 +47,6 @@ class TestScriptJob(unittest.TestCase):
         with open(self.complex_script, 'w') as f:
             f.write("from pyiron_base import Project\n")
             f.write(f"pr = Project('{self.project_name}')\n")
-            f.write("pr.data.read()\n")  # TODO: Remove this line once data is auto-reading
             f.write("pr.data.out = pr.data.in_ * 7\n")
             f.write("pr.data.write()\n")
         self.job.script_path = self.complex_script
