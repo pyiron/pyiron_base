@@ -37,7 +37,7 @@ class ProjectData(InputList):
         object.__setattr__(instance, "project", None)
         return instance
 
-    def __init__(self, project, *args, **kwargs):
+    def __init__(self, *args, project=None, **kwargs):
         super().__init__(*args, **kwargs)
         self.project = project
 

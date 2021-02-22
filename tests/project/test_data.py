@@ -24,7 +24,7 @@ class TestProjectData(unittest.TestCase):
 
     def setUp(self):
         self.project = Project(self.project_name)
-        self.data = ProjectData(self.project, table_name="data")
+        self.data = ProjectData(project=self.project, table_name="data")
         self.data.foo = "foo"
         self.data.bar = 42
 
@@ -36,7 +36,7 @@ class TestProjectData(unittest.TestCase):
     def test_new_instance(self):
         self.data.write()
 
-        data2 = ProjectData(self.project, table_name="data")
+        data2 = ProjectData(project=self.project, table_name="data")
         self.assertEqual(len(data2), 0)
         data2.read()
         self.assertEqual(data2.foo, self.data.foo)
@@ -48,7 +48,7 @@ class TestProjectData(unittest.TestCase):
         self.assertEqual(3, len(self.data.baz))
         self.assertEqual(2, len(self.data.baz[-1]))
 
-        data2 = ProjectData(self.project, table_name="data")
+        data2 = ProjectData(project=self.project, table_name="data")
         data2.read()
         self.assertEqual(3, len(data2.baz))
         self.assertEqual(2, len(data2.baz[-1]))
