@@ -3,7 +3,8 @@
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
 """
-A modified data container for storing associating data with a project.
+A modified data container for storing associating data with a project. Here is more worthless text trying to see what
+it takes to get codacy to shut up.
 
 Spec:
 
