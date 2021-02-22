@@ -75,53 +75,19 @@ class Project(ProjectPath):
                                     directory.
 
     Attributes:
-
-        .. attribute:: root_path
-
-            the pyiron user directory, defined in the .pyiron configuration
-
-        .. attribute:: project_path
-
-            the relative path of the current project / folder starting from the root path
-            of the pyiron user directory
-
-        .. attribute:: path
-
-            the absolute path of the current project / folder
-
-        .. attribute:: base_name
-
-            the name of the current project / folder
-
-        .. attribute:: history
-
-            previously opened projects / folders
-
-        .. attribute:: parent_group
-
-            parent project - one level above the current project
-
-        .. attribute:: user
-
-            current unix/linux/windows user who is running pyiron
-
-        .. attribute:: sql_query
-
-            an SQL query to limit the jobs within the project to a subset which matches the SQL query.
-
-        .. attribute:: db
-
-            connection to the SQL database
-
-        .. attribute:: job_type
-
-            Job Type object with all the available job types: ['ExampleJob', 'SerialMaster', 'ParallelMaster',
-                                                               'ScriptJob', 'ListMaster']
-
-        .. attribute:: view_mode
-
-            If viewer_mode is enable pyiron has read only access to the database.
-
+        root_path (): The pyiron user directory, defined in the .pyiron configuration.
+        project_path (): The relative path of the current project / folder starting from the root path of the pyiron
+                            user directory
+        path (): The absolute path of the current project / folder.
+        base_name (): The name of the current project / folder.
+        history (): Previously opened projects / folders.
+        parent_group (): Parent project - one level above the current project.
+        user (): Current unix/linux/windows user who is running pyiron
+        sql_query (): An SQL query to limit the jobs within the project to a subset which matches the SQL query.
+        db (): Connection to the SQL database.
+        job_type (): Job Type object with all the available job types: ['ExampleJob', 'SerialMaster', 'ParallelMaster',
+                        'ScriptJob', 'ListMaster'].
+        view_mode (): If viewer_mode is enable pyiron has read only access to the database.
     """
 
     def __init__(self, path="", user=None, sql_query=None, default_working_directory=False):
