@@ -9,6 +9,22 @@ import os
 import unittest
 import warnings
 import numpy as np
+import yaml
+import xmltodict
+from dicttoxml import dicttoxml
+from defusedxml.minidom import parseString
+from pyiron_base.generic.datacontainer import _conv_OrderedDict_to_dict
+
+
+def conv_OrderedDict_to_dict(inp):
+    out = {}
+    for k in inp.keys():
+        if isinstance(inp[k], dict):
+            out[k] = conv_OrderedDict_to_dict(inp[k])
+        else:
+            out[k] = inp[k]
+    return out
+
 
 class TestDataContainer(unittest.TestCase):
 
@@ -31,6 +47,10 @@ class TestDataContainer(unittest.TestCase):
         cls.file_name = os.path.join(file_location, "input.h5")
         cls.hdf = ProjectHDFio(project=pr, file_name=cls.file_name,
                                h5_path="/test", mode="a")
+        cls.file_input_yaml = "test_input.yaml"
+        cls.file_output_yaml = "test_output.yaml"
+        cls.file_input_xml = "test_input.xml"
+        cls.file_output_xml = "test_output.xml"
 
     @classmethod
     def tearDownClass(cls):
@@ -414,6 +434,46 @@ class TestDataContainer(unittest.TestCase):
             self.assertEqual(len(w), 1,
                     "Trying to change read-only flag back didn't raise warning.")
 
+    def test_read_input(self):
+        dict_data = {"a":2, "b":{"c":4, "d":{"e":5,"f":6}}, 'g':[1,2,3]}
+        with open(self.file_input_yaml, 'w') as output_file:
+            yaml.dump(dict_data,output_file, default_flow_style=False)
+        container_data_yaml = DataContainer(table_name="input_data")
+        container_data_yaml.read(file_name=self.file_input_yaml)
+        self.assertEqual(container_data_yaml.to_builtin(),dict_data)
+
+        xml_data = dicttoxml(dict_data, attr_type=False)
+        with open(self.file_input_xml, 'w') as xmlfile:
+            xmlfile.write(parseString(xml_data).toprettyxml())
+        container_data_xml = DataContainer(table_name="input_data")
+        container_data_xml.read(file_name=self.file_input_xml)
+        self.assertEqual(container_data_xml.to_builtin(),dict_data)
+    
+    def test_write_output(self):
+        dict_data = {"a":2, "b":{"c":4, "d":{"e":5,"f":6}}, 'g':[1,2,3]}
+        container_data = DataContainer(dict_data)
+        container_data.write(self.file_output_yaml)
+        container_data.write(self.file_output_xml)
+        with open(self.file_output_yaml, 'r') as input_src:
+            try:
+                data_read_from_yaml = yaml.safe_load(input_src)
+            except yaml.YAMLError as exc:
+                warnings.warn(exc)
+        self.assertEqual(data_read_from_yaml, dict_data)
+
+        with open(self.file_output_xml, 'r') as input_src:
+            try:
+                output = _conv_OrderedDict_to_dict(
+                         xmltodict.parse(input_src.read())
+                        )
+                if 'root' in output.keys():
+                    data_read_from_xml =  output['root']
+                else:
+                    data_read_from_xml = output
+            except Exception as message:
+                warnings.warn(message)
+        container_data_from_xml= DataContainer(data_read_from_xml)
+        self.assertEqual(container_data_from_xml.to_builtin(), dict_data)
 
 if __name__ == "__main__":
     unittest.main()
