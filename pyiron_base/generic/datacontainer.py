@@ -71,10 +71,109 @@ def _parse_xml(file_name, wrap=False):
     """
     with open(file_name) as input_src:
         try:
-            return xmltodict.parse(input_src.read())
+            output = _conv_OrderedDict_to_dict(
+                        xmltodict.parse(input_src.read())
+                    )
+            if 'root' in output.keys():
+                return output['root']
+            else:
+                return output
         except Exception as message:
             warnings.warn(message)
             return {}
+
+
+def _check_for_numerics(val_list):
+    """
+    This function checks whether a given list includes numerical values,
+    which in the process of reading from the xml file,
+    has been coverted to a string. Then it fixes it by converting
+    the values to an integer or a float.
+    """
+    out = []
+    for val in val_list:
+        if isinstance(val, list):
+            out.append(_check_for_numerics(val))
+        else:
+            try:
+                if val.find('.') != -1:
+                    out.append(float(val))
+                else:
+                    out.append(int(val))
+            except Exception:
+                out.append(val)
+    return out
+
+
+def _correct_list_items(input_dict):
+    """
+    This function corrects the resulting dictionary
+    from _conv_OrderedDict_to_dict()
+    to include any nested list correctly.
+    """
+    out = {}
+    for k in input_dict.keys():
+        if k == 'item':
+            result1 = _check_for_numerics(input_dict[k])
+            result2 = _conv_OrderedDict_to_dict(result1)
+            return result2
+        else:
+            if isinstance(input_dict[k], dict):
+                out[k] = _correct_list_items(input_dict[k])
+            else:
+                out[k] = input_dict[k]
+    return out
+
+
+def _conv_OrderedDict_to_dict(inp):
+    """
+    This function converts an OrderedDict to a dictionary.
+    The OrderedDict is the class of object which is returned by
+    xmltodict.parse(). The problem with OrderedDict is more visible
+    when we are facing a nested list inside a dictionary or vice versa.
+    The problem can be envisioned better with the following example:
+    dict_input= {'a':2, 'b':{'c':4, 'd':{'e':5,'f':6}},
+                'g':[1,[2,3],{'k':'more complication'}],
+                'n':'curious'
+                }
+    container_data = DataContainer(dict_data)
+    container_data.write("output.xml",attr_flag=True)
+    with open("output.xml", 'r') as input_src:
+    try:
+        data_read_from_xml = xmltodict.parse(input_src.read())
+    except Exception as message:
+        warnings.warn(message)
+    
+    In this case, data_read_from_xml is a complicated object, and the resulting
+    datacontainer might be different that what intended.
+    Therefore, this function fix this issue by converting
+    the output of the parsing to nested dictionaries and lists.
+
+    Args:
+    inp(dict or OrderedDict, or lists): input from xmltodict.parse()
+    """
+    out = {}
+    if isinstance(inp, dict):
+        for k in inp.keys():
+            if isinstance(inp[k], dict):
+                if k == 'item':
+                    return inp[k]
+                else:
+                    out[k] = _conv_OrderedDict_to_dict(inp[k])
+            else:
+                try:
+                    if inp[k].find('.') != -1:
+                        out[k] = float(inp[k])
+                    else:
+                        out[k] = int(inp[k])
+                except Exception:
+                    out[k] = inp[k]
+        return _correct_list_items(out)
+    elif isinstance(inp, list):
+        for i, val in enumerate(inp):
+            if isinstance(val, dict):
+                inp[i] = _conv_OrderedDict_to_dict(val)
+        return inp
 
 
 class DataContainer(MutableMapping):
@@ -712,7 +811,7 @@ class DataContainer(MutableMapping):
         Raises:
             :class:`ValueError`: if file extension doesn't match one of the supported ones
         """
-        ext = os.path.splitext(file_name)[1]
+        ext = os.path.basename(file_name).split('.')[1]
         try:
             parser = {
                     'yml': _parse_yaml, 'yaml': _parse_yaml,
@@ -723,57 +822,47 @@ class DataContainer(MutableMapping):
 
         self.update(parser(file_name), wrap=wrap)
 
-    def _dictify(self):
+    def write(self, file_name, attr_flag=False):
         """
-        cast the DataContainer to a dictionary. It is important to note
-        that if the DataContainer contains a list or an array, it is converted
-        to a dictionary with the indices used as their keys.
+        Writes the DataContainer to a yaml/yml/xml file.
 
         Args:
-            --
+            file_name(str): the name of the file to be writen to.
+            attr_flag(bool): (only for xml files) if False, it will not
+            include the type of data in xml file if True, it also include
+            the type of the data in the xml file.
         """
-        out_dict = {}
-        if self.has_keys():
-            for key, val in zip(self.keys(), self.values()):
-                try:
-                    val.has_keys()
-                    out_dict[key] = val._dictify()
-                except AttributeError:
-                    out_dict[key] = val
+        ext = os.path.basename(file_name).split('.')[1]
+        if ext == 'yaml' or ext == 'yml':
+            self._to_yml(file_name)
+        elif ext == 'xml':
+            self._to_xml(file_name, attr_flag)
         else:
-            for i, val in enumerate(self):
-                out_dict[str(i)] = val
-        return out_dict
+            raise ValueError(
+                             "The output file is not supported; expected *.yml"
+                             ", *.yaml, or *.xml"
+                            ) from None
 
-    def write_yml(self, file_name):
+    def _to_yml(self, file_name):
         """
         Writes the DataContainer to a yaml file.
 
         Args:
             file_name(str): the name of the file to be writen to.
         """
-        ext = os.path.splitext(file_name)[1]
-        if ext != 'yml' or ext != 'yaml':
-            warn("The extension of the given file_name is not yaml or yml"
-                 "Despite of the inconsistent file extension,"
-                 "the writen data has yaml encoding!")
-        dictified_data = self._dictify()
         with open(file_name, 'w') as output:
-            yaml.dump(dictified_data, output, default_flow_style=False)
+            yaml.dump(self.to_builtin(), output, default_flow_style=False)
 
-    def write_xml(self, file_name, attr_flag=False):
+    def _to_xml(self, file_name, attr_flag=False):
         """
         Writes the DataContainer to an xml file.
 
         Args:
             file_name(str): the name of the file to be writen to.
+            attr_flag(bool): if False, it will not include the type of data
+            in xml file if True, it also include the type
+            of the data in the xml file.
         """
-        ext = os.path.splitext(file_name)[1]
-        if ext != 'xml':
-            warn("The extension of the given file_name is not ext"
-                 "Despite of the inconsistent file extension,"
-                 "the writen data has xml encoding!")
-        dictified_data = self._dictify()
-        xml_data = dicttoxml(dictified_data, attr_type=attr_flag)
+        xml_data = dicttoxml(self.to_builtin(), attr_type=attr_flag)
         with open(file_name, 'w') as xmlfile:
             xmlfile.write(parseString(xml_data).toprettyxml())
