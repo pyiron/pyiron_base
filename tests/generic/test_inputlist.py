@@ -16,16 +16,6 @@ from defusedxml.minidom import parseString
 from pyiron_base.generic.datacontainer import _conv_OrderedDict_to_dict
 
 
-def conv_OrderedDict_to_dict(inp):
-    out = {}
-    for k in inp.keys():
-        if isinstance(inp[k], dict):
-            out[k] = conv_OrderedDict_to_dict(inp[k])
-        else:
-            out[k] = inp[k]
-    return out
-
-
 class TestDataContainer(unittest.TestCase):
 
     @classmethod
