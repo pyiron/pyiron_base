@@ -74,8 +74,8 @@ class ScriptJob(GenericJob):
 
                 # Optional: get an input value from 'submit_example_job.ipynb', the notebook which submits
                 #   'example.ipynb'
-                external_input = pr.get_external_input()
-                job.server.cores = external_input['number_of_cores']
+                number_of_cores = pr.data.number_of_cores
+                job.server.cores = number_of_cores
 
                 job.run()  # run the job
 
@@ -93,13 +93,14 @@ class ScriptJob(GenericJob):
                                                          # directory as 'submit_example_job.ipynb'
 
                 # Optional: to submit the notebook to a queueing system
-                number_of_cores = 4  # number of cores to be used
+                number_of_cores = 1  # number of cores to be used
                 scriptjob.server.cores = number_of_cores
                 scriptjob.server.queue = 'cmfe'  # specify the queue to which the ScriptJob job is to be submitted
                 scriptjob.server.run_time = 120  # specify the runtime limit for the ScriptJob job in seconds
 
                 # Optional: save an input, such that it can be accessed by 'example.ipynb'
-                scriptjob.input['number_of_cores'] = number_of_cores
+                pr.data.number_of_cores = number_of_cores
+                pr.data.write()
 
                 # run the ScriptJob job
                 scriptjob.run()
