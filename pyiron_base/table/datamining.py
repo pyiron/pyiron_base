@@ -571,6 +571,11 @@ class TableJob(GenericJob):
 
     @property
     def analysis_project(self):
+        """
+        :class:`.Project`: which pyiron project should be searched for jobs
+
+        WARNING: setting this resets any previously added analysis functions
+        """
         return self._analysis_project
 
     @analysis_project.setter
