@@ -626,6 +626,14 @@ class GenericMaster(GenericJob):
         """
         pass
 
+    def _init_child_job(self, parent):
+        """
+        Update our reference job.
+
+        Args:
+            parent (:class:`.GenericJob`): job instance that this job was created from
+        """
+        self.ref_job = parent
 
 def get_function_from_string(function_str):
     """

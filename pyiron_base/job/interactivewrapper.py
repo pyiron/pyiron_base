@@ -153,15 +153,6 @@ class InteractiveWrapper(GenericMaster):
         self.send_to_database()
         self.update_master()
 
-    def _init_child_job(self, parent):
-        """
-        Set the job that created us as reference job.
-
-        Args:
-            master (:class:`.GenericJob`): job instance that this job was created from
-        """
-        self.ref_job = parent
-
     def __getitem__(self, item):
         """
         Get/ read data from the GenericMaster
