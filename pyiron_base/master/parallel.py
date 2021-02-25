@@ -145,7 +145,6 @@ class ParallelMaster(GenericMaster):
     def __init__(self, project, job_name):
         self.input = GenericParameters("parameters")
         super(ParallelMaster, self).__init__(project, job_name=job_name)
-        self.__name__ = "ParallelMaster"
         self.__version__ = "0.3"
         self._ref_job = None
         self._output = GenericOutput()

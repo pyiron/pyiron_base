@@ -133,7 +133,6 @@ class SerialMasterBase(GenericMaster):
         self._input = GenericParameters("parameters")  # e.g. convergence goal
 
         super(SerialMasterBase, self).__init__(project, job_name=job_name)
-        self.__name__ = "SerialMaster"
         self.__version__ = "0.3"
 
         self._output = GenericOutput()

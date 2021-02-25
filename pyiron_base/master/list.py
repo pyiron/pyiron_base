@@ -129,7 +129,6 @@ class ListMaster(GenericMaster):
     def __init__(self, project, job_name):
         self._input = GenericParameters("parameters")
         super(ListMaster, self).__init__(project, job_name=job_name)
-        self.__name__ = "ListMaster"
         self.__version__ = "0.1"
         self._input["mode"] = "parallel"
         self.submission_status = SubmissionStatus(db=project.db, job_id=self.job_id)
