@@ -151,7 +151,7 @@ class GenericJob(JobCore):
 
     def __init__(self, project, job_name):
         super(GenericJob, self).__init__(project, job_name)
-        self.__name__ = "GenericJob"
+        self.__name__ = type(self).__name__
         self.__version__ = "0.4"
         self.__hdf_version__ = "0.1.0"
         self._server = Server()
