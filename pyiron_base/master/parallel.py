@@ -857,7 +857,7 @@ class ParallelMaster(GenericMaster):
         Args:
             parent (:class:`.GenericJob`): job instance that this job was created from
         """
-        self.ref_job = parent
+        super()._init_child_job(parent)
         if parent.server.run_mode.non_modal:
             self.server.run_mode.non_modal = True
         elif (
