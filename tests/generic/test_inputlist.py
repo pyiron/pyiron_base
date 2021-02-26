@@ -13,7 +13,6 @@ import yaml
 import xmltodict
 from dicttoxml import dicttoxml
 from defusedxml.minidom import parseString
-from pyiron_base.generic.datacontainer import _conv_OrderedDict_to_dict
 
 
 class TestDataContainer(unittest.TestCase):
