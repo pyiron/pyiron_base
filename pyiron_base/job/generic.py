@@ -664,18 +664,11 @@ class GenericJob(JobCore):
                 self.reset_job_id()
                 self.master_id, self.parent_id = master_id, parent_id
             if repair and self.job_id and not self.status.finished:
-                status = "created"
-            if status == "initialized":
+                self._run_if_repair()
+            elif status == "initialized":
                 self._run_if_new(debug=debug)
             elif status == "created":
-                que_id = self._run_if_created()
-                if que_id:
-                    self._logger.info(
-                        "{}, status: {}, submitted: queue id {}".format(
-                            self.job_info_str, self.status, que_id
-                        )
-                    )
-                    # print('job was submitted, queue id: ', que_id)
+                self._run_if_created()
             elif status == "submitted":
                 self._run_if_submitted()
             elif status == "running":
@@ -965,7 +958,11 @@ class GenericJob(JobCore):
             raise ValueError("run_queue.sh crashed")
         s.logger.debug("submitted %s", self.job_name)
         self._logger.debug("job status: %s", self.status)
-        return que_id
+        self._logger.info(
+            "{}, status: {}, submitted: queue id {}".format(
+                self.job_info_str, self.status, que_id
+            )
+        )
 
     def send_to_database(self):
         """
@@ -1351,12 +1348,18 @@ class GenericJob(JobCore):
         elif self.server.run_mode.non_modal or self.server.run_mode.thread:
             self.run_if_non_modal()
         elif self.server.run_mode.queue:
-            return self.run_if_scheduler()
+            self.run_if_scheduler()
         elif self.server.run_mode.interactive:
             self.run_if_interactive()
         elif self.server.run_mode.interactive_non_modal:
             self.run_if_interactive_non_modal()
-        return None
+
+    def _run_if_repair(self):
+        """
+        Internal helper function the run if repair function is called when the run() function is called with the
+        'repair' parameter.
+        """
+        self._run_if_created()
 
     def _run_if_submitted(self):  # Submitted jobs are handled by the job wrapper!
         """

@@ -670,23 +670,24 @@ class ParallelMaster(GenericMaster):
                 "{} child project {}".format(self.job_name, self.project.__str__())
             )
             job = next(self._job_generator, None)
-            if (self.server.run_mode.non_modal or self.server.run_mode.queue or self.server.run_mode.modal) \
-                    and job.server.run_mode.interactive:
-                self.run_if_interactive()
-            elif self.server.run_mode.queue:
-                self._run_if_master_modal_child_non_modal(job=job)
-            elif job.server.run_mode.queue:
-                self._run_if_child_queue(job)
-            elif self.server.run_mode.non_modal and job.server.run_mode.non_modal:
-                self._run_if_master_non_modal_child_non_modal(job)
-            elif (self.server.run_mode.modal and job.server.run_mode.modal) or (
-                self.server.run_mode.interactive and job.server.run_mode.interactive
-            ):
-                self._run_if_master_modal_child_modal(job)
-            elif self.server.run_mode.modal and job.server.run_mode.non_modal:
-                self._run_if_master_modal_child_non_modal(job)
-            else:
-                raise TypeError()
+            if job is not None:
+                if (self.server.run_mode.non_modal or self.server.run_mode.queue or self.server.run_mode.modal) \
+                        and job.server.run_mode.interactive:
+                    self.run_if_interactive()
+                elif self.server.run_mode.queue:
+                    self._run_if_master_modal_child_non_modal(job=job)
+                elif job.server.run_mode.queue:
+                    self._run_if_child_queue(job)
+                elif self.server.run_mode.non_modal and job.server.run_mode.non_modal:
+                    self._run_if_master_non_modal_child_non_modal(job)
+                elif (self.server.run_mode.modal and job.server.run_mode.modal) or (
+                    self.server.run_mode.interactive and job.server.run_mode.interactive
+                ):
+                    self._run_if_master_modal_child_modal(job)
+                elif self.server.run_mode.modal and job.server.run_mode.non_modal:
+                    self._run_if_master_modal_child_non_modal(job)
+                else:
+                    raise TypeError()
         else:
             self.status.collect = True
             self.run()
@@ -849,6 +850,14 @@ class ParallelMaster(GenericMaster):
             )
         else:
             return db_entry + "#" + str(self.submission_status.submitted_jobs)
+
+    def _run_if_repair(self):
+        """
+        Internal helper function the run if repair function is called when the run() function is called with the
+        'repair' parameter.
+        """
+        reload_self = self.to_object()
+        reload_self._run_if_created()
 
     def _init_child_job(self, parent):
         """
