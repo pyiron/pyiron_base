@@ -12,8 +12,8 @@ class TestScriptJob(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.file_location = dirname(abspath(__file__)).replace("\\", "/")
-        cls.project_name = join(cls.file_location, "test_sriptjob").replace("\\", "/")  # replace to satisfy windows
-        cls.project = Project(cls.project_name)
+        cls.project_abspath = join(cls.file_location, "test_sriptjob").replace("\\", "/")  # replace to satisfy windows
+        cls.project = Project(cls.project_abspath)
         cls.simple_script = join(cls.file_location, 'simple.py')
         cls.complex_script = join(cls.file_location, 'complex.py')
 
@@ -46,9 +46,11 @@ class TestScriptJob(unittest.TestCase):
         self.project.data.write()
         with open(self.complex_script, 'w') as f:
             f.write("from pyiron_base import Project\n")
-            f.write(f"pr = Project('{self.project_name}')\n")
+            f.write(f"pr = Project('{self.project_abspath}')\n")
             f.write("pr.data.out = pr.data.in_ * 7\n")
             f.write("pr.data.write()\n")
+        # WARNING: If a user parallelizes this with multiple ScriptJobs, it would be possible to get a log jam with
+        #          multiple simultaneous write-calls.
         self.job.script_path = self.complex_script
         self.job.run()
         self.project.data.read()
