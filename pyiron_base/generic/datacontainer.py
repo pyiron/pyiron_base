@@ -61,6 +61,38 @@ def _parse_yaml(file_name):
             return {}
 
 
+def _correct_list_item(inp):
+    """
+    this function fixes issues with parsed_xml file, when there is a nested list in the 
+    input file. 
+    The following funtion
+    output = xmltodict.parse(
+                input_src.read(), dict_constructor=dict,
+                postprocessor=postprocessor
+            )
+    returns each list as a nested dictionary with key equals to 'item'
+    By this function, the item key is removed.
+    """
+    if isinstance(inp, dict):
+        out = {}
+        for k in inp.keys():
+            if k == 'item':
+                return _correct_list_item(inp[k])
+            else:
+                out[k] = _correct_list_item(inp[k])
+        return out
+    elif isinstance(inp, list):
+        out = []
+        for val in inp:
+            if isinstance(val, dict):
+                out.append(_correct_list_item(val))
+            else:
+                out.append(val)
+        return out
+    else:
+        return inp
+
+
 def postprocessor(path, key, value):
     try:
         return key, ast.literal_eval(value)
@@ -84,6 +116,7 @@ def _parse_xml(file_name, wrap=False):
                 input_src.read(), dict_constructor=dict,
                 postprocessor=postprocessor
             )
+            output = _correct_list_item(output)
             if 'root' in output.keys():
                 return output['root']
             else:
