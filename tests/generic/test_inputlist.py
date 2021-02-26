@@ -13,6 +13,10 @@ import yaml
 import xmltodict
 from dicttoxml import dicttoxml
 from defusedxml.minidom import parseString
+<<<<<<< HEAD
+from pyiron_base.generic.datacontainer import _correct_list_item, postprocessor
+=======
+>>>>>>> d14e1a8dcb6fcad1cd25411063c7e899eca05351
 
 
 class TestDataContainer(unittest.TestCase):
@@ -452,8 +456,8 @@ class TestDataContainer(unittest.TestCase):
 
         with open(self.file_output_xml, 'r') as input_src:
             try:
-                output = _conv_OrderedDict_to_dict(
-                         xmltodict.parse(input_src.read())
+                output = _correct_list_item(
+                         xmltodict.parse(input_src.read(), postprocessor=postprocessor),
                         )
                 if 'root' in output.keys():
                     data_read_from_xml =  output['root']
