@@ -133,7 +133,6 @@ class SerialMasterBase(GenericMaster):
         self._input = GenericParameters("parameters")  # e.g. convergence goal
 
         super(SerialMasterBase, self).__init__(project, job_name=job_name)
-        self.__name__ = "SerialMaster"
         self.__version__ = "0.3"
 
         self._output = GenericOutput()
@@ -509,7 +508,7 @@ class SerialMasterBase(GenericMaster):
         Args:
             parent (:class:`.GenericJob`): job instance that this job was created from
         """
-        self.ref_job = parent
+        super()._init_child_job(parent)
         if parent.server.run_mode.non_modal:
             self.server.run_mode.non_modal = True
         elif (
