@@ -15,6 +15,7 @@ import xmltodict
 from dicttoxml import dicttoxml
 from defusedxml.minidom import parseString
 from warnings import warn
+import ast
 
 __author__ = "Marvin Poul"
 __copyright__ = (
@@ -43,7 +44,8 @@ def _normalize(key):
 
 def _parse_yaml(file_name):
     """
-    Parse a YAML file as a dict.  Errors during reading raise a warning and return an empty dict.
+    Parse a YAML file as a dict.  Errors during reading raise
+    a warning and return an empty dict.
 
     Args:
         file_name(str): path to the input file; it should be a YAML file.
@@ -59,6 +61,13 @@ def _parse_yaml(file_name):
             return {}
 
 
+def postprocessor(path, key, value):
+    try:
+        return key, ast.literal_eval(value)
+    except (ValueError, TypeError):
+        return key, value
+
+
 def _parse_xml(file_name, wrap=False):
     """
     Parse a XML file and update the datacontainer with a dictionary
@@ -71,9 +80,10 @@ def _parse_xml(file_name, wrap=False):
     """
     with open(file_name) as input_src:
         try:
-            output = _conv_OrderedDict_to_dict(
-                        xmltodict.parse(input_src.read())
-                    )
+            output = xmltodict.parse(
+                input_src.read(), dict_constructor=dict,
+                postprocessor=postprocessor
+            )
             if 'root' in output.keys():
                 return output['root']
             else:
@@ -81,99 +91,6 @@ def _parse_xml(file_name, wrap=False):
         except Exception as message:
             warnings.warn(message)
             return {}
-
-
-def _check_for_numerics(val_list):
-    """
-    This function checks whether a given list includes numerical values,
-    which in the process of reading from the xml file,
-    has been coverted to a string. Then it fixes it by converting
-    the values to an integer or a float.
-    """
-    out = []
-    for val in val_list:
-        if isinstance(val, list):
-            out.append(_check_for_numerics(val))
-        else:
-            try:
-                if val.find('.') != -1:
-                    out.append(float(val))
-                else:
-                    out.append(int(val))
-            except Exception:
-                out.append(val)
-    return out
-
-
-def _correct_list_items(input_dict):
-    """
-    This function corrects the resulting dictionary
-    from _conv_OrderedDict_to_dict()
-    to include any nested list correctly.
-    """
-    out = {}
-    for k in input_dict.keys():
-        if k == 'item':
-            result1 = _check_for_numerics(input_dict[k])
-            result2 = _conv_OrderedDict_to_dict(result1)
-            return result2
-        else:
-            if isinstance(input_dict[k], dict):
-                out[k] = _correct_list_items(input_dict[k])
-            else:
-                out[k] = input_dict[k]
-    return out
-
-
-def _conv_OrderedDict_to_dict(inp):
-    """
-    This function converts an OrderedDict to a dictionary.
-    The OrderedDict is the class of object which is returned by
-    xmltodict.parse(). The problem with OrderedDict is more visible
-    when we are facing a nested list inside a dictionary or vice versa.
-    The problem can be envisioned better with the following example:
-    dict_input= {'a':2, 'b':{'c':4, 'd':{'e':5,'f':6}},
-                'g':[1,[2,3],{'k':'more complication'}],
-                'n':'curious'
-                }
-    container_data = DataContainer(dict_data)
-    container_data.write("output.xml",attr_flag=True)
-    with open("output.xml", 'r') as input_src:
-    try:
-        data_read_from_xml = xmltodict.parse(input_src.read())
-    except Exception as message:
-        warnings.warn(message)
-    
-    In this case, data_read_from_xml is a complicated object, and the resulting
-    datacontainer might be different that what intended.
-    Therefore, this function fix this issue by converting
-    the output of the parsing to nested dictionaries and lists.
-
-    Args:
-    inp(dict or OrderedDict, or lists): input from xmltodict.parse()
-    """
-    out = {}
-    if isinstance(inp, dict):
-        for k in inp.keys():
-            if isinstance(inp[k], dict):
-                if k == 'item':
-                    return inp[k]
-                else:
-                    out[k] = _conv_OrderedDict_to_dict(inp[k])
-            else:
-                try:
-                    if inp[k].find('.') != -1:
-                        out[k] = float(inp[k])
-                    else:
-                        out[k] = int(inp[k])
-                except Exception:
-                    out[k] = inp[k]
-        return _correct_list_items(out)
-    elif isinstance(inp, list):
-        for i, val in enumerate(inp):
-            if isinstance(val, dict):
-                inp[i] = _conv_OrderedDict_to_dict(val)
-        return inp
 
 
 class DataContainer(MutableMapping):
@@ -796,7 +713,7 @@ class DataContainer(MutableMapping):
         """
         return list(self.groups())
 
-    def read(self, file_name, wrap=False):
+    def read(self, file_name, wrap=True):
         """
         Parse file as dictionary and add its keys to this container.
 
