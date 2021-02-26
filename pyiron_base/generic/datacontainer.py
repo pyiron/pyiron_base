@@ -10,11 +10,7 @@ from collections.abc import Sequence, Set, Mapping, MutableMapping
 import warnings
 import os.path
 import numpy as np
-import yaml
-import xmltodict
-from dicttoxml import dicttoxml
-from defusedxml.minidom import parseString
-import ast
+from .fileparsers import read, write
 
 __author__ = "Marvin Poul"
 __copyright__ = (
@@ -39,90 +35,6 @@ def _normalize(key):
         return _normalize(key[0])
 
     return key
-
-
-def _parse_yaml(file_name):
-    """
-    Parse a YAML file as a dict.  Errors during reading raise
-    a warning and return an empty dict.
-
-    Args:
-        file_name(str): path to the input file; it should be a YAML file.
-
-    Returns:
-        dict: parsed file contents
-    """
-    with open(file_name, 'r') as input_src:
-        try:
-            return yaml.safe_load(input_src)
-        except yaml.YAMLError as exc:
-            warnings.warn(exc)
-            return {}
-
-
-def _correct_list_item(inp):
-    """
-    this function fixes issues with parsed_xml file, when there is
-    a nested list in the input file.
-    The following funtion
-    output = xmltodict.parse(
-                input_src.read(), dict_constructor=dict,
-                postprocessor=postprocessor
-            )
-    returns each list as a nested dictionary with key equals to 'item'
-    By this function, the key "item" is removed.
-    """
-    if isinstance(inp, dict):
-        out = {}
-        for k in inp.keys():
-            if k == 'item':
-                return _correct_list_item(inp[k])
-            else:
-                out[k] = _correct_list_item(inp[k])
-        return out
-    elif isinstance(inp, list):
-        out = []
-        for val in inp:
-            if isinstance(val, dict):
-                out.append(_correct_list_item(val))
-            else:
-                out.append(val)
-        return out
-    else:
-        return inp
-
-
-def postprocessor(path, key, value):
-    try:
-        return key, ast.literal_eval(value)
-    except (ValueError, TypeError):
-        return key, value
-
-
-def _parse_xml(file_name, wrap=False):
-    """
-    Parse a XML file and update the datacontainer with a dictionary
-
-    Args:
-        file_name(str): path to the input file; it should be a XML file.
-
-    Returns:
-        dict: parsed file contents
-    """
-    with open(file_name) as input_src:
-        try:
-            output = xmltodict.parse(
-                input_src.read(), dict_constructor=dict,
-                postprocessor=postprocessor
-            )
-            output = _correct_list_item(output)
-            if 'root' in output.keys():
-                return output['root']
-            else:
-                return output
-        except Exception as message:
-            warnings.warn(message)
-            return {}
 
 
 class DataContainer(MutableMapping):
@@ -760,58 +672,13 @@ class DataContainer(MutableMapping):
         Raises:
             :class:`ValueError`: if file extension doesn't match one of the supported ones
         """
-        ext = os.path.basename(file_name).split('.')[1]
-        try:
-            parser = {
-                    'yml': _parse_yaml, 'yaml': _parse_yaml,
-                    'xml': _parse_xml
-            }[ext]
-        except KeyError:
-            raise ValueError("The input file is not supported; expected *.yml, *.yaml, or *.xml") from None
+        self.update(read(file_name), wrap=wrap)
 
-        self.update(parser(file_name), wrap=wrap)
-
-    def write(self, file_name, attr_flag=False):
+    def write(self, file_name):
         """
-        Writes the DataContainer to a yaml/yml/xml file.
-
-        Args:
-            file_name(str): the name of the file to be writen to.
-            attr_flag(bool): (only for xml files) if False, it will not
-            include the type of data in xml file if True, it also include
-            the type of the data in the xml file.
-        """
-        ext = os.path.basename(file_name).split('.')[1]
-        if ext == 'yaml' or ext == 'yml':
-            self._to_yml(file_name)
-        elif ext == 'xml':
-            self._to_xml(file_name, attr_flag)
-        else:
-            raise ValueError(
-                             "The output file is not supported; expected *.yml"
-                             ", *.yaml, or *.xml"
-                            ) from None
-
-    def _to_yml(self, file_name):
-        """
-        Writes the DataContainer to a yaml file.
+        Writes the DataContainer to a text file.
 
         Args:
             file_name(str): the name of the file to be writen to.
         """
-        with open(file_name, 'w') as output:
-            yaml.dump(self.to_builtin(), output, default_flow_style=False)
-
-    def _to_xml(self, file_name, attr_flag=False):
-        """
-        Writes the DataContainer to an xml file.
-
-        Args:
-            file_name(str): the name of the file to be writen to.
-            attr_flag(bool): if False, it will not include the type of data
-            in xml file if True, it also include the type
-            of the data in the xml file.
-        """
-        xml_data = dicttoxml(self.to_builtin(), attr_type=attr_flag)
-        with open(file_name, 'w') as xmlfile:
-            xmlfile.write(parseString(xml_data).toprettyxml())
+        write(self.to_builtin(), file_name)
