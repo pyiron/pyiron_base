@@ -13,10 +13,7 @@ import yaml
 import xmltodict
 from dicttoxml import dicttoxml
 from defusedxml.minidom import parseString
-<<<<<<< HEAD
 from pyiron_base.generic.datacontainer import _correct_list_item, postprocessor
-=======
->>>>>>> d14e1a8dcb6fcad1cd25411063c7e899eca05351
 
 
 class TestDataContainer(unittest.TestCase):
