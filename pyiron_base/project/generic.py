@@ -1460,6 +1460,8 @@ class Project(ProjectPath):
         if item in self.list_dirs():
             with self.open(item) as new_item:
                 return new_item.copy()
+        if item in os.listdir(self.path) and os.path.isdir(os.path.join(self.path, item)):
+            return self.open(item)
         raise ValueError("Unknown item: {}".format(item))
 
     def _remove_files(self, pattern="*"):
