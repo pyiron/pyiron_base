@@ -438,7 +438,7 @@ class TestDataContainer(unittest.TestCase):
         container_data_xml = DataContainer(table_name="input_data")
         container_data_xml.read(file_name=self.file_input_xml)
         self.assertEqual(container_data_xml.to_builtin(),dict_data)
-    
+
     def test_write_output(self):
         dict_data = {"a":2, "b":{"c":4, "d":{"e":5,"f":6}}, 'g':[1,2,3]}
         container_data = DataContainer(dict_data)

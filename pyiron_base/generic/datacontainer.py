@@ -14,7 +14,6 @@ import yaml
 import xmltodict
 from dicttoxml import dicttoxml
 from defusedxml.minidom import parseString
-from warnings import warn
 import ast
 
 __author__ = "Marvin Poul"
@@ -63,15 +62,15 @@ def _parse_yaml(file_name):
 
 def _correct_list_item(inp):
     """
-    this function fixes issues with parsed_xml file, when there is a nested list in the 
-    input file. 
+    this function fixes issues with parsed_xml file, when there is
+    a nested list in the input file.
     The following funtion
     output = xmltodict.parse(
                 input_src.read(), dict_constructor=dict,
                 postprocessor=postprocessor
             )
     returns each list as a nested dictionary with key equals to 'item'
-    By this function, the item key is removed.
+    By this function, the key "item" is removed.
     """
     if isinstance(inp, dict):
         out = {}
