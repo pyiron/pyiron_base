@@ -85,7 +85,7 @@ def _parse_yml(file_name):
         try:
             return yaml.safe_load(input_src)
         except yaml.YAMLError as exc:
-            warnings.warn(exc)
+            warnings.warn(f"Failed to parse yaml file with error: {str(exc)}")
             return {}
 
 def _parse_xml(file_name):
@@ -149,8 +149,8 @@ def _parse_xml(file_name):
                 return output['root']
             else:
                 return output
-        except Exception as message:
-            warnings.warn(message)
+        except Exception as exc:
+            warnings.warn(f"Failed to parse xml file with: {str(exc)}")
             return {}
 
 def _to_yml(data, file_name):
