@@ -15,7 +15,17 @@ class TestDataContainer(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.pl = DataContainer({
+        cls.pl = DataContainer([
+            {"foo": "bar"},
+            2,
+            42,
+            {"next":
+                [0,
+                    {"depth": 23}
+                ]
+            }
+        ], table_name = "input")
+        cls.pl_xml = DataContainer({
             "data": {"foo": "bar"},
             "numbers": [2, 42],
             "nested": {
@@ -23,6 +33,7 @@ class TestDataContainer(unittest.TestCase):
             }
         }, table_name = "input")
         cls.pl["tail"] = DataContainer([2,4,8])
+        cls.pl_xml["tail"] = DataContainer([2,4,8])
 
         file_location = os.path.dirname(os.path.abspath(__file__))
         cls.pr = Project(file_location)
@@ -492,10 +503,10 @@ class TestDataContainer(unittest.TestCase):
         os.remove(fn)
 
         fn = "pl.xml"
-        self.pl.write(fn)
+        self.pl_xml.write(fn)
         pl = DataContainer()
         pl.read(fn)
-        self.assertEqual(self.pl, pl, "Read container from xml, is not the same as written.")
+        self.assertEqual(self.pl_xml, pl, "Read container from xml, is not the same as written.")
         os.remove(fn)
 
 class TestInputList(unittest.TestCase):
