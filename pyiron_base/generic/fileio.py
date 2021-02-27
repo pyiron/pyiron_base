@@ -10,7 +10,6 @@ import os.path
 import yaml
 import warnings
 import xmltodict
-from dicttoxml import dicttoxml
 from defusedxml.minidom import parseString
 
 __author__ = "Muhammad Hassani, Marvin Poul"
@@ -165,18 +164,15 @@ def _to_yml(data, file_name):
     with open(file_name, 'w') as output:
         yaml.dump(data, output, default_flow_style=False)
 
-def _to_xml(data, file_name, attr_flag=False):
+def _to_xml(data, file_name):
     """
     Writes the DataContainer to an xml file.
 
     Args:
         data (nested dict/list): data to save to file, dictionary keys must be str!
         file_name(str): the name of the file to be writen to.
-        attr_flag(bool): if False, it will not include the type of data
-            in xml file if True, it also include the type
-            of the data in the xml file.
     """
-    xml_data = dicttoxml(data, attr_type=attr_flag)
+    xml_data = xmltodict.unparse(data)
     with open(file_name, 'w') as xmlfile:
         xmlfile.write(parseString(xml_data).toprettyxml())
 
