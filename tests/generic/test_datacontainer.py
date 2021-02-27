@@ -15,16 +15,13 @@ class TestDataContainer(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.pl = DataContainer([
-                {"foo": "bar"},
-                2,
-                42,
-                {"next":
-                    [0,
-                        {"depth": 23}
-                    ]
-                }
-        ], table_name = "input")
+        cls.pl = DataContainer({
+            "data": {"foo": "bar"},
+            "numbers": [2, 42],
+            "nested": {
+                "next": {"depth": 23}
+            }
+        }, table_name = "input")
         cls.pl["tail"] = DataContainer([2,4,8])
 
         file_location = os.path.dirname(os.path.abspath(__file__))
