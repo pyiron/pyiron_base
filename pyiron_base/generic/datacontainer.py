@@ -10,7 +10,7 @@ from collections.abc import Sequence, Set, Mapping, MutableMapping
 import warnings
 import os.path
 import numpy as np
-from .fileparsers import read, write
+from .fileio import read, write
 
 __author__ = "Marvin Poul"
 __copyright__ = (
