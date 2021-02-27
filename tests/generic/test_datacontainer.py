@@ -2,7 +2,6 @@
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 from pyiron_base.generic.datacontainer import DataContainer
 from pyiron_base.generic.inputlist import InputList
-from pyiron_base.generic.hdfio import ProjectHDFio
 from pyiron_base.project.generic import Project
 from collections import Iterator
 import copy
@@ -29,14 +28,12 @@ class TestDataContainer(unittest.TestCase):
         cls.pl["tail"] = DataContainer([2,4,8])
 
         file_location = os.path.dirname(os.path.abspath(__file__))
-        pr = Project(file_location)
-        cls.file_name = os.path.join(file_location, "input.h5")
-        cls.hdf = ProjectHDFio(project=pr, file_name=cls.file_name,
-                               h5_path="/test", mode="a")
+        cls.pr = Project(file_location)
+        cls.hdf = cls.pr.create_hdf(cls.pr.path, "test")
 
     @classmethod
     def tearDownClass(cls):
-        os.remove(cls.file_name)
+        os.remove(cls.hdf.file_name)
 
     ## Init tests
     def test_init_none(self):
@@ -165,6 +162,12 @@ class TestDataContainer(unittest.TestCase):
                          "append via index broken on empty list")
         self.assertEqual(pl[1], 2,
                          "append via index broken on non-empty list")
+        pl.append([])
+        self.assertTrue(isinstance(pl[-1], list),
+                        "append wraps sequences as DataContainer, but should not")
+        pl.append({})
+        self.assertTrue(isinstance(pl[-1], dict),
+                        "append wraps mappings as DataContainer, but should not")
 
     def test_update(self):
         pl = DataContainer()
@@ -299,8 +302,9 @@ class TestDataContainer(unittest.TestCase):
         self.assertTrue(rec(self.pl._repr_json_()),
                 "_repr_json_ output not all str")
 
-    # hdf tests
-    def test_to_hdf(self):
+
+    def test_to_hdf_type(self):
+        """Should write correct type information."""
         self.pl.to_hdf(hdf=self.hdf)
         self.assertEqual(self.hdf["input/NAME"],
                          "DataContainer")
@@ -308,21 +312,37 @@ class TestDataContainer(unittest.TestCase):
                          "DataContainer")
         self.assertEqual(self.hdf["input/TYPE"],
                          "<class 'pyiron_base.generic.datacontainer.DataContainer'>")
-        l = DataContainer(self.hdf["input/data"])
-        self.assertEqual(self.pl, l)
 
+        h = self.hdf.open('nested')
         pl = DataContainer(self.pl)
-        pl.to_hdf(hdf=self.hdf)
-        self.assertEqual(self.hdf["NAME"],
+        pl.to_hdf(hdf=h)
+        self.assertEqual(h["NAME"],
                          "DataContainer")
-        self.assertEqual(self.hdf["OBJECT"],
+        self.assertEqual(h["OBJECT"],
                          "DataContainer")
-        self.assertEqual(self.hdf["TYPE"],
+        self.assertEqual(h["TYPE"],
                          "<class 'pyiron_base.generic.datacontainer.DataContainer'>")
-        l = DataContainer(self.hdf["data"])
-        self.assertEqual(pl, l)
+
+    def test_to_hdf_items(self):
+        """Should write all sublists to HDF groups and simple items to HDF datasets."""
+        self.pl.to_hdf(hdf=self.hdf)
+        for i, (k, v) in enumerate(self.pl.items()):
+            k = "{}__index_{}".format(k if isinstance(k, str) else "", i)
+            if isinstance(v, DataContainer):
+                self.assertTrue(k in self.hdf["input"].list_groups(),
+                                "Sublist '{}' not a sub group in hdf!".format(k))
+            else:
+                self.assertTrue(k in self.hdf["input"].list_nodes(),
+                                "Item '{}' not a dataset in hdf!".format(k))
+
+    def test_to_hdf_name(self):
+        """Should raise error if clashing names are given."""
+        with self.assertRaises(ValueError,
+                msg="Cannot have names clashing with index mangling."):
+            DataContainer({'__index_0': 42}).to_hdf(hdf=self.hdf)
 
     def test_to_hdf_group(self):
+        """Should be possible to give a custom group name."""
         self.pl.to_hdf(hdf=self.hdf, group_name = "test_group")
         self.assertEqual(self.hdf["test_group/NAME"],
                          "DataContainer")
@@ -330,47 +350,95 @@ class TestDataContainer(unittest.TestCase):
                          "<class 'pyiron_base.generic.datacontainer.DataContainer'>")
         self.assertEqual(self.hdf["test_group/OBJECT"],
                          "DataContainer")
-        l = DataContainer(self.hdf["test_group/data"])
-        self.assertEqual(self.pl, l)
 
     def test_to_hdf_readonly(self):
+        """Read-only property should be stored."""
         self.pl.to_hdf(hdf=self.hdf, group_name = "read_only_f")
-        self.assertTrue("read_only" in self.hdf.list_nodes(),
+        self.assertTrue("READ_ONLY" in self.hdf["read_only_f"].list_nodes(),
                         "read-only parameter not saved in HDF")
         self.assertEqual(self.pl.read_only,
-                         self.hdf[self.pl.table_name]["read_only"],
+                         self.hdf[self.pl.table_name]["READ_ONLY"],
                          "read-only parameter not correctly written to HDF")
 
         pl = self.pl.copy()
         pl.read_only = True
         pl.to_hdf(hdf=self.hdf, group_name = "read_only_t")
         self.assertEqual(pl.read_only,
-                         self.hdf["read_only_t/read_only"],
+                         self.hdf["read_only_t/READ_ONLY"],
                          "read-only parameter not correctly written to HDF")
 
     def test_from_hdf(self):
+        """Reading from HDF should give back the same list as written."""
         self.pl.to_hdf(hdf=self.hdf)
         l = DataContainer(table_name = "input")
         l.from_hdf(hdf=self.hdf)
         self.assertEqual(self.pl, l)
 
     def test_from_hdf_group(self):
+        """Reading from HDF should give back the same list as written even with custom group name."""
         self.pl.to_hdf(hdf=self.hdf, group_name = "test_group")
         l = DataContainer(table_name = "input")
         l.from_hdf(hdf=self.hdf, group_name = "test_group")
         self.assertEqual(self.pl, l)
 
     def test_from_hdf_readonly(self):
+        """Reading from HDF should restore the read-only property."""
         self.pl.to_hdf(hdf=self.hdf, group_name = "read_only_from")
         pl = DataContainer()
         pl.from_hdf(self.hdf, group_name = "read_only_from")
-        self.assertEqual(pl.read_only, self.hdf["read_only_from/read_only"],
+        self.assertEqual(pl.read_only, self.hdf["read_only_from/READ_ONLY"],
                          "read-only parameter not correctly read from HDF")
 
-        self.hdf["read_only_from/read_only"] = True
+        self.hdf["read_only_from/READ_ONLY"] = True
         pl.from_hdf(self.hdf, group_name = "read_only_from")
-        self.assertEqual(pl.read_only, self.hdf["read_only_from/read_only"],
+        self.assertEqual(pl.read_only, self.hdf["read_only_from/READ_ONLY"],
                          "read-only parameter not correctly read from HDF")
+
+    def test_hdf_complex_members(self):
+        """Values that implement to_hdf/from_hdf, should write themselves to the HDF file correctly."""
+        pl = DataContainer(table_name="complex")
+        pl.append(self.pr.create_job(self.pr.job_type.ScriptJob, "dummy1"))
+        pl.append(self.pr.create_job(self.pr.job_type.ScriptJob, "dummy2"))
+        pl.append(42)
+        pl["foo"] = "bar"
+        pl.to_hdf(hdf=self.hdf)
+        pl2 = self.hdf["complex"].to_object()
+        self.assertEqual(type(pl[0]), type(pl2[0]))
+        self.assertEqual(type(pl[1]), type(pl2[1]))
+
+    def test_hdf_empty_group(self):
+        """Writing a list without table_name or group_name should only work if the HDF group is empty."""
+        l = DataContainer([1,2,3])
+        with self.assertRaises(ValueError,
+                               msg="No exception when writing to full "
+                                   "hdf group."):
+            l.to_hdf(self.hdf)
+        h = self.hdf.create_group("empty_group")
+        l.to_hdf(h)
+        self.assertEqual(l, h.to_object())
+
+    def test_hdf_empty_list(self):
+        """Writing and reading an empty list should work."""
+        l = DataContainer(table_name="empty_list")
+        l.to_hdf(self.hdf)
+        l.from_hdf(self.hdf)
+        self.assertEqual(len(l), 0,
+                         "Empty list read from HDF not empty.")
+
+    def test_hdf_no_wrap(self):
+        """Nested mappings should not be wrapped as DataContainer after reading."""
+        l = DataContainer(table_name="mappings")
+        l.append({"foo": "bar"})
+        l.append([1,2,3])
+        l.to_hdf(self.hdf)
+        m = l.copy()
+        m.from_hdf(self.hdf, group_name="mappings")
+        self.assertEqual(l, m,
+                         "List with nested mappings not restored from HDF.")
+        self.assertTrue(isinstance(m[0], dict),
+                         "dicts wrapped after reading from HDF.")
+        self.assertTrue(isinstance(m[1], list),
+                         "lists wrapped after reading from HDF.")
 
 
     def test_groups_nodes(self):
