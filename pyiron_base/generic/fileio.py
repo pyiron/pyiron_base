@@ -174,7 +174,7 @@ def _to_xml(data, file_name):
     """
     xml_data = xmltodict.unparse({"root": data}, pretty=True)
     with open(file_name, 'w') as xmlfile:
-        xmlfile.write(parseString(xml_data).toprettyxml())
+        xmlfile.write(xml_data)
 
 FileAdapter = namedtuple('FileAdapter', ('parse', 'write'))
 YMLAdapter = FileAdapter(_parse_yml, _to_yml)
