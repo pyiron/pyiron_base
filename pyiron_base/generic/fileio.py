@@ -172,7 +172,7 @@ def _to_xml(data, file_name):
         data (nested dict/list): data to save to file, dictionary keys must be str!
         file_name(str): the name of the file to be writen to.
     """
-    xml_data = xmltodict.unparse({"root": data})
+    xml_data = xmltodict.unparse({"root": data}, pretty=True)
     with open(file_name, 'w') as xmlfile:
         xmlfile.write(parseString(xml_data).toprettyxml())
 
