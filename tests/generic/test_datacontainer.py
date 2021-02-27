@@ -37,10 +37,6 @@ class TestDataContainer(unittest.TestCase):
         cls.file_name = os.path.join(file_location, "input.h5")
         cls.hdf = ProjectHDFio(project=pr, file_name=cls.file_name,
                                h5_path="/test", mode="a")
-        cls.file_input_yaml = "test_input.yaml"
-        cls.file_output_yaml = "test_output.yaml"
-        cls.file_input_xml = "test_input.xml"
-        cls.file_output_xml = "test_output.xml"
 
     @classmethod
     def tearDownClass(cls):
