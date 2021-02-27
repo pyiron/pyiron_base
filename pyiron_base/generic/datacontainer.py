@@ -661,7 +661,7 @@ class DataContainer(MutableMapping):
         """
         Parse file as dictionary and add its keys to this container.
 
-        Only yaml (*.yml, *.yaml) and xml (*.xml) files are supported.
+        For supported file types, see :function:`.fileio.read`.
 
         Errors during reading of the files generate a warning, but leave the container unchanged.
 
@@ -677,6 +677,8 @@ class DataContainer(MutableMapping):
     def write(self, file_name):
         """
         Writes the DataContainer to a text file.
+
+        For supported file types, see :function:`.fileio.write`.
 
         Args:
             file_name(str): the name of the file to be writen to.

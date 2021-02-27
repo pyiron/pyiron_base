@@ -88,12 +88,12 @@ def _parse_yml(file_name):
             warnings.warn(exc)
             return {}
 
-def _parse_xml(file_name, wrap=False):
+def _parse_xml(file_name):
     """
-    Parse a XML file and update the datacontainer with a dictionary
+    Parse a XML file into a dictionary.
 
     Args:
-        file_name(str): path to the input file; it should be a XML file.
+        file_name(str): path to the input file; it should be an XML file.
 
     Returns:
         dict: parsed file contents
@@ -158,7 +158,8 @@ def _to_yml(data, file_name):
     Writes the DataContainer to a yaml file.
 
     Args:
-        file_name(str): the name of the file to be writen to.
+        data (nested dict/list): data to save to file, dictionary keys must be str!
+        file_name (str): the name of the file to be writen to.
     """
     with open(file_name, 'w') as output:
         yaml.dump(data, output, default_flow_style=False)
@@ -168,6 +169,7 @@ def _to_xml(data, file_name, attr_flag=False):
     Writes the DataContainer to an xml file.
 
     Args:
+        data (nested dict/list): data to save to file, dictionary keys must be str!
         file_name(str): the name of the file to be writen to.
         attr_flag(bool): if False, it will not include the type of data
             in xml file if True, it also include the type
