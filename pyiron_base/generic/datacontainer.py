@@ -8,7 +8,6 @@ Data structure for versatile data handling.
 import copy
 from collections.abc import Sequence, Set, Mapping, MutableMapping
 import warnings
-import os.path
 import numpy as np
 from .fileio import read, write
 

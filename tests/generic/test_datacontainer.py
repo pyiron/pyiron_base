@@ -10,10 +10,6 @@ import os
 import unittest
 import warnings
 import numpy as np
-import yaml
-import xmltodict
-from dicttoxml import dicttoxml
-from defusedxml.minidom import parseString
 
 
 class TestDataContainer(unittest.TestCase):
