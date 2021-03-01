@@ -20,4 +20,4 @@ dependencies:
   - six =1.14.0
   - sqlalchemy =1.3.23
   - tqdm =4.58.0
-  - xmltodict =0.12.0
+  - xmltodict =0.13.0
