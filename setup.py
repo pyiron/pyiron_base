@@ -32,7 +32,7 @@ setup(
         'dill==0.3.3',
         'dicttoxml==1.7.4',
         'future==0.18.2',
-        'gitpython==3.1.13',
+        'gitpython==3.1.14',
         'h5io==0.1.1',
         'h5py==3.1.0',
         'numpy==1.20.1',
