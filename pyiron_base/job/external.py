@@ -25,6 +25,8 @@ __date__ = "Sep 1, 2019"
 class Notebook(object):
     """
     class for pyiron notebook objects
+
+    # TODO: Extract JSON functionality over to Project.data.read/write and remove this file.
     """
 
     @staticmethod
