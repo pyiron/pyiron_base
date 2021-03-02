@@ -44,7 +44,7 @@ setup(
         'sqlalchemy==1.3.23',
         'tables==3.6.1',
         'tqdm==4.58.0',
-        'xmltodict==0.11.0'
+        'xmltodict==0.12.0'
     ],
     cmdclass=versioneer.get_cmdclass(),
 
