@@ -195,9 +195,6 @@ class FileHDFio(object):
         self._h5_path = posixpath.normpath(path)
         if not posixpath.isabs(self._h5_path):
             self._h5_path = "/" + self._h5_path
-        self._h5_group = "store.root" + self._h5_path.replace("/", ".")
-        if self._h5_group[-1] != ".":
-            self._h5_group += "."
 
     @property
     def is_root(self):
@@ -233,8 +230,8 @@ class FileHDFio(object):
         if self.file_exists:
             store = HDFStoreIO(self.file_name, mode="r")
             with store.open(mode="r"):
-                len_nodes = len(eval("store.root._v_children.keys()"))
-                len_groups = len(eval("store.root._v_groups.keys()"))
+                len_nodes = len(store.root._v_children.keys())
+                len_groups = len(store.root._v_groups.keys())
                 return len_groups + len_nodes == 0
         else:
             return True
@@ -505,9 +502,10 @@ class FileHDFio(object):
             store = HDFStoreIO(self.file_name, mode="r")
             with store.open(mode="r"):
                 try:
-                    groups = set(eval(self._h5_group + "_v_groups.keys()"))
-                    nodes = set(eval(self._h5_group + "_v_children.keys()"))
-                except NoSuchNodeError:
+                    node = self._get_store_node(store)
+                    groups = set(node._v_groups.keys())
+                    nodes = set(node._v_children.keys())
+                except IndexError:
                     groups = set()
                     nodes = set()
             iopy_nodes = self._filter_io_objects(groups)
@@ -784,7 +782,6 @@ class FileHDFio(object):
         del self._file_name
         del self.history
         del self._h5_path
-        del self._h5_group
 
     def __enter__(self):
         """
@@ -914,6 +911,16 @@ class FileHDFio(object):
         """
         return posixpath.join(self.h5_path, name)
 
+    def _get_store_node(self, store):
+        """
+        Index store with the current h5_path set, but avoid to index by '/', because that raises an IndexError.
+        """
+        p = self.h5_path
+        if p != '/':
+            return store.root[p]
+        else:
+            return store.root
+
     def _get_h5io_type(self, name):
         """
         Internal function to get h5io type
@@ -926,7 +933,7 @@ class FileHDFio(object):
         """
         store = HDFStoreIO(self.file_name, mode="r")
         with store.open(mode="r"):
-            return str(eval("".join([self._h5_group, name, "._v_title"])))
+            return str(self._get_store_node(store)[name]._v_title)
 
     def _filter_io_objects(self, groups):
         """
