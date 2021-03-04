@@ -717,10 +717,7 @@ class GenericJob(JobCore):
         try:
             if self.server.cores == 1 or not self.executable.mpi:
                 out = subprocess.check_output(
-                    [
-                        str(self.executable),
-                        self.executable.additional_arguments,
-                    ],
+                    [str(self.executable)] + self.executable.additional_arguments.split(),
                     cwd=self.project_hdf5.working_directory,
                     shell=True,
                     stderr=subprocess.STDOUT,
@@ -732,8 +729,7 @@ class GenericJob(JobCore):
                         self.executable.executable_path,
                         str(self.server.cores),
                         str(self.server.threads),
-                        self.executable.additional_arguments,
-                    ],
+                    ] + self.executable.additional_arguments.split(),
                     cwd=self.project_hdf5.working_directory,
                     shell=False,
                     stderr=subprocess.STDOUT,
