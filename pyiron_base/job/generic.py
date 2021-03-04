@@ -150,7 +150,7 @@ class GenericJob(JobCore):
     """
 
     def __init__(self, project, job_name):
-        super(GenericJob, self).__init__(project, job_name)
+        super().__init__(project, job_name)
         self.__name__ = type(self).__name__
         self.__version__ = "0.4"
         self.__hdf_version__ = "0.1.0"
@@ -717,7 +717,10 @@ class GenericJob(JobCore):
         try:
             if self.server.cores == 1 or not self.executable.mpi:
                 out = subprocess.check_output(
-                    str(self.executable),
+                    [
+                        str(self.executable),
+                        self.executable.additional_arguments,
+                    ],
                     cwd=self.project_hdf5.working_directory,
                     shell=True,
                     stderr=subprocess.STDOUT,
@@ -729,6 +732,7 @@ class GenericJob(JobCore):
                         self.executable.executable_path,
                         str(self.server.cores),
                         str(self.server.threads),
+                        self.executable.additional_arguments,
                     ],
                     cwd=self.project_hdf5.working_directory,
                     shell=False,
@@ -1499,6 +1503,8 @@ class GenericJob(JobCore):
         self._hdf5["TYPE"] = str(type(self))
         if self._executable:
             self._hdf5["VERSION"] = self.executable.version
+            if not self.executable.additional_arguments == "":
+                self._hdf5["RUNARGS"] = self.executable.additional_arguments
         else:
             self._hdf5["VERSION"] = self.__version__
         if hasattr(self, "__hdf_version__"):
@@ -1514,6 +1520,10 @@ class GenericJob(JobCore):
                 self.executable.version = self._hdf5["VERSION"]
             except ValueError:
                 self.executable.executable_path = self._hdf5["VERSION"]
+            try:
+                self.executable.additional_arguments = self._hdf5["RUNARGS"]
+            except ValueError:
+                pass
         else:
             self.__obj_version__ = self._hdf5["VERSION"]
 

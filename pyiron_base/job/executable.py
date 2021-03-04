@@ -20,7 +20,7 @@ __status__ = "production"
 __date__ = "Sep 1, 2017"
 
 
-class Executable(object):
+class Executable:
     def __init__(
         self,
         path_binary_codes,
@@ -71,6 +71,7 @@ class Executable(object):
         self._executable = None
         self._executable_path = None
         self._mpi = False
+        self.additional_arguments = ""
         if self._executable_lst:
             self.version = self.default_version
 
