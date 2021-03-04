@@ -207,7 +207,7 @@ class InputList(MutableMapping):
 
         if isinstance(key, tuple):
             if key[0] not in self.keys():
-                self[key[0]] = InputList()
+                self[key[0]] = type(self)()
             self[key[0]][key[1:]] = val
         elif isinstance(key, int):
             if key < len(self):
