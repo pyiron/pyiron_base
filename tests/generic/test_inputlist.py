@@ -414,6 +414,13 @@ class TestInputList(unittest.TestCase):
             self.assertEqual(len(w), 1,
                     "Trying to change read-only flag back didn't raise warning.")
 
+    def test_recursive_append(self):
+        input_tmp = InputList()
+        input_tmp['some/argument/inside/another/argument'] = 3
+        self.assertEqual(input_tmp['some/argument/inside/another/argument'], 3)
+        self.assertEqual(input_tmp.some.argument.inside.another.argument, 3)
+        self.assertEqual(type(input_tmp.some), InputList)
+
 
 if __name__ == "__main__":
     unittest.main()
