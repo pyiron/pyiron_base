@@ -714,10 +714,14 @@ class GenericJob(JobCore):
         if self.job_id is not None:
             self.project.db.item_update({"timestart": datetime.now()}, self.job_id)
         job_crashed, out = False, None
+        if hasattr(self.executable, 'additional_arguments'):
+            additional_arguments = self.executable.additional_arguments
+        else:
+            additional_arguments = ''
         try:
             if self.server.cores == 1 or not self.executable.mpi:
                 out = subprocess.check_output(
-                    [str(self.executable)] + self.executable.additional_arguments.split(),
+                    str(self.executable) + ' ' + additional_arguments,
                     cwd=self.project_hdf5.working_directory,
                     shell=True,
                     stderr=subprocess.STDOUT,
@@ -729,7 +733,7 @@ class GenericJob(JobCore):
                         self.executable.executable_path,
                         str(self.server.cores),
                         str(self.server.threads),
-                    ] + self.executable.additional_arguments.split(),
+                    ] + additional_arguments.split(),
                     cwd=self.project_hdf5.working_directory,
                     shell=False,
                     stderr=subprocess.STDOUT,
@@ -1516,10 +1520,8 @@ class GenericJob(JobCore):
                 self.executable.version = self._hdf5["VERSION"]
             except ValueError:
                 self.executable.executable_path = self._hdf5["VERSION"]
-            try:
+            if "RUNARGS" in self._hdf5.list_nodes():
                 self.executable.additional_arguments = self._hdf5["RUNARGS"]
-            except ValueError:
-                pass
         else:
             self.__obj_version__ = self._hdf5["VERSION"]
 
