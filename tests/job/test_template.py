@@ -4,7 +4,7 @@ import os
 from pyiron_base import Project
 from pyiron_base.job.template import TemplateJob
 
-command = "echo TemplateJob "
+command = "echo TemplateJob"
 
 
 class ToyJob(TemplateJob):
@@ -17,8 +17,11 @@ class ToyJob(TemplateJob):
 
     def collect_output(self):
         with self.project_hdf5.open("output/generic") as h5out:
-            with open(self.working_directory + "/output.txt") as out:
+            with open(self.working_directory + "/error.out") as out:
                 h5out['output'] = out.read()
+            if os.path.isfile(self.working_directory + '/output.txt'):
+                with open(self.working_directory + '/output.txt') as out:
+                    h5out['output'] = out.read()
 
 
 class TestTemplateJob(unittest.TestCase):
@@ -27,24 +30,16 @@ class TestTemplateJob(unittest.TestCase):
         file_location = os.path.dirname(os.path.abspath(__file__))
         cls.file_location = file_location.replace("\\", "/")
         cls.project = Project(os.path.join(cls.file_location, "test_templatejob"))
+        cls.exe = command  # + " %* > output.txt"
         if os.name == 'nt':
-            cls.exe = os.path.join(file_location, "executable.bat")
-            cls.exe_mpi = os.path.join(file_location, "executable_mpi.bat")
-        else:
-            cls.exe = os.path.join(file_location, "executable.sh")
-            cls.exe_mpi = os.path.join(file_location, "executable_mpi.sh")
-        if os.name == 'nt':
+            cls.exe_mpi = os.path.join(cls.file_location + '/executable_mpi.bat')
             with open(cls.exe_mpi, 'w') as f:
-                f.write(command + "%* > output.txt")
-            with open(cls.exe, 'w') as f:
-                f.write(command + "%* > output.txt")
+                f.write(command + " %* > output.txt")
         else:
-            with open(cls.exe, 'w') as f:
-                f.write("#!/bin/sh\n")
-                f.write(command + "$@ > output.txt")
+            cls.exe_mpi = os.path.join(cls.file_location + '/executable_mpi.sh')
             with open(cls.exe_mpi, 'w') as f:
                 f.write("#!/bin/sh\n")
-                f.write(command + "$@ > output.txt")
+                f.write(command + " $@ > output.txt")
 
     @classmethod
     def tearDownClass(cls):
@@ -52,11 +47,6 @@ class TestTemplateJob(unittest.TestCase):
         cls.file_location = file_location.replace("\\", "/")
         project = Project(os.path.join(cls.file_location, "test_templatejob"))
         project.remove(enable=True)
-        if os.name == 'nt':
-            cls.exe = os.path.join(file_location, "executable.bat")
-        else:
-            cls.exe = os.path.join(file_location, "executable.sh")
-        os.remove(cls.exe)
 
     def test_initiating(self):
         cwd = self.file_location
@@ -76,7 +66,7 @@ class TestTemplateJob(unittest.TestCase):
         job.project_hdf5.remove_file()
         self.assertFalse(os.path.isfile(job.project_hdf5.file_name))
 
-    def test_run(self):
+    def test_run_no_args(self):
         job = self.project.create_job(job_type=ToyJob, job_name="test_toy")
         job.executable = self.exe
         job.run()
@@ -84,6 +74,7 @@ class TestTemplateJob(unittest.TestCase):
         self.assertEqual(job["output/generic/output"].split(), ["TemplateJob"])
         self.assertFalse("RUNARGS" in job.list_nodes())
 
+    def test_run_with_args(self):
         job = self.project.create_job(job_type=ToyJob, job_name="test_toy2")
         job.executable = self.exe
         job.executable.additional_arguments = 'great job!'
@@ -92,12 +83,17 @@ class TestTemplateJob(unittest.TestCase):
         self.assertTrue("RUNARGS" in job.list_nodes())
         self.assertEqual(job["RUNARGS"], 'great job!')
 
+    def test_run_with_args_mpi(self):
         job = self.project.create_job(job_type=ToyJob, job_name="test_toy3")
         job.executable = self.exe_mpi
         job.executable.additional_arguments = 'great job!'
         job.server.cores = 2
-        job.run()
-        self.assertEqual(job["output/generic/output"].split(), ["TemplateJob", "2", "1", "great", "job!"])
+        try:
+            job.run()
+        except RuntimeError:
+            pass
+        else:
+            self.assertEqual(job["output/generic/output"].split(), ["TemplateJob", "2", "1", "great", "job!"])
         self.assertTrue("RUNARGS" in job.list_nodes())
         self.assertEqual(job["RUNARGS"], 'great job!')
 
