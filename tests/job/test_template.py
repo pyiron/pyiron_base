@@ -90,7 +90,7 @@ class TestTemplateJob(unittest.TestCase):
         job.server.cores = 2
         try:
             job.run()
-        except RuntimeError:
+        except (RuntimeError, PermissionError):
             pass
         else:
             self.assertEqual(job["output/generic/output"].split(), ["TemplateJob", "2", "1", "great", "job!"])
