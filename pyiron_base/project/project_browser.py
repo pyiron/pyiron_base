@@ -255,16 +255,7 @@ class ProjectBrowser:
         except(KeyError):
             data = None
         with self.output:
-            if data is not None and str(type(data)) == "<class 'boto3.resources.factory.s3.Object'>":
-                def _display_s3_metadata(s3_obj):
-                    metadata_str = "Metadata:\n"
-                    metadata_str += "------------------------\n"
-                    for key, value in s3_obj.metadata.items():
-                        metadata_str += key + ': ' + value + '\n'
-                    return metadata_str
-
-                print(_display_s3_metadata(data))
-            elif data is not None and str(type(data)).split('.')[0] == "<class 'PIL":
+            if data is not None and str(type(data)).split('.')[0] == "<class 'PIL":
                 try:
                     data_cp = data.copy()
                     data_cp.thumbnail((800, 800))
@@ -280,7 +271,7 @@ class ProjectBrowser:
             self._clickedFiles.remove(filepath)
         else:
             if data is not None:
-                self._data = FileData(data=data, filename=filename, metadata={"path": filepath})
+                self._data = FileData(data=data, file=filename, metadata={"path": filepath})
             # self._clickedFiles.append(filepath)
             self._clickedFiles = [filepath]
 
