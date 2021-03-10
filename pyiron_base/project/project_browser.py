@@ -252,7 +252,7 @@ class ProjectBrowser:
         self.output.clear_output(True)
         try:
             data = self.project[filename]
-        except(KeyError):
+        except(KeyError, IOError):
             data = None
         with self.output:
             if data is not None and str(type(data)).split('.')[0] == "<class 'PIL":
