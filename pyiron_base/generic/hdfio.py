@@ -715,7 +715,7 @@ class FileHDFio(object):
             if all([shape_lst[0][1:] == t[1:] for t in shape_lst]):
                 h5io.write_hdf5(
                     self.file_name,
-                    np.array([np.array(v) for v in value]),
+                    np.array([np.array(v) for v in value], dtype=object),
                     title=posixpath.join(self.h5_path, key),
                     overwrite="update",
                     use_json=False,
