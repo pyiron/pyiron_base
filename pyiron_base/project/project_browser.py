@@ -213,6 +213,20 @@ class ProjectBrowser:
             self._project = path
         self.refresh()
 
+    def _gen_pathbox_path_list(self):
+        """Internal helper function to generate a list of paths from the current path."""
+        path_list = list()
+        tmppath = os.path.abspath(self.path)
+        if tmppath[-1] == '/':
+            tmppath = tmppath[:-1]
+        tmppath_old = tmppath + '/'
+        while tmppath != tmppath_old:
+            tmppath_old = tmppath
+            [tmppath, curentdir] = os.path.split(tmppath)
+            path_list.append(tmppath_old)
+        path_list.reverse()
+        return path_list
+
     def _update_pathbox(self, box):
         path_color = '#DDDDAA'
         home_color = '#999999'
@@ -224,25 +238,9 @@ class ProjectBrowser:
             self._busy_check(False)
 
         buttons = []
-        tmppath = os.path.abspath(self.path)
-        if tmppath[-1] == '/':
-            tmppath = tmppath[:-1]
-        len_root_path = len(os.path.split(self._project_root_path[:-1])[0])
-        tmppath_old = tmppath + '/'
-        while tmppath != tmppath_old:
-            tmppath_old = tmppath
-            [tmppath, curentdir] = os.path.split(tmppath)
-            button = widgets.Button(description=curentdir + '/',
-                                    tooltip=curentdir,
-                                    layout=widgets.Layout(width='auto'))
-            button.style.button_color = path_color
-            button.path = tmppath_old
-            button.on_click(on_click)
-            if self.fix_path or len(tmppath) < len_root_path - 1:
-                button.disabled = True
-                if self._hide_path:
-                    button.layout.display = 'none'
-            buttons.append(button)
+        len_root_path = len(self._project_root_path[:-1])
+
+        # Home button
         button = widgets.Button(icon="fa-home",
                                 tooltip=self._initial_project_path,
                                 layout=widgets.Layout(width='auto'))
@@ -252,7 +250,22 @@ class ProjectBrowser:
             button.disabled = True
         button.on_click(on_click)
         buttons.append(button)
-        buttons.reverse()
+
+        # Path buttons
+        for path in self._gen_pathbox_path_list():
+            _, current_dir = os.path.split(path)
+            button = widgets.Button(description=current_dir + '/',
+                                    tooltip=current_dir,
+                                    layout=widgets.Layout(width='auto'))
+            button.style.button_color = path_color
+            button.path = path
+            button.on_click(on_click)
+            if self.fix_path or len(path) < len_root_path - 1:
+                button.disabled = True
+                if self._hide_path:
+                    button.layout.display = 'none'
+            buttons.append(button)
+
         box.children = tuple(buttons)
 
     def _on_click_file(self, filename):
