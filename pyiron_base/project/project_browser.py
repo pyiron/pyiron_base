@@ -303,11 +303,13 @@ class ProjectBrowser:
         file_chosen_color = '#FFBBBB'
         file_color = '#DDDDDD'
 
-        dirs, files = self.dirs, self.files
-        if self._node_as_dirs:
-            dirs += self.nodes
-        else:
-            files += self.nodes
+        # item layout definition
+        item_layout = widgets.Layout(width='80%',
+                                     height='30px',
+                                     min_height='24px',
+                                     display='flex',
+                                     align_items="center",
+                                     justify_content='flex-start')
 
         def on_click_group(b):
             if self._busy_check():
@@ -323,32 +325,30 @@ class ProjectBrowser:
             self._update_filebox(filebox)
             self._busy_check(False)
 
-        buttons = []
-        item_layout = widgets.Layout(width='80%',
-                                     height='30px',
-                                     min_height='24px',
-                                     display='flex',
-                                     align_items="center",
-                                     justify_content='flex-start')
-
-        for f in dirs:
-            button = widgets.Button(description=f,
+        def gen_dir_button(dirname):
+            button = widgets.Button(description=dirname,
                                     icon="fa-folder",
                                     layout=item_layout)
             button.style.button_color = dir_color
             button.on_click(on_click_group)
-            buttons.append(button)
+            return button
 
-        for f in files:
-            button = widgets.Button(description=f,
+        def gen_file_button(filename):
+            button = widgets.Button(description=filename,
                                     icon="fa-file-o",
                                     layout=item_layout)
-            if os.path.join(self.path, f) in self._clickedFiles:
+            if os.path.join(self.path, filename) in self._clickedFiles:
                 button.style.button_color = file_chosen_color
             else:
                 button.style.button_color = file_color
             button.on_click(on_click_file)
-            buttons.append(button)
+            return button
+
+        dirs = self.dirs + self.nodes if self._node_as_dirs else self.dirs
+        files = self.files if self._node_as_dirs else self.files + self.nodes
+
+        buttons = [gen_dir_button(name) for name in dirs]
+        buttons += [gen_file_button(name) for name in files]
 
         filebox.children = tuple(buttons)
 
