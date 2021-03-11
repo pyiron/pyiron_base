@@ -303,12 +303,11 @@ class ProjectBrowser:
         file_chosen_color = '#FFBBBB'
         file_color = '#DDDDDD'
 
+        dirs, files = self.dirs, self.files
         if self._node_as_dirs:
-            dirs = self.dirs + self.nodes
-            files = self.files
+            dirs += self.nodes
         else:
-            files = self.nodes + self.files
-            dirs = self.dirs
+            files += self.nodes
 
         def on_click_group(b):
             if self._busy_check():
