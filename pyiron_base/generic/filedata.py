@@ -131,7 +131,7 @@ class FileData:
         self._hasdata = True if self._data is not None else False
 
     @property
-    @lru_cache
+    @lru_cache()
     def data(self):
         """Return the associated data."""
         if self._hasdata:
