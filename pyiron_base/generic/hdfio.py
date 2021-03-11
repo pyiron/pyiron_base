@@ -700,6 +700,7 @@ class FileHDFio(object):
             key (str): key to store the data
             value (pandas.DataFrame, pandas.Series, dict, list, float, int): basically any kind of data is supported
         """
+        use_json = True
         if hasattr(value, "to_hdf") & (
             not isinstance(value, (pandas.DataFrame, pandas.Series))
         ):
@@ -713,37 +714,17 @@ class FileHDFio(object):
         ):
             shape_lst = [np.shape(sub) for sub in value]
             if all([shape_lst[0][1:] == t[1:] for t in shape_lst]):
-                h5io.write_hdf5(
-                    self.file_name,
-                    np.array([np.array(v) for v in value], dtype=object),
-                    title=posixpath.join(self.h5_path, key),
-                    overwrite="update",
-                    use_json=False,
-                )
-            else:
-                h5io.write_hdf5(
-                    self.file_name,
-                    value,
-                    title=posixpath.join(self.h5_path, key),
-                    overwrite="update",
-                    use_json=True,
-                )
+                value = np.array([np.array(v) for v in value], dtype=object)
+                use_json=False,
         elif isinstance(value, tuple):
-            h5io.write_hdf5(
-                self.file_name,
-                list(value),
-                title=posixpath.join(self.h5_path, key),
-                overwrite="update",
-                use_json=True,
-            )
-        else:
-            h5io.write_hdf5(
-                self.file_name,
-                value,
-                title=posixpath.join(self.h5_path, key),
-                overwrite="update",
-                use_json=True,
-            )
+            value = list(value),
+        h5io.write_hdf5(
+            self.file_name,
+            value,
+            title=posixpath.join(self.h5_path, key),
+            overwrite="update",
+            use_json=use_json,
+        )
 
     def __delitem__(self, key):
         """
