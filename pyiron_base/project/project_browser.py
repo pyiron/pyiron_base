@@ -1,3 +1,7 @@
+# coding: utf-8
+# Copyright (c) Max-Planck-Institut für Eisenforschung GmbH - Computational Materials Design (CM) Department
+# Distributed under the terms of "New BSD License", see the LICENSE file.
+
 import os
 
 import ipywidgets as widgets
@@ -41,7 +45,7 @@ class ProjectBrowser:
                 fix_path (bool): If True the path in the file system cannot be changed.
                 show_files(bool): If True files (from project.list_files()) are displayed.
         """
-        self.project = project.copy()
+        self._project = project.copy()
         self._node_as_dirs = isinstance(self.project, BaseProject)
         self._initial_project = project.copy()
         self._initial_project_path = self.path
@@ -62,6 +66,10 @@ class ProjectBrowser:
         self.filebox = widgets.VBox(layout=widgets.Layout(width='50%', height='100%', justify_content='flex-start'))
         self.path_string_box = widgets.Text(description="(rel) Path", width='min-content')
         self.refresh()
+
+    @property
+    def project(self):
+        return self._project
 
     @property
     def path(self):
@@ -193,7 +201,7 @@ class ProjectBrowser:
             return
         else:
             if new_project is not None:
-                self.project = new_project
+                self._project = new_project
 
     def _update_project(self, path):
         if isinstance(path, str):
@@ -202,7 +210,7 @@ class ProjectBrowser:
                 return
             self._update_project_worker(rel_path)
         else:
-            self.project = path
+            self._project = path
         self.refresh()
 
     def _update_pathbox(self, box):
