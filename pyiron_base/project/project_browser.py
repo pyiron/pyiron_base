@@ -64,7 +64,9 @@ class ProjectBrowser:
         self.pathbox = widgets.HBox(layout=widgets.Layout(width='100%', justify_content='flex-start'))
         self.optionbox = widgets.HBox()
         self.filebox = widgets.VBox(layout=widgets.Layout(width='50%', height='100%', justify_content='flex-start'))
-        self.path_string_box = widgets.Text(description="(rel) Path", width='min-content')
+        self.path_string_box = widgets.Text(description="(rel) Path",
+                                            layout=widgets.Layout(width='min-content')
+                                            )
         self.refresh()
 
     @property
@@ -202,7 +204,7 @@ class ProjectBrowser:
             set_path_button.disabled = True
         childs = [set_path_button, self.path_string_box]
 
-        button = widgets.Button(description="Reset selection", width='min-content')
+        button = widgets.Button(description="Reset selection", layout=widgets.Layout(width='min-content'))
         button.on_click(click_option_button)
         childs.append(button)
 
@@ -287,7 +289,7 @@ class ProjectBrowser:
         len_root_path = len(self._project_root_path[:-1])
 
         # Home button
-        button = widgets.Button(icon="fa-home",
+        button = widgets.Button(icon="home",
                                 tooltip=self._initial_project_path,
                                 layout=widgets.Layout(width='auto'))
         button.style.button_color = home_color
@@ -373,7 +375,7 @@ class ProjectBrowser:
 
         def gen_dir_button(dirname):
             button = widgets.Button(description=dirname,
-                                    icon="fa-folder",
+                                    icon="folder",
                                     layout=item_layout)
             button.style.button_color = dir_color
             button.on_click(on_click_group)
@@ -381,7 +383,7 @@ class ProjectBrowser:
 
         def gen_file_button(filename):
             button = widgets.Button(description=filename,
-                                    icon="fa-file-o",
+                                    icon="file-o",
                                     layout=item_layout)
             if os.path.join(self.path, filename) in self._clickedFiles:
                 button.style.button_color = file_chosen_color
