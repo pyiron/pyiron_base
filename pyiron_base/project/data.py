@@ -16,7 +16,7 @@ Spec:
 """
 
 from pyiron_base.generic.inputlist import InputList
-from pyiron_base.generic.hdfio import ProjectHDFio
+from pyiron_base.generic.hdfio import FileHDFio
 
 __author__ = "Liam Huber"
 __copyright__ = (
@@ -45,14 +45,18 @@ class ProjectData(InputList):
         """
         super().__init__(*args, **kwargs)
         self._project = project
+        try:
+            self.read()
+        except KeyError:
+            pass
 
     def read(self):
         """Read existing data from project-level storage."""
-        hdf = ProjectHDFio(self._project, file_name="project_data")
+        hdf = FileHDFio(file_name=self._project.path + "project_data" )
         if self.table_name not in hdf.list_groups():
             raise KeyError(f"Table name {self.table_name} was not found -- Project data is empty.")
         self.from_hdf(hdf=hdf)
 
     def write(self):
         """Write data to project-level storage."""
-        self.to_hdf(ProjectHDFio(self._project, file_name="project_data"))
+        self.to_hdf(FileHDFio(file_name=self._project.path + "project_data"))
