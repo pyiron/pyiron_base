@@ -28,9 +28,10 @@ class TestProjectData(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
+        cls.file_location = dirname(abspath(__file__)).replace("\\", "/")
         try:
             remove(join(cls.file_location, "pyiron.log"))
-        except (FileNotFoundError):
+        except FileNotFoundError:
             pass
 
     def setUp(self):
@@ -74,7 +75,7 @@ class TestProjectBrowser(unittest.TestCase):
         project.remove(enable=True)
         try:
             remove(join(cls.file_location, "pyiron.log"))
-        except (FileNotFoundError):
+        except FileNotFoundError:
             pass
 
     def test_init_browser(self):
