@@ -40,8 +40,7 @@ class TestProjectData(unittest.TestCase):
         self.data.write()
 
         data2 = ProjectData(project=self.project, table_name="data")
-        self.assertEqual(len(data2), 0)
-        data2.read()
+        self.assertEqual(len(data2), len(self.data))  # Automatic reading on instantiation
         self.assertEqual(data2.foo, self.data.foo)
         self.assertEqual(data2.bar, self.data.bar)
 
