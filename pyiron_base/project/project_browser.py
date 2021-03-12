@@ -45,9 +45,9 @@ class ProjectBrowser:
                 fix_path (bool): If True the path in the file system cannot be changed.
                 show_files(bool): If True files (from project.list_files()) are displayed.
         """
-        self._project = project.copy()
+        self._project = project
         self._node_as_dirs = isinstance(self.project, BaseProject)
-        self._initial_project = project.copy()
+        self._initial_project = project
         self._initial_project_path = self.path
 
         if Vbox is None:
