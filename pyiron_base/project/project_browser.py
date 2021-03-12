@@ -51,10 +51,10 @@ class ProjectBrowser:
         self._initial_project_path = self.path
 
         if Vbox is None:
-            self.box = widgets.VBox()
+            self._box = widgets.VBox()
         else:
-            self.box = Vbox
-        self.fix_path = fix_path
+            self._box = Vbox
+        self._fix_path = fix_path
         self._busy = False
         self._show_files = show_files
         self._hide_path = True
@@ -65,6 +65,42 @@ class ProjectBrowser:
         self.optionbox = widgets.HBox()
         self.filebox = widgets.VBox(layout=widgets.Layout(width='50%', height='100%', justify_content='flex-start'))
         self.path_string_box = widgets.Text(description="(rel) Path", width='min-content')
+        self.refresh()
+
+    @property
+    def box(self):
+        return self._box
+
+    @box.setter
+    def box(self, Vbox):
+        self._box = Vbox
+        self.refresh()
+
+    @property
+    def fix_path(self):
+        return self._fix_path
+
+    @fix_path.setter
+    def fix_path(self, fix_path):
+        self._fix_path = fix_path
+        self.refresh()
+
+    @property
+    def show_files(self):
+        return self._show_files
+
+    @show_files.setter
+    def show_files(self, show_files):
+        self._show_files = show_files
+        self.refresh()
+
+    @property
+    def hide_path(self):
+        return self._hide_path
+
+    @hide_path.setter
+    def hide_path(self, hide_path):
+        self._hide_path = hide_path
         self.refresh()
 
     def __copy__(self):
@@ -143,9 +179,9 @@ class ProjectBrowser:
                 hide_path(bool/None): If True the root_path is omitted in the path.
         """
         if Vbox is not None:
-            self.box = Vbox
+            self._box = Vbox
         if fix_path is not None:
-            self.fix_path = fix_path
+            self._fix_path = fix_path
         if show_files is not None:
             self._show_files = show_files
         if hide_path is not None:
