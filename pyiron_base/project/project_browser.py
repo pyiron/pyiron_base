@@ -113,6 +113,7 @@ class ProjectBrowser:
         return new
 
     def copy(self):
+        """Copy of the browser using a new Vbox."""
         return self.__copy__()
 
     @property
