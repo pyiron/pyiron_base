@@ -67,6 +67,16 @@ class ProjectBrowser:
         self.path_string_box = widgets.Text(description="(rel) Path", width='min-content')
         self.refresh()
 
+    def __copy__(self):
+        """Copy of the browser using a new Vbox."""
+        new = self.__class__(project=self.project, show_files=self._show_files, fix_path=self.fix_path, Vbox=None)
+        new._hide_path = self._hide_path
+        new._initial_project = self._initial_project
+        return new
+
+    def copy(self):
+        return self.__copy__()
+
     @property
     def project(self):
         return self._project
