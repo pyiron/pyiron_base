@@ -124,7 +124,10 @@ class TestProjectBrowser(unittest.TestCase):
         browser = self.project.browser.copy()
         self.assertEqual(browser.files, [])
         browser.show_files = True
-        self.assertEqual(browser.files, ['testjob.h5', 'test_hdf.h5', 'text.txt'])
+        self.assertEqual(len(browser.files), 3)
+        self.assertTrue('testjob.h5' in browser.files)
+        self.assertTrue('test_hdf.h5' in browser.files)
+        self.assertTrue('text.txt' in browser.files)
 
     def test_nodes(self):
         self.assertEqual(self.project.browser.nodes, ['testjob'])
