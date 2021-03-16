@@ -24,6 +24,7 @@ __date__ = "Feb 02, 2021"
 
 
 class ProjectBrowser:
+
     """
         Project Browser Widget
 
@@ -37,13 +38,13 @@ class ProjectBrowser:
                  show_files=True
                  ):
         """
-            ProjectBrowser to browse the project file system.
+        ProjectBrowser to browse the project file system.
 
-            Args:
-                project: Any pyiron project to browse.
-                Vbox(:class:`ipython.widget.VBox`/None): Widget used to display the browser (Constructed if None).
-                fix_path (bool): If True the path in the file system cannot be changed.
-                show_files(bool): If True files (from project.list_files()) are displayed.
+        Args:
+            project: Any pyiron project to browse.
+            Vbox(:class:`ipython.widget.VBox`/None): Widget used to display the browser (Constructed if None).
+            fix_path (bool): If True the path in the file system cannot be changed.
+            show_files(bool): If True files (from project.list_files()) are displayed.
         """
         self._project = project
         self._node_as_dirs = isinstance(self.project, BaseProject)
@@ -134,7 +135,7 @@ class ProjectBrowser:
         return root_path
 
     def _busy_check(self, busy=True):
-        """Function to disable widget interaction while another update is ongoing"""
+        """Function to disable widget interaction while another update is ongoing."""
         if self._busy and busy:
             return True
         else:
@@ -173,13 +174,14 @@ class ProjectBrowser:
         self.box.children = tuple([self.optionbox, self.pathbox, body])
 
     def configure(self, Vbox=None, fix_path=None, show_files=None, hide_path=None):
-        """Change configuration of the project browser.
+        """
+        Change configuration of the project browser.
 
-            Args:
-                Vbox(:class:`ipython.widget.VBox`/None): Widget used to display the browser.
-                fix_path (bool/None): If True the path in the file system cannot be changed.
-                show_files(bool/None): If True files (from project.list_files()) are displayed.
-                hide_path(bool/None): If True the root_path is omitted in the path.
+        Args:
+            Vbox(:class:`ipython.widget.VBox`/None): Widget used to display the browser.
+            fix_path (bool/None): If True the path in the file system cannot be changed.
+            show_files(bool/None): If True files (from project.list_files()) are displayed.
+            hide_path(bool/None): If True the root_path is omitted in the path.
         """
         if Vbox is not None:
             self._box = Vbox
@@ -271,7 +273,7 @@ class ProjectBrowser:
         tmppath_old = tmppath + '/'
         while tmppath != tmppath_old:
             tmppath_old = tmppath
-            [tmppath, curentdir] = os.path.split(tmppath)
+            [tmppath, _] = os.path.split(tmppath)
             path_list.append(tmppath_old)
         path_list.reverse()
         return path_list
@@ -348,7 +350,6 @@ class ProjectBrowser:
     def _update_filebox(self, filebox):
         # color definitions
         dir_color = '#9999FF'
-        node_color = '#9999EE'
         file_chosen_color = '#FFBBBB'
         file_color = '#DDDDDD'
 
@@ -402,5 +403,5 @@ class ProjectBrowser:
         filebox.children = tuple(buttons)
 
     def _ipython_display_(self):
-        """This function is used by Ipython to display the object."""
+        """Function used by Ipython to display the object."""
         display(self.gui())
