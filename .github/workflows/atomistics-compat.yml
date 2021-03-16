@@ -30,8 +30,9 @@ jobs:
         conda env update --name test --file .ci_support/environment-notebooks.yml
         mkdir -p tests/compat
         git clone https://github.com/pyiron/pyiron_atomistics tests/compat/atomistics
-        pip install --no-deps tests/compat/atomistics
-        conda env update --name test --file tests/compat/atomistics/.ci_support/environment.yml
+        conda install -c conda-forge pyiron_atomistics
+        # pip install --no-deps tests/compat/atomistics
+        # conda env update --name test --file tests/compat/atomistics/.ci_support/environment.yml
     - name: Test
       shell: bash -l {0}
       run: |
