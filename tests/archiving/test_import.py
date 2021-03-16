@@ -1,3 +1,7 @@
+# coding: utf-8
+# Copyright (c) Max-Planck-Institut für Eisenforschung GmbH - Computational Materials Design (CM) Department
+# Distributed under the terms of "New BSD License", see the LICENSE file.
+
 import os
 import unittest
 from pyiron_base import Project
@@ -99,6 +103,7 @@ class TestUnpacking(unittest.TestCase):
                          "Input values not properly copied to imported job.")
         self.assertEqual(self.job["output/energy_tot"], j["output/energy_tot"],
                          "Output values not properly copied to imported job.")
+
 
 if __name__ == "__main__":
     unittest.main()
