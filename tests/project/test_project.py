@@ -63,7 +63,7 @@ class TestProjectBrowser(unittest.TestCase):
         job.run()
         hdf = cls.project.create_hdf(cls.project.path, 'test_hdf.h5')
         hdf['key'] = 'value'
-        pr = Project(cls.project.path + 'sub')
+        Project(cls.project.path + 'sub')
         with open(cls.project.path+'text.txt', 'w') as f:
             f.write('some text')
 
@@ -84,6 +84,7 @@ class TestProjectBrowser(unittest.TestCase):
         self.assertFalse(self.project.browser.show_files)
         self.assertTrue(self.project.browser.hide_path)
         self.assertFalse(self.project.browser.fix_path)
+        self.assertTrue(self.project.browser._node_as_dirs)
 
     def test_copy(self):
         browser = self.project.browser.copy()
@@ -135,10 +136,19 @@ class TestProjectBrowser(unittest.TestCase):
     def test_dirs(self):
         self.assertEqual(self.project.browser.dirs, ['sub'])
 
-    def test_data(self):
+    def test__on_click_file(self):
         browser = self.project.browser.copy()
+        self.assertEqual(browser._clickedFiles, [])
         browser._on_click_file('text.txt')
+        self.assertEqual(browser._clickedFiles, [join(browser.path, 'text.txt')])
         self.assertEqual(browser.data.data, ["some text"])
+
+    def test__update_project(self):
+        browser = self.project.browser.copy()
+        path = join(browser.path, 'testjob')
+        browser._update_project(path)
+        self.assertIsInstance(browser.project, ToyJob)
+        self.assertFalse(browser._node_as_dirs)
 
 
 if __name__ == '__main__':
