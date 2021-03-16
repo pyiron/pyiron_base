@@ -226,7 +226,7 @@ class ProjectBrowser:
                 with self.output:
                     print('No path given')
                 return
-            elif self.path_string_box.value[0] != '/':
+            elif not os.path.isabs(self.path_string_box.value):
                 path = path + '/' + self.path_string_box.value
             else:
                 path = self.path_string_box.value
