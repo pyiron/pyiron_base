@@ -156,7 +156,7 @@ def _is_valid_job_name(job_name):
     """
     if not job_name.isidentifier():
         raise ValueError(
-            'Invalid name for a PyIron object (no "." or "#") allowed'
+            'Invalid name for a PyIron object (must letters, digits (not as first character) and "_" only) allowed'
         )
     if len(job_name) > 50:
         raise ValueError(
