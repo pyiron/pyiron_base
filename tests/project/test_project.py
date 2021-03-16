@@ -6,18 +6,7 @@ import unittest
 from os.path import dirname, join, abspath
 from os import remove
 from pyiron_base.project.generic import Project
-from pyiron_base.job.template import PythonTemplateJob
-
-# To 'run' a job
-class ToyJob(PythonTemplateJob):
-    def __init__(self, project, job_name):
-        super(ToyJob, self).__init__(project, job_name)
-        self.input['input_energy'] = 100
-
-    def run_static(self):
-        with self.project_hdf5.open("output/generic") as h5out:
-            h5out["energy_tot"] = self.input["input_energy"]
-        self.status.finished = True
+from ..toy_job_run import ToyJob
 
 
 class TestProjectData(unittest.TestCase):
