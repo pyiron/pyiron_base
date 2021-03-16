@@ -8,7 +8,7 @@ from pyiron_base import Project
 from pyiron_base.archiving.import_archive import getdir
 from pandas._testing import assert_frame_equal
 from filecmp import dircmp
-from ..toy_job_run import ToyJob
+from tests.toy_job_run import ToyJob
 
 
 class TestUnpacking(unittest.TestCase):

@@ -6,7 +6,7 @@ import unittest
 from os.path import dirname, join, abspath
 from os import remove
 from pyiron_base.project.generic import Project
-from ..toy_job_run import ToyJob
+from tests.toy_job_run import ToyJob
 
 
 class TestProjectData(unittest.TestCase):

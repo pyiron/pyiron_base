@@ -9,7 +9,7 @@ from pyiron_base.archiving.export_archive import export_database
 import pandas as pd
 from pandas._testing import assert_frame_equal
 from filecmp import dircmp
-from ..toy_job_run import ToyJob
+from tests.toy_job_run import ToyJob
 
 
 class TestPack(unittest.TestCase):
