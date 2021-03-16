@@ -7,7 +7,7 @@ import os
 import ipywidgets as widgets
 from IPython.core.display import display
 
-from pyiron_base import Project as BaseProject
+from pyiron_base.generic.util import static_isinstance
 from pyiron_base.generic.filedata import FileData
 
 
@@ -47,7 +47,7 @@ class ProjectBrowser:
             show_files(bool): If True files (from project.list_files()) are displayed.
         """
         self._project = project
-        self._node_as_dirs = isinstance(self.project, BaseProject)
+        self._node_as_dirs = static_isinstance(self.project, 'pyiron_base.project.generic.Project')
         self._initial_project = project
         self._initial_project_path = self.path
 
@@ -160,7 +160,7 @@ class ProjectBrowser:
     def refresh(self):
         """Refresh the project browser."""
         self.output.clear_output(True)
-        self._node_as_dirs = isinstance(self.project, BaseProject)
+        self._node_as_dirs = static_isinstance(self.project, 'pyiron_base.project.generic.Project')
         self._update_files()
         body = widgets.HBox([self.filebox, self.output],
                             layout=widgets.Layout(
