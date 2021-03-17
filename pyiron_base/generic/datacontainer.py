@@ -599,7 +599,7 @@ class DataContainer(MutableMapping):
                 try:
                     hdf[k] = v
                 except TypeError:
-                    raise TypeError("Error saving {} (key {}): InputList doesn't support saving elements "
+                    raise TypeError("Error saving {} (key {}): DataContainer doesn't support saving elements "
                                     "of type \"{}\" to HDF!".format(v, k, type(v))) from None
 
     def _type_to_hdf(self, hdf):
