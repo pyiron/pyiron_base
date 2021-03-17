@@ -494,12 +494,6 @@ class TestDataContainer(unittest.TestCase):
         self.assertEqual(self.pl, pl, "Read container from yaml, is not the same as written.")
         os.remove(fn)
 
-        fn = "pl.xml"
-        self.pl.write(fn)
-        pl = DataContainer()
-        pl.read(fn)
-        self.assertEqual(self.pl, pl, "Read container from xml, is not the same as written.")
-        os.remove(fn)
 
 class TestInputList(unittest.TestCase):
 

@@ -11,7 +11,6 @@ class TestFileIO(unittest.TestCase):
     def setUpClass(cls):
         cls.data = {"a": 2, "b": {"c": 4, "d": {"e": 5,"f": 6}}, 'g': [1,2,3]}
         cls.yaml_name = "data.yaml"
-        cls.xml_name = "data.xml"
 
     @classmethod
     def tearDownClass(cls):
@@ -19,21 +18,11 @@ class TestFileIO(unittest.TestCase):
             os.remove(cls.yaml_name)
         except FileNotFoundError:
             pass
-        try:
-            os.remove(cls.xml_name)
-        except FileNotFoundError:
-            pass
 
     def test_yaml_consistency(self):
         """Writing the test data to yaml then reading it should leave it unchanged."""
         write(self.data, self.yaml_name)
         self.assertEqual(self.data, read(self.yaml_name),
-                         "Read data not the same as written data.")
-
-    def test_xml_consistency(self):
-        """Writing the test data to xml then reading it should leave it unchanged."""
-        write(self.data, self.xml_name)
-        self.assertEqual(self.data, read(self.xml_name),
                          "Read data not the same as written data.")
 
     def test_unsupported_file_raises_error(self):
