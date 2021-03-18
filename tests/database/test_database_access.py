@@ -152,7 +152,7 @@ class TestDatabaseAccess(unittest.TestCase):
         )
         self.assertIsInstance(key, int)  # returned value must be int
         # added and got dict must be(almost) the same
-        result = self.database.get_item_by_id(key))
+        result = self.database.get_item_by_id(key)
         self.assertTrue(par_dict.items() <= result.items())
 
     def test_item_update(self):
@@ -205,7 +205,7 @@ class TestDatabaseAccess(unittest.TestCase):
             self.database.get_item_by_id(key), dict
         )  # return value has to be a dict
         # added dict must (almost) be same as the got ones
-        result = self.database.get_item_by_id(key))
+        result = self.database.get_item_by_id(key)
         self.assertTrue(par_dict.items() <= result.items())
 
     def test_get_items_dict_and(self):
