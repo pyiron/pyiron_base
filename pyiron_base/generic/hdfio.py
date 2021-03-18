@@ -717,7 +717,7 @@ class FileHDFio(object):
                 value = np.array([np.array(v) for v in value], dtype=object)
                 use_json=False,
         elif isinstance(value, tuple):
-            value = list(value),
+            value = list(value)
         h5io.write_hdf5(
             self.file_name,
             value,
