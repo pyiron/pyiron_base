@@ -220,6 +220,17 @@ class TestProjectBrowser(unittest.TestCase):
         self.assertEqual(self.browser.path, self.project.path)
         self.assertEqual(self.browser.path_string_box.value, "")
 
+    def test_color(self):
+        color_keys = self.browser.color.keys()
+        for key in ['dir', 'file', 'file_chosen', 'path', 'home']:
+            self.assertTrue(key in color_keys)
+            color = self.browser.color[key]
+            self.assertEqual(len(color), 7)
+            self.assertEqual(color[0], '#')
+            self.assertTrue(0 <= int(color[1:3], base=16) <= 255)
+            self.assertTrue(0 <= int(color[3:5], base=16) <= 255)
+            self.assertTrue(0 <= int(color[5:7], base=16) <= 255)
+
 
 if __name__ == '__main__':
     unittest.main()
