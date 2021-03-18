@@ -50,6 +50,13 @@ class ProjectBrowser:
         self._node_as_dirs = isinstance(self.project, BaseProject)
         self._initial_project = project
         self._initial_project_path = self.path
+        self._color = {
+            "dir": '#9999FF',
+            'path': '#DDDDAA',
+            'home': '#999999',
+            'file_chosen': '#FFBBBB',
+            'file': '#DDDDDD',
+        }
 
         if Vbox is None:
             self._box = widgets.VBox()
@@ -69,6 +76,10 @@ class ProjectBrowser:
                                             layout=widgets.Layout(width='min-content')
                                             )
         self.refresh()
+
+    @property
+    def color(self):
+        return self._color
 
     @property
     def box(self):
@@ -279,8 +290,6 @@ class ProjectBrowser:
         return path_list
 
     def _update_pathbox(self, box):
-        path_color = '#DDDDAA'
-        home_color = '#999999'
 
         def on_click(b):
             if self._busy_check():
@@ -295,7 +304,7 @@ class ProjectBrowser:
         button = widgets.Button(icon="home",
                                 tooltip=self._initial_project_path,
                                 layout=widgets.Layout(width='auto'))
-        button.style.button_color = home_color
+        button.style.button_color = self.color['home']
         button.path = self._initial_project
         if self.fix_path:
             button.disabled = True
@@ -308,7 +317,7 @@ class ProjectBrowser:
             button = widgets.Button(description=current_dir + '/',
                                     tooltip=current_dir,
                                     layout=widgets.Layout(width='auto'))
-            button.style.button_color = path_color
+            button.style.button_color = self.color['path']
             button.path = path
             button.on_click(on_click)
             if self.fix_path or len(path) < len_root_path - 1:
@@ -348,10 +357,6 @@ class ProjectBrowser:
             self._clickedFiles = [filepath]
 
     def _update_filebox(self, filebox):
-        # color definitions
-        dir_color = '#9999FF'
-        file_chosen_color = '#FFBBBB'
-        file_color = '#DDDDDD'
 
         # item layout definition
         item_layout = widgets.Layout(width='80%',
@@ -379,7 +384,7 @@ class ProjectBrowser:
             button = widgets.Button(description=dirname,
                                     icon="folder",
                                     layout=item_layout)
-            button.style.button_color = dir_color
+            button.style.button_color = self.color["dir"]
             button.on_click(on_click_group)
             return button
 
@@ -388,9 +393,9 @@ class ProjectBrowser:
                                     icon="file-o",
                                     layout=item_layout)
             if os.path.join(self.path, filename) in self._clickedFiles:
-                button.style.button_color = file_chosen_color
+                button.style.button_color = self.color["file_chosen"]
             else:
-                button.style.button_color = file_color
+                button.style.button_color = self.color["file"]
             button.on_click(on_click_file)
             return button
 
