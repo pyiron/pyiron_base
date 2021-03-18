@@ -6,8 +6,6 @@ name: Compatibility with pyiron_atomistics
 on:
   push:
     branches: [ master ]
-  pull_request:
-    branches: [ master ]
 
 jobs:
   build:
