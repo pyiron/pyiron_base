@@ -4,13 +4,12 @@
 name: Compatibility with pyiron_contrib
 
 on:
-  push:
-    branches: [ master ]
   pull_request:
-    branches: [ master ]
+    types: [ labeled ]
 
 jobs:
   build:
+    if: ${{ github.event.label.name == 'integration' }}
 
     runs-on: ubuntu-latest
 
