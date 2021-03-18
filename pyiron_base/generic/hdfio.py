@@ -715,7 +715,7 @@ class FileHDFio(object):
             shape_lst = [np.shape(sub) for sub in value]
             if all([shape_lst[0][1:] == t[1:] for t in shape_lst]):
                 value = np.array([np.array(v) for v in value], dtype=object)
-                use_json=False,
+                use_json=False
         elif isinstance(value, tuple):
             value = list(value)
         h5io.write_hdf5(
