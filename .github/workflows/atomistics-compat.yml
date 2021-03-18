@@ -4,11 +4,12 @@
 name: Compatibility with pyiron_atomistics
 
 on:
-  push:
-    branches: [ master ]
+  pull_request:
+    types: [ labeled ]
 
 jobs:
   build:
+    if: ${{ github.event.label.name == 'integration' }}
 
     runs-on: ubuntu-latest
 
