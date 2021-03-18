@@ -484,6 +484,13 @@ class TestDataContainer(unittest.TestCase):
             self.assertEqual(len(w), 1,
                     "Trying to change read-only flag back didn't raise warning.")
 
+    def test_recursive_append(self):
+        input_tmp = InputList()
+        input_tmp['some/argument/inside/another/argument'] = 3
+        self.assertEqual(input_tmp['some/argument/inside/another/argument'], 3)
+        self.assertEqual(input_tmp.some.argument.inside.another.argument, 3)
+        self.assertEqual(type(input_tmp.some), InputList)
+
 
     def test_read_write_consistency(self):
         """Writing a datacontainer, then reading it back in, should leave it unchanged."""
