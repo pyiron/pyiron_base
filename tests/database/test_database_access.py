@@ -99,7 +99,7 @@ class TestDatabaseAccess(unittest.TestCase):
         par_dict = self.add_items("BO")
         key = par_dict["id"]
         # be sure that get_items_sql returns right result with right statement
-        result = sself.database.get_items_sql(
+        result = self.database.get_items_sql(
             where_condition="",
             sql_statement="select * from simulation " "where id=%s" % key,
         )[-1]
