@@ -99,13 +99,11 @@ class TestDatabaseAccess(unittest.TestCase):
         par_dict = self.add_items("BO")
         key = par_dict["id"]
         # be sure that get_items_sql returns right result with right statement
-        self.assertDictContainsSubset(
-            par_dict,
-            self.database.get_items_sql(
-                where_condition="",
-                sql_statement="select * from simulation " "where id=%s" % key,
-            )[-1],
-        )
+        result = sself.database.get_items_sql(
+            where_condition="",
+            sql_statement="select * from simulation " "where id=%s" % key,
+        )[-1]
+        self.assertEqual(dict(result, **par_dict), result)
 
     def test_get_items_sql_like_regex(self):
         """
@@ -154,7 +152,8 @@ class TestDatabaseAccess(unittest.TestCase):
         )
         self.assertIsInstance(key, int)  # returned value must be int
         # added and got dict must be(almost) the same
-        self.assertDictContainsSubset(par_dict, self.database.get_item_by_id(key))
+        result = self.database.get_item_by_id(key))
+        self.assertEqual(dict(result, **par_dict), result)
 
     def test_item_update(self):
         """
@@ -206,7 +205,8 @@ class TestDatabaseAccess(unittest.TestCase):
             self.database.get_item_by_id(key), dict
         )  # return value has to be a dict
         # added dict must (almost) be same as the got ones
-        self.assertDictContainsSubset(par_dict, self.database.get_item_by_id(key))
+        result = self.database.get_item_by_id(key))
+        self.assertEqual(dict(result, **par_dict), result)
 
     def test_get_items_dict_and(self):
         """
