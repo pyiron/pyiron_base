@@ -70,7 +70,8 @@ class TestDatabaseAccess(unittest.TestCase):
         )
         self.assertIsInstance(key, int)  # returned value must be int
         # added and got dict must be(almost) the same
-        self.assertDictContainsSubset(par_dict, self.database.get_item_by_id(key))
+        result = self.database.get_item_by_id(key)
+        self.assertEqual(dict(result, **par_dict), result)
 
     def test_item_update(self):
         """
@@ -122,7 +123,8 @@ class TestDatabaseAccess(unittest.TestCase):
             self.database.get_item_by_id(key), dict
         )  # return value has to be a dict
         # added dict must (almost) be same as the got ones
-        self.assertDictContainsSubset(par_dict, self.database.get_item_by_id(key))
+        result = self.database.get_item_by_id(key)
+        self.assertEqual(dict(result, **par_dict), result)
 
     def test_get_items_dict_project(self):
         """
