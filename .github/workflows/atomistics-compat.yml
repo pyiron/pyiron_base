@@ -35,5 +35,5 @@ jobs:
     - name: Test
       shell: bash -l {0}
       run: |
-        cd pyiron_atomistics
+        cd ../pyiron_atomistics
         python -m unittest discover tests/
