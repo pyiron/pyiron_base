@@ -355,7 +355,7 @@ class DatabaseAccess(object):
             # ensures working with db entries, which are camel case
             timestop_index = [item.lower() for item in col.keys()].index("timestop")
             timestart_index = [item.lower() for item in col.keys()].index("timestart")
-            tmp_values = col._mapping.values()
+            tmp_values = col.values()
             if (
                 col.values()[timestop_index] and col.values()[timestart_index]
             ) is not None:
