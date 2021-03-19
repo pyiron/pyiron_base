@@ -11,6 +11,12 @@ import warnings
 import numpy as np
 
 
+class Sub(DataContainer):
+    def __init__(self, init=None, table_name=None):
+        super().__init__(init=init, table_name=table_name)
+        self.foo = 42
+
+
 class TestDataContainer(unittest.TestCase):
 
     @classmethod
@@ -429,11 +435,11 @@ class TestDataContainer(unittest.TestCase):
             self.assertEqual(len(w), 1, "Trying to change read-only flag back didn't raise warning.")
 
     def test_recursive_append(self):
-        input_tmp = InputList()
+        input_tmp = DataContainer()
         input_tmp['some/argument/inside/another/argument'] = 3
         self.assertEqual(input_tmp['some/argument/inside/another/argument'], 3)
         self.assertEqual(input_tmp.some.argument.inside.another.argument, 3)
-        self.assertEqual(type(input_tmp.some), InputList)
+        self.assertEqual(type(input_tmp.some), DataContainer)
 
     def test_read_write_consistency(self):
         """Writing a datacontainer, then reading it back in, should leave it unchanged."""
@@ -443,6 +449,19 @@ class TestDataContainer(unittest.TestCase):
         pl.read(fn)
         self.assertEqual(self.pl, pl, "Read container from yaml, is not the same as written.")
         os.remove(fn)
+
+    def test_subclass_preservation(self):
+        self.pl.subclass = Sub(table_name='subclass')
+        self.pl.to_hdf(hdf=self.hdf)
+        loaded = DataContainer(table_name="input")
+        loaded.from_hdf(hdf=self.hdf)
+        self.assertIsInstance(
+            loaded.subclass,
+            Sub,
+            f"Subclass not preserved on loading. "
+            f"Expected {Sub.__name__} but got {type(loaded.subclass).__name__}."
+        )
+        self.pl.pop('subclass')
 
 
 class TestInputList(unittest.TestCase):
