@@ -433,7 +433,7 @@ class TestDataContainer(unittest.TestCase):
         input_tmp['some/argument/inside/another/argument'] = 3
         self.assertEqual(input_tmp['some/argument/inside/another/argument'], 3)
         self.assertEqual(input_tmp.some.argument.inside.another.argument, 3)
-        self.assertEqual(type(input_tmp.some), InputList)
+        self.assertEqual(type(input_tmp.some), DataContainer)
 
     def test_read_write_consistency(self):
         """Writing a datacontainer, then reading it back in, should leave it unchanged."""
