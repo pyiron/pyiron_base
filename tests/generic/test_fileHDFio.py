@@ -23,7 +23,7 @@ class TestFileHDFio(unittest.TestCase):
         with cls.full_hdf5.open("content") as hdf:
             hdf["array"] = np.array([1, 2, 3, 4, 5, 6])
             hdf["array_3d"] = np.array([[1, 2, 3], [4, 5, 6]])
-            hdf["traj"] = np.array([[[1, 2, 3], [4, 5, 6]], [[7, 8, 9]]])
+            hdf["traj"] = np.array([[[1, 2, 3], [4, 5, 6]], [[7, 8, 9]]], dtype=object)
             hdf["dict"] = {"key_1": 1, "key_2": "hallo"}
             hdf["dict_numpy"] = {"key_1": 1, "key_2": np.array([1, 2, 3, 4, 5, 6])}
             with hdf.open('group') as grp:
