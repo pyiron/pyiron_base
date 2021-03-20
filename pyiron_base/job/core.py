@@ -10,7 +10,6 @@ import os
 import posixpath
 import math
 from pyiron_base.settings.generic import Settings
-from pyiron_base.generic.template import PyironObject
 from pyiron_base.generic.util import static_isinstance
 from pyiron_base.job.util import \
     _get_project_for_copy, \

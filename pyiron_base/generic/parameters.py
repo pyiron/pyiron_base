@@ -13,7 +13,6 @@ import posixpath
 import warnings
 from ast import literal_eval
 from pyiron_base.settings.generic import Settings
-from pyiron_base.generic.template import PyironObject
 
 __author__ = "Joerg Neugebauer"
 __copyright__ = (
