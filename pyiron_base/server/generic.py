@@ -25,9 +25,7 @@ __date__ = "Sep 1, 2017"
 s = Settings()
 
 
-class Server(
-    PyironObject
-):  # add the option to return the job id and the hold id to the server object
+class Server:  # add the option to return the job id and the hold id to the server object
     """
     Generic Server object to handle the execution environment for the job
 
