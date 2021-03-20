@@ -28,7 +28,8 @@ jobs:
         cd .. 
         git clone https://github.com/pyiron/pyiron_atomistics
         cd pyiron_atomistics
-        conda env update --name test --file .ci_support/environment.yml
+        grep -v "pyiron_base" .ci_support/environment.yml > environment.yml
+        conda env update --name test --file environment.yml
         python .ci_support/pyironconfig.py
         pip install --no-deps .
     - name: Test
