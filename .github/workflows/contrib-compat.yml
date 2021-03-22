@@ -28,7 +28,8 @@ jobs:
         cd ..
         git clone https://github.com/pyiron/pyiron_contrib
         cd pyiron_contrib
-        conda env update --name test --file .ci_support/environment.yml
+        grep -v "pyiron_base" .ci_support/environment.yml > environment.yml
+        conda env update --name test --file environment.yml
         pip install --no-deps .
     - name: Test
       shell: bash -l {0}
