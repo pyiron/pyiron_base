@@ -10,7 +10,6 @@ import os
 import posixpath
 import math
 from pyiron_base.settings.generic import Settings
-from pyiron_base.generic.template import PyironObject
 from pyiron_base.generic.util import static_isinstance
 from pyiron_base.job.util import \
     _get_project_for_copy, \
@@ -44,7 +43,7 @@ __date__ = "Sep 1, 2017"
 s = Settings()
 
 
-class JobCore(PyironObject):
+class JobCore:
     """
     The JobCore the most fundamental pyiron job class. From this class the GenericJob as well as the reduced JobPath
     class are derived. While JobPath only provides access to the HDF5 file it is about one order faster.

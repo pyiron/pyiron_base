@@ -8,7 +8,6 @@ from pyiron_base.generic.hdfio import FileHDFio, ProjectHDFio
 from pyiron_base.generic.datacontainer import DataContainer
 from pyiron_base.generic.inputlist import InputList
 from pyiron_base.generic.parameters import GenericParameters
-from pyiron_base.generic.template import PyironObject
 from pyiron_base.generic.util import deprecate, deprecate_soon, ImportAlarm
 from pyiron_base.job.executable import Executable
 from pyiron_base.job.external import Notebook
@@ -29,6 +28,7 @@ from pyiron_base.server.queuestatus import validate_que_request
 from pyiron_base.settings.generic import Settings
 from pyiron_base.settings.install import install_dialog
 from pyiron_base.table.datamining import PyironTable, TableJob
+from pyiron_base.generic.object import HasDatabase, HasStorage, PyironObject
 
 # optional API of the pyiron_base module
 try:

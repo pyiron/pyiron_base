@@ -13,7 +13,6 @@ import posixpath
 import warnings
 from ast import literal_eval
 from pyiron_base.settings.generic import Settings
-from pyiron_base.generic.template import PyironObject
 
 __author__ = "Joerg Neugebauer"
 __copyright__ = (
@@ -29,7 +28,7 @@ __date__ = "Sep 1, 2017"
 s = Settings()
 
 
-class GenericParameters(PyironObject):
+class GenericParameters:
     """
     GenericParameters class defines the typical input file with a key value structure plus an additional column for comments.
     Convenience class to easily create, read, and modify input files

@@ -7,7 +7,6 @@ Server object class which is connected to each job containing the technical deta
 
 from collections import OrderedDict
 from pyiron_base.settings.generic import Settings
-from pyiron_base.generic.template import PyironObject
 from pyiron_base.server.runmode import Runmode
 import socket
 
@@ -25,9 +24,7 @@ __date__ = "Sep 1, 2017"
 s = Settings()
 
 
-class Server(
-    PyironObject
-):  # add the option to return the job id and the hold id to the server object
+class Server:  # add the option to return the job id and the hold id to the server object
     """
     Generic Server object to handle the execution environment for the job
 
