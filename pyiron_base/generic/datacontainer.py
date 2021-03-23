@@ -153,9 +153,10 @@ class DataContainer(MutableMapping):
     >>> list(pl.keys())
     [0, 1, 2, 3]
 
-    .. attention::
+    .. attention:: Subclasses beware!
 
-        Subclasses beware!  DataContainer require some careful treatment when creating subclasses.
+        DataContainer require some careful treatment when creating subclasses.
+
         1. Since DataContainers are expected to recursively instantiate themselves subclasses need to keep their
         `__init__ compatible to the base class.  That means being able to be instantiated without arguments, if
         arguments are given the first one (or `init`) has to accept a Mapping or Iterable.  Additional arguments may be
