@@ -26,23 +26,22 @@ __date__ = "Mar 23, 2021"
 
 class TestWithProject(unittest.TestCase, ABC):
     """
-    A class that spins up a clean project at the start of each test, and removes the pyiron log when everything is done.
+    Tests that start and remove a project for their suite, and remove jobs from the project for each test.
     """
 
     @classmethod
     def setUpClass(cls):
         cls.file_location = dirname(abspath(__file__)).replace("\\", "/")
         cls.project_name = join(cls.file_location, "test_project")
+        cls.project = Project(cls.project_name)
 
     @classmethod
     def tearDownClass(cls):
+        cls.project.remove(enable=True)
         try:
             remove(join(cls.file_location, "pyiron.log"))
         except FileNotFoundError:
             pass
 
     def tearDown(self):
-        self.project.remove(enable=True)
-
-    def setUp(self):
-        self.project = Project(self.project_name)
+        self.project.remove_jobs_silently(recursive=True)
