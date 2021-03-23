@@ -34,11 +34,6 @@ class TestDataContainer(TestWithProject):
         cls.pl["tail"] = DataContainer([2, 4, 8])
         cls.hdf = cls.project.create_hdf(cls.project.path, "test")
 
-    @classmethod
-    def tearDownClass(cls):
-        super().tearDownClass()
-        os.remove(cls.hdf.file_name)
-
     # Init tests
     def test_init_none(self):
         pl = DataContainer()
