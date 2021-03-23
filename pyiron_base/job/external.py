@@ -37,7 +37,7 @@ class Notebook(object):
         hdf_file = str(hdf_file) + ".h5"
         if Path(hdf_file).exists():
             hdf = FileHDFio(hdf_file).create_project_from_hdf5()
-            custom_dict = hdf[str(folder) + '/input/custom_dict'].to_object()
+            custom_dict = hdf[folder + '/input/custom_dict'].to_object()
             custom_dict["project_dir"] = str(project_folder)
             return custom_dict
         elif Path("input.json").exists():

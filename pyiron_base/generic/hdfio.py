@@ -804,7 +804,7 @@ class FileHDFio(object):
                     with self.open(item) as hdf_item:
                         obj = hdf_item.copy()
                         return obj
-                raise ValueError("Unknown item: {}".format(item))
+                raise ValueError("Unknown item: {} {} {}".format(item, self.file_name, self.h5_path))
             else:
                 if item_lst[0] == "":  # item starting with '/', thus we have an absoute HDF5 path
                     item_abs_lst = os.path.normpath(item).replace("\\", "/").split("/")
