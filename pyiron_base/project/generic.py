@@ -128,9 +128,6 @@ class Project(ProjectPath):
         self.job_type = JobTypeChoice()
 
         self._data = ProjectData(project=self, table_name="data")
-        # TODO: Read the data here, if it exists.
-        #       Currently this keeps giving a recursion error because ProjectHDFio instantiation copies the project
-        #       which then tries to read, which instantiates a ProjectHDFio, which copies the project... Ugh.
 
     @property
     def parent_group(self):
@@ -176,11 +173,6 @@ class Project(ProjectPath):
 
     @property
     def data(self):
-        if len(self._data) == 0:  # This is just a workaround because loading in __init__ is not working
-            try:
-                self._data.read()
-            except KeyError:
-                pass
         return self._data
 
     def copy(self):
