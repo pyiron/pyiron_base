@@ -47,7 +47,7 @@ class TestScriptJob(TestWithProject):
         self.project.data.write()
         with open(self.complex_script, 'w') as f:
             f.write("from pyiron_base import Project\n")
-            f.write(f"pr = Project('{self.project_abspath}')\n")
+            f.write(f"pr = Project('{self.project_path}')\n")
             f.write("pr.data.out = pr.data.in_ * 7\n")
             f.write("pr.data.write()\n")
         # WARNING: If a user parallelizes this with multiple ScriptJobs, it would be possible to get a log jam with
