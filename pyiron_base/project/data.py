@@ -16,7 +16,7 @@ Spec:
 """
 
 from pyiron_base.generic.datacontainer import DataContainer
-from pyiron_base.generic.hdfio import ProjectHDFio
+from pyiron_base.generic.hdfio import FileHDFio
 
 __author__ = "Liam Huber"
 __copyright__ = (
