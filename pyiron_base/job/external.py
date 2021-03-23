@@ -8,6 +8,7 @@ Load input parameters for jupyter notebooks from external HDF5 or JSON file
 import json
 from pathlib2 import Path
 import warnings
+from pyiron_base.generic.hdfio import FileHDFio
 from pyiron_base.generic.datacontainer import DataContainer
 
 __author__ = "Osamu Waseda"
