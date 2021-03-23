@@ -9,26 +9,7 @@ from pyiron_base.project.generic import Project
 from pyiron_base.generic.object import HasStorage, HasDatabase, PyironObject
 from pyiron_base import DataContainer
 from pyiron_base.database.generic import DatabaseAccess
-
-
-class TestWithProject(unittest.TestCase):
-    @classmethod
-    def setUpClass(cls):
-        cls.file_location = dirname(abspath(__file__)).replace("\\", "/")
-        cls.project_name = join(cls.file_location, "test_project")
-
-    @classmethod
-    def tearDownClass(cls):
-        try:
-            remove(join(cls.file_location, "pyiron.log"))
-        except FileNotFoundError:
-            pass
-
-    def tearDown(self):
-        self.project.remove(enable=True)
-
-    def setUp(self):
-        self.project = Project(self.project_name)
+from pyiron_base._tests import TestWithProject
 
 
 class TestHasStorage(TestWithProject):
