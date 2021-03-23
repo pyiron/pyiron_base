@@ -30,7 +30,6 @@ class HasStorage(ABC):
     """
 
     def __init__(self, *args, **kwargs):
-        print("Init HasStorage")
         self._storage = DataContainer(table_name='storage')
 
     @property
@@ -70,7 +69,6 @@ class HasDatabase(ABC):
     """
 
     def __init__(self, *args, **kwargs):
-        print("Init HasDatabase")
         if not s.database_is_disabled:
             s.open_connection()
             self._database = s.database
