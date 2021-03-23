@@ -6,20 +6,19 @@ import unittest
 from os.path import dirname, abspath, join
 from os import remove
 from pyiron_base.project.generic import Project
+from pyiron_base._test import TestWithProject
 
 
-class TestScriptJob(unittest.TestCase):
+class TestScriptJob(TestWithProject):
     @classmethod
     def setUpClass(cls):
-        cls.file_location = dirname(abspath(__file__)).replace("\\", "/")
-        cls.project_abspath = join(cls.file_location, "test_sriptjob").replace("\\", "/")  # replace to satisfy windows
-        cls.project = Project(cls.project_abspath)
+        super().setUpClass()
         cls.simple_script = join(cls.file_location, 'simple.py')
         cls.complex_script = join(cls.file_location, 'complex.py')
 
     @classmethod
     def tearDownClass(cls):
-        cls.project.remove(enable=True)
+        super().tearDownClass()
         for file in [cls.simple_script, cls.complex_script]:
             try:
                 remove(file)
@@ -27,9 +26,11 @@ class TestScriptJob(unittest.TestCase):
                 continue
 
     def setUp(self):
+        super().setUp()
         self.job = self.project.create.job.ScriptJob('script')
 
     def tearDown(self):
+        super().tearDown()
         self.project.remove_job('script')
 
     def test_script_path(self):
