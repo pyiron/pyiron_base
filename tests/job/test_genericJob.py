@@ -58,15 +58,11 @@ class TestGenericJob(TestWithProject):
         ham = self.project.create.job.ScriptJob("job_single_debug")
         self.assertEqual("job_single_debug", ham.job_name)
         self.assertEqual("/job_single_debug", ham.project_hdf5.h5_path)
-        self.assertEqual(
-            cwd + "/test_project/job_single_debug.h5", ham.project_hdf5.file_name
-        )
+        self.assertEqual("/".join([cwd, self.project_name, "job_single_debug.h5"]), ham.project_hdf5.file_name)
         ham.job_name = "job_single_move"
         ham.to_hdf()
         self.assertEqual("/job_single_move", ham.project_hdf5.h5_path)
-        self.assertEqual(
-            cwd + "/test_project/job_single_move.h5", ham.project_hdf5.file_name
-        )
+        self.assertEqual("/".join([cwd, self.project_name, "job_single_move.h5"]), ham.project_hdf5.file_name)
         self.assertTrue(os.path.isfile(ham.project_hdf5.file_name))
         ham.project_hdf5.remove_file()
         self.assertFalse(os.path.isfile(ham.project_hdf5.file_name))
@@ -74,18 +70,14 @@ class TestGenericJob(TestWithProject):
         ham.to_hdf()
         self.assertEqual("job_single_debug_2", ham.job_name)
         self.assertEqual("/job_single_debug_2", ham.project_hdf5.h5_path)
-        self.assertEqual(
-            cwd + "/test_project/job_single_debug_2.h5", ham.project_hdf5.file_name
-        )
+        self.assertEqual("/".join([cwd, self.project_name, "job_single_debug_2.h5"]), ham.project_hdf5.file_name)
         self.assertTrue(os.path.isfile(ham.project_hdf5.file_name))
         ham.job_name = "job_single_move_2"
         self.assertEqual("/job_single_move_2", ham.project_hdf5.h5_path)
-        self.assertEqual(
-            cwd + "/test_project/job_single_move_2.h5", ham.project_hdf5.file_name
-        )
+        self.assertEqual("/".join([cwd, self.project_name, "job_single_move_2.h5"]), ham.project_hdf5.file_name)
         self.assertTrue(os.path.isfile(ham.project_hdf5.file_name))
         ham.project_hdf5.remove_file()
-        self.assertFalse(os.path.isfile(cwd + "/test_project/job_single_debug_2.h5"))
+        self.assertFalse(os.path.isfile("/".join([cwd, self.project_name, "job_single_debug_2.h5"])))
         self.assertFalse(os.path.isfile(ham.project_hdf5.file_name))
 
     def test_move(self):
@@ -93,15 +85,15 @@ class TestGenericJob(TestWithProject):
         pr_b = self.project.open("project_b")
         ham = pr_a.create.job.ScriptJob("job_moving_easy")
         self.assertFalse(ham.project_hdf5.file_exists)
-        self.assertTrue("test_project/project_a/" in ham.project_hdf5.project_path)
+        self.assertTrue(self.project_name + "/project_a/" in ham.project_hdf5.project_path)
         self.assertFalse(ham.project_hdf5.file_exists)
         ham.move_to(pr_b)
-        self.assertTrue("test_project/project_b/" in ham.project_hdf5.project_path)
+        self.assertTrue(self.project_name + "/project_b/" in ham.project_hdf5.project_path)
         ham_2 = pr_a.create.job.ScriptJob("job_moving_diff")
         ham_2.to_hdf()
-        self.assertTrue("test_project/project_a/" in ham_2.project_hdf5.project_path)
+        self.assertTrue(self.project_name + "/project_a/" in ham_2.project_hdf5.project_path)
         ham_2.move_to(pr_b)
-        self.assertTrue("test_project/project_b/" in ham_2.project_hdf5.project_path)
+        self.assertTrue(self.project_name + "/project_b/" in ham_2.project_hdf5.project_path)
         ham_2.project_hdf5.remove_file()
         pr_a.remove(enable=True)
         pr_b.remove(enable=True)
