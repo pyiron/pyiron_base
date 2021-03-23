@@ -1,7 +1,5 @@
 import os
-import unittest
-
-from pyiron_base import Project
+from pyiron_base._tests import TestWithProject
 
 job_py_source = """
 from pyiron_base import Notebook as nb
@@ -9,22 +7,20 @@ coeff_tot = nb.get_custom_dict()
 print(coeff_tot['value'])
 """
 
-class TestScriptJob(unittest.TestCase):
+
+class TestScriptJob(TestWithProject):
     @classmethod
     def setUpClass(cls):
-        cls.file_location = os.path.dirname(os.path.abspath(__file__)).replace("\\", "/")  # replace to satisfy windows
+        super().setUpClass()
         cls.job_location = os.path.join(cls.file_location, "job.py")
-        cls.project = Project(os.path.join(cls.file_location, "test_notebook").replace("\\", "/"))
-        cls.job = cls.project.create_job(cls.project.job_type.ScriptJob,
-                                               "test")
+        cls.job = cls.project.create.job.ScriptJob("test")
         with open(cls.job_location, 'w') as f:
             f.write(job_py_source)
 
     @classmethod
     def tearDownClass(cls):
+        super().tearDownClass()
         os.remove(cls.job_location)
-        cls.project.remove(enable=True)
-
 
     def test_notebook_input(self):
         """
