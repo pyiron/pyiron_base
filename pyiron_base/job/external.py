@@ -8,7 +8,7 @@ Load input parameters for jupyter notebooks from external HDF5 or JSON file
 import json
 from pathlib2 import Path
 import warnings
-from pyiron_base.generic.hdfio import FileHDFio
+from pyiron_base.generic.datacontainer import DataContainer
 
 __author__ = "Osamu Waseda"
 __copyright__ = (
@@ -36,10 +36,13 @@ class Notebook(object):
         hdf_file = project_folder / folder
         hdf_file = str(hdf_file).replace("\\", "/") + ".h5"
         if Path(hdf_file).exists():
-            hdf = FileHDFio(hdf_file).create_project_from_hdf5()
-            custom_dict = hdf[str(folder) + '/input/custom_dict'].to_object()
-            custom_dict["project_dir"] = str(project_folder)
-            return custom_dict
+            obj = DataContainer()
+            obj.from_hdf(
+                hdf = FileHDFio(hdf_file),
+                group_name = folder + '/input/custom_dict'
+            )
+            obj["project_dir"] = str(project_folder)
+            return obj
         elif Path("input.json").exists():
             with open("input.json") as f:
                 return json.load(f)
