@@ -1,8 +1,8 @@
 # Copyright (c) Max-Planck-Institut für Eisenforschung GmbH - Computational Materials Design (CM) Department
 # Distributed under the terms of "New BSD License", see the LICENSE file.
+from pyiron_base._tests import TestWithProject
 from pyiron_base.generic.datacontainer import DataContainer
 from pyiron_base.generic.inputlist import InputList
-from pyiron_base.project.generic import Project
 from collections import Iterator
 import copy
 import os
@@ -17,10 +17,11 @@ class Sub(DataContainer):
         self.foo = 42
 
 
-class TestDataContainer(unittest.TestCase):
+class TestDataContainer(TestWithProject):
 
     @classmethod
     def setUpClass(cls):
+        super().setUpClass()
         cls.pl = DataContainer([
             {"foo": "bar"},
             2,
@@ -31,14 +32,7 @@ class TestDataContainer(unittest.TestCase):
             ]}
         ], table_name="input")
         cls.pl["tail"] = DataContainer([2, 4, 8])
-
-        file_location = os.path.dirname(os.path.abspath(__file__))
-        cls.pr = Project(file_location)
-        cls.hdf = cls.pr.create_hdf(cls.pr.path, "test")
-
-    @classmethod
-    def tearDownClass(cls):
-        os.remove(cls.hdf.file_name)
+        cls.hdf = cls.project.create_hdf(cls.project.path, "test")
 
     # Init tests
     def test_init_none(self):
@@ -364,8 +358,8 @@ class TestDataContainer(unittest.TestCase):
     def test_hdf_complex_members(self):
         """Values that implement to_hdf/from_hdf, should write themselves to the HDF file correctly."""
         pl = DataContainer(table_name="complex")
-        pl.append(self.pr.create_job(self.pr.job_type.ScriptJob, "dummy1"))
-        pl.append(self.pr.create_job(self.pr.job_type.ScriptJob, "dummy2"))
+        pl.append(self.project.create_job(self.project.job_type.ScriptJob, "dummy1"))
+        pl.append(self.project.create_job(self.project.job_type.ScriptJob, "dummy2"))
         pl.append(42)
         pl["foo"] = "bar"
         pl.to_hdf(hdf=self.hdf)
