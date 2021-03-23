@@ -104,7 +104,7 @@ class FileData:
             Args:
                 file (str): path to the data file (if data is None) or filename associated with the data.
                 data (object/None): object containing data
-                metadata (dict/InputList): Dictionary of metadata associated with the data
+                metadata (dict/DataContainer): Dictionary of metadata associated with the data
                 filetype (str): File extension associated with the type data,
                                 If provided this overwrites the assumption based on the extension of the filename.
         """
