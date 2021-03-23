@@ -61,7 +61,7 @@ class HasDatabase(ABC):
     pass
 
 
-class PyironObject(HasStorage, HasDatabase):
+class PyironObject(HasStorage, HasDatabase, ABC):
     """
     The fundamental pyiron object bringing together python objects, database identification, and data serialziation.
     """
