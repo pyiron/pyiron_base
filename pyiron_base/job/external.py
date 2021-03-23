@@ -34,10 +34,9 @@ class Notebook(object):
         folder = Path(".").cwd().parts[-1]
         project_folder = Path(".").cwd().parents[1]
         hdf_file = project_folder / folder
-        hdf_file = str(hdf_file) + ".h5"
+        hdf_file = str(hdf_file).replace("\\", "/") + ".h5"
         if Path(hdf_file).exists():
             hdf = FileHDFio(hdf_file).create_project_from_hdf5()
-            print("Debug_notebook:", folder)
             custom_dict = hdf[folder + '/input/custom_dict'].to_object()
             custom_dict["project_dir"] = str(project_folder)
             return custom_dict
