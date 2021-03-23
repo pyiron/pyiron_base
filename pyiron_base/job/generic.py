@@ -1483,7 +1483,7 @@ class GenericJob(JobCore):
             if len(self.__module__.split(".")) > 1:
                 self._executable = Executable(
                     codename=self.__name__,
-                    module=self.__module__.split(".")[1],
+                    module=self.__module__.split(".")[-2],
                     path_binary_codes=s.resource_paths,
                 )
             else:
