@@ -28,6 +28,7 @@ from pyiron_base.server.queuestatus import validate_que_request
 from pyiron_base.settings.generic import Settings
 from pyiron_base.settings.install import install_dialog
 from pyiron_base.table.datamining import PyironTable, TableJob
+from pyiron_base.generic.object import HasDatabase, HasStorage, PyironObject
 
 # optional API of the pyiron_base module
 try:
