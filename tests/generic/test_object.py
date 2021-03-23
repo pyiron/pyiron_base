@@ -8,6 +8,7 @@ from os import remove
 from pyiron_base.project.generic import Project
 from pyiron_base.generic.object import HasStorage, HasDatabase, PyironObject
 from pyiron_base import DataContainer
+from pyiron_base.database.generic import DatabaseAccess
 
 
 class TestWithProject(unittest.TestCase):
@@ -59,7 +60,20 @@ class TestHasStorage(TestWithProject):
 
 
 class TestHasDatabase(TestWithProject):
-    pass
+
+    def setUp(self):
+        super().setUp()
+        self.has_database = HasDatabase()
+
+    def test_database(self):
+        self.assertIsInstance(
+            self.has_database.database,
+            DatabaseAccess,
+            msg=f"Expected storage to be a {DatabaseAccess.__name__} "
+                f"but got {type(self.has_database.database).__name__}"
+        )
+        with self.assertRaises(AttributeError, msg="Expected the database field to be read-only."):
+            self.has_database.database = 42
 
 
 class TestPyironObject(TestWithProject):
@@ -69,3 +83,10 @@ class TestPyironObject(TestWithProject):
 
     def test_has_storage(self):
         self.assertIsInstance(self.obj.storage, DataContainer, msg=f"Expected storage to be {DataContainer.__name__}.")
+
+    def test_has_database(self):
+        self.assertIsInstance(
+            self.obj.database,
+            DatabaseAccess,
+            msg=f"Expected database to be {DatabaseAccess.__name__}."
+        )

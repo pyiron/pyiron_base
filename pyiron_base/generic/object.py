@@ -8,6 +8,7 @@ The core class in pyiron, linking python to the database to file storage.
 
 from abc import ABC
 from pyiron_base import DataContainer
+from pyiron_base.settings.generic import Settings
 
 __author__ = "Liam Huber"
 __copyright__ = (
@@ -20,11 +21,16 @@ __email__ = "huber@mpie.de"
 __status__ = "development"
 __date__ = "Mar 23, 2021"
 
+s = Settings()
+
 
 class HasStorage(ABC):
-    """A base class for objects that use HDF5 data serialization via the `DataContainer` class."""
+    """
+    A base class for objects that use HDF5 data serialization via the `DataContainer` class.
+    """
 
     def __init__(self, *args, **kwargs):
+        print("Init HasStorage")
         self._storage = DataContainer(table_name='storage')
 
     @property
@@ -57,12 +63,33 @@ class HasStorage(ABC):
 
 
 class HasDatabase(ABC):
-    """A base class for objects that are registered in pyiron's database"""
-    pass
+    """
+    A base class for objects that are registered in pyiron's database
+
+    # TODO: Flesh this class out so it actually gives us a good link to the database!
+    """
+
+    def __init__(self, *args, **kwargs):
+        print("Init HasDatabase")
+        if not s.database_is_disabled:
+            s.open_connection()
+            self._database = s.database
+        else:
+            raise NotImplementedError("WIP. For now only allowed with a database")
+
+    @property
+    def database(self):
+        return self._database
+
+    def save(self):
+        raise NotImplementedError("WIP. Saving should make sure you're registered with the database.")
 
 
 class PyironObject(HasStorage, HasDatabase, ABC):
     """
     The fundamental pyiron object bringing together python objects, database identification, and data serialziation.
     """
-    pass
+
+    def __init__(self, *args, **kwargs):
+        HasStorage.__init__(self)
+        HasDatabase.__init__(self)
