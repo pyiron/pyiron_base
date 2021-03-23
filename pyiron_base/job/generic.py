@@ -1127,7 +1127,7 @@ class GenericJob(JobCore):
         """
         job_name = posixpath.splitext(posixpath.basename(hdf.file_name))[0]
         project_hdf5 = type(hdf)(
-            project=hdf._create_project_from_hdf5(),
+            project=hdf.create_project_from_hdf5(),
             file_name=job_name
         )
         return {"job_name": job_name, "project": project_hdf5}

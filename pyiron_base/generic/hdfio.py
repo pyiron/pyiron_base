@@ -824,11 +824,11 @@ class FileHDFio(object):
                 ):
                     # Here, we are asked to return the root of the HDF5-file. The resulting self.path would be the
                     # same as the self.file_path and, thus, the path of the pyiron Project this HDF5-file belongs to:
-                    return self._create_project_from_hdf5()
+                    return self.create_project_from_hdf5()
                 elif item_abs_lst[0] == "..":
                     # Here, we are asked to return a path super to the root of the HDF5-file, a.k.a. the path of it's
                     # pyiron Project, thus we pass the relative path to the pyiron Project to handle it:
-                    return self._create_project_from_hdf5()["/".join(item_abs_lst)]
+                    return self.create_project_from_hdf5()["/".join(item_abs_lst)]
                 else:
                     hdf_object = self.copy()
                     hdf_object.h5_path = "/".join(item_abs_lst[:-1])
@@ -869,7 +869,7 @@ class FileHDFio(object):
     #     except AttributeError:
     #         pass
 
-    def _create_project_from_hdf5(self):
+    def create_project_from_hdf5(self):
         """
         Internal function to create a pyiron project pointing to the directory where the HDF5 file is located.
 
@@ -1405,7 +1405,7 @@ class ProjectHDFio(FileHDFio):
         """
         self._project.remove_job(job_specifier=job_specifier, _unprotect=_unprotect)
 
-    def _create_project_from_hdf5(self):
+    def create_project_from_hdf5(self):
         """
         Internal function to create a pyiron project pointing to the directory where the HDF5 file is located.
 
