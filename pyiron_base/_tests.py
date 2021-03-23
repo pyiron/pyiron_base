@@ -23,6 +23,7 @@ __date__ = "Mar 23, 2021"
 
 
 class TestWithProject(unittest.TestCase, ABC):
+
     """Tests that start and remove a project for their suite, and remove jobs from the project for each test."""
 
     @classmethod
