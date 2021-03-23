@@ -1,0 +1,38 @@
+# This workflow will install Python dependencies, run tests and lint with a variety of Python versions
+# For more information see: https://help.github.com/actions/language-and-framework-guides/using-python-with-github-actions
+
+name: Compatibility with pyiron_contrib
+
+on:
+  pull_request:
+    types: [ labeled ]
+
+jobs:
+  build:
+    if: ${{ github.event.label.name == 'integration' }}
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - uses: conda-incubator/setup-miniconda@v2
+      with:
+        auto-update-conda: true
+        python-version: 3.9
+        channel-priority: strict
+        environment-file: .ci_support/environment.yml
+    - name: Setup
+      shell: bash -l {0}
+      run: |
+        pip install --no-deps .
+        cd ..
+        git clone https://github.com/pyiron/pyiron_contrib
+        cd pyiron_contrib
+        grep -v "pyiron_base" .ci_support/environment.yml > environment.yml
+        conda env update --name test --file environment.yml
+        pip install --no-deps .
+    - name: Test
+      shell: bash -l {0}
+      run: |
+        cd ../pyiron_contrib
+        python -m unittest discover tests/

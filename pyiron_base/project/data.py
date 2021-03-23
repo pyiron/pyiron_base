@@ -15,8 +15,8 @@ Spec:
     - The `Project` tab completion menu should not get cluttered (i.e. nest everything under `Project.foo`)
 """
 
-from pyiron_base.generic.inputlist import InputList
-from pyiron_base.generic.hdfio import FileHDFio
+from pyiron_base.generic.datacontainer import DataContainer
+from pyiron_base.generic.hdfio import ProjectHDFio
 
 __author__ = "Liam Huber"
 __copyright__ = (
@@ -30,7 +30,7 @@ __status__ = "production"
 __date__ = "Feb 19, 2021"
 
 
-class ProjectData(InputList):
+class ProjectData(DataContainer):
     def __new__(cls, *args, **kwargs):
         instance = super().__new__(cls, *args, **kwargs)
         object.__setattr__(instance, "_project", None)
