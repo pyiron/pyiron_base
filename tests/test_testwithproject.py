@@ -9,7 +9,7 @@ from os.path import abspath, dirname
 class TestTestWithProject(TestWithProject):
     def test_location(self):
         self.assertEqual(
-            dirname(abspath(__file__)),
+            dirname(abspath(__file__)).replace("\\", "/"),
             self.file_location,
             msg="Projects will not be instantiated where their invoking script is."
         )
