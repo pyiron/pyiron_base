@@ -21,7 +21,7 @@ from sqlalchemy import (
 from sqlalchemy.pool import NullPool
 from sqlalchemy.sql import select
 from sqlalchemy.exc import OperationalError, DatabaseError
-from pyiron_base.database.tables import SimulationTable
+from pyiron_base.database.tables import simulation_table
 
 __author__ = "Murat Han Celik"
 __copyright__ = (
@@ -99,7 +99,7 @@ class DatabaseAccess(object):
             raise ValueError("Connection to database failed: " + str(except_msg))
 
         self.__reload_db()
-        self.simulation_table = SimulationTable(str(table_name), self.metadata).table
+        self.simulation_table = simulation_table(table_name, self.metadata, extend_existing=True)
         self.metadata.create_all()
         self._viewer_mode = False
 
