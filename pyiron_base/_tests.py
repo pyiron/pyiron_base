@@ -36,6 +36,10 @@ class TestWithProject(unittest.TestCase, ABC):
 
     @classmethod
     def tearDownClass(cls):
+        cls.file_location = dirname(abspath(__file__)).replace("\\", "/")
+        cls.project_name = "test_project"
+        cls.project_path = join(cls.file_location, cls.project_name).replace("\\", "/")
+        cls.project = Project(cls.project_path)
         cls.project.remove(enable=True)
         try:
             remove(join(cls.file_location, "pyiron.log"))
