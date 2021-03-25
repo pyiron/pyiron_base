@@ -165,7 +165,7 @@ class DataContainer(MutableMapping):
         2. Creating new instance attributes that don't live in the container itself is possible, but you need to use
         `object.__setattr__` the first time you define that attribute.  Afterwards using normal assignment syntax works.
 
-        3. Subclasses should always be thought off as general data structures, if you want to subclass to have access to
+        3. Subclasses should always be thought of as general data structures, if you want to subclass to have access to
         the HDF5 functionality or the way the DataContainer is shown in jupyter notebooks, but only have a fixed number
         of attributes it is better to create a new class that has an DataContainer as an attribute and dispatch to the
         :method:`.DataContainer.from_hdf`, :method:`.DataContainer.to_hdf` and :method:`.DataContainer._repr_json_`
