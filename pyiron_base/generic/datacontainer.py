@@ -71,7 +71,7 @@ class DataContainer(MutableMapping):
     >>> pl2 = DataContainer([1,2])
     >>> pl2["end"] = 3
     >>> pl2
-    DataContainer({0: 1, 1: 2, "end": 3})
+    DataContainer({0: 1, 1: 2, 'end': 3})
 
     It is also allowed to set an item one past the length of the DataContainer,
     this is then equivalent to appending that element.  This allows to use the
@@ -90,9 +90,9 @@ class DataContainer(MutableMapping):
 
     >>> pm.foo
     24
-    >>> pm.append = 23
+    >>> pm.tail = 23
     >>> pm
-    DataContainer({"foo": 24, "bar": 42, "append": 23})
+    DataContainer({'foo': 24, 'bar': 42, 'tail': 23})
 
     Keys and indices can be tuples to traverse nested DataContainers.
 
@@ -128,7 +128,7 @@ class DataContainer(MutableMapping):
     to avoid ambiguities in the final order of the DataContainer.
 
     >>> DataContainer({0: "foo", 1: "bar", 2: 42})
-    DataContainer(["foo", "bar", 42])
+    DataContainer(['foo', 'bar', 42])
     >>> DataContainer({0: "foo", 2: 42, 1: "bar"})
     Traceback (most recent call last):
         File "<stdin>", line 1, in <module>
