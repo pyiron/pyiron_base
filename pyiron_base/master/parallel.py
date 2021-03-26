@@ -37,9 +37,9 @@ s = Settings()
 class ParallelMaster(GenericMaster):
     """
     MasterJob that handles the creation and analysis of several parallel jobs (including master and
-    continuation jobs), Examples are Murnaghan or Phonon calculations
+    continuation jobs), Examples are Murnaghan or Phonon calculations.
 
-    Subclasses *must* implement :method:`.collect_output()`.  Additionally :attribute:`._job_generator` must be
+    Subclasses *must* implement :meth:`.collect_output()`.  Additionally :attr:`._job_generator` must be
     initialized with an instance of :class:`.JobGenerator` in the subclasses' `__init__`.
 
     Args:
@@ -889,8 +889,8 @@ class JobGenerator(object):
     Implements the functions to generate the parameter list, modify the individual jobs according to the parameter list
     and generate the new job names according to the parameter list.
 
-    Subclasses have to override :method:`.parameter_list()` to provide a list of (arbitrary) parameter objects and
-    :method:`.modify_job()` and may override :method:`.job_name()` to provide custom job names.
+    Subclasses have to override :meth:`.parameter_list()` to provide a list of (arbitrary) parameter objects and
+    :meth:`.modify_job()` and may override :meth:`.job_name()` to provide custom job names.
 
     The generated jobs are created as child job from the given master.
     """
@@ -899,7 +899,7 @@ class JobGenerator(object):
         """
         Args:
             master (:class:`.ParallelMaster`): master job from which child jobs are created with
-            :method:`.ParallelMaster.create_child_job()`.
+            :meth:`.ParallelMaster.create_child_job()`.
         """
         self._master = master
         self._childcounter = 0
@@ -927,7 +927,7 @@ class JobGenerator(object):
     def parameter_list(self):
         """
         list:
-            parameter objects passed to :method:`.modify_job()` when the next
+            parameter objects passed to :meth:`.modify_job()` when the next
             job is requested.
         """
         raise NotImplementedError("Implement in derived class")
@@ -943,7 +943,7 @@ class JobGenerator(object):
             job (:class:`.GenericJob`):
                 new job instance
             parameter (type):
-                current parameter object drawn from :attribute:`.parameter_list`.
+                current parameter object drawn from :attr:`.parameter_list`.
 
         Returns:
             :class:`.GenericJob`: must be the given job
@@ -958,7 +958,7 @@ class JobGenerator(object):
 
         Args:
             parameter (type):
-                current parameter object drawn from :attribute:`.parameter_list`.
+                current parameter object drawn from :attr:`.parameter_list`.
 
         Returns:
             str: job name for the next child job
@@ -979,7 +979,7 @@ class JobGenerator(object):
         Iterate over the child jobs
 
         Returns:
-            GenericJob: new job object
+            :class:`~.GenericJob`: new job object
         """
         if len(self.parameter_list_cached) > self._childcounter:
             current_paramenter = self.parameter_list_cached[self._childcounter]

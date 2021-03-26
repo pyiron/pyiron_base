@@ -270,9 +270,9 @@ class InteractiveBase(GenericJob):
         """
         Set the run mode to interactive.
 
-        This is the same as setting :attribute:`.server.run_mode.interactive`.
+        This is the same as setting :attr:`.server.run_mode.interactive`.
 
-        Must be called before :method:`.run()` is called.
+        Must be called before :meth:`.run()` is called.
         """
         self.server.run_mode.interactive = True
 
@@ -280,7 +280,7 @@ class InteractiveBase(GenericJob):
         """
         Stop interactive execution and sync interactive output cache.
 
-        Sets the job status to :attribute:`~.JobStatus.finished`, :method:`.run()` cannot be called after this.
+        Sets the job status to :attr:`~.JobStatus.finished`, :meth:`.run()` cannot be called after this.
         """
         if (
             len(list(self.interactive_cache.keys())) > 0
