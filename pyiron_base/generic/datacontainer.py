@@ -168,7 +168,7 @@ class DataContainer(MutableMapping):
         3. Subclasses should always be thought of as general data structures, if you want to subclass to have access to
         the HDF5 functionality or the way the DataContainer is shown in jupyter notebooks, but only have a fixed number
         of attributes it is better to create a new class that has an DataContainer as an attribute and dispatch to the
-        :method:`.DataContainer.from_hdf`, :method:`.DataContainer.to_hdf` and :method:`.DataContainer._repr_json_`
+        :method:`DataContainer.from_hdf`, :method:`DataContainer.to_hdf` and :method:`DataContainer._repr_json_`
         methods.
 
 
