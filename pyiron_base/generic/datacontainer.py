@@ -168,7 +168,7 @@ class DataContainer(MutableMapping):
         3. Subclasses should always be thought of as general data structures, if you want to subclass to have access to
         the HDF5 functionality or the way the DataContainer is shown in jupyter notebooks, but only have a fixed number
         of attributes it is better to create a new class that has an DataContainer as an attribute and dispatch to the
-        :method:`DataContainer.from_hdf`, :method:`DataContainer.to_hdf` and :method:`DataContainer._repr_json_`
+        :meth:`DataContainer.from_hdf`, :meth:`DataContainer.to_hdf` and :meth:`DataContainer._repr_json_`
         methods.
 
 
@@ -773,7 +773,7 @@ class DataContainer(MutableMapping):
         """
         Parse file as dictionary and add its keys to this container.
 
-        For supported file types, see :function:`.fileio.read`.
+        For supported file types, see :func:`.fileio.read`.
 
         Errors during reading of the files generate a warning, but leave the container unchanged.
 
@@ -790,7 +790,7 @@ class DataContainer(MutableMapping):
         """
         Writes the DataContainer to a text file.
 
-        For supported file types, see :function:`.fileio.write`.
+        For supported file types, see :func:`.fileio.write`.
 
         Args:
             file_name(str): the name of the file to be writen to.
