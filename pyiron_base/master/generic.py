@@ -172,7 +172,7 @@ class GenericMaster(GenericJob):
 
         Returns:
             :class:`.ProjectHDFio`: HDF file for new child job, can be assigned to its
-            :attribute:`~.Generic.project_hdf5`
+            :attr:`~.Generic.project_hdf5`
         """
         if self.server.new_hdf:
             return self.project_hdf5.create_hdf(
