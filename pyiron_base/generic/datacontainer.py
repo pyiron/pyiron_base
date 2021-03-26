@@ -71,7 +71,7 @@ class DataContainer(MutableMapping):
     >>> pl2 = DataContainer([1,2])
     >>> pl2["end"] = 3
     >>> pl2
-    DataContainer({0: 1, 1: 2, "end": 3})
+    DataContainer({0: 1, 1: 2, 'end': 3})
 
     It is also allowed to set an item one past the length of the DataContainer,
     this is then equivalent to appending that element.  This allows to use the
@@ -90,9 +90,9 @@ class DataContainer(MutableMapping):
 
     >>> pm.foo
     24
-    >>> pm.append = 23
+    >>> pm.tail = 23
     >>> pm
-    DataContainer({"foo": 24, "bar": 42, "append": 23})
+    DataContainer({'foo': 24, 'bar': 42, 'tail': 23})
 
     Keys and indices can be tuples to traverse nested DataContainers.
 
@@ -128,7 +128,7 @@ class DataContainer(MutableMapping):
     to avoid ambiguities in the final order of the DataContainer.
 
     >>> DataContainer({0: "foo", 1: "bar", 2: 42})
-    DataContainer(["foo", "bar", 42])
+    DataContainer(['foo', 'bar', 42])
     >>> DataContainer({0: "foo", 2: 42, 1: "bar"})
     Traceback (most recent call last):
         File "<stdin>", line 1, in <module>
@@ -152,6 +152,71 @@ class DataContainer(MutableMapping):
     [3, 2, 1, 0]
     >>> list(pl.keys())
     [0, 1, 2, 3]
+
+    .. attention:: Subclasses beware!
+
+        DataContainer require some careful treatment when creating subclasses.
+
+        1. Since DataContainers are expected to recursively instantiate themselves subclasses need to keep their
+        `__init__ compatible to the base class.  That means being able to be instantiated without arguments, if
+        arguments are given the first one (or `init`) has to accept a Mapping or Iterable.  Additional arguments may be
+        added, but must be after `init` and must have a default.
+
+        2. Creating new instance attributes that don't live in the container itself is possible, but you need to use
+        `object.__setattr__` the first time you define that attribute.  Afterwards using normal assignment syntax works.
+
+        3. Subclasses should always be thought of as general data structures, if you want to subclass to have access to
+        the HDF5 functionality or the way the DataContainer is shown in jupyter notebooks, but only have a fixed number
+        of attributes it is better to create a new class that has an DataContainer as an attribute and dispatch to the
+        :meth:`DataContainer.from_hdf`, :meth:`DataContainer.to_hdf` and :meth:`DataContainer._repr_json_`
+        methods.
+
+
+    A few examples for subclasses
+
+    >>> class ExtendedContainer(DataContainer):
+    ...     def __init__(self, init=None, my_fancy_field=42, table_name=None):
+    ...         super().__init__(init=init, table_name=table_name)
+    ...         object.__setattr__(self, "my_fancy_field", my_fancy_field)
+
+    After defining it once like this you can access my_fancy_field as a normal attribute, but it will not be stored in
+    the container itself and will not be stored in HDF5.
+
+    >>> e = ExtendedContainer({'foo': 1, 'bar': 5}, my_fancy_field=23)
+    >>> e.my_fancy_field
+    23
+    >>> e
+    ExtendedContainer({'foo': 1, 'bar': 5})
+    >>> e.my_fancy_field = 42
+    >>> e.my_fancy_field
+    42
+    >>> e
+    ExtendedContainer({'foo': 1, 'bar': 5})
+
+    Or a class that uses a DataContainer for storage, but doesn't derive from it.
+
+    >>> class FancyClass:
+    ...     def __init__(self, foo):
+    ...         self.storage = DataContainer()
+    ...         self.storage.foo = foo
+    ...
+    ...     @property
+    ...     def foo(self):
+    ...         return self.storage.foo
+    ...
+    ...     @foo.setter
+    ...     def foo(self, val):
+    ...         self.storage.foo = val
+    ...
+    ...     def from_hdf(self, hdf, group_name):
+    ...         self.storage.from_hdf(hdf=hdf, group_name=group_name)
+    ...
+    ...     def to_hdf(self, hdf, group_name):
+    ...         self.storage.to_hdf(hdf=hdf, group_name=group_name)
+    ...
+    ...     def _repr_json_(self):
+    ...         return self.storage._repr_json_()
+
     """
 
     __version__ = "0.1.0"
@@ -708,7 +773,7 @@ class DataContainer(MutableMapping):
         """
         Parse file as dictionary and add its keys to this container.
 
-        For supported file types, see :function:`.fileio.read`.
+        For supported file types, see :func:`.fileio.read`.
 
         Errors during reading of the files generate a warning, but leave the container unchanged.
 
@@ -725,7 +790,7 @@ class DataContainer(MutableMapping):
         """
         Writes the DataContainer to a text file.
 
-        For supported file types, see :function:`.fileio.write`.
+        For supported file types, see :func:`.fileio.write`.
 
         Args:
             file_name(str): the name of the file to be writen to.
