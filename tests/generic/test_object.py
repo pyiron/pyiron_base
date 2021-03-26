@@ -9,10 +9,10 @@ from pyiron_base.project.generic import Project
 from pyiron_base.generic.object import HasStorage, HasDatabase, PyironObject
 from pyiron_base import DataContainer
 from pyiron_base.database.generic import DatabaseAccess
-from pyiron_base._tests import TestWithProject
+from pyiron_base._tests import TestWithCleanProject
 
 
-class TestHasStorage(TestWithProject):
+class TestHasStorage(TestWithCleanProject):
 
     def setUp(self):
         super().setUp()
@@ -40,7 +40,7 @@ class TestHasStorage(TestWithProject):
         )
 
 
-class TestHasDatabase(TestWithProject):
+class TestHasDatabase(TestWithCleanProject):
 
     def setUp(self):
         super().setUp()
@@ -57,7 +57,7 @@ class TestHasDatabase(TestWithProject):
             self.has_database.database = 42
 
 
-class TestPyironObject(TestWithProject):
+class TestPyironObject(TestWithCleanProject):
     def setUp(self):
         super().setUp()
         self.obj = PyironObject()
