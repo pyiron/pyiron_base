@@ -1,6 +1,6 @@
 # Copyright (c) Max-Planck-Institut für Eisenforschung GmbH - Computational Materials Design (CM) Department
 # Distributed under the terms of "New BSD License", see the LICENSE file.
-from pyiron_base._tests import TestWithProject
+from pyiron_base._tests import TestWithCleanProject
 from pyiron_base.generic.datacontainer import DataContainer
 from pyiron_base.generic.inputlist import InputList
 from collections import Iterator
@@ -17,7 +17,7 @@ class Sub(DataContainer):
         self.foo = 42
 
 
-class TestDataContainer(TestWithProject):
+class TestDataContainer(TestWithCleanProject):
 
     @classmethod
     def setUpClass(cls):

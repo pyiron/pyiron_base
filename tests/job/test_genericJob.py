@@ -5,10 +5,10 @@
 import unittest
 import os
 from pyiron_base.job.generic import GenericJob
-from pyiron_base._tests import TestWithProject
+from pyiron_base._tests import TestWithCleanProject
 
 
-class TestGenericJob(TestWithProject):
+class TestGenericJob(TestWithCleanProject):
     def test_db_entry(self):
         ham = self.project.create.job.ScriptJob("job_single_debug")
         db_entry = ham.db_entry()

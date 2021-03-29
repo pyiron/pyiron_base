@@ -1,5 +1,5 @@
 import os
-from pyiron_base._tests import TestWithProject
+from pyiron_base._tests import TestWithCleanProject
 
 job_py_source = """
 from pyiron_base import Notebook as nb
@@ -8,7 +8,7 @@ print(coeff_tot['value'])
 """
 
 
-class TestScriptJob(TestWithProject):
+class TestScriptJob(TestWithCleanProject):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
