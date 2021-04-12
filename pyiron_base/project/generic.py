@@ -532,7 +532,7 @@ class Project(ProjectPath):
             job_id_lst = self.get_jobs(recursive)["id"]
         else:
             df = self.job_table(recursive=True)
-            job_id_lst = list(df[df["status"] == status]["id"])
+            job_id_lst = list(df[df["status"] == status]["id"]) if not df.empty else []
         for job_id in job_id_lst:
             if path is not None:
                 yield self.load(job_id, convert_to_object=False)[path]
