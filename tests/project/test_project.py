@@ -39,6 +39,21 @@ class TestProjectData(unittest.TestCase):
         self.assertEqual(1, len(project2.data))
         self.assertEqual(self.project.data.foo, project2.data.foo)
 
+    def test_iterjobs(self):
+
+        try:
+            for j in self.project.iter_jobs():
+                pass
+        except:
+            self.fail("Iterating over empty project should not raise exception.")
+
+
+        try:
+            for j in self.project.iter_jobs(status="finished"):
+                pass
+        except:
+            self.fail("Iterating over empty project with set status flag should not raise exception.")
+
 
 if __name__ == '__main__':
     unittest.main()
