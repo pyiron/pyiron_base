@@ -35,7 +35,7 @@ setup(
         'h5io==0.1.2',
         'h5py==3.1.0',
         'numpy==1.20.2',
-        'pandas==1.2.3',
+        'pandas==1.2.4',
         'pathlib2==2.3.5',
         'psutil==5.8.0',
         'pyfileindex==0.0.6',
