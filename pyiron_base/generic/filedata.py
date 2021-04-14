@@ -8,7 +8,7 @@ import os
 import pandas
 from functools import lru_cache
 
-from pyiron_base import ImportAlarm, FileHDFio
+from pyiron_base import ImportAlarm, FileHDFio, ProjectHDFio
 
 __author__ = "Niklas Siemer"
 __copyright__ = (
@@ -26,28 +26,40 @@ _has_imported = {}
 try:
     from PIL import Image
     _has_imported['PIL'] = True
-    import_alarm = ImportAlarm()
 except ImportError:
     _has_imported['PIL'] = False
+try:
+    import nbformat
+    _has_imported['nbformat'] = True
+except ImportError:
+    _has_imported['nbformat'] = False
+
+if all(_has_imported.values()):
+    import_alarm = ImportAlarm()
+else:
     import_alarm = ImportAlarm(
-        "Reduced functionality, since " + 'PIL' + " could not be imported."
+        "Reduced functionality, since " +
+        str([package for package in _has_imported.keys() if not _has_imported[package]]) +
+        " could not be imported."
     )
 
 
 @import_alarm
-def load_file(filename, filetype=None):
+def load_file(filename, filetype=None, project=None):
     """
         Load the file and return an appropriate object containing the data.
 
         Args:
             filename (str): path to the file to be displayed.
             filetype (str/None): File extension, if given this overwrites the assumption based on the filename.
+            project (pyiron-Project/None): Project calling this function, provided to all objects referring to such.
 
             Supported file types are:
             '.h5', '.hdf'
             '.json'
             '.txt'
             '.csv'
+            '.ipynb'
             Image extensions supported by PIL
 
         Returns:
@@ -60,6 +72,9 @@ def load_file(filename, filetype=None):
     def _load_txt(file):
         with open(file, encoding='utf8') as f:
             return f.readlines()
+
+    def _load_ipynb(file):
+        return nbformat.read(file, as_version=4)
 
     def _load_json(file):
         with open(file) as f:
@@ -83,17 +98,27 @@ def load_file(filename, filetype=None):
         filetype = '.' + filetype
 
     if filetype.lower() in ['.h5', '.hdf']:
-        return FileHDFio(file_name=filename)
+        if project is None:
+            return FileHDFio(file_name=filename)
+        else:
+            return ProjectHDFio(file_name=filename, project=project)
     if filetype.lower() in ['.json']:
         return _load_json(filename)
     elif filetype.lower() in ['.txt']:
         return _load_txt(filename)
     elif filetype.lower() in ['.csv']:
         return _load_csv(filename)
-    elif _has_imported['PIL'] and filetype.lower() in Image.registered_extensions():
-        return _load_img(filename)
-    else:
-        return _load_default(filename)
+    try:
+        if filetype.lower() in ['.ipynb']:
+            return _load_ipynb(filename)
+    except NameError:
+        pass
+    try:
+        if filetype.lower() in Image.registered_extensions():
+            return _load_img(filename)
+    except NameError:
+        pass
+    return _load_default(filename)
 
 
 class FileData:
