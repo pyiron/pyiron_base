@@ -372,6 +372,33 @@ class DatabaseAccess(object):
             output_list += [dict(zip(col.keys(), tmp_values))]
         return output_list
 
+    def _truncate_chem_formula(self, chem_formula):
+        """
+        this functions truncate the chemical formula to the last element,
+        up to the limit of the database.
+        arg:
+        chem_form(str): the chemical formula
+        """
+        acceptable_len=30
+        if len(chem_formula) >= acceptable_len:
+            for i in range(acceptable_len):
+                if not chem_formula[acceptable_len-i].isdigit():
+                    return chem_formula[:acceptable_len-i+1]
+            return chem_formula[:acceptable_len]
+        else:
+            return chem_formula
+
+    def _check_chem_formula_length(self, par_dict):
+        """
+        performs a check whether the length of chemical formula exceeds the defined limit
+        args:
+        par_dict(dict): dictionary of the parameter
+        """
+        for key, value in par_dict:
+            if key == 'chemicalformula':
+               par_dict[key] = self._truncate_chem_formula(value)
+        return par_dict
+
     # Item functions
     def add_item_dict(self, par_dict):
         """
@@ -400,6 +427,7 @@ class DatabaseAccess(object):
         """
         if not self._viewer_mode:
             try:
+                par_dict = self._check_chem_formula_length(par_dict)
                 par_dict = dict(
                     (key.lower(), value) for key, value in par_dict.items()
                 )  # make keys lowercase
