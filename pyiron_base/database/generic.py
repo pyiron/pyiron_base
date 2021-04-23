@@ -102,6 +102,7 @@ class DatabaseAccess(object):
         except Exception as except_msg:
             raise ValueError("Connection to database failed: " + str(except_msg))
 
+        self._chem_formula_lim_length=30
         self.__reload_db()
         self.simulation_table = Table(
             str(table_name),
@@ -113,7 +114,7 @@ class DatabaseAccess(object):
             Column("project", String(255)),
             Column("job", String(50)),
             Column("subjob", String(255)),
-            Column("chemicalformula", String(30)),
+            Column("chemicalformula", String(self._chem_formula_lim_length)),
             Column("status", String(20)),
             Column("hamilton", String(20)),
             Column("hamversion", String(50)),
@@ -372,6 +373,19 @@ class DatabaseAccess(object):
             output_list += [dict(zip(col.keys(), tmp_values))]
         return output_list
 
+    def _check_chem_formula_length(self, par_dict):
+        """
+        performs a check whether the length of chemical formula exceeds the defined limit
+        args:
+        par_dict(dict): dictionary of the parameter
+        limit(int): the limit for the length of checmical formular
+        """
+        for key, value in par_dict.items():
+            if key == 'chemicalformula' and not value is None:
+                if len(value) > self._chem_formula_lim_length:
+                    par_dict[key] = "OVERFLOW_ERROR"
+        return par_dict
+
     # Item functions
     def add_item_dict(self, par_dict):
         """
@@ -400,6 +414,7 @@ class DatabaseAccess(object):
         """
         if not self._viewer_mode:
             try:
+                par_dict = self._check_chem_formula_length(par_dict)
                 par_dict = dict(
                     (key.lower(), value) for key, value in par_dict.items()
                 )  # make keys lowercase
