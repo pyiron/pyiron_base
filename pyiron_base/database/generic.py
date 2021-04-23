@@ -395,7 +395,7 @@ class DatabaseAccess(object):
         par_dict(dict): dictionary of the parameter
         """
         for key, value in par_dict.items():
-            if key == 'chemicalformula':
+            if key == 'chemicalformula' and not value is None:
                par_dict[key] = self._truncate_chem_formula(value)
         return par_dict
 
