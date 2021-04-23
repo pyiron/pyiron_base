@@ -39,35 +39,6 @@ __status__ = "production"
 __date__ = "Sep 1, 2017"
 
 
-def _truncate_chem_formula(chem_formula):
-    """
-    this functions truncate the chemical formula to the last element,
-    up to the limit of the database.
-    arg:
-    chem_form(str): the chemical formula
-    """
-    acceptable_len=30
-    if len(chem_formula) >= acceptable_len:
-        for i in range(acceptable_len):
-            if not chem_formula[acceptable_len-i].isdigit():
-                return chem_formula[:acceptable_len-i+1]
-        return chem_formula[:acceptable_len]
-    else:
-        return chem_formula
-
-
-def _check_chem_formula_length( par_dict):
-    """
-    performs a check whether the length of chemical formula exceeds the defined limit
-    args:
-    par_dict(dict): dictionary of the parameter
-    """
-    for key, value in par_dict.items():
-        if key == 'chemicalformula' and not value is None:
-            par_dict[key] = _truncate_chem_formula(value)
-    return par_dict
-
-
 class AutorestoredConnection:
     def __init__(self, engine):
         self.engine = engine
@@ -131,6 +102,7 @@ class DatabaseAccess(object):
         except Exception as except_msg:
             raise ValueError("Connection to database failed: " + str(except_msg))
 
+        self._chem_formula_lim_lenght=30
         self.__reload_db()
         self.simulation_table = Table(
             str(table_name),
@@ -142,7 +114,7 @@ class DatabaseAccess(object):
             Column("project", String(255)),
             Column("job", String(50)),
             Column("subjob", String(255)),
-            Column("chemicalformula", String(30)),
+            Column("chemicalformula", String(self._chem_formula_lim_lenght)),
             Column("status", String(20)),
             Column("hamilton", String(20)),
             Column("hamversion", String(50)),
@@ -401,6 +373,19 @@ class DatabaseAccess(object):
             output_list += [dict(zip(col.keys(), tmp_values))]
         return output_list
 
+    def _check_chem_formula_length(self, par_dict):
+        """
+        performs a check whether the length of chemical formula exceeds the defined limit
+        args:
+        par_dict(dict): dictionary of the parameter
+        limit(int): the limit for the length of checmical formular
+        """
+        for key, value in par_dict.items():
+            if key == 'chemicalformula' and not value is None:
+                if len(value) > self._chem_formula_lim_lenght:
+                    par_dict[key] = "OVERFLOW_ERROR"
+        return par_dict
+
     # Item functions
     def add_item_dict(self, par_dict):
         """
@@ -429,7 +414,7 @@ class DatabaseAccess(object):
         """
         if not self._viewer_mode:
             try:
-                par_dict = _check_chem_formula_length(par_dict)
+                par_dict = self._check_chem_formula_length(par_dict)
                 par_dict = dict(
                     (key.lower(), value) for key, value in par_dict.items()
                 )  # make keys lowercase
