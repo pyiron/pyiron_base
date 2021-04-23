@@ -380,10 +380,9 @@ class DatabaseAccess(object):
         par_dict(dict): dictionary of the parameter
         limit(int): the limit for the length of checmical formular
         """
-        for key, value in par_dict.items():
-            if key == 'chemicalformula' and not value is None:
-                if len(value) > self._chem_formula_lim_length:
-                    par_dict[key] = "OVERFLOW_ERROR"
+        key_limited = 'chemicalformula'
+        if key_limited in par_dict.keys() and par_dict[key_limited] > self._chem_formula_lim_length:
+            par_dict[key_limited] = "OVERFLOW_ERROR"
         return par_dict
 
     # Item functions
