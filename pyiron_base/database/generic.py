@@ -381,7 +381,9 @@ class DatabaseAccess(object):
         limit(int): the limit for the length of checmical formular
         """
         key_limited = 'chemicalformula'
-        if key_limited in par_dict.keys() and par_dict[key_limited] is not None and len(par_dict[key_limited]) > self._chem_formula_lim_length:
+        if key_limited in par_dict.keys() and \
+                par_dict[key_limited] is not None and \
+                len(par_dict[key_limited]) > self._chem_formula_lim_length:
             par_dict[key_limited] = "OVERFLOW_ERROR"
         return par_dict
 
