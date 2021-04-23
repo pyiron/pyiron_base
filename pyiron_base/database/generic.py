@@ -102,7 +102,7 @@ class DatabaseAccess(object):
         except Exception as except_msg:
             raise ValueError("Connection to database failed: " + str(except_msg))
 
-        self._chem_formula_lim_lenght=30
+        self._chem_formula_lim_length=30
         self.__reload_db()
         self.simulation_table = Table(
             str(table_name),
@@ -114,7 +114,7 @@ class DatabaseAccess(object):
             Column("project", String(255)),
             Column("job", String(50)),
             Column("subjob", String(255)),
-            Column("chemicalformula", String(self._chem_formula_lim_lenght)),
+            Column("chemicalformula", String(self._chem_formula_lim_length)),
             Column("status", String(20)),
             Column("hamilton", String(20)),
             Column("hamversion", String(50)),
@@ -382,7 +382,7 @@ class DatabaseAccess(object):
         """
         for key, value in par_dict.items():
             if key == 'chemicalformula' and not value is None:
-                if len(value) > self._chem_formula_lim_lenght:
+                if len(value) > self._chem_formula_lim_length:
                     par_dict[key] = "OVERFLOW_ERROR"
         return par_dict
 
