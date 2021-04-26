@@ -14,6 +14,7 @@ import numpy as np
 
 from pyiron_base.interfaces.has_groups import HasGroups
 from .fileio import read, write
+from .hdfstub import SimpleStub, ObjectStub
 
 __author__ = "Marvin Poul"
 __copyright__ = (
@@ -245,6 +246,7 @@ class DataContainer(MutableMapping, HasGroups):
         object.__setattr__(instance, "_indices", {})
         object.__setattr__(instance, "table_name", None)
         object.__setattr__(instance, "_read_only", False)
+        object.__setattr__(instance, "_lazy", False)
 
         return instance
 
@@ -272,13 +274,21 @@ class DataContainer(MutableMapping, HasGroups):
 
         elif isinstance(key, int):
             try:
-                return self._store[key]
+                v = self._store[key]
+                if not isinstance(v, HDF5Stub):
+                    return v
+                else:
+                    return v.realize()
             except IndexError:
                 raise IndexError("list index out of range") from None
 
         elif isinstance(key, str):
             try:
-                return self._store[self._indices[key]]
+                v = self._store[self._indices[key]]
+                if not isinstance(v, HDF5Stub):
+                    return v
+                else:
+                    return v.realize()
             except KeyError:
                 raise KeyError(repr(key)) from None
 
@@ -740,9 +750,9 @@ class DataContainer(MutableMapping, HasGroups):
             for n in hdf.list_nodes():
                 if n in _internal_hdf_nodes:
                     continue
-                items.append( (*normalize_key(n), hdf[n]))
+                items.append( (*normalize_key(n), hdf[n] if not self._lazy else SimpleStub(hdf, n)) )
             for g in hdf.list_groups():
-                items.append( (*normalize_key(g), hdf[g].to_object()))
+                items.append( (*normalize_key(g), hdf[g].to_object() if not self._lazy else ObjectStub(hdf, g)) )
             for _, k, v in sorted(items, key=lambda x: x[0]):
                 self[k] = v
 
