@@ -44,7 +44,7 @@ __date__ = "Sep 1, 2017"
 s = Settings()
 
 
-class JobCore:
+class JobCore(HasGroups):
     """
     The JobCore the most fundamental pyiron job class. From this class the GenericJob as well as the reduced JobPath
     class are derived. While JobPath only provides access to the HDF5 file it is about one order faster.
@@ -625,25 +625,13 @@ class JobCore:
             for child_id in self.child_ids
         ]
 
-    def list_groups(self):
-        """
-        equivalent to os.listdirs (consider groups as equivalent to dirs)
-
-        Returns:
-            (list): list of groups in pytables for the path self.h5_path
-        """
+    def _list_groups(self):
         return self.project_hdf5.list_groups() + self._list_ext_childs()
 
-    def list_nodes(self):
-        """
-        List all groups and nodes of the HDF5 file
-
-        Returns:
-            list: list of nodes
-        """
+    def _list_nodes(self):
         return self.project_hdf5.list_nodes()
 
-    def list_all(self):
+    def _list_all(self):
         """
         List all groups and nodes of the HDF5 file - where groups are equivalent to directories and nodes to files.
 

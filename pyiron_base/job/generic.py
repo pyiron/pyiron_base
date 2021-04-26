@@ -1248,7 +1248,7 @@ class GenericJob(JobCore):
         new_ham._restart_file_dict = dict()
         return new_ham
 
-    def list_all(self):
+    def _list_all(self):
         """
         List all groups and nodes of the HDF5 file - where groups are equivalent to directories and nodes to files.
 

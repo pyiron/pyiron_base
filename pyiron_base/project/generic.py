@@ -32,6 +32,7 @@ from pyiron_base.database.jobtable import (
 from pyiron_base.settings.logger import set_logging_level
 from pyiron_base.generic.hdfio import ProjectHDFio
 from pyiron_base.generic.filedata import load_file
+from pyiron_base.generic.has_groups import HasGroups
 from pyiron_base.job.jobtype import JobType, JobTypeChoice, JobFactory
 from pyiron_base.server.queuestatus import (
     queue_delete_job,
@@ -62,7 +63,7 @@ __date__ = "Sep 1, 2017"
 s = Settings()
 
 
-class Project(ProjectPath):
+class Project(ProjectPath, HasGroups):
     """
     The project is the central class in pyiron, all other objects can be created from the project object.
 
@@ -655,7 +656,7 @@ class Project(ProjectPath):
         """
         return self.list_dirs() + self.list_nodes()
 
-    def list_all(self):
+    def _list_all(self):
         """
         Combination of list_groups(), list_nodes() and list_files() all in one dictionary with the corresponding keys:
         - 'groups': Subprojects/ -folder/ -groups.
@@ -714,16 +715,9 @@ class Project(ProjectPath):
         except StopIteration:
             return []
 
-    def list_groups(self):
-        """
-        List directories inside the project
+    _list_groups = list_dirs
 
-        Returns:
-            list: list of directory names
-        """
-        return self.list_dirs()
-
-    def list_nodes(self, recursive=False):
+    def _list_nodes(self, recursive=False):
         """
         List nodes/ jobs/ pyiron objects inside the project
 
