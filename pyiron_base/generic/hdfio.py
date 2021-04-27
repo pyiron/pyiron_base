@@ -333,12 +333,12 @@ class FileHDFio(object):
         if self.file_exists:
             dest_path = destination.h5_path[1:] if destination.h5_path[0] == "/" else destination.h5_path
             if self.file_name != file_name:
-                with h5py.File(self.file_name, mode="r") as f_source:
-                    with h5py.File(file_name, mode="a") as f_target:
+                with h5py.File(self.file_name, mode="r", libver="latest") as f_source:
+                    with h5py.File(file_name, mode="a", libver="latest") as f_target:
                         _internal_copy(source=f_source, source_path=self._h5_path, target=f_target,
                                        target_path=dest_path, maintain_flag=maintain_name)
             else:
-                with h5py.File(file_name, mode="a") as f_target:
+                with h5py.File(file_name, mode="a", libver="latest") as f_target:
                     _internal_copy(source=f_target, source_path=self._h5_path, target=f_target,
                                    target_path=dest_path, maintain_flag=maintain_name)
 
@@ -358,7 +358,7 @@ class FileHDFio(object):
             FileHDFio: FileHDFio object pointing to the new group
         """
         full_name = posixpath.join(self.h5_path, name)
-        with h5py.File(self.file_name, mode="a", libver="latest", swmr=True) as h:
+        with h5py.File(self.file_name, mode="a", libver="latest") as h:
             try:
                 h.create_group(full_name, track_order=track_order)
             except ValueError:
@@ -372,7 +372,7 @@ class FileHDFio(object):
         """
         try:
             with h5py.File(
-                self.file_name, mode="a", libver="latest", swmr=True
+                self.file_name, mode="a", libver="latest"
             ) as hdf_file:
                 del hdf_file[self.h5_path]
         except KeyError:
