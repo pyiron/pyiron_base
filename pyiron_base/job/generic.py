@@ -443,19 +443,12 @@ class GenericJob(JobCore):
         del self.__name__
         del self.__version__
         del self._executable
-        del self._name
         del self._server
         del self._logger
-        del self._parent_id
-        del self._master_id
         del self._import_directory
         del self._status
         del self._restart_file_list
         del self._restart_file_dict
-        # del self._process
-        # del self._hdf5
-        del self._job_id
-        del self._status
 
     def copy(self):
         """
