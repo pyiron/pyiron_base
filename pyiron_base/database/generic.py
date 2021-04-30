@@ -380,7 +380,7 @@ class DatabaseAccess(object):
         par_dict(dict): dictionary of the parameter
         limit(int): the limit for the length of checmical formular
         """
-        key_limited = 'chemicalformula'
+        key_limited = 'ChemicalFormula'
         if key_limited in par_dict.keys() and \
                 par_dict[key_limited] is not None and \
                 len(par_dict[key_limited]) > self._chem_formula_lim_length:
