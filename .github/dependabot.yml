@@ -1,0 +1,17 @@
+version: 2
+updates:
+- package-ecosystem: pip
+  directory: "/"
+  schedule:
+    interval: daily
+  open-pull-requests-limit: 10
+  ignore:
+  - dependency-name: h5py
+    versions:
+    - 3.2.0
+  - dependency-name: h5io
+    versions:
+    - 0.1.2.post0.dev2
+  - dependency-name: pyfileindex
+    versions:
+    - 0.0.4.post0.dev2
