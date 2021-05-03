@@ -25,6 +25,10 @@ class HasHDF(ABC):
         pass
 
     @abstractmethod
+    def _type_to_hdf(hdf):
+        pass
+
+    @abstractmethod
     def _to_hdf(hdf):
         pass
 
@@ -34,6 +38,7 @@ class HasHDF(ABC):
 
     def to_hdf(self, hdf, group_name=None):
         with WithHDF(hdf, group_name) as hdf:
+            self._type_to_hdf(hdf)
             self._to_hdf(hdf)
 
     def rewrite_hdf(self, hdf, group_name=None):
