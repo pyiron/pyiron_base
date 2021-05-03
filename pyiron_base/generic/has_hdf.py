@@ -2,6 +2,7 @@
 from abc import ABC, abstractmethod
 
 class WithHDF:
+    __slots__ = ("_hdf", "_group_name")
 
     def __init__(self, hdf, group_name=None):
         self._hdf = hdf
