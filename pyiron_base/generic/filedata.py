@@ -45,13 +45,17 @@ else:
     )
 
 
-class OwnNotebookNode(nbformat.NotebookNode):
-    """Wrapper for nbformat.NotebookNode with some additional representation based on nbconvert."""
-    def _repr_html_(self):
-        html_exporter = nbconvert.HTMLExporter()
-        html_exporter.template_name = "classic"
-        (html_output, resources) = html_exporter.from_notebook_node(self)
-        return html_output
+try:
+    class OwnNotebookNode(nbformat.NotebookNode):
+        """Wrapper for nbformat.NotebookNode with some additional representation based on nbconvert."""
+        def _repr_html_(self):
+            html_exporter = nbconvert.HTMLExporter()
+            html_exporter.template_name = "classic"
+            (html_output, resources) = html_exporter.from_notebook_node(self)
+            return html_output
+
+except NameError:
+    pass
 
 
 @import_alarm
