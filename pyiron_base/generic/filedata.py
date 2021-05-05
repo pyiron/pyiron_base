@@ -5,8 +5,9 @@
 
 import json
 import os
-import pandas
 from functools import lru_cache
+
+import pandas
 
 from pyiron_base import ImportAlarm, FileHDFio, ProjectHDFio
 
@@ -29,7 +30,7 @@ try:
 except ImportError:
     _has_imported['PIL'] = False
 try:
-    import nbformat
+    import nbformat, nbconvert
     _has_imported['nbformat'] = True
 except ImportError:
     _has_imported['nbformat'] = False
@@ -42,6 +43,15 @@ else:
         str([package for package in _has_imported.keys() if not _has_imported[package]]) +
         " could not be imported."
     )
+
+
+class OwnNotebookNode(nbformat.NotebookNode):
+    """Wrapper for nbformat.NotebookNode with some additional representation based on nbconvert."""
+    def _repr_html_(self):
+        html_exporter = nbconvert.HTMLExporter()
+        html_exporter.template_name = "classic"
+        (html_output, resources) = html_exporter.from_notebook_node(self)
+        return html_output
 
 
 @import_alarm
@@ -74,7 +84,7 @@ def load_file(filename, filetype=None, project=None):
             return f.readlines()
 
     def _load_ipynb(file):
-        return nbformat.read(file, as_version=4)
+        return OwnNotebookNode(nbformat.read(file, as_version=4))
 
     def _load_json(file):
         with open(file) as f:
