@@ -5,8 +5,9 @@
 
 import json
 import os
-import pandas
 from functools import lru_cache
+
+import pandas
 
 from pyiron_base import ImportAlarm, FileHDFio
 
@@ -27,6 +28,8 @@ try:
     from PIL import Image
     _has_imported['PIL'] = True
     import_alarm = ImportAlarm()
+    # For some reason I do not know this forces PIL to always be aware of all possible Image extensions.
+    Image.registered_extensions()
 except ImportError:
     _has_imported['PIL'] = False
     import_alarm = ImportAlarm(
