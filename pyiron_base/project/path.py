@@ -350,10 +350,11 @@ class ProjectPath(GenericPath):
 
     def _convert_str_to_generic_path(self, path):
         """
-        Convert path in string representation to an GenericPath object
+        Convert path in string representation to an GenericPath object.  If argument is string and the given path does
+        not exist, create it.
 
         Args:
-            path (str): absolute path
+            path (str, GenericPath): absolute path, if GenericPath, returned unchanged
 
         Returns:
             GenericPath: GenericPath object pointing to the absolute path
