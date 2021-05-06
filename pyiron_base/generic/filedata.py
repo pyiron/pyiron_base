@@ -107,23 +107,25 @@ def load_file(filename, filetype=None, project=None):
         _, filetype = os.path.splitext(filename)
     elif filetype[0] != '.':
         filetype = '.' + filetype
+    filetype = filetype.lower()
 
-    if filetype.lower() in ['.h5', '.hdf']:
+    if filetype in ['.h5', '.hdf']:
         if project is None:
             return FileHDFio(file_name=filename)
         else:
             return ProjectHDFio(file_name=filename, project=project)
-    if filetype.lower() in ['.json']:
+    elif filetype in ['.json']:
         return _load_json(filename)
-    elif filetype.lower() in ['.txt']:
+    elif filetype in ['.txt']:
         return _load_txt(filename)
-    elif filetype.lower() in ['.csv']:
+    elif filetype in ['.csv']:
         return _load_csv(filename)
-    elif _has_imported['nbformat'] and filetype.lower() in ['.ipynb']:
+    elif _has_imported['nbformat'] and filetype in ['.ipynb']:
         return _load_ipynb(filename)
-    elif _has_imported['PIL'] and filetype.lower() in Image.registered_extensions():
+    elif _has_imported['PIL'] and filetype in Image.registered_extensions():
         return _load_img(filename)
-    return _load_default(filename)
+    else:
+        return _load_default(filename)
 
 
 class FileData:
