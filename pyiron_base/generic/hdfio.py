@@ -5,6 +5,7 @@
 Classes to map the Python objects to HDF5 data structures
 """
 
+from functools import lru_cache
 import h5py
 import os
 import importlib
@@ -700,6 +701,7 @@ class FileHDFio(object):
             key (str): key to store the data
             value (pandas.DataFrame, pandas.Series, dict, list, float, int): basically any kind of data is supported
         """
+        self.__getitem__.cache_clear()
         use_json = True
         if hasattr(value, "to_hdf") & (
             not isinstance(value, (pandas.DataFrame, pandas.Series))
@@ -780,6 +782,7 @@ class FileHDFio(object):
         except AttributeError:
             pass
 
+    @lru_cache(maxsize=32)
     def __getitem__(self, item):
         """
         Get/ read data from the HDF5 file
