@@ -350,10 +350,11 @@ class ProjectPath(GenericPath):
 
     def _convert_str_to_generic_path(self, path):
         """
-        Convert path in string representation to an GenericPath object
+        Convert path in string representation to an GenericPath object.  If argument is string and the given path does
+        not exist, create it.
 
         Args:
-            path (str): absolute path
+            path (str, GenericPath): absolute path, if GenericPath, returned unchanged
 
         Returns:
             GenericPath: GenericPath object pointing to the absolute path
@@ -368,9 +369,7 @@ class ProjectPath(GenericPath):
                 )
                 self._create_path(path_local, path)
                 path = posixpath.join(path_local, path)
-            elif not os.path.exists(path) and os.path.exists(
-                os.path.normpath(os.path.join(path, ".."))
-            ):
+            elif not os.path.exists(path):
                 self._create_path(path)
             # else:
             #     raise ValueError(path, ' does not exist!')
