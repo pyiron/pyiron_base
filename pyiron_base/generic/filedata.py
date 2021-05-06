@@ -27,6 +27,8 @@ _has_imported = {}
 try:
     from PIL import Image
     _has_imported['PIL'] = True
+    # For some reason I do not know this forces PIL to always be aware of all possible Image extensions.
+    Image.registered_extensions()
 except ImportError:
     _has_imported['PIL'] = False
 try:
