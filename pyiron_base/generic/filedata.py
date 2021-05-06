@@ -45,7 +45,7 @@ else:
     )
 
 
-try:
+if _has_imported['nbformat']:
     class OwnNotebookNode(nbformat.NotebookNode):
         """Wrapper for nbformat.NotebookNode with some additional representation based on nbconvert."""
         def _repr_html_(self):
@@ -53,9 +53,6 @@ try:
             html_exporter.template_name = "classic"
             (html_output, resources) = html_exporter.from_notebook_node(self)
             return html_output
-
-except NameError:
-    pass
 
 
 @import_alarm
@@ -122,16 +119,10 @@ def load_file(filename, filetype=None, project=None):
         return _load_txt(filename)
     elif filetype.lower() in ['.csv']:
         return _load_csv(filename)
-    try:
-        if filetype.lower() in ['.ipynb']:
-            return _load_ipynb(filename)
-    except NameError:
-        pass
-    try:
-        if filetype.lower() in Image.registered_extensions():
-            return _load_img(filename)
-    except NameError:
-        pass
+    elif _has_imported['nbformat'] and filetype.lower() in ['.ipynb']:
+        return _load_ipynb(filename)
+    elif _has_imported['PIL'] and filetype.lower() in Image.registered_extensions():
+        return _load_img(filename)
     return _load_default(filename)
 
 
