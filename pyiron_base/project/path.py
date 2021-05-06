@@ -368,9 +368,7 @@ class ProjectPath(GenericPath):
                 )
                 self._create_path(path_local, path)
                 path = posixpath.join(path_local, path)
-            elif not os.path.exists(path) and os.path.exists(
-                os.path.normpath(os.path.join(path, ".."))
-            ):
+            elif not os.path.exists(path):
                 self._create_path(path)
             # else:
             #     raise ValueError(path, ' does not exist!')
