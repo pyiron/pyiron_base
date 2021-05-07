@@ -1,10 +1,12 @@
-import unittest
-import os
 import json
+import os
+import unittest
+
 import pandas as pd
 
+from pyiron_base import FileHDFio, ProjectHDFio
 from pyiron_base.generic.filedata import FileData, load_file
-from pyiron_base import FileHDFio
+from pyiron_base.project.generic import Project
 
 
 class TestLoadFile(unittest.TestCase):
@@ -49,6 +51,13 @@ class TestLoadFile(unittest.TestCase):
         hdf = load_file(self.current_dir+'/test_data.h5')
         self.assertIsInstance(hdf, FileHDFio)
         self.assertEqual(hdf['content/key'], 'value')
+
+    def test_load_file_ProjectHDF(self):
+        pr = Project(self.current_dir + '/test_pr')
+        pr_hdf = load_file(self.current_dir + '/test_data.h5', project=pr)
+        self.assertIsInstance(pr_hdf, ProjectHDFio)
+        self.assertEqual(pr_hdf['content/key'], 'value')
+        pr.remove(enable=True)
 
     def test_load_file_default(self):
         """Test default load for text file and h5 file without extension."""
