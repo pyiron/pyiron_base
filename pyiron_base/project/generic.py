@@ -1441,7 +1441,7 @@ class Project(ProjectPath):
             return ProjectHDFio(project=self, file_name=file_name)
         if item in self.list_files():
             file_name = posixpath.join(self.path, "{}".format(item))
-            return load_file(file_name)
+            return load_file(file_name, project=self)
         if item in self.list_dirs():
             with self.open(item) as new_item:
                 return new_item.copy()

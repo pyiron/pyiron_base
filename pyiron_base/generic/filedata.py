@@ -9,7 +9,7 @@ from functools import lru_cache
 
 import pandas
 
-from pyiron_base import ImportAlarm, FileHDFio
+from pyiron_base import ImportAlarm, FileHDFio, ProjectHDFio
 
 __author__ = "Niklas Siemer"
 __copyright__ = (
@@ -27,30 +27,53 @@ _has_imported = {}
 try:
     from PIL import Image
     _has_imported['PIL'] = True
-    import_alarm = ImportAlarm()
     # For some reason I do not know this forces PIL to always be aware of all possible Image extensions.
     Image.registered_extensions()
 except ImportError:
     _has_imported['PIL'] = False
+try:
+    import nbformat, nbconvert
+    _has_imported['nbformat'] = True
+except ImportError:
+    _has_imported['nbformat'] = False
+
+if all(_has_imported.values()):
+    import_alarm = ImportAlarm()
+else:
     import_alarm = ImportAlarm(
-        "Reduced functionality, since " + 'PIL' + " could not be imported."
+        "Reduced functionality, since " +
+        str([package for package in _has_imported.keys() if not _has_imported[package]]) +
+        " could not be imported."
     )
 
 
+if _has_imported['nbformat']:
+    class OwnNotebookNode(nbformat.NotebookNode):
+
+        """Wrapper for nbformat.NotebookNode with some additional representation based on nbconvert."""
+        def _repr_html_(self):
+            html_exporter = nbconvert.HTMLExporter()
+            html_exporter.template_name = "classic"
+            (html_output, _) = html_exporter.from_notebook_node(self)
+            return html_output
+
+
 @import_alarm
-def load_file(filename, filetype=None):
+def load_file(filename, filetype=None, project=None):
     """
         Load the file and return an appropriate object containing the data.
 
         Args:
             filename (str): path to the file to be displayed.
             filetype (str/None): File extension, if given this overwrites the assumption based on the filename.
+            project (pyiron-Project/None): Project calling this function, provided to all objects referring to such.
 
             Supported file types are:
             '.h5', '.hdf'
             '.json'
             '.txt'
             '.csv'
+            '.ipynb'
             Image extensions supported by PIL
 
         Returns:
@@ -63,6 +86,9 @@ def load_file(filename, filetype=None):
     def _load_txt(file):
         with open(file, encoding='utf8') as f:
             return f.readlines()
+
+    def _load_ipynb(file):
+        return OwnNotebookNode(nbformat.read(file, as_version=4))
 
     def _load_json(file):
         with open(file) as f:
@@ -84,16 +110,22 @@ def load_file(filename, filetype=None):
         _, filetype = os.path.splitext(filename)
     elif filetype[0] != '.':
         filetype = '.' + filetype
+    filetype = filetype.lower()
 
-    if filetype.lower() in ['.h5', '.hdf']:
-        return FileHDFio(file_name=filename)
-    if filetype.lower() in ['.json']:
+    if filetype in ['.h5', '.hdf']:
+        if project is None:
+            return FileHDFio(file_name=filename)
+        else:
+            return ProjectHDFio(file_name=filename, project=project)
+    elif filetype in ['.json']:
         return _load_json(filename)
-    elif filetype.lower() in ['.txt']:
+    elif filetype in ['.txt']:
         return _load_txt(filename)
-    elif filetype.lower() in ['.csv']:
+    elif filetype in ['.csv']:
         return _load_csv(filename)
-    elif _has_imported['PIL'] and filetype.lower() in Image.registered_extensions():
+    elif _has_imported['nbformat'] and filetype in ['.ipynb']:
+        return _load_ipynb(filename)
+    elif _has_imported['PIL'] and filetype in Image.registered_extensions():
         return _load_img(filename)
     else:
         return _load_default(filename)
