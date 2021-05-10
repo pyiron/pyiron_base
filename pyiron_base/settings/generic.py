@@ -5,11 +5,12 @@
 The settings file provides the attributes of the configuration as properties.
 """
 
-import os
 import importlib
+import os
 from configparser import ConfigParser
-from pyiron_base.settings.logger import setup_logger
+
 from pyiron_base.database.generic import DatabaseAccess
+from pyiron_base.settings.logger import setup_logger
 
 __author__ = "Jan Janssen"
 __copyright__ = (
@@ -118,7 +119,7 @@ class Settings(metaclass=Singleton):
             resource_path_lst=self._configuration["resource_paths"]
         )
         self.logger = setup_logger()
-        self._publication_lst = {}
+        self._publication_lst = {0: {}}
         self.publication_add(self.publication)
 
     @property
@@ -147,29 +148,59 @@ class Settings(metaclass=Singleton):
     @property
     def publication_lst(self):
         """
-        List of publications currently in use.
+        List of the most relevant publications currently in use.
 
         Returns:
             list: list of publications
         """
         all_publication = []
-        for v in self._publication_lst.values():
+        for v in self._publication_lst[0].values():
             if isinstance(v, list):
                 all_publication += v
             else:
                 all_publication.append(v)
         return all_publication
 
-    def publication_add(self, pub_dict):
+    @property
+    def publication_dict(self):
+        """
+        Dictionary of the publications currently in use; sorted by relevance.
+
+        Returns:
+           dict : dict of publications
+        """
+        all_publication = {}
+        for cat in self._publication_lst.keys():
+            all_publication[cat] = []
+            for v in self._publication_lst[cat].values():
+                if isinstance(v, list):
+                    all_publication[cat] += v
+                else:
+                    all_publication[cat].append(v)
+        return all_publication
+
+    def publication_add(self, pub_dict, category=0):
         """
         Add a publication to the list of publications
 
         Args:
             pub_dict (dict): The key should be the name of the code used and the value a list of publications to cite.
+            category (int): Importance of the papers for the current method, lower numbers have higher priority.
         """
+        def _add_publication(category_, key_, value_):
+            try:
+                self._publication_lst[category_][key_] = value_
+            except KeyError:
+                self._publication_lst[category_] = {}
+                self._publication_lst[category_][key_] = value_
+
         for key, value in pub_dict.items():
-            if key not in self._publication_lst.keys():
-                self._publication_lst[key] = value
+            cat_list = [cat for cat in self._publication_lst.keys() if key in self._publication_lst[cat]]
+            if len(cat_list) == 0:
+                _add_publication(category, key, value)
+            elif len(cat_list) == 1 and category < cat_list[0]:
+                del self._publication_lst[cat_list[0]][key]
+                _add_publication(category, key, value)
 
     @property
     def login_user(self):
