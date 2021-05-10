@@ -857,18 +857,28 @@ class JobCore:
 
     def __getitem__(self, item):
         """
-        Get/read data from the HDF5 file or access log files.
+        Get/read data from the HDF5 file, child jobs or access log files.
 
         If the job is :method:`~.decompress`ed, item can also be a file name to
         access the raw output file of that name of the job.  See available file
         with :method:`~.list_files()`.
 
+        `item` is first looked up in this jobs HDF5 file, then in the HDF5 files of any child jobs and finally it is
+        matched against any files in the job directory as described above.
+
         Args:
             item (str, slice): path to the data or key of the data object
 
         Returns:
-            dict, list, float, int: data or data object
+            dict, list, float, int, None: data or data object; if nothing is found None is returned
         """
+        try:
+            hdf5_item = self._hdf5[item]
+        except ValueError:
+            hdf5_item = None
+        if hdf5_item is not None:
+            return hdf5_item
+
         name_lst = item.split("/")
         item_obj = name_lst[0]
         if item_obj in self._list_ext_childs():
@@ -879,13 +889,6 @@ class JobCore:
                 return child
             else:
                 return child["/".join(name_lst[1:])]
-
-        try:
-            hdf5_item = self._hdf5[item]
-        except ValueError:
-            hdf5_item = None
-        if hdf5_item is not None:
-            return hdf5_item
 
         if name_lst[0] in self.list_files():
             file_name = posixpath.join(self.working_directory, "{}".format(item_obj))
