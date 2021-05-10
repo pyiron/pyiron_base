@@ -20,12 +20,13 @@ __date__ = "Sep 1, 2017"
 s = Settings()
 
 
-def list_publications(bib_format="pandas"):
+def list_publications(bib_format="pandas", category=0):
     """
     List the publications used in this project.
 
     Args:
         bib_format (str): ['pandas', 'dict', 'bibtex', 'apa']
+        category (int): priority category
 
     Returns:
         pandas.DataFrame/ list: list of publications in chosen format.
@@ -77,24 +78,36 @@ def list_publications(bib_format="pandas"):
             apa_str += "doi: " + v["doi"] + "\n"
         return apa_str
 
-    publication_dict = s.publication_lst
+    publication_dict = {}
+    for key in [key for key in s.publication_dict.keys() if (key <= category or category < 0)]:
+        publication_dict[key] = s.publication_dict[key]
+
+    publication_lst = []
+    for cat in publication_dict:
+        for pub in publication_dict[cat]:
+            print(f"pandas_ v = {pub}")
+            if category != 0:
+                for pub_ in pub:
+                    pub[pub_]["Relevance"] = cat
+            publication_lst.append(pub)
+
     if bib_format.lower() == "dict":
         return publication_dict
     elif bib_format.lower() == "pandas":
-        publication_lst = []
-        for p in publication_dict:
-            for v in p.values():
-                publication_lst.append(v)
-        return pandas.DataFrame(publication_lst)
+        pub_list = []
+        for pub_item in publication_lst:
+            for p in pub_item.values():
+                pub_list.append(p)
+        return pandas.DataFrame(pub_list)
     elif bib_format.lower() == "bibtex":
         total_str = ""
-        for pub in publication_dict:
+        for pub in publication_lst:
             for key, value in pub.items():
                 total_str += get_bibtex(k=key, v=value)
         return total_str
     elif bib_format.lower() == "apa":
         total_str = ""
-        for pub in publication_dict:
+        for pub in publication_lst:
             for key, value in pub.items():
                 total_str += get_apa(v=value)
         return total_str
