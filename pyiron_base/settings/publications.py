@@ -3,6 +3,7 @@
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
 import pandas
+
 from pyiron_base.settings.generic import Settings
 
 __author__ = "Joerg Neugebauer, Jan Janssen"
@@ -27,7 +28,7 @@ def list_publications(bib_format="pandas"):
         bib_format (str): ['pandas', 'dict', 'bibtex', 'apa']
 
     Returns:
-        pandas.DataFrame/ list: list of publications in Bibtex format.
+        pandas.DataFrame/ list: list of publications in chosen format.
     """
 
     def get_bibtex(k, v):
@@ -98,4 +99,4 @@ def list_publications(bib_format="pandas"):
                 total_str += get_apa(v=value)
         return total_str
     else:
-        raise ValueError("Supported Bibformats are ['dict', 'bibtex', 'apa']")
+        raise ValueError("Supported Bibformats are ['dict', 'pandas', 'bibtex', 'apa']")
