@@ -78,15 +78,18 @@ def list_publications(bib_format="pandas", category=0):
             apa_str += "doi: " + v["doi"] + "\n"
         return apa_str
 
+    category_name = {0: 'core', 1: 'general', 2: 'dependencies'}
+
     publication_dict = {}
     # Filter full publication dict:
     for key in [key for key in s.publication_dict.keys() if (key <= category or category < 0)]:
-        publication_dict[key] = s.publication_dict[key]
+        publication_dict[category_name[key]] = s.publication_dict[key]
 
     # Convert dict into list with relevance stored as key inside its items
     publication_lst = []
-    for cat in publication_dict:
-        for pub in publication_dict[cat]:
+    for cat in publication_dict.copy():
+        for publication in publication_dict[cat]:
+            pub = publication
             if category != 0:
                 for pub_ in pub:
                     pub[pub_]["Relevance"] = cat
