@@ -79,13 +79,14 @@ def list_publications(bib_format="pandas", category=0):
         return apa_str
 
     publication_dict = {}
+    # Filter full publication dict:
     for key in [key for key in s.publication_dict.keys() if (key <= category or category < 0)]:
         publication_dict[key] = s.publication_dict[key]
 
+    # Convert dict into list with relevance stored as key inside its items
     publication_lst = []
     for cat in publication_dict:
         for pub in publication_dict[cat]:
-            print(f"pandas_ v = {pub}")
             if category != 0:
                 for pub_ in pub:
                     pub[pub_]["Relevance"] = cat
@@ -98,7 +99,11 @@ def list_publications(bib_format="pandas", category=0):
         for pub_item in publication_lst:
             for p in pub_item.values():
                 pub_list.append(p)
-        return pandas.DataFrame(pub_list)
+        df = pandas.DataFrame(pub_list)
+        if category != 0:
+            return df.set_index("Relevance", append=True)
+        else:
+            return df
     elif bib_format.lower() == "bibtex":
         total_str = ""
         for pub in publication_lst:
