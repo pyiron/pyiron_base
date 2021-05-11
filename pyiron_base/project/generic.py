@@ -5,19 +5,18 @@
 The project object is the central import point of pyiron - all other objects can be created from this one
 """
 
+import importlib
 import os
+import pkgutil
 import posixpath
 import shutil
-import pandas
-import importlib
+
 import numpy as np
-import pkgutil
+import pandas
 from git import Repo, InvalidGitRepositoryError
 
-from pyiron_base.project.path import ProjectPath
+from pyiron_base.archiving import import_archive, export_archive
 from pyiron_base.database.filetable import FileTable
-from pyiron_base.settings.generic import Settings
-from pyiron_base.settings.publications import list_publications
 from pyiron_base.database.jobtable import (
     get_db_columns,
     get_job_ids,
@@ -29,10 +28,12 @@ from pyiron_base.database.jobtable import (
     get_job_working_directory,
     get_job_status
 )
-from pyiron_base.settings.logger import set_logging_level
-from pyiron_base.generic.hdfio import ProjectHDFio
 from pyiron_base.generic.filedata import load_file
+from pyiron_base.generic.hdfio import ProjectHDFio
+from pyiron_base.job.external import Notebook
 from pyiron_base.job.jobtype import JobType, JobTypeChoice, JobFactory
+from pyiron_base.project.data import ProjectData
+from pyiron_base.project.path import ProjectPath
 from pyiron_base.server.queuestatus import (
     queue_delete_job,
     queue_is_empty,
@@ -43,10 +44,9 @@ from pyiron_base.server.queuestatus import (
     queue_enable_reservation,
     queue_check_job_is_waiting_or_running,
 )
-from pyiron_base.job.external import Notebook
-from pyiron_base.project.data import ProjectData
-
-from pyiron_base.archiving import import_archive, export_archive
+from pyiron_base.settings.generic import Settings
+from pyiron_base.settings.logger import set_logging_level
+from pyiron_base.settings.publications import list_publications
 
 __author__ = "Joerg Neugebauer, Jan Janssen"
 __copyright__ = (
@@ -1224,17 +1224,18 @@ class Project(ProjectPath):
         return inputdict
 
     @staticmethod
-    def list_publications(bib_format="pandas"):
+    def list_publications(bib_format="pandas", category=0):
         """
         List the publications used in this project.
 
         Args:
             bib_format (str): ['pandas', 'dict', 'bibtex', 'apa']
+            category (int): Relevance category to print
 
         Returns:
             pandas.DataFrame/ list: list of publications in Bibtex format.
         """
-        return list_publications(bib_format=bib_format)
+        return list_publications(bib_format=bib_format, category=category)
 
     @staticmethod
     def queue_is_empty():
