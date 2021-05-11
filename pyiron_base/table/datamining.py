@@ -6,7 +6,6 @@ import codecs
 from collections import OrderedDict
 from datetime import datetime
 import dill as pickle
-import inspect
 import json
 import numpy as np
 import os
@@ -30,6 +29,12 @@ __maintainer__ = "Jan Janssen"
 __email__ = "janssen@mpie.de"
 __status__ = "development"
 __date__ = "Sep 1, 2018"
+
+def _to_pickle(hdf, key, value):
+    hdf[key] = codecs.encode(pickle.dumps(value), "base64").decode()
+
+def _from_pickle(hdf, key):
+    return pickle.loads(codecs.decode(hdf[key].encode(), "base64"))
 
 
 class FunctionContainer(object):
@@ -57,16 +62,16 @@ class FunctionContainer(object):
         ] + list(self._user_function_dict.values())
 
     def _to_hdf(self, hdf):
-        self._to_pickle(
+        _to_pickle(
             hdf=hdf, key="user_function_dict", value=self._user_function_dict
         )
-        self._to_pickle(
+        _to_pickle(
             hdf=hdf, key="system_function_dict", value=self._system_function_dict
         )
 
     def _from_hdf(self, hdf):
-        self._user_function_dict = self._from_pickle(hdf=hdf, key="user_function_dict")
-        self._system_function_dict = self._from_pickle(
+        self._user_function_dict = _from_pickle(hdf=hdf, key="user_function_dict")
+        self._system_function_dict = _from_pickle(
             hdf=hdf, key="system_function_dict"
         )
 
@@ -92,15 +97,6 @@ class FunctionContainer(object):
 
     def __dir__(self):
         return list(self._system_function_dict.keys())
-
-    @staticmethod
-    def _to_pickle(hdf, key, value):
-        hdf[key] = codecs.encode(pickle.dumps(value), "base64").decode()
-
-    @staticmethod
-    def _from_pickle(hdf, key):
-        return pickle.loads(codecs.decode(hdf[key].encode(), "base64"))
-
 
 class JobFilters(object):
     """
@@ -135,9 +131,7 @@ class PyironTable(object):
         self.convert_to_object = False
         self._name = name
         self._db_filter_function = always_true_pandas
-        self._db_filter_function_str = inspect.getsource(always_true_pandas)
         self._filter_function = always_true
-        self._filter_function_str = inspect.getsource(always_true)
         self._filter = JobFilters()
         self._system_function_lst = system_function_lst
         self.add = FunctionContainer(system_function_lst=self._system_function_lst)
@@ -201,10 +195,6 @@ class PyironTable(object):
     @db_filter_function.setter
     def db_filter_function(self, funct):
         self._db_filter_function = funct
-        try:
-            self._db_filter_function_str = inspect.getsource(funct)
-        except (OSError, IOError):
-            pass
 
     @property
     def filter_function(self):
@@ -216,10 +206,6 @@ class PyironTable(object):
     @filter_function.setter
     def filter_function(self, funct):
         self._filter_function = funct
-        try:
-            self._filter_function_str = inspect.getsource(funct)
-        except (OSError, IOError):
-            pass
 
     def to_hdf(self):
         file = FileHDFio(file_name=self._project.path + self.name + ".h5", h5_path="/")
@@ -428,10 +414,10 @@ class PyironTable(object):
         return lst
 
     def _get_data_from_hdf5(self, hdf):
-        temp_user_function_dict = self.add._from_pickle(
+        temp_user_function_dict = _from_pickle(
             hdf=hdf, key="user_function_dict"
         )
-        temp_system_function_dict = self.add._from_pickle(
+        temp_system_function_dict = _from_pickle(
             hdf=hdf, key="system_function_dict"
         )
         return temp_user_function_dict, temp_system_function_dict
@@ -518,6 +504,7 @@ class TableJob(GenericJob):
     def __init__(self, project, job_name):
         super(TableJob, self).__init__(project, job_name)
         self.__version__ = "0.1"
+        self.__hdf_version__ = "0.2"
         self.__name__ = "TableJob"
         self._analysis_project = None
         self._system_function_lst = None
@@ -647,21 +634,9 @@ class TableJob(GenericJob):
                     "inspect_mode": self._analysis_project._inspect_mode,
                 }
             if self.pyiron_table._filter_function is not None:
-                try:
-                    hdf5_input["filter"] = inspect.getsource(
-                        self.pyiron_table._filter_function
-                    )
-                except (OSError, IOError):
-                    if self.pyiron_table._filter_function_str is not None:
-                        hdf5_input["filter"] = self.pyiron_table._filter_function_str
+                _to_pickle(hdf5_input, "filter", self.pyiron_table._filter_function)
             if self.pyiron_table._db_filter_function is not None:
-                try:
-                    hdf5_input["db_filter"] = inspect.getsource(
-                        self.pyiron_table._db_filter_function
-                    )
-                except (OSError, IOError):
-                    if self.pyiron_table._db_filter_function_str is not None:
-                        hdf5_input["db_filter"] = self.pyiron_table._db_filter_function_str
+                _to_pickle(hdf5_input, "db_filter", self.pyiron_table._db_filter_function)
         if len(self.pyiron_table._df) != 0:
             with self.project_hdf5.open("output") as hdf5_output:
                 table_dict = self.convert_numpy_to_list(self.pyiron_table._df.to_dict())
@@ -676,6 +651,7 @@ class TableJob(GenericJob):
             group_name:
         """
         super(TableJob, self).from_hdf(hdf=hdf, group_name=group_name)
+        hdf_version = hdf.get("HDF_VERSION", "0.1.0")
         with self.project_hdf5.open("input") as hdf5_input:
             if "project" in hdf5_input.list_nodes():
                 project_dict = hdf5_input["project"]
@@ -688,15 +664,21 @@ class TableJob(GenericJob):
                 project._inspect_mode = project_dict["inspect_mode"]
                 self.analysis_project = project
             if "filter" in hdf5_input.list_nodes():
-                self.pyiron_table._filter_function_str = hdf5_input["filter"]
-                self.pyiron_table.filter_function = get_function_from_string(
-                    hdf5_input["filter"]
-                )
+                if hdf_version == "0.1.0":
+                    self.pyiron_table._filter_function_str = hdf5_input["filter"]
+                    self.pyiron_table.filter_function = get_function_from_string(
+                        hdf5_input["filter"]
+                    )
+                else:
+                    self.pyiron_table.filter_function = _from_pickle(hdf5_input, "filter")
             if "db_filter" in hdf5_input.list_nodes():
-                self.pyiron_table._db_filter_function_str = hdf5_input["db_filter"]
-                self.pyiron_table.db_filter_function = get_function_from_string(
-                    hdf5_input["db_filter"]
-                )
+                if hdf_version == "0.1.0":
+                    self.pyiron_table._db_filter_function_str = hdf5_input["db_filter"]
+                    self.pyiron_table.db_filter_function = get_function_from_string(
+                        hdf5_input["db_filter"]
+                    )
+                else:
+                    self.pyiron_table.db_filter_function = _from_pickle(hdf5_input, "db_filter")
             bool_dict = hdf5_input["bool_dict"]
             self._enforce_update = bool_dict["enforce_update"]
             self._pyiron_table.convert_to_object = bool_dict["convert_to_object"]
