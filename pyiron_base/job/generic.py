@@ -524,10 +524,6 @@ class GenericJob(JobCore):
         Returns:
             GenericJob: GenericJob object pointing to the new location.
         """
-        # Update flags
-        if input_only and new_database_entry:
-            new_database_entry = False
-
         # Call the copy_to() function defined in the JobCore
         new_job_core, file_project, hdf5_project, reload_flag = self._internal_copy_to(
             project=project,
@@ -536,16 +532,6 @@ class GenericJob(JobCore):
             copy_files=False,
             delete_existing_job=delete_existing_job
         )
-        if reload_flag:
-            return new_job_core
-
-        # Remove output if it should not be copied
-        if input_only:
-            if "output" in new_job_core.project_hdf5.list_groups():
-                del new_job_core.project_hdf5[
-                    posixpath.join(new_job_core.project_hdf5.h5_path, "output")
-                ]
-            new_job_core.status.initialized = True
         return new_job_core
 
     def copy_file_to_working_directory(self, file):

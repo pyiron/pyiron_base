@@ -739,18 +739,34 @@ class JobCore:
 
         Args:
             project (JobCore/ProjectHDFio/Project): project to copy the job to
-            new_database_entry (bool): [True/False] to create a new database entry - default True
+            input_only (bool): [True/False] Whether to copy only the input. (Default is False.)
+            new_database_entry (bool): [True/False] Whether to create a new database entry. If input_only is True then
+                new_database_entry is False. (Default is True.)
             copy_files (bool): [True/False] copy the files inside the working directory - default True
 
         Returns:
             JobCore: JobCore object pointing to the new location.
         """
+        # Update flags
+        if input_only and new_database_entry:
+            new_database_entry = False
+
         new_job_core, _, _, reload = self._internal_copy_to(
             project=project,
             new_job_name=new_job_name,
             new_database_entry=new_database_entry,
             copy_files=copy_files
         )
+        if reload_flag:
+            return new_job_core
+
+        # Remove output if it should not be copied
+        if input_only:
+            if "output" in new_job_core.project_hdf5.list_groups():
+                del new_job_core.project_hdf5[
+                    posixpath.join(new_job_core.project_hdf5.h5_path, "output")
+                ]
+            new_job_core.status.initialized = True
         new_job_core._after_copy_to(reload=reload)
         return new_job_core
 
