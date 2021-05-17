@@ -745,13 +745,20 @@ class JobCore:
         Returns:
             JobCore: JobCore object pointing to the new location.
         """
-        new_job_core, _, _, _ = self._internal_copy_to(
+        new_job_core, _, _, reload = self._internal_copy_to(
             project=project,
             new_job_name=new_job_name,
             new_database_entry=new_database_entry,
             copy_files=copy_files
         )
+        new_job_core._after_copy_to(reload=reload)
         return new_job_core
+
+    def _after_copy_to(self, reload=False):
+        """
+        Called after _internal_copy_to to allow sub classes to modify copy behavior.
+        """
+        pass
 
     def move_to(self, project):
         """
