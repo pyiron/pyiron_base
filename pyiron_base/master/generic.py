@@ -265,18 +265,17 @@ class GenericMaster(GenericJob):
         if reloaded:
             return
 
-        if new_job_core.job_id and new_database_entry and self._job_id:
+        if self.job_id and new_database_entry and self._job_id:
             for child_id in self.child_ids:
                 child = self.project.load(child_id)
                 new_child = child.copy_to(
-                    project=file_project.open(new_job_core.job_name + "_hdf5"),
+                    project=file_project.open(self.job_name + "_hdf5"),
                     new_database_entry=new_database_entry,
                 )
                 if new_database_entry and child.parent_id:
-                    new_child.parent_id = new_job_core.job_id
+                    new_child.parent_id = self.job_id
                 if new_database_entry and child.master_id:
-                    new_child.master_id = new_job_core.job_id
-        return new_job_core
+                    new_child.master_id = self.job_id
 
     def update_master(self):
         """
