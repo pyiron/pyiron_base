@@ -733,7 +733,7 @@ class JobCore:
             )
         return new_job_core, file_project, hdf5_project, False
 
-    def copy_to(self, project, new_job_name=None, new_database_entry=True, copy_files=True):
+    def copy_to(self, project, new_job_name=None, input_only=False, new_database_entry=True, copy_files=True):
         """
         Copy the content of the job including the HDF5 file to a new location
 
