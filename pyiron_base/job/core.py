@@ -739,6 +739,8 @@ class JobCore:
 
         Args:
             project (JobCore/ProjectHDFio/Project): project to copy the job to
+            new_job_name (str): The new name to assign the duplicate job. Required if the project is `None` or the same
+                project as the copied job. (Default is None, try to keep the same name.)
             input_only (bool): [True/False] Whether to copy only the input. (Default is False.)
             new_database_entry (bool): [True/False] Whether to create a new database entry. If input_only is True then
                 new_database_entry is False. (Default is True.)
