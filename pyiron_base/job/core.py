@@ -753,13 +753,13 @@ class JobCore:
         if input_only and new_database_entry:
             new_database_entry = False
 
-        new_job_core, _, _, reload = self._internal_copy_to(
+        new_job_core, _, _, reloaded = self._internal_copy_to(
             project=project,
             new_job_name=new_job_name,
             new_database_entry=new_database_entry,
             copy_files=copy_files
         )
-        if reload_flag:
+        if reloaded:
             return new_job_core
 
         # Remove output if it should not be copied
