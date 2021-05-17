@@ -2,8 +2,8 @@
 # Copyright (c) Max-Planck-Institut für Eisenforschung GmbH - Computational Materials Design (CM) Department
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
+import unittest
 from pyiron_base.job.template import PythonTemplateJob
-from pyiron_base.project.generic import Project
 from pyiron_base._tests import TestWithProject
 
 class ToyJob(PythonTemplateJob):
