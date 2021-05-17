@@ -767,14 +767,7 @@ class JobCore:
                     posixpath.join(new_job_core.project_hdf5.h5_path, "output")
                 ]
             new_job_core.status.initialized = True
-        new_job_core._after_copy_to(reload=reload)
         return new_job_core
-
-    def _after_copy_to(self, reload=False):
-        """
-        Called after _internal_copy_to to allow sub classes to modify copy behavior.
-        """
-        pass
 
     def move_to(self, project):
         """

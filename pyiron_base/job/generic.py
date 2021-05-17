@@ -532,7 +532,14 @@ class GenericJob(JobCore):
             copy_files=False,
             delete_existing_job=delete_existing_job
         )
+        new_job_core._after_copy_to()
         return new_job_core
+
+    def _after_copy_to(self):
+        """
+        Called after _internal_copy_to to allow sub classes to modify copy behavior.
+        """
+        pass
 
     def copy_file_to_working_directory(self, file):
         """
