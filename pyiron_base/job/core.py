@@ -762,10 +762,9 @@ class JobCore:
 
         # Remove output if it should not be copied
         if input_only:
-            if "output" in new_job_core.project_hdf5.list_groups():
-                del new_job_core.project_hdf5[
-                    posixpath.join(new_job_core.project_hdf5.h5_path, "output")
-                ]
+            for group in new_job_core.project_hdf5.list_groups():
+                if "output" in group:
+                    del new_job_core.project_hdf5[posixpath.join(new_job_core.project_hdf5.h5_path, group)]
             new_job_core.status.initialized = True
         return new_job_core
 
