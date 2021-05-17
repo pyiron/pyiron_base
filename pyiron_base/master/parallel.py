@@ -357,32 +357,10 @@ class ParallelMaster(GenericMaster):
             new_job.ref_job = self.ref_job
         return new_job
 
-    def copy_to(
-        self, project=None, new_job_name=None, input_only=False, new_database_entry=True
-    ):
-        """
-        Copy the content of the job including the HDF5 file to a new location
-
-        Args:
-            project (JobCore/ProjectHDFio/Project/None): project to copy the job to
-            new_job_name (str): to duplicate the job within the same porject it is necessary to modify the job name
-                                - optional
-            input_only (bool): [True/False] to copy only the input - default False
-            new_database_entry (bool): [True/False] to create a new database entry - default True
-
-        Returns:
-            GenericJob: GenericJob object pointing to the new location.
-        """
-        new_generic_job = super(ParallelMaster, self).copy_to(
-            project=project,
-            new_job_name=new_job_name,
-            input_only=input_only,
-            new_database_entry=new_database_entry,
+    def _after_copy_to(self):
+        self.submission_status = SubmissionStatus(
+            db=self._hdf5.project.db, job_id=self.job_id
         )
-        new_generic_job.submission_status = SubmissionStatus(
-            db=new_generic_job._hdf5.project.db, job_id=new_generic_job.job_id
-        )
-        return new_generic_job
 
     def is_finished(self):
         """
