@@ -525,19 +525,22 @@ class GenericJob(JobCore):
             GenericJob: GenericJob object pointing to the new location.
         """
         # Call the copy_to() function defined in the JobCore
-        new_job_core, file_project, hdf5_project, reload_flag = self._internal_copy_to(
+        new_job_core, file_project, hdf5_project, reloaded = self._internal_copy_to(
             project=project,
             new_job_name=new_job_name,
             new_database_entry=new_database_entry,
             copy_files=False,
             delete_existing_job=delete_existing_job
         )
-        new_job_core._after_copy_to()
+        new_job_core._after_copy_to(reloaded=reloaded)
         return new_job_core
 
-    def _after_copy_to(self):
+    def _after_copy_to(self, reloaded):
         """
         Called after _internal_copy_to to allow sub classes to modify copy behavior.
+
+        Args:
+            reloaded (bool): True if this job was reloaded instead of copied.
         """
         pass
 
