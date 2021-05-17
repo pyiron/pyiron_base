@@ -651,7 +651,7 @@ class TableJob(GenericJob):
             group_name:
         """
         super(TableJob, self).from_hdf(hdf=hdf, group_name=group_name)
-        hdf_version = hdf.get("HDF_VERSION", "0.1.0")
+        hdf_version = self.project_hdf5.get("HDF_VERSION", "0.1.0")
         with self.project_hdf5.open("input") as hdf5_input:
             if "project" in hdf5_input.list_nodes():
                 project_dict = hdf5_input["project"]
