@@ -13,7 +13,7 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.head.ref }} # Check out the head of the actual branch, not the PR
           fetch-depth: 0 # otherwise, you will fail to push refs to dest repo
-          token: ${{ secrets.WORFKLOW_TOKEN }}
+          token: ${{ secrets.DEPENDABOT_WORKFLOW_TOKEN }}
       - name: UpdateEnvironmentFile
         shell: bash -l {0}
         run: |
@@ -29,5 +29,5 @@ jobs:
       - name: UpdateDependabotPR push
         uses: ad-m/github-push-action@master
         with:
-          github_token: ${{ secrets.WORFKLOW_TOKEN }}
+          github_token: ${{ secrets.DEPENDABOT_WORKFLOW_TOKEN }}
           branch: ${{ github.event.pull_request.head.ref }}
