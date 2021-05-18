@@ -28,6 +28,7 @@ from pyiron_base.job.util import \
     _job_remove_folder
 from tables import NoSuchNodeError
 import shutil
+import warnings
 
 __author__ = "Jan Janssen"
 __copyright__ = (
@@ -751,6 +752,7 @@ class JobCore:
         """
         # Update flags
         if input_only and new_database_entry:
+            warnings.warn("input_only conflicts new_database_entry; setting new_database_entry=False")
             new_database_entry = False
 
         new_job_core, _, _, reloaded = self._internal_copy_to(
