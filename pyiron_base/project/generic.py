@@ -118,6 +118,7 @@ class Project(ProjectPath):
         self._filter = ["groups", "nodes", "objects"]
         self._inspect_mode = False
         self._store = None
+        self._data = None
         self._creator = Creator(project=self)
 
         if not s.database_is_disabled:
@@ -126,11 +127,6 @@ class Project(ProjectPath):
         else:
             self.db = FileTable(project=path)
         self.job_type = JobTypeChoice()
-
-        self._data = ProjectData(project=self, table_name="data")
-        # TODO: Read the data here, if it exists.
-        #       Currently this keeps giving a recursion error because ProjectHDFio instantiation copies the project
-        #       which then tries to read, which instantiates a ProjectHDFio, which copies the project... Ugh.
 
     @property
     def parent_group(self):
@@ -176,11 +172,8 @@ class Project(ProjectPath):
 
     @property
     def data(self):
-        if len(self._data) == 0:  # This is just a workaround because loading in __init__ is not working
-            try:
-                self._data.read()
-            except KeyError:
-                pass
+        if self._data is None:
+            self._data = ProjectData(project=self, table_name="data")
         return self._data
 
     def copy(self):
