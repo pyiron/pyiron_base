@@ -46,7 +46,10 @@ class TestProjectData(unittest.TestCase):
         self.assertEqual(data2.bar, self.data.bar)
 
     def test_reading_recursion(self):
-        self.data.baz = [1, 2, [3, 3]]
+        baz = self.data.create_group("baz")
+        baz[0] = 1
+        baz[1] = 2
+        baz[2] = [3, 3]
         self.data.write()
         self.assertEqual(3, len(self.data.baz))
         self.assertEqual(2, len(self.data.baz[-1]))
