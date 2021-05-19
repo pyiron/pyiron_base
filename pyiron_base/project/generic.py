@@ -174,6 +174,10 @@ class Project(ProjectPath):
     def data(self):
         if self._data is None:
             self._data = ProjectData(project=self, table_name="data")
+            try:
+                self._data.read()
+            except KeyError:
+                pass
         return self._data
 
     def copy(self):
