@@ -329,7 +329,7 @@ def cached(function=None, maxsize=8*1024*1024*1024):
     def wrap(function):
         cache = cachetools.LFUCache(maxsize=maxsize, getsizeof=sys.getsizeof)
         wrapped = cachetools.cached(cache)(function)
-        wrapped.cache_clear = lambda: cache.clear()
+        wrapped.cache_clear = cache.clear
         return wrapped
     if function is None:
         return wrap
