@@ -1,6 +1,7 @@
 import json
 import os
 import unittest
+from shutil import copyfile
 
 import pandas as pd
 
@@ -13,12 +14,10 @@ class TestLoadFile(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.current_dir = os.path.dirname(os.path.abspath(__file__)).replace("\\", "/")
-        hdf5 = FileHDFio(file_name=cls.current_dir + '/test_data')
-        with hdf5.open("content") as hdf:
-            hdf['key'] = "value"
         hdf5 = FileHDFio(file_name=cls.current_dir + "/test_data.h5")
         with hdf5.open("content") as hdf:
             hdf['key'] = "value"
+        copyfile(cls.current_dir + "/test_data.h5", cls.current_dir + "/test_data")
         with open(cls.current_dir + '/test_data.txt', 'w') as f:
             f.write("some text")
         with open(cls.current_dir + '/test_data2', 'w') as f:
@@ -132,8 +131,6 @@ class TestFileData(unittest.TestCase):
 
         data = FileData(self.filepath, filetype='.txt')
         self.assertEqual(data.data, some_data)
-
-
 
 
 if __name__ == '__main__':

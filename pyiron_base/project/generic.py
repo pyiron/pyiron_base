@@ -117,6 +117,7 @@ class Project(ProjectPath):
         self.sql_query = sql_query
         self._filter = ["groups", "nodes", "objects"]
         self._inspect_mode = False
+        self._data = None
         self._creator = Creator(project=self)
 
         if not s.database_is_disabled:
@@ -125,8 +126,6 @@ class Project(ProjectPath):
         else:
             self.db = FileTable(project=path)
         self.job_type = JobTypeChoice()
-
-        self._data = ProjectData(project=self, table_name="data")
 
     @property
     def parent_group(self):
@@ -172,6 +171,12 @@ class Project(ProjectPath):
 
     @property
     def data(self):
+        if self._data is None:
+            self._data = ProjectData(project=self, table_name="data")
+            try:
+                self._data.read()
+            except KeyError:
+                pass
         return self._data
 
     def copy(self):

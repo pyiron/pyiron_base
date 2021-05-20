@@ -31,7 +31,7 @@ setup(
     install_requires=[
         'dill==0.3.3',
         'future==0.18.2',
-        'gitpython==3.1.14',
+        'gitpython==3.1.17',
         'h5io==0.1.2',
         'h5py==3.2.1',
         'numpy==1.20.2',
@@ -40,7 +40,7 @@ setup(
         'psutil==5.8.0',
         'pyfileindex==0.0.6',
         'pysqa==0.0.15',
-        'sqlalchemy==1.4.14',
+        'sqlalchemy==1.4.15',
         'tables==3.6.1',
         'tqdm==4.60.0'
     ],
