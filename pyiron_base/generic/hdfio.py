@@ -5,7 +5,7 @@
 Classes to map the Python objects to HDF5 data structures
 """
 
-from functools import lru_cache
+from pyiron_base.generic.util import cached
 import h5py
 import os
 import importlib
@@ -782,7 +782,7 @@ class FileHDFio(object):
         except AttributeError:
             pass
 
-    @lru_cache(maxsize=32)
+    @cached
     def __getitem__(self, item):
         """
         Get/ read data from the HDF5 file

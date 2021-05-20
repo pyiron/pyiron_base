@@ -7,7 +7,9 @@ Utility functions used in pyiron.
 """
 
 from copy import copy
+import cachetools
 import functools
+import sys
 import types
 import warnings
 
@@ -295,3 +297,41 @@ class ImportAlarm:
         else:
             # unrelated error during import, re-raise
             return False
+
+
+def cached(function=None, maxsize=8*1024*1024*1024):
+    """
+    Decorator to add an Least Frequently Used (LFU) cache to a function.
+
+    You can either use this directly as a decorator
+
+    >>> @cached
+    ... def foo(n):
+    ...     if n == 1:
+    ...         return 1
+    ...     else:
+    ...         return foo(n - 1) * n
+
+    or pass the `maxsize` argument first to limit the cache size in bytes
+
+    >>> @cached(maxsize=1024)
+    ... def bar(n):
+    ...     time.sleep(5)
+    ...     return n**2
+
+    Args:
+        function (callable):  function to cache
+        maxsize (int):  maximum size of cached items in bytes
+
+    Returns:
+        function: wrapped function or wrapper
+    """
+    def wrap(function):
+        cache = cachetools.LFUCache(maxsize=maxsize, getsizeof=sys.getsizeof)
+        wrapped = cachetools.cached(cache)(function)
+        wrapped.cache_clear = lambda: cache.clear()
+        return wrapped
+    if function is None:
+        return wrap
+    else:
+        return wrap(function)

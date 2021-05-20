@@ -29,6 +29,7 @@ setup(
     keywords='pyiron',
     packages=find_packages(exclude=["*tests*", "*docs*", "*binder*", "*conda*", "*notebooks*", "*.ci_support*"]),
     install_requires=[
+        'cachetools==4.2.2',
         'dill==0.3.3',
         'future==0.18.2',
         'gitpython==3.1.14',
