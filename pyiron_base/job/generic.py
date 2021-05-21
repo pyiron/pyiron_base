@@ -532,10 +532,10 @@ class GenericJob(JobCore):
             copy_files=False,
             delete_existing_job=delete_existing_job
         )
-        new_job_core._after_copy_to(new_database_entry=new_database_entry, reloaded=reloaded)
+        new_job_core._copy_to(new_database_entry=new_database_entry, reloaded=reloaded)
         return new_job_core
 
-    def _after_copy_to(self, new_database_entry, reloaded):
+    def _copy_to(self, new_database_entry, reloaded):
         """
         Called after _internal_copy_to to allow sub classes to modify copy behavior.
 

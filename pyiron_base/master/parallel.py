@@ -357,7 +357,7 @@ class ParallelMaster(GenericMaster):
             new_job.ref_job = self.ref_job
         return new_job
 
-    def _after_copy_to(self, new_database_entry, reloaded):
+    def _copy_to(self, new_database_entry, reloaded):
         self.submission_status = SubmissionStatus(
             db=self._hdf5.project.db, job_id=self.job_id
         )

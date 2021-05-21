@@ -261,7 +261,7 @@ class GenericMaster(GenericJob):
                 child.move_to(project.open(self.job_name + "_hdf5"))
         super(GenericMaster, self).move_to(project)
 
-    def _after_copy_to(self, new_database_entry, reloaded):
+    def _copy_to(self, new_database_entry, reloaded):
         if reloaded:
             return
 
