@@ -1033,18 +1033,6 @@ class GenericJob(JobCore):
         job._init_child_job(self)
         return job
 
-    def create_pipeline(self, step_lst, delete_existing_job=False):
-        """
-        Create a job pipeline
-
-        Args:
-            step_lst (list): List of functions which create calculations
-
-        Returns:
-            FlexibleMaster:
-        """
-        return self.project.create_pipeline(job=self, step_lst=step_lst, delete_existing_job=delete_existing_job)
-
     def update_master(self):
         """
         After a job is finished it checks whether it is linked to any metajob - meaning the master ID is pointing to
