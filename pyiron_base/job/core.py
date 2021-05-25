@@ -873,11 +873,9 @@ class JobCore:
             dict, list, float, int, None: data or data object; if nothing is found None is returned
         """
         try:
-            hdf5_item = self._hdf5[item]
+            return self._hdf5[item]
         except ValueError:
-            hdf5_item = None
-        if hdf5_item is not None:
-            return hdf5_item
+            pass
 
         name_lst = item.split("/")
         item_obj = name_lst[0]
