@@ -769,7 +769,7 @@ class JobCore:
             for group in new_job_core.project_hdf5.list_groups():
                 if "output" in group:
                     del new_job_core.project_hdf5[posixpath.join(new_job_core.project_hdf5.h5_path, group)]
-            new_job_core.status.initialized = True
+            new_job_core._status = "initialized"
         return new_job_core
 
     def move_to(self, project):
