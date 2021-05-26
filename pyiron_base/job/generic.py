@@ -53,7 +53,7 @@ class GenericJob(JobCore):
     all specific Hamiltonians are derived. Therefore it should contain the properties/routines common to all jobs.
     The functions in this module should be as generic as possible.
 
-    Sub classes that need to add special behavior after :method:`.copy_to()` can override :method:`._copy_to()`.
+    Sub classes that need to add special behavior after :method:`.copy_to()` can override :method:`._after_generic_copy_to()`.
 
     Args:
         project (ProjectHDFio): ProjectHDFio instance which points to the HDF5 file the job is stored in
@@ -534,10 +534,10 @@ class GenericJob(JobCore):
             copy_files=False,
             delete_existing_job=delete_existing_job
         )
-        new_job_core._copy_to(new_database_entry=new_database_entry, reloaded=reloaded)
+        new_job_core._after_generic_copy_to(new_database_entry=new_database_entry, reloaded=reloaded)
         return new_job_core
 
-    def _copy_to(self, new_database_entry, reloaded):
+    def _after_generic_copy_to(self, new_database_entry, reloaded):
         """
         Called after _internal_copy_to to allow sub classes to modify copy behavior.
 
