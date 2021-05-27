@@ -40,6 +40,11 @@ class TestCopyTo(unittest.TestCase):
         self.assertEqual(job.script_path, copy.script_path,
                          "Script path not equal after copy.")
 
+        jobc = self.project.inspect(job.id)
+        copyc = jobc.copy_to(jobc.project_hdf5, "job_core_copy")
+        self.assertEqual(jobc.load_object().script_path, copyc.load_object().script_path,
+                         "Script path not equal after JobCore copy.")
+
         os.remove("foo.py")
 
     def test_copy_to_project(self):
