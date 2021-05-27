@@ -259,6 +259,11 @@ class ImportAlarm:
     This class is also a context manager that can be used as a short-cut, like this:
     >>> with ImportAlarm("MysteryJob relies on mystery_package, but this was unavailable.") as import_alarm:
     ...     import mystery_package
+
+    If you do not use `import_alarm` as a decorator, but only to get a consistent warning message, call
+    :method:`.warn_if_failed()` after the with statement.
+
+    >>> import_alarm.warn_if_failed()
     """
     def __init__(self, message=None):
         """
@@ -276,10 +281,17 @@ class ImportAlarm:
     def wrapper(self, function):
         @functools.wraps(function)
         def decorator(*args, **kwargs):
-            if self.message is not None:
-                warnings.warn(self.message, category=ImportWarning)
+            self.warn_if_failed()
             return function(*args, **kwargs)
         return decorator
+
+    def warn_if_failed(self):
+        """
+        Print warning message if import has failed.  In case you are not using `ImportAlarm` as a decorator you can call
+        this method manually to trigger the warning.
+        """
+        if self.message is not None:
+            warnings.warn(self.message, category=ImportWarning)
 
     def __enter__(self):
         return self
