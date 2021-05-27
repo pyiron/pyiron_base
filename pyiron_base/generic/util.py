@@ -276,10 +276,17 @@ class ImportAlarm:
     def wrapper(self, function):
         @functools.wraps(function)
         def decorator(*args, **kwargs):
-            if self.message is not None:
-                warnings.warn(self.message, category=ImportWarning)
+            self.warn_if_failed()
             return function(*args, **kwargs)
         return decorator
+
+    def warn_if_failed(self):
+        """
+        Print warning message if import has failed.  In case you are not using `ImportAlarm` as a decorator you can call
+        this method manually to trigger the warning.
+        """
+        if self.message is not None:
+            warnings.warn(self.message, category=ImportWarning)
 
     def __enter__(self):
         return self
