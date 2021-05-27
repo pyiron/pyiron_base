@@ -29,6 +29,19 @@ class TestCopyTo(unittest.TestCase):
         self.assertTrue(job_ser['job_single/input/custom_dict'])
         job_ser.remove()
 
+        job = self.project.create.job.ScriptJob("job_script")
+
+        with open('foo.py', 'w') as f:
+            f.write("print(42)\n")
+
+        job.script_path = "foo.py"
+        job.save()
+        copy = job.copy_to(job.project_hdf5, "job_copy")
+        self.assertEqual(job.script_path, copy.script_path,
+                         "Script path not equal after copy.")
+
+        os.remove("foo.py")
+
     def test_copy_to_project(self):
         sub_project = self.project.copy()
         sub_project = sub_project.open("sub_project")
