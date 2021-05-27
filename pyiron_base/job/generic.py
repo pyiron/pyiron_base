@@ -53,6 +53,8 @@ class GenericJob(JobCore):
     all specific Hamiltonians are derived. Therefore it should contain the properties/routines common to all jobs.
     The functions in this module should be as generic as possible.
 
+    Sub classes that need to add special behavior after :method:`.copy_to()` can override :method:`._after_generic_copy_to()`.
+
     Args:
         project (ProjectHDFio): ProjectHDFio instance which points to the HDF5 file the job is stored in
         job_name (str): name of the job, which has to be unique within the project
@@ -483,15 +485,15 @@ class GenericJob(JobCore):
         )
 
         # Call the copy_to() function defined in the JobCore
-        new_job_core, file_project, hdf5_project, reload_flag = super(GenericJob, self)._internal_copy_to(
+        new_job_core, file_project, hdf5_project, reloaded = super(GenericJob, self)._internal_copy_to(
             project=project,
             new_job_name=new_job_name,
             new_database_entry=new_database_entry,
             copy_files=copy_files,
             delete_existing_job=delete_existing_job
         )
-        if reload_flag:
-            return new_job_core, file_project, hdf5_project, reload_flag
+        if reloaded:
+            return new_job_core, file_project, hdf5_project, reloaded
 
         # Reload object from HDF5 file
         if not static_isinstance(
@@ -504,7 +506,7 @@ class GenericJob(JobCore):
             )
         if delete_file_after_copy:
             self.project_hdf5.remove_file()
-        return new_job_core, file_project, hdf5_project, reload_flag
+        return new_job_core, file_project, hdf5_project, reloaded
 
     def copy_to(self, project=None, new_job_name=None, input_only=False, new_database_entry=True,
                 delete_existing_job=False):
@@ -524,29 +526,26 @@ class GenericJob(JobCore):
         Returns:
             GenericJob: GenericJob object pointing to the new location.
         """
-        # Update flags
-        if input_only and new_database_entry:
-            new_database_entry = False
-
         # Call the copy_to() function defined in the JobCore
-        new_job_core, file_project, hdf5_project, reload_flag = self._internal_copy_to(
+        new_job_core, file_project, hdf5_project, reloaded = self._internal_copy_to(
             project=project,
             new_job_name=new_job_name,
             new_database_entry=new_database_entry,
             copy_files=False,
             delete_existing_job=delete_existing_job
         )
-        if reload_flag:
-            return new_job_core
-
-        # Remove output if it should not be copied
-        if input_only:
-            if "output" in new_job_core.project_hdf5.list_groups():
-                del new_job_core.project_hdf5[
-                    posixpath.join(new_job_core.project_hdf5.h5_path, "output")
-                ]
-            new_job_core.status.initialized = True
+        new_job_core._after_generic_copy_to(new_database_entry=new_database_entry, reloaded=reloaded)
         return new_job_core
+
+    def _after_generic_copy_to(self, new_database_entry, reloaded):
+        """
+        Called after _internal_copy_to to allow sub classes to modify copy behavior.
+
+        Args:
+            new_database_entry (bool): Whether to create a new database entry was created.
+            reloaded (bool): True if this job was reloaded instead of copied.
+        """
+        pass
 
     def copy_file_to_working_directory(self, file):
         """
