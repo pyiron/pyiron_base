@@ -28,7 +28,6 @@ from pyiron_base.job.util import \
     _job_remove_folder
 from tables import NoSuchNodeError
 import shutil
-import warnings
 
 __author__ = "Jan Janssen"
 __copyright__ = (
@@ -734,42 +733,24 @@ class JobCore:
             )
         return new_job_core, file_project, hdf5_project, False
 
-    def copy_to(self, project, new_job_name=None, input_only=False, new_database_entry=True, copy_files=True):
+    def copy_to(self, project, new_job_name=None, new_database_entry=True, copy_files=True):
         """
         Copy the content of the job including the HDF5 file to a new location
 
         Args:
             project (JobCore/ProjectHDFio/Project): project to copy the job to
-            new_job_name (str): The new name to assign the duplicate job. Required if the project is `None` or the same
-                project as the copied job. (Default is None, try to keep the same name.)
-            input_only (bool): [True/False] Whether to copy only the input. (Default is False.)
-            new_database_entry (bool): [True/False] Whether to create a new database entry. If input_only is True then
-                new_database_entry is False. (Default is True.)
+            new_database_entry (bool): [True/False] to create a new database entry - default True
             copy_files (bool): [True/False] copy the files inside the working directory - default True
 
         Returns:
             JobCore: JobCore object pointing to the new location.
         """
-        # Update flags
-        if input_only and new_database_entry:
-            warnings.warn("input_only conflicts new_database_entry; setting new_database_entry=False")
-            new_database_entry = False
-
-        new_job_core, _, _, reloaded = self._internal_copy_to(
+        new_job_core, _, _, _ = self._internal_copy_to(
             project=project,
             new_job_name=new_job_name,
             new_database_entry=new_database_entry,
             copy_files=copy_files
         )
-        if reloaded:
-            return new_job_core
-
-        # Remove output if it should not be copied
-        if input_only:
-            for group in new_job_core.project_hdf5.list_groups():
-                if "output" in group:
-                    del new_job_core.project_hdf5[posixpath.join(new_job_core.project_hdf5.h5_path, group)]
-            new_job_core._status = "initialized"
         return new_job_core
 
     def move_to(self, project):
@@ -876,26 +857,18 @@ class JobCore:
 
     def __getitem__(self, item):
         """
-        Get/read data from the HDF5 file, child jobs or access log files.
+        Get/read data from the HDF5 file or access log files.
 
         If the job is :method:`~.decompress`ed, item can also be a file name to
         access the raw output file of that name of the job.  See available file
         with :method:`~.list_files()`.
 
-        `item` is first looked up in this jobs HDF5 file, then in the HDF5 files of any child jobs and finally it is
-        matched against any files in the job directory as described above.
-
         Args:
             item (str, slice): path to the data or key of the data object
 
         Returns:
-            dict, list, float, int, None: data or data object; if nothing is found None is returned
+            dict, list, float, int: data or data object
         """
-        try:
-            return self._hdf5[item]
-        except ValueError:
-            pass
-
         name_lst = item.split("/")
         item_obj = name_lst[0]
         if item_obj in self._list_ext_childs():
@@ -906,6 +879,13 @@ class JobCore:
                 return child
             else:
                 return child["/".join(name_lst[1:])]
+
+        try:
+            hdf5_item = self._hdf5[item]
+        except ValueError:
+            hdf5_item = None
+        if hdf5_item is not None:
+            return hdf5_item
 
         if name_lst[0] in self.list_files():
             file_name = posixpath.join(self.working_directory, "{}".format(item_obj))

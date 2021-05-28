@@ -40,22 +40,17 @@ class TestProjectData(unittest.TestCase):
         self.data.write()
 
         data2 = ProjectData(project=self.project, table_name="data")
-        self.assertEqual(len(data2), 0)
-        data2.read()
+        self.assertEqual(len(data2), len(self.data))  # Automatic reading on instantiation
         self.assertEqual(data2.foo, self.data.foo)
         self.assertEqual(data2.bar, self.data.bar)
 
     def test_reading_recursion(self):
-        baz = self.data.create_group("baz")
-        baz[0] = 1
-        baz[1] = 2
-        baz[2] = [3, 3]
+        self.data.baz = [1, 2, [3, 3]]
         self.data.write()
         self.assertEqual(3, len(self.data.baz))
         self.assertEqual(2, len(self.data.baz[-1]))
 
         data2 = ProjectData(project=self.project, table_name="data")
-        data2.read()
         self.assertEqual(3, len(data2.baz))
         self.assertEqual(2, len(data2.baz[-1]))
 

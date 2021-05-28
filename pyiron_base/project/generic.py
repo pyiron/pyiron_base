@@ -117,7 +117,7 @@ class Project(ProjectPath):
         self.sql_query = sql_query
         self._filter = ["groups", "nodes", "objects"]
         self._inspect_mode = False
-        self._data = None
+        self._store = None
         self._creator = Creator(project=self)
 
         if not s.database_is_disabled:
@@ -126,6 +126,8 @@ class Project(ProjectPath):
         else:
             self.db = FileTable(project=path)
         self.job_type = JobTypeChoice()
+
+        self._data = ProjectData(project=self, table_name="data")
 
     @property
     def parent_group(self):
@@ -171,12 +173,6 @@ class Project(ProjectPath):
 
     @property
     def data(self):
-        if self._data is None:
-            self._data = ProjectData(project=self, table_name="data")
-            try:
-                self._data.read()
-            except KeyError:
-                pass
         return self._data
 
     def copy(self):
@@ -1399,6 +1395,28 @@ class Project(ProjectPath):
             {"groups": self.list_dirs(skip_hdf5=True), "nodes": self.list_nodes()}
         )
 
+    def __setitem__(self, key, value):
+        """
+        Store data in the ProjectStore container
+
+        Args:
+            key (str): key within the container
+            value (dict, list, float, int): data to store
+        """
+        if self.db is not None:
+            if self._store is None:
+                where_dict = {
+                    "job": "ProjectStore",
+                    "project": str(self.project_path),
+                    "subjob": "/ProjectStore",
+                }
+                store_job_id = self.db.get_items_dict(where_dict)["id"]
+                if store_job_id:
+                    self._store = self.load(store_job_id)
+                else:
+                    self._store = self.create_job("ProjectStore", "ProjectStore")
+            self._store[key] = value
+
     def _get_item_helper(self, item, convert_to_object=True):
         """
         Internal helper function to get item from project
@@ -1423,7 +1441,7 @@ class Project(ProjectPath):
             return ProjectHDFio(project=self, file_name=file_name)
         if item in self.list_files():
             file_name = posixpath.join(self.path, "{}".format(item))
-            return load_file(file_name, project=self)
+            return load_file(file_name)
         if item in self.list_dirs():
             with self.open(item) as new_item:
                 return new_item.copy()

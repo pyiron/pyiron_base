@@ -1,23 +1,22 @@
-import json
-import os
 import unittest
-from shutil import copyfile
-
+import os
+import json
 import pandas as pd
 
-from pyiron_base import FileHDFio, ProjectHDFio
 from pyiron_base.generic.filedata import FileData, load_file
-from pyiron_base.project.generic import Project
+from pyiron_base import FileHDFio
 
 
 class TestLoadFile(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.current_dir = os.path.dirname(os.path.abspath(__file__)).replace("\\", "/")
+        hdf5 = FileHDFio(file_name=cls.current_dir + '/test_data')
+        with hdf5.open("content") as hdf:
+            hdf['key'] = "value"
         hdf5 = FileHDFio(file_name=cls.current_dir + "/test_data.h5")
         with hdf5.open("content") as hdf:
             hdf['key'] = "value"
-        copyfile(cls.current_dir + "/test_data.h5", cls.current_dir + "/test_data")
         with open(cls.current_dir + '/test_data.txt', 'w') as f:
             f.write("some text")
         with open(cls.current_dir + '/test_data2', 'w') as f:
@@ -50,13 +49,6 @@ class TestLoadFile(unittest.TestCase):
         hdf = load_file(self.current_dir+'/test_data.h5')
         self.assertIsInstance(hdf, FileHDFio)
         self.assertEqual(hdf['content/key'], 'value')
-
-    def test_load_file_ProjectHDF(self):
-        pr = Project(self.current_dir + '/test_pr')
-        pr_hdf = load_file(self.current_dir + '/test_data.h5', project=pr)
-        self.assertIsInstance(pr_hdf, ProjectHDFio)
-        self.assertEqual(pr_hdf['content/key'], 'value')
-        pr.remove(enable=True)
 
     def test_load_file_default(self):
         """Test default load for text file and h5 file without extension."""
@@ -131,6 +123,8 @@ class TestFileData(unittest.TestCase):
 
         data = FileData(self.filepath, filetype='.txt')
         self.assertEqual(data.data, some_data)
+
+
 
 
 if __name__ == '__main__':

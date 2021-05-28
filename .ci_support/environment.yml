@@ -6,15 +6,15 @@ dependencies:
   - codacy-coverage
   - dill =0.3.3
   - future =0.18.2
-  - gitpython =3.1.17
+  - gitpython =3.1.14
   - h5io =0.1.2
   - h5py =3.2.1
-  - numpy =1.20.3
+  - numpy =1.20.2
   - pandas =1.2.4
   - pathlib2 =2.3.5
   - psutil =5.8.0
   - pyfileindex =0.0.6
   - pysqa =0.0.15
   - pytables =3.6.1
-  - sqlalchemy =1.4.15
+  - sqlalchemy =1.4.12
   - tqdm =4.60.0
