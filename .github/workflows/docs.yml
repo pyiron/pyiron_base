@@ -29,4 +29,7 @@ jobs:
         conda env update --name test --file .ci_support/environment-docs.yml
     - name: Documentation
       shell: bash -l {0}
-      run: ./.ci_support/build_docs.sh
+      run: |
+        mkdir public_html; cd docs
+        sphinx-build -b html ./ ../public_html || exit 1;
+        cd ..
