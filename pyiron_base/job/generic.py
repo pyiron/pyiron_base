@@ -534,14 +534,15 @@ class GenericJob(JobCore):
             copy_files=False,
             delete_existing_job=delete_existing_job
         )
-        new_job_core._after_generic_copy_to(new_database_entry=new_database_entry, reloaded=reloaded)
+        new_job_core._after_generic_copy_to(self, new_database_entry=new_database_entry, reloaded=reloaded)
         return new_job_core
 
-    def _after_generic_copy_to(self, new_database_entry, reloaded):
+    def _after_generic_copy_to(self, original, new_database_entry, reloaded):
         """
-        Called after _internal_copy_to to allow sub classes to modify copy behavior.
+        Called in :method:`.copy_to()` after :method`._internal_copy_to()` to allow sub classes to modify copy behavior.
 
         Args:
+            original (:class:`.GenericJob`): job that this job was copied from
             new_database_entry (bool): Whether to create a new database entry was created.
             reloaded (bool): True if this job was reloaded instead of copied.
         """
