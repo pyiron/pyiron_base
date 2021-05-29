@@ -14,6 +14,7 @@ import h5io
 import numpy as np
 from tables.exceptions import NoSuchNodeError, HDF5ExtError
 import sys
+from pyiron_base.generic.has_groups import HasGroups
 
 __author__ = "Joerg Neugebauer, Jan Janssen"
 __copyright__ = (
