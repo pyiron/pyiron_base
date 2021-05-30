@@ -801,7 +801,7 @@ class GenericJob(JobCore):
                     "timestart": datetime.utcfromtimestamp(ts.tolist() / 1e9),
                     "timestop": datetime.utcfromtimestamp(tp.tolist() / 1e9),
                     "totalcputime": tc,
-                    "masterid": None,
+                    "masterid": self.master_id,
                     "parentid": None,
                 })
             _ = [self.project.db.add_item_dict(d) for d in db_dict_lst]
