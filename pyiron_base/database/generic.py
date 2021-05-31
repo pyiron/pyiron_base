@@ -75,10 +75,7 @@ class IsDatabase(ABC):
             project_path,
             recursive=True,
             columns=None,
-            sort_by="id",
-            max_colwidth=200,
             element_lst=None,
-            job_name_contains='',
     ):
         pass
 
@@ -138,6 +135,8 @@ class IsDatabase(ABC):
                 "parentid",
                 "masterid",
             ]
+        if sort_by not in columns:
+            columns = list(columns) + [sort_by]
         if full_table:
             pandas.set_option('display.max_rows', None)
             pandas.set_option('display.max_columns', None)
@@ -145,16 +144,18 @@ class IsDatabase(ABC):
             pandas.reset_option('display.max_rows')
             pandas.reset_option('display.max_columns')
         pandas.set_option("display.max_colwidth", max_colwidth)
-        return self._get_job_table(
+        df = self._get_job_table(
                 user=user,
                 sql_query=sql_query,
                 project_path=project_path,
                 recursive=recursive,
                 columns=columns,
-                sort_by=sort_by,
-                max_colwidth=max_colwidth,
-                job_name_contains=job_name_contains
         )
+        if job_name_contains != '':
+            df = df[df.job.str.contains(job_name_contains)]
+        if sort_by is not None:
+            return df.sort_values(by=sort_by)
+        return df
 
 class ConnectionWatchDog(Thread):
     """
@@ -440,10 +441,7 @@ class DatabaseAccess(IsDatabase):
             project_path,
             recursive=True,
             columns=None,
-            sort_by="id",
-            max_colwidth=200,
             element_lst=None,
-            job_name_contains='',
     ):
         job_dict = self._job_dict(
             sql_query=sql_query,
@@ -453,10 +451,6 @@ class DatabaseAccess(IsDatabase):
             element_lst=element_lst,
         )
         df = pandas.DataFrame(job_dict, columns=columns)
-        if job_name_contains != '':
-            df = df[df.job.str.contains(job_name_contains)]
-        if sort_by in columns:
-            return df[columns].sort_values(by=sort_by)
         return df[columns]
 
     # Internal functions

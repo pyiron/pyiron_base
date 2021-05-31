@@ -153,9 +153,7 @@ class FileTable(IsDatabase, metaclass=Singleton):
         project_path=None,
         recursive=True,
         columns=None,
-        sort_by="id",
-        max_colwidth=200,
-        job_name_contains=''
+        element_lst=None
     ):
         self.update()
         if project is None:
@@ -167,12 +165,6 @@ class FileTable(IsDatabase, metaclass=Singleton):
                 df = self._job_table[self._job_table.project == project]
         else:
             df = self._job_table
-        if len(df) == 0:
-            return df
-        if job_name_contains != '':
-            df = df[df.job.str.contains(job_name_contains)]
-        if sort_by in columns:
-            return df[columns].sort_values(by=sort_by)
         return df[columns]
 
     def get_jobs(self, project=None, recursive=True, columns=None):
