@@ -427,6 +427,9 @@ class DatabaseAccess(IsDatabase):
         if element_lst is not None:
             dict_clause["element_lst"] = element_lst
 
+        # HACK: breaks circular dependency of Settings on DatabaseAccess
+        from pyiron_base.settings.generic import Settings
+        s = Settings()
         s.logger.debug("sql_query: %s", str(dict_clause))
         return self.get_items_dict(dict_clause)
 
