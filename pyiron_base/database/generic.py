@@ -148,7 +148,7 @@ class IsDatabase(ABC):
         return self._get_job_table(
                 user=user,
                 sql_query=sql_query,
-                project=project_path,
+                project_path=project_path,
                 recursive=recursive,
                 columns=columns,
                 sort_by=sort_by,

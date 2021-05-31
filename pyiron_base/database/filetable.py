@@ -150,7 +150,7 @@ class FileTable(IsDatabase, metaclass=Singleton):
         self,
         sql_query,
         user,
-        project=None,
+        project_path=None,
         recursive=True,
         columns=None,
         sort_by="id",
