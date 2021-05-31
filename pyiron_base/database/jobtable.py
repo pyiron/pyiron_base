@@ -54,68 +54,6 @@ def get_db_columns(database):
     return database.get_table_headings()
 
 
-def job_table(
-    database,
-    sql_query,
-    user,
-    project_path,
-    recursive=True,
-    columns=None,
-    all_columns=False,
-    sort_by="id",
-    max_colwidth=200,
-    full_table=False,
-    element_lst=None,
-    job_name_contains='',
-):
-    """
-    Access the job_table
-
-    Args:
-        database (DatabaseAccess): Database object
-        sql_query (str): SQL query to enter a more specific request
-        user (str): username of the user whoes user space should be searched
-        project_path (str): root_path - this is in contrast to the project_path in GenericPath
-        recursive (bool): search subprojects [True/False]
-        columns (list): by default only the columns ['job', 'project', 'chemicalformula'] are selected, but the
-                        user can select a subset of ['id', 'status', 'chemicalformula', 'job', 'subjob', 'project',
-                        'projectpath', 'timestart', 'timestop', 'totalcputime', 'computer', 'hamilton', 'hamversion',
-                        'parentid', 'masterid']
-        all_columns (bool): Select all columns - this overwrites the columns option.
-        sort_by (str): Sort by a specific column
-        max_colwidth (int): set the column width
-        full_table (bool): Whether to show the entire pandas table
-        element_lst (list): list of elements required in the chemical formular - by default None
-        job_name_contains (str): a string which should be contained in every job_name
-
-    Returns:
-        pandas.Dataframe: Return the result as a pandas.Dataframe object
-    """
-    if not isinstance(database, FileTable):
-        return database.job_table(
-            project=project_path,
-            recursive=recursive,
-            columns=columns,
-            all_columns=all_columns,
-            sort_by=sort_by,
-            max_colwidth=200,
-            full_table=full_table,
-            job_name_contains=job_name_contains
-        )
-    else:
-        database.update()
-        return database.job_table(
-            project=project_path,
-            recursive=recursive,
-            columns=columns,
-            all_columns=all_columns,
-            sort_by=sort_by,
-            max_colwidth=200,
-            full_table=full_table,
-            job_name_contains=job_name_contains
-        )
-
-
 def get_jobs(database, sql_query, user, project_path, recursive=True, columns=None):
     """
     Internal function to return the jobs as dictionary rather than a pandas.Dataframe
@@ -136,8 +74,7 @@ def get_jobs(database, sql_query, user, project_path, recursive=True, columns=No
     if not isinstance(database, FileTable):
         if columns is None:
             columns = ["id", "project"]
-        df = job_table(
-            database=database,
+        df = database.job_table(
             sql_query=sql_query,
             user=user,
             project_path=project_path,

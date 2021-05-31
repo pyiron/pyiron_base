@@ -157,6 +157,7 @@ class FileTable(IsDatabase, metaclass=Singleton):
         full_table=False, 
         job_name_contains=''
     ):
+        self.update()
         if project is None:
             project = self._project
         if columns is None:
