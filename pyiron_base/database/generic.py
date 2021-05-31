@@ -146,6 +146,8 @@ class IsDatabase(ABC):
             pandas.reset_option('display.max_columns')
         pandas.set_option("display.max_colwidth", max_colwidth)
         return self._get_job_table(
+                user=user,
+                sql_query=sql_query,
                 project=project_path,
                 recursive=recursive,
                 columns=columns,

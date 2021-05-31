@@ -147,12 +147,14 @@ class FileTable(IsDatabase, metaclass=Singleton):
         return self._job_table.columns.values
 
     def _get_job_table(
-        self, 
-        project=None, 
-        recursive=True, 
-        columns=None, 
-        sort_by="id", 
-        max_colwidth=200, 
+        self,
+        sql_query,
+        user,
+        project=None,
+        recursive=True,
+        columns=None,
+        sort_by="id",
+        max_colwidth=200,
         job_name_contains=''
     ):
         self.update()
