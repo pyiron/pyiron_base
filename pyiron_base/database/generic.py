@@ -52,12 +52,12 @@ class IsDatabase(ABC):
     @property
     def view_mode(self):
         """
-        Get viewer_mode - if viewer_moded is enable pyiron has read only access to the database.
+        Get view_mode - if view_moded is enable pyiron has read only access to the database.
 
         Some implementations do not allow to set this value.
 
         Returns:
-            bool: True when viewer_mode is enabled
+            bool: True when view_mode is enabled
         """
         return self._get_view_mode()
 
@@ -318,21 +318,21 @@ class DatabaseAccess(IsDatabase):
         self.__reload_db()
         self.simulation_table = HistoricalTable(str(table_name), self.metadata)
         self.metadata.create_all()
-        self._viewer_mode = False
+        self._view_mode = False
 
     def _get_view_mode(self):
-        return self._viewer_mode
+        return self._view_mode
 
     @IsDatabase.view_mode.setter
     def view_mode(self, value):
         """
-        Set viewer_mode - if viewer_mode is enable pyiron has read only access to the database.
+        Set view_mode - if view_mode is enable pyiron has read only access to the database.
 
         Args:
             value (bool): TRUE or FALSE
         """
         if isinstance(value, bool):
-            self._viewer_mode = value
+            self._view_mode = value
         else:
             raise TypeError("Viewmode can only be TRUE or FALSE.")
 
@@ -552,7 +552,7 @@ class DatabaseAccess(IsDatabase):
         Returns:
 
         """
-        if not self._viewer_mode:
+        if not self._view_mode:
             if isinstance(col_name, list):
                 col_name = col_name[-1]
             if isinstance(col_type, list):
@@ -575,7 +575,7 @@ class DatabaseAccess(IsDatabase):
         Returns:
 
         """
-        if not self._viewer_mode:
+        if not self._view_mode:
             if isinstance(col_name, list):
                 col_name = col_name[-1]
             if isinstance(col_type, list):
@@ -721,7 +721,7 @@ class DatabaseAccess(IsDatabase):
         Returns:
             int: Database ID of the item created as an int, like: 3
         """
-        if not self._viewer_mode:
+        if not self._view_mode:
             try:
                 par_dict = self._check_chem_formula_length(par_dict)
                 par_dict = dict(
@@ -802,7 +802,7 @@ class DatabaseAccess(IsDatabase):
         Returns:
 
         """
-        if not self._viewer_mode:
+        if not self._view_mode:
             if type(item_id) is list:
                 item_id = item_id[-1]  # sometimes a list is given, make it int
             if np.issubdtype(type(item_id), np.integer):
@@ -837,7 +837,7 @@ class DatabaseAccess(IsDatabase):
         Returns:
 
         """
-        if not self._viewer_mode:
+        if not self._view_mode:
             self.conn.execute(
                 self.simulation_table.delete(
                     self.simulation_table.c["id"] == int(item_id)
