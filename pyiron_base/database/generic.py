@@ -450,8 +450,7 @@ class DatabaseAccess(IsDatabase):
             recursive=recursive,
             element_lst=element_lst,
         )
-        df = pandas.DataFrame(job_dict, columns=columns)
-        return df[columns]
+        return pandas.DataFrame(job_dict, columns=columns)
 
     # Internal functions
     def __del__(self):

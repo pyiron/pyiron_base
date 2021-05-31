@@ -164,8 +164,7 @@ class FileTable(IsDatabase, metaclass=Singleton):
             else:
                 df = self._job_table[self._job_table.project == project]
         else:
-            df = self._job_table
-        return df[columns]
+            return self._job_table
 
     def get_jobs(self, project=None, recursive=True, columns=None):
         if project is None:
