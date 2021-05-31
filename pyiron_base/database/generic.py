@@ -67,6 +67,23 @@ class IsDatabase(ABC):
         return self.view_mode
     viewer_mode.__doc__ = view_mode.__doc__
 
+    @abstractmethod
+    def _get_job_table(
+            self,
+            sql_query,
+            user,
+            project_path,
+            recursive=True,
+            columns=None,
+            all_columns=False,
+            sort_by="id",
+            max_colwidth=200,
+            full_table=False,
+            element_lst=None,
+            job_name_contains='',
+    ):
+        pass
+
     def job_table(
             self,
             sql_query,
