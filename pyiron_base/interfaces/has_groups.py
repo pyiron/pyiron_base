@@ -30,6 +30,8 @@ class HasGroups(ABC):
     :class:`.HasGroups`.  These are called "groups"; other children are "nodes".  :method:`._list_groups()` and
     :method:`._list_nodes()` must return the names of the respective type of children.
 
+    Sub classes should document in their class docstring what they consider has "groups" or "nodes".
+
     Here's an example class that uses nested dicts to store children
 
     >>> class NestedDicts(HasGroups):
@@ -64,10 +66,27 @@ class HasGroups(ABC):
 
     @abstractmethod
     def _list_groups(self):
+        """
+        Return a list of names of all nested groups.
+
+        Indexing the object with names returned from here, must return instances of :class:`.HasGroups`.
+
+        Returns:
+            list of str: group names
+        """
         pass
 
     @abstractmethod
     def _list_nodes(self):
+        """
+        Return a list of names of all nested nodes.
+
+        Indexing the object with names returned from here may return any type at all, but names must not overlap with
+        names returned from :method:`._list_groups()`.
+
+        Returns:
+            list of str: node names
+        """
         pass
 
     def _list_all(self):
@@ -76,8 +95,6 @@ class HasGroups(ABC):
     def list_groups(self):
         """
         Return a list of names of all nested groups.
-
-        Indexing the object with names returned from here, must return instances of :class:`.HasGroups`.
 
         Returns:
             list of str: group names
