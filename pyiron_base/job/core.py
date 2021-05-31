@@ -50,6 +50,9 @@ class JobCore(HasGroups):
     The JobCore the most fundamental pyiron job class. From this class the GenericJob as well as the reduced JobPath
     class are derived. While JobPath only provides access to the HDF5 file it is about one order faster.
 
+    Implements :class:`.HasGroups`.  Groups are HDF groups in the HDF file associated with the job and any child jobs,
+    nodes are HDF dataset in the HDF file.
+
     Args:
         project (ProjectHDFio): ProjectHDFio instance which points to the HDF5 file the job is stored in
         job_name (str): name of the job, which has to be unique within the project

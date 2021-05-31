@@ -154,6 +154,15 @@ class DataContainer(MutableMapping, HasGroups):
     >>> list(pl.keys())
     [0, 1, 2, 3]
 
+
+    Implements :class:`.HasGroups`.  Groups are nested data containers and nodes are everything else.
+
+    >>> p = DataContainer({"a": 42, "b": [0, 1, 2]})
+    >>> p.list_groups()
+    ['b']
+    >>> p.list_nodes()
+    ['a']
+
     .. attention:: Subclasses beware!
 
         DataContainer require some careful treatment when creating subclasses.

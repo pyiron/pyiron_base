@@ -85,6 +85,8 @@ class FileHDFio(HasGroups):
     Class that provides all info to access a h5 file. This class is based on h5io.py, which allows to
     get and put a large variety of jobs to/from h5
 
+    Implements :class:`.HasGroups`.  Groups are HDF groups in the file, nodes are HDF datasets.
+
     Args:
         file_name (str): absolute path of the HDF5 file
         h5_path (str): absolute path inside the h5 path - starting from the root group

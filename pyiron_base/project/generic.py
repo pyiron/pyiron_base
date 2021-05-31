@@ -67,6 +67,8 @@ class Project(ProjectPath, HasGroups):
     """
     The project is the central class in pyiron, all other objects can be created from the project object.
 
+    Implements :class:`.HasGroups`.  Groups are sub directories in the project, nodes are jobs inside the project.
+
     Args:
         path (GenericPath, str): path of the project defined by GenericPath, absolute or relative (with respect to
                                      current working directory) path
