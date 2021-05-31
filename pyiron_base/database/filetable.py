@@ -146,7 +146,7 @@ class FileTable(IsDatabase, metaclass=Singleton):
     def get_table_headings(self):
         return self._job_table.columns.values
 
-    def job_table(
+    def _get_job_table(
         self, 
         project=None, 
         recursive=True, 
