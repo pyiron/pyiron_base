@@ -32,7 +32,7 @@ from pyiron_base.database.jobtable import (
 from pyiron_base.settings.logger import set_logging_level
 from pyiron_base.generic.hdfio import ProjectHDFio
 from pyiron_base.generic.filedata import load_file
-from pyiron_base.generic.has_groups import HasGroups
+from pyiron_base.interfaces.has_groups import HasGroups
 from pyiron_base.job.jobtype import JobType, JobTypeChoice, JobFactory
 from pyiron_base.server.queuestatus import (
     queue_delete_job,

@@ -10,7 +10,7 @@ from collections.abc import Sequence, Set, Mapping, MutableMapping
 import warnings
 import numpy as np
 from .fileio import read, write
-from .has_groups import HasGroups
+from pyiron_base.interfaces.has_groups import HasGroups
 
 __author__ = "Marvin Poul"
 __copyright__ = (

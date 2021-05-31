@@ -16,7 +16,7 @@ import types
 
 from pyiron_base.job.generic import GenericJob
 from pyiron_base.generic.hdfio import FileHDFio
-from pyiron_base.generic.has_groups import HasGroups
+from pyiron_base.interfaces.has_groups import HasGroups
 from pyiron_base.master.generic import get_function_from_string
 
 
