@@ -75,10 +75,8 @@ class IsDatabase(ABC):
             project_path,
             recursive=True,
             columns=None,
-            all_columns=False,
             sort_by="id",
             max_colwidth=200,
-            full_table=False,
             element_lst=None,
             job_name_contains='',
     ):
@@ -120,14 +118,39 @@ class IsDatabase(ABC):
         Returns:
             pandas.Dataframe: Return the result as a pandas.Dataframe object
         """
+        if columns is None:
+            columns = ["job", "project", "chemicalformula"]
+        if all_columns:
+            columns = [
+                "id",
+                "status",
+                "chemicalformula",
+                "job",
+                "subjob",
+                "projectpath",
+                "project",
+                "timestart",
+                "timestop",
+                "totalcputime",
+                "computer",
+                "hamilton",
+                "hamversion",
+                "parentid",
+                "masterid",
+            ]
+        if full_table:
+            pandas.set_option('display.max_rows', None)
+            pandas.set_option('display.max_columns', None)
+        else:
+            pandas.reset_option('display.max_rows')
+            pandas.reset_option('display.max_columns')
+        pandas.set_option("display.max_colwidth", max_colwidth)
         return self._get_job_table(
                 project=project_path,
                 recursive=recursive,
                 columns=columns,
-                all_columns=all_columns,
                 sort_by=sort_by,
                 max_colwidth=max_colwidth,
-                full_table=full_table,
                 job_name_contains=job_name_contains
         )
 
@@ -412,35 +435,11 @@ class DatabaseAccess(IsDatabase):
             project_path,
             recursive=True,
             columns=None,
-            all_columns=False,
             sort_by="id",
             max_colwidth=200,
-            full_table=False,
             element_lst=None,
             job_name_contains='',
     ):
-        if columns is None:
-            columns = ["job", "project", "chemicalformula"]
-        all_db = [
-            "id",
-            "status",
-            "chemicalformula",
-            "job",
-            "subjob",
-            "projectpath",
-            "project",
-            "timestart",
-            "timestop",
-            "totalcputime",
-            "computer",
-            "hamilton",
-            "hamversion",
-            "parentid",
-            "masterid",
-        ]
-
-        if all_columns:
-            columns = all_db
         job_dict = self._job_dict(
             sql_query=sql_query,
             user=user,
@@ -448,13 +447,6 @@ class DatabaseAccess(IsDatabase):
             recursive=recursive,
             element_lst=element_lst,
         )
-        if full_table:
-            pandas.set_option('display.max_rows', None)
-            pandas.set_option('display.max_columns', None)
-        else:
-            pandas.reset_option('display.max_rows')
-            pandas.reset_option('display.max_columns')
-        pandas.set_option("display.max_colwidth", max_colwidth)
         df = pandas.DataFrame(job_dict, columns=columns)
         if job_name_contains != '':
             df = df[df.job.str.contains(job_name_contains)]

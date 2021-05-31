@@ -151,19 +151,13 @@ class FileTable(IsDatabase, metaclass=Singleton):
         project=None, 
         recursive=True, 
         columns=None, 
-        all_columns=False, 
         sort_by="id", 
         max_colwidth=200, 
-        full_table=False, 
         job_name_contains=''
     ):
         self.update()
         if project is None:
             project = self._project
-        if columns is None:
-            columns = ["job", "project", "chemicalformula"]
-        if all_columns:
-            columns = self._columns
         if len(self._job_table) != 0:
             if recursive:
                 df = self._job_table[self._job_table.project.str.contains(project)]
@@ -171,13 +165,6 @@ class FileTable(IsDatabase, metaclass=Singleton):
                 df = self._job_table[self._job_table.project == project]
         else:
             df = self._job_table
-        if full_table:
-            pandas.set_option('display.max_rows', None)
-            pandas.set_option('display.max_columns', None)
-        else:
-            pandas.reset_option('display.max_rows')
-            pandas.reset_option('display.max_columns')
-        pandas.set_option("display.max_colwidth", max_colwidth)
         if len(df) == 0:
             return df
         if job_name_contains != '':
