@@ -7,6 +7,17 @@ Mixin for classes that represent a hierarchical structures of "groups" and "node
 
 from abc import ABC, abstractmethod
 
+__author__ = "Marvin Poul"
+__copyright__ = (
+    "Copyright 2021, Max-Planck-Institut für Eisenforschung GmbH - "
+    "Computational Materials Design (CM) Department"
+)
+__version__ = "1.0"
+__maintainer__ = "Marvin Poul"
+__email__ = "poul@mpie.de"
+__status__ = "production"
+__date__ = "May 31, 2021"
+
 class HasGroups(ABC):
     """
     Abstract mixin to capture hierarchical structure of pyiron objects.
