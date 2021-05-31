@@ -153,6 +153,7 @@ class Project(ProjectPath, HasGroups):
         return self.create_group("..")
 
     @property
+    @deprecate("use db.view_mode")
     def view_mode(self):
         """
         Get viewer_mode - if viewer_mode is enable pyiron has read only access to the database.
@@ -165,10 +166,7 @@ class Project(ProjectPath, HasGroups):
         Returns:
             bool: returns TRUE when viewer_mode is enabled
         """
-        if not isinstance(self.db, FileTable):
-            return self.db.viewer_mode
-        else:
-            return False
+        return self.db.view_mode
 
     @property
     def name(self):

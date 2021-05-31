@@ -6,12 +6,13 @@ DatabaseAccess class deals with accessing the database
 """
 
 import pyiron_base.settings.logger
-
+from abc import ABC, abstractmethod
 import numpy as np
 import re
 import time
 import os
 from datetime import datetime
+from pyiron_base.generic.util import deprecate
 from sqlalchemy import (
     create_engine,
     MetaData,
@@ -38,6 +39,32 @@ __email__ = "janssen@mpie.de"
 __status__ = "production"
 __date__ = "Sep 1, 2017"
 
+class IsDatabase(ABC):
+    """
+    Captures common interface for all database types in pyiron, e.g. SQL/SQLite/FileTable.
+    """
+
+    @abstractmethod
+    def _get_view_mode(self):
+        pass
+
+    @property
+    def view_mode(self):
+        """
+        Get viewer_mode - if viewer_moded is enable pyiron has read only access to the database.
+
+        Some implementations do not allow to set this value.
+
+        Returns:
+            bool: True when viewer_mode is enabled
+        """
+        return self._get_view_mode()
+
+    @property
+    @deprecate("use view_mode")
+    def viewer_mode(self):
+        return self.view_mode
+    viewer_mode.__doc__ = view_mode.__doc__
 
 class ConnectionWatchDog(Thread):
     """
@@ -152,7 +179,7 @@ class AutorestoredConnection:
             self._conn.close()
 
 
-class DatabaseAccess(object):
+class DatabaseAccess(IsDatabase):
     """
     A core element of PyIron, which generally deals with accessing the database: getting, sending, changing some data
     to the db.
@@ -204,18 +231,11 @@ class DatabaseAccess(object):
         self.metadata.create_all()
         self._viewer_mode = False
 
-    @property
-    def viewer_mode(self):
-        """
-        Get viewer_mode - if viewer_mode is enable pyiron has read only access to the database.
-
-        Returns:
-            bool: returns TRUE when viewer_mode is enabled
-        """
+    def _get_view_mode(self):
         return self._viewer_mode
 
-    @viewer_mode.setter
-    def viewer_mode(self, value):
+    @IsDatabase.view_mode.setter
+    def view_mode(self, value):
         """
         Set viewer_mode - if viewer_mode is enable pyiron has read only access to the database.
 
@@ -226,6 +246,11 @@ class DatabaseAccess(object):
             self._viewer_mode = value
         else:
             raise TypeError("Viewmode can only be TRUE or FALSE.")
+
+    @IsDatabase.viewer_mode.setter
+    @deprecate("use view_mode")
+    def viewer_mode(self, value):
+        self.view_mode = value
 
     # Internal functions
     def __del__(self):

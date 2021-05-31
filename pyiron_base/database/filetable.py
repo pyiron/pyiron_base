@@ -5,13 +5,14 @@ import datetime
 import h5io
 from pyfileindex import PyFileIndex
 from pyiron_base.generic.util import Singleton
+from pyiron_base.database.generic import IsDatabase
 
 
 def filter_function(file_name):
     return '.h5' in file_name
 
 
-class FileTable(metaclass=Singleton):
+class FileTable(IsDatabase, metaclass=Singleton):
     def __init__(self, project):
         self._fileindex = None
         self._job_table = None
@@ -21,9 +22,8 @@ class FileTable(metaclass=Singleton):
                          'username']
         self.force_reset()
 
-    @property
-    def viewer_mode(self):
-        return None
+    def _get_view_mode(self):
+        return False
 
     def force_reset(self):
         self._fileindex = PyFileIndex(
