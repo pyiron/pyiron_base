@@ -545,7 +545,7 @@ class GenericJob(JobCore):
             for group in new_job_core.project_hdf5.list_groups():
                 if "output" in group:
                     del new_job_core.project_hdf5[posixpath.join(new_job_core.project_hdf5.h5_path, group)]
-            new_job_core._status = "initialized"
+            new_job_core.status.initialized = True
         new_job_core._after_generic_copy_to(self, new_database_entry=new_database_entry, reloaded=reloaded)
         return new_job_core
 
