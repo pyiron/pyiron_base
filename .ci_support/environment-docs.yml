@@ -2,11 +2,10 @@ channels:
   - conda-forge
 dependencies:
   - sphinx
-  - nbsphinx
+  - nbsphinx >= 0.8.5
   - ipywidgets
   - sphinx_rtd_theme
   - pylint
   - Graphviz
   - sphinxcontrib-applehelp
   - seaborn
-  - jinja2 <3
