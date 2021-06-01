@@ -526,6 +526,11 @@ class GenericJob(JobCore):
         Returns:
             GenericJob: GenericJob object pointing to the new location.
         """
+        # Update flags
+        if input_only and new_database_entry:
+            warnings.warn("input_only conflicts new_database_entry; setting new_database_entry=False")
+            new_database_entry = False
+
         # Call the copy_to() function defined in the JobCore
         new_job_core, file_project, hdf5_project, reloaded = self._internal_copy_to(
             project=project,
@@ -534,6 +539,13 @@ class GenericJob(JobCore):
             copy_files=False,
             delete_existing_job=delete_existing_job
         )
+
+        # Remove output if it should not be copied
+        if input_only:
+            for group in new_job_core.project_hdf5.list_groups():
+                if "output" in group:
+                    del new_job_core.project_hdf5[posixpath.join(new_job_core.project_hdf5.h5_path, group)]
+            new_job_core.status.initialized = True
         new_job_core._after_generic_copy_to(self, new_database_entry=new_database_entry, reloaded=reloaded)
         return new_job_core
 
