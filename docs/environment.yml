@@ -1,6 +1,0 @@
-channels:
-- conda-forge
-dependencies:
-- ipywidgets
-- pyiron_base
-- nbsphinx
