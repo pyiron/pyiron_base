@@ -42,12 +42,13 @@ class HasHDF(ABC):
         hdf["HDF_VERSION"] = self.__hdf_version__
 
     def from_hdf(self, hdf, group_name=None):
-        group_name = group_name or self._get_group_name()
+        group_name = group_name or self._get_hdf_group_name()
         with WithHDF(hdf, group_name) as hdf:
             version = hdf.get("HDF_VERSION", "0.1.0")
             self._from_hdf(hdf, version=version)
 
     def to_hdf(self, hdf, group_name=None):
+        group_name = group_name or self._get_hdf_group_name()
         with WithHDF(hdf, group_name) as hdf:
             if len(hdf.list_dirs()) > 0 and group_name is None:
                 raise ValueError("HDF group must be empty when group_name is not set.")
