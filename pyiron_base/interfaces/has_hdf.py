@@ -32,7 +32,7 @@ class HasHDF(ABC):
         pass
 
     @abstractmethod
-    def _get_group_name(self):
+    def _get_hdf_group_name(self):
         pass
 
     def _type_to_hdf(self, hdf):
