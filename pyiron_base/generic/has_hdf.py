@@ -20,17 +20,22 @@ class WithHDF:
 
 class HasHDF(ABC):
 
+    __version__ = "0.1.0"
+    __hdf_version__ = "0.1.0"
+
     @abstractmethod
     def _from_hdf(hdf):
         pass
 
     @abstractmethod
-    def _type_to_hdf(hdf):
-        pass
-
-    @abstractmethod
     def _to_hdf(hdf):
         pass
+
+    def _type_to_hdf(hdf):
+        hdf["NAME"] = self.__class__.__name__
+        hdf["TYPE"] = str(type(self))
+        hdf["VERSION"] = self.__version__
+        hdf["HDF_VERSION"] = self.__hdf_version__
 
     def from_hdf(self, hdf, group_name=None):
         with WithHDF(hdf, group_name) as hdf:
