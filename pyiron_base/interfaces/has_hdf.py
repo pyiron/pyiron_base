@@ -38,6 +38,7 @@ class HasHDF(ABC):
     def _type_to_hdf(self, hdf):
         hdf["NAME"] = self.__class__.__name__
         hdf["TYPE"] = str(type(self))
+        hdf["OBJECT"] = hdf["NAME"] # unused alias
         hdf["VERSION"] = self.__version__
         hdf["HDF_VERSION"] = self.__hdf_version__
 
