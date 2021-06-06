@@ -24,7 +24,7 @@ class HasHDF(ABC):
     __hdf_version__ = "0.1.0"
 
     @abstractmethod
-    def _from_hdf(hdf):
+    def _from_hdf(hdf, version=None):
         pass
 
     @abstractmethod
@@ -39,7 +39,8 @@ class HasHDF(ABC):
 
     def from_hdf(self, hdf, group_name=None):
         with WithHDF(hdf, group_name) as hdf:
-            self._from_hdf(hdf)
+            version = hdf.get("HDF_VERSION", "0.1.0")
+            self._from_hdf(hdf, version=version)
 
     def to_hdf(self, hdf, group_name=None):
         with WithHDF(hdf, group_name) as hdf:
