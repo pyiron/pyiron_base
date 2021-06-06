@@ -49,6 +49,8 @@ class HasHDF(ABC):
 
     def to_hdf(self, hdf, group_name=None):
         with WithHDF(hdf, group_name) as hdf:
+            if len(hdf.list_dirs()) > 0 and group_name is None:
+                raise ValueError("HDF group must be empty when group_name is not set.")
             self._type_to_hdf(hdf)
             self._to_hdf(hdf)
 
