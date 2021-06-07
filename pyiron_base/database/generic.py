@@ -8,6 +8,7 @@ DatabaseAccess class deals with accessing the database
 import numpy as np
 import re
 import time
+import warnings
 import os
 from datetime import datetime
 from sqlalchemy import (
@@ -38,7 +39,6 @@ __email__ = "janssen@mpie.de"
 __status__ = "production"
 __date__ = "Sep 1, 2017"
 
-
 class AutorestoredConnection:
     def __init__(self, engine):
         self.engine = engine
@@ -47,9 +47,14 @@ class AutorestoredConnection:
     def execute(self, *args, **kwargs):
         try:
             if self._conn is None or self._conn.closed:
+                if self._conn is None:
+                    print("Reconnecting to DB; connection not existing.")
+                else:
+                    print("Reconnecting to DB; connection closed.")
                 self._conn = self.engine.connect()
             result = self._conn.execute(*args, **kwargs)
-        except OperationalError:
+        except OperationalError as e:
+            print(f"Database connection failed with operational error {e}, waiting 5s, then re-trying.")
             time.sleep(5)
             result = self.execute(*args, **kwargs)
         return result
