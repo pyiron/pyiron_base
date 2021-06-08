@@ -99,6 +99,7 @@ class DatabaseAccess(object):
                     poolclass=NullPool,
                 )
                 self.conn = AutorestoredConnection(self._engine)
+                self._keep_connection = True
             else:
                 self._engine = create_engine(connection_string)
                 self.conn = self._engine.connect()
