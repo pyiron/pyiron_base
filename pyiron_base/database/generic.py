@@ -45,18 +45,19 @@ class AutorestoredConnection:
         self._conn = None
 
     def execute(self, *args, **kwargs):
-        try:
-            if self._conn is None or self._conn.closed:
-                if self._conn is None:
-                    print("Reconnecting to DB; connection not existing.")
-                else:
-                    print("Reconnecting to DB; connection closed.")
-                self._conn = self.engine.connect()
-            result = self._conn.execute(*args, **kwargs)
-        except OperationalError as e:
-            print(f"Database connection failed with operational error {e}, waiting 5s, then re-trying.")
-            time.sleep(5)
-            result = self.execute(*args, **kwargs)
+        while True:
+            try:
+                if self._conn is None or self._conn.closed:
+                    if self._conn is None:
+                        print("Reconnecting to DB; connection not existing.")
+                    else:
+                        print("Reconnecting to DB; connection closed.")
+                    self._conn = self.engine.connect()
+                result = self._conn.execute(*args, **kwargs)
+                break
+            except OperationalError as e:
+                print(f"Database connection failed with operational error {e}, waiting 5s, then re-trying.")
+                time.sleep(5)
         return result
 
     def close(self):
