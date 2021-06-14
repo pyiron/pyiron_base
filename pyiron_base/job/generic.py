@@ -436,6 +436,13 @@ class GenericJob(JobCore):
                 db=self.project.db,
                 job_id=self.job_id,
             )
+            # in case we're running, check with the queue that we're really still running or it killed us or we crashed
+            # unrecoverably
+            qid = self.server.queue_id
+            if self.status.running and qid is not None:
+                queue_status = s.queue_adapter.get_status_of_job(qid)
+                if queue_status != "running":
+                    self.status.aborted = True
 
     def clear_job(self):
         """
