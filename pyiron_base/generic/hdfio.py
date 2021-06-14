@@ -25,6 +25,13 @@ __email__ = "janssen@mpie.de"
 __status__ = "production"
 __date__ = "Sep 1, 2017"
 
+def open_hdf5(filename, mode="r", swmr=False):
+    if swmr and mode != "r":
+        store = h5py.File(filename, mode=mode, libver="latest")
+        store.swmr = True
+        return store
+    else:
+        return h5py.File(filename, mode=mode, libver="latest", swmr=swmr)
 
 class FileHDFio(object):
     """
@@ -176,7 +183,7 @@ class FileHDFio(object):
             bool: [True/False]
         """
         if self.file_exists:
-            with h5py.File(self.file_name) as h:
+            with open_hdf5(self.file_name) as h:
                 return len(h.keys()) == 0
         else:
             return True
@@ -278,12 +285,12 @@ class FileHDFio(object):
         if self.file_exists:
             dest_path = destination.h5_path[1:] if destination.h5_path[0] == "/" else destination.h5_path
             if self.file_name != file_name:
-                with h5py.File(self.file_name, mode="r", libver="latest") as f_source:
-                    with h5py.File(file_name, mode="a", libver="latest") as f_target:
+                with open_hdf5(self.file_name, mode="r") as f_source:
+                    with open_hdf5(file_name, mode="a") as f_target:
                         _internal_copy(source=f_source, source_path=self._h5_path, target=f_target,
                                        target_path=dest_path, maintain_flag=maintain_name)
             else:
-                with h5py.File(file_name, mode="a", libver="latest") as f_target:
+                with open_hdf5(file_name, mode="a") as f_target:
                     _internal_copy(source=f_target, source_path=self._h5_path, target=f_target,
                                    target_path=dest_path, maintain_flag=maintain_name)
 
@@ -303,7 +310,7 @@ class FileHDFio(object):
             FileHDFio: FileHDFio object pointing to the new group
         """
         full_name = posixpath.join(self.h5_path, name)
-        with h5py.File(self.file_name, mode="a", libver="latest") as h:
+        with open_hdf5(self.file_name, mode="a") as h:
             try:
                 h.create_group(full_name, track_order=track_order)
             except ValueError:
@@ -316,9 +323,7 @@ class FileHDFio(object):
         Remove an HDF5 group - if it exists. If the group does not exist no error message is raised.
         """
         try:
-            with h5py.File(
-                self.file_name, mode="a", libver="latest"
-            ) as hdf_file:
+            with open_hdf5(self.file_name, mode="a") as hdf_file:
                 del hdf_file[self.h5_path]
         except KeyError:
             pass
@@ -446,7 +451,7 @@ class FileHDFio(object):
         if self.file_exists:
             groups = set()
             nodes = set()
-            with h5py.File(self.file_name) as h:
+            with open_hdf5(self.file_name) as h:
                 try:
                     h = h[self.h5_path]
                     for k in h.keys():
@@ -682,7 +687,7 @@ class FileHDFio(object):
         """
         if self.file_exists:
             try:
-                with h5py.File(self.file_name, mode="a") as store:
+                with open_hdf5(self.file_name, mode="a") as store:
                     del store[key]
             except (AttributeError, KeyError):
                 pass
@@ -848,7 +853,7 @@ class FileHDFio(object):
         Returns:
             str: h5io type
         """
-        with h5py.File(self.file_name) as store:
+        with open_hdf5(self.file_name) as store:
             return str(store[self.h5_path][name].attrs.get("TITLE", ""))
 
     def _filter_io_objects(self, groups):
