@@ -22,8 +22,8 @@ def getdir(path):
 def update_id_lst(record_lst, job_id_lst):
     masterid_lst = []
     for masterid in record_lst:
-        if np.isnan(masterid):
-            masterid_lst.append(masterid)
+        if masterid is None or np.isnan(masterid):
+            masterid_lst.append(np.nan)
         elif isinstance(masterid, int) or isinstance(masterid, float):
             masterid = int(masterid)
             masterid_lst.append(job_id_lst[masterid])
