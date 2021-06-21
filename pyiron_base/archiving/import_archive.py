@@ -23,7 +23,7 @@ def update_id_lst(record_lst, job_id_lst):
     masterid_lst = []
     for masterid in record_lst:
         if masterid is None or np.isnan(masterid):
-            masterid_lst.append(np.nan)
+            masterid_lst.append(None)
         elif isinstance(masterid, int) or isinstance(masterid, float):
             masterid = int(masterid)
             masterid_lst.append(job_id_lst[masterid])
@@ -105,7 +105,7 @@ def import_jobs(
         update_id_lst(record_lst=df["masterid"].values, job_id_lst=job_id_lst),
         update_id_lst(record_lst=df["parentid"].values, job_id_lst=job_id_lst),
     ):
-        if not np.isnan(masterid) or not np.isnan(parentid):
+        if masterid is not None or parentid is not None:
             pr_import.db.item_update(
                 item_id=job_id,
                 par_dict={
