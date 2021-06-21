@@ -16,6 +16,7 @@ import types
 
 from pyiron_base.job.generic import GenericJob
 from pyiron_base.generic.hdfio import FileHDFio
+from pyiron_base.interfaces.has_groups import HasGroups
 from pyiron_base.master.generic import get_function_from_string
 
 
@@ -116,7 +117,7 @@ class JobFilters(object):
         return filter_job_name_segment
 
 
-class PyironTable(object):
+class PyironTable(HasGroups):
     """
     Class for easy, efficient, and pythonic analysis of data from pyiron projects
 
@@ -337,10 +338,10 @@ class PyironTable(object):
     def get_dataframe(self):
         return self._df
 
-    def list_nodes(self):
+    def _list_nodes(self):
         return list(self._df.columns)
 
-    def list_groups(self):
+    def _list_groups(self):
         return list(set(self._df["col_0"]))
 
     @staticmethod

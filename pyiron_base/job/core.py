@@ -10,6 +10,7 @@ import os
 import posixpath
 import math
 from pyiron_base.settings.generic import Settings
+from pyiron_base.interfaces.has_groups import HasGroups
 from pyiron_base.generic.util import static_isinstance
 from pyiron_base.job.util import \
     _get_project_for_copy, \
@@ -44,10 +45,13 @@ __date__ = "Sep 1, 2017"
 s = Settings()
 
 
-class JobCore:
+class JobCore(HasGroups):
     """
     The JobCore the most fundamental pyiron job class. From this class the GenericJob as well as the reduced JobPath
     class are derived. While JobPath only provides access to the HDF5 file it is about one order faster.
+
+    Implements :class:`.HasGroups`.  Groups are HDF groups in the HDF file associated with the job and any child jobs,
+    nodes are HDF dataset in the HDF file.
 
     Args:
         project (ProjectHDFio): ProjectHDFio instance which points to the HDF5 file the job is stored in
@@ -625,25 +629,13 @@ class JobCore:
             for child_id in self.child_ids
         ]
 
-    def list_groups(self):
-        """
-        equivalent to os.listdirs (consider groups as equivalent to dirs)
-
-        Returns:
-            (list): list of groups in pytables for the path self.h5_path
-        """
+    def _list_groups(self):
         return self.project_hdf5.list_groups() + self._list_ext_childs()
 
-    def list_nodes(self):
-        """
-        List all groups and nodes of the HDF5 file
-
-        Returns:
-            list: list of nodes
-        """
+    def _list_nodes(self):
         return self.project_hdf5.list_nodes()
 
-    def list_all(self):
+    def _list_all(self):
         """
         List all groups and nodes of the HDF5 file - where groups are equivalent to directories and nodes to files.
 

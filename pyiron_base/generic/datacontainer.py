@@ -10,6 +10,7 @@ from collections.abc import Sequence, Set, Mapping, MutableMapping
 import warnings
 import numpy as np
 from .fileio import read, write
+from pyiron_base.interfaces.has_groups import HasGroups
 
 __author__ = "Marvin Poul"
 __copyright__ = (
@@ -45,7 +46,7 @@ def _normalize(key):
     return key
 
 
-class DataContainer(MutableMapping):
+class DataContainer(MutableMapping, HasGroups):
     """
     Mutable sequence with optional keys.
 
@@ -152,6 +153,15 @@ class DataContainer(MutableMapping):
     [3, 2, 1, 0]
     >>> list(pl.keys())
     [0, 1, 2, 3]
+
+
+    Implements :class:`.HasGroups`.  Groups are nested data containers and nodes are everything else.
+
+    >>> p = DataContainer({"a": 42, "b": [0, 1, 2]})
+    >>> p.list_groups()
+    ['b']
+    >>> p.list_nodes()
+    ['a']
 
     .. attention:: Subclasses beware!
 
@@ -740,18 +750,12 @@ class DataContainer(MutableMapping):
             if not isinstance(v, DataContainer):
                 yield k
 
-    def list_nodes(self):
-        """
-        Return a list of keys to terminal nodes.
-
-        Returns:
-            :class:`list`: list of keys to normal values.
-        """
+    def _list_nodes(self):
         return list(self.nodes())
 
     def groups(self):
         """
-        Return a list of keys to nested containers.
+        Iterate over keys to nested containers.
 
         Returns:
             :class:`list`: list of all keys to elements of :class:`DataContainer`.
@@ -760,13 +764,7 @@ class DataContainer(MutableMapping):
             if isinstance(v, DataContainer):
                 yield k
 
-    def list_groups(self):
-        """
-        Return a list of keys to nested containers.
-
-        Returns:
-            :class:`list`: list of all keys to elements of :class:`DataContainer`.
-        """
+    def _list_groups(self):
         return list(self.groups())
 
     def read(self, file_name, wrap=True):

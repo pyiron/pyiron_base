@@ -14,6 +14,7 @@ import h5io
 import numpy as np
 from tables.exceptions import NoSuchNodeError, HDF5ExtError
 import sys
+from pyiron_base.interfaces.has_groups import HasGroups
 
 __author__ = "Joerg Neugebauer, Jan Janssen"
 __copyright__ = (
@@ -79,10 +80,12 @@ class HDFStoreIO(pandas.HDFStore):
         return self
 
 
-class FileHDFio(object):
+class FileHDFio(HasGroups):
     """
     Class that provides all info to access a h5 file. This class is based on h5io.py, which allows to
     get and put a large variety of jobs to/from h5
+
+    Implements :class:`.HasGroups`.  Groups are HDF groups in the file, nodes are HDF datasets.
 
     Args:
         file_name (str): absolute path of the HDF5 file
@@ -492,7 +495,7 @@ class FileHDFio(object):
         """
         self.__setitem__(key=key, value=value)
 
-    def list_all(self):
+    def _list_all(self):
         """
         List all groups and nodes of the HDF5 file - where groups are equivalent to directories and nodes to files.
 
@@ -518,23 +521,10 @@ class FileHDFio(object):
         else:
             return {"groups": [], "nodes": []}
 
-    def list_nodes(self):
-        """
-        List all nodes of the HDF5 file
-
-        Returns:
-            list: list of nodes
-        """
+    def _list_nodes(self):
         return self.list_all()["nodes"]
 
-    def list_groups(self):
-        """
-        equivalent to os.listdirs (consider groups as equivalent to dirs)
-
-        Returns:
-            (list): list of groups in pytables for the path self.h5_path
-
-        """
+    def _list_groups(self):
         return self.list_all()["groups"]
 
     def listdirs(self):
