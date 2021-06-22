@@ -12,7 +12,6 @@ import pandas
 import posixpath
 import h5io
 import numpy as np
-from tables.exceptions import NoSuchNodeError, HDF5ExtError
 import sys
 from pyiron_base.interfaces.has_groups import HasGroups
 
@@ -27,58 +26,13 @@ __email__ = "janssen@mpie.de"
 __status__ = "production"
 __date__ = "Sep 1, 2017"
 
-
-class HDFStoreIO(pandas.HDFStore):
-    """
-    dict-like IO interface for storing pandas objects in PyTables either Fixed or Table format.
-    - copied from pandas.HDFStore
-
-    Args:
-        path (str) : File path to HDF5 file
-        mode (str): {'a', 'w', 'r', 'r+'}, default 'a'
-                    ``'r'``
-                        Read-only; no data can be modified.
-                    ``'w'``
-                        Write; a new file is created (an existing file with the same name would be deleted).
-                    ``'a'``
-                        Append; an existing file is opened for reading and writing, and if the file does not exist it
-                        is created.
-                    ``'r+'``
-                        It is similar to ``'a'``, but the file must already exist.
-        complevel (int): 1-9, default 0
-                         If a complib is specified compression will be applied
-                         where possible
-        complib (str): {'zlib', 'bzip2', 'lzo', 'blosc', None}, default None
-                       If complevel is > 0 apply compression to objects written in the store wherever possible
-        fletcher32 (bool): bool, default False
-                           If applying compression use the fletcher32 checksum
-    """
-
-    def __init__(
-        self, path, mode=None, complevel=None, complib=None, fletcher32=False, **kwargs
-    ):
-        super(HDFStoreIO, self).__init__(
-            path,
-            mode=mode,
-            complevel=complevel,
-            complib=complib,
-            fletcher32=fletcher32,
-            **kwargs
-        )
-
-    def open(self, **kwargs):
-        """
-        Open the file in the specified mode - copied from pandas.HDFStore.open()
-
-        Args:
-            **kwargs: mode : {'a', 'w', 'r', 'r+'}, default 'a'
-                      See HDFStore docstring or tables.open_file for info about modes
-        Returns:
-            HDFStoreIO: self - in contrast to the original implementation in pandas.
-        """
-        super(HDFStoreIO, self).open(**kwargs)
-        return self
-
+def open_hdf5(filename, mode="r", swmr=False):
+    if swmr and mode != "r":
+        store = h5py.File(filename, mode=mode, libver="latest")
+        store.swmr = True
+        return store
+    else:
+        return h5py.File(filename, mode=mode, libver="latest", swmr=swmr)
 
 class FileHDFio(HasGroups):
     """
@@ -232,11 +186,8 @@ class FileHDFio(HasGroups):
             bool: [True/False]
         """
         if self.file_exists:
-            store = HDFStoreIO(self.file_name, mode="r")
-            with store.open(mode="r"):
-                len_nodes = len(store.root._v_children.keys())
-                len_groups = len(store.root._v_groups.keys())
-                return len_groups + len_nodes == 0
+            with open_hdf5(self.file_name) as h:
+                return len(h.keys()) == 0
         else:
             return True
 
@@ -337,12 +288,12 @@ class FileHDFio(HasGroups):
         if self.file_exists:
             dest_path = destination.h5_path[1:] if destination.h5_path[0] == "/" else destination.h5_path
             if self.file_name != file_name:
-                with h5py.File(self.file_name, mode="r", libver="latest") as f_source:
-                    with h5py.File(file_name, mode="a", libver="latest") as f_target:
+                with open_hdf5(self.file_name, mode="r") as f_source:
+                    with open_hdf5(file_name, mode="a") as f_target:
                         _internal_copy(source=f_source, source_path=self._h5_path, target=f_target,
                                        target_path=dest_path, maintain_flag=maintain_name)
             else:
-                with h5py.File(file_name, mode="a", libver="latest") as f_target:
+                with open_hdf5(file_name, mode="a") as f_target:
                     _internal_copy(source=f_target, source_path=self._h5_path, target=f_target,
                                    target_path=dest_path, maintain_flag=maintain_name)
 
@@ -362,7 +313,7 @@ class FileHDFio(HasGroups):
             FileHDFio: FileHDFio object pointing to the new group
         """
         full_name = posixpath.join(self.h5_path, name)
-        with h5py.File(self.file_name, mode="a", libver="latest") as h:
+        with open_hdf5(self.file_name, mode="a") as h:
             try:
                 h.create_group(full_name, track_order=track_order)
             except ValueError:
@@ -375,9 +326,7 @@ class FileHDFio(HasGroups):
         Remove an HDF5 group - if it exists. If the group does not exist no error message is raised.
         """
         try:
-            with h5py.File(
-                self.file_name, mode="a", libver="latest"
-            ) as hdf_file:
+            with open_hdf5(self.file_name, mode="a") as hdf_file:
                 del hdf_file[self.h5_path]
         except KeyError:
             pass
@@ -503,17 +452,19 @@ class FileHDFio(HasGroups):
             dict: {'groups': [list of groups], 'nodes': [list of nodes]}
         """
         if self.file_exists:
-            store = HDFStoreIO(self.file_name, mode="r")
-            with store.open(mode="r"):
+            groups = set()
+            nodes = set()
+            with open_hdf5(self.file_name) as h:
                 try:
-                    node = self._get_store_node(store)
-                    groups = set(node._v_groups.keys())
-                    nodes = set(node._v_children.keys())
-                except IndexError:
-                    groups = set()
-                    nodes = set()
+                    h = h[self.h5_path]
+                    for k in h.keys():
+                        if isinstance(h[k], h5py.Group):
+                            groups.add(k)
+                        else:
+                            nodes.add(k)
+                except KeyError:
+                    pass
             iopy_nodes = self._filter_io_objects(groups)
-            store.close()
             return {
                 "groups": sorted(list(groups - iopy_nodes)),
                 "nodes": sorted(list((nodes - groups).union(iopy_nodes))),
@@ -726,10 +677,9 @@ class FileHDFio(HasGroups):
         """
         if self.file_exists:
             try:
-                store = HDFStoreIO(self.file_name, mode="a")
-                with store.open(mode="a"):
+                with open_hdf5(self.file_name, mode="a") as store:
                     del store[key]
-            except (AttributeError, KeyError, HDF5ExtError):
+            except (AttributeError, KeyError):
                 pass
 
     def __str__(self):
@@ -883,16 +833,6 @@ class FileHDFio(HasGroups):
         """
         return posixpath.join(self.h5_path, name)
 
-    def _get_store_node(self, store):
-        """
-        Index store with the current h5_path set, but avoid to index by '/', because that raises an IndexError.
-        """
-        p = self.h5_path
-        if p != '/':
-            return store.root[p]
-        else:
-            return store.root
-
     def _get_h5io_type(self, name):
         """
         Internal function to get h5io type
@@ -903,9 +843,8 @@ class FileHDFio(HasGroups):
         Returns:
             str: h5io type
         """
-        store = HDFStoreIO(self.file_name, mode="r")
-        with store.open(mode="r"):
-            return str(self._get_store_node(store)[name]._v_title)
+        with open_hdf5(self.file_name) as store:
+            return str(store[self.h5_path][name].attrs.get("TITLE", ""))
 
     def _filter_io_objects(self, groups):
         """
