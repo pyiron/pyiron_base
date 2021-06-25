@@ -511,12 +511,6 @@ class GenericMaster(GenericJob):
         """
         pass
 
-    def _run_if_busy(self):
-        """
-        Run if busy is not implemented for MetaJobs
-        """
-        pass
-
     def _init_child_job(self, parent):
         """
         Update our reference job.
