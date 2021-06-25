@@ -147,7 +147,7 @@ class GenericMaster(GenericJob):
         Returns:
             list: list of child job ids
         """
-        if self._child_id_func:
+        if self._child_id_func is not None:
             return self._child_id_func(self)
         else:
             return super(GenericMaster, self).child_ids
@@ -255,7 +255,7 @@ class GenericMaster(GenericJob):
         Returns:
             JobCore: JobCore object pointing to the new location.
         """
-        if self._job_id:
+        if self._job_id is not None:
             for child_id in self.child_ids:
                 child = self.project.load(child_id)
                 child.move_to(project.open(self.job_name + "_hdf5"))
@@ -265,7 +265,7 @@ class GenericMaster(GenericJob):
         if reloaded:
             return
 
-        if self.job_id and new_database_entry and original._job_id:
+        if self.job_id is not None and new_database_entry and original._job_id is not None:
             for child_id in original.child_ids:
                 child = original.project.load(child_id)
                 new_child = child.copy_to(
