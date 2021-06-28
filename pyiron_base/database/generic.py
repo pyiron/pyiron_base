@@ -27,6 +27,8 @@ from sqlalchemy import (
 from sqlalchemy.pool import NullPool
 from sqlalchemy.sql import select
 from sqlalchemy.exc import OperationalError, DatabaseError
+from threading import Thread, Lock
+from queue import SimpleQueue
 
 __author__ = "Murat Han Celik"
 __copyright__ = (
@@ -39,10 +41,35 @@ __email__ = "janssen@mpie.de"
 __status__ = "production"
 __date__ = "Sep 1, 2017"
 
+class ConnectionWatchDog(Thread):
+    def __init__(self, conn, lock, timeout=60):
+        super().__init__()
+        self._queue = SimpleQueue()
+        self._conn = conn
+        self._lock = lock
+        self._timeout = timeout
+
+    def run(self):
+        while True:
+            kicked = self._queue.get(timeout=self._timeout)
+            if not kicked:
+                with self._lock:
+                    self._conn.close()
+                    break
+
+    def kick(self):
+        self._queue.put(True)
+
+    def kill(self):
+        self._queue.put(False)
+        self.join()
+
 class AutorestoredConnection:
     def __init__(self, engine):
         self.engine = engine
         self._conn = None
+        self._lock = Lock()
+        self._watchdog = None
 
     def execute(self, *args, **kwargs):
         while True:
@@ -53,8 +80,16 @@ class AutorestoredConnection:
                     else:
                         print("Reconnecting to DB; connection closed.")
                     self._conn = self.engine.connect()
-                result = self._conn.execute(*args, **kwargs)
-                break
+                    if self._watchdog is not None:
+                        # in case connection is dead, but watchdog is still up, something else killed the connection,
+                        # make the watchdog quit, then making a new one
+                        self._watchdog.kill()
+                    self._watchdog = ConnectionWatchDog(self._conn, self._lock)
+                    self._watchdog.start()
+                self._watchdog.kick()
+                with self._lock:
+                    result = self._conn.execute(*args, **kwargs)
+                    break
             except OperationalError as e:
                 print(f"Database connection failed with operational error {e}, waiting 5s, then re-trying.")
                 time.sleep(5)
