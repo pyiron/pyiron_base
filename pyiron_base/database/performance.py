@@ -26,7 +26,7 @@ class DatabaseStatistics:
     def __init__(self):
         s = Settings()
         self._connection_string = s._configuration['sql_connection_string']
-        self._job_table = s._configuration['sql_table_name']
+        self._job_table = s._configuration['sql_view_table_name']
         if "postgresql" not in self._connection_string:
             raise RuntimeError(
                 """
@@ -108,7 +108,7 @@ class DatabaseStatistics:
         self._index_usage = 0
         for row in rows:
             if row[1] == self._job_table:
-                self._index_usage = self._index_usage + int(str(row[5]).split(' ')[0])
+                self._index_usage += int(str(row[5]).split(' ')[0])
 
         self._performance_dict['index size/usage (MB)'] = self._index_usage
 
@@ -132,7 +132,7 @@ class DatabaseStatistics:
         self._performance_dict['duplicated indices'] = ''
         for pair in overlapping_indices:
             self._performance_dict['duplicated indices'] = str(pair[1]) + \
-                                                        ', and ' + str(pair[2]) + 'with total size: ' \
+                                                        ', and ' + str(pair[2]) + ' with total size: ' \
                                                         + str(pair[0]) + '\n'
 
     def _checkpoints_interval(self, conn):
@@ -167,4 +167,4 @@ class DatabaseStatistics:
             self._index_size(conn)
             self._duplicate_indices(conn)
 
-        return pd.dataframe(self._performance_dict, index=['performance'])
+        return pd.DataFrame(self._performance_dict, index=['performance'])
