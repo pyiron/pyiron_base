@@ -157,6 +157,66 @@ class IsDatabase(ABC):
             return df.sort_values(by=sort_by)
         return df
 
+    @abstractmethod
+    def _get_table_headings(self, table_name=None):
+        pass
+
+    def get_table_headings(self, table_name=None):
+        """
+        Get column names; if given table_name can select one of multiple tables defined in the database, but subclasses
+        may ignore it
+
+        Args:
+            table_name (str): simple string of a table_name like: 'jobs_username'
+
+        Returns:
+            list: list of column names like:
+                ['id',
+                'parentid',
+                'masterid',
+                'projectpath',
+                'project',
+                'job',
+                'subjob',
+                'chemicalformula',
+                'status',
+                'hamilton',
+                'hamversion',
+                'username',
+                'computer',
+                'timestart',
+                'timestop',
+                'totalcputime']
+        """
+        return self._get_table_headings(table_name=table_name)
+
+    @deprecate("use get_table_headings()")
+    def get_db_columns(self):
+        """
+        Get column names
+
+        Returns:
+            list: list of column names like:
+                ['id',
+                'parentid',
+                'masterid',
+                'projectpath',
+                'project',
+                'job',
+                'subjob',
+                'chemicalformula',
+                'status',
+                'hamilton',
+                'hamversion',
+                'username',
+                'computer',
+                'timestart',
+                'timestop',
+                'totalcputime']
+        """
+        return self.get_table_headings()
+
+
 class ConnectionWatchDog(Thread):
     """
     Helper class that closes idle connections after a given timeout.
@@ -494,7 +554,7 @@ class DatabaseAccess(IsDatabase):
             return reg.search(item) is not None
 
     # Table functions
-    def get_table_headings(self, table_name=None):
+    def _get_table_headings(self, table_name=None):
         """
         Get column names
 
@@ -533,6 +593,8 @@ class DatabaseAccess(IsDatabase):
         except Exception:
             raise ValueError(str(table_name) + " does not exist")
         return [column.name for column in iter(simulation_list.columns)]
+
+
 
     def add_column(self, col_name, col_type):
         """

@@ -22,7 +22,6 @@ from pyiron_base.database.manager import DatabaseManager
 from pyiron_base.settings.publications import list_publications
 from pyiron_base.database.performance import get_database_statistics
 from pyiron_base.database.jobtable import (
-    get_db_columns,
     get_job_ids,
     get_job_id,
     get_jobs,
@@ -367,7 +366,7 @@ class Project(ProjectPath, HasGroups):
                  'timestop',
                  'totalcputime']
         """
-        return get_db_columns(self.db)
+        return self.db.get_table_headings()
 
     def get_jobs(self, recursive=True, columns=None):
         """

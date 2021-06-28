@@ -140,10 +140,7 @@ class FileTable(IsDatabase, metaclass=Singleton):
             else:
                 self._job_table = df
 
-    def get_db_columns(self):
-        return self.get_table_headings()
-
-    def get_table_headings(self):
+    def _get_table_headings(self, table_name=None):
         return self._job_table.columns.values
 
     def _get_job_table(

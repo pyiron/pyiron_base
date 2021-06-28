@@ -24,36 +24,6 @@ __date__ = "Sep 1, 2017"
 s = Settings()
 
 
-
-def get_db_columns(database):
-    """
-    Get column names
-
-    Args:
-        database (DatabaseAccess): Database object
-
-    Returns:
-        list: list of column names like:
-             ['id',
-             'parentid',
-             'masterid',
-             'projectpath',
-             'project',
-             'job',
-             'subjob',
-             'chemicalformula',
-             'status',
-             'hamilton',
-             'hamversion',
-             'username',
-             'computer',
-             'timestart',
-             'timestop',
-             'totalcputime']
-    """
-    return database.get_table_headings()
-
-
 def get_jobs(database, sql_query, user, project_path, recursive=True, columns=None):
     """
     Internal function to return the jobs as dictionary rather than a pandas.Dataframe
