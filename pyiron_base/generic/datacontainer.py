@@ -278,7 +278,8 @@ class DataContainer(MutableMapping, HasGroups):
                 if not isinstance(v, HDF5Stub):
                     return v
                 else:
-                    return v.realize()
+                    v = self._store[key] = v.realize()
+                    return v
             except IndexError:
                 raise IndexError("list index out of range") from None
 
@@ -288,7 +289,8 @@ class DataContainer(MutableMapping, HasGroups):
                 if not isinstance(v, HDF5Stub):
                     return v
                 else:
-                    return v.realize()
+                    v = self._store[self._indices[key]] = v.realize()
+                    return v
             except KeyError:
                 raise KeyError(repr(key)) from None
 
