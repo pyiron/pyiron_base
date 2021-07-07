@@ -20,32 +20,26 @@ __date__ = "Apr 26, 2021"
 
 
 
-class HDF5Stub(ABC):
+class HDF5Stub:
+
+    _realize_functions = {}
 
     def __init__(self, hdf, group_name):
         self._hdf = hdf
         self._group_name = group_name
 
-    @abstractmethod
+    @classmethod
+    def register(cls, type_name, realize):
+        cls._realize_functions[type_name] = realize
+
     def realize(self):
-        pass
+        if self._group_name in self._hdf.list_nodes():
+            return self._hdf[self._group_name]
+        realize = self._realize_functions.get(
+                self._hdf[self._group_name]['NAME'],
+                lambda h, g: h[g].to_object()
+        )
+        return realize(self._hdf, self._group_name)
 
     def __repr__(self):
         return f"{self.__class__.__name__}({self._hdf}, {self._group_name})"
-
-class SimpleStub(HDF5Stub):
-
-    def realize(self):
-        return self._hdf[self._group_name]
-
-class ObjectStub(HDF5Stub):
-
-    def realize(self):
-        return self._hdf[self._group_name].to_object()
-
-# exists to pass lazy=True, to make sure we can be recursively lazy!
-class DataContainerStub(HDF5Stub):
-
-    def realize(self):
-        return self._hdf[self._group_name].to_object(lazy=True)
-
