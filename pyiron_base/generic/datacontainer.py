@@ -14,7 +14,7 @@ import numpy as np
 
 from pyiron_base.interfaces.has_groups import HasGroups
 from .fileio import read, write
-from .hdfstub import HDF5Stub
+from .hdfstub import HDFStub
 
 __author__ = "Marvin Poul"
 __copyright__ = (
@@ -49,7 +49,7 @@ def _normalize(key):
 
     return key
 
-HDF5Stub.register('DataContainer', lambda h, g: h[g].to_object(lazy=True))
+HDFStub.register('DataContainer', lambda h, g: h[g].to_object(lazy=True))
 
 class DataContainer(MutableMapping, HasGroups):
     """
@@ -277,10 +277,10 @@ class DataContainer(MutableMapping, HasGroups):
         elif isinstance(key, int):
             try:
                 v = self._store[key]
-                if not isinstance(v, HDF5Stub):
+                if not isinstance(v, HDFStub):
                     return v
                 else:
-                    v = self._store[key] = v.realize()
+                    v = self._store[key] = v.load()
                     return v
             except IndexError:
                 raise IndexError("list index out of range") from None
@@ -288,10 +288,10 @@ class DataContainer(MutableMapping, HasGroups):
         elif isinstance(key, str):
             try:
                 v = self._store[self._indices[key]]
-                if not isinstance(v, HDF5Stub):
+                if not isinstance(v, HDFStub):
                     return v
                 else:
-                    v = self._store[self._indices[key]] = v.realize()
+                    v = self._store[self._indices[key]] = v.load()
                     return v
             except KeyError:
                 raise KeyError(repr(key)) from None
@@ -757,9 +757,9 @@ class DataContainer(MutableMapping, HasGroups):
             for n in hdf.list_nodes():
                 if n in _internal_hdf_nodes:
                     continue
-                items.append( (*normalize_key(n), hdf[n] if not self._lazy else HDF5Stub(hdf, n)) )
+                items.append( (*normalize_key(n), hdf[n] if not self._lazy else HDFStub(hdf, n)) )
             for g in hdf.list_groups():
-                items.append( (*normalize_key(g), hdf[g].to_object() if not self._lazy else HDF5Stub(hdf, g)) )
+                items.append( (*normalize_key(g), hdf[g].to_object() if not self._lazy else HDFStub(hdf, g)) )
 
 
             for _, k, v in sorted(items, key=lambda x: x[0]):
