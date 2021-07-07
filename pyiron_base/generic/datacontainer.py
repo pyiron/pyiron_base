@@ -159,7 +159,6 @@ class DataContainer(MutableMapping, HasGroups):
     >>> list(pl.keys())
     [0, 1, 2, 3]
 
-
     Implements :class:`.HasGroups`.  Groups are nested data containers and nodes are everything else.
 
     >>> p = DataContainer({"a": 42, "b": [0, 1, 2]})
@@ -167,6 +166,12 @@ class DataContainer(MutableMapping, HasGroups):
     ['b']
     >>> p.list_nodes()
     ['a']
+
+    If instantiated with the argument `lazy=True`, data read from HDF5 later via :method:`.from_hdf` are not actually
+    read, but only earmarked to be read later when actually accessed via :class:`.HDFStub`.  This is largely
+    transparent, i.e. when accessing an earmarked value it will automatically be loaded and this loaded value is stored
+    in container.  The only difference is in the string representation of the container, values not read yet appear as
+    'HDFStub(...)' in the output.
 
     .. attention:: Subclasses beware!
 
@@ -252,6 +257,15 @@ class DataContainer(MutableMapping, HasGroups):
         return instance
 
     def __init__(self, init=None, table_name=None, lazy=False):
+        """
+        Create new container.
+
+        Args:
+            init (Sequence, Mapping): initial data for the container, nested occurances of Sequence and Mapping are
+                                      translated to nested containers
+            table_name (str): default name of the data container in HDF5
+            lazy (bool): if True, use :class:`.HDFStub` to load values lazily from HDF5
+        """
         self.table_name = table_name
         self._lazy = lazy
         if init is not None:
