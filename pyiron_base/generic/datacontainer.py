@@ -396,7 +396,10 @@ class DataContainer(MutableMapping, HasGroups):
     def __repr__(self):
         name = self.__class__.__name__
         if self.has_keys():
-            return name + "({" + ", ".join("{!r}: {!r}".format(k, v) for k, v in self.items()) + "})"
+            # access _store and _indices directly to avoid forcing HDFStubs
+            index2key = {v: k for k, v in self._indices.items()}
+            return name + "({" + ", ".join("{!r}: {!r}".format(index2key.get(i, i), self._store[i])
+                                                for i in range(len(self))) + "})"
         else:
             return name + "([" + ", ".join("{!r}".format(v) for v in self._store) + "])"
 
