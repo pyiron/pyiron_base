@@ -250,8 +250,9 @@ class DataContainer(MutableMapping, HasGroups):
 
         return instance
 
-    def __init__(self, init=None, table_name=None):
+    def __init__(self, init=None, table_name=None, lazy=False):
         self.table_name = table_name
+        self._lazy = lazy
         if init is not None:
             self.update(init, wrap=True)
 
