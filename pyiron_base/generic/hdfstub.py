@@ -5,6 +5,8 @@ Convenience class to lazily read values from HDF.
 # Copyright (c) Max-Planck-Institut für Eisenforschung GmbH - Computational Materials Design (CM) Department
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
+from abc import ABC, abstractmethod
+
 __author__ = "Marvin Poul"
 __copyright__ = (
     "Copyright 2020, Max-Planck-Institut für Eisenforschung GmbH - "
@@ -37,3 +39,10 @@ class ObjectStub(HDF5Stub):
 
     def realize(self):
         return self._hdf[self._group_name].to_object()
+
+# exists to pass lazy=True, to make sure we can be recursively lazy!
+class DataContainerStub(HDF5Stub):
+
+    def realize(self):
+        return self._hdf[self._group_name].to_object(lazy=True)
+

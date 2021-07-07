@@ -14,7 +14,7 @@ import numpy as np
 
 from pyiron_base.interfaces.has_groups import HasGroups
 from .fileio import read, write
-from .hdfstub import SimpleStub, ObjectStub
+from .hdfstub import HDF5Stub, SimpleStub, ObjectStub, DataContainerStub
 
 __author__ = "Marvin Poul"
 __copyright__ = (
@@ -755,7 +755,18 @@ class DataContainer(MutableMapping, HasGroups):
                     continue
                 items.append( (*normalize_key(n), hdf[n] if not self._lazy else SimpleStub(hdf, n)) )
             for g in hdf.list_groups():
-                items.append( (*normalize_key(g), hdf[g].to_object() if not self._lazy else ObjectStub(hdf, g)) )
+                # poor programmer's static type check, if this is called on DataContainer and is reading a DataContainer
+                # in HDF5 this be True and also when this is called on a subclass of DataContainer and is reading either
+                # the same subclass or a DataContainer in HDF.  It will not work when one subclass is reading another or
+                # a DataContainer is reading a subclass.
+                if hdf[g]['NAME'] in ("DataContainer", self.__class__.__name__):
+                    items.append( (*normalize_key(g),
+                                    hdf[g].to_object() if not self._lazy else DataContainerStub(hdf, g)) )
+                else:
+                    items.append( (*normalize_key(g),
+                                    hdf[g].to_object() if not self._lazy else ObjectStub(hdf, g)) )
+
+
             for _, k, v in sorted(items, key=lambda x: x[0]):
                 self[k] = v
 
