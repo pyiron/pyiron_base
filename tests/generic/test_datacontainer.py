@@ -472,6 +472,10 @@ class TestDataContainer(TestWithCleanProject):
         self.assertTrue(all(isinstance(v, HDFStub) for v in ll._store),
                         "Some stubs have been loaded after getting string repr of container!")
 
+        ll0 = ll[0]
+        self.assertTrue(all(isinstance(v, HDFStub) for v in ll0._store),
+                        "Recursive datacontainers not lazily loaded!")
+
         self.assertEqual(ll[0].foo, self.pl[0].foo,
                          "Lazily loaded list not equal to orignal list!")
 
