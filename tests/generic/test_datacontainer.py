@@ -2,6 +2,7 @@
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 from pyiron_base._tests import TestWithCleanProject
 from pyiron_base.generic.datacontainer import DataContainer
+from pyiron_base.generic.hdfstub import HDFStub
 from pyiron_base.generic.inputlist import InputList
 from collections import Iterator
 import copy
@@ -458,6 +459,24 @@ class TestDataContainer(TestWithCleanProject):
             f"Expected {Sub.__name__} but got {type(loaded.subclass).__name__}."
         )
         self.pl.pop('subclass')
+
+    def test_stub(self):
+        """Lazily loaded containers should contain only stubs and only force them when directly accessed."""
+
+        self.pl.to_hdf(self.hdf, "lazy")
+        ll = self.hdf["lazy"].to_object(lazy=True)
+        self.assertTrue(all(isinstance(v, HDFStub) for v in ll._store),
+                        "Not all values loaded as stubs!")
+
+        ll_repr = repr(ll)
+        self.assertTrue(all(isinstance(v, HDFStub) for v in ll._store),
+                        "Some stubs have been loaded after getting string repr of container!")
+
+        self.assertEqual(ll[0].foo, self.pl[0].foo,
+                         "Lazily loaded list not equal to orignal list!")
+
+        self.assertTrue(not isinstance(ll._store[0], HDFStub),
+                        "Loaded value not stored back into container!")
 
 
 class TestInputList(unittest.TestCase):
