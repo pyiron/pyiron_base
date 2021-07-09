@@ -49,8 +49,6 @@ def _normalize(key):
 
     return key
 
-HDFStub.register('DataContainer', lambda h, g: h[g].to_object(lazy=True))
-
 class DataContainer(MutableMapping, HasGroups):
     """
     Mutable sequence with optional keys.
@@ -190,13 +188,14 @@ class DataContainer(MutableMapping, HasGroups):
         of attributes it is better to create a new class that has an DataContainer as an attribute and dispatch to the
         :meth:`DataContainer.from_hdf`, :meth:`DataContainer.to_hdf` and :meth:`DataContainer._repr_json_`
         methods.
+        4. To allow lazy loading sub classes must accept a `lazy` keyword argument and pass it to `super().__init__`.
 
 
     A few examples for subclasses
 
     >>> class ExtendedContainer(DataContainer):
-    ...     def __init__(self, init=None, my_fancy_field=42, table_name=None):
-    ...         super().__init__(init=init, table_name=table_name)
+    ...     def __init__(self, init=None, my_fancy_field=42, table_name=None, lazy=False):
+    ...         super().__init__(init=init, table_name=table_name, lazy=lazy)
     ...         object.__setattr__(self, "my_fancy_field", my_fancy_field)
 
     After defining it once like this you can access my_fancy_field as a normal attribute, but it will not be stored in
@@ -836,3 +835,10 @@ class DataContainer(MutableMapping, HasGroups):
             file_name(str): the name of the file to be writen to.
         """
         write(self.to_builtin(), file_name)
+
+    def __init_subclass__(cls):
+        # called whenever a subclass of DataContainer is defined, then register all subclasses with the same function
+        # that the DataContainer is registered
+        HDFStub.register(cls, lambda h, g: h[g].to_object(lazy=True))
+
+HDFStub.register(DataContainer, lambda h, g: h[g].to_object(lazy=True))

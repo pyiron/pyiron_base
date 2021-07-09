@@ -13,8 +13,8 @@ import numpy as np
 
 
 class Sub(DataContainer):
-    def __init__(self, init=None, table_name=None):
-        super().__init__(init=init, table_name=table_name)
+    def __init__(self, init=None, table_name=None, lazy=False):
+        super().__init__(init=init, table_name=table_name, lazy=lazy)
         self.foo = 42
 
 
@@ -482,6 +482,32 @@ class TestDataContainer(TestWithCleanProject):
         self.assertTrue(not isinstance(ll._store[0], HDFStub),
                         "Loaded value not stored back into container!")
 
+    def test_stub(self):
+        """Sub classes of DataContainer should also be able to be lazily loaded."""
+
+        sl = Sub(self.pl.to_builtin())
+
+        sl.to_hdf(self.hdf, "lazy_sub")
+        # breakpoint()
+        # ll = self.hdf["lazy_sub"].to_object(lazy=True)
+        ll = Sub(lazy=True)
+        ll.from_hdf(self.hdf, "lazy_sub")
+        self.assertTrue(all(isinstance(v, HDFStub) for v in ll._store),
+                        "Not all values loaded as stubs!")
+
+        ll_repr = repr(ll)
+        self.assertTrue(all(isinstance(v, HDFStub) for v in ll._store),
+                        "Some stubs have been loaded after getting string repr of container!")
+
+        ll0 = ll[0]
+        self.assertTrue(all(isinstance(v, HDFStub) for v in ll0._store),
+                        "Recursive datacontainers not lazily loaded!")
+
+        self.assertEqual(ll[0].foo, sl[0].foo,
+                         "Lazily loaded list not equal to orignal list!")
+
+        self.assertTrue(not isinstance(ll._store[0], HDFStub),
+                        "Loaded value not stored back into container!")
 
 class TestInputList(unittest.TestCase):
 

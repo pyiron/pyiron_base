@@ -42,7 +42,9 @@ class HDFStub:
 
     >>> hdf['mytype/NAME']
     MyType
-    >>> HDFStub.register('MyType', lambda hdf, group: print(42) or hdf[group].to_object())
+    >>> hdf['mytype/TYPE']
+    <class 'my.module.MyType'>
+    >>> HDFStub.register(MyType, lambda hdf, group: print(42) or hdf[group].to_object())
     >>> my = HDFStub(hdf, 'mytype').load()
     42
     >>> my
@@ -66,18 +68,17 @@ class HDFStub:
         self._group_name = group_name
 
     @classmethod
-    def register(cls, type_name, load):
+    def register(cls, type, load):
         """
         Register call back for a new type.
 
         Args:
-            type_name (str): the class name of the type to be register, corresponds to what pyiron object save in 'NAME'
-                             field of their HDF groups
+            type (type): class to be registered
             load (function): callback that is called on :method:`.load` when the type matches `type_name`, must
                              accept `hdf` and `group_name` corresponding to the init paramters of this class and return
                              (lazily) loaded object
         """
-        cls._load_functions[type_name] = load
+        cls._load_functions[str(type)] = load
 
     def load(self):
         """
@@ -87,10 +88,11 @@ class HDFStub:
         node matches any of the types registered with :method:`.register`, it will be loaded with the provided callback.
         Otherwise it will be loaded with :method:`.ProjectHDFio.to_object()`.
         """
-        if self._group_name in self._hdf.list_nodes():
+        if self._group_name in self._hdf.list_nodes() or 'TYPE' not in self._hdf[self._group_name].list_nodes():
             return self._hdf[self._group_name]
+
         load = self._load_functions.get(
-                self._hdf[self._group_name]['NAME'],
+                self._hdf[self._group_name]['TYPE'],
                 lambda h, g: h[g].to_object()
         )
         return load(self._hdf, self._group_name)
