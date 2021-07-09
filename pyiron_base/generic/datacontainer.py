@@ -12,9 +12,9 @@ from collections.abc import Sequence, Set, Mapping, MutableMapping
 
 import numpy as np
 
+from pyiron_base.generic.fileio import read, write
+from pyiron_base.generic.hdfstub import HDFStub
 from pyiron_base.interfaces.has_groups import HasGroups
-from .fileio import read, write
-from .hdfstub import HDFStub
 
 __author__ = "Marvin Poul"
 __copyright__ = (
