@@ -4,42 +4,58 @@ import sys
 
 import yaml
 
+environment_file = '.ci_support/environment.yml'
+name_mapping_file = '.ci_support/pypi_vs_conda_names.json'
 
-def convert_package_name(name, name_conv_dict):
-    if name.startswith('pyiron-'):
-        return name.replace('pyiron-', 'pyiron_')
-    try:
-        result = name_conv_dict[name]
-    except KeyError:
-        result = name
-    return result
+
+class EnvironmentUpdater:
+    def __init__(self, package_name, from_version, to_version):
+        self.from_version = from_version
+        self.to_version = to_version
+        with open(name_mapping_file, 'r') as f:
+            self._name_conversion_dict = json.load(f)
+
+        with open(environment_file, 'r') as f:
+            self.environment = yaml.safe_load(f)
+
+        self.package_name = self._convert_package_name(package_name)
+
+    def _convert_package_name(self, name):
+        if name.startswith('pyiron-'):
+            return name.replace('pyiron-', 'pyiron_')
+        try:
+            result = self._name_conversion_dict[name]
+        except KeyError:
+            result = name
+        return result
+
+    def _update_dependencies(self):
+        updated_dependencies = []
+
+        for dep in self.environment['dependencies']:
+            updated_dependencies.append(re.sub(
+                r'(' + self.package_name + '.*)' + self.from_version,
+                r'\g<1>' + self.to_version,
+                dep
+            ))
+
+        self.environment['dependencies'] = updated_dependencies
+
+    def _write(self):
+        with open(environment_file, 'w') as f:
+            yaml.safe_dump(self.environment, f)
+
+    def update_dependencies(self):
+        self._update_dependencies()
+        self._write()
 
 
 if len(sys.argv) != 7 or not (sys.argv[1] == 'Bump' and sys.argv[3] == 'from' and sys.argv[5] == 'to'):
     raise ValueError(f"Title of a dependabot PR 'Bump <package> from <version> to <version>' expected, "
                      f"but got {' '.join(sys.argv[1:])}")
-
 package_to_update = sys.argv[2]
 from_version = sys.argv[4]
 to_version = sys.argv[6]
 
-with open('.ci_support/pypi_vs_conda_names.json', 'r') as f:
-    name_conversion_dict = json.load(f)
-
-package_name = convert_package_name(package_to_update, name_conversion_dict)
-with open('.ci_support/environment.yml', 'r') as f:
-    environment = yaml.safe_load(f)
-
-updated_dependencies = []
-
-for dep in environment['dependencies']:
-    updated_dependencies.append(re.sub(
-         r'(' + package_name + '.*)' + from_version,
-         r'\g<1>' + to_version,
-         dep
-    ))
-
-environment['dependencies'] = updated_dependencies
-
-with open('.ci_support/environment.yml', 'w') as f:
-    yaml.safe_dump(environment, f)
+updater = EnvironmentUpdater(package_to_update, from_version, to_version)
+updater.update_dependencies()
