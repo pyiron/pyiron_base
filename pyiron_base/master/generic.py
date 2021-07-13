@@ -128,6 +128,19 @@ class GenericMaster(GenericJob):
         self._child_id_func_str = None
 
     @property
+    def project_hdf5(self):
+        return super().project_hdf5
+
+    @project_hdf5.setter
+    def project_hdf5(self, hdf):
+        super().project_hdf5 = hdf
+
+        self._load_all_child_jobs(self)
+        for child_job_name in self._job_name_lst:
+            child_job = self._load_job_from_cache(child_job_name)
+            self._child_job_update_hdf(self, child_job)
+
+    @property
     def child_names(self):
         """
         Dictionary matching the child ID to the child job name
@@ -240,9 +253,6 @@ class GenericMaster(GenericJob):
         job_to_return.project_hdf5 = self.project_hdf5.__class__(
             self.project, job_to_return.job_name, h5_path="/" + job_to_return.job_name
         )
-        if isinstance(job_to_return, GenericMaster):
-            for sub_job in job_to_return._job_object_dict.values():
-                self._child_job_update_hdf(parent_job=job_to_return, child_job=sub_job)
         job_to_return.status.initialized = True
         return job_to_return
 
@@ -568,12 +578,6 @@ class GenericMaster(GenericJob):
                 file_name=parent_job.project_hdf5.file_name,
                 h5_path=parent_job.project_hdf5.h5_path + "/" + child_job.job_name
         )
-        if isinstance(child_job, GenericMaster):
-            for sub_job_name in child_job._job_name_lst:
-                self._child_job_update_hdf(
-                    parent_job=child_job,
-                    child_job=child_job._load_job_from_cache(sub_job_name),
-                )
         parent_job.job_object_dict[child_job.job_name] = child_job
 
     def _executable_activate_mpi(self):

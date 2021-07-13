@@ -789,9 +789,6 @@ class ParallelMaster(GenericMaster):
         job = self.ref_job.copy()
         job = self._load_all_child_jobs(job_to_load=job)
         job.project_hdf5 = self.child_hdf(job_name)
-        if isinstance(job, GenericMaster):
-            for sub_job in job._job_object_dict.values():
-                self._child_job_update_hdf(parent_job=job, child_job=sub_job)
         self._logger.debug(
             "create_job:: {} {} {} {}".format(
                 self.project_hdf5.path,
