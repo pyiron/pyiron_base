@@ -7,6 +7,7 @@ The GenericMaster is the template class for all meta jobs
 
 import inspect
 import textwrap
+from pyiron_base.generic.hdfio import ProjectHDFio
 from pyiron_base.job.generic import GenericJob
 from pyiron_base.job.jobstatus import job_status_finished_lst
 
@@ -562,9 +563,10 @@ class GenericMaster(GenericJob):
             parent_job:
             child_job:
         """
-        child_job.project_hdf5.file_name = parent_job.project_hdf5.file_name
-        child_job.project_hdf5.h5_path = (
-            parent_job.project_hdf5.h5_path + "/" + child_job.job_name
+        child_job.project_hdf5 = ProjectHDFio(
+                project=child_job.project_hdf5.project,
+                file_name=parent_job.project_hdf5.file_name,
+                h5_path=parent_job.project_hdf5.h5_path + "/" + child_job.job_name
         )
         if isinstance(child_job, GenericMaster):
             for sub_job_name in child_job._job_name_lst:
