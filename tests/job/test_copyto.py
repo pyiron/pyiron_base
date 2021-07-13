@@ -21,6 +21,7 @@ class TestCopyTo(unittest.TestCase):
         sub_project.remove(enable=True)
         sub_project = project.open("sub_project")
         sub_project.remove(enable=True)
+        project.remove(enable=True)
 
     def test_copy_to_job(self):
         job_ser = self.project.create.job.SerialMasterBase("sequence_single")
