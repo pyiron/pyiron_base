@@ -138,7 +138,7 @@ class GenericMaster(GenericJob):
         self._load_all_child_jobs(self)
         for child_job_name in self._job_name_lst:
             child_job = self._load_job_from_cache(child_job_name)
-            self._child_job_update_hdf(self, child_job)
+            self._child_job_update_hdf(child_job)
 
     @property
     def child_names(self):
@@ -230,7 +230,7 @@ class GenericMaster(GenericJob):
             self.server.cores = job.server.cores
         if job.job_name not in self._job_name_lst:
             self._job_name_lst.append(job.job_name)
-            self._child_job_update_hdf(parent_job=self, child_job=job)
+            self._child_job_update_hdf(job)
 
     def pop(self, i=-1):
         """
@@ -566,19 +566,18 @@ class GenericMaster(GenericJob):
         else:
             return super(GenericMaster, self).__getitem__(item)
 
-    def _child_job_update_hdf(self, parent_job, child_job):
+    def _child_job_update_hdf(self, child_job):
         """
 
         Args:
-            parent_job:
             child_job:
         """
         child_job.project_hdf5 = ProjectHDFio(
                 project=child_job.project_hdf5.project,
-                file_name=parent_job.project_hdf5.file_name,
-                h5_path=parent_job.project_hdf5.h5_path + "/" + child_job.job_name
+                file_name=self.project_hdf5.file_name,
+                h5_path=self.project_hdf5.h5_path + "/" + child_job.job_name
         )
-        parent_job.job_object_dict[child_job.job_name] = child_job
+        self.job_object_dict[child_job.job_name] = child_job
 
     def _executable_activate_mpi(self):
         """
