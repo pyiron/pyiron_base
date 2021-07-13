@@ -10,6 +10,14 @@ name_mapping_file = '.ci_support/pypi_vs_conda_names.json'
 
 class EnvironmentUpdater:
     def __init__(self, package_name, from_version, to_version):
+        """
+        Updates the version of a package in the conda environment file.
+
+        Parameters:
+            package_name: Name of the package to update as available on PyPI
+            from_version: Version the package is before the update
+            to_version: Version to which the package should be updated
+        """
         self.from_version = from_version
         self.to_version = to_version
         with open(name_mapping_file, 'r') as f:
@@ -46,6 +54,7 @@ class EnvironmentUpdater:
             yaml.safe_dump(self.environment, f)
 
     def update_dependencies(self):
+        """Update the version of the requested dependency in the environment file"""
         self._update_dependencies()
         self._write()
 
