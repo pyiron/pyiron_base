@@ -138,8 +138,6 @@ class SerialMasterBase(GenericMaster):
         self._output = GenericOutput()
         self._max_iterations = 100
         self._start_job = None
-        self._run_fast = False
-        self._logger.debug("run_fast: {}".format(self._run_fast))
         self._convergence_goal = None
         self._convergence_goal_qwargs = {}
         self._convergence_goal_str = None
