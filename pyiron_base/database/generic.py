@@ -89,7 +89,10 @@ class ConnectionWatchDog(Thread):
             kicked = self._queue.get(timeout=self._timeout)
             if not kicked:
                 with self._lock:
-                    self._conn.close()
+                    try:
+                        self._conn.close()
+                    except:
+                        pass
                     break
 
     def kick(self):
