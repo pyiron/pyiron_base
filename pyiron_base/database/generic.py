@@ -42,7 +42,39 @@ __status__ = "production"
 __date__ = "Sep 1, 2017"
 
 class ConnectionWatchDog(Thread):
+    """
+    Helper class that closes idle connections after a given timeout.
+
+    Initialize it with the connection to watch and a lock that protects it.  The lock prevents the watchdog from killing
+    a connection that is currently used.  The timeout is in seconds.
+
+    >>> conn = SqlConnection(...)
+    >>> lock = threading.Lock()
+    >>> dog = ConnectionWatchDog(conn, lock, timeout=60)
+
+    After it is created, :method:`.kick()` the watchdog periodically before the timeout runs out.  It is important to
+    acquire the lock when using the connection object.
+
+    >>> dog.kick()
+    >>> with lock:
+    ...    conn.execute(...)
+    >>> dog.kick()
+
+    Once you want to finish the connection or want to make sure the watchdog quit, call :method:`.kill()` to shut it
+    down.  This also causes the watch dog to try and close the connection.
+
+    >>> dog.kill()
+    """
+
     def __init__(self, conn, lock, timeout=60):
+        """
+        Create new watchdog.
+
+        Args:
+            conn: any python object with a `close()` method.
+            lock (:class:`threading.Lock`): lock to protect conn
+            timeout (int): time in seconds before the watchdog closes the connection.
+        """
         super().__init__()
         self._queue = SimpleQueue()
         self._conn = conn
@@ -50,6 +82,9 @@ class ConnectionWatchDog(Thread):
         self._timeout = timeout
 
     def run(self):
+        """
+        Starts the watchdog.
+        """
         while True:
             kicked = self._queue.get(timeout=self._timeout)
             if not kicked:
@@ -58,9 +93,15 @@ class ConnectionWatchDog(Thread):
                     break
 
     def kick(self):
+        """
+        Restarts the timeout.
+        """
         self._queue.put(True)
 
     def kill(self):
+        """
+        Stop the watchdog and close the connection.
+        """
         self._queue.put(False)
         self.join()
 
