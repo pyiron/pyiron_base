@@ -3,25 +3,10 @@
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
 import os
-import unittest
 from pyiron_base.project.generic import Project
+from pyiron_base._tests import TestWithProject
 
-
-class TestCopyTo(unittest.TestCase):
-    @classmethod
-    def setUpClass(cls):
-        cls.file_location = os.path.dirname(os.path.abspath(__file__))
-        cls.project = Project(os.path.join(cls.file_location, "testing_copyto"))
-
-    @classmethod
-    def tearDownClass(cls):
-        file_location = os.path.dirname(os.path.abspath(__file__))
-        project = Project(os.path.join(file_location, "testing_copyto"))
-        sub_project = project.open("sub_project_ex")
-        sub_project.remove(enable=True)
-        sub_project = project.open("sub_project")
-        sub_project.remove(enable=True)
-        project.remove(enable=True)
+class TestCopyTo(TestWithProject):
 
     def test_copy_to_job(self):
         job_ser = self.project.create.job.SerialMasterBase("sequence_single")
@@ -72,7 +57,7 @@ class TestCopyTo(unittest.TestCase):
         ham.remove()
         os.remove(
             os.path.join(
-                self.file_location, "testing_copyto/sub_project_ex/job_single_pr_ex.h5"
+                self.file_location, f"{sub_project.path}/job_single_pr_ex.h5"
             )
         )
 
