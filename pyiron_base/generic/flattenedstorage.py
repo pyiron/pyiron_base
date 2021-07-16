@@ -669,6 +669,8 @@ class FlattenedStorage(HasHDF):
         >>> store.apply("integers", lambda n: 2*n, inplace=False, per="element")
         array([0, 0, 2, 0, 2, 4, 0, 2, 4, 6])
 
+        Note that it makes no sense to apply a function per element to a per chunk array.
+
         Args:
             name (str): name of the array to apply the function to
             function (Function): any callable, return value must have the same length along the first axis as the array
@@ -693,6 +695,7 @@ class FlattenedStorage(HasHDF):
             result = function(source)
             if result.shape[0] != source.shape[0]:
                 raise ValueError(f"Shape of result ({result.shape[0]}) doesn't match shape of source ({source.shape[0]})!")
+            result.resize((self._num_elements_alloc,) + result.shape[1:])
             store = self._per_element_arrays
         elif per == "chunk":
             if name in self._per_element_arrays:
@@ -701,6 +704,7 @@ class FlattenedStorage(HasHDF):
             else:
                 source = self._per_chunk_arrays[name][:self.num_chunks]
                 result = np.array([ function(source[i]) for i in range(len(self)) ])
+            result.resize((self._num_chunks_alloc,) + result.shape[1:])
             store = self._per_chunk_arrays
         else:
             raise ValueError(f"per must \"element\" or \"chunk\", not {per}")
