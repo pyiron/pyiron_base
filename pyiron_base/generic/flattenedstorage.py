@@ -516,7 +516,6 @@ class FlattenedStorage(HasHDF):
             return None
         return {"shape": a.shape[1:], "dtype": a.dtype, "per": per}
 
-
     def sample(self, selector: Callable[["FlattenedStorage", int], bool]) -> "FlattenedStorage":
         """
         Create a new storage with chunks selected by given function.
@@ -620,6 +619,96 @@ class FlattenedStorage(HasHDF):
         self._resize_chunks(self._num_chunks_alloc)
         return self
 
+    def apply(self, name, function, inplace=True, per="element"):
+        """
+        Apply a function on the given array and return result.
+
+        Usage is shown below.
+
+        >>> data = [np.arange(i+1) for i in range(4)]
+        >>> data
+        [array([0]), array([0, 1]), array([0, 1, 2]), array([0, 1, 2, 3])]
+        >>> store = FlattenedStorage(integers=data)
+
+        By default the method will return the results *and* save them in a generated name, derived from the name of the
+        function and the name of the array.
+
+        >>> store.apply("integers", np.sum, per="chunk")
+        array([0, 1, 3, 6])
+        >>> store.get_array("sum(integers)", 0)
+        0
+        >>> store.get_array("sum(integers)", 1)
+        1
+        >>> store.get_array("sum(integers)", 2)
+        3
+        >>> store.get_array("sum(integers)", 3)
+        6
+
+        You may provide a name under which the result should be saved with the inplace argument
+
+        >>> store.apply("integers", lambda n: 2*n, inplace="double", per="element")
+        array([0, 0, 2, 0, 2, 4, 0, 2, 4, 6])
+        >>> store.get_array("double", 0)
+        array([0])
+        >>> store.get_array("double", 1)
+        array([0, 2])
+        >>> store.get_array("double", 2)
+        array([0, 2, 4])
+        >>> store.get_array("double", 3)
+        array([0, 2, 4, 6])
+
+        or set it to `False` to just return the result.
+
+        >>> store.apply("double", np.sum, inplace=False, per="chunk")
+        array([ 0,  2,  6, 12])
+        >>> store.has_array("sum(double)") # returns None
+
+        In any case the return value will be the flattened array in storage so it is mostly useful for applying
+        functions per chunk, since applying per element you won't know the chunk boundaries.
+
+        >>> store.apply("integers", lambda n: 2*n, inplace=False, per="element")
+        array([0, 0, 2, 0, 2, 4, 0, 2, 4, 6])
+
+        Args:
+            name (str): name of the array to apply the function to
+            function (Function): any callable, return value must have the same length along the first axis as the array
+                                 specified by name
+            inplace (bool/str, optional): if str, save the result in an array in this storage under the given name; if
+                                          True generate a name automatically from name and function; if False just
+                                          return the result
+            per (str, optional): apply the given function either per element or per chunk
+
+        Returns:
+            :class:`numpy.ndarray`: if per element; first axis cooresponds to the number of elements stored; if per
+                                    chunk to the number of chunks; in any case the remaining axes are determined by the
+                                    result of the function
+
+        Raises:
+            :class:`ValueError`: per is not "element" or "chunk"
+            :class:`ValueError`: if per element and the return value of function does not match the number of elements
+                                 in the first axis
+        """
+        if per == "element":
+            source = self._per_element_arrays[name][:self.num_elements]
+            result = function(source)
+            if result.shape[0] != source.shape[0]:
+                raise ValueError(f"Shape of result ({result.shape[0]}) doesn't match shape of source ({source.shape[0]})!")
+            store = self._per_element_arrays
+        elif per == "chunk":
+            if name in self._per_element_arrays:
+                source = self._per_element_arrays[name][:self.num_elements]
+                result = np.array([ function(source[self._get_per_element_slice(i)]) for i in range(len(self)) ])
+            else:
+                source = self._per_chunk_arrays[name][:self.num_chunks]
+                result = np.array([ function(source[i]) for i in range(len(self)) ])
+            store = self._per_chunk_arrays
+        else:
+            raise ValueError(f"per must \"element\" or \"chunk\", not {per}")
+
+        if inplace:
+            inplace = f"{function.__name__}({name})" if inplace is True else inplace
+            store[inplace] = result
+        return result
 
     def add_chunk(self, chunk_length, identifier=None, **arrays):
         """
