@@ -4,6 +4,7 @@
 
 # API of the pyiron_base module - in alphabetical order 
 from pyiron_base.generic.factory import PyironFactory
+from pyiron_base.generic.flattenedstorage import FlattenedStorage
 from pyiron_base.generic.hdfio import FileHDFio, ProjectHDFio
 from pyiron_base.generic.datacontainer import DataContainer
 from pyiron_base.generic.inputlist import InputList
