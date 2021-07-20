@@ -1,3 +1,7 @@
+# coding: utf-8
+# Copyright (c) Max-Planck-Institut für Eisenforschung GmbH - Computational Materials Design (CM) Department
+# Distributed under the terms of "New BSD License", see the LICENSE file.
+
 import json
 import re
 import sys
@@ -29,9 +33,9 @@ class EnvironmentUpdater:
         self.package_name = self._convert_package_name(package_name)
 
     def _convert_package_name(self, name):
-        try:
+        if name in self._name_conversion_dict.keys():
             result = self._name_conversion_dict[name]
-        except KeyError:
+        else:
             result = name
         return result
 
