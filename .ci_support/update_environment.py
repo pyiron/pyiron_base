@@ -29,8 +29,6 @@ class EnvironmentUpdater:
         self.package_name = self._convert_package_name(package_name)
 
     def _convert_package_name(self, name):
-        if name.startswith('pyiron-'):
-            return name.replace('pyiron-', 'pyiron_')
         try:
             result = self._name_conversion_dict[name]
         except KeyError:
