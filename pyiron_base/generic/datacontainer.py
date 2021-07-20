@@ -6,11 +6,14 @@ Data structure for versatile data handling.
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
 import copy
-from collections.abc import Sequence, Set, Mapping, MutableMapping
+import json
 import warnings
+from collections.abc import Sequence, Set, Mapping, MutableMapping
+
 import numpy as np
-from .fileio import read, write
+
 from pyiron_base.interfaces.has_groups import HasGroups
+from .fileio import read, write
 
 __author__ = "Marvin Poul"
 __copyright__ = (
@@ -444,9 +447,15 @@ class DataContainer(MutableMapping, HasGroups):
                         if isinstance(v, DataContainer) else v
                         for v in self.values())
 
-    # allows "nice" displays in jupyter notebooks
+    # allows "nice" displays in jupyter lab
     def _repr_json_(self):
         return self.to_builtin(stringify=True)
+
+    # allows 'nice' display in notebooks
+    def _repr_html_(self):
+        name = self.__class__.__name__
+        plain = f"{name}({json.dumps(self.to_builtin(stringify=True), indent=2, default=str)})"
+        return "<pre>" + plain + "</pre>"
 
     def get(self, key, default=None, create=False):
         """
