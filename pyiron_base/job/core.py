@@ -6,12 +6,15 @@ The JobCore the most fundamental pyiron job class.
 """
 
 import copy
+import math
 import os
 import posixpath
-import math
-from pyiron_base.settings.generic import Settings
+import shutil
+import warnings
+
+from tables import NoSuchNodeError
+
 from pyiron_base.interfaces.has_groups import HasGroups
-from pyiron_base.generic.util import static_isinstance
 from pyiron_base.job.util import \
     _get_project_for_copy, \
     _copy_database_entry, \
@@ -27,9 +30,7 @@ from pyiron_base.job.util import \
     _job_delete_files, \
     _job_delete_hdf, \
     _job_remove_folder
-from tables import NoSuchNodeError
-import shutil
-import warnings
+from pyiron_base.settings.generic import Settings
 
 __author__ = "Jan Janssen"
 __copyright__ = (
@@ -429,6 +430,23 @@ class JobCore(HasGroups):
         internal function to remove command that removes also child jobs.
         Do never use this command, since it will destroy the integrity of your project.
         """
+        # Check if the job requires to be removed from the full object (This is the case for external Storage)
+        print(f"Enter base/job/core/JobCore.remove_child with self={type(self)} with path={self.path}")
+        try:
+            print("try")
+            requires_full_object = self.get('REQ_OBJ_RM')
+            print("Found!")
+        except ValueError as e:
+            print(e)
+            requires_full_object = False
+
+        print("Check if requires full object:")
+        if requires_full_object:
+            print("require full obj!")
+            job = self.to_object()
+            job.remove_child()
+
+        print('Go on with unchanged implementation')
         # Delete job from HPC-computing-queue if it is still running.
         job_status = str(self.status)
         if (
