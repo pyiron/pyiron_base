@@ -146,9 +146,10 @@ def load_file(fp, filetype=None, project=None):
 
 class FileDataTemplate(ABC):
     @property
+    @abstractmethod
     def data(self):
         """Return the associated data."""
-        raise NotImplementedError
+        pass  
 
 
 class FileData(FileDataTemplate):
