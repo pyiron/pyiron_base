@@ -5,6 +5,7 @@
 
 import json
 import os
+from abc import ABC
 from functools import lru_cache
 
 import pandas
@@ -59,12 +60,12 @@ if _has_imported['nbformat']:
 
 
 @import_alarm
-def load_file(filename, filetype=None, project=None):
+def load_file(fp, filetype=None, project=None):
     """
         Load the file and return an appropriate object containing the data.
 
         Args:
-            filename (str): path to the file to be displayed.
+            fp (str / file): path to the file or file object to be displayed.
             filetype (str/None): File extension, if given this overwrites the assumption based on the filename.
             project (pyiron-Project/None): Project calling this function, provided to all objects referring to such.
 
@@ -83,16 +84,22 @@ def load_file(filename, filetype=None, project=None):
             :class:`pandas.DataFrame`: containing data from file of filetype = '.csv'
 
     """
-    def _load_txt(file):
-        with open(file, encoding='utf8') as f:
-            return f.readlines()
+    def _load_txt(file, is_file):
+        if is_file:
+            with open(file, encoding='utf8') as f:
+                return f.readlines()
+        else:
+            return file.readlines()
 
     def _load_ipynb(file):
         return OwnNotebookNode(nbformat.read(file, as_version=4))
 
-    def _load_json(file):
-        with open(file) as f:
-            return json.load(f)
+    def _load_json(file, is_file):
+        if is_file:
+            with open(file) as f:
+                return json.load(f)
+        else:
+            return json.load(file)
 
     def _load_csv(file):
         return pandas.read_csv(file)
@@ -100,38 +107,51 @@ def load_file(filename, filetype=None, project=None):
     def _load_img(file):
         return Image.open(file)
  
-    def _load_default(file):
+    def _load_default(file, is_file):
         try:
-            return _load_txt(file)
+            return _load_txt(file, is_file)
         except Exception as e:
             raise IOError("File could not be loaded.") from e
 
-    if filetype is None:
-        _, filetype = os.path.splitext(filename)
+    filename_is_str = isinstance(fp, str)
+
+    if filetype is None and filename_is_str:
+        _, filetype = os.path.splitext(fp)
+    elif filetype is None and hasattr(fp, 'name'):
+        _, filetype = os.path.splitext(fp.name)
+    elif filetype is None:
+        return _load_default(fp, filename_is_str)
     elif filetype[0] != '.':
         filetype = '.' + filetype
     filetype = filetype.lower()
 
-    if filetype in ['.h5', '.hdf']:
+    if filetype in ['.h5', '.hdf'] and filename_is_str:
         if project is None:
-            return FileHDFio(file_name=filename)
+            return FileHDFio(file_name=fp)
         else:
-            return ProjectHDFio(file_name=filename, project=project)
+            return ProjectHDFio(file_name=fp, project=project)
     elif filetype in ['.json']:
-        return _load_json(filename)
+        return _load_json(fp, is_file=filename_is_str)
     elif filetype in ['.txt']:
-        return _load_txt(filename)
+        return _load_txt(fp, is_file=filename_is_str)
     elif filetype in ['.csv']:
-        return _load_csv(filename)
+        return _load_csv(fp)
     elif _has_imported['nbformat'] and filetype in ['.ipynb']:
-        return _load_ipynb(filename)
+        return _load_ipynb(fp)
     elif _has_imported['PIL'] and filetype in Image.registered_extensions():
-        return _load_img(filename)
+        return _load_img(fp)
     else:
-        return _load_default(filename)
+        return _load_default(fp, is_file=filename_is_str)
 
 
-class FileData:
+class FileDataTemplate(ABC):
+    @property
+    def data(self):
+        """Return the associated data."""
+        raise NotImplementedError
+
+
+class FileData(FileDataTemplate):
     """FileData stores an instance of a data file, e.g. a single Image from a measurement."""
     def __init__(self, file, data=None, metadata=None, filetype=None):
         """FileData class to store data and associated metadata.
