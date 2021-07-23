@@ -5,7 +5,7 @@
 
 import json
 import os
-from abc import ABC
+from abc import ABC, abstractmethod
 from functools import lru_cache
 
 import pandas
