@@ -703,7 +703,7 @@ class FlattenedStorage(HasHDF):
                 result = np.array([ function(source[self._get_per_element_slice(i)]) for i in range(len(self)) ])
             else:
                 source = self._per_chunk_arrays[name][:self.num_chunks]
-                result = np.array([ function(source[i]) for i in range(len(self)) ])
+                result = np.array([ function(source[i]) for i in range(len(self)) ]) # dtype=object?
             result.resize((self._num_chunks_alloc,) + result.shape[1:])
             store = self._per_chunk_arrays
         else:
@@ -712,7 +712,10 @@ class FlattenedStorage(HasHDF):
         if inplace:
             inplace = f"{function.__name__}({name})" if inplace is True else inplace
             store[inplace] = result
-        return result
+        if per == "element":
+            return result[:self.num_elements]
+        elif per == "chunk":
+            return result[:self.num_chunks]
 
     def add_chunk(self, chunk_length, identifier=None, **arrays):
         """
