@@ -431,22 +431,15 @@ class JobCore(HasGroups):
         Do never use this command, since it will destroy the integrity of your project.
         """
         # Check if the job requires to be removed from the full object (This is the case for external Storage)
-        print(f"Enter base/job/core/JobCore.remove_child with self={type(self)} with path={self.path}")
         try:
-            print("try")
             requires_full_object = self.get('REQ_OBJ_RM')
-            print("Found!")
         except ValueError as e:
-            print(e)
             requires_full_object = False
 
-        print("Check if requires full object:")
         if requires_full_object:
-            print("require full obj!")
             job = self.to_object()
             job.remove_child()
 
-        print('Go on with unchanged implementation')
         # Delete job from HPC-computing-queue if it is still running.
         job_status = str(self.status)
         if (
