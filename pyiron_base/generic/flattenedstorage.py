@@ -390,6 +390,12 @@ class FlattenedStorage:
         >>> container.get_array("pressure", 2).shape
         (3, 3)
 
+        .. attention: Edge-case!
+
+            This will not work when the chunk length is also 1 and the array does not exist yet!  In this case the array
+            will be assumed to be per element and there is no way around explicitly calling :method:`.add_array()`.
+
+
         Args:
             chunk_length (int): length of the new chunk
             identifier (str, optional): human-readable name for the chunk, if None use current chunk index as string
@@ -421,16 +427,15 @@ class FlattenedStorage:
 
         for k, a in arrays.items():
             a = np.asarray(a)
-            if len(a.shape) > 0 and a.shape[0] == n:
-                if k not in self._per_element_arrays:
+            if k not in self._per_element_arrays and k not in self._per_chunk_arrays:
+                if len(a.shape) > 0 and a.shape[0] == n:
                     self.add_array(k, shape=a.shape[1:], dtype=a.dtype, per="element")
-                self._per_element_arrays[k][self.current_element_index:i] = a
-            else:
-                if len(a.shape) > 0 and a.shape[0] == 1:
-                    a = a[0]
-                if k not in self._per_chunk_arrays:
+                else:
                     self.add_array(k, shape=a.shape, dtype=a.dtype, per="chunk")
-                self._per_chunk_arrays[k][self.current_chunk_index] = a
+            # if the first axis was added by the caller to force to add a per chunk array, remove it again here
+            if k in self._per_chunk_arrays and len(a.shape) > 0 and a.shape[0] == 1:
+                a = a[0]
+            self.set_array(k, self.current_chunk_index, a)
 
         self.prev_chunk_index = self.current_chunk_index
         self.prev_element_index = self.current_element_index
