@@ -431,10 +431,7 @@ class JobCore(HasGroups):
         Do never use this command, since it will destroy the integrity of your project.
         """
         # Check if the job requires to be removed from the full object (This is the case for external Storage)
-        try:
-            requires_full_object = self.get('REQ_OBJ_RM')
-        except ValueError as e:
-            requires_full_object = False
+        requires_full_object = self.get('REQ_OBJ_RM', default=False)
 
         if requires_full_object:
             job = self.to_object()
