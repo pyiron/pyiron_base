@@ -133,6 +133,21 @@ class TestFlattenedStorage(unittest.TestCase):
         with self.assertRaises(KeyError, msg="No KeyError raised on non-existing identifier!"):
             store.find_chunk("asdf")
 
+    def test_add_chunk_add_array(self):
+        """Adding arrays via add_chunk and add_array should be equivalent."""
+
+        cont = FlattenedStorage()
+        cont.add_array("perchunk", shape=(3,), dtype=float, per="chunk")
+        val = np.array([1,2,3])
+        try:
+            cont.add_chunk(1, perchunk=val[np.newaxis, :])
+        except ValueError:
+            # both checks below are regression tests for https://github.com/pyiron/pyiron_contrib/pull/197
+            self.fail("add_chunk should not raise an exception when passed a value for an existing per-chunk array.")
+        self.assertTrue(np.array_equal(val, cont.get_array("perchunk", 0)),
+                        "add_chunk did not remove first axis on a per chunk array!")
+
+
     def test_get_array(self):
         """get_array should return the arrays for the correct structures."""
 
