@@ -121,6 +121,7 @@ class Project(ProjectPath, HasGroups):
         self._filter = ["groups", "nodes", "objects"]
         self._inspect_mode = False
         self._data = None
+        self._browser = None
         self._creator = Creator(project=self)
 
         if not s.database_is_disabled:
@@ -181,6 +182,17 @@ class Project(ProjectPath, HasGroups):
             except KeyError:
                 pass
         return self._data
+
+    @property
+    def browser(self):
+        try:
+            from pyiron_gui import ProjectBrowser
+        except ImportError:
+            raise ImportError("The browser is a GUI feature which needs pyiron_gui to be installed. "
+                              "Please install pyiron_gui, e.g. by running 'conda -c conda-forge install pyiron_gui'.")
+        if self._browser is None:
+            self._browser = ProjectBrowser(project=self, show_files=False, Vbox=None)
+        return self._browser
 
     def copy(self):
         """
