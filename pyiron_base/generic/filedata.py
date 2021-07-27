@@ -84,8 +84,8 @@ def load_file(fp, filetype=None, project=None):
             :class:`pandas.DataFrame`: containing data from file of filetype = '.csv'
 
     """
-    def _load_txt(file, is_file):
-        if is_file:
+    def _load_txt(file):
+        if isinstance(file, str):
             with open(file, encoding='utf8') as f:
                 return f.readlines()
         else:
@@ -94,8 +94,8 @@ def load_file(fp, filetype=None, project=None):
     def _load_ipynb(file):
         return OwnNotebookNode(nbformat.read(file, as_version=4))
 
-    def _load_json(file, is_file):
-        if is_file:
+    def _load_json(file):
+        if isinstance(file, str):
             with open(file) as f:
                 return json.load(f)
         else:
@@ -107,36 +107,34 @@ def load_file(fp, filetype=None, project=None):
     def _load_img(file):
         return Image.open(file)
  
-    def _load_default(file, is_file):
+    def _load_default(file):
         try:
-            return _load_txt(file, is_file)
+            return _load_txt(file)
         except Exception as e:
             raise IOError("File could not be loaded.") from e
 
     def _resolve_filetype(file, _filetype):
-        _filename_is_str = isinstance(file, str)
-
-        if _filetype is None and _filename_is_str:
+        if _filetype is None and isinstance(file, str):
             _, _filetype = os.path.splitext(file)
         elif _filetype is None and hasattr(file, 'name'):
             _, _filetype = os.path.splitext(file.name)
         elif _filetype is None:
-            pass
+            return None
         elif _filetype[0] != '.':
             _filetype = '.' + _filetype
-        return _filetype.lower(), _filename_is_str
+        return _filetype.lower()
 
-    filetype, filename_is_str = _resolve_filetype(fp, filetype)
+    filetype = _resolve_filetype(fp, filetype)
 
-    if filetype in ['.h5', '.hdf'] and filename_is_str:
+    if filetype in ['.h5', '.hdf'] and isinstance(fp, str):
         if project is None:
             return FileHDFio(file_name=fp)
         else:
             return ProjectHDFio(file_name=fp, project=project)
     elif filetype in ['.json']:
-        return _load_json(fp, is_file=filename_is_str)
+        return _load_json(fp)
     elif filetype in ['.txt']:
-        return _load_txt(fp, is_file=filename_is_str)
+        return _load_txt(fp)
     elif filetype in ['.csv']:
         return _load_csv(fp)
     elif _has_imported['nbformat'] and filetype in ['.ipynb']:
@@ -144,7 +142,7 @@ def load_file(fp, filetype=None, project=None):
     elif _has_imported['PIL'] and filetype in Image.registered_extensions():
         return _load_img(fp)
     else:
-        return _load_default(fp, is_file=filename_is_str)
+        return _load_default(fp)
 
 
 class FileDataTemplate(ABC):
