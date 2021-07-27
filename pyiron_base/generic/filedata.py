@@ -117,11 +117,11 @@ def load_file(fp, filetype=None, project=None):
         _filename_is_str = isinstance(file, str)
 
         if _filetype is None and _filename_is_str:
-            _, _filetype = os.path.splitext()
+            _, _filetype = os.path.splitext(file)
         elif _filetype is None and hasattr(file, 'name'):
             _, _filetype = os.path.splitext(file.name)
         elif _filetype is None:
-            return _load_default(file, _filename_is_str)
+            pass
         elif _filetype[0] != '.':
             _filetype = '.' + _filetype
         return _filetype.lower(), _filename_is_str
