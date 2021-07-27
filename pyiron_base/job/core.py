@@ -431,7 +431,8 @@ class JobCore(HasGroups):
         Do never use this command, since it will destroy the integrity of your project.
         """
         # Check if the job requires to be removed from the full object (This is the case for external Storage)
-        requires_full_object = self.get('REQ_OBJ_RM', default=False)
+        # TODO: remove this workaround once the database lookup is aware of external storage types.
+        requires_full_object = self._hdf5.get('REQUIRE_FULL_OBJ_FOR_RM', default=False)
 
         if requires_full_object:
             job = self.to_object()
