@@ -72,7 +72,7 @@ class DatabaseStatistics:
 
     def _max_trans_age(self, conn):
         """
-        returns the maximum age of a transaction
+        returns the cd maximum age of a transaction
         """
         stmt = select(func.max(func.now() - self._stat_view.c.xact_start)).select_from(self._stat_view).where(
             or_(self._stat_view.c.state == 'idle in transaction', self._stat_view.c.state == 'active'))
