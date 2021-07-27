@@ -113,17 +113,20 @@ def load_file(fp, filetype=None, project=None):
         except Exception as e:
             raise IOError("File could not be loaded.") from e
 
-    filename_is_str = isinstance(fp, str)
+    def _resolve_filetype(file, _filetype):
+        _filename_is_str = isinstance(file, str)
 
-    if filetype is None and filename_is_str:
-        _, filetype = os.path.splitext(fp)
-    elif filetype is None and hasattr(fp, 'name'):
-        _, filetype = os.path.splitext(fp.name)
-    elif filetype is None:
-        return _load_default(fp, filename_is_str)
-    elif filetype[0] != '.':
-        filetype = '.' + filetype
-    filetype = filetype.lower()
+        if _filetype is None and _filename_is_str:
+            _, _filetype = os.path.splitext()
+        elif _filetype is None and hasattr(file, 'name'):
+            _, _filetype = os.path.splitext(file.name)
+        elif _filetype is None:
+            return _load_default(file, _filename_is_str)
+        elif _filetype[0] != '.':
+            _filetype = '.' + _filetype
+        return _filetype.lower(), _filename_is_str
+
+    filetype, filename_is_str = _resolve_filetype(fp, filetype)
 
     if filetype in ['.h5', '.hdf'] and filename_is_str:
         if project is None:
@@ -149,7 +152,7 @@ class FileDataTemplate(ABC):
     @abstractmethod
     def data(self):
         """Return the associated data."""
-        pass  
+        pass
 
 
 class FileData(FileDataTemplate):
