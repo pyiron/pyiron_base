@@ -102,7 +102,7 @@ class DatabaseAccess(object):
         except Exception as except_msg:
             raise ValueError("Connection to database failed: " + str(except_msg))
 
-        self._chem_formula_lim_length=30
+        self._chem_formula_lim_length = 50
         self.__reload_db()
         self.simulation_table = Table(
             str(table_name),
