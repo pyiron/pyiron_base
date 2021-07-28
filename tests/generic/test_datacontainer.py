@@ -348,7 +348,9 @@ class TestDataContainer(TestWithCleanProject):
         )
 
         self.hdf["read_only_from/READ_ONLY"] = True
-        pl.from_hdf(self.hdf, group_name="read_only_from")
+        with warnings.catch_warnings(record=True) as w:
+            pl.from_hdf(self.hdf, group_name="read_only_from")
+            self.assertEqual(len(w), 0, "from_hdf on read_only DataContainer should not call _read_only_error.")
         self.assertEqual(
             pl.read_only,
             self.hdf["read_only_from/READ_ONLY"],
