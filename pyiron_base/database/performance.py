@@ -24,6 +24,15 @@ __email__ = "hassani@mpie.de"
 
 
 class DatabaseStatistics:
+    """
+    The use case is:
+    >>> from pyiron_base import DatabaseStatistics
+    >>> db_stat = DatabaseStatistics()
+    >>> df = db_stat.performance()
+    >>> df
+    >>> df['duplicated indices'].values[0]
+    """
+
     def __init__(self):
         s = Settings()
         connection_string = s._configuration['sql_connection_string']
