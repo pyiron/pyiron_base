@@ -41,6 +41,13 @@ class TestLoadFile(unittest.TestCase):
             content = f.readlines()
         self.assertEqual(txt, content)
 
+    def test_load_file_stream_txt(self):
+        with open(self.current_dir + '/test_data.txt') as f:
+            content = f.readlines()
+        with open(self.current_dir + '/test_data.txt') as f:
+            txt = load_file(f)
+        self.assertEqual(txt, content)
+
     def test_load_file_csv(self):
         csv = load_file(self.current_dir+'/test_data.csv')
         content = pd.read_csv(self.current_dir+'/test_data.csv')
