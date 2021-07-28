@@ -1,3 +1,8 @@
+__copyright__ = (
+    "Copyright 2020, Max-Planck-Institut für Eisenforschung GmbH - "
+    "Computational Materials Design (CM) Department"
+)
+
 import pandas as pd
 from sqlalchemy import (
     create_engine,
@@ -13,10 +18,6 @@ from pyiron_base.settings.generic import Settings
 
 
 __author__ = "Muhammad Hassani"
-__copyright__ = (
-    "Copyright 2020, Max-Planck-Institut für Eisenforschung GmbH - "
-    "Computational Materials Design (CM) Department"
-)
 __version__ = "1.0"
 __maintainer__ = "Muhammad Hassani"
 __email__ = "hassani@mpie.de"
@@ -25,16 +26,15 @@ __email__ = "hassani@mpie.de"
 class DatabaseStatistics:
     def __init__(self):
         s = Settings()
-        self._connection_string = s._configuration['sql_connection_string']
+        connection_string = s._configuration['sql_connection_string']
         self._job_table = s._configuration['sql_view_table_name']
-        if "postgresql" not in self._connection_string:
+        if "postgresql" not in connection_string:
             raise RuntimeError(
                 """
                 The detabase statistics is only available for a Postgresql database
                 """
             )
-        self._table = s._configuration['sql_table_name']
-        self._engine = create_engine(self._connection_string)
+        self._engine = create_engine(connection_string)
         self._performance_dict = {}
         self.total_index_size = 0
         self._metadata = MetaData()
@@ -72,7 +72,7 @@ class DatabaseStatistics:
 
     def _max_trans_age(self, conn):
         """
-        returns the cd maximum age of a transaction
+        returns the maximum age of a transaction
         """
         stmt = select(func.max(func.now() - self._stat_view.c.xact_start)).select_from(self._stat_view).where(
             or_(self._stat_view.c.state == 'idle in transaction', self._stat_view.c.state == 'active'))
