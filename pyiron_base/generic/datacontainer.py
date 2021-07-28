@@ -723,11 +723,9 @@ class DataContainer(MutableMapping, HasGroups):
         self.clear()
 
         if version == "0.1.0":
-            self.read_only = bool(hdf.get("read_only", False))
             self.update(hdf["data"], wrap=True)
+            self.read_only = bool(hdf.get("read_only", False))
         else:
-            self.read_only = bool(hdf.get("READ_ONLY", False))
-
             def normalize_key(name):
                 # split a dataset/group name into the position in the list and
                 # the key
@@ -747,6 +745,8 @@ class DataContainer(MutableMapping, HasGroups):
                 items.append( (*normalize_key(g), hdf[g].to_object()))
             for _, k, v in sorted(items, key=lambda x: x[0]):
                 self[k] = v
+
+            self.read_only = bool(hdf.get("READ_ONLY", False))
 
     def nodes(self):
         """
