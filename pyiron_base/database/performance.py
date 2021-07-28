@@ -36,10 +36,9 @@ class DatabaseStatistics:
             )
         self._engine = create_engine(connection_string)
         self._performance_dict = {}
-        self.total_index_size = 0
-        self._metadata = MetaData()
-        self._stat_view = Table('pg_stat_activity', self._metadata, autoload_with=self._engine)
-        self._locks_view = Table('pg_locks', self._metadata, autoload_with=self._engine)
+        metadata = MetaData()
+        self._stat_view = Table('pg_stat_activity', metadata, autoload_with=self._engine)
+        self._locks_view = Table('pg_locks', metadata, autoload_with=self._engine)
 
     def _num_conn(self, conn):
         """
@@ -47,7 +46,7 @@ class DatabaseStatistics:
         """
         stmt = select(func.count()).select_from(self._stat_view)
         result = conn.execute(stmt)
-        self._performance_dict['total num. connection'] = result.fetchone()[0]
+        return {'total num. connection': result.fetchone()[0]}
 
     def _num_conn_by_state(self, conn):
         """
@@ -57,18 +56,19 @@ class DatabaseStatistics:
         stmt = select(self._stat_view.c.state, func.count()).\
             select_from(self._stat_view).group_by(self._stat_view.c.state)
         results = conn.execute(stmt).fetchall()
+        output_dict = {}
         for result in results:
             key = 'Number of ' + str(result[0]) + ' connection'
             val = int(result[1])
-            self._performance_dict[key] = val
+            output_dict[key] = val
+        return output_dict
 
     def _num_conn_waiting_locks(self, conn):
         """
         returns the number of connection waiting for locks
         """
         stmt = select(func.count(distinct(self._locks_view.c.pid))).where(self._locks_view.c.granted == false())
-        self._performance_dict['num. of conn. waiting for locks'] = \
-            conn.execute(stmt).fetchone()[0]
+        return {'num. of conn. waiting for locks': conn.execute(stmt).fetchone()[0]}
 
     def _max_trans_age(self, conn):
         """
@@ -76,7 +76,7 @@ class DatabaseStatistics:
         """
         stmt = select(func.max(func.now() - self._stat_view.c.xact_start)).select_from(self._stat_view).where(
             or_(self._stat_view.c.state == 'idle in transaction', self._stat_view.c.state == 'active'))
-        self._performance_dict['max. transaction age'] = str(conn.execute(stmt).fetchone()[0])
+        return {'max. transaction age': str(conn.execute(stmt).fetchone()[0])}
 
     def _index_size(self, conn):
         """
@@ -105,12 +105,12 @@ class DatabaseStatistics:
             ORDER BY 1, 2;        
             """
         rows = conn.execute(stmt).fetchall()
-        self._index_usage = 0
+        index_usage = 0
         for row in rows:
             if row[1] == self._job_table:
-                self._index_usage += int(str(row[5]).split(' ')[0])
+                index_usage += int(str(row[5]).split(' ')[0])
 
-        self._performance_dict['index size/usage (MB)'] = self._index_usage
+        return {'index size/usage (MB)': index_usage}
 
     def _duplicate_indices(self, conn):
         """
@@ -129,11 +129,13 @@ class DatabaseStatistics:
                 ORDER BY sum(pg_relation_size(idx)) DESC;
         """
         overlapping_indices = conn.execute(stmt).fetchall()
-        self._performance_dict['duplicated indices'] = ''
-        for pair in overlapping_indices:
-            self._performance_dict['duplicated indices'] = str(pair[1]) + \
-                                                        ', and ' + str(pair[2]) + ' with total size: ' \
-                                                        + str(pair[0]) + '\n'
+        output_dict = {'duplicated indices': []}
+        if len(overlapping_indices) > 0:
+            for pair in overlapping_indices:
+                output_dict['duplicated indices'].append(
+                    str(pair[1]) + ', and ' + str(pair[2]) + ' with total size: ' + str(pair[0])
+                )
+        return output_dict
 
     def _checkpoints_interval(self, conn):
         """
@@ -151,20 +153,19 @@ class DatabaseStatistics:
             ) AS sub;
         """
         check_points = conn.execute(stmt).fetchone()
-        self._performance_dict['num. checkpoints'] = check_points[0]
-        self._performance_dict['checkpoint interval'] = check_points[1]
+        return {'num. checkpoints': check_points[0], 'checkpoint interval': check_points[1]}
 
     def performance(self):
         """
         returns a pandas dataframe with the essential statistics of a pyiron postgres database
         """
         with self._engine.connect() as conn:
-            self._num_conn(conn)
-            self._num_conn_by_state(conn)
-            self._num_conn_waiting_locks(conn)
-            self._max_trans_age(conn)
-            self._checkpoints_interval(conn)
-            self._index_size(conn)
-            self._duplicate_indices(conn)
+            self._performance_dict.update(self._num_conn(conn))
+            self._performance_dict.update(self._num_conn_by_state(conn))
+            self._performance_dict.update(self._num_conn_waiting_locks(conn))
+            self._performance_dict.update(self._max_trans_age(conn))
+            self._performance_dict.update(self._checkpoints_interval(conn))
+            self._performance_dict.update(self._index_size(conn))
+            self._performance_dict.update(self._duplicate_indices(conn))
 
         return pd.DataFrame(self._performance_dict, index=['performance'])
