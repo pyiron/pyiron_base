@@ -507,3 +507,11 @@ class FlattenedStorage:
                         self._per_element_arrays[k] = a
                     elif a.shape[0] == self._num_chunks_alloc:
                         self._per_chunk_arrays[k] = a
+            for k, a in self._per_chunk_arrays.items():
+                if a.shape[0] != self._num_chunks_alloc:
+                    raise RuntimeError(f"per-chunk array {k} read inconsistently from HDF: "
+                                       f"shape {a.shape[0]} does not match global allocation {self._num_chunks_alloc}!")
+            for k, a in self._per_element_arrays.items():
+                if a.shape[0] != self._num_elements_alloc:
+                    raise RuntimeError(f"per-element array {k} read inconsistently from HDF: "
+                                       f"shape {a.shape[0]} does not match global allocation {self._num_elements_alloc}!")
