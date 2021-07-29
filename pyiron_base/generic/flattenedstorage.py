@@ -487,8 +487,13 @@ class FlattenedStorage:
     def from_hdf(self, hdf, group_name="flat_storage"):
         with hdf.open(group_name) as hdf_s_lst:
             version = hdf_s_lst.get("HDF_VERSION", "0.0.0")
-            num_chunks = hdf_s_lst["num_chunks"] or hdf_s_lst["num_structures"]
-            num_elements = hdf_s_lst["num_elements"] or hdf_s_lst["num_atoms"]
+            try:
+                num_chunks = hdf_s_lst["num_chunks"]
+                num_elements = hdf_s_lst["num_elements"]
+            except KeyError:
+                num_chunks = hdf_s_lst["num_structures"]
+                num_elements = hdf_s_lst["num_atoms"]
+
             self._num_chunks_alloc = self.num_chunks = self.current_chunk_index = num_chunks
             self._num_elements_alloc = self.num_elements = self.current_element_index = num_elements
 
