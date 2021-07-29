@@ -23,6 +23,51 @@ __maintainer__ = "Muhammad Hassani"
 __email__ = "hassani@mpie.de"
 
 
+def _checkpoints_interval(conn):
+    """
+    returns the number of checkpoints and their intervals
+    """
+    stmt = """
+    SELECT
+        total_checkpoints,
+        seconds_since_start / total_checkpoints / 60 AS minutes_between_checkpoints
+        FROM
+        (SELECT
+        EXTRACT(EPOCH FROM (now() - pg_postmaster_start_time())) AS seconds_since_start,
+        (checkpoints_timed+checkpoints_req) AS total_checkpoints
+        FROM pg_stat_bgwriter
+        ) AS sub;
+    """
+    check_points = conn.execute(stmt).fetchone()
+    return {'num. checkpoints': check_points[0], 'checkpoint interval': check_points[1]}
+
+
+def _duplicate_indices(conn):
+    """
+    returns the duplicates in indices
+    """
+    stmt = """
+        SELECT pg_size_pretty(sum(pg_relation_size(idx))::bigint) as size,
+                   (array_agg(idx))[1] as idx1, (array_agg(idx))[2] as idx2,
+                   (array_agg(idx))[3] as idx3, (array_agg(idx))[4] as idx4
+            FROM (
+                SELECT indexrelid::regclass as idx, 
+                    (indrelid::text ||E'\n'|| indclass::text ||E'\n'|| indkey::text ||E'\n'||
+                    coalesce(indexprs::text,'')||E'\n' || coalesce(indpred::text,'')) as key
+                FROM pg_index) sub
+            GROUP BY key HAVING count(*)>1
+            ORDER BY sum(pg_relation_size(idx)) DESC;
+    """
+    overlapping_indices = conn.execute(stmt).fetchall()
+    output_dict = {'duplicated indices': []}
+    if len(overlapping_indices) > 0:
+        for pair in overlapping_indices:
+            output_dict['duplicated indices'].append(
+                str(pair[1]) + ', and ' + str(pair[2]) + ' with total size: ' + str(pair[0])
+            )
+    return output_dict
+
+
 class DatabaseStatistics:
     """
     The use case is:
@@ -121,49 +166,6 @@ class DatabaseStatistics:
 
         return {'index size/usage (MB)': index_usage}
 
-    def _duplicate_indices(self, conn):
-        """
-        returns the duplicates in indices
-        """
-        stmt = """
-            SELECT pg_size_pretty(sum(pg_relation_size(idx))::bigint) as size,
-                       (array_agg(idx))[1] as idx1, (array_agg(idx))[2] as idx2,
-                       (array_agg(idx))[3] as idx3, (array_agg(idx))[4] as idx4
-                FROM (
-                    SELECT indexrelid::regclass as idx, 
-                        (indrelid::text ||E'\n'|| indclass::text ||E'\n'|| indkey::text ||E'\n'||
-                        coalesce(indexprs::text,'')||E'\n' || coalesce(indpred::text,'')) as key
-                    FROM pg_index) sub
-                GROUP BY key HAVING count(*)>1
-                ORDER BY sum(pg_relation_size(idx)) DESC;
-        """
-        overlapping_indices = conn.execute(stmt).fetchall()
-        output_dict = {'duplicated indices': []}
-        if len(overlapping_indices) > 0:
-            for pair in overlapping_indices:
-                output_dict['duplicated indices'].append(
-                    str(pair[1]) + ', and ' + str(pair[2]) + ' with total size: ' + str(pair[0])
-                )
-        return output_dict
-
-    def _checkpoints_interval(self, conn):
-        """
-        returns the number of checkpoints and their intervals
-        """
-        stmt = """
-        SELECT
-            total_checkpoints,
-            seconds_since_start / total_checkpoints / 60 AS minutes_between_checkpoints
-            FROM
-            (SELECT
-            EXTRACT(EPOCH FROM (now() - pg_postmaster_start_time())) AS seconds_since_start,
-            (checkpoints_timed+checkpoints_req) AS total_checkpoints
-            FROM pg_stat_bgwriter
-            ) AS sub;
-        """
-        check_points = conn.execute(stmt).fetchone()
-        return {'num. checkpoints': check_points[0], 'checkpoint interval': check_points[1]}
-
     def performance(self):
         """
         returns a pandas dataframe with the essential statistics of a pyiron postgres database
@@ -173,8 +175,26 @@ class DatabaseStatistics:
             self._performance_dict.update(self._num_conn_by_state(conn))
             self._performance_dict.update(self._num_conn_waiting_locks(conn))
             self._performance_dict.update(self._max_trans_age(conn))
-            self._performance_dict.update(self._checkpoints_interval(conn))
+            self._performance_dict.update(_checkpoints_interval(conn))
             self._performance_dict.update(self._index_size(conn))
-            self._performance_dict.update(self._duplicate_indices(conn))
+            self._performance_dict.update(_duplicate_indices(conn))
 
         return pd.DataFrame(self._performance_dict, index=['performance'])
+
+
+def get_database_statistics():
+    """
+    This function returns the statistics of pyiron postgres database in the form of a pandas dataframe.
+    The dataframe includes:
+    - total number of connection
+    - number of connection categorized by their state
+    - maximum age of a transaction
+    - number of checkpoints and their interval
+    - size of indices
+    - pair of duplicate indices and their total size
+    usage:
+    >>> from pyiron_base import get_database_statistics
+    >>> get_database_statistics()
+    """
+
+    return DatabaseStatistics().performance()
