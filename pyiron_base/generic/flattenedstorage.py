@@ -431,8 +431,13 @@ class FlattenedStorage:
                 if len(a.shape) > 0 and a.shape[0] == n:
                     self.add_array(k, shape=a.shape[1:], dtype=a.dtype, per="element")
                 else:
-                    self.add_array(k, shape=a.shape, dtype=a.dtype, per="chunk")
-            # if the first axis was added by the caller to force to add a per chunk array, remove it again here
+                    shape = a.shape
+                    # if the first axis was added by the caller to force to add a per chunk array, remove it again here
+                    if len(shape) > 0 and a.shape[0] == 1:
+                        shape = shape[1:]
+                    self.add_array(k, shape=shape, dtype=a.dtype, per="chunk")
+            # same as above: if the first axis was added by the caller to force to add a per chunk array, remove it
+            # again here
             if k in self._per_chunk_arrays and len(a.shape) > 0 and a.shape[0] == 1:
                 a = a[0]
             self.set_array(k, self.current_chunk_index, a)
