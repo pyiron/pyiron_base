@@ -437,7 +437,7 @@ class JobCore(HasGroups):
         if requires_full_object:
             job = self.to_object()
             job._before_generic_remove_child()
-            
+
         # Delete job from HPC-computing-queue if it is still running.
         job_status = str(self.status)
         if (
