@@ -495,7 +495,7 @@ class FlattenedStorage:
             try:
                 num_chunks = hdf_s_lst["num_chunks"]
                 num_elements = hdf_s_lst["num_elements"]
-            except KeyError:
+            except ValueError:
                 num_chunks = hdf_s_lst["num_structures"]
                 num_elements = hdf_s_lst["num_atoms"]
 
