@@ -64,6 +64,69 @@ class TestUnpacking(unittest.TestCase):
         compare_obj = dircmp(path_original, path_import)
         self.assertEqual(len(compare_obj.diff_files), 0)
 
+    def test_unpack_to_nested_project(self):
+        pr = self.pr.open("nested")
+        pr_imp = pr.open("imported")
+        pr_imp.unpack(origin_path=self.arch_dir_comp, compress=True)
+
+        path_original = self.pr.path
+        path_import = pr_imp.path
+        path_original = getdir(path_original)
+        path_import = getdir(path_import)
+        print(f"DEBUG \n"
+              f" print(path_original, path_import)\n"
+              f"> {path_original, path_import}\n"
+              f" os.listdir(path_original)\n"
+              f"> {os.listdir(path_original)}\n"
+              f" os.listdir(path_import)\n"
+              f"> {os.listdir(path_import)}\n"
+              f"END DEBUG")
+        compare_obj = dircmp(path_original, path_import)
+
+        self.assertEqual(len(compare_obj.diff_files), 0)
+
+        pr.remove(enable=True)
+
+    def test_unpack_from_other_dir(self):
+        """Testing to unpack a packed project from a different directory:
+            The packed project is stored at the
+        """
+        pr = self.pr.open("nested")
+        cwd = os.getcwd()
+
+        # wrapped in try/ finally to make sure we end up in cwd again.
+        try:
+            os.chdir(pr.path)
+
+            pr_imp = pr.open("imported")
+            print(f"DEGUB START\n"
+                  f" cwd\n"
+                  f"> {os.getcwd()}\n"
+                  f" os.listdir()\n"
+                  f"> {os.listdir()}\n"
+                  f" self.pr.path \n"
+                  f"> {self.pr.path}\n"
+                  f" origin_path\n"
+                  f"> {os.path.join(cwd, self.arch_dir_comp)}\n"
+                  f" os.listdir(os.path.dirname(origin_path))\n"
+                  f"> {os.listdir(os.path.dirname(os.path.join(cwd, self.arch_dir_comp)))}\n"
+                  f" pr_imp.path\n"
+                  f"> {pr_imp.path} \n"
+                  f"END DEBUG")
+            pr_imp.unpack(origin_path=os.path.join(cwd, self.arch_dir_comp),
+                          csv_file_name=os.path.join(cwd, 'export.csv'))
+        finally:
+            os.chdir(cwd)
+
+        path_original = self.pr.path
+        path_import = pr_imp.path
+        path_original = getdir(path_original)
+        path_import = getdir(path_import)
+        compare_obj = dircmp(path_original, path_import)
+        self.assertEqual(len(compare_obj.diff_files), 0)
+
+        pr.remove(enable=True)
+
     def test_import_uncompress(self):
         self.pr.pack(destination_path=self.arch_dir, compress=False)
         self.imp_pr.remove_jobs_silently(recursive=True)
