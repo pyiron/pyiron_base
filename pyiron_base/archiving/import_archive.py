@@ -60,8 +60,7 @@ def import_jobs(
         extract_archive(archive_directory)
     archive_name = getdir(path=archive_directory)
     # destination folder
-    des = os.path.abspath(project_instance.path)
-
+    des = project_instance.path
     # source folder; archive folder
     src = os.path.abspath(os.path.join(os.path.dirname(archive_directory), os.path.basename(archive_directory)))
     copy_tree(src, des)
