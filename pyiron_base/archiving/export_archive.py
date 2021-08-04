@@ -76,6 +76,11 @@ def copy_files_to_archive(
     directory_to_transfer,
     archive_directory, compressed=True
 ):
+    if archive_directory[-7:] == ".tar.gz":
+        archive_directory = archive_directory[:-7]
+        if not compressed:
+            compressed = True
+
     if directory_to_transfer[-1] != '/':
         directory_to_transfer = os.path.basename(directory_to_transfer)
     else:
