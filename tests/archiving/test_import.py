@@ -87,7 +87,7 @@ class TestUnpacking(unittest.TestCase):
 
         pr.remove(enable=True)
 
-    def test_unpack_from_other_dir(self):
+    def test_unpack_from_other_dir_uncompress(self):
         cwd = os.getcwd()
         print("DEBUG")
         print(f"cwd: {cwd}")
@@ -103,6 +103,9 @@ class TestUnpacking(unittest.TestCase):
         pr = self.pr.open("nested")
         pr_imp = pr.open("imported")
         pr_imp.unpack(origin_path=pack_path_comp, csv_file_name=pack_path_csv, compress=False)
+        print(f"pr_imp.path: {pr_imp.path}")
+        print(f"content of pack_path_comp: {os.listdir(os.path.join(pack_path_comp, 'test'))}")
+        print(f"content of nested proj: {os.listdir(os.path.join(pr_imp.path, 'test'))}")
         compare_obj = dircmp(pack_path_comp, pr_imp.path)
         self.assertEqual(len(compare_obj.diff_files), 0)
 
