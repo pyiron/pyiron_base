@@ -1,10 +1,11 @@
 import os
 import unittest
 from pyiron_base import Project
-from pyiron_base.archiving.import_archive import getdir
+from pyiron_base.archiving.import_archive import getdir, extract_archive
 from pandas._testing import assert_frame_equal
 from filecmp import dircmp
 from pyiron_base import PythonTemplateJob
+from shutil import rmtree
 
 
 class ToyJob(PythonTemplateJob):
@@ -68,7 +69,6 @@ class TestUnpacking(unittest.TestCase):
         pr = self.pr.open("nested")
         pr_imp = pr.open("imported")
         pr_imp.unpack(origin_path=self.arch_dir_comp, compress=True)
-
         path_original = self.pr.path
         path_import = pr_imp.path
         path_original = getdir(path_original)
@@ -82,32 +82,25 @@ class TestUnpacking(unittest.TestCase):
               f"> {os.listdir(path_import)}\n"
               f"END DEBUG")
         compare_obj = dircmp(path_original, path_import)
-
         self.assertEqual(len(compare_obj.diff_files), 0)
-
         pr.remove(enable=True)
 
     def test_unpack_from_other_dir_uncompress(self):
         cwd = os.getcwd()
-        print("DEBUG")
-        print(f"cwd: {cwd}")
         pack_path = os.path.join(cwd, 'exported')
-        print(f"pack_path: {pack_path}")
         os.mkdir(path=pack_path)
         pack_path_comp = os.path.join(pack_path, self.arch_dir_comp)
         pack_path_csv = os.path.join(pack_path, 'export.csv')
-        print(f"pack_path_comp: {pack_path_comp}\n"
-              "pack_path_csv: {pack_path_csv}")
         self.pr.pack(destination_path=pack_path_comp, csv_file_name=pack_path_csv, compress=False)
-        print(f"content of pack_path: {os.listdir(pack_path)}")
         pr = self.pr.open("nested")
         pr_imp = pr.open("imported")
         pr_imp.unpack(origin_path=pack_path_comp, csv_file_name=pack_path_csv, compress=False)
-        print(f"pr_imp.path: {pr_imp.path}")
-        print(f"content of pack_path_comp: {os.listdir(os.path.join(pack_path_comp, 'test'))}")
-        print(f"content of nested proj: {os.listdir(os.path.join(pr_imp.path, 'test'))}")
         compare_obj = dircmp(pack_path_comp, pr_imp.path)
         self.assertEqual(len(compare_obj.diff_files), 0)
+        try:
+            rmtree(pack_path)
+        except Exception as err_msg:
+            print(f"deleting unsuccessful: {err_msg}")
 
     def test_import_uncompress(self):
         self.pr.pack(destination_path=self.arch_dir, compress=False)
@@ -135,7 +128,6 @@ class TestUnpacking(unittest.TestCase):
 
     def test_load_job(self):
         """Jobs should be able to load from the imported project."""
-
         self.imp_pr.remove_jobs_silently(recursive=True)
         self.pr.pack(destination_path=self.arch_dir_comp, compress=True)
         self.imp_pr.unpack(origin_path=self.arch_dir_comp, compress=True)
@@ -146,16 +138,36 @@ class TestUnpacking(unittest.TestCase):
 
     def test_check_job_parameters(self):
         """Imported jobs should be equal to their originals in all their parameters."""
-
         self.imp_pr.remove_jobs_silently(recursive=True)
         self.pr.pack(destination_path=self.arch_dir_comp, compress=True)
         self.imp_pr.unpack(origin_path=self.arch_dir_comp, compress=True)
-
         j = self.imp_pr.load(self.job.name)
         self.assertEqual(self.job.input["input_energy"], j.input["input_energy"],
                          "Input values not properly copied to imported job.")
         self.assertEqual(self.job["output/energy_tot"], j["output/energy_tot"],
                          "Output values not properly copied to imported job.")
+
+    def test_import_with_targz_extension(self):
+        cwd = os.getcwd()
+        pack_path = os.path.join(cwd, 'exported_withTar')
+        os.mkdir(path=pack_path)
+        tar_arch = self.arch_dir_comp + '.tar.gz'
+        pack_path_comp = os.path.join(pack_path, tar_arch)
+        pack_path_csv = os.path.join(pack_path, 'export.csv')
+        self.pr.pack(destination_path=pack_path_comp, csv_file_name=pack_path_csv, compress=True)
+        pr = self.pr.open("nested2")
+        pr_imp = pr.open("imported2")
+        pr_imp.unpack(origin_path=pack_path_comp, csv_file_name=pack_path_csv, compress=True)
+        # here the 7 is the length of '.tar.gz' string
+        extract_archive(pack_path_comp[:-7])
+        compare_obj = dircmp(pack_path_comp[:-7], pr_imp.path)
+        self.assertEqual(len(compare_obj.diff_files), 0)
+        pr.remove(enable=True)
+        try:
+            rmtree(pack_path)
+        except Exception as err_msg:
+            print(f"deleting unsuccessful: {err_msg}")
+
 
 if __name__ == "__main__":
     unittest.main()
