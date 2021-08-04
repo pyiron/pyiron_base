@@ -131,8 +131,14 @@ class Project(ProjectPath, HasGroups):
             self.db = FileTable(project=path)
         self.job_type = JobTypeChoice()
 
-        self.maintenance = Maintenance()
+        self._maintenance = None
 
+
+    @property
+    def maintenance(self):
+        if self._maintenance is None:
+            self._maintenance = Maintenance()
+        return self._maintenance
     @property
     def parent_group(self):
         """
