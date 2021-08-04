@@ -41,6 +41,10 @@ def import_jobs(
     project_instance, archive_directory,
     df, compressed=True
 ):
+    if archive_directory[-7:] == ".tar.gz":
+        archive_directory = archive_directory[:-7]
+        if not compressed:
+            compressed = True
     # Copy HDF5 files
     # if the archive_directory is a path(string)/name of the compressed file
     if static_isinstance(
@@ -62,7 +66,7 @@ def import_jobs(
     # destination folder
     des = project_instance.path
     # source folder; archive folder
-    src = os.path.abspath(os.path.join(os.path.dirname(archive_directory), os.path.basename(archive_directory)))
+    src = os.path.abspath(archive_directory)
     copy_tree(src, des)
     if compressed:
         rmtree(src)
