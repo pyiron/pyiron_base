@@ -62,8 +62,10 @@ def import_jobs(
             as string or pyiron Project objects are expected"""
         )
     if compressed:
-        extract_archive(archive_directory)
+        extract_archive(os.path.relpath(archive_directory, os.getcwd()))
+
     archive_name = getdir(path=archive_directory)
+
     # destination folder
     des = project_instance.path
     # source folder; archive folder
@@ -74,6 +76,7 @@ def import_jobs(
 
     # # Update Database
     pr_import = project_instance.open(os.curdir)
+
     df["project"] = [os.path.join(
         pr_import.project_path, os.path.relpath(p, archive_name)) + "/"
         for p in df["project"].values
