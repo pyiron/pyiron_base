@@ -1529,8 +1529,7 @@ class Maintenance:
         else:
             self._check_postgres = True
 
-    @property
-    def database_statistics(self):
+    def get_database_statistics(self):
         if self._check_postgres:
             return get_database_statistics()
         else:
