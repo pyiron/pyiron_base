@@ -41,10 +41,6 @@ def import_jobs(
     project_instance, archive_directory,
     df, compressed=True
 ):
-    if archive_directory[-7:] == ".tar.gz":
-        archive_directory = archive_directory[:-7]
-        if not compressed:
-            compressed = True
     # Copy HDF5 files
     # if the archive_directory is a path(string)/name of the compressed file
     if static_isinstance(
@@ -54,7 +50,12 @@ def import_jobs(
         ]
     ):
         archive_directory = archive_directory.path
-    elif not isinstance(archive_directory, str):
+    elif isinstance(archive_directory, str):
+        if archive_directory[-7:] == ".tar.gz":
+            archive_directory = archive_directory[:-7]
+            if not compressed:
+                compressed = True
+    else:
         raise RuntimeError(
             """the given path for importing from,
             does not have the correct format paths
