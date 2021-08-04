@@ -18,7 +18,7 @@ from pyiron_base.project.path import ProjectPath
 from pyiron_base.database.filetable import FileTable
 from pyiron_base.settings.generic import Settings
 from pyiron_base.settings.publications import list_publications
-from pyiron_base import get_database_statistics
+from pyiron_base.database.performance import get_database_statistics
 from pyiron_base.database.jobtable import (
     get_db_columns,
     get_job_ids,
@@ -1502,7 +1502,15 @@ class Project(ProjectPath, HasGroups):
 
 
 class Maintenance:
+    """
+    The purpose of maintenance class is to provide
+    some measures of perfomance for pyiron
+    """
     def __init__(self):
+        """
+        initialize the flag self._check_postgres, to control whether pyiron is
+        set to communicate with a postgres database.
+        """
         s = Settings()
         connection_string = s._configuration['sql_connection_string']
         if "postgresql" not in connection_string:
