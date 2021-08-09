@@ -3,6 +3,7 @@
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
 import functools
+import numpy as np
 
 __author__ = "Sudarsan Surendralal"
 __copyright__ = (
@@ -12,7 +13,10 @@ __copyright__ = (
 
 
 class UnitsBase:
+    """
+    Module to record units for physical quantities within pyiron
 
+    """
     def __init__(self):
         self._quantity_dict = dict()
         self._dtype_dict = dict()
@@ -44,6 +48,12 @@ class UnitsBase:
         elif item in self._quantity_dict.keys():
             return self._unit_dict[self._quantity_dict[item]]
 
+    def get_dtype(self, item):
+        if item in self._unit_dict.keys():
+            return self._dtype_dict[item]
+        elif item in self._quantity_dict.keys():
+            return self._dtype_dict[self._quantity_dict[item]]
+
 
 class UnitConverter:
 
@@ -63,30 +73,22 @@ class UnitConverter:
     def base_to_code_value(self, quantity):
         return self.base_to_code(quantity).magnitude
 
-
-class UnitsDecorator:
-
-    def __init__(self):
-        self._units = None
-        self._label = None
-
-    def __call__(self, label, units=None):
-        if units is not None:
-            self._units = units
-        self._label = label
-        return self.__decorate_to_pyiron
-
-    @staticmethod
-    def __decorate_to_pyiron(function):
-        @functools.wraps(function)
-        def dec(*args, **kwargs):
-            return function(*args, **kwargs)
-        return dec
-
-# def decorator(func):
-# @wraps(func)
-# def f(self, *args, **kwargs):
-#     units = unit_getter(self)
-#     return func(self, *args, **kwargs)
-
-# Quick sketch, unit_getter is something you have to define via a class decorator like you had
+    def __call__(self, conversion, quantity):
+        if conversion == "to_base":
+            def __decorate_to_base(function):
+                @functools.wraps(function)
+                def dec(*args, **kwargs):
+                    return np.array(function(*args, **kwargs) * self.code_to_base_value(quantity),
+                                    dtype=self._base_units.get_dtype(quantity))
+                return dec
+            return __decorate_to_base
+        elif conversion == "to_code":
+            def __decorate_to_code(function):
+                @functools.wraps(function)
+                def dec(*args, **kwargs):
+                    return np.array(function(*args, **kwargs) * self.base_to_code_value(quantity),
+                                    dtype=self._base_units.get_dtype(quantity))
+                return dec
+            return __decorate_to_code
+        else:
+            raise ValueError()
