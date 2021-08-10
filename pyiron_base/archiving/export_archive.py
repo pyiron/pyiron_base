@@ -65,9 +65,10 @@ def generate_list_of_directories(
 
 
 def compress_dir(archive_directory):
+
     arch_comp_name = archive_directory+".tar.gz"
     tar = tarfile.open(arch_comp_name, "w:gz")
-    tar.add(archive_directory, arcname=archive_directory)
+    tar.add(os.path.relpath(archive_directory, os.getcwd()))
     tar.close()
     rmtree(archive_directory)
 
@@ -76,6 +77,11 @@ def copy_files_to_archive(
     directory_to_transfer,
     archive_directory, compressed=True
 ):
+    if archive_directory[-7:] == ".tar.gz":
+        archive_directory = archive_directory[:-7]
+        if not compressed:
+            compressed = True
+
     if directory_to_transfer[-1] != '/':
         directory_to_transfer = os.path.basename(directory_to_transfer)
     else:
@@ -116,6 +122,8 @@ def export_database(
     # here we first check wether the archive directory is a path
     # or a project object
     if isinstance(archive_directory, str):
+        if archive_directory[-7:] == ".tar.gz":
+            archive_directory = archive_directory[:-7]
         archive_directory = os.path.basename(archive_directory)
     # if the archive_directory is a project
     elif static_isinstance(

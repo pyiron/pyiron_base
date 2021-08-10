@@ -38,21 +38,23 @@ def extract_archive(archive_directory):
 
 
 def import_jobs(
-    project_instance, directory_to_import_to, archive_directory,
+    project_instance, archive_directory,
     df, compressed=True
 ):
     # Copy HDF5 files
     # if the archive_directory is a path(string)/name of the compressed file
-    if isinstance(archive_directory, str):
-        archive_directory = os.path.basename(archive_directory)
-    # if the archive_directory is a project
-    elif static_isinstance(
+    if static_isinstance(
         obj=archive_directory.__class__,
         obj_type=[
             "pyiron_base.project.generic.Project",
         ]
     ):
         archive_directory = archive_directory.path
+    elif isinstance(archive_directory, str):
+        if archive_directory[-7:] == ".tar.gz":
+            archive_directory = archive_directory[:-7]
+            if not compressed:
+                compressed = True
     else:
         raise RuntimeError(
             """the given path for importing from,
@@ -60,22 +62,21 @@ def import_jobs(
             as string or pyiron Project objects are expected"""
         )
     if compressed:
-        extract_archive(archive_directory)
+        extract_archive(os.path.relpath(archive_directory, os.getcwd()))
+
     archive_name = getdir(path=archive_directory)
-    if directory_to_import_to[-1] != '/':
-        directory_to_import_to = os.path.basename(directory_to_import_to)
-    else:
-        directory_to_import_to = os.path.basename(directory_to_import_to[:-1])
+
     # destination folder
-    des = os.path.abspath(os.path.join(os.curdir, directory_to_import_to))
+    des = project_instance.path
     # source folder; archive folder
-    src = os.path.abspath(os.path.join(os.curdir, archive_directory))
+    src = os.path.abspath(archive_directory)
     copy_tree(src, des)
     if compressed:
-        rmtree(archive_directory)
+        rmtree(src)
 
-    # Update Database
+    # # Update Database
     pr_import = project_instance.open(os.curdir)
+
     df["project"] = [os.path.join(
         pr_import.project_path, os.path.relpath(p, archive_name)) + "/"
         for p in df["project"].values
@@ -94,7 +95,7 @@ def import_jobs(
             entry["timestart"] = pandas.to_datetime(entry["timestart"])
         if 'timestop' in entry:
             entry["timestop"] = pandas.to_datetime(entry["timestop"])
-        if 'username' not in entry: 
+        if 'username' not in entry:
             entry["username"] = s.login_user
         job_id = pr_import.db.add_item_dict(par_dict=entry)
         job_id_lst.append(job_id)

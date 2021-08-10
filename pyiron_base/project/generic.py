@@ -1462,7 +1462,6 @@ class Project(ProjectPath, HasGroups):
                 for entry in db_entry_in_old_format:
                     self.db.item_update({"project": self.project_path}, entry["id"])
 
-
     def pack(self, destination_path, csv_file_name='export.csv', compress=True):
         """
         by this funtion, the job table is exported to a csv file
@@ -1480,7 +1479,6 @@ class Project(ProjectPath, HasGroups):
         df = export_archive.export_database(self, directory_to_transfer, destination_path)
         df.to_csv(csv_file_name)
 
-
     def unpack(self, origin_path, csv_file_name='export.csv', compress=True):
         """
         by this function, job table is imported from a given csv file,
@@ -1490,11 +1488,12 @@ class Project(ProjectPath, HasGroups):
             origin_path (str): the relative path of a directory (or a compressed file without the tar.gz exention)
                             from which the project directory is copied.
             csv_file_name (str): the csv file from which the job_table is copied to the current project
+            compress (bool): if True, it looks for a compressed file
         """
         csv_path = csv_file_name
         df = pandas.read_csv(csv_path, index_col=0)
         import_archive.import_jobs(
-            self, self.path, archive_directory=origin_path, df=df, compressed=compress
+            self, archive_directory=origin_path, df=df, compressed=compress
         )
 
 
