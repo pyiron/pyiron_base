@@ -6,6 +6,8 @@ import functools
 import numpy as np
 import pint
 
+Q_ = pint.Quantity
+
 __author__ = "Sudarsan Surendralal"
 __copyright__ = (
     "Copyright 2021, Max-Planck-Institut für Eisenforschung GmbH - "
@@ -165,7 +167,7 @@ class UnitConverter:
     0.043364104241800934
 
     Alternatively, the unit converter can also be used as decorators for functions that return an array scaled into
-    appropriate units
+    appropriate units:
 
     >>> @unit_converter(quantity="energy", conversion="code_to_base")
     >>>    def return_ones():
@@ -173,6 +175,14 @@ class UnitConverter:
     >>> print(return_ones())
     [0.0433641 0.0433641 0.0433641 0.0433641 0.0433641]
 
+    The decorator can also be used to assign units for numpy arrays
+    (for more info see https://pint.readthedocs.io/en/0.10.1/numpy.html)
+
+    >>> @unit_converter(quantity="energy", conversion="base_units")
+    >>> def return_ones_ev():
+    >>>     return np.ones(5)
+    >>> print(return_ones_ev())
+    [1.0 1.0 1.0 1.0 1.0] electron_volt
     """
 
     def __init__(self, base_units, code_units):
@@ -257,8 +267,24 @@ class UnitConverter:
                 @functools.wraps(function)
                 def dec(*args, **kwargs):
                     return np.array(function(*args, **kwargs) * self.base_to_code_value(quantity),
-                                    dtype=self._base_units.get_dtype(quantity))
+                                    dtype=self._code_units.get_dtype(quantity))
                 return dec
             return _decorate_to_code
+        elif conversion == "base_units":
+            def _decorate_base_units(function):
+                @functools.wraps(function)
+                def dec(*args, **kwargs):
+                    return Q_(np.array(function(*args, **kwargs), dtype=self._base_units.get_dtype(quantity)),
+                              self._base_units[quantity])
+                return dec
+            return _decorate_base_units
+        elif conversion == "code_units":
+            def _decorate_code_units(function):
+                @functools.wraps(function)
+                def dec(*args, **kwargs):
+                    return Q_(np.array(function(*args, **kwargs), dtype=self._code_units.get_dtype(quantity)),
+                              self._code_units[quantity])
+                return dec
+            return _decorate_code_units
         else:
             raise ValueError("Conversion type {} not implemented!".format(conversion))
