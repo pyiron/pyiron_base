@@ -21,7 +21,7 @@ class TestUnits(unittest.TestCase):
         code_units = PyironUnitRegistry()
         # Define unit kJ/mol
         code_units.add_quantity(quantity="energy",
-                                unit=1e3 * pint_registry.cal / (pint_registry.mol * pint_registry.N_A))
+                                unit=pint_registry.kilocal / (pint_registry.mol * pint_registry.N_A))
         code_units.add_labels(labels=["energy_tot", "energy_pot"], quantity="energy")
         # Raise Error for undefined quantity
         self.assertRaises(ValueError, code_units.add_labels, labels=["mean_forces"], quantity="force")
@@ -39,7 +39,7 @@ class TestUnits(unittest.TestCase):
         self.assertIsInstance(code_units.get_dtype("energy_tot"), float.__class__)
         self.assertAlmostEqual(unit_converter.code_to_base_value("dimensionless_integer_quantity"), 1)
         self.assertAlmostEqual(unit_converter.code_to_base_value("energy")
-                               * unit_converter.base_to_code_value("energy"), 1e3)
+                               * unit_converter.base_to_code_value("energy"), 1)
 
         # Use decorator to convert units
         @unit_converter(quantity="energy", conversion="code_to_base")
@@ -50,8 +50,18 @@ class TestUnits(unittest.TestCase):
         def return_ones_code():
             return np.ones(10)
 
+        @unit_converter(quantity="energy", conversion="base_units")
+        def return_ones_ev():
+            return np.ones(10)
+
+        @unit_converter(quantity="energy", conversion="code_units")
+        def return_ones_kj_mol():
+            return np.ones(10)
+        print(return_ones_ev())
+        self.assertEqual(1 * return_ones_kj_mol().units, 1 * code_units["energy"])
+        self.assertEqual(1 * return_ones_ev().units, 1 * base_units["energy"])
         self.assertTrue(np.allclose(return_ones_base(), np.ones(10) * 0.0433641))
-        self.assertTrue(np.allclose(return_ones_base() * return_ones_code(), np.ones(10) * 1e3))
+        self.assertTrue(np.allclose(return_ones_base() * return_ones_code(), np.ones(10) * 1))
         self.assertRaises(ValueError, unit_converter, quantity="energy", conversion="gibberish")
         # Define dimensionally incorrect units
         code_units.add_quantity(quantity="energy",
