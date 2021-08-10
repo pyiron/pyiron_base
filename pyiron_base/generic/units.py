@@ -17,6 +17,7 @@ __copyright__ = (
 
 class PyironUnitRegistry:
     """
+
     Module to record units for physical quantities within pyiron. This module is used for defining the units
     for different pyiron submodules.
 
@@ -36,8 +37,15 @@ class PyironUnitRegistry:
     >>> base_units.add_labels(labels=["energy_tot", "energy_pot"], quantity="energy")
 
     For more information on working with `pint`, see: https://pint.readthedocs.io/en/0.10.1/tutorial.html
+
     """
     def __init__(self):
+        """
+        Attributes:
+            self.quantity_dict
+            self.unit_dict
+            self.dtype_dict
+        """
         self._quantity_dict = dict()
         self._dtype_dict = dict()
         self._unit_dict = dict()
@@ -141,6 +149,7 @@ class PyironUnitRegistry:
 
 class UnitConverter:
     """
+
     Module to handle conversions between two different unit registries mainly use to convert units between codes and
     pyiron submodules.
 
@@ -183,6 +192,7 @@ class UnitConverter:
     >>>     return np.ones(5)
     >>> print(return_ones_ev())
     [1.0 1.0 1.0 1.0 1.0] electron_volt
+
     """
 
     def __init__(self, base_units, code_units):
