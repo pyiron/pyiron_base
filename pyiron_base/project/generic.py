@@ -540,12 +540,15 @@ class Project(ProjectPath, HasGroups):
             job_id_lst = self.get_jobs(recursive)["id"]
         else:
             df = self.job_table(recursive=True)
-            mask = np.ones_like(df.index, dtype=bool)
-            if status is not None:
-                mask &= df["status"] == status
-            if job_type is not None:
-                mask &= df["hamilton"] == job_type
-            job_id_lst = list(df[mask]["id"]) if not df.empty else []
+            if df.empty:
+                job_id_lst = []
+            else:
+                mask = np.ones_like(df.index, dtype=bool)
+                if status is not None:
+                    mask &= df["status"] == status
+                if job_type is not None:
+                    mask &= df["hamilton"] == job_type
+                job_id_lst = list(df[mask]["id"])
         for job_id in job_id_lst:
             if path is not None:
                 yield self.load(job_id, convert_to_object=False)[path]
