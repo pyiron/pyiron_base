@@ -522,7 +522,7 @@ class Project(ProjectPath, HasGroups):
         """
         return self.load(job_specifier=job_specifier, convert_to_object=False)
 
-    def iter_jobs(self, path=None, recursive=True, convert_to_object=True, status=None):
+    def iter_jobs(self, path=None, recursive=True, convert_to_object=True, status=None, job_type=None):
         """
         Iterate over the jobs within the current project and it is sub projects
 
@@ -531,15 +531,24 @@ class Project(ProjectPath, HasGroups):
             recursive (bool): search subprojects [True/False] - True by default
             convert_to_object (bool): load the full GenericJob object (default) or just the HDF5 / JobCore object
             status (str/None): status of the jobs to filter for - ['finished', 'aborted', 'submitted', ...]
+            job_type (str/None): job type to filter for, corresponds to the 'hamilton' column in the job table
 
         Returns:
             yield: Yield of GenericJob or JobCore
         """
-        if status is None:
+        if status is None and job_type is None:
             job_id_lst = self.get_jobs(recursive)["id"]
         else:
             df = self.job_table(recursive=True)
-            job_id_lst = list(df[df["status"] == status]["id"]) if not df.empty else []
+            if df.empty:
+                job_id_lst = []
+            else:
+                mask = np.ones_like(df.index, dtype=bool)
+                if status is not None:
+                    mask &= df["status"] == status
+                if job_type is not None:
+                    mask &= df["hamilton"] == job_type
+                job_id_lst = list(df[mask]["id"])
         for job_id in job_id_lst:
             if path is not None:
                 yield self.load(job_id, convert_to_object=False)[path]
