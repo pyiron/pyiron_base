@@ -705,6 +705,7 @@ class JobCore(HasGroups):
         new_job_core._parent_id = self._parent_id
         new_job_core._master_id = self._master_id
         new_job_core._status = self._status
+        new_job_core._create_working_directory()
         if new_job_name == self.job_name:
             self.project_hdf5.copy_to(destination=hdf5_project.open(".."))
         else:
