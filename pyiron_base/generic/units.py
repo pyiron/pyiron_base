@@ -63,7 +63,7 @@ class PyironUnitRegistry:
     @property
     def dtype_dict(self):
         """
-        A dictionary of the different physical quantities and the corresponding datatype in which they are to be stored
+        A dictionary of the names of the different physical quantities to the corresponding datatype in which they are to be stored
 
         Returns:
             dict
