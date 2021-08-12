@@ -26,12 +26,12 @@ jobs:
     - name: Setup
       shell: bash -l {0}
       run: |
-        pip install --no-deps .
         cd ..
         git clone https://github.com/pyiron/pyiron_contrib
         cd pyiron_contrib
-        grep -v "pyiron_base" .ci_support/environment.yml > environment.yml
-        conda env update --name test --file environment.yml
+        conda env update --name test --file .ci_support/environment.yml
+        pip install --no-deps .
+        cd ../pyiron_base
         pip install --no-deps .
     - name: Test
       shell: bash -l {0}
