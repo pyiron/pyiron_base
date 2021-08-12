@@ -200,7 +200,7 @@ class UnitConverter:
         """
 
         Args:
-            base_units (pyiron_base.generic.units.PyironUnitRegistry): Base unit registry
+            base_units (:class:`pyiron_base.generic.units.PyironUnitRegistry`): Base unit registry
             code_units (pyiron_base.generic.units.PyironUnitRegistry): Code specific unit registry
         """
         self._base_units = base_units
