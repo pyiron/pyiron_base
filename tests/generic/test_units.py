@@ -47,19 +47,19 @@ class TestUnits(unittest.TestCase):
                                * unit_converter.base_to_code_value("energy"), 1)
 
         # Use decorator to convert units
-        @unit_converter(quantity="energy", conversion="code_to_base")
+        @unit_converter.code_to_base(quantity="energy")
         def return_ones_base():
             return np.ones(10)
 
-        @unit_converter(quantity="energy", conversion="base_to_code")
+        @unit_converter.base_to_code(quantity="energy")
         def return_ones_code():
             return np.ones(10)
 
-        @unit_converter(quantity="energy", conversion="base_units")
+        @unit_converter.base_units(quantity="energy")
         def return_ones_ev():
             return np.ones(10)
 
-        @unit_converter(quantity="energy", conversion="code_units")
+        @unit_converter.code_units(quantity="energy")
         def return_ones_kj_mol():
             return np.ones(10)
 
