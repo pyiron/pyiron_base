@@ -28,7 +28,7 @@ class TestUnits(unittest.TestCase):
         self.assertTrue(code_units["energy"], code_units["energy_tot"])
         self.assertTrue(code_units["energy"], code_units["energy_pot"])
         # Define converter
-        unit_converter = UnitConverter(base_units=base_units, code_units=code_units)
+        unit_converter = UnitConverter(base_registry=base_units, code_registry=code_units)
         self.assertAlmostEqual(round(unit_converter.code_to_base_value("energy"), 3), 0.043)
         # Raise error if quantity not defined in any of the unit registries
         self.assertRaises(ValueError, unit_converter.code_to_base_value, "dimensionless_integer_quantity")
@@ -50,14 +50,14 @@ class TestUnits(unittest.TestCase):
         def return_ones_code():
             return np.ones(10)
 
-        @unit_converter(quantity="energy", conversion="base_units")
+        @unit_converter(quantity="energy", conversion="base_registry")
         def return_ones_ev():
             return np.ones(10)
 
-        @unit_converter(quantity="energy", conversion="code_units")
+        @unit_converter(quantity="energy", conversion="code_registry")
         def return_ones_kj_mol():
             return np.ones(10)
-        print(return_ones_ev())
+
         self.assertEqual(1 * return_ones_kj_mol().units, 1 * code_units["energy"])
         self.assertEqual(1 * return_ones_ev().units, 1 * base_units["energy"])
         self.assertTrue(np.allclose(return_ones_base(), np.ones(10) * 0.0433641))
@@ -66,11 +66,11 @@ class TestUnits(unittest.TestCase):
         # Define dimensionally incorrect units
         code_units.add_quantity(quantity="energy",
                                 unit=pint_registry.N * pint_registry.metre ** 2)
-        unit_converter = UnitConverter(base_units=base_units, code_units=code_units)
+        unit_converter = UnitConverter(base_registry=base_units, code_registry=code_units)
         # Check if dimensionality error raised
         self.assertRaises(pint.DimensionalityError, unit_converter.code_to_base_value, "energy")
         # Try SI units
         code_units.add_quantity(quantity="energy",
                                 unit=pint_registry.N * pint_registry.metre)
-        unit_converter = UnitConverter(base_units=base_units, code_units=code_units)
+        unit_converter = UnitConverter(base_registry=base_units, code_registry=code_units)
         self.assertAlmostEqual(round(unit_converter.code_to_base_value("energy") / 1e18, 3), 6.242)

@@ -29,12 +29,12 @@ class PyironUnitRegistry:
 
     After instantiating, the `pint` units for different physical quantities can be registered as follows
 
-    >>> base_units = PyironUnitRegistry()
-    >>> base_units.add_quantity(quantity="energy", unit=pint_registry.eV, data_type=float)
+    >>> base_registry = PyironUnitRegistry()
+    >>> base_registry.add_quantity(quantity="energy", unit=pint_registry.eV, data_type=float)
 
     Labels corresponding to a particular physical quantity can also be registered
 
-    >>> base_units.add_labels(labels=["energy_tot", "energy_pot"], quantity="energy")
+    >>> base_registry.add_labels(labels=["energy_tot", "energy_pot"], quantity="energy")
 
     For more information on working with `pint`, see: https://pint.readthedocs.io/en/0.10.1/tutorial.html
 
@@ -157,17 +157,17 @@ class UnitConverter:
 
     >>> import pint
     >>> pint_registry = pint.UnitRegistry()
-    >>> base_units = PyironUnitRegistry()
-    >>> base_units.add_quantity(quantity="energy", unit=pint_registry.eV)
-    >>> code_units = PyironUnitRegistry()
-    >>> code_units.add_quantity(quantity="energy",
-    >>>                         unit=1e3 * pint_registry.cal / (pint_registry.mol * pint_registry.N_A))
-    >>> unit_converter = UnitConverter(base_units=base_units, code_units=code_units)
+    >>> base = PyironUnitRegistry()
+    >>> base.add_quantity(quantity="energy", unit=pint_registry.eV)
+    >>> code = PyironUnitRegistry()
+    >>> code.add_quantity(quantity="energy",
+    >>>                         unit=pint_registry.kilocal / (pint_registry.mol * pint_registry.N_A))
+    >>> unit_converter = UnitConverter(base_registry=base, code_registry=code)
 
     The unit converter instance can then be used to obtain conversion factors between code and base units either as a
     `pint` quantity:
 
-    >>> print(unit_converter.code_to_base("energy"))
+    >>> print(unit_converter.code_to_base_pint("energy"))
     0.043364104241800934 electron_volt
 
     or as a scalar:
@@ -187,7 +187,7 @@ class UnitConverter:
     The decorator can also be used to assign units for numpy arrays
     (for more info see https://pint.readthedocs.io/en/0.10.1/numpy.html)
 
-    >>> @unit_converter(quantity="energy", conversion="base_units")
+    >>> @unit_converter(quantity="energy", conversion="base_registry")
     >>> def return_ones_ev():
     >>>     return np.ones(5)
     >>> print(return_ones_ev())
@@ -195,17 +195,17 @@ class UnitConverter:
 
     """
 
-    def __init__(self, base_units, code_units):
+    def __init__(self, base_registry, code_registry):
         """
 
         Args:
-            base_units (pyiron_base.generic.units.PyironUnitRegistry): Base unit registry
-            code_units (pyiron_base.generic.units.PyironUnitRegistry): Code specific unit registry
+            base_registry (pyiron_base.generic.units.PyironUnitRegistry): Base unit registry
+            code_registry (pyiron_base.generic.units.PyironUnitRegistry): Code specific unit registry
         """
-        self._base_units = base_units
-        self._code_units = code_units
+        self._base_registry = base_registry
+        self._code_registry = code_registry
 
-    def code_to_base(self, quantity):
+    def code_to_base_pint(self, quantity):
         """
         Get the conversion factor as a `pint` quantity from code to base units
 
@@ -215,9 +215,9 @@ class UnitConverter:
         Returns:
             pint.quantity.Quantity: Conversion factor as a `pint` quantity
         """
-        return (1 * self._code_units[quantity]).to(self._base_units[quantity])
+        return (1 * self._code_registry[quantity]).to(self._base_registry[quantity])
 
-    def base_to_code(self, quantity):
+    def base_to_code_pint(self, quantity):
         """
         Get the conversion factor as a `pint` quantity from base to code units
 
@@ -227,7 +227,7 @@ class UnitConverter:
         Returns:
             pint.quantity.Quantity: Conversion factor as a `pint` quantity
         """
-        return (1 * self._base_units[quantity]).to(self._code_units[quantity])
+        return (1 * self._base_registry[quantity]).to(self._code_registry[quantity])
 
     def code_to_base_value(self, quantity):
         """
@@ -239,7 +239,7 @@ class UnitConverter:
         Returns:
             float: Conversion factor as a float
         """
-        return self.code_to_base(quantity).magnitude
+        return self.code_to_base_pint(quantity).magnitude
 
     def base_to_code_value(self, quantity):
         """
@@ -251,7 +251,7 @@ class UnitConverter:
         Returns:
             float: Conversion factor as a float
         """
-        return self.base_to_code(quantity).magnitude
+        return self.base_to_code_pint(quantity).magnitude
 
     def __call__(self, conversion, quantity):
         """
@@ -269,7 +269,7 @@ class UnitConverter:
                 @functools.wraps(function)
                 def dec(*args, **kwargs):
                     return np.array(function(*args, **kwargs) * self.code_to_base_value(quantity),
-                                    dtype=self._base_units.get_dtype(quantity))
+                                    dtype=self._base_registry.get_dtype(quantity))
                 return dec
             return _decorate_to_base
         elif conversion == "base_to_code":
@@ -277,24 +277,36 @@ class UnitConverter:
                 @functools.wraps(function)
                 def dec(*args, **kwargs):
                     return np.array(function(*args, **kwargs) * self.base_to_code_value(quantity),
-                                    dtype=self._code_units.get_dtype(quantity))
+                                    dtype=self._code_registry.get_dtype(quantity))
                 return dec
             return _decorate_to_code
-        elif conversion == "base_units":
+        elif conversion == "base_registry":
             def _decorate_base_units(function):
                 @functools.wraps(function)
                 def dec(*args, **kwargs):
-                    return Q_(np.array(function(*args, **kwargs), dtype=self._base_units.get_dtype(quantity)),
-                              self._base_units[quantity])
+                    return Q_(np.array(function(*args, **kwargs), dtype=self._base_registry.get_dtype(quantity)),
+                              self._base_registry[quantity])
                 return dec
             return _decorate_base_units
-        elif conversion == "code_units":
+        elif conversion == "code_registry":
             def _decorate_code_units(function):
                 @functools.wraps(function)
                 def dec(*args, **kwargs):
-                    return Q_(np.array(function(*args, **kwargs), dtype=self._code_units.get_dtype(quantity)),
-                              self._code_units[quantity])
+                    return Q_(np.array(function(*args, **kwargs), dtype=self._code_registry.get_dtype(quantity)),
+                              self._code_registry[quantity])
                 return dec
             return _decorate_code_units
         else:
             raise ValueError("Conversion type {} not implemented!".format(conversion))
+
+    # def code_to_base(self, quantity):
+    #     return self(quantity=quantity, conversion="code_to_base")
+    #
+    # def base_to_code(self, quantity):
+    #     return self(quantity=quantity, conversion="base_to_code")
+    #
+    # def code_units(self, quantity):
+    #     return self(quantity=quantity, conversion="code_registry")
+    #
+    # def base_units(self, quantity):
+    #     return self(quantity=quantity, conversion="base_registry")
