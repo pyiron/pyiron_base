@@ -146,6 +146,10 @@ class TestFlattenedStorage(unittest.TestCase):
             self.fail("add_chunk should not raise an exception when passed a value for an existing per-chunk array.")
         self.assertTrue(np.array_equal(val, cont.get_array("perchunk", 0)),
                         "add_chunk did not remove first axis on a per chunk array!")
+        # test the same, but now let the array be created by add_chunk, instead of doing it on our own
+        cont.add_chunk(2, perelem=[1,1], perchunk2=val[np.newaxis, :])
+        self.assertTrue(np.array_equal(val, cont.get_array("perchunk2", 1)),
+                        "add_chunk did not remove first axis on a per chunk array!")
 
 
     def test_get_array(self):
