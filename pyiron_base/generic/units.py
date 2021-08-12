@@ -188,16 +188,16 @@ class UnitConverter:
     Alternatively, the unit converter can also be used as decorators for functions that return an array scaled into
     appropriate units:
 
-    >>> @unit_converter(quantity="energy", conversion="code_to_base")
+    >>> @unit_converter.code_to_base(quantity="energy")
     ... def return_ones():
     ...    return np.ones(5)
     >>> print(return_ones())
-    [0.0433641 0.0433641 0.0433641 0.0433641 0.0433641]
+    [0.0433641 0.0433641 0.0433641 0.0433641 0.0433641
 
     The decorator can also be used to assign units for numpy arrays
     (for more info see https://pint.readthedocs.io/en/0.10.1/numpy.html)
 
-    >>> @unit_converter(quantity="energy", conversion="base_units")
+    >>> @unit_converter.base_units(quantity="energy")
     ... def return_ones_ev():
     ...     return np.ones(5)
     >>> print(return_ones_ev())
@@ -268,8 +268,13 @@ class UnitConverter:
         Function call operator used as a decorator for functions that return numpy array
 
         Args:
-            conversion (str):
-            quantity (str):
+            conversion (str): Conversion type which should be one of
+                'code_to_base' To multiply by the code to base units conversion factor
+                'base_to_code' To multiply by the base to code units conversion factor
+                'code_units' To assign code units to the nunpy array returned by the decorated function
+                'base_units' To assign base units to the nunpy array returned by the decorated function
+
+            quantity (str): Name of quantity
 
         Returns:
             function: Decorated function
@@ -309,14 +314,56 @@ class UnitConverter:
         else:
             raise ValueError("Conversion type {} not implemented!".format(conversion))
 
-    # def code_to_base(self, quantity):
-    #     return self(quantity=quantity, conversion="code_to_base")
-    #
-    # def base_to_code(self, quantity):
-    #     return self(quantity=quantity, conversion="base_to_code")
-    #
-    # def code_units(self, quantity):
-    #     return self(quantity=quantity, conversion="code_registry")
-    #
-    # def base_units(self, quantity):
-    #     return self(quantity=quantity, conversion="base_registry")
+    def code_to_base(self, quantity):
+        """
+        Decorator for functions that returns a numpy array. Multiples the function output by the code to base units
+        conversion factor
+
+        Args:
+            quantity (str):  Name of the quantity
+
+        Returns:
+            function: Decorated function
+
+        """
+        return self(quantity=quantity, conversion="code_to_base")
+
+    def base_to_code(self, quantity):
+        """
+        Decorator for functions that returns a numpy array. Multiples the function output by the base to code units
+        conversion factor
+
+        Args:
+            quantity (str):  Name of the quantity
+
+        Returns:
+            function: Decorated function
+
+        """
+        return self(quantity=quantity, conversion="base_to_code")
+
+    def code_units(self, quantity):
+        """
+        Decorator for functions that returns a numpy array. Assigns the code unit of the quantity to the function output
+
+        Args:
+            quantity (str):  Name of the quantity
+
+        Returns:
+            function: Decorated function
+
+        """
+        return self(quantity=quantity, conversion="code_units")
+
+    def base_units(self, quantity):
+        """
+        Decorator for functions that returns a numpy array. Assigns the base unit of the quantity to the function output
+
+        Args:
+            quantity (str):  Name of the quantity
+
+        Returns:
+            function: Decorated function
+
+        """
+        return self(quantity=quantity, conversion="base_units")
