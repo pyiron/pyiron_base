@@ -189,8 +189,8 @@ class UnitConverter:
     (for more info see https://pint.readthedocs.io/en/0.10.1/numpy.html)
 
     >>> @unit_converter(quantity="energy", conversion="base_units")
-    >>> def return_ones_ev():
-    >>>     return np.ones(5)
+    ... def return_ones_ev():
+    ...     return np.ones(5)
     >>> print(return_ones_ev())
     [1.0 1.0 1.0 1.0 1.0] electron_volt
 
