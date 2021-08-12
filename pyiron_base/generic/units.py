@@ -63,7 +63,7 @@ class PyironUnitRegistry:
     @property
     def dtype_dict(self):
         """
-        A dictionary of the different physical quantities and the corresponding datatype in which they are to be stored
+        A dictionary of the names of the different physical quantities to the corresponding datatype in which they are to be stored
 
         Returns:
             dict
@@ -103,6 +103,9 @@ class PyironUnitRegistry:
             labels (list/ndarray): List of labels
             quantity (str): Physical quantity associated with the labels
 
+        Raises:
+            ValueError: If quantity is not yet added with :method:`.add_quantity()`
+
         Note: `quantity` should already be a key of unit_dict
 
         """
@@ -138,6 +141,9 @@ class PyironUnitRegistry:
 
         Returns:
             type: Corresponding data type
+
+        Raises:
+            ValueError:
         """
         if quantity in self._unit_dict.keys():
             return self._dtype_dict[quantity]
@@ -179,17 +185,17 @@ class UnitConverter:
     appropriate units:
 
     >>> @unit_converter(quantity="energy", conversion="code_to_base")
-    >>>    def return_ones():
-    >>>        return np.ones(5)
+    ... def return_ones():
+    ...    return np.ones(5)
     >>> print(return_ones())
     [0.0433641 0.0433641 0.0433641 0.0433641 0.0433641]
 
     The decorator can also be used to assign units for numpy arrays
     (for more info see https://pint.readthedocs.io/en/0.10.1/numpy.html)
 
-    >>> @unit_converter(quantity="energy", conversion="base_registry")
-    >>> def return_ones_ev():
-    >>>     return np.ones(5)
+    >>> @unit_converter(quantity="energy", conversion="base_units")
+    ... def return_ones_ev():
+    ...     return np.ones(5)
     >>> print(return_ones_ev())
     [1.0 1.0 1.0 1.0 1.0] electron_volt
 
@@ -199,8 +205,8 @@ class UnitConverter:
         """
 
         Args:
-            base_registry (pyiron_base.generic.units.PyironUnitRegistry): Base unit registry
-            code_registry (pyiron_base.generic.units.PyironUnitRegistry): Code specific unit registry
+            base_registry (:class:`pyiron_base.generic.units.PyironUnitRegistry`): Base unit registry
+            code_registry (:class:`pyiron_base.generic.units.PyironUnitRegistry`): Code specific unit registry
         """
         self._base_registry = base_registry
         self._code_registry = code_registry
@@ -280,7 +286,7 @@ class UnitConverter:
                                     dtype=self._code_registry.get_dtype(quantity))
                 return dec
             return _decorate_to_code
-        elif conversion == "base_registry":
+        elif conversion == "base_units":
             def _decorate_base_units(function):
                 @functools.wraps(function)
                 def dec(*args, **kwargs):
@@ -288,7 +294,7 @@ class UnitConverter:
                               self._base_registry[quantity])
                 return dec
             return _decorate_base_units
-        elif conversion == "code_registry":
+        elif conversion == "code_units":
             def _decorate_code_units(function):
                 @functools.wraps(function)
                 def dec(*args, **kwargs):
