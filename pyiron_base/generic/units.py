@@ -180,8 +180,8 @@ class UnitConverter:
     appropriate units:
 
     >>> @unit_converter(quantity="energy", conversion="code_to_base")
-    >>>    def return_ones():
-    >>>        return np.ones(5)
+    ... def return_ones():
+    ...    return np.ones(5)
     >>> print(return_ones())
     [0.0433641 0.0433641 0.0433641 0.0433641 0.0433641]
 
