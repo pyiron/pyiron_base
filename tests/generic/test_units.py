@@ -71,11 +71,13 @@ class TestUnits(unittest.TestCase):
         # Define dimensionally incorrect units
         code_units.add_quantity(quantity="energy",
                                 unit=pint_registry.N * pint_registry.metre ** 2)
-        unit_converter = UnitConverter(base_registry=base_units, code_registry=code_units)
         # Check if dimensionality error raised
-        self.assertRaises(pint.DimensionalityError, unit_converter.code_to_base_value, "energy")
+        self.assertRaises(pint.DimensionalityError, UnitConverter, base_registry=base_units, code_registry=code_units)
         # Try SI units
         code_units.add_quantity(quantity="energy",
                                 unit=pint_registry.N * pint_registry.metre)
         unit_converter = UnitConverter(base_registry=base_units, code_registry=code_units)
         self.assertAlmostEqual(round(unit_converter.code_to_base_value("energy") / 1e18, 3), 6.242)
+        # Raise error if quantity not defined in base class
+        code_units.add_quantity(quantity="force", unit=pint_registry.N)
+        self.assertRaises(ValueError, UnitConverter, base_registry=base_units, code_registry=code_units)
