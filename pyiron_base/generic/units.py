@@ -215,6 +215,24 @@ class UnitConverter:
         """
         self._base_registry = base_registry
         self._code_registry = code_registry
+        self._check_quantities()
+        self._check_dimensionality()
+
+    def _check_quantities(self):
+        base_quant = list(self._base_registry.unit_dict.keys())
+        for quant in self._code_registry.unit_dict.keys():
+            if quant not in base_quant:
+                raise ValueError("quantity {} is not defined in the base registry".format(quant))
+
+    def _check_dimensionality(self):
+        for quant in self._code_registry.unit_dict.keys():
+            if not self._base_registry[quant].dimensionality == self._code_registry[quant].dimensionality:
+                raise pint.DimensionalityError(self._base_registry[quant], self._code_registry[quant],
+                                               extra_msg="\n Dimensional inequality: Quantity {} has dimensionality {} "
+                                                         "in the base registry but {} in the code "
+                                                         "registry".format(quant,
+                                                                           self._base_registry[quant].dimensionality,
+                                                                           self._code_registry[quant].dimensionality))
 
     def code_to_base_pint(self, quantity):
         """
