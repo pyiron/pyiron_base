@@ -63,7 +63,8 @@ class PyironUnitRegistry:
     @property
     def dtype_dict(self):
         """
-        A dictionary of the names of the different physical quantities to the corresponding datatype in which they are to be stored
+        A dictionary of the names of the different physical quantities to the corresponding datatype in which they are
+        to be stored
 
         Returns:
             dict
@@ -104,7 +105,7 @@ class PyironUnitRegistry:
             quantity (str): Physical quantity associated with the labels
 
         Raises:
-            ValueError: If quantity is not yet added with :method:`.add_quantity()`
+            KeyError: If quantity is not yet added with :method:`.add_quantity()`
 
         Note: `quantity` should already be a key of unit_dict
 
@@ -113,7 +114,7 @@ class PyironUnitRegistry:
             if quantity in self.unit_dict.keys():
                 self._quantity_dict[label] = quantity
             else:
-                raise ValueError("Quantity {} is not defined. Use `add_quantity` to register the unit of this label")
+                raise KeyError("Quantity {} is not defined. Use `add_quantity` to register the unit of this label")
 
     def __getitem__(self, item):
         """
@@ -124,13 +125,16 @@ class PyironUnitRegistry:
 
         Returns:
             pint.unit.Unit/pint.quantity.Quantity: The corresponding `pint` unit/quantity
+
+        Raises:
+            KeyError: If quantity is not yet added with :method:`.add_quantity()` or :method:`.add_labels()`
         """
         if item in self._unit_dict.keys():
             return self._unit_dict[item]
         elif item in self._quantity_dict.keys():
             return self._unit_dict[self._quantity_dict[item]]
         else:
-            raise ValueError("Quantity/label '{}' not registered in this unit registry".format(item))
+            raise KeyError("Quantity/label '{}' not registered in this unit registry".format(item))
 
     def get_dtype(self, quantity):
         """
@@ -143,14 +147,14 @@ class PyironUnitRegistry:
             type: Corresponding data type
 
         Raises:
-            ValueError:
+            KeyError: If quantity is not yet added with :method:`.add_quantity()` or :method:`.add_labels()`
         """
         if quantity in self._unit_dict.keys():
             return self._dtype_dict[quantity]
         elif quantity in self._quantity_dict.keys():
             return self._dtype_dict[self._quantity_dict[quantity]]
         else:
-            raise ValueError("Quantity/label '{}' not registered in this unit registry".format(quantity))
+            raise KeyError("Quantity/label '{}' not registered in this unit registry".format(quantity))
 
 
 class UnitConverter:

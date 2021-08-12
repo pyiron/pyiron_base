@@ -24,15 +24,15 @@ class TestUnits(unittest.TestCase):
                                 unit=pint_registry.kilocal / (pint_registry.mol * pint_registry.N_A))
         code_units.add_labels(labels=["energy_tot", "energy_pot"], quantity="energy")
         # Raise Error for undefined quantity
-        self.assertRaises(ValueError, code_units.add_labels, labels=["mean_forces"], quantity="force")
+        self.assertRaises(KeyError, code_units.add_labels, labels=["mean_forces"], quantity="force")
         self.assertTrue(code_units["energy"], code_units["energy_tot"])
         self.assertTrue(code_units["energy"], code_units["energy_pot"])
         # Define converter
         unit_converter = UnitConverter(base_registry=base_units, code_registry=code_units)
         self.assertAlmostEqual(round(unit_converter.code_to_base_value("energy"), 3), 0.043)
         # Raise error if quantity not defined in any of the unit registries
-        self.assertRaises(ValueError, unit_converter.code_to_base_value, "dimensionless_integer_quantity")
-        self.assertRaises(ValueError, code_units.get_dtype, "dimensionless_integer_quantity")
+        self.assertRaises(KeyError, unit_converter.code_to_base_value, "dimensionless_integer_quantity")
+        self.assertRaises(KeyError, code_units.get_dtype, "dimensionless_integer_quantity")
         # Define dimensionless quantity in the code units registry
         code_units.add_quantity(quantity="dimensionless_integer_quantity", unit=dim_less_q(1), data_type=int)
         self.assertIsInstance(code_units.get_dtype("dimensionless_integer_quantity"), int.__class__)
@@ -50,11 +50,11 @@ class TestUnits(unittest.TestCase):
         def return_ones_code():
             return np.ones(10)
 
-        @unit_converter(quantity="energy", conversion="base_registry")
+        @unit_converter(quantity="energy", conversion="base_units")
         def return_ones_ev():
             return np.ones(10)
 
-        @unit_converter(quantity="energy", conversion="code_registry")
+        @unit_converter(quantity="energy", conversion="code_units")
         def return_ones_kj_mol():
             return np.ones(10)
 
