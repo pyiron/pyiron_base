@@ -18,6 +18,11 @@ class TestUnits(unittest.TestCase):
         self.assertRaises(ValueError, base_units.add_quantity, quantity="energy", unit="eV")
         dim_less_q = pint_registry.Quantity
         base_units.add_quantity(quantity="dimensionless_integer_quantity", unit=dim_less_q(1), data_type=int)
+        self.assertIsInstance(base_units.quantity_dict, dict)
+        self.assertIsInstance(base_units.unit_dict, dict)
+        self.assertEqual(base_units.unit_dict["energy"], pint_registry.eV)
+        self.assertIsInstance(base_units.dtype_dict, dict)
+        self.assertIsInstance(base_units.dtype_dict["energy"], float.__class__)
         code_units = PyironUnitRegistry()
         # Define unit kJ/mol
         code_units.add_quantity(quantity="energy",
