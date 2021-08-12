@@ -114,7 +114,8 @@ class PyironUnitRegistry:
             if quantity in self.unit_dict.keys():
                 self._quantity_dict[label] = quantity
             else:
-                raise KeyError("Quantity {} is not defined. Use `add_quantity` to register the unit of this label")
+                raise KeyError("Quantity {} is not defined. "
+                               "Use `add_quantity` to register the unit of this label".format(quantity))
 
     def __getitem__(self, item):
         """
