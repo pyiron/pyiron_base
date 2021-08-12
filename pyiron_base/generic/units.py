@@ -104,7 +104,8 @@ class PyironUnitRegistry:
             quantity (str): Physical quantity associated with the labels
 
         Note: `quantity` should already be a key of unit_dict
-
+Raises:
+    ValueError: if quantity is not yet added with :method:`.add_quantity()`.
         """
         for label in labels:
             if quantity in self.unit_dict.keys():
