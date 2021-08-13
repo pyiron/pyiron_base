@@ -61,16 +61,21 @@ class TestWithDocstrings(unittest.TestCase, ABC):
     """
     Tests that also include testing the docstrings in the specified modules
     """
-    def test_docstrings(self, module):
-        """
-        Fails with output if docstrings in the given module fails
 
-        Args:
-            module (module/string): The module or path to the module
+    @property
+    def docstring_module(self):
+        """
+        Define module whose docstrings will be tested
+        """
+        return None
+
+    def test_docstrings(self):
+        """
+        Fails with output if docstrings in the given module fails.
 
         Output capturing adapted from https://stackoverflow.com/a/22434594/12332968
         """
         with StringIO() as buf, redirect_stdout(buf):
-            result = doctest.testmod(module)
+            result = doctest.testmod(self.docstring_module)
             output = buf.getvalue()
         self.failIf(result.failed > 0, msg=output)
