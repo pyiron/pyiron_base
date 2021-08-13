@@ -172,19 +172,19 @@ class UnitConverter:
     >>> base.add_quantity(quantity="energy", unit=pint_registry.eV)
     >>> code = PyironUnitRegistry()
     >>> code.add_quantity(quantity="energy",
-    >>>                         unit=pint_registry.kilocal / (pint_registry.mol * pint_registry.N_A))
+    ...                         unit=pint_registry.kilocal / (pint_registry.mol * pint_registry.N_A))
     >>> unit_converter = UnitConverter(base_registry=base, code_registry=code)
 
     The unit converter instance can then be used to obtain conversion factors between code and base units either as a
     `pint` quantity:
 
     >>> print(unit_converter.code_to_base_pint("energy"))
-    0.043364104241800934 electron_volt
+    0.04336410424180094 electron_volt
 
     or as a scalar:
 
     >>> print(unit_converter.code_to_base_value("energy"))
-    0.043364104241800934
+    0.04336410424180094
 
     Alternatively, the unit converter can also be used as decorators for functions that return an array scaled into
     appropriate units:
@@ -193,7 +193,7 @@ class UnitConverter:
     ... def return_ones():
     ...    return np.ones(5)
     >>> print(return_ones())
-    [0.0433641 0.0433641 0.0433641 0.0433641 0.0433641
+    [0.0433641 0.0433641 0.0433641 0.0433641 0.0433641]
 
     The decorator can also be used to assign units for numpy arrays
     (for more info see https://pint.readthedocs.io/en/0.10.1/numpy.html)
