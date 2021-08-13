@@ -2,19 +2,20 @@
 # Copyright (c) Max-Planck-Institut für Eisenforschung GmbH - Computational Materials Design (CM) Department
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
-from contextlib import redirect_stdout
-import doctest
-from io import StringIO
 import numpy as np
+from pyiron_base._tests import TestWithDocstrings
 import pyiron_base
 from pyiron_base.generic.units import PyironUnitRegistry, UnitConverter
-import unittest
 import pint
 
 pint_registry = pint.UnitRegistry()
 
 
-class TestUnits(unittest.TestCase):
+class TestUnits(TestWithDocstrings):
+
+    @property
+    def docstring_module(self):
+        return pyiron_base.generic.units
 
     def test_units(self):
         base_units = PyironUnitRegistry()
@@ -85,25 +86,3 @@ class TestUnits(unittest.TestCase):
         # Raise error if quantity not defined in base class
         code_units.add_quantity(quantity="force", unit=pint_registry.N)
         self.assertRaises(ValueError, UnitConverter, base_registry=base_units, code_registry=code_units)
-
-    def test_docstrings(self):
-        # Fails if docstrings fail
-        # Capturing output adapted from https://stackoverflow.com/a/22434594/12332968
-        with StringIO() as buf, redirect_stdout(buf):
-            result = doctest.testmod(pyiron_base.generic.units)
-            output = buf.getvalue()
-        self.failIf(result.failed > 0, msg=output)
-
-# from contextlib import redirect_stdout
-# import doctest
-# from io import StringIO
-
-# class TestWithDocstrings(unittest.TestCase, ABC):
-#
-#     def test_docstrings(self, module):
-#         # Fails if docstrings fail
-#         # Capturing output adapted from https://stackoverflow.com/a/22434594/12332968
-#         with StringIO() as buf, redirect_stdout(buf):
-#             result = doctest.testmod(module)
-#             output = buf.getvalue()
-#         self.failIf(result.failed > 0, msg=output)
