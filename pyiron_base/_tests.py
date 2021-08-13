@@ -4,12 +4,16 @@
 
 """Classes to help developers avoid code duplication when writing tests for pyiron."""
 
+from contextlib import redirect_stdout
+import doctest
+from io import StringIO
 import unittest
 from os.path import split, join
 from os import remove
 from pyiron_base.project.generic import Project
 from abc import ABC
 from inspect import getfile
+
 
 __author__ = "Liam Huber"
 __copyright__ = (
@@ -50,3 +54,23 @@ class TestWithCleanProject(TestWithProject, ABC):
 
     def tearDown(self):
         self.project.remove_jobs_silently(recursive=True)
+
+
+class TestWithDocstrings(unittest.TestCase, ABC):
+
+    """
+    Tests that also include testing the docstrings in the specified modules
+    """
+    def test_docstrings(self, module):
+        """
+        Fails with output if docstrings in the given module fails
+
+        Args:
+            module (module/string): The module or path to the module
+
+        Output capturing adapted from https://stackoverflow.com/a/22434594/12332968
+        """
+        with StringIO() as buf, redirect_stdout(buf):
+            result = doctest.testmod(module)
+            output = buf.getvalue()
+        self.failIf(result.failed > 0, msg=output)
