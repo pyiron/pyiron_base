@@ -1,9 +1,9 @@
-import unittest
 import numpy as np
 
+from pyiron_base._tests import TestWithProject
 from pyiron_base.generic.flattenedstorage import FlattenedStorage
 
-class TestFlattenedStorage(unittest.TestCase):
+class TestFlattenedStorage(TestWithProject):
 
     @classmethod
     def setUpClass(cls):
@@ -199,3 +199,30 @@ class TestFlattenedStorage(unittest.TestCase):
         self.assertEqual(info["per"], "element", "has_array returns wrong per for per atom array.")
 
         self.assertEqual(store.has_array("missing"), None, "has_array does not return None for nonexisting array.")
+
+
+    def test_hdf_chunklength_one(self):
+        """Reading a storage with all chunks of length one should give back exactly what was written!"""
+        # Regression test if all stored chunks are of length 1: there used to be a bug that read all arrays as per
+        # element in this case
+        store = FlattenedStorage()
+        store.add_array('foo', dtype=np.int64, shape=(), per="element")
+        store.add_array('bar', dtype=np.int64, shape=(), per="chunk")
+        for i in range(5):
+            store.add_chunk(1, foo=i, bar=i**2)
+        hdf = self.project.create_hdf(self.project.path, "test")
+        store.to_hdf(hdf)
+        read = FlattenedStorage()
+        try:
+            read.from_hdf(hdf)
+        except RuntimeError as e:
+            self.fail(f"Reading storage from HDF failed with {e}")
+        self.assertEqual(len(store), len(read), "Length not equal after reading from HDF!")
+        for i in range(5):
+            store_foo = store.get_array("foo", i)
+            read_foo = read.get_array("foo", i)
+            self.assertTrue(np.array_equal(store_foo, read_foo),
+                            f"per element values not equal after reading from HDF! {store_foo} != {read_foo}")
+            self.assertEqual(store.get_array("bar", i), read.get_array("bar", i),
+                             "per chunk values not equal after reading from HDF!")
+

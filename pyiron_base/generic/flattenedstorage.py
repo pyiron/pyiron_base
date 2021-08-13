@@ -18,8 +18,6 @@ __status__ = "production"
 __date__ = "Jul 16, 2020"
 
 
-from itertools import chain
-
 import numpy as np
 import h5py
 
@@ -132,7 +130,7 @@ class FlattenedStorage:
     """
 
     __version__ = "0.1.0"
-    __hdf_version__ = "0.1.0"
+    __hdf_version__ = "0.2.0"
 
     def __init__(self, num_chunks=1, num_elements=1, **kwargs):
         """
@@ -465,6 +463,21 @@ class FlattenedStorage:
         hdf["OBJECT"] = self.__class__.__name__
 
     def to_hdf(self, hdf, group_name="flat_storage"):
+
+        def write_array(name, array, hdf):
+            if array.dtype.char == "U":
+                # numpy stores unicode data in UTF-32/UCS-4, but h5py wants UTF-8, so we manually encode them here
+                # TODO: string arrays with shape != () not handled
+                hdf[name] = np.array([s.encode("utf8") for s in array],
+                                     # each character in a utf8 string might be encoded in up to 4 bytes, so to
+                                     # make sure we can store any string of length n we tell h5py that the
+                                     # string will be 4 * n bytes; numpy's dtype does this calculation already
+                                     # in itemsize, so we don't need to repeat it here
+                                     # see also https://docs.h5py.org/en/stable/strings.html
+                                     dtype=h5py.string_dtype('utf8', array.dtype.itemsize))
+            else:
+                hdf[name] = array
+
         # truncate arrays to necessary size before writing
         self._resize_elements(self.num_elements)
         self._resize_chunks(self.num_chunks)
@@ -474,41 +487,63 @@ class FlattenedStorage:
             hdf_s_lst["num_elements"] =  self._num_elements_alloc
             hdf_s_lst["num_chunks"] = self._num_chunks_alloc
 
-            hdf_arrays = hdf_s_lst.open("arrays")
-            for k, a in chain(self._per_element_arrays.items(), self._per_chunk_arrays.items()):
-                if a.dtype.char == "U":
-                    # numpy stores unicode data in UTF-32/UCS-4, but h5py wants UTF-8, so we manually encode them here
-                    # TODO: string arrays with shape != () not handled
-                    hdf_arrays[k] = np.array([s.encode("utf8") for s in a],
-                                             # each character in a utf8 string might be encoded in up to 4 bytes, so to
-                                             # make sure we can store any string of length n we tell h5py that the
-                                             # string will be 4 * n bytes; numpy's dtype does this calculation already
-                                             # in itemsize, so we don't need to repeat it here
-                                             # see also https://docs.h5py.org/en/stable/strings.html
-                                             dtype=h5py.string_dtype('utf8', a.dtype.itemsize))
-                else:
-                    hdf_arrays[k] = a
+            hdf_arrays = hdf_s_lst.open("element_arrays")
+            for k, a in self._per_element_arrays.items():
+                write_array(k, a, hdf_arrays)
+
+            hdf_arrays = hdf_s_lst.open("chunk_arrays")
+            for k, a in self._per_chunk_arrays.items():
+                write_array(k, a, hdf_arrays)
 
     def from_hdf(self, hdf, group_name="flat_storage"):
+
+        def read_array(name, hdf):
+            a = np.array(hdf[name])
+            if a.dtype.char == "S":
+                # if saved as bytes, we wrote this as an encoded unicode string, so manually decode here
+                # TODO: string arrays with shape != () not handled
+                a = np.array([s.decode("utf8") for s in a],
+                            # itemsize of original a is four bytes per character, so divide by four to get
+                            # length of the orignal stored unicode string; np.dtype('U1').itemsize is just a
+                            # platform agnostic way of knowing how wide a unicode charater is for numpy
+                            dtype=f"U{a.dtype.itemsize//np.dtype('U1').itemsize}")
+            return a
+
         with hdf.open(group_name) as hdf_s_lst:
             version = hdf_s_lst.get("HDF_VERSION", "0.0.0")
-            num_chunks = hdf_s_lst["num_chunks"] or hdf_s_lst["num_structures"]
-            num_elements = hdf_s_lst["num_elements"] or hdf_s_lst["num_atoms"]
+            try:
+                num_chunks = hdf_s_lst["num_chunks"]
+                num_elements = hdf_s_lst["num_elements"]
+            except ValueError:
+                num_chunks = hdf_s_lst["num_structures"]
+                num_elements = hdf_s_lst["num_atoms"]
+
             self._num_chunks_alloc = self.num_chunks = self.current_chunk_index = num_chunks
             self._num_elements_alloc = self.num_elements = self.current_element_index = num_elements
 
-            with hdf_s_lst.open("arrays") as hdf_arrays:
-                for k in hdf_arrays.list_nodes():
-                    a = np.array(hdf_arrays[k])
-                    if a.dtype.char == "S":
-                        # if saved as bytes, we wrote this as an encoded unicode string, so manually decode here
-                        # TODO: string arrays with shape != () not handled
-                        a = np.array([s.decode("utf8") for s in a],
-                                    # itemsize of original a is four bytes per character, so divide by four to get
-                                    # length of the orignal stored unicode string; np.dtype('U1').itemsize is just a
-                                    # platform agnostic way of knowing how wide a unicode charater is for numpy
-                                    dtype=f"U{a.dtype.itemsize//np.dtype('U1').itemsize}")
-                    if a.shape[0] == self._num_elements_alloc:
-                        self._per_element_arrays[k] = a
-                    elif a.shape[0] == self._num_chunks_alloc:
-                        self._per_chunk_arrays[k] = a
+            if version == "0.1.0":
+                with hdf_s_lst.open("arrays") as hdf_arrays:
+                    for k in hdf_arrays.list_nodes():
+                        a = read_array(k, hdf_arrays)
+                        if a.shape[0] == self._num_elements_alloc:
+                            self._per_element_arrays[k] = a
+                        elif a.shape[0] == self._num_chunks_alloc:
+                            self._per_chunk_arrays[k] = a
+            elif version == "0.2.0":
+                with hdf_s_lst.open("element_arrays") as hdf_arrays:
+                    for k in hdf_arrays.list_nodes():
+                        self._per_element_arrays[k] = read_array(k, hdf_arrays)
+                with hdf_s_lst.open("chunk_arrays") as hdf_arrays:
+                    for k in hdf_arrays.list_nodes():
+                        self._per_chunk_arrays[k] = read_array(k, hdf_arrays)
+            else:
+                raise RuntimeError(f"Unsupported HDF version {version}; use an older version of pyiron to load this job!")
+
+            for k, a in self._per_chunk_arrays.items():
+                if a.shape[0] != self._num_chunks_alloc:
+                    raise RuntimeError(f"per-chunk array {k} read inconsistently from HDF: "
+                                       f"shape {a.shape[0]} does not match global allocation {self._num_chunks_alloc}!")
+            for k, a in self._per_element_arrays.items():
+                if a.shape[0] != self._num_elements_alloc:
+                    raise RuntimeError(f"per-element array {k} read inconsistently from HDF: "
+                                       f"shape {a.shape[0]} does not match global allocation {self._num_elements_alloc}!")
