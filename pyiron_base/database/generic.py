@@ -28,7 +28,7 @@ from sqlalchemy.pool import NullPool
 from sqlalchemy.sql import select
 from sqlalchemy.exc import OperationalError, DatabaseError
 from threading import Thread, Lock
-from queue import SimpleQueue
+from queue import SimpleQueue, Empty as QueueEmpty
 
 __author__ = "Murat Han Celik"
 __copyright__ = (
@@ -86,7 +86,10 @@ class ConnectionWatchDog(Thread):
         Starts the watchdog.
         """
         while True:
-            kicked = self._queue.get(timeout=self._timeout)
+            try:
+                kicked = self._queue.get(timeout=self._timeout)
+            except QueueEmpty:
+                kicked = False
             if not kicked:
                 with self._lock:
                     try:
