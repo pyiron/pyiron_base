@@ -482,7 +482,7 @@ class TestDataContainer(TestWithCleanProject):
         self.assertTrue(not isinstance(ll._store[0], HDFStub),
                         "Loaded value not stored back into container!")
 
-    def test_stub(self):
+    def test_stub_sublasses(self):
         """Sub classes of DataContainer should also be able to be lazily loaded."""
 
         sl = Sub(self.pl.to_builtin())
