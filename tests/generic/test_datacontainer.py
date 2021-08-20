@@ -488,8 +488,6 @@ class TestDataContainer(TestWithCleanProject):
         sl = Sub(self.pl.to_builtin())
 
         sl.to_hdf(self.hdf, "lazy_sub")
-        # breakpoint()
-        # ll = self.hdf["lazy_sub"].to_object(lazy=True)
         ll = Sub(lazy=True)
         ll.from_hdf(self.hdf, "lazy_sub")
         self.assertTrue(all(isinstance(v, HDFStub) for v in ll._store),
