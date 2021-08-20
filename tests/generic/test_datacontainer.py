@@ -468,7 +468,7 @@ class TestDataContainer(TestWithCleanProject):
         self.assertTrue(all(isinstance(v, HDFStub) for v in ll._store),
                         "Not all values loaded as stubs!")
 
-        ll_repr = repr(ll)
+        repr(ll)
         self.assertTrue(all(isinstance(v, HDFStub) for v in ll._store),
                         "Some stubs have been loaded after getting string repr of container!")
 
@@ -495,7 +495,7 @@ class TestDataContainer(TestWithCleanProject):
         self.assertTrue(all(isinstance(v, HDFStub) for v in ll._store),
                         "Not all values loaded as stubs!")
 
-        ll_repr = repr(ll)
+        repr(ll)
         self.assertTrue(all(isinstance(v, HDFStub) for v in ll._store),
                         "Some stubs have been loaded after getting string repr of container!")
 
