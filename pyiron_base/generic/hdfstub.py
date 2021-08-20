@@ -75,7 +75,7 @@ class HDFStub:
         Args:
             type (type): class to be registered
             load (function): callback that is called on :method:`.load` when the type matches `type_name`, must
-                             accept `hdf` and `group_name` corresponding to the init paramters of this class and return
+                             accept `hdf` and `group_name` corresponding to the init parameters of this class and return
                              (lazily) loaded object
         """
         cls._load_functions[str(type)] = load
