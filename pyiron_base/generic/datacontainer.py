@@ -12,8 +12,9 @@ from collections.abc import Sequence, Set, Mapping, MutableMapping
 
 import numpy as np
 
+from pyiron_base.generic.fileio import read, write
+from pyiron_base.generic.hdfstub import HDFStub
 from pyiron_base.interfaces.has_groups import HasGroups
-from .fileio import read, write
 
 __author__ = "Marvin Poul"
 __copyright__ = (
@@ -47,7 +48,6 @@ def _normalize(key):
         return _normalize(key[0])
 
     return key
-
 
 class DataContainer(MutableMapping, HasGroups):
     """
@@ -157,7 +157,6 @@ class DataContainer(MutableMapping, HasGroups):
     >>> list(pl.keys())
     [0, 1, 2, 3]
 
-
     Implements :class:`.HasGroups`.  Groups are nested data containers and nodes are everything else.
 
     >>> p = DataContainer({"a": 42, "b": [0, 1, 2]})
@@ -165,6 +164,12 @@ class DataContainer(MutableMapping, HasGroups):
     ['b']
     >>> p.list_nodes()
     ['a']
+
+    If instantiated with the argument `lazy=True`, data read from HDF5 later via :method:`.from_hdf` are not actually
+    read, but only earmarked to be read later when actually accessed via :class:`.HDFStub`.  This is largely
+    transparent, i.e. when accessing an earmarked value it will automatically be loaded and this loaded value is stored
+    in container.  The only difference is in the string representation of the container, values not read yet appear as
+    'HDFStub(...)' in the output.
 
     .. attention:: Subclasses beware!
 
@@ -183,13 +188,14 @@ class DataContainer(MutableMapping, HasGroups):
         of attributes it is better to create a new class that has an DataContainer as an attribute and dispatch to the
         :meth:`DataContainer.from_hdf`, :meth:`DataContainer.to_hdf` and :meth:`DataContainer._repr_json_`
         methods.
+        4. To allow lazy loading sub classes must accept a `lazy` keyword argument and pass it to `super().__init__`.
 
 
     A few examples for subclasses
 
     >>> class ExtendedContainer(DataContainer):
-    ...     def __init__(self, init=None, my_fancy_field=42, table_name=None):
-    ...         super().__init__(init=init, table_name=table_name)
+    ...     def __init__(self, init=None, my_fancy_field=42, table_name=None, lazy=False):
+    ...         super().__init__(init=init, table_name=table_name, lazy=lazy)
     ...         object.__setattr__(self, "my_fancy_field", my_fancy_field)
 
     After defining it once like this you can access my_fancy_field as a normal attribute, but it will not be stored in
@@ -245,11 +251,22 @@ class DataContainer(MutableMapping, HasGroups):
         object.__setattr__(instance, "_indices", {})
         object.__setattr__(instance, "table_name", None)
         object.__setattr__(instance, "_read_only", False)
+        object.__setattr__(instance, "_lazy", False)
 
         return instance
 
-    def __init__(self, init=None, table_name=None):
+    def __init__(self, init=None, table_name=None, lazy=False):
+        """
+        Create new container.
+
+        Args:
+            init (Sequence, Mapping): initial data for the container, nested occurances of Sequence and Mapping are
+                                      translated to nested containers
+            table_name (str): default name of the data container in HDF5
+            lazy (bool): if True, use :class:`.HDFStub` to load values lazily from HDF5
+        """
         self.table_name = table_name
+        self._lazy = lazy
         if init is not None:
             self.update(init, wrap=True)
 
@@ -272,13 +289,23 @@ class DataContainer(MutableMapping, HasGroups):
 
         elif isinstance(key, int):
             try:
-                return self._store[key]
+                v = self._store[key]
+                if not isinstance(v, HDFStub):
+                    return v
+                else:
+                    v = self._store[key] = v.load()
+                    return v
             except IndexError:
                 raise IndexError("list index out of range") from None
 
         elif isinstance(key, str):
             try:
-                return self._store[self._indices[key]]
+                v = self._store[self._indices[key]]
+                if not isinstance(v, HDFStub):
+                    return v
+                else:
+                    v = self._store[self._indices[key]] = v.load()
+                    return v
             except KeyError:
                 raise KeyError(repr(key)) from None
 
@@ -383,7 +410,10 @@ class DataContainer(MutableMapping, HasGroups):
     def __repr__(self):
         name = self.__class__.__name__
         if self.has_keys():
-            return name + "({" + ", ".join("{!r}: {!r}".format(k, v) for k, v in self.items()) + "})"
+            # access _store and _indices directly to avoid forcing HDFStubs
+            index2key = {v: k for k, v in self._indices.items()}
+            return name + "({" + ", ".join("{!r}: {!r}".format(index2key.get(i, i), self._store[i])
+                                                for i in range(len(self))) + "})"
         else:
             return name + "([" + ", ".join("{!r}".format(v) for v in self._store) + "])"
 
@@ -740,9 +770,11 @@ class DataContainer(MutableMapping, HasGroups):
             for n in hdf.list_nodes():
                 if n in _internal_hdf_nodes:
                     continue
-                items.append( (*normalize_key(n), hdf[n]))
+                items.append( (*normalize_key(n), hdf[n] if not self._lazy else HDFStub(hdf, n)) )
             for g in hdf.list_groups():
-                items.append( (*normalize_key(g), hdf[g].to_object()))
+                items.append( (*normalize_key(g), hdf[g].to_object() if not self._lazy else HDFStub(hdf, g)) )
+
+
             for _, k, v in sorted(items, key=lambda x: x[0]):
                 self[k] = v
 
@@ -803,3 +835,10 @@ class DataContainer(MutableMapping, HasGroups):
             file_name(str): the name of the file to be writen to.
         """
         write(self.to_builtin(), file_name)
+
+    def __init_subclass__(cls):
+        # called whenever a subclass of DataContainer is defined, then register all subclasses with the same function
+        # that the DataContainer is registered
+        HDFStub.register(cls, lambda h, g: h[g].to_object(lazy=True))
+
+HDFStub.register(DataContainer, lambda h, g: h[g].to_object(lazy=True))
