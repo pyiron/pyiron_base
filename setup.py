@@ -37,6 +37,7 @@ setup(
         'numpy==1.21.2',
         'pandas==1.3.2',
         'pathlib2==2.3.6',
+        'pint==0.17',
         'psutil==5.8.0',
         'pyfileindex==0.0.6',
         'pysqa==0.0.15',
