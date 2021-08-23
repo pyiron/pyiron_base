@@ -68,3 +68,13 @@ def setup_logger():
         logger.addHandler(fh)
 
     return logger
+
+_logger = setup_logger()
+def get_logger():
+    """
+    Return global instance of the default logger to the log file at `pyiron.log`.
+
+    This exists only to circumvent recursive imports for modules that implement functionality for :class:`.Settings`,
+    normal code should rely on the logger defined at :attribute:`.Settings.logger`.
+    """
+    return _logger

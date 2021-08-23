@@ -5,11 +5,12 @@
 DatabaseAccess class deals with accessing the database
 """
 
+import pyiron_base.settings.logger
+
 import numpy as np
 import re
 import time
 import warnings
-import logging
 import os
 from datetime import datetime
 from sqlalchemy import (
@@ -120,7 +121,7 @@ class AutorestoredConnection:
         self._conn = None
         self._lock = Lock()
         self._watchdog = None
-        self._logger = logging.getLogger("pyiron_log")
+        self._logger = pyiron_base.settings.logger.get_logger()
 
     def execute(self, *args, **kwargs):
         while True:
