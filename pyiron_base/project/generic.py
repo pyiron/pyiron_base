@@ -489,22 +489,26 @@ class Project(ProjectPath, HasGroups):
     @staticmethod
     def get_repository_status():
         """
-        Finds the hashes for every `pyiron` module available.
+        Finds the hashes and versions for every `pyiron` module available.
 
         Returns:
-            pandas.DataFrame: The name of each module and the hash for its current git head.
+            pandas.DataFrame: The name of each module and the hash and version for its current git head.
         """
         module_names = [name for _, name, _ in pkgutil.iter_modules() if name.startswith("pyiron")]
 
-        report = pandas.DataFrame(columns=['Module', 'Git head'], index=range(len(module_names)))
+        report = pandas.DataFrame(columns=['Module', 'Git head', 'Version'], index=range(len(module_names)))
         for i, name in enumerate(module_names):
+            module = importlib.import_module(name)
             try:
-                module = importlib.import_module(name)
                 repo = Repo(os.path.dirname(os.path.dirname(module.__file__)))
                 hash_ = repo.head.reference.commit.hexsha
-                report.loc[i] = [name, hash_]
             except InvalidGitRepositoryError:
-                report.loc[i] = [name, 'Not a repo']
+                hash_ = 'Not a repo'
+            try:
+                version = module.__version__
+            except AttributeError:
+                version = "not defined"
+            report.loc[i] = [name, hash_, version]
 
         return report
 
