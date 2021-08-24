@@ -5,6 +5,8 @@
 DatabaseAccess class deals with accessing the database
 """
 
+import pyiron_base.settings.logger
+
 import numpy as np
 import re
 import time
@@ -40,6 +42,7 @@ __maintainer__ = "Jan Janssen"
 __email__ = "janssen@mpie.de"
 __status__ = "production"
 __date__ = "Sep 1, 2017"
+
 
 class ConnectionWatchDog(Thread):
     """
@@ -111,21 +114,23 @@ class ConnectionWatchDog(Thread):
         self._queue.put(False)
         self.join()
 
+
 class AutorestoredConnection:
     def __init__(self, engine):
         self.engine = engine
         self._conn = None
         self._lock = Lock()
         self._watchdog = None
+        self._logger = pyiron_base.settings.logger.get_logger()
 
     def execute(self, *args, **kwargs):
         while True:
             try:
                 if self._conn is None or self._conn.closed:
                     if self._conn is None:
-                        print("Reconnecting to DB; connection not existing.")
+                        self._logger.info("Reconnecting to DB; connection not existing.")
                     else:
-                        print("Reconnecting to DB; connection closed.")
+                        self._logger.info("Reconnecting to DB; connection closed.")
                     self._conn = self.engine.connect()
                     if self._watchdog is not None:
                         # in case connection is dead, but watchdog is still up, something else killed the connection,
