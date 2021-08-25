@@ -432,12 +432,12 @@ class Settings(metaclass=Singleton):
                 self._configuration["sql_view_user_key"] = parser.get(
                     section, "VIEWERPASSWD"
                 )
-            self._configuration["connection_timeout"] = parser.get(section, "connection_timeout", default=60)
+            self._configuration["connection_timeout"] = parser.get(section, "connection_timeout", fallback=60)
         elif self._configuration["sql_type"] == "SQLalchemy":
             self._configuration["sql_connection_string"] = parser.get(
                 section, "CONNECTION"
             )
-            self._configuration["connection_timeout"] = parser.get(section, "connection_timeout", default=60)
+            self._configuration["connection_timeout"] = parser.get(section, "connection_timeout", fallback=60)
         else:  # finally we assume an SQLite connection
             if parser.has_option(section, "FILE"):
                 self._configuration["sql_file"] = parser.get(section, "FILE").replace(
