@@ -116,12 +116,13 @@ class ConnectionWatchDog(Thread):
 
 
 class AutorestoredConnection:
-    def __init__(self, engine):
+    def __init__(self, engine, timeout=60):
         self.engine = engine
         self._conn = None
         self._lock = Lock()
         self._watchdog = None
         self._logger = pyiron_base.settings.logger.get_logger()
+        self._timeout = timeout
 
     def execute(self, *args, **kwargs):
         while True:
@@ -132,13 +133,15 @@ class AutorestoredConnection:
                     else:
                         self._logger.info("Reconnecting to DB; connection closed.")
                     self._conn = self.engine.connect()
-                    if self._watchdog is not None:
-                        # in case connection is dead, but watchdog is still up, something else killed the connection,
-                        # make the watchdog quit, then making a new one
-                        self._watchdog.kill()
-                    self._watchdog = ConnectionWatchDog(self._conn, self._lock)
-                    self._watchdog.start()
-                self._watchdog.kick()
+                    if self._timeout > 0:
+                        if self._watchdog is not None:
+                            # in case connection is dead, but watchdog is still up, something else killed the connection,
+                            # make the watchdog quit, then making a new one
+                            self._watchdog.kill()
+                        self._watchdog = ConnectionWatchDog(self._conn, self._lock, timeout=self._timeout)
+                        self._watchdog.start()
+                if self._timeout > 0:
+                    self._watchdog.kick()
                 with self._lock:
                     result = self._conn.execute(*args, **kwargs)
                     break
@@ -166,7 +169,7 @@ class DatabaseAccess(object):
     Murat Han Celik
     """
 
-    def __init__(self, connection_string, table_name):
+    def __init__(self, connection_string, table_name, timeout=60):
         """
         Initialize the Database connection
 
@@ -175,9 +178,11 @@ class DatabaseAccess(object):
                                      typical form: dialect+driver://username:password@host:port/database
                                      example: 'postgresql://scott:tiger@cmcent56.mpie.de/mdb'
             table_name (str): database table name, a simple string like: 'simulation'
+            timeout (int): time in seconds before unused database connection are closed
         """
         self.table_name = table_name
         self._keep_connection = False
+        self._timeout = timeout
         self._sql_lite = "sqlite" in connection_string
         try:
             if not self._sql_lite:
@@ -186,8 +191,8 @@ class DatabaseAccess(object):
                     connect_args={"connect_timeout": 15},
                     poolclass=NullPool,
                 )
-                self.conn = AutorestoredConnection(self._engine)
-                self._keep_connection = True
+                self.conn = AutorestoredConnection(self._engine, timeout=self._timeout)
+                self._keep_connection = self._timeout > 0
             else:
                 self._engine = create_engine(connection_string)
                 self.conn = self._engine.connect()

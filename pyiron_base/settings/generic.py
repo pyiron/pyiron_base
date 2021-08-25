@@ -60,6 +60,7 @@ class Settings(metaclass=Singleton):
             "user": "pyiron",
             "resource_paths": [],
             "project_paths": [],
+            "connection_timeout": 60,
             "sql_connection_string": None,
             "sql_table_name": "jobs_pyiron",
             "sql_view_connection_string": None,
@@ -200,6 +201,7 @@ class Settings(metaclass=Singleton):
             self._database = DatabaseAccess(
                 self._configuration["sql_connection_string"],
                 self._configuration["sql_table_name"],
+                timeout=self._configuration["connection_timeout"]
             )
 
     def switch_to_local_database(self, file_name="pyiron.db", cwd=None):
@@ -416,10 +418,12 @@ class Settings(metaclass=Singleton):
                 self._configuration["sql_view_user_key"] = parser.get(
                     section, "VIEWERPASSWD"
                 )
+            self._configuration["connection_timeout"] = parser.get(section, "connection_timeout", default=60)
         elif self._configuration["sql_type"] == "SQLalchemy":
             self._configuration["sql_connection_string"] = parser.get(
                 section, "CONNECTION"
             )
+            self._configuration["connection_timeout"] = parser.get(section, "connection_timeout", default=60)
         else:  # finally we assume an SQLite connection
             if parser.has_option(section, "FILE"):
                 self._configuration["sql_file"] = parser.get(section, "FILE").replace(
