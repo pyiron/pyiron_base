@@ -10,7 +10,6 @@ import pyiron_base.settings.logger
 import numpy as np
 import re
 import time
-import warnings
 import os
 from datetime import datetime
 from sqlalchemy import (
