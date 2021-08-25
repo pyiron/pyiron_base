@@ -128,12 +128,14 @@ class AutorestoredConnection:
         while True:
             try:
                 if self._conn is None or self._conn.closed:
-                    if self._conn is None:
-                        self._logger.info("Reconnecting to DB; connection not existing.")
-                    else:
-                        self._logger.info("Reconnecting to DB; connection closed.")
                     self._conn = self.engine.connect()
                     if self._timeout > 0:
+                        # only log reconnections when we keep the connection alive between requests otherwise we'll spam
+                        # the log
+                        if self._conn is None:
+                            self._logger.info("Reconnecting to DB; connection not existing.")
+                        else:
+                            self._logger.info("Reconnecting to DB; connection closed.")
                         if self._watchdog is not None:
                             # in case connection is dead, but watchdog is still up, something else killed the connection,
                             # make the watchdog quit, then making a new one
