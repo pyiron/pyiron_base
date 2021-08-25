@@ -192,6 +192,20 @@ class Settings(metaclass=Singleton):
         """
         return self._configuration["resource_paths"]
 
+    @property
+    def connection_timeout(self):
+        """
+        Get the connection timeout in seconds.  Zero means close the database after every connection.
+
+        Returns:
+            int: timeout in seconds
+        """
+        return self._configuration["connection_timeout"]
+
+    @connection_timeout.setter
+    def connection_timeout(self, val):
+        self._configuration["connection_timeout"] = val
+
     def open_connection(self):
         """
         Internal function to open the connection to the database. Only after this function is called the database is
