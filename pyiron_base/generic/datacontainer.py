@@ -8,6 +8,7 @@ Data structure for versatile data handling.
 import copy
 import json
 import warnings
+import pandas
 from collections.abc import Sequence, Set, Mapping, MutableMapping
 
 import numpy as np
@@ -48,6 +49,7 @@ def _normalize(key):
         return _normalize(key[0])
 
     return key
+
 
 class DataContainer(MutableMapping, HasGroups):
     """
@@ -708,7 +710,10 @@ class DataContainer(MutableMapping, HasGroups):
             k = "{}__index_{}".format(k if isinstance(k, str) else "", i)
 
             if hasattr(v, "to_hdf"):
-                v.to_hdf(hdf=hdf, group_name=k)
+                if not isinstance(v, pandas.DataFrame):
+                    v.to_hdf(hdf=hdf, group_name=k)
+                else:
+                    v.to_hdf(hdf.file_name, hdf.h5_path + "/" + k)
             else:
                 # if the value doesn't know how to serialize itself, assume
                 # that h5py knows how to
@@ -772,9 +777,11 @@ class DataContainer(MutableMapping, HasGroups):
                     continue
                 items.append( (*normalize_key(n), hdf[n] if not self._lazy else HDFStub(hdf, n)) )
             for g in hdf.list_groups():
-                items.append( (*normalize_key(g), hdf[g].to_object() if not self._lazy else HDFStub(hdf, g)) )
-
-
+                hdf_pointer = hdf[g]
+                if hasattr(hdf_pointer, "to_to_object"):
+                    items.append( (*normalize_key(g), hdf[g].to_object()))
+                else:
+                    items.append((*normalize_key(g), pandas.read_hdf(hdf.file_name, hdf.h5_path + "/" + g)))
             for _, k, v in sorted(items, key=lambda x: x[0]):
                 self[k] = v
 
