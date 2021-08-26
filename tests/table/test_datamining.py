@@ -46,7 +46,6 @@ class TestProjectData(TestWithProject):
 
     def test_filter_reload(self):
         """Lambdas should work as filter functions even if read from HDF5."""
-
         try:
             table_loaded = self.project.load(self.table.name)
         except:

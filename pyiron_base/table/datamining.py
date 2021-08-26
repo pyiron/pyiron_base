@@ -144,9 +144,6 @@ class PyironTable(HasGroups):
         self._system_function_lst = system_function_lst
         self.add = FunctionContainer(system_function_lst=self._system_function_lst)
         self._csv_file = csv_file_name
-        if self._is_file():
-            self.load()
-
         self.EMPTY_STR = "-"
 
     @property
