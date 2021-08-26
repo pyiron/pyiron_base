@@ -779,9 +779,9 @@ class DataContainer(MutableMapping, HasGroups):
             for g in hdf.list_groups():
                 hdf_pointer = hdf[g]
                 if hasattr(hdf_pointer, "to_to_object"):
-                    items.append( (*normalize_key(g), hdf[g].to_object()))
+                    items.append( (*normalize_key(g), hdf_pointer.to_object()))
                 else:
-                    items.append((*normalize_key(g), pandas.read_hdf(hdf.file_name, hdf.h5_path + "/" + g)))
+                    items.append((*normalize_key(g), pandas.read_hdf(hdf_pointer.file_name, hdf_pointer.h5_path)))
             for _, k, v in sorted(items, key=lambda x: x[0]):
                 self[k] = v
 
