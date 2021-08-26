@@ -39,7 +39,8 @@ class HasHDF(ABC):
         hdf["NAME"] = self.__class__.__name__
         hdf["TYPE"] = str(type(self))
         hdf["OBJECT"] = hdf["NAME"] # unused alias
-        hdf["VERSION"] = self.__version__
+        if hasattr(self, "__version__"):
+            hdf["VERSION"] = self.__version__
         hdf["HDF_VERSION"] = self.__hdf_version__
 
     def from_hdf(self, hdf, group_name=None):
