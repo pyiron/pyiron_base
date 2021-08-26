@@ -39,8 +39,8 @@ class Notebook(object):
         if Path(hdf_file).exists():
             obj = DataContainer()
             obj.from_hdf(
-                hdf = FileHDFio(hdf_file),
-                group_name = folder + '/input/custom_dict'
+                hdf=FileHDFio(hdf_file),
+                group_name=folder + '/input/custom_dict'
             )
             obj["project_dir"] = str(project_folder)
             return obj
@@ -58,5 +58,5 @@ class Notebook(object):
         hdf_file = str(hdf_file) + ".h5"
         hdf = FileHDFio(hdf_file)
         hdf[folder].create_group("output")
-        for k, v in output_dict.items():
-            hdf[folder + "/output"][k] = v
+        obj = DataContainer(output_dict)
+        obj.to_hdf(hdf[folder + "/output"])
