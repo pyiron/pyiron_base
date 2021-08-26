@@ -59,7 +59,6 @@ class HasHDF(ABC):
 
     def rewrite_hdf(self, hdf, group_name=None):
         with WithHDF(hdf, group_name) as hdf:
-            obj = self.__class__()
-            obj.from_hdf(hdf)
-            hdf.remove(...)
+            obj = hdf.to_object()
+            hdf.remove_group()
             obj.to_hdf(hdf)
