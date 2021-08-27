@@ -3,9 +3,10 @@
 
 from pyiron_base.generic.fileio import read, write
 import os
-import unittest
+from pyiron_base._tests import PyironTestCase
 
-class TestFileIO(unittest.TestCase):
+
+class TestFileIO(PyironTestCase):
 
     @classmethod
     def setUpClass(cls):

@@ -27,7 +27,32 @@ __status__ = "development"
 __date__ = "Mar 23, 2021"
 
 
-class TestWithProject(unittest.TestCase, ABC):
+class PyironTestCase(unittest.TestCase, ABC):
+
+    """
+    Tests that also include testing the docstrings in the specified modules
+    """
+
+    @property
+    def docstring_module(self):
+        """
+        Define module whose docstrings will be tested
+        """
+        return None
+
+    def test_docstrings(self):
+        """
+        Fails with output if docstrings in the given module fails.
+
+        Output capturing adapted from https://stackoverflow.com/a/22434594/12332968
+        """
+        with StringIO() as buf, redirect_stdout(buf):
+            result = doctest.testmod(self.docstring_module)
+            output = buf.getvalue()
+        self.failIf(result.failed > 0, msg=output)
+
+
+class TestWithProject(PyironTestCase, ABC):
     """
     Tests that start and remove a project for their suite.
     """
@@ -54,28 +79,3 @@ class TestWithCleanProject(TestWithProject, ABC):
 
     def tearDown(self):
         self.project.remove_jobs_silently(recursive=True)
-
-
-class TestWithDocstrings(unittest.TestCase, ABC):
-
-    """
-    Tests that also include testing the docstrings in the specified modules
-    """
-
-    @property
-    def docstring_module(self):
-        """
-        Define module whose docstrings will be tested
-        """
-        return None
-
-    def test_docstrings(self):
-        """
-        Fails with output if docstrings in the given module fails.
-
-        Output capturing adapted from https://stackoverflow.com/a/22434594/12332968
-        """
-        with StringIO() as buf, redirect_stdout(buf):
-            result = doctest.testmod(self.docstring_module)
-            output = buf.getvalue()
-        self.failIf(result.failed > 0, msg=output)

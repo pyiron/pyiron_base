@@ -3,11 +3,11 @@
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
 import os
-import unittest
 from pyiron_base.project.generic import Project
+from pyiron_base._tests import PyironTestCase
 
 
-class TestChildids(unittest.TestCase):
+class TestChildids(PyironTestCase):
     @classmethod
     def setUpClass(cls):
         cls.file_location = os.path.dirname(os.path.abspath(__file__))

@@ -4,9 +4,10 @@
 
 import unittest
 from pyiron_base.server.generic import Server
+from pyiron_base._tests import PyironTestCase
 
 
-class TestRunmode(unittest.TestCase):
+class TestRunmode(PyironTestCase):
     @classmethod
     def setUpClass(cls):
         cls.server = Server()

@@ -6,9 +6,10 @@ import os
 import shutil
 from pyiron_base.settings.install import install_pyiron
 import unittest
+from pyiron_base._tests import PyironTestCase
 
 
-class TestInstall(unittest.TestCase):
+class TestInstall(PyironTestCase):
     @classmethod
     def setUpClass(cls):
         cls.execution_path = os.path.dirname(os.path.abspath(__file__))

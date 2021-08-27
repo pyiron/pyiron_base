@@ -3,7 +3,7 @@
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
 import numpy as np
-from pyiron_base._tests import TestWithDocstrings
+from pyiron_base._tests import PyironTestCase
 import pyiron_base
 from pyiron_base.generic.units import PyironUnitRegistry, UnitConverter
 import pint
@@ -11,7 +11,7 @@ import pint
 pint_registry = pint.UnitRegistry()
 
 
-class TestUnits(TestWithDocstrings):
+class TestUnits(PyironTestCase):
 
     @property
     def docstring_module(self):

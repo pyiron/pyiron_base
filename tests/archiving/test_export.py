@@ -7,6 +7,8 @@ from pandas._testing import assert_frame_equal
 from filecmp import dircmp
 from pyiron_base import PythonTemplateJob
 from shutil import rmtree
+from pyiron_base._tests import PyironTestCase
+
 
 class ToyJob(PythonTemplateJob):
     def __init__(self, project, job_name):
@@ -21,7 +23,7 @@ class ToyJob(PythonTemplateJob):
         self.status.finished = True
 
 
-class TestPack(unittest.TestCase):
+class TestPack(PyironTestCase):
 
     @classmethod
     def setUpClass(cls):
