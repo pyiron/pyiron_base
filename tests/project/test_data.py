@@ -7,6 +7,7 @@ from os.path import dirname, join, abspath
 from os import remove
 from pyiron_base.project.generic import Project
 from pyiron_base.project.data import ProjectData
+from pyiron_base._tests import PyironTestCase
 
 
 class TestProjectData(PyironTestCase):

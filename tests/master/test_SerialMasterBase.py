@@ -6,6 +6,8 @@ import unittest
 import os
 from pyiron_base.project.generic import Project
 from pyiron_base.master.serial import SerialMasterBase
+from pyiron_base._tests import PyironTestCase
+
 
 class TestGenericJob(PyironTestCase):
     @classmethod

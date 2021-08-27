@@ -5,8 +5,8 @@
 from datetime import datetime
 from pyiron_base.database.generic import DatabaseAccess
 from pyiron_base.master.submissionstatus import SubmissionStatus
-import unittest
 import os
+from pyiron_base._tests import PyironTestCase
 
 
 class TestSubmissionStatus(PyironTestCase):

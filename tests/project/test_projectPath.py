@@ -5,6 +5,7 @@
 import os
 import unittest
 from pyiron_base.project.path import ProjectPath
+from pyiron_base._tests import PyironTestCase
 
 
 class TestProjectPath(PyironTestCase):

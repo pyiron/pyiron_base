@@ -6,6 +6,8 @@ import unittest
 import os
 from pyiron_base.project.generic import Project
 from pyiron_base import JobGenerator, ParallelMaster
+from pyiron_base._tests import PyironTestCase
+
 
 class TestGenerator(JobGenerator):
 

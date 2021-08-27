@@ -4,6 +4,7 @@
 
 import unittest
 from pyiron_base.generic.factory import PyironFactory
+from pyiron_base._tests import PyironTestCase
 
 
 class TestFactories(PyironTestCase):

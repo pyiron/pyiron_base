@@ -7,6 +7,7 @@ import warnings
 from pyiron_base.generic.util import static_isinstance
 from pyiron_base.generic.util import deprecate, deprecate_soon
 from pyiron_base.generic.util import ImportAlarm
+from pyiron_base._tests import PyironTestCase
 
 
 class TestJobType(PyironTestCase):
@@ -119,6 +120,7 @@ class TestDeprecator(PyironTestCase):
             food(baz=True)
         self.assertEqual(len(w), 2, "Not all warnings preserved.")
 
+
 class TestImportAlarm(PyironTestCase):
 
     def setUp(self):
@@ -174,6 +176,7 @@ class TestImportAlarm(PyironTestCase):
         with self.assertRaises(ZeroDivisionError, msg="Context manager should swallow unrelated exceptions"), \
              ImportAlarm("Unrelated"):
             print(1/0)
+
 
 if __name__ == "__main__":
     unittest.main()

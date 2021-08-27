@@ -6,6 +6,7 @@ from pathlib2 import Path
 import os
 import unittest
 from pyiron_base.settings.generic import Settings
+from pyiron_base._tests import PyironTestCase
 
 
 class TestConfigSettingsStatic(PyironTestCase):

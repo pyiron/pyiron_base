@@ -3,8 +3,8 @@
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
 import os
-import unittest
 from pyiron_base.project.generic import Project
+from pyiron_base._tests import PyironTestCase
 
 
 class TestChildids(PyironTestCase):

@@ -4,6 +4,7 @@
 
 import unittest
 from pyiron_base.server.runmode import Runmode
+from pyiron_base._tests import PyironTestCase
 
 
 class TestRunmode(PyironTestCase):

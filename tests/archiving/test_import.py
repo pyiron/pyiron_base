@@ -6,6 +6,7 @@ from pandas._testing import assert_frame_equal
 from filecmp import dircmp
 from pyiron_base import PythonTemplateJob
 from shutil import rmtree
+from pyiron_base._tests import PyironTestCase
 
 
 class ToyJob(PythonTemplateJob):
@@ -19,6 +20,7 @@ class ToyJob(PythonTemplateJob):
         with self.project_hdf5.open("output/generic") as h5out:
             h5out["energy_tot"] = self.input["input_energy"]
         self.status.finished = True
+
 
 class TestUnpacking(PyironTestCase):
     @classmethod

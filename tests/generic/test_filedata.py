@@ -8,6 +8,7 @@ import pandas as pd
 from pyiron_base import FileHDFio, ProjectHDFio
 from pyiron_base.generic.filedata import FileData, load_file
 from pyiron_base.project.generic import Project
+from pyiron_base._tests import PyironTestCase
 
 
 class TestLoadFile(PyironTestCase):

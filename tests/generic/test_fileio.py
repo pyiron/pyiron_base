@@ -3,7 +3,8 @@
 
 from pyiron_base.generic.fileio import read, write
 import os
-import unittest
+from pyiron_base._tests import PyironTestCase
+
 
 class TestFileIO(PyironTestCase):
 

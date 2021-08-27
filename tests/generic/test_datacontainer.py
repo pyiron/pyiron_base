@@ -1,7 +1,7 @@
 # Copyright (c) Max-Planck-Institut für Eisenforschung GmbH - Computational Materials Design (CM) Department
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 import pyiron_base
-from pyiron_base._tests import TestWithCleanProject
+from pyiron_base._tests import TestWithCleanProject, PyironTestCase
 from pyiron_base.generic.datacontainer import DataContainer
 from pyiron_base.generic.hdfstub import HDFStub
 from pyiron_base.generic.inputlist import InputList

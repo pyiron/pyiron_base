@@ -14,6 +14,7 @@ import unittest
 import os
 from datetime import datetime
 from pyiron_base.database.filetable import FileTable
+from pyiron_base._tests import PyironTestCase
 
 
 class TestDatabaseAccess(PyironTestCase):

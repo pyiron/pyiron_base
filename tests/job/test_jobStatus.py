@@ -8,6 +8,7 @@ from pyiron_base.project.generic import Project
 from pyiron_base.database.generic import DatabaseAccess
 from pyiron_base.job.jobstatus import JobStatus
 import unittest
+from pyiron_base._tests import PyironTestCase
 
 
 class TestJobStatus(PyironTestCase):

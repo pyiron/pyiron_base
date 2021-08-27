@@ -5,6 +5,7 @@
 from pyiron_base.settings.generic import Settings
 import os
 import unittest
+from pyiron_base._tests import PyironTestCase
 
 
 class TestConfigSettingsStatic(PyironTestCase):

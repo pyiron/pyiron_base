@@ -6,6 +6,7 @@ import os
 import shutil
 from pyiron_base.settings.install import install_pyiron
 import unittest
+from pyiron_base._tests import PyironTestCase
 
 
 class TestInstall(PyironTestCase):

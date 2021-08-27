@@ -6,6 +6,8 @@ import os
 import unittest
 from pyiron_base.project.generic import Project
 from pyiron_base.project.path import GenericPath
+from pyiron_base._tests import PyironTestCase
+from pyiron_base._tests import PyironTestCase
 
 
 class TestGenericPath(PyironTestCase):

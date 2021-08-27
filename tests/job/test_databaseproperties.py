@@ -7,6 +7,7 @@ import datetime
 import os
 from pyiron_base.project.generic import Project
 from pyiron_base.job.core import DatabaseProperties
+from pyiron_base._tests import PyironTestCase
 
 
 class TestDatabaseProperties(PyironTestCase):
