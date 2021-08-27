@@ -2,7 +2,6 @@
 # Copyright (c) Max-Planck-Institut für Eisenforschung GmbH - Computational Materials Design (CM) Department
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
-import unittest
 import os
 from pyiron_base.project.generic import Project
 from pyiron_base.job.generic import GenericJob
