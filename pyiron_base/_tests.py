@@ -27,36 +27,7 @@ __status__ = "development"
 __date__ = "Mar 23, 2021"
 
 
-class TestWithProject(unittest.TestCase, ABC):
-    """
-    Tests that start and remove a project for their suite.
-    """
-
-    @classmethod
-    def setUpClass(cls):
-        cls.project_path = getfile(cls)[:-3].replace("\\", "/")
-        cls.file_location, cls.project_name = split(cls.project_path)
-        cls.project = Project(cls.project_path)
-
-    @classmethod
-    def tearDownClass(cls):
-        cls.project.remove(enable=True)
-        try:
-            remove(join(cls.file_location, "pyiron.log"))
-        except FileNotFoundError:
-            pass
-
-
-class TestWithCleanProject(TestWithProject, ABC):
-    """
-    Tests that start and remove a project for their suite, and remove jobs from the project for each test.
-    """
-
-    def tearDown(self):
-        self.project.remove_jobs_silently(recursive=True)
-
-
-class TestWithDocstrings(unittest.TestCase, ABC):
+class PyironTestCase(unittest.TestCase, ABC):
 
     """
     Tests that also include testing the docstrings in the specified modules
@@ -79,3 +50,32 @@ class TestWithDocstrings(unittest.TestCase, ABC):
             result = doctest.testmod(self.docstring_module)
             output = buf.getvalue()
         self.failIf(result.failed > 0, msg=output)
+
+
+class TestWithProject(PyironTestCase):
+    """
+    Tests that start and remove a project for their suite.
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        cls.project_path = getfile(cls)[:-3].replace("\\", "/")
+        cls.file_location, cls.project_name = split(cls.project_path)
+        cls.project = Project(cls.project_path)
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.project.remove(enable=True)
+        try:
+            remove(join(cls.file_location, "pyiron.log"))
+        except FileNotFoundError:
+            pass
+
+
+class TestWithCleanProject(TestWithProject):
+    """
+    Tests that start and remove a project for their suite, and remove jobs from the project for each test.
+    """
+
+    def tearDown(self):
+        self.project.remove_jobs_silently(recursive=True)
