@@ -9,7 +9,7 @@ import unittest
 import os
 
 
-class TestSubmissionStatus(unittest.TestCase):
+class TestSubmissionStatus(PyironTestCase):
     @classmethod
     def setUpClass(cls):
         cls.sub_status = SubmissionStatus()

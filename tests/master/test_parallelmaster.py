@@ -29,7 +29,7 @@ class TestMaster(ParallelMaster):
         super().__init__(job_name, project)
         self._job_generator = TestGenerator(self)
 
-class TestParallelMaster(unittest.TestCase):
+class TestParallelMaster(PyironTestCase):
     @classmethod
     def setUpClass(cls):
         cls.file_location = os.path.dirname(os.path.abspath(__file__))

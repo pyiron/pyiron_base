@@ -20,7 +20,7 @@ class ToyJob(PythonTemplateJob):
             h5out["energy_tot"] = self.input["input_energy"]
         self.status.finished = True
 
-class TestUnpacking(unittest.TestCase):
+class TestUnpacking(PyironTestCase):
     @classmethod
     def setUpClass(cls):
         # this is used to create a folder/a compressed file, are not path

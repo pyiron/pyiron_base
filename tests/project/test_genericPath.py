@@ -8,7 +8,7 @@ from pyiron_base.project.generic import Project
 from pyiron_base.project.path import GenericPath
 
 
-class TestGenericPath(unittest.TestCase):
+class TestGenericPath(PyironTestCase):
     @classmethod
     def setUpClass(cls):
         cls.current_dir = os.path.dirname(os.path.abspath(__file__)).replace("\\", "/")
@@ -26,7 +26,7 @@ class TestGenericPath(unittest.TestCase):
         self.assertEqual(self.path_project.path, self.current_dir + "/project/path/")
 
 
-class TestProject(unittest.TestCase):
+class TestProject(PyironTestCase):
     @classmethod
     def setUpClass(cls):
         cls.current_dir = os.path.dirname(os.path.abspath(__file__)).replace("\\", "/")

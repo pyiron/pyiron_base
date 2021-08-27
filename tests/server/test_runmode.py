@@ -6,7 +6,7 @@ import unittest
 from pyiron_base.server.runmode import Runmode
 
 
-class TestRunmode(unittest.TestCase):
+class TestRunmode(PyironTestCase):
     @classmethod
     def setUpClass(cls):
         cls.run_mode_default = Runmode()

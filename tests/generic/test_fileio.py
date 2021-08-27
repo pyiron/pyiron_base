@@ -5,7 +5,7 @@ from pyiron_base.generic.fileio import read, write
 import os
 import unittest
 
-class TestFileIO(unittest.TestCase):
+class TestFileIO(PyironTestCase):
 
     @classmethod
     def setUpClass(cls):

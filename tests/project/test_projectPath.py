@@ -7,7 +7,7 @@ import unittest
 from pyiron_base.project.path import ProjectPath
 
 
-class TestProjectPath(unittest.TestCase):
+class TestProjectPath(PyironTestCase):
     @classmethod
     def setUpClass(cls):
         if os.name == "nt":

@@ -7,7 +7,7 @@ from pyiron_base.job.jobtype import JobTypeChoice, JobFactory
 from pyiron_base import JOB_CLASS_DICT
 
 
-class TestJobTypeChoice(unittest.TestCase):
+class TestJobTypeChoice(PyironTestCase):
 
     @classmethod
     def setUpClass(cls):
@@ -50,7 +50,7 @@ class TestJobTypeChoice(unittest.TestCase):
                       "JobTypeChoice")
 
 
-class TestJobCreator(unittest.TestCase):
+class TestJobCreator(PyironTestCase):
 
     @classmethod
     def setUpClass(cls):

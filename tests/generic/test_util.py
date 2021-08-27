@@ -9,7 +9,7 @@ from pyiron_base.generic.util import deprecate, deprecate_soon
 from pyiron_base.generic.util import ImportAlarm
 
 
-class TestJobType(unittest.TestCase):
+class TestJobType(PyironTestCase):
     def test_static_isinstance(self):
         self.assertTrue(
             static_isinstance(
@@ -27,7 +27,7 @@ class TestJobType(unittest.TestCase):
         self.assertRaises(TypeError, static_isinstance, list(), 1)
 
 
-class TestDeprecator(unittest.TestCase):
+class TestDeprecator(PyironTestCase):
     def test_deprecate(self):
         """Function decorated with `deprecate` should raise a warning."""
         @deprecate
@@ -119,7 +119,7 @@ class TestDeprecator(unittest.TestCase):
             food(baz=True)
         self.assertEqual(len(w), 2, "Not all warnings preserved.")
 
-class TestImportAlarm(unittest.TestCase):
+class TestImportAlarm(PyironTestCase):
 
     def setUp(self):
         self.import_alarm = ImportAlarm()

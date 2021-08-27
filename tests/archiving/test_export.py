@@ -21,7 +21,7 @@ class ToyJob(PythonTemplateJob):
         self.status.finished = True
 
 
-class TestPack(unittest.TestCase):
+class TestPack(PyironTestCase):
 
     @classmethod
     def setUpClass(cls):

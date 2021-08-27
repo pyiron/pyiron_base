@@ -6,7 +6,7 @@ import unittest
 from pyiron_base.generic.factory import PyironFactory
 
 
-class TestFactories(unittest.TestCase):
+class TestFactories(PyironTestCase):
     def test_pyiron_factory(self):
         factory = PyironFactory()
         factory.foo = "foo"

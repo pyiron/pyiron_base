@@ -7,7 +7,7 @@ import unittest
 from pyiron_base.project.generic import Project
 from pyiron_base.job.interactivewrapper import InteractiveWrapper
 
-class TestInteractiveWrapper(unittest.TestCase):
+class TestInteractiveWrapper(PyironTestCase):
 
     @classmethod
     def setUpClass(cls):

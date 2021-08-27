@@ -10,7 +10,7 @@ from pyiron_base.job.jobstatus import JobStatus
 import unittest
 
 
-class TestJobStatus(unittest.TestCase):
+class TestJobStatus(PyironTestCase):
     @classmethod
     def setUpClass(cls):
         cls.jobstatus = JobStatus()
@@ -273,7 +273,7 @@ class TestJobStatus(unittest.TestCase):
         self.assertEqual(finished_status, str(self.jobstatus_database))
 
 
-class JobStatusIntegration(unittest.TestCase):
+class JobStatusIntegration(PyironTestCase):
     @classmethod
     def setUpClass(cls):
         cls.file_location = os.path.dirname(os.path.abspath(__file__))

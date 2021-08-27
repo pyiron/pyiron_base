@@ -9,7 +9,7 @@ from pyiron_base.job.generic import GenericJob
 from pyiron_base.master.generic import GenericMaster
 
 
-class TestGenericJob(unittest.TestCase):
+class TestGenericJob(PyironTestCase):
     @classmethod
     def setUpClass(cls):
         cls.file_location = os.path.dirname(os.path.abspath(__file__))

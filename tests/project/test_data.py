@@ -9,7 +9,7 @@ from pyiron_base.project.generic import Project
 from pyiron_base.project.data import ProjectData
 
 
-class TestProjectData(unittest.TestCase):
+class TestProjectData(PyironTestCase):
     @classmethod
     def setUpClass(cls):
         cls.file_location = dirname(abspath(__file__)).replace("\\", "/")

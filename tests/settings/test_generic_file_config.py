@@ -7,7 +7,7 @@ import os
 import unittest
 
 
-class TestConfigSettingsStatic(unittest.TestCase):
+class TestConfigSettingsStatic(PyironTestCase):
     @classmethod
     def setUpClass(cls):
         cls.resource_path = os.path.abspath(

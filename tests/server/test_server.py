@@ -6,7 +6,7 @@ import unittest
 from pyiron_base.server.generic import Server
 
 
-class TestRunmode(unittest.TestCase):
+class TestRunmode(PyironTestCase):
     @classmethod
     def setUpClass(cls):
         cls.server = Server()

@@ -18,7 +18,7 @@ from string import ascii_uppercase
 from pyiron_base.database.generic import DatabaseAccess
 
 
-class TestDatabaseAccess(unittest.TestCase):
+class TestDatabaseAccess(PyironTestCase):
     """
     Standard Unittest of the DatabaseAccess class
     """

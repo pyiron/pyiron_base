@@ -1,5 +1,6 @@
 # Copyright (c) Max-Planck-Institut für Eisenforschung GmbH - Computational Materials Design (CM) Department
 # Distributed under the terms of "New BSD License", see the LICENSE file.
+import pyiron_base
 from pyiron_base._tests import TestWithCleanProject
 from pyiron_base.generic.datacontainer import DataContainer
 from pyiron_base.generic.hdfstub import HDFStub
@@ -19,6 +20,10 @@ class Sub(DataContainer):
 
 
 class TestDataContainer(TestWithCleanProject):
+
+    @property
+    def docstring_module(self):
+        return pyiron_base.generic.datacontainer
 
     @classmethod
     def setUpClass(cls):
@@ -507,7 +512,8 @@ class TestDataContainer(TestWithCleanProject):
         self.assertTrue(not isinstance(ll._store[0], HDFStub),
                         "Loaded value not stored back into container!")
 
-class TestInputList(unittest.TestCase):
+
+class TestInputList(PyironTestCase):
 
     def test_deprecation_warning(self):
         """Instantiating an InputList should raise a warning."""

@@ -8,10 +8,12 @@ import os
 from pyiron_base.generic.parameters import GenericParameters
 from pyiron_base.generic.hdfio import ProjectHDFio
 from pyiron_base.project.generic import Project
+from pyiron_base._tests import PyironTestCase
 import unittest
 
 
-class TestGenericParameters(unittest.TestCase):
+class TestGenericParameters(PyironTestCase):
+
     @classmethod
     def setUpClass(cls):
         cls.generic_parameters_empty = GenericParameters(table_name="empty")

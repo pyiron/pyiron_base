@@ -8,7 +8,7 @@ from pyiron_base.settings.install import install_pyiron
 import unittest
 
 
-class TestInstall(unittest.TestCase):
+class TestInstall(PyironTestCase):
     @classmethod
     def setUpClass(cls):
         cls.execution_path = os.path.dirname(os.path.abspath(__file__))
