@@ -4,8 +4,9 @@
 
 import os
 import unittest
+from pyiron_base.project.generic import Project
 from pyiron_base.project.path import GenericPath
-from pyiron_base._tests import PyironTestCase, TestWithCleanProject
+from pyiron_base._tests import PyironTestCase
 
 
 class TestGenericPath(PyironTestCase):
@@ -26,16 +27,16 @@ class TestGenericPath(PyironTestCase):
         self.assertEqual(self.path_project.path, self.current_dir + "/project/path/")
 
 
-class TestProject(TestWithCleanProject):
+class TestProject(PyironTestCase):
 
-    # @classmethod
-    # def setUpClass(cls):
-    #     cls.current_dir = os.path.dirname(os.path.abspath(__file__)).replace("\\", "/")
-    #     cls.project = Project(os.path.join(cls.current_dir, "sub_folder"))
-    #
-    # @classmethod
-    # def tearDownClass(cls):
-    #     cls.project.remove(enable=True)
+    @classmethod
+    def setUpClass(cls):
+        cls.current_dir = os.path.dirname(os.path.abspath(__file__)).replace("\\", "/")
+        cls.project = Project(os.path.join(cls.current_dir, "sub_folder"))
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.project.remove(enable=True)
 
     def test_repr(self):
         self.assertEqual([], self.project.list_groups())
@@ -47,8 +48,8 @@ class TestProject(TestWithCleanProject):
             sorted(
                 [
                     directory
-                    for directory in os.listdir(self.file_location)
-                    if not os.path.isfile(os.path.join(self.file_location, directory))
+                    for directory in os.listdir(self.current_dir)
+                    if not os.path.isfile(os.path.join(self.current_dir, directory))
                 ]
             ),
             pr_down_one.list_groups(),
@@ -57,9 +58,9 @@ class TestProject(TestWithCleanProject):
             sorted(
                 [
                     directory
-                    for directory in os.listdir(os.path.join(self.file_location, ".."))
+                    for directory in os.listdir(os.path.join(self.current_dir, ".."))
                     if not os.path.isfile(
-                        os.path.join(self.file_location, "..", directory)
+                        os.path.join(self.current_dir, "..", directory)
                     )
                 ]
             ),
