@@ -52,7 +52,7 @@ class PyironTestCase(unittest.TestCase, ABC):
         self.failIf(result.failed > 0, msg=output)
 
 
-class TestWithProject(PyironTestCase):
+class TestWithProject(PyironTestCase, ABC):
     """
     Tests that start and remove a project for their suite.
     """
