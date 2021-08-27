@@ -31,11 +31,17 @@ __email__ = "janssen@mpie.de"
 __status__ = "development"
 __date__ = "Sep 1, 2018"
 
+
 def _to_pickle(hdf, key, value):
     hdf[key] = codecs.encode(pickle.dumps(value), "base64").decode()
 
+
 def _from_pickle(hdf, key):
     return pickle.loads(codecs.decode(hdf[key].encode(), "base64"))
+
+
+def get_job_id(job):
+    return {"job_id": job.job_id}
 
 
 class FunctionContainer(object):
@@ -99,6 +105,7 @@ class FunctionContainer(object):
     def __dir__(self):
         return list(self._system_function_dict.keys())
 
+
 class JobFilters(object):
     """
     Certain predefined job filters
@@ -126,7 +133,7 @@ class PyironTable(HasGroups):
         name (str): Name of the pyiron table
         system_function_lst (list/ None): List of built-in functions
     """
-    def __init__(self, project, name=None, system_function_lst=None):
+    def __init__(self, project, name=None, system_function_lst=None, csv_file_name=None):
         self._project = project
         self._df = pandas.DataFrame({})
         self.convert_to_object = False
@@ -136,10 +143,7 @@ class PyironTable(HasGroups):
         self._filter = JobFilters()
         self._system_function_lst = system_function_lst
         self.add = FunctionContainer(system_function_lst=self._system_function_lst)
-        self._csv_file = None
-        if self._is_file():
-            self.load()
-
+        self._csv_file = csv_file_name
         self.EMPTY_STR = "-"
 
     @property
@@ -377,7 +381,8 @@ class PyironTable(HasGroups):
 
             new_table = PyironTable(
                 project=self._project[item],
-                system_function_lst=self._system_function_lst
+                system_function_lst=self._system_function_lst,
+                csv_file_name=os.path.join(self.working_directory, "pyirontable.csv")
             )
             new_table._df = self._df.drop("col_0", axis=1)
             new_table._df.rename(index=str, columns=rename_dict, inplace=True)
@@ -414,7 +419,8 @@ class PyironTable(HasGroups):
                 lst[i] = p
         return lst
 
-    def _get_data_from_hdf5(self, hdf):
+    @staticmethod
+    def _get_data_from_hdf5(hdf):
         temp_user_function_dict = _from_pickle(
             hdf=hdf, key="user_function_dict"
         )
@@ -508,10 +514,11 @@ class TableJob(GenericJob):
         self.__hdf_version__ = "0.2"
         self.__name__ = "TableJob"
         self._analysis_project = None
-        self._system_function_lst = None
+        self._system_function_lst = [get_job_id]
         self._pyiron_table = PyironTable(
             project=None,
-            system_function_lst=self._system_function_lst
+            system_function_lst=self._system_function_lst,
+            csv_file_name=os.path.join(self.working_directory, "pyirontable.csv")
         )
         self._enforce_update = False
         self._project_level = 0
@@ -571,7 +578,8 @@ class TableJob(GenericJob):
         self._analysis_project = project
         self._pyiron_table = PyironTable(
             project=self._analysis_project,
-            system_function_lst=self._system_function_lst
+            system_function_lst=self._system_function_lst,
+            csv_file_name=os.path.join(self.working_directory, "pyirontable.csv")
         )
 
     @property
