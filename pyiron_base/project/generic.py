@@ -8,6 +8,7 @@ The project object is the central import point of pyiron - all other objects can
 import os
 import posixpath
 import shutil
+from tqdm import tqdm
 import pandas
 import importlib
 import numpy as np
@@ -522,7 +523,7 @@ class Project(ProjectPath, HasGroups):
         """
         return self.load(job_specifier=job_specifier, convert_to_object=False)
 
-    def iter_jobs(self, path=None, recursive=True, convert_to_object=True, status=None, job_type=None):
+    def iter_jobs(self, path=None, recursive=True, convert_to_object=True, status=None, job_type=None, progress=True):
         """
         Iterate over the jobs within the current project and it is sub projects
 
@@ -532,6 +533,7 @@ class Project(ProjectPath, HasGroups):
             convert_to_object (bool): load the full GenericJob object (default) or just the HDF5 / JobCore object
             status (str/None): status of the jobs to filter for - ['finished', 'aborted', 'submitted', ...]
             job_type (str/None): job type to filter for, corresponds to the 'hamilton' column in the job table
+            progress (bool): if True (default), add an interactive progress bar to the iteration
 
         Returns:
             yield: Yield of GenericJob or JobCore
@@ -549,6 +551,8 @@ class Project(ProjectPath, HasGroups):
                 if job_type is not None:
                     mask &= df["hamilton"] == job_type
                 job_id_lst = list(df[mask]["id"])
+        if progress:
+            job_id_lst = tqdm(job_id_lst)
         for job_id in job_id_lst:
             if path is not None:
                 yield self.load(job_id, convert_to_object=False)[path]
