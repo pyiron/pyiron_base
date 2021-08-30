@@ -404,15 +404,6 @@ class GenericJob(JobCore):
             "read procedure must be defined for derived Hamilton!"
         )
 
-    def append(self, job):
-        """
-        Metajobs like GenericMaster, ParallelMaster, SerialMaser or ListMaster allow other jobs to be appended. In the
-        GenericJob definition this is only a template function.
-        """
-        raise NotImplementedError(
-            "append procedure must be defined for derived Hamilton!"
-        )
-
     def suspend(self):
         """
         Suspend the job by storing the object and its state persistently in HDF5 file and exit it.
