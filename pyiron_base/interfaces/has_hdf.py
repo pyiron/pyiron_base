@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 
-class WithHDF:
+class _WithHDF:
     __slots__ = ("_hdf", "_group_name")
 
     def __init__(self, hdf, group_name=None):
@@ -44,20 +44,20 @@ class HasHDF(ABC):
 
     def from_hdf(self, hdf, group_name=None):
         group_name = group_name or self._get_hdf_group_name()
-        with WithHDF(hdf, group_name) as hdf:
+        with _WithHDF(hdf, group_name) as hdf:
             version = hdf.get("HDF_VERSION", "0.1.0")
             self._from_hdf(hdf, version=version)
 
     def to_hdf(self, hdf, group_name=None):
         group_name = group_name or self._get_hdf_group_name()
-        with WithHDF(hdf, group_name) as hdf:
+        with _WithHDF(hdf, group_name) as hdf:
             if len(hdf.list_dirs()) > 0 and group_name is None:
                 raise ValueError("HDF group must be empty when group_name is not set.")
             self._to_hdf(hdf)
             self._type_to_hdf(hdf)
 
     def rewrite_hdf(self, hdf, group_name=None):
-        with WithHDF(hdf, group_name) as hdf:
+        with _WithHDF(hdf, group_name) as hdf:
             obj = hdf.to_object()
             hdf.remove_group()
             obj.to_hdf(hdf)
