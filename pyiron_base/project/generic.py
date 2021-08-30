@@ -133,12 +133,12 @@ class Project(ProjectPath, HasGroups):
 
         self._maintenance = None
 
-
     @property
     def maintenance(self):
         if self._maintenance is None:
             self._maintenance = Maintenance()
         return self._maintenance
+
     @property
     def parent_group(self):
         """
@@ -1471,7 +1471,6 @@ class Project(ProjectPath, HasGroups):
                 for entry in db_entry_in_old_format:
                     self.db.item_update({"project": self.project_path}, entry["id"])
 
-
     def pack(self, destination_path, csv_file_name='export.csv', compress=True):
         """
         by this funtion, the job table is exported to a csv file
@@ -1488,7 +1487,6 @@ class Project(ProjectPath, HasGroups):
         )
         df = export_archive.export_database(self, directory_to_transfer, destination_path)
         df.to_csv(csv_file_name)
-
 
     def unpack(self, origin_path, csv_file_name='export.csv', compress=True):
         """
@@ -1510,8 +1508,24 @@ class Project(ProjectPath, HasGroups):
 class Maintenance:
     """
     The purpose of maintenance class is to provide
-    some measures of perfomance for pyiron
+    some measures of perfomance for pyiron, whether local to the project
+    or global (describing the status of pyiron on the running machine)
     """
+    def __init__(self):
+        """
+        initialize the local and global attributes to None
+        """
+        self._global = None
+        self._local = None
+
+    @property
+    def global_status(self):
+        if self._global is None:
+            self._global = GlobalMaintenance()
+            return self._global
+
+
+class GlobalMaintenance:
     def __init__(self):
         """
         initialize the flag self._check_postgres, to control whether pyiron is
