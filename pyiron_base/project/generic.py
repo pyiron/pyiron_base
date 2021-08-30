@@ -1513,16 +1513,14 @@ class Maintenance:
     """
     def __init__(self):
         """
-        initialize the local and global attributes to None
+        initialize the local and global attributes
         """
-        self._global = None
+        self._global = GlobalMaintenance()
         self._local = None
 
     @property
-    def global_status(self):
-        if self._global is None:
-            self._global = GlobalMaintenance()
-            return self._global
+    def global(self):
+        return self._global
 
 
 class GlobalMaintenance:
