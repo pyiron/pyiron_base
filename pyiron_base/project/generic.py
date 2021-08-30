@@ -1519,7 +1519,7 @@ class Maintenance:
         self._local = None
 
     @property
-    def global(self):
+    def global_status(self):
         return self._global
 
 
