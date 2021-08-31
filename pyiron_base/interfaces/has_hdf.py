@@ -34,6 +34,19 @@ class HasHDF(ABC):
     def _get_hdf_group_name(self):
         pass
 
+    @classmethod
+    def from_hdf_args(cls, hdf):
+        """
+        Read arguments for instance creation from HDF5 file.
+
+        Args:
+            hdf (ProjectHDFio): HDF5 group object
+
+        Returns:
+            dict: arguments that can be **kwarg-passed to cls().
+        """
+        return {}
+
     def _type_to_hdf(self, hdf):
         hdf["NAME"] = self.__class__.__name__
         hdf["TYPE"] = str(type(self))
