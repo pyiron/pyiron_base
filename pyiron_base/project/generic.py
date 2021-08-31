@@ -13,11 +13,12 @@ import importlib
 import numpy as np
 import pkgutil
 from git import Repo, InvalidGitRepositoryError
-
+from warnings import warn
 from pyiron_base.project.path import ProjectPath
 from pyiron_base.database.filetable import FileTable
 from pyiron_base.settings.generic import Settings
 from pyiron_base.settings.publications import list_publications
+from pyiron_base.database.performance import get_database_statistics
 from pyiron_base.database.jobtable import (
     get_db_columns,
     get_job_ids,
@@ -129,6 +130,14 @@ class Project(ProjectPath, HasGroups):
         else:
             self.db = FileTable(project=path)
         self.job_type = JobTypeChoice()
+
+        self._maintenance = None
+
+    @property
+    def maintenance(self):
+        if self._maintenance is None:
+            self._maintenance = Maintenance()
+        return self._maintenance
 
     @property
     def parent_group(self):
@@ -1504,6 +1513,53 @@ class Project(ProjectPath, HasGroups):
         import_archive.import_jobs(
             self, archive_directory=origin_path, df=df, compressed=compress
         )
+
+
+class Maintenance:
+    """
+    The purpose of maintenance class is to provide
+    some measures of perfomance for pyiron, whether local to the project
+    or global (describing the status of pyiron on the running machine)
+    """
+    def __init__(self):
+        """
+        initialize the local and global attributes
+        """
+        self._global = GlobalMaintenance()
+        self._local = None
+
+    @property
+    def global_status(self):
+        return self._global
+
+
+class GlobalMaintenance:
+    def __init__(self):
+        """
+        initialize the flag self._check_postgres, to control whether pyiron is
+        set to communicate with a postgres database.
+        """
+        s = Settings()
+        connection_string = s._configuration['sql_connection_string']
+        if "postgresql" not in connection_string:
+            warn(
+                """
+                The detabase statistics is only available for a Postgresql database
+                """
+            )
+            self._check_postgres = False
+        else:
+            self._check_postgres = True
+
+    def get_database_statistics(self):
+        if self._check_postgres:
+            return get_database_statistics()
+        else:
+            raise RuntimeError(
+                """
+                The detabase statistics is only available for a Postgresql database
+                """
+            )
 
 
 class Creator:
