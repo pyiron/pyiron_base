@@ -26,13 +26,20 @@ __email__ = "huber@mpie.de"
 __status__ = "development"
 __date__ = "Mar 23, 2021"
 
-@unittest.skip("ABC for test suite")
+
 class PyironTestCase(unittest.TestCase, ABC):
 
     """
     Tests that also include testing the docstrings in the specified modules
     """
+    
+    @classmethod
+    def setUpClass(cls):
+        if cls is PyironTestCase:
+            raise unittest.SkipTest(f"{cls.__name__} tests, it's a base class")
+        super().setUpClass()
 
+    
     @property
     def docstring_module(self):
         """
@@ -60,6 +67,8 @@ class TestWithProject(PyironTestCase, ABC):
 
     @classmethod
     def setUpClass(cls):
+        if cls is TestWithProject:
+            raise unittest.SkipTest(f"{cls.__name__} tests, it's a base class")
         print("TestWithProject: Setting up test project")
         cls.project_path = getfile(cls)[:-3].replace("\\", "/")
         cls.file_location, cls.project_name = split(cls.project_path)
@@ -79,6 +88,11 @@ class TestWithCleanProject(TestWithProject, ABC):
     """
     Tests that start and remove a project for their suite, and remove jobs from the project for each test.
     """
+    @classmethod
+    def setUpClass(cls):
+        if cls is TestWithCleanProject:
+            raise unittest.SkipTest(f"{cls.__name__} tests, it's a base class")
+        super().setUpClass()
 
     def tearDown(self):
         self.project.remove_jobs_silently(recursive=True)
