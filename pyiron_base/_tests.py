@@ -32,7 +32,7 @@ class PyironTestCase(unittest.TestCase, ABC):
     """
     Tests that also include testing the docstrings in the specified modules
     """
-    
+
     @classmethod
     def setUpClass(cls):
         if cls is PyironTestCase:
