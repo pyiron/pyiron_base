@@ -39,7 +39,6 @@ class PyironTestCase(unittest.TestCase, ABC):
             raise unittest.SkipTest(f"{cls.__name__} tests, it's a base class")
         super().setUpClass()
 
-    
     @property
     def docstring_module(self):
         """
