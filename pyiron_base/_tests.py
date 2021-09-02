@@ -59,7 +59,6 @@ class PyironTestCase(unittest.TestCase, ABC):
         self.failIf(result.failed > 0, msg=output)
 
 
-@unittest.skip("ABC for test suite")
 class TestWithProject(PyironTestCase, ABC):
     """
     Tests that start and remove a project for their suite.
@@ -83,7 +82,6 @@ class TestWithProject(PyironTestCase, ABC):
             pass
 
         
-@unittest.skip("ABC for test suite")
 class TestWithCleanProject(TestWithProject, ABC):
     """
     Tests that start and remove a project for their suite, and remove jobs from the project for each test.
