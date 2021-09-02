@@ -60,6 +60,7 @@ class TestWithProject(PyironTestCase, ABC):
 
     @classmethod
     def setUpClass(cls):
+        print("TestWithProject: Setting up test project")
         cls.project_path = getfile(cls)[:-3].replace("\\", "/")
         cls.file_location, cls.project_name = split(cls.project_path)
         cls.project = Project(cls.project_path)
