@@ -33,6 +33,12 @@ class PyironTestCase(unittest.TestCase, ABC):
     Tests that also include testing the docstrings in the specified modules
     """
 
+    @classmethod
+    def setUpClass(cls):
+        if any([cls is c for c in _TO_SKIP]):
+            raise unittest.SkipTest(f"{cls.__name__} tests, it's a base class")
+        super().setUpClass()
+
     @property
     def docstring_module(self):
         """
@@ -59,6 +65,8 @@ class TestWithProject(PyironTestCase, ABC):
 
     @classmethod
     def setUpClass(cls):
+        super().setUpClass()
+        print("TestWithProject: Setting up test project")
         cls.project_path = getfile(cls)[:-3].replace("\\", "/")
         cls.file_location, cls.project_name = split(cls.project_path)
         cls.project = Project(cls.project_path)
@@ -76,6 +84,8 @@ class TestWithCleanProject(TestWithProject, ABC):
     """
     Tests that start and remove a project for their suite, and remove jobs from the project for each test.
     """
-
     def tearDown(self):
         self.project.remove_jobs_silently(recursive=True)
+
+
+_TO_SKIP = [PyironTestCase, TestWithProject, TestWithCleanProject]
