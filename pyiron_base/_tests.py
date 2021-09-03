@@ -35,7 +35,7 @@ class PyironTestCase(unittest.TestCase, ABC):
 
     @classmethod
     def setUpClass(cls):
-        if cls is PyironTestCase:
+        if any([cls is c for c in _TO_SKIP]):
             raise unittest.SkipTest(f"{cls.__name__} tests, it's a base class")
         super().setUpClass()
 
@@ -65,8 +65,7 @@ class TestWithProject(PyironTestCase, ABC):
 
     @classmethod
     def setUpClass(cls):
-        if cls is TestWithProject:
-            raise unittest.SkipTest(f"{cls.__name__} tests, it's a base class")
+        super().setUpClass()
         print("TestWithProject: Setting up test project")
         cls.project_path = getfile(cls)[:-3].replace("\\", "/")
         cls.file_location, cls.project_name = split(cls.project_path)
@@ -85,11 +84,8 @@ class TestWithCleanProject(TestWithProject, ABC):
     """
     Tests that start and remove a project for their suite, and remove jobs from the project for each test.
     """
-    @classmethod
-    def setUpClass(cls):
-        if cls is TestWithCleanProject:
-            raise unittest.SkipTest(f"{cls.__name__} tests, it's a base class")
-        super().setUpClass()
-
     def tearDown(self):
         self.project.remove_jobs_silently(recursive=True)
+
+
+_TO_SKIP = [PyironTestCase, TestWithProject, TestWithCleanProject]
