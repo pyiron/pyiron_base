@@ -31,5 +31,5 @@ class BaseTools(Toolkit):
         self._job = JobFactory(project)
 
     @property
-    def job(self):
+    def job(self) -> JobFactory:
         return self._job

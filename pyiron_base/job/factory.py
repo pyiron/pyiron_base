@@ -72,7 +72,7 @@ class JobFactoryCore(PyironFactory, ABC):
 
 class JobFactory(JobFactoryCore):
     @property
-    def _job_class_dict(self):
+    def _job_class_dict(self) -> dict:
         return {
             "FlexibleMaster": FlexibleMaster,
             "ScriptJob": ScriptJob,
