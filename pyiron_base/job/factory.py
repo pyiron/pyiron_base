@@ -5,9 +5,12 @@
 Factories for creating jobs, which may already exist in the database/storage.
 """
 
+from pyiron_base.project.generic import Project
 from pyiron_base.generic.factory import PyironFactory
 from abc import ABC, abstractmethod
 from pyiron_base.job.jobtype import JobType
+from pyiron_base.job.generic import GenericJob
+from typing import Type
 
 from pyiron_base.master.flexible import FlexibleMaster
 from pyiron_base.job.script import ScriptJob
@@ -28,7 +31,7 @@ __date__ = "Sep 7, 2021"
 
 
 class JobFactoryCore(PyironFactory, ABC):
-    def __init__(self, project):
+    def __init__(self, project: Project):
         self._project = project
 
     def __dir__(self):
@@ -39,7 +42,7 @@ class JobFactoryCore(PyironFactory, ABC):
 
     def __getattr__(self, name):
         if name in self._job_class_dict.keys():
-            def wrapper(job_name, delete_existing_job=False):
+            def wrapper(job_name, delete_existing_job=False) -> Type[GenericJob]:
                 """
                 Create a job.
 
