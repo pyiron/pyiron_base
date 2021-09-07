@@ -47,8 +47,9 @@ from pyiron_base.server.queuestatus import (
 )
 from pyiron_base.job.external import Notebook
 from pyiron_base.project.data import ProjectData
-
 from pyiron_base.archiving import import_archive, export_archive
+from abc import ABC
+from typing import Type
 
 __author__ = "Joerg Neugebauer, Jan Janssen"
 __copyright__ = (
@@ -62,6 +63,17 @@ __status__ = "production"
 __date__ = "Sep 1, 2017"
 
 s = Settings()
+
+
+class CreatorCore(ABC):
+    def __init__(self, project):
+        self._project = project
+
+
+class BaseCreator(CreatorCore):
+    def __init__(self, project):
+        super().__init__(project)
+        # TODO: Attach a job factory
 
 
 class Project(ProjectPath, HasGroups):
@@ -123,6 +135,7 @@ class Project(ProjectPath, HasGroups):
         self._inspect_mode = False
         self._data = None
         self._creator = Creator(project=self)
+        self._base = BaseCreator(project=self)
 
         if not s.database_is_disabled:
             s.open_connection()
@@ -1514,6 +1527,33 @@ class Project(ProjectPath, HasGroups):
             self, archive_directory=origin_path, df=df, compressed=compress
         )
 
+    @classmethod
+    def register_creator(cls, name: str, creator: Type[CreatorCore]):
+        """
+        Add a new creator to the project class.
+
+        Example)
+        >>> from pyiron_base import Project, CreatorCore
+        >>> class MyCreator(CreatorCore):
+        >>>     @property
+        >>>     def foo(self):
+        >>>         return 'foo'
+        >>>
+        >>> Project.register_creator('my_creator', MyCreator)
+        >>> pr = Project('scratch')
+        >>> print(pr.my_creator.foo)
+        'foo'
+
+        The intent is then that pyiron submodules (e.g. `pyiron_atomistics`) define a new creator and in their
+        `__init__.py` file only need to invoke `Project.register_creator('pyiron_submodule', SubmoduleCreator)`.
+        Then whenever `pyiron_submodule` gets imported, all its functionality is available on the project.
+
+        Args:
+            name (str): The name for the newly registered property.
+            creator (CreatorCore): The creator to register.
+        """
+        setattr(cls, name, property(lambda self: creator(self)))
+
 
 class Maintenance:
     """
@@ -1566,29 +1606,6 @@ class Creator:
     def __init__(self, project):
         self._job_factory = JobFactory(project=project)
         self._project = project
-
-    @classmethod
-    def register(cls, name, registrant):
-        """
-        Instantiate a new object as a property of the creator. The new object should take a `Project` instance as the
-        only initialization argument.
-
-        E.g. in the `__init__` file for a new pyiron module you may have:
-        >>> class Foo:
-        >>>     def __init__(self, project):
-        >>>         self._project = project
-        >>>
-        >>> from pyiron_base import Creator
-        >>> Creator.register('my_new_foo', Foo)
-
-        Of course you shouldn't also define the class itself in `__init__.py` but rather somewhere in your codebase, it
-        just shows up here to make the example complete.
-
-        Args:
-            name (str): The name for the newly registered property.
-            registrant (class): The class to register, which must take an instance of `Project` as its only argument.
-        """
-        setattr(cls, name, property(lambda self: registrant(self._project)))
 
     @property
     def job(self):

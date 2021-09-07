@@ -23,7 +23,7 @@ from pyiron_base.master.list import ListMaster
 from pyiron_base.master.parallel import ParallelMaster, JobGenerator
 from pyiron_base.master.serial import SerialMasterBase
 from pyiron_base.master.flexible import FlexibleMaster
-from pyiron_base.project.generic import Project, Creator
+from pyiron_base.project.generic import Project, Creator, CreatorCore
 from pyiron_base.pyio.parser import Logstatus, extract_data_from_file
 from pyiron_base.server.queuestatus import validate_que_request
 from pyiron_base.settings.generic import Settings
