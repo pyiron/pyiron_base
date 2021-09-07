@@ -1567,6 +1567,29 @@ class Creator:
         self._job_factory = JobFactory(project=project)
         self._project = project
 
+    @classmethod
+    def register(cls, name, registrant):
+        """
+        Instantiate a new object as a property of the creator. The new object should take a `Project` instance as the
+        only initialization argument.
+
+        E.g. in the `__init__` file for a new pyiron module you may have:
+        >>> class Foo:
+        >>>     def __init__(self, project):
+        >>>         self._project = project
+        >>>
+        >>> from pyiron_base import Creator
+        >>> Creator.register('my_new_foo', Foo)
+
+        Of course you shouldn't also define the class itself in `__init__.py` but rather somewhere in your codebase, it
+        just shows up here to make the example complete.
+
+        Args:
+            name (str): The name for the newly registered property.
+            registrant (class): The class to register, which must take an instance of `Project` as its only argument.
+        """
+        setattr(cls, name, property(lambda self: registrant(self._project)))
+
     @property
     def job(self):
         return self._job_factory
