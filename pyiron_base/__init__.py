@@ -34,7 +34,7 @@ from pyiron_base.generic.object import HasDatabase, HasStorage, PyironObject
 from pyiron_base.database.performance import get_database_statistics
 
 from pyiron_base.toolkit import Toolkit, BaseTools
-Project.register_creator('base', BaseTools)
+Project.register_tools('base', BaseTools)
 
 # optional API of the pyiron_base module
 try:

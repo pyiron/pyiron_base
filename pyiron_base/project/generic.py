@@ -1514,7 +1514,7 @@ class Project(ProjectPath, HasGroups):
         )
 
     @classmethod
-    def register_creator(cls, name: str, creator):
+    def register_tools(cls, name: str, creator):
         """
         Add a new creator to the project class.
 
@@ -1525,7 +1525,7 @@ class Project(ProjectPath, HasGroups):
         >>>     def foo(self):
         >>>         return 'foo'
         >>>
-        >>> Project.register_creator('my_creator', MyCreator)
+        >>> Project.register_tools('my_creator', MyCreator)
         >>> pr = Project('scratch')
         >>> print(pr.my_creator.foo)
         'foo'
