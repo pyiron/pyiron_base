@@ -48,8 +48,6 @@ from pyiron_base.server.queuestatus import (
 from pyiron_base.job.external import Notebook
 from pyiron_base.project.data import ProjectData
 from pyiron_base.archiving import import_archive, export_archive
-from abc import ABC
-from typing import Type
 
 __author__ = "Joerg Neugebauer, Jan Janssen"
 __copyright__ = (
@@ -63,17 +61,6 @@ __status__ = "production"
 __date__ = "Sep 1, 2017"
 
 s = Settings()
-
-
-class CreatorCore(ABC):
-    def __init__(self, project):
-        self._project = project
-
-
-class BaseCreator(CreatorCore):
-    def __init__(self, project):
-        super().__init__(project)
-        # TODO: Attach a job factory
 
 
 class Project(ProjectPath, HasGroups):
@@ -135,7 +122,6 @@ class Project(ProjectPath, HasGroups):
         self._inspect_mode = False
         self._data = None
         self._creator = Creator(project=self)
-        self._base = BaseCreator(project=self)
 
         if not s.database_is_disabled:
             s.open_connection()
@@ -1528,13 +1514,13 @@ class Project(ProjectPath, HasGroups):
         )
 
     @classmethod
-    def register_creator(cls, name: str, creator: Type[CreatorCore]):
+    def register_creator(cls, name: str, creator):
         """
         Add a new creator to the project class.
 
         Example)
-        >>> from pyiron_base import Project, CreatorCore
-        >>> class MyCreator(CreatorCore):
+        >>> from pyiron_base import Project, Toolkit
+        >>> class MyCreator(Toolkit):
         >>>     @property
         >>>     def foo(self):
         >>>         return 'foo'
@@ -1550,7 +1536,7 @@ class Project(ProjectPath, HasGroups):
 
         Args:
             name (str): The name for the newly registered property.
-            creator (CreatorCore): The creator to register.
+            creator (Toolkit): The creator to register.
         """
         setattr(cls, name, property(lambda self: creator(self)))
 
