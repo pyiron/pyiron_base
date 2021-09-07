@@ -40,7 +40,7 @@ class TemplateJob(GenericJob):
             hdf=hdf,
             group_name=group_name
         )
-        self._data.to_hdf(hdf=hdf, group_name=group_name)
+        self._data.to_hdf(hdf=self.project_hdf5, group_name=None)
 
     def from_hdf(self, hdf=None, group_name=None):
         super().from_hdf(
