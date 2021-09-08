@@ -4,6 +4,7 @@
 
 # API of the pyiron_base module - in alphabetical order 
 from pyiron_base.generic.factory import PyironFactory
+from pyiron_base.generic.flattenedstorage import FlattenedStorage
 from pyiron_base.generic.hdfio import FileHDFio, ProjectHDFio
 from pyiron_base.generic.datacontainer import DataContainer
 from pyiron_base.generic.inputlist import InputList
@@ -29,6 +30,7 @@ from pyiron_base.settings.generic import Settings
 from pyiron_base.settings.install import install_dialog
 from pyiron_base.table.datamining import PyironTable, TableJob
 from pyiron_base.generic.object import HasDatabase, HasStorage, PyironObject
+from pyiron_base.database.performance import get_database_statistics
 
 # optional API of the pyiron_base module
 try:

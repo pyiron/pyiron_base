@@ -4,7 +4,7 @@
 
 import unittest
 
-# class TestExecutable(unittest.TestCase):
+# class TestExecutable(PyironTestCase):
 #     def setUp(self):
 #         self.exe_no_existing = Executable(codename='GenericJob', path_binary_codes=['../../../../static/bin_cmmc'],
 #                                           overwrite_nt_flag=True)

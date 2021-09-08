@@ -6,6 +6,8 @@ import pandas as pd
 from pandas._testing import assert_frame_equal
 from filecmp import dircmp
 from pyiron_base import PythonTemplateJob
+from shutil import rmtree
+from pyiron_base._tests import PyironTestCase
 
 
 class ToyJob(PythonTemplateJob):
@@ -21,7 +23,7 @@ class ToyJob(PythonTemplateJob):
         self.status.finished = True
 
 
-class TestPack(unittest.TestCase):
+class TestPack(PyironTestCase):
 
     @classmethod
     def setUpClass(cls):
@@ -74,6 +76,22 @@ class TestPack(unittest.TestCase):
         path_to_compare = self.arch_dir + "/" + self.pr.name
         compare_obj = dircmp(path_to_compare, self.pr.path)
         self.assertEqual(len(compare_obj.diff_files), 0)
+
+    def test_export_with_targz_extension(self):
+        os.mkdir(os.path.join(os.curdir, 'tmp'))
+        tmp_path = os.path.join(os.curdir, 'tmp')
+        tar_arch = self.arch_dir_comp + '.tar.gz'
+        self.pr.pack(destination_path=os.path.join(tmp_path, tar_arch),
+                     csv_file_name=os.path.join(tmp_path, 'exported.csv'), compress=True)
+        desirable_lst = [tar_arch, 'exported.csv']
+        desirable_lst.sort()
+        content_tmp = os.listdir(tmp_path)
+        content_tmp.sort()
+        try:
+            rmtree(tmp_path)
+        except Exception as err_msg:
+            print(f"deleting unsuccessful: {err_msg}")
+        self.assertListEqual(desirable_lst, content_tmp)
 
 
 if __name__ == "__main__":

@@ -2,12 +2,12 @@
 # Copyright (c) Max-Planck-Institut für Eisenforschung GmbH - Computational Materials Design (CM) Department
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
-import unittest
 from pyiron_base.job.jobtype import JobTypeChoice, JobFactory
 from pyiron_base import JOB_CLASS_DICT
+from pyiron_base._tests import PyironTestCase
 
 
-class TestJobTypeChoice(unittest.TestCase):
+class TestJobTypeChoice(PyironTestCase):
 
     @classmethod
     def setUpClass(cls):
@@ -50,7 +50,7 @@ class TestJobTypeChoice(unittest.TestCase):
                       "JobTypeChoice")
 
 
-class TestJobCreator(unittest.TestCase):
+class TestJobCreator(PyironTestCase):
 
     @classmethod
     def setUpClass(cls):

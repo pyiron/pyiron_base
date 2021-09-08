@@ -5,9 +5,10 @@
 from pyiron_base.settings.generic import Settings
 import os
 import unittest
+from pyiron_base._tests import PyironTestCase
 
 
-class TestConfigSettingsStatic(unittest.TestCase):
+class TestConfigSettingsStatic(PyironTestCase):
     @classmethod
     def setUpClass(cls):
         cls.resource_path = os.path.abspath(

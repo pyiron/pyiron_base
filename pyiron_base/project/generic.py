@@ -13,11 +13,12 @@ import importlib
 import numpy as np
 import pkgutil
 from git import Repo, InvalidGitRepositoryError
-
+from warnings import warn
 from pyiron_base.project.path import ProjectPath
 from pyiron_base.database.filetable import FileTable
 from pyiron_base.settings.generic import Settings
 from pyiron_base.settings.publications import list_publications
+from pyiron_base.database.performance import get_database_statistics
 from pyiron_base.database.jobtable import (
     get_db_columns,
     get_job_ids,
@@ -129,6 +130,14 @@ class Project(ProjectPath, HasGroups):
         else:
             self.db = FileTable(project=path)
         self.job_type = JobTypeChoice()
+
+        self._maintenance = None
+
+    @property
+    def maintenance(self):
+        if self._maintenance is None:
+            self._maintenance = Maintenance()
+        return self._maintenance
 
     @property
     def parent_group(self):
@@ -522,7 +531,7 @@ class Project(ProjectPath, HasGroups):
         """
         return self.load(job_specifier=job_specifier, convert_to_object=False)
 
-    def iter_jobs(self, path=None, recursive=True, convert_to_object=True, status=None):
+    def iter_jobs(self, path=None, recursive=True, convert_to_object=True, status=None, job_type=None):
         """
         Iterate over the jobs within the current project and it is sub projects
 
@@ -531,15 +540,24 @@ class Project(ProjectPath, HasGroups):
             recursive (bool): search subprojects [True/False] - True by default
             convert_to_object (bool): load the full GenericJob object (default) or just the HDF5 / JobCore object
             status (str/None): status of the jobs to filter for - ['finished', 'aborted', 'submitted', ...]
+            job_type (str/None): job type to filter for, corresponds to the 'hamilton' column in the job table
 
         Returns:
             yield: Yield of GenericJob or JobCore
         """
-        if status is None:
+        if status is None and job_type is None:
             job_id_lst = self.get_jobs(recursive)["id"]
         else:
             df = self.job_table(recursive=True)
-            job_id_lst = list(df[df["status"] == status]["id"]) if not df.empty else []
+            if df.empty:
+                job_id_lst = []
+            else:
+                mask = np.ones_like(df.index, dtype=bool)
+                if status is not None:
+                    mask &= df["status"] == status
+                if job_type is not None:
+                    mask &= df["hamilton"] == job_type
+                job_id_lst = list(df[mask]["id"])
         for job_id in job_id_lst:
             if path is not None:
                 yield self.load(job_id, convert_to_object=False)[path]
@@ -1462,7 +1480,6 @@ class Project(ProjectPath, HasGroups):
                 for entry in db_entry_in_old_format:
                     self.db.item_update({"project": self.project_path}, entry["id"])
 
-
     def pack(self, destination_path, csv_file_name='export.csv', compress=True):
         """
         by this funtion, the job table is exported to a csv file
@@ -1480,7 +1497,6 @@ class Project(ProjectPath, HasGroups):
         df = export_archive.export_database(self, directory_to_transfer, destination_path)
         df.to_csv(csv_file_name)
 
-
     def unpack(self, origin_path, csv_file_name='export.csv', compress=True):
         """
         by this function, job table is imported from a given csv file,
@@ -1490,12 +1506,60 @@ class Project(ProjectPath, HasGroups):
             origin_path (str): the relative path of a directory (or a compressed file without the tar.gz exention)
                             from which the project directory is copied.
             csv_file_name (str): the csv file from which the job_table is copied to the current project
+            compress (bool): if True, it looks for a compressed file
         """
         csv_path = csv_file_name
         df = pandas.read_csv(csv_path, index_col=0)
         import_archive.import_jobs(
-            self, self.path, archive_directory=origin_path, df=df, compressed=compress
+            self, archive_directory=origin_path, df=df, compressed=compress
         )
+
+
+class Maintenance:
+    """
+    The purpose of maintenance class is to provide
+    some measures of perfomance for pyiron, whether local to the project
+    or global (describing the status of pyiron on the running machine)
+    """
+    def __init__(self):
+        """
+        initialize the local and global attributes
+        """
+        self._global = GlobalMaintenance()
+        self._local = None
+
+    @property
+    def global_status(self):
+        return self._global
+
+
+class GlobalMaintenance:
+    def __init__(self):
+        """
+        initialize the flag self._check_postgres, to control whether pyiron is
+        set to communicate with a postgres database.
+        """
+        s = Settings()
+        connection_string = s._configuration['sql_connection_string']
+        if "postgresql" not in connection_string:
+            warn(
+                """
+                The detabase statistics is only available for a Postgresql database
+                """
+            )
+            self._check_postgres = False
+        else:
+            self._check_postgres = True
+
+    def get_database_statistics(self):
+        if self._check_postgres:
+            return get_database_statistics()
+        else:
+            raise RuntimeError(
+                """
+                The detabase statistics is only available for a Postgresql database
+                """
+            )
 
 
 class Creator:

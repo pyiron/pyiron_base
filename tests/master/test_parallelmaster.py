@@ -6,6 +6,8 @@ import unittest
 import os
 from pyiron_base.project.generic import Project
 from pyiron_base import JobGenerator, ParallelMaster
+from pyiron_base._tests import PyironTestCase
+
 
 class TestGenerator(JobGenerator):
 
@@ -29,7 +31,7 @@ class TestMaster(ParallelMaster):
         super().__init__(job_name, project)
         self._job_generator = TestGenerator(self)
 
-class TestParallelMaster(unittest.TestCase):
+class TestParallelMaster(PyironTestCase):
     @classmethod
     def setUpClass(cls):
         cls.file_location = os.path.dirname(os.path.abspath(__file__))

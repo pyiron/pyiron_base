@@ -1,7 +1,9 @@
 # Copyright (c) Max-Planck-Institut für Eisenforschung GmbH - Computational Materials Design (CM) Department
 # Distributed under the terms of "New BSD License", see the LICENSE file.
-from pyiron_base._tests import TestWithCleanProject
+import pyiron_base
+from pyiron_base._tests import TestWithCleanProject, PyironTestCase
 from pyiron_base.generic.datacontainer import DataContainer
+from pyiron_base.generic.hdfstub import HDFStub
 from pyiron_base.generic.inputlist import InputList
 from collections import Iterator
 import copy
@@ -12,12 +14,16 @@ import numpy as np
 
 
 class Sub(DataContainer):
-    def __init__(self, init=None, table_name=None):
-        super().__init__(init=init, table_name=table_name)
+    def __init__(self, init=None, table_name=None, lazy=False):
+        super().__init__(init=init, table_name=table_name, lazy=lazy)
         self.foo = 42
 
 
 class TestDataContainer(TestWithCleanProject):
+
+    @property
+    def docstring_module(self):
+        return pyiron_base.generic.datacontainer
 
     @classmethod
     def setUpClass(cls):
@@ -348,7 +354,9 @@ class TestDataContainer(TestWithCleanProject):
         )
 
         self.hdf["read_only_from/READ_ONLY"] = True
-        pl.from_hdf(self.hdf, group_name="read_only_from")
+        with warnings.catch_warnings(record=True) as w:
+            pl.from_hdf(self.hdf, group_name="read_only_from")
+            self.assertEqual(len(w), 0, "from_hdf on read_only DataContainer should not call _read_only_error.")
         self.assertEqual(
             pl.read_only,
             self.hdf["read_only_from/READ_ONLY"],
@@ -457,8 +465,55 @@ class TestDataContainer(TestWithCleanProject):
         )
         self.pl.pop('subclass')
 
+    def test_stub(self):
+        """Lazily loaded containers should contain only stubs and only force them when directly accessed."""
 
-class TestInputList(unittest.TestCase):
+        self.pl.to_hdf(self.hdf, "lazy")
+        ll = self.hdf["lazy"].to_object(lazy=True)
+        self.assertTrue(all(isinstance(v, HDFStub) for v in ll._store),
+                        "Not all values loaded as stubs!")
+
+        repr(ll)
+        self.assertTrue(all(isinstance(v, HDFStub) for v in ll._store),
+                        "Some stubs have been loaded after getting string repr of container!")
+
+        ll0 = ll[0]
+        self.assertTrue(all(isinstance(v, HDFStub) for v in ll0._store),
+                        "Recursive datacontainers not lazily loaded!")
+
+        self.assertEqual(ll[0].foo, self.pl[0].foo,
+                         "Lazily loaded list not equal to orignal list!")
+
+        self.assertTrue(not isinstance(ll._store[0], HDFStub),
+                        "Loaded value not stored back into container!")
+
+    def test_stub_sublasses(self):
+        """Sub classes of DataContainer should also be able to be lazily loaded."""
+
+        sl = Sub(self.pl.to_builtin())
+
+        sl.to_hdf(self.hdf, "lazy_sub")
+        ll = Sub(lazy=True)
+        ll.from_hdf(self.hdf, "lazy_sub")
+        self.assertTrue(all(isinstance(v, HDFStub) for v in ll._store),
+                        "Not all values loaded as stubs!")
+
+        repr(ll)
+        self.assertTrue(all(isinstance(v, HDFStub) for v in ll._store),
+                        "Some stubs have been loaded after getting string repr of container!")
+
+        ll0 = ll[0]
+        self.assertTrue(all(isinstance(v, HDFStub) for v in ll0._store),
+                        "Recursive datacontainers not lazily loaded!")
+
+        self.assertEqual(ll[0].foo, sl[0].foo,
+                         "Lazily loaded list not equal to orignal list!")
+
+        self.assertTrue(not isinstance(ll._store[0], HDFStub),
+                        "Loaded value not stored back into container!")
+
+
+class TestInputList(PyironTestCase):
 
     def test_deprecation_warning(self):
         """Instantiating an InputList should raise a warning."""

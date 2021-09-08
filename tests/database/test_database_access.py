@@ -16,9 +16,10 @@ from datetime import datetime
 from random import choice
 from string import ascii_uppercase
 from pyiron_base.database.generic import DatabaseAccess
+from pyiron_base._tests import PyironTestCase
 
 
-class TestDatabaseAccess(unittest.TestCase):
+class TestDatabaseAccess(PyironTestCase):
     """
     Standard Unittest of the DatabaseAccess class
     """

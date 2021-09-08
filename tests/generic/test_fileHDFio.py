@@ -7,10 +7,11 @@ import sys
 from io import StringIO
 import numpy as np
 from pyiron_base.generic.hdfio import FileHDFio
+from pyiron_base._tests import PyironTestCase
 import unittest
 
 
-class TestFileHDFio(unittest.TestCase):
+class TestFileHDFio(PyironTestCase):
     @classmethod
     def setUpClass(cls):
         cls.current_dir = os.path.dirname(os.path.abspath(__file__)).replace("\\", "/")
