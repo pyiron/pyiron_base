@@ -60,6 +60,7 @@ class Settings(metaclass=Singleton):
             "user": "pyiron",
             "resource_paths": [],
             "project_paths": [],
+            "connection_timeout": 60,
             "sql_connection_string": None,
             "sql_table_name": "jobs_pyiron",
             "sql_view_connection_string": None,
@@ -191,6 +192,20 @@ class Settings(metaclass=Singleton):
         """
         return self._configuration["resource_paths"]
 
+    @property
+    def connection_timeout(self):
+        """
+        Get the connection timeout in seconds.  Zero means close the database after every connection.
+
+        Returns:
+            int: timeout in seconds
+        """
+        return self._configuration["connection_timeout"]
+
+    @connection_timeout.setter
+    def connection_timeout(self, val):
+        self._configuration["connection_timeout"] = val
+
     def open_connection(self):
         """
         Internal function to open the connection to the database. Only after this function is called the database is
@@ -200,6 +215,7 @@ class Settings(metaclass=Singleton):
             self._database = DatabaseAccess(
                 self._configuration["sql_connection_string"],
                 self._configuration["sql_table_name"],
+                timeout=self._configuration["connection_timeout"]
             )
 
     def switch_to_local_database(self, file_name="pyiron.db", cwd=None):
@@ -416,10 +432,12 @@ class Settings(metaclass=Singleton):
                 self._configuration["sql_view_user_key"] = parser.get(
                     section, "VIEWERPASSWD"
                 )
+            self._configuration["connection_timeout"] = parser.get(section, "CONNECTION_TIMEOUT", fallback=60)
         elif self._configuration["sql_type"] == "SQLalchemy":
             self._configuration["sql_connection_string"] = parser.get(
                 section, "CONNECTION"
             )
+            self._configuration["connection_timeout"] = parser.get(section, "CONNECTION_TIMEOUT", fallback=60)
         else:  # finally we assume an SQLite connection
             if parser.has_option(section, "FILE"):
                 self._configuration["sql_file"] = parser.get(section, "FILE").replace(

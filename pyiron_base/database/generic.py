@@ -5,6 +5,8 @@
 DatabaseAccess class deals with accessing the database
 """
 
+import pyiron_base.settings.logger
+
 import numpy as np
 import re
 import time
@@ -26,6 +28,8 @@ from sqlalchemy import (
 from sqlalchemy.pool import NullPool
 from sqlalchemy.sql import select
 from sqlalchemy.exc import OperationalError, DatabaseError
+from threading import Thread, Lock
+from queue import SimpleQueue, Empty as QueueEmpty
 
 __author__ = "Murat Han Celik"
 __copyright__ = (
@@ -39,19 +43,112 @@ __status__ = "production"
 __date__ = "Sep 1, 2017"
 
 
+class ConnectionWatchDog(Thread):
+    """
+    Helper class that closes idle connections after a given timeout.
+
+    Initialize it with the connection to watch and a lock that protects it.  The lock prevents the watchdog from killing
+    a connection that is currently used.  The timeout is in seconds.
+
+    >>> conn = SqlConnection(...)
+    >>> lock = threading.Lock()
+    >>> dog = ConnectionWatchDog(conn, lock, timeout=60)
+
+    After it is created, :method:`.kick()` the watchdog periodically before the timeout runs out.  It is important to
+    acquire the lock when using the connection object.
+
+    >>> dog.kick()
+    >>> with lock:
+    ...    conn.execute(...)
+    >>> dog.kick()
+
+    Once you want to finish the connection or want to make sure the watchdog quit, call :method:`.kill()` to shut it
+    down.  This also causes the watch dog to try and close the connection.
+
+    >>> dog.kill()
+    """
+
+    def __init__(self, conn, lock, timeout=60):
+        """
+        Create new watchdog.
+
+        Args:
+            conn: any python object with a `close()` method.
+            lock (:class:`threading.Lock`): lock to protect conn
+            timeout (int): time in seconds before the watchdog closes the connection.
+        """
+        super().__init__()
+        self._queue = SimpleQueue()
+        self._conn = conn
+        self._lock = lock
+        self._timeout = timeout
+
+    def run(self):
+        """
+        Starts the watchdog.
+        """
+        while True:
+            try:
+                kicked = self._queue.get(timeout=self._timeout)
+            except QueueEmpty:
+                kicked = False
+            if not kicked:
+                with self._lock:
+                    try:
+                        self._conn.close()
+                    except:
+                        pass
+                    break
+
+    def kick(self):
+        """
+        Restarts the timeout.
+        """
+        self._queue.put(True)
+
+    def kill(self):
+        """
+        Stop the watchdog and close the connection.
+        """
+        self._queue.put(False)
+        self.join()
+
+
 class AutorestoredConnection:
-    def __init__(self, engine):
+    def __init__(self, engine, timeout=60):
         self.engine = engine
         self._conn = None
+        self._lock = Lock()
+        self._watchdog = None
+        self._logger = pyiron_base.settings.logger.get_logger()
+        self._timeout = timeout
 
     def execute(self, *args, **kwargs):
-        try:
-            if self._conn is None or self._conn.closed:
-                self._conn = self.engine.connect()
-            result = self._conn.execute(*args, **kwargs)
-        except OperationalError:
-            time.sleep(5)
-            result = self.execute(*args, **kwargs)
+        while True:
+            try:
+                if self._conn is None or self._conn.closed:
+                    self._conn = self.engine.connect()
+                    if self._timeout > 0:
+                        # only log reconnections when we keep the connection alive between requests otherwise we'll spam
+                        # the log
+                        if self._conn is None:
+                            self._logger.info("Reconnecting to DB; connection not existing.")
+                        else:
+                            self._logger.info("Reconnecting to DB; connection closed.")
+                        if self._watchdog is not None:
+                            # in case connection is dead, but watchdog is still up, something else killed the connection,
+                            # make the watchdog quit, then making a new one
+                            self._watchdog.kill()
+                        self._watchdog = ConnectionWatchDog(self._conn, self._lock, timeout=self._timeout)
+                        self._watchdog.start()
+                if self._timeout > 0:
+                    self._watchdog.kick()
+                with self._lock:
+                    result = self._conn.execute(*args, **kwargs)
+                    break
+            except OperationalError as e:
+                print(f"Database connection failed with operational error {e}, waiting 5s, then re-trying.")
+                time.sleep(5)
         return result
 
     def close(self):
@@ -73,7 +170,7 @@ class DatabaseAccess(object):
     Murat Han Celik
     """
 
-    def __init__(self, connection_string, table_name):
+    def __init__(self, connection_string, table_name, timeout=60):
         """
         Initialize the Database connection
 
@@ -82,9 +179,11 @@ class DatabaseAccess(object):
                                      typical form: dialect+driver://username:password@host:port/database
                                      example: 'postgresql://scott:tiger@cmcent56.mpie.de/mdb'
             table_name (str): database table name, a simple string like: 'simulation'
+            timeout (int): time in seconds before unused database connection are closed
         """
         self.table_name = table_name
         self._keep_connection = False
+        self._timeout = timeout
         self._sql_lite = "sqlite" in connection_string
         try:
             if not self._sql_lite:
@@ -93,7 +192,8 @@ class DatabaseAccess(object):
                     connect_args={"connect_timeout": 15},
                     poolclass=NullPool,
                 )
-                self.conn = AutorestoredConnection(self._engine)
+                self.conn = AutorestoredConnection(self._engine, timeout=self._timeout)
+                self._keep_connection = self._timeout > 0
             else:
                 self._engine = create_engine(connection_string)
                 self.conn = self._engine.connect()

@@ -126,6 +126,13 @@ def job_wrapper_function(working_directory, job_id=None, file_path=None, submit_
         debug (bool): enable debug mode
         submit_on_remote (bool): submit to queuing system on remote host
     """
+
+    # always close the database connection in calculations on the cluster to avoid high number of concurrent
+    # connections.
+    s.close_connection()
+    s.connection_timeout = 0
+    s.open_connection()
+
     if job_id is not None:
         job = JobWrapper(
             working_directory=working_directory,

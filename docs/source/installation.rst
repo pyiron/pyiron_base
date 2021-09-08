@@ -152,6 +152,9 @@ options can be added to the :code:`~/.pyiron`:
 
 * :code:`JOB_TABLE` the name of the database table. pyiron is commonly using one table per user. 
 
+* :code:`CONNECTION_TIMEOUT` the time in seconds before an idle connection to the database server is closed, set to 0 to
+  close after every transaction.  Default is 60 seconds.
+
 A typical :code:`.pyiron` configuration with a `PostgreSQL <https://www.postgresql.org>`_ database might look like this: 
 
 .. code-block:: bash
