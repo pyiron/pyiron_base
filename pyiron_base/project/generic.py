@@ -1514,20 +1514,20 @@ class Project(ProjectPath, HasGroups):
         )
 
     @classmethod
-    def register_tools(cls, name: str, creator):
+    def register_tools(cls, name: str, tools):
         """
         Add a new creator to the project class.
 
         Example)
         >>> from pyiron_base import Project, Toolkit
-        >>> class MyCreator(Toolkit):
+        >>> class MyTools(Toolkit):
         >>>     @property
         >>>     def foo(self):
         >>>         return 'foo'
         >>>
-        >>> Project.register_tools('my_creator', MyCreator)
+        >>> Project.register_tools('my_tools', MyTools)
         >>> pr = Project('scratch')
-        >>> print(pr.my_creator.foo)
+        >>> print(pr.my_tools.foo)
         'foo'
 
         The intent is then that pyiron submodules (e.g. `pyiron_atomistics`) define a new creator and in their
@@ -1536,9 +1536,9 @@ class Project(ProjectPath, HasGroups):
 
         Args:
             name (str): The name for the newly registered property.
-            creator (Toolkit): The creator to register.
+            tools (Toolkit): The tools to register.
         """
-        setattr(cls, name, property(lambda self: creator(self)))
+        setattr(cls, name, property(lambda self: tools(self)))
 
 
 class Maintenance:
