@@ -1539,6 +1539,10 @@ class Project(ProjectPath, HasGroups):
             name (str): The name for the newly registered property.
             tools (Toolkit): The tools to register.
         """
+        if hasattr(cls, name):
+            raise AttributeError(
+                f'{cls.__name__} already has an attribute {name}. Please use a new name for registration.'
+            )
         setattr(cls, name, property(lambda self: tools(self)))
 
 
