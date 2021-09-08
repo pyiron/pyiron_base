@@ -1522,9 +1522,9 @@ class Project(ProjectPath, HasGroups):
         
         >>> from pyiron_base import Project, Toolkit
         >>> class MyTools(Toolkit):
-        >>>     @property
-        >>>     def foo(self):
-        >>>         return 'foo'
+        ...     @property
+        ...     def foo(self):
+        ...         return 'foo'
         >>>
         >>> Project.register_tools('my_tools', MyTools)
         >>> pr = Project('scratch')
