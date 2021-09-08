@@ -1519,6 +1519,7 @@ class Project(ProjectPath, HasGroups):
         Add a new creator to the project class.
 
         Example)
+        
         >>> from pyiron_base import Project, Toolkit
         >>> class MyTools(Toolkit):
         >>>     @property
