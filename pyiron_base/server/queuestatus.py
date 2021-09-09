@@ -255,7 +255,6 @@ def update_from_remote(project, recursive=True):
             jobs_now_running_lst = []
         for job_id in df_combined.id.values:
             if job_id not in jobs_now_running_lst:
-                try:
                     job = project.inspect(job_id)
                     s.queue_adapter.transfer_file_to_remote(
                         file=job.project_hdf5.file_name,
@@ -270,8 +269,6 @@ def update_from_remote(project, recursive=True):
                     if status_hdf5 in job_status_finished_lst:
                         job_object = job.to_object()
                         job_object.transfer_from_remote()
-                except Exception as e:
-                    print("Error: {} while trying to fetch job {}".format(e, job_id))
 
 
 def validate_que_request(item):
