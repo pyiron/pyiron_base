@@ -214,7 +214,7 @@ class FlattenedStorage:
         if old_max < new:
             for k in self._per_element_arrays.keys():
                 if k in self._default_values.keys():
-                    self._per_element_arrays[k][old_max+1:] = self._default_values[k]
+                    self._per_element_arrays[k][old_max:] = self._default_values[k]
 
     def _resize_chunks(self, new):
         old_max = self._num_chunks_alloc
@@ -228,7 +228,7 @@ class FlattenedStorage:
         if old_max < new:
             for k in self._per_chunk_arrays.keys():
                 if k in self._default_values.keys():
-                    self._per_chunk_arrays[k][old_max+1:] = self._default_values[k]
+                    self._per_chunk_arrays[k][old_max:] = self._default_values[k]
 
     def add_array(self, name, shape=(), dtype=np.float64, fill=None, per="element"):
         """
