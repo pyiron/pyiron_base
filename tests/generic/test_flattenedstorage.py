@@ -226,3 +226,16 @@ class TestFlattenedStorage(TestWithProject):
             self.assertEqual(store.get_array("bar", i), read.get_array("bar", i),
                              "per chunk values not equal after reading from HDF!")
 
+    def test_fill_value(self):
+        """fill if fill values are correctly assigned when resizing an array"""
+        store = FlattenedStorage()
+        store.add_array("bar", per="chunk", dtype=bool, fill=True)
+        store.add_array("foo", per="chunk")
+        for i in range(3):
+            store.add_chunk(1, bar=False)
+            store.add_chunk(1, foo=i)
+        store._resize_chunks(6)
+        self.assertTrue(np.all(store._per_chunk_arrays["foo"][:3]==False), "value is overwritten when resizing")
+        self.assertTrue(np.all(store._per_chunk_arrays["foo"][3:]==True), "fill value is not correctly set when resizing")
+        self.assertEqual(store._per_chunk_arrays["foo"][0:3], np.array((0,1,2)), "values in array changed on resizing")
+        store = FlattenedStorage()
