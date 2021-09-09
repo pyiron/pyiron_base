@@ -150,7 +150,7 @@ class FlattenedStorage:
         # Also store indices of chunk recently added
         self.prev_chunk_index = 0
         self.prev_element_index = 0
-        self._default_values = {}
+        self._fill_values = {}
 
         self._init_arrays()
 
@@ -213,8 +213,8 @@ class FlattenedStorage:
                 self._per_element_arrays[k] = np.resize(a, new_shape)
         if old_max < new:
             for k in self._per_element_arrays.keys():
-                if k in self._default_values.keys():
-                    self._per_element_arrays[k][old_max:] = self._default_values[k]
+                if k in self._fill_values.keys():
+                    self._per_element_arrays[k][old_max:] = self._fill_values[k]
 
     def _resize_chunks(self, new):
         old_max = self._num_chunks_alloc
@@ -227,8 +227,8 @@ class FlattenedStorage:
                 self._per_chunk_arrays[k] = np.resize(a, new_shape)
         if old_max < new:
             for k in self._per_chunk_arrays.keys():
-                if k in self._default_values.keys():
-                    self._per_chunk_arrays[k][old_max:] = self._default_values[k]
+                if k in self._fill_values.keys():
+                    self._per_chunk_arrays[k][old_max:] = self._fill_values[k]
 
     def add_array(self, name, shape=(), dtype=np.float64, fill=None, per="element"):
         """
@@ -295,7 +295,7 @@ class FlattenedStorage:
             store[name] = np.empty(shape=shape, dtype=dtype)
         else:
             store[name] = np.full(shape=shape, fill_value=fill, dtype=dtype)
-            self._default_values[name] = fill
+            self._fill_values[name] = fill
 
     def get_array(self, name, frame):
         """
@@ -506,7 +506,7 @@ class FlattenedStorage:
             for k, a in self._per_chunk_arrays.items():
                 write_array(k, a, hdf_arrays)
 
-            hdf_s_lst["_default_values"] = self._default_values
+            hdf_s_lst["_fill_values"] = self._fill_values
 
     def from_hdf(self, hdf, group_name="flat_storage"):
 
@@ -562,4 +562,4 @@ class FlattenedStorage:
                                        f"shape {a.shape[0]} does not match global allocation {self._num_elements_alloc}!")
 
             if version >= "0.3.0":
-                self._default_values = hdf_s_lst["_default_values"]
+                self._fill_values = hdf_s_lst["_fill_values"]
