@@ -226,3 +226,41 @@ class TestFlattenedStorage(TestWithProject):
             self.assertEqual(store.get_array("bar", i), read.get_array("bar", i),
                              "per chunk values not equal after reading from HDF!")
 
+    def test_fill_value(self):
+        """Test if fill values are correctly assigned when resizing an array and if self._fill_value is correctly read from hdf."""
+        # Test for per chunk arrays
+        store = FlattenedStorage()
+        store.add_array("bar", per="chunk", dtype=bool, fill=True)
+        store.add_array("foo", per="chunk")
+        for i in range(3):
+            store.add_chunk(1, bar=False, foo=i)
+        store._resize_chunks(6)
+        self.assertTrue(np.all(store._per_chunk_arrays["bar"][:3]==False), "value is overwritten when resizing")
+        self.assertTrue(np.all(store._per_chunk_arrays["bar"][3:]==True), "fill value is not correctly set when resizing")
+        self.assertTrue(np.all(store._per_chunk_arrays["foo"][0:3]==np.array((0,1,2))), "values in array changed on resizing")
+        # Test for per element arrays
+        store = FlattenedStorage()
+        store.add_array("bar", per="element", fill=np.nan)
+        store.add_array("foo", per="element")
+        for i in range(1,4):
+            store.add_chunk(i*2, bar=i*[i, i**2], foo=i*[i, i**2])
+        store._resize_elements(15)
+        self.assertTrue(np.all(store._per_element_arrays["foo"][:12]==store._per_element_arrays["bar"][:12]), "arrays are not equal up to resized part")
+        self.assertTrue(np.all(np.isnan(store._per_element_arrays["bar"][12:])), "array should np.nan where not set")
+        # Test hdf
+        store = FlattenedStorage()
+        store.add_array("bar", per="element", fill=np.nan)
+        store.add_array("foo", per="element")
+        store.add_array("fooTrue", per="chunk", dtype=bool, fill=True)
+        store.add_array("barText", per="chunk", dtype="U4", fill="fill")
+        hdf = self.project.create_hdf(self.project.path, "test_fill_values")
+        store.to_hdf(hdf)
+        read=FlattenedStorage()
+        read.from_hdf(hdf)
+        # normally it is possible to compare 2 dicts using ==, but np.nan!=np.nan so this has to be explicitly tested.
+        for k, v in store._fill_values.items():
+            if isinstance(v, float) and np.isnan(v):
+                self.assertTrue(np.isnan(read._fill_values[k]))
+            else:
+                self.assertEqual(v, read._fill_values[k], "value read from hdf differs from original value")
+        self.assertEqual(read._fill_values.keys(), store._fill_values.keys(), "keys read from hdf differ from original keys")

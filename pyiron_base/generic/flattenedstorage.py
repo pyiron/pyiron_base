@@ -129,8 +129,8 @@ class FlattenedStorage:
     3
     """
 
-    __version__ = "0.1.0"
-    __hdf_version__ = "0.2.0"
+    __version__ = "0.2.0"
+    __hdf_version__ = "0.3.0"
 
     def __init__(self, num_chunks=1, num_elements=1, **kwargs):
         """
@@ -150,6 +150,7 @@ class FlattenedStorage:
         # Also store indices of chunk recently added
         self.prev_chunk_index = 0
         self.prev_element_index = 0
+        self._fill_values = {}
 
         self._init_arrays()
 
@@ -201,8 +202,8 @@ class FlattenedStorage:
         end = start + self._per_chunk_arrays["length"][frame]
         return slice(start, end, 1)
 
-
     def _resize_elements(self, new):
+        old_max = self._num_elements_alloc
         self._num_elements_alloc = new
         for k, a in self._per_element_arrays.items():
             new_shape = (new,) + a.shape[1:]
@@ -210,8 +211,13 @@ class FlattenedStorage:
                 a.resize(new_shape)
             except ValueError:
                 self._per_element_arrays[k] = np.resize(a, new_shape)
+        if old_max < new:
+            for k in self._per_element_arrays.keys():
+                if k in self._fill_values.keys():
+                    self._per_element_arrays[k][old_max:] = self._fill_values[k]
 
     def _resize_chunks(self, new):
+        old_max = self._num_chunks_alloc
         self._num_chunks_alloc = new
         for k, a in self._per_chunk_arrays.items():
             new_shape = (new,) + a.shape[1:]
@@ -219,6 +225,10 @@ class FlattenedStorage:
                 a.resize(new_shape)
             except ValueError:
                 self._per_chunk_arrays[k] = np.resize(a, new_shape)
+        if old_max < new:
+            for k in self._per_chunk_arrays.keys():
+                if k in self._fill_values.keys():
+                    self._per_chunk_arrays[k][old_max:] = self._fill_values[k]
 
     def add_array(self, name, shape=(), dtype=np.float64, fill=None, per="element"):
         """
@@ -285,6 +295,7 @@ class FlattenedStorage:
             store[name] = np.empty(shape=shape, dtype=dtype)
         else:
             store[name] = np.full(shape=shape, fill_value=fill, dtype=dtype)
+            self._fill_values[name] = fill
 
     def get_array(self, name, frame):
         """
@@ -495,6 +506,8 @@ class FlattenedStorage:
             for k, a in self._per_chunk_arrays.items():
                 write_array(k, a, hdf_arrays)
 
+            hdf_s_lst["_fill_values"] = self._fill_values
+
     def from_hdf(self, hdf, group_name="flat_storage"):
 
         def read_array(name, hdf):
@@ -529,7 +542,7 @@ class FlattenedStorage:
                             self._per_element_arrays[k] = a
                         elif a.shape[0] == self._num_chunks_alloc:
                             self._per_chunk_arrays[k] = a
-            elif version == "0.2.0":
+            elif version == "0.2.0" or "0.3.0":
                 with hdf_s_lst.open("element_arrays") as hdf_arrays:
                     for k in hdf_arrays.list_nodes():
                         self._per_element_arrays[k] = read_array(k, hdf_arrays)
@@ -547,3 +560,6 @@ class FlattenedStorage:
                 if a.shape[0] != self._num_elements_alloc:
                     raise RuntimeError(f"per-element array {k} read inconsistently from HDF: "
                                        f"shape {a.shape[0]} does not match global allocation {self._num_elements_alloc}!")
+
+            if version >= "0.3.0":
+                self._fill_values = hdf_s_lst["_fill_values"]
