@@ -232,8 +232,7 @@ class TestFlattenedStorage(TestWithProject):
         store.add_array("bar", per="chunk", dtype=bool, fill=True)
         store.add_array("foo", per="chunk")
         for i in range(3):
-            store.add_chunk(1, bar=False)
-            store.add_chunk(1, foo=i)
+            store.add_chunk(1, bar=False, foo=i)
         store._resize_chunks(6)
         self.assertTrue(np.all(store._per_chunk_arrays["foo"][:3]==False), "value is overwritten when resizing")
         self.assertTrue(np.all(store._per_chunk_arrays["foo"][3:]==True), "fill value is not correctly set when resizing")
