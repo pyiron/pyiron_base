@@ -227,7 +227,7 @@ class TestFlattenedStorage(TestWithProject):
                              "per chunk values not equal after reading from HDF!")
 
     def test_fill_value(self):
-        """test if fill values are correctly assigned when resizing an array and if self._fill_value is correctly read from hdf"""
+        """Test if fill values are correctly assigned when resizing an array and if self._fill_value is correctly read from hdf."""
         # Test for per chunk arrays
         store = FlattenedStorage()
         store.add_array("bar", per="chunk", dtype=bool, fill=True)
