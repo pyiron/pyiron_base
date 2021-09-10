@@ -253,7 +253,7 @@ class TestFlattenedStorage(TestWithProject):
         store.add_array("foo", per="element")
         store.add_array("fooTrue", per="chunk", dtype=bool, fill=True)
         store.add_array("barText", per="chunk", dtype="U4", fill="fill")
-        hdf = self.project.create_hdf(self.project.path, "test")
+        hdf = self.project.create_hdf(self.project.path, "test_fill_values")
         store.to_hdf(hdf)
         read=FlattenedStorage()
         read.from_hdf(hdf)
