@@ -259,7 +259,7 @@ class TestFlattenedStorage(TestWithProject):
         read.from_hdf(hdf)
         # normally it is possible to compare 2 dicts using ==, but np.nan!=np.nan so this has to be explicitly tested.
         for k, v in store._fill_values.items():
-            if np.isnan(v):
+            if isinstance(v, float) and np.isnan(v):
                 self.assertTrue(np.isnan(read._fill_values[k]))
             else:
                 self.assertEqual(v, read._fill_values[k], "value read from hdf differs from original value")
