@@ -234,7 +234,7 @@ class TestFlattenedStorage(TestWithProject):
         for i in range(3):
             store.add_chunk(1, bar=False, foo=i)
         store._resize_chunks(6)
-        self.assertTrue(np.all(store._per_chunk_arrays["foo"][:3]==False), "value is overwritten when resizing")
+        self.assertTrue(np.all(store._per_chunk_arrays["bar"][:3]==False), "value is overwritten when resizing")
         self.assertTrue(np.all(store._per_chunk_arrays["foo"][3:]==True), "fill value is not correctly set when resizing")
         self.assertEqual(store._per_chunk_arrays["foo"][0:3], np.array((0,1,2)), "values in array changed on resizing")
         store = FlattenedStorage()
