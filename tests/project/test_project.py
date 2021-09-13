@@ -6,7 +6,8 @@ import unittest
 from os.path import dirname, join, abspath
 from os import remove
 from pyiron_base.project.generic import Project
-from pyiron_base._tests import PyironTestCase
+from pyiron_base._tests import PyironTestCase, TestWithProject
+from pyiron_base.toolkit import BaseTools
 
 
 class TestProjectData(PyironTestCase):
@@ -54,6 +55,18 @@ class TestProjectData(PyironTestCase):
                 pass
         except:
             self.fail("Iterating over empty project with set status flag should not raise exception.")
+
+
+class TestToolRegistration(TestWithProject):
+    def setUp(self) -> None:
+        self.tools = BaseTools(self.project)
+
+    def test_registration(self):
+        self.project.register_tools('foo', self.tools)
+        with self.assertRaises(AttributeError):
+            self.project.register_tools('foo', self.tools)  # Name taken
+        with self.assertRaises(AttributeError):
+            self.project.register_tools('load', self.tools)  # Already another method
 
 
 if __name__ == '__main__':

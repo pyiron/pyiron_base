@@ -47,7 +47,6 @@ from pyiron_base.server.queuestatus import (
 )
 from pyiron_base.job.external import Notebook
 from pyiron_base.project.data import ProjectData
-
 from pyiron_base.archiving import import_archive, export_archive
 
 __author__ = "Joerg Neugebauer, Jan Janssen"
@@ -1513,6 +1512,38 @@ class Project(ProjectPath, HasGroups):
         import_archive.import_jobs(
             self, archive_directory=origin_path, df=df, compressed=compress
         )
+
+    @classmethod
+    def register_tools(cls, name: str, tools):
+        """
+        Add a new creator to the project class.
+
+        Example)
+        
+        >>> from pyiron_base import Project, Toolkit
+        >>> class MyTools(Toolkit):
+        ...     @property
+        ...     def foo(self):
+        ...         return 'foo'
+        >>>
+        >>> Project.register_tools('my_tools', MyTools)
+        >>> pr = Project('scratch')
+        >>> print(pr.my_tools.foo)
+        'foo'
+
+        The intent is then that pyiron submodules (e.g. `pyiron_atomistics`) define a new creator and in their
+        `__init__.py` file only need to invoke `Project.register_creator('pyiron_submodule', SubmoduleCreator)`.
+        Then whenever `pyiron_submodule` gets imported, all its functionality is available on the project.
+
+        Args:
+            name (str): The name for the newly registered property.
+            tools (Toolkit): The tools to register.
+        """
+        if hasattr(cls, name):
+            raise AttributeError(
+                f'{cls.__name__} already has an attribute {name}. Please use a new name for registration.'
+            )
+        setattr(cls, name, property(lambda self: tools(self)))
 
 
 class Maintenance:
