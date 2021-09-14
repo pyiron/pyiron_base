@@ -35,6 +35,14 @@ class TemplateJob(GenericJob, HasStorage):
     def output(self):
         return self._storage.output
 
+    def to_hdf(self, hdf=None, group_name=None):
+        HasStorage.to_hdf(self, hdf=self.project_hdf5)
+        GenericJob.to_hdf(self, hdf=hdf, group_name=group_name)
+
+    def from_hdf(self, hdf=None, group_name=None):
+        GenericJob.to_hdf(self, hdf=hdf, group_name=group_name)
+        HasStorage.from_hdf(self, hdf=self.project_hdf5)
+
 
 class PythonTemplateJob(TemplateJob):
     def __init__(self, project, job_name):
