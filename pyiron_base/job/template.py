@@ -6,7 +6,7 @@ Template class to define jobs
 """
 
 from pyiron_base.job.generic import GenericJob
-from pyiron_base.generic.parameters import GenericParameters
+from pyiron_base.generic.object import HasStorage
 
 __author__ = "Jan Janssen"
 __copyright__ = (
@@ -20,26 +20,20 @@ __status__ = "development"
 __date__ = "May 15, 2020"
 
 
-class TemplateJob(GenericJob):
+class TemplateJob(GenericJob, HasStorage):
     def __init__(self, project, job_name):
-        super().__init__(project, job_name)
-        self.input = GenericParameters(table_name="input")
+        GenericJob.__init__(self, project, job_name)
+        HasStorage.__init__(self)
+        self._storage.create_group('input')
+        self._storage.create_group('output')
 
-    def to_hdf(self, hdf=None, group_name=None):
-        super().to_hdf(
-            hdf=hdf,
-            group_name=group_name
-        )
-        with self.project_hdf5.open("input") as h5in:
-            self.input.to_hdf(h5in)
+    @property
+    def input(self):
+        return self._storage.input
 
-    def from_hdf(self, hdf=None, group_name=None):
-        super().from_hdf(
-            hdf=hdf,
-            group_name=group_name
-        )
-        with self.project_hdf5.open("input") as h5in:
-            self.input.from_hdf(h5in)
+    @property
+    def output(self):
+        return self._storage.output
 
 
 class PythonTemplateJob(TemplateJob):
