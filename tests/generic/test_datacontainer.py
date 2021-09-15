@@ -11,6 +11,7 @@ import os
 import unittest
 import warnings
 import numpy as np
+import pandas as pd
 
 
 class Sub(DataContainer):
@@ -402,6 +403,14 @@ class TestDataContainer(TestWithCleanProject):
         self.assertEqual(l, m, "List with nested mappings not restored from HDF.")
         self.assertTrue(isinstance(m[0], dict), "dicts wrapped after reading from HDF.")
         self.assertTrue(isinstance(m[1], list), "lists wrapped after reading from HDF.")
+
+    def test_hdf_pandas(self):
+        """Values that implement to_hdf/from_hdf, should write themselves to the HDF file correctly."""
+        pl = DataContainer(table_name="pandas")
+        pl.append(pd.DataFrame({"a": [1, 2], "b": ["x", "y"]}))
+        pl.to_hdf(hdf=self.hdf)
+        pl2 = self.hdf["pandas"].to_object()
+        self.assertEqual(type(pl[0]), type(pl2[0]))
 
     def test_groups_nodes(self):
         self.assertTrue(isinstance(self.pl.nodes(), Iterator), "nodes does not return an Iterator")

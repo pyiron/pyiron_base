@@ -11,6 +11,7 @@ import warnings
 from collections.abc import Sequence, Set, Mapping, MutableMapping
 
 import numpy as np
+import pandas
 
 from pyiron_base.generic.fileio import read, write
 from pyiron_base.generic.hdfstub import HDFStub
@@ -707,7 +708,8 @@ class DataContainer(MutableMapping, HasGroups):
 
             k = "{}__index_{}".format(k if isinstance(k, str) else "", i)
 
-            if hasattr(v, "to_hdf"):
+            # pandas objects also have a to_hdf method that is entirely unrelated to ours
+            if hasattr(v, "to_hdf") and not isinstance(v, (pandas.DataFrame, pandas.Series)):
                 v.to_hdf(hdf=hdf, group_name=k)
             else:
                 # if the value doesn't know how to serialize itself, assume
