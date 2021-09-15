@@ -35,7 +35,6 @@ class _WithHDF:
 
 class HasHDF(ABC):
 
-    __version__ = "0.1.0"
     __hdf_version__ = "0.1.0"
 
     @abstractmethod
