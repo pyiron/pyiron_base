@@ -8,6 +8,8 @@ The core class in pyiron, linking python to the database to file storage.
 
 from abc import ABC
 from pyiron_base import DataContainer
+from pyiron_base.interfaces.has_hdf import HasHDF
+from pyiron_base.generic.hdfio import ProjectHDFio
 from pyiron_base.settings.generic import Settings
 
 __author__ = "Liam Huber"
@@ -24,7 +26,7 @@ __date__ = "Mar 23, 2021"
 s = Settings()
 
 
-class HasStorage(ABC):
+class HasStorage(HasHDF, ABC):
     """
     A base class for objects that use HDF5 data serialization via the `DataContainer` class.
     """
@@ -33,32 +35,17 @@ class HasStorage(ABC):
         self._storage = DataContainer(table_name='storage')
 
     @property
-    def storage(self):
+    def storage(self) -> DataContainer:
         return self._storage
 
-    def to_hdf(self, hdf, group_name=None):
-        """
-        Serialize everything in the `storage` field to HDF5.
+    def _to_hdf(self, hdf: ProjectHDFio):
+        self.storage.to_hdf(hdf=hdf)
 
-        Args:
-            hdf (ProjectHDFio): HDF5 group object.
-            group_name (str, optional): HDF5 subgroup name.
-        """
-        if group_name is not None:
-            hdf = hdf.create_group(group_name)
-        self._storage.to_hdf(hdf=hdf)
+    def _from_hdf(self, hdf: ProjectHDFio, version: str=None):
+        self.storage.from_hdf(hdf=hdf)
 
-    def from_hdf(self, hdf, group_name=None):
-        """
-        Restore the everything in the `storage` field from an HDF5 file.
-
-        Args:
-            hdf (ProjectHDFio): HDF5 group object.
-            group_name (str, optional): HDF5 subgroup name.
-        """
-        if group_name is not None:
-            hdf = hdf.create_group(group_name)
-        self._storage.from_hdf(hdf=hdf)
+    def _get_hdf_group_name(self):
+        return "storage"
 
 
 class HasDatabase(ABC):
