@@ -283,6 +283,8 @@ class TestDataContainer(TestWithCleanProject):
         sub2 = cont.create_group("sub")
         self.assertEqual(sub1.foo, sub2.foo, "create_group overwrites existing data.")
         self.assertTrue(sub1 is sub2, "create_group return new DataContainer group instead of existing one.")
+        with self.assertRaises(ValueError, msg="No ValueError on existing data in Container"):
+            sub1.create_group("foo")
 
     def test_to_hdf_type(self):
         """Should write correct type information."""
