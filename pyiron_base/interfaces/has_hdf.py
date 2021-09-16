@@ -3,6 +3,8 @@
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 """Interface for classes to serialize to HDF5."""
 
+from pyiron_base.generic.hdfio import ProjectHDFio
+
 from abc import ABC, abstractmethod
 
 __author__ = "Marvin Poul"
@@ -34,23 +36,26 @@ class _WithHDF:
             self._hdf.close()
 
 class HasHDF(ABC):
+    """
+    Mixin class for objects that can write themselves to HDF.
+    """
 
     __hdf_version__ = "0.1.0"
 
     @abstractmethod
-    def _from_hdf(self, hdf, version=None):
+    def _from_hdf(self, hdf: ProjectHDFio, version: str=None):
         pass
 
     @abstractmethod
-    def _to_hdf(self, hdf):
+    def _to_hdf(self, hdf: ProjectHDFio):
         pass
 
     @abstractmethod
-    def _get_hdf_group_name(self):
+    def _get_hdf_group_name(self) -> str:
         pass
 
     @classmethod
-    def from_hdf_args(cls, hdf):
+    def from_hdf_args(cls, hdf: ProjectHDFio):
         """
         Read arguments for instance creation from HDF5 file.
 
@@ -62,7 +67,7 @@ class HasHDF(ABC):
         """
         return {}
 
-    def _type_to_hdf(self, hdf):
+    def _type_to_hdf(self, hdf: ProjectHDFio):
         hdf["NAME"] = self.__class__.__name__
         hdf["TYPE"] = str(type(self))
         hdf["OBJECT"] = hdf["NAME"] # unused alias
@@ -70,13 +75,13 @@ class HasHDF(ABC):
             hdf["VERSION"] = self.__version__
         hdf["HDF_VERSION"] = self.__hdf_version__
 
-    def from_hdf(self, hdf, group_name=None):
+    def from_hdf(self, hdf: ProjectHDFio, group_name: str=None):
         group_name = group_name if group_name is not None else self._get_hdf_group_name()
         with _WithHDF(hdf, group_name) as hdf:
             version = hdf.get("HDF_VERSION", "0.1.0")
             self._from_hdf(hdf, version=version)
 
-    def to_hdf(self, hdf, group_name=None):
+    def to_hdf(self, hdf: ProjectHDFio, group_name: str=None):
         group_name = group_name if group_name is not None else self._get_hdf_group_name()
         with _WithHDF(hdf, group_name) as hdf:
             if len(hdf.list_dirs()) > 0 and group_name is None:
@@ -84,7 +89,7 @@ class HasHDF(ABC):
             self._to_hdf(hdf)
             self._type_to_hdf(hdf)
 
-    def rewrite_hdf(self, hdf, group_name=None):
+    def rewrite_hdf(self, hdf: ProjectHDFio, group_name: str=None):
         with _WithHDF(hdf, group_name) as hdf:
             obj = hdf.to_object()
             hdf.remove_group()
