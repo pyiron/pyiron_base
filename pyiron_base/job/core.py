@@ -655,7 +655,7 @@ class JobCore(HasGroups):
         h5_dict["groups"] += self._list_ext_childs()
         return h5_dict
 
-    def copy(self):
+    def copy_self(self):
         """
         Copy the JobCore object which links to the HDF5 file
 
@@ -707,7 +707,7 @@ class JobCore(HasGroups):
 
         # Create a new job by copying the current python object, move the content
         # of the HDF5 file and then attach the new HDF5 link to the new python object.
-        new_job_core = self.copy()
+        new_job_core = self.copy_self()
         new_job_core._name = new_job_name
         new_job_core._hdf5 = hdf5_project
         new_job_core._master_id = self._master_id

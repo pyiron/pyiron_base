@@ -170,6 +170,7 @@ class GenericJob(JobCore):
         self._python_only_job = False
         self.interactive_cache = None
         self.error = GenericError(job=self)
+        self._copy_exists = False
 
         for sig in intercepted_signals:
             signal.signal(sig, self.signal_intercept)
@@ -472,8 +473,10 @@ class GenericJob(JobCore):
                           copy_files=True, delete_existing_job=False):
         # Store all job arguments in the HDF5 file
         delete_file_after_copy = _job_store_before_copy(
-            job=self
+            job=self,
+            copy_exists=self._copy_exists
         )
+        self._copy_exists = True
 
         # Call the copy_to() function defined in the JobCore
         new_job_core, file_project, hdf5_project, reloaded = super(GenericJob, self)._internal_copy_to(

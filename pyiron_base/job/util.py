@@ -379,12 +379,13 @@ def _job_remove_folder(job):
         shutil.rmtree(working_directory)
 
 
-def _job_store_before_copy(job):
+def _job_store_before_copy(job, copy_exists=False):
     """
     Store job in HDF5 file for copying
 
     Args:
         job (GenericJob): job object to copy
+        copy_exists (bool): if a copy of the job has already been made
 
     Returns:
         bool: [True/False] if the HDF5 file of the job exists already
@@ -393,7 +394,8 @@ def _job_store_before_copy(job):
         delete_file_after_copy = True
     else:
         delete_file_after_copy = False
-    job.to_hdf()
+    if not copy_exists:
+        job.to_hdf()
     return delete_file_after_copy
 
 
