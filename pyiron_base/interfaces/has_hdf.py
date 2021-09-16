@@ -52,6 +52,10 @@ class HasHDF(ABC):
     subclass.  When loading an object with :class:`ProjectHDFio.to_object` this method is called internally, used to
     create an instance on which then :meth:`.from_hdf` is called.
 
+    Subclasses may specify an :attr:`__hdf_version__` to signal changes in the layout of the data in HDF.
+    :meth:`.from_hdf` will read this value and pass it verbatim to the subclasses :meth:`._from_hdf`.  No semantics are
+    imposed on this value, but it is usually a three digit version number.
+
     Here's a toy class that enables writting `list`s to HDF.
 
     >>> class HDFList(list, HasHDF):
@@ -177,7 +181,7 @@ class HasHDF(ABC):
         """
         Update the HDF representation.
 
-        If an object is read from an older format, this will remove the old data and rewrite it in the newest format.
+        If an object is read from an older layout, this will remove the old data and rewrite it in the newest layout.
 
         Args:
             hdf (:class:`.ProjectHDFio`): HDF group to read/write
