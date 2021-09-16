@@ -7,7 +7,7 @@ The core class in pyiron, linking python to the database to file storage.
 """
 
 from abc import ABC
-from pyiron_base import DataContainer
+from pyiron_base.generic.datacontainer import DataContainer
 from pyiron_base.interfaces.has_hdf import HasHDF
 from pyiron_base.generic.hdfio import ProjectHDFio
 from pyiron_base.settings.generic import Settings
