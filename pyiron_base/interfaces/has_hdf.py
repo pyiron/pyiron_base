@@ -121,7 +121,7 @@ class HasHDF(ABC):
         pass
 
     @classmethod
-    def from_hdf_args(cls, hdf: ProjectHDFio):
+    def from_hdf_args(cls, hdf: ProjectHDFio) -> dict:
         """
         Read arguments for instance creation from HDF5 file.
 
@@ -142,12 +142,30 @@ class HasHDF(ABC):
         hdf["HDF_VERSION"] = self.__hdf_version__
 
     def from_hdf(self, hdf: ProjectHDFio, group_name: str=None):
+        """
+        Read object to HDF.
+
+        If group_name is given descend into subgroup in hdf first.
+
+        Args:
+            hdf (:class:`.ProjectHDFio`): HDF group to read from
+            group_name (str, optional): name of subgroup
+        """
         group_name = group_name if group_name is not None else self._get_hdf_group_name()
         with _WithHDF(hdf, group_name) as hdf:
             version = hdf.get("HDF_VERSION", "0.1.0")
             self._from_hdf(hdf, version=version)
 
     def to_hdf(self, hdf: ProjectHDFio, group_name: str=None):
+        """
+        Write object to HDF.
+
+        If group_name is given create a subgroup in hdf first.
+
+        Args:
+            hdf (:class:`.ProjectHDFio`): HDF group to write to
+            group_name (str, optional): name of subgroup
+        """
         group_name = group_name if group_name is not None else self._get_hdf_group_name()
         with _WithHDF(hdf, group_name) as hdf:
             if len(hdf.list_dirs()) > 0 and group_name is None:
@@ -156,6 +174,15 @@ class HasHDF(ABC):
             self._type_to_hdf(hdf)
 
     def rewrite_hdf(self, hdf: ProjectHDFio, group_name: str=None):
+        """
+        Update the HDF representation.
+
+        If an object is read from an older format, this will remove the old data and rewrite it in the newest format.
+
+        Args:
+            hdf (:class:`.ProjectHDFio`): HDF group to read/write
+            group_name (str, optional): name of subgroup
+        """
         with _WithHDF(hdf, group_name) as hdf:
             obj = hdf.to_object()
             hdf.remove_group()
