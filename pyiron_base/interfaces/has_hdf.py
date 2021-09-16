@@ -18,6 +18,7 @@ __email__ = "poul@mpie.de"
 __status__ = "production"
 __date__ = "Sep 1, 2021"
 
+
 class _WithHDF:
     __slots__ = ("_hdf", "_group_name")
 
@@ -34,6 +35,7 @@ class _WithHDF:
     def __exit__(self, *args):
         if self._group_name is not None:
             self._hdf.close()
+
 
 class HasHDF(ABC):
     """
@@ -140,7 +142,7 @@ class HasHDF(ABC):
     def _type_to_hdf(self, hdf: ProjectHDFio):
         hdf["NAME"] = self.__class__.__name__
         hdf["TYPE"] = str(type(self))
-        hdf["OBJECT"] = hdf["NAME"] # unused alias
+        hdf["OBJECT"] = hdf["NAME"]  # unused alias
         if hasattr(self, "__version__"):
             hdf["VERSION"] = self.__version__
         hdf["HDF_VERSION"] = self.__hdf_version__
