@@ -45,7 +45,7 @@ class HasStorage(HasHDF, ABC):
         self.storage.from_hdf(hdf=hdf)
 
     def _get_hdf_group_name(self):
-        return "storage"
+        return ""
 
 
 class HasDatabase(ABC):
