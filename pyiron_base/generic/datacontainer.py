@@ -16,6 +16,7 @@ import pandas
 from pyiron_base.generic.fileio import read, write
 from pyiron_base.generic.hdfstub import HDFStub
 from pyiron_base.interfaces.has_groups import HasGroups
+from pyiron_base.interfaces.has_hdf import HasHDF
 
 __author__ = "Marvin Poul"
 __copyright__ = (
@@ -50,7 +51,7 @@ def _normalize(key):
 
     return key
 
-class DataContainer(MutableMapping, HasGroups):
+class DataContainer(MutableMapping, HasGroups, HasHDF):
     """
     Mutable sequence with optional keys.
 
@@ -677,30 +678,10 @@ class DataContainer(MutableMapping, HasGroups):
         """
         return copy.deepcopy(self)
 
-    def to_hdf(self, hdf, group_name=None):
-        """
-        Store the DataContainer in an HDF5 file.  If ``group_name`` or
-        *self.table_name* are not `None`, create a sub group in hdf prior to
-        writing if not save directly to hdf.  group_name overrides
-        self.table_name if both are not None.
+    def _get_hdf_group_name(self):
+        return self.table_name
 
-        Args:
-            hdf (ProjectHDFio): HDF5 group object
-            group_name (str, optional): HDF5 subgroup name, overrides
-                self.table_name
-        """
-
-        group_name = group_name or self.table_name
-        if group_name:
-            hdf = hdf.create_group(group_name)
-        elif len(hdf.list_dirs()) > 0:
-            raise ValueError(
-                    "HDF group must be empty when neither table_name nor "
-                    "group_name are set."
-            )
-
-
-        self._type_to_hdf(hdf)
+    def _to_hdf(self, hdf):
         hdf["READ_ONLY"] = self.read_only
         for i, (k, v) in enumerate(self.items()):
             if isinstance(k, str) and "__index_" in k:
@@ -720,38 +701,7 @@ class DataContainer(MutableMapping, HasGroups):
                     raise TypeError("Error saving {} (key {}): DataContainer doesn't support saving elements "
                                     "of type \"{}\" to HDF!".format(v, k, type(v))) from None
 
-    def _type_to_hdf(self, hdf):
-        """
-        Internal helper function to save type and version in hdf root
-
-        Args:
-            hdf (ProjectHDFio): HDF5 group object
-        """
-        hdf["NAME"] = self.__class__.__name__
-        hdf["TYPE"] = str(type(self))
-        hdf["VERSION"] = self.__version__
-        hdf["HDF_VERSION"] = self.__hdf_version__
-        hdf["OBJECT"] = "DataContainer"
-
-    def from_hdf(self, hdf, group_name=None):
-        """
-        Restore the DataContainer from an HDF5 file.  If group_name or
-        self.table_name are not None, open a sub group in hdf prior to reading
-        if not read directly from hdf.  group_name overrides self.table_name if
-        both are not None.
-
-        Args:
-            hdf (ProjectHDFio): HDF5 group object
-            group_name (str, optional): HDF5 subgroup name, overrides
-                self.table_name
-        """
-
-        group_name = group_name or self.table_name
-        if group_name:
-            hdf = hdf.open(group_name)
-
-        version = hdf.get("HDF_VERSION", "0.1.0")
-
+    def _from_hdf(self, hdf, version=None):
         self.clear()
 
         if version == "0.1.0":
