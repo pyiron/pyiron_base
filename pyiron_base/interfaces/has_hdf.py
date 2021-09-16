@@ -38,6 +38,72 @@ class _WithHDF:
 class HasHDF(ABC):
     """
     Mixin class for objects that can write themselves to HDF.
+
+    Subclasses must implement :meth:`._from_hdf`, :meth:`._to_hdf` and :meth:`_get_hdf_group_name`.  They may implement
+    :meth:`.from_hdf_args`.
+
+    :meth:`from_hdf` and :meth:`to_hdf` shall respect the given `group_name` in the following way.  If either the
+    argument or the method :meth:`_get_hdf_group_name` returns not `None` they shall create a new subgroup in the given
+    HDF object and then call :meth:`_from_hdf` or :meth:`_to_hdf` with this subgroup and afterwards call
+    :meth:`ProjectHDFio.close` on it.  If both are `None` it shall pass the given HDF object unchanged.
+
+    Subclasses that need to read special arguments from HDF before an instance can be created, can overwrite
+    :meth:`.from_hdf_args` and return the arguments in a `dict` that can be **kwargs-passed to the `__init__` of the
+    subclass.  When loading an object with :class:`ProjectHDFio.to_object` this method is called internally, used to
+    create an instance on which then :meth:`.from_hdf` is called.
+
+    Here's a toy class that enables writting `list`s to HDF.
+
+    >>> class HDFList(list, HasHDF):
+    ...     def _from_hdf(self, hdf, version=None):
+    ...         values = []
+    ...         for n in hdf.list_nodes():
+    ...             if not n.startswith("__index_"): continue
+    ...             values.append((int(n.split("__index_")[1]), hdf[n]))
+    ...         values = sorted(values, key=lambda e: e[0])
+    ...         self.clear()
+    ...         self.extend(list(zip(*values))[1])
+    ...     def _to_hdf(self, hdf):
+    ...         for i, v in enumerate(self):
+    ...             hdf[f"__index_{i}"] = v
+    ...     def _get_hdf_group_name(self):
+    ...         return "list"
+
+    We can use this simply like any other list, but also call the new HDF methods on it after we get an HDF object.
+
+    >>> l = HDFList([1,2,3,4])
+    >>> from pyiron_base import Project
+    >>> pr = Project('test_foo')
+    >>> hdf = pr.create_hdf(pr.path, 'list')
+
+    Since we return "list" in :meth:`._get_hdf_group_name` by default our list gets written into a group of the same
+    name.
+
+    >>> l.to_hdf(hdf)
+    >>> hdf
+    {'groups': ['list'], 'nodes': []}
+    >>> hdf['list']
+    {'groups': [], 'nodes': ['HDF_VERSION', 'NAME', 'OBJECT', 'TYPE', '__index_0', '__index_1', '__index_2', '__index_3']}
+
+    (Since this is a docstring, actually calling :meth:`ProjectHDFio.to_object()` wont' work, so we'll simulate it.)
+
+    >>> lcopy = HDFList()
+    >>> lcopy.from_hdf(hdf)
+    >>> lcopy
+    [1, 2, 3, 4]
+
+    We can also override the target group name by passing it
+    >>> l.to_hdf(hdf, "my_group")
+    >>> hdf
+    {'groups': ['list', 'my_group'], 'nodes': []}
+
+    >>> hdf.remove_file()
+    >>> pr.remove(enable=True)
+
+    .. document private methods
+    .. automethod _from_hdf
+    .. automethod _to_hdf
+    .. automethod _get_hdf_group_name
     """
 
     __hdf_version__ = "0.1.0"
