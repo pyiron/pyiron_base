@@ -77,7 +77,7 @@ class HistoricalTable(TableManager):
             Column("project", String(255)),
             Column("job", String(50)),
             Column("subjob", String(255)),
-            Column("chemicalformula", String(30)),
+            Column("chemicalformula", String(50)),
             Column("status", String(20)),
             Column("hamilton", String(20)),
             Column("hamversion", String(50)),
