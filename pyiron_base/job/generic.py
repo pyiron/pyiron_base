@@ -1157,7 +1157,8 @@ class GenericJob(JobCore):
             (int): Job ID stored in the database
         """
         self.to_hdf()
-        job_id = self.project.db.add_item_dict(self.db_entry())
+        job_id = self.project.db.add(self, s, self.project.db.historical)
+        # job_id = self.project.db.add_item_dict(self.db_entry())
         self._job_id = job_id
         self.refresh_job_status()
         if self._check_if_input_should_be_written():

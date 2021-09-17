@@ -25,7 +25,8 @@ from sqlalchemy.sql import select
 from sqlalchemy.exc import OperationalError, DatabaseError
 from threading import Thread, Lock
 from queue import SimpleQueue, Empty as QueueEmpty
-from pyiron_base.database.tables import HistoricalTable
+from pyiron_base.database.tables import HistoricalTable, TableManager
+from typing import Type
 
 __author__ = "Murat Han Celik"
 __copyright__ = (
@@ -200,9 +201,17 @@ class DatabaseAccess(object):
 
         self._chem_formula_lim_length = 50
         self.__reload_db()
-        self.simulation_table = HistoricalTable(str(table_name), self.metadata)
+        self._historical = HistoricalTable(str(table_name), self.metadata)
         self.metadata.create_all()
         self._viewer_mode = False
+
+    @property
+    def simulation_table(self):
+        return self._historical.table
+
+    @property
+    def historical(self):
+        return self._historical
 
     @property
     def viewer_mode(self):
@@ -462,6 +471,20 @@ class DatabaseAccess(object):
                 len(par_dict[key_limited]) > self._chem_formula_lim_length:
             par_dict[key_limited] = "OVERFLOW_ERROR"
         return par_dict
+
+    def add(self, obj, settings, target_manager: Type[TableManager]):
+        if not self._viewer_mode:
+            try:
+                result = self.conn.execute(
+                    target_manager.add(obj, settings)
+                ).inserted_primary_key[-1]
+                if not self._keep_connection:
+                    self.conn.close()
+                return result
+            except Exception as except_msg:
+                raise ValueError("Error occurred: " + str(except_msg))
+        else:
+            raise PermissionError("Not avilable in viewer mode.")
 
     # Item functions
     def add_item_dict(self, par_dict):
