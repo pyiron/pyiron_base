@@ -13,13 +13,8 @@ import time
 import os
 from datetime import datetime
 from sqlalchemy import (
-    Column,
     create_engine,
-    DateTime,
-    Float,
-    Integer,
     MetaData,
-    String,
     Table,
     text,
     and_,
@@ -30,6 +25,7 @@ from sqlalchemy.sql import select
 from sqlalchemy.exc import OperationalError, DatabaseError
 from threading import Thread, Lock
 from queue import SimpleQueue, Empty as QueueEmpty
+from pyiron_base.database.tables import HistoricalTable
 
 __author__ = "Murat Han Celik"
 __copyright__ = (
@@ -204,27 +200,7 @@ class DatabaseAccess(object):
 
         self._chem_formula_lim_length = 50
         self.__reload_db()
-        self.simulation_table = Table(
-            str(table_name),
-            self.metadata,
-            Column("id", Integer, primary_key=True, autoincrement=True),
-            Column("parentid", Integer),
-            Column("masterid", Integer),
-            Column("projectpath", String(50)),
-            Column("project", String(255)),
-            Column("job", String(50)),
-            Column("subjob", String(255)),
-            Column("chemicalformula", String(self._chem_formula_lim_length)),
-            Column("status", String(20)),
-            Column("hamilton", String(20)),
-            Column("hamversion", String(50)),
-            Column("username", String(20)),
-            Column("computer", String(100)),
-            Column("timestart", DateTime),
-            Column("timestop", DateTime),
-            Column("totalcputime", Float),
-            extend_existing=True,
-        )
+        self.simulation_table = HistoricalTable(str(table_name), self.metadata)
         self.metadata.create_all()
         self._viewer_mode = False
 
