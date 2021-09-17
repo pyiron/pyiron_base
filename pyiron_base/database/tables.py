@@ -26,26 +26,27 @@ __status__ = "development"
 __date__ = "Sep, 2021"
 
 
-def simulation_table(table_name, metadata, extend_existing=True):
+class HistoricalTable(Table):
     """The historical table."""
-    return Table(
-        table_name,
-        metadata,
-        Column("id", Integer, primary_key=True, autoincrement=True),
-        Column("parentid", Integer),
-        Column("masterid", Integer),
-        Column("projectpath", String(50)),
-        Column("project", String(255)),
-        Column("job", String(50)),
-        Column("subjob", String(255)),
-        Column("chemicalformula", String(30)),
-        Column("status", String(20)),
-        Column("hamilton", String(20)),
-        Column("hamversion", String(50)),
-        Column("username", String(20)),
-        Column("computer", String(100)),
-        Column("timestart", DateTime),
-        Column("timestop", DateTime),
-        Column("totalcputime", Float),
-        extend_existing=extend_existing
-    )
+    def _init(self, table_name, metadata, *args, extend_existing=True, **kwargs):
+        super()._init(
+            table_name,
+            metadata,
+            Column("id", Integer, primary_key=True, autoincrement=True),
+            Column("parentid", Integer),
+            Column("masterid", Integer),
+            Column("projectpath", String(50)),
+            Column("project", String(255)),
+            Column("job", String(50)),
+            Column("subjob", String(255)),
+            Column("chemicalformula", String(30)),
+            Column("status", String(20)),
+            Column("hamilton", String(20)),
+            Column("hamversion", String(50)),
+            Column("username", String(20)),
+            Column("computer", String(100)),
+            Column("timestart", DateTime),
+            Column("timestop", DateTime),
+            Column("totalcputime", Float),
+            extend_existing=extend_existing
+        )
