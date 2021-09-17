@@ -663,7 +663,6 @@ class JobCore(HasGroups):
             JobCore: New FileHDFio object pointing to the same HDF5 file
         """
         copied_self = copy.copy(self)
-        copied_self.reset_job_id()
         return copied_self
 
     def _internal_copy_to(self, project=None, new_job_name=None, new_database_entry=True,
