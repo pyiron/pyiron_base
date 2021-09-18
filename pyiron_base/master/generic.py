@@ -9,6 +9,7 @@ import inspect
 import textwrap
 from pyiron_base.job.generic import GenericJob
 from pyiron_base.job.jobstatus import job_status_finished_lst
+import sys
 
 __author__ = "Jan Janssen"
 __copyright__ = (
@@ -440,7 +441,7 @@ class GenericMaster(GenericJob):
 
     def __getattr__(self, item):
         """
-        CHeck if a job with the specific name exists
+        Check if a job with the specific name exists
 
         Args:
             item (str): name of the job
@@ -448,8 +449,20 @@ class GenericMaster(GenericJob):
         Returns:
 
         """
-        item_from_get_item = self.__getitem__(item=item)
-        if item_from_get_item is not None:
+        exception = False
+        sys.setrecursionlimit(100)
+        # NOTE: Manually set the recursion limit, since ipython 7.18.1 apparently doesn't catch RecursionError
+        # exceptions, on windows 10 systems like the one I'm testing on and is still an open issue here:
+        # https://github.com/ipython/ipython/issues/12197#
+        # Setting recursion limit lower than 100 raises 'recursion depth is too low'. Setting it too high crashes
+        # the kernel.
+        try:
+            item_from_get_item = self.__getitem__(item=item)
+        except RecursionError:
+            item_from_get_item = None
+            exception = True
+        sys.setrecursionlimit(1000)  # set recursion limit back to the default value
+        if (item_from_get_item is not None) or exception:
             return item_from_get_item
         else:
             raise AttributeError("{} tried to find child job {}, but getattr failed to find the item.".format(
@@ -546,12 +559,13 @@ class GenericMaster(GenericJob):
                 return self.project.inspect(child_id)["/".join(name_lst[1:])]
             else:
                 return self.project.load(child_id, convert_to_object=True)
-        elif item_obj in self._job_name_lst:
-            child = self._load_job_from_cache(job_name=item_obj)
-            if len(name_lst) == 1:
-                return child
-            else:
-                return child["/".join(name_lst[1:])]
+        elif self._job_name_lst is not None:
+            if item_obj in self._job_name_lst:
+                child = self._load_job_from_cache(job_name=item_obj)
+                if len(name_lst) == 1:
+                    return child
+                else:
+                    return child["/".join(name_lst[1:])]
         else:
             return super(GenericMaster, self).__getitem__(item)
 
