@@ -559,13 +559,12 @@ class GenericMaster(GenericJob):
                 return self.project.inspect(child_id)["/".join(name_lst[1:])]
             else:
                 return self.project.load(child_id, convert_to_object=True)
-        elif self._job_name_lst is not None:
-            if item_obj in self._job_name_lst:
-                child = self._load_job_from_cache(job_name=item_obj)
-                if len(name_lst) == 1:
-                    return child
-                else:
-                    return child["/".join(name_lst[1:])]
+        elif (self._job_name_lst is not None) and (item_obj in self._job_name_lst):
+            child = self._load_job_from_cache(job_name=item_obj)
+            if len(name_lst) == 1:
+                return child
+            else:
+                return child["/".join(name_lst[1:])]
         else:
             return super(GenericMaster, self).__getitem__(item)
 
