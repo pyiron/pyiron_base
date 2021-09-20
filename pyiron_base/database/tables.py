@@ -119,20 +119,24 @@ class TableManager(ABC):
 
     @property
     def columns(self):
-        return [ColumnManager("id", Integer, column_kwargs={'primary_key': True, 'autoincrement': True})] + \
-               self._columns
+        return [Column("id", Integer, primary_key=True, autoincrement=True)] + [c.column for c in self._columns]
 
     def _create_table(self, table_name: str, metadata: MetaData, extend_existing: bool=True) -> Table:
         return Table(
             table_name,
             metadata,
-            *self._columns,
+            *self.columns,
             extend_existing=extend_existing
         )
 
 
-def _attribute_or_none_decorator():
-    raise NotImplementedError
+def _attribute_or_none_decorator(fnc):
+    def wrapper(*args, **kwargs):
+        try:
+            return fnc(*args, **kwargs)
+        except (AttributeError, TypeError):
+            return None
+    return wrapper
 
 
 class HistoricalTable(TableManager):
@@ -163,18 +167,20 @@ class HistoricalTable(TableManager):
                           type_kwargs={'length': 20}, length_limit_is_critical=True),
             ColumnManager("computer", String, self._get_computer,
                           type_kwargs={'length': 100}, length_limit_is_critical=True),
-            ColumnManager("timestart", self._get_timestart, DateTime),
-            ColumnManager("timestop", self._get_timestop, DateTime),
-            ColumnManager("totalcputime", self._get_totalcputime, Float),
+            ColumnManager("timestart", DateTime, self._get_timestart),
+            ColumnManager("timestop", DateTime, self._get_timestop),
+            ColumnManager("totalcputime", Float, self._get_totalcputime),
         ]
 
     @staticmethod
+    @_attribute_or_none_decorator
     def _get_parentid(obj, settings):
         return obj.parent_id
 
     @staticmethod
+    @_attribute_or_none_decorator
     def _get_masterid(obj, settings):
-        return obj.chemical_formula
+        return obj.master_id
 
     @staticmethod
     def _get_username(obj, settings):
@@ -194,9 +200,10 @@ class HistoricalTable(TableManager):
 
     @staticmethod
     def _get_subjob(obj, settings):
-        return obj.project_hdf5.
+        return obj.project_hdf5.h5_path
 
     @staticmethod
+    @_attribute_or_none_decorator
     def _get_chemicalformula(obj, settings):
         return obj.chemical_formula
 
@@ -205,6 +212,7 @@ class HistoricalTable(TableManager):
         return obj.__name__
 
     @staticmethod
+    @_attribute_or_none_decorator
     def _get_hamversion(obj, settings):
         return obj.version
 
@@ -221,9 +229,11 @@ class HistoricalTable(TableManager):
         return datetime.now()
 
     @staticmethod
+    @_attribute_or_none_decorator
     def _get_timestop(obj, settings):
         return obj._runtime()['timestop']
 
     @staticmethod
+    @_attribute_or_none_decorator
     def _get_totalcputime(obj, settings):
         return obj._runtime()['totalcputime']
