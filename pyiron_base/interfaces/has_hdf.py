@@ -122,9 +122,8 @@ class HasHDF(ABC):
     def _to_hdf(self, hdf: ProjectHDFio):
         pass
 
-    @abstractmethod
     def _get_hdf_group_name(self) -> str:
-        pass
+        return None
 
     @classmethod
     def from_hdf_args(cls, hdf: ProjectHDFio) -> dict:
