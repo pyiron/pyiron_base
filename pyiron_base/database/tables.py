@@ -109,6 +109,7 @@ class TableManager(ABC):
 
     def add(self, obj, settings):
         """Add data from an object to the database table."""
+        # TODO: Refactor the entire codebase so that we can just import Settings here without getting circular errors
         return self._table.insert(
             {c.name.lower(): c.object_to_entry(obj, settings) for c in self._columns}
         )
@@ -231,9 +232,11 @@ class HistoricalTable(TableManager):
     @staticmethod
     @_attribute_or_none_decorator
     def _get_timestop(obj, settings):
+        # TODO: Add tests to make sure this is actually updating with stop times
         return obj._runtime()['timestop']
 
     @staticmethod
     @_attribute_or_none_decorator
     def _get_totalcputime(obj, settings):
+        # TODO: Add tests to make sure this is actually updating with stop times
         return obj._runtime()['totalcputime']
