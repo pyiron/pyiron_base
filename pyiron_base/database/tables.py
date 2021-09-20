@@ -20,7 +20,7 @@ from typing import Type
 from datetime import datetime
 
 
-__author__ = "Murat Han Celik, Liam Huber"
+__author__ = "Murat Han Celik, Liam Huber, Muhammad Hassani"
 __copyright__ = (
     "Copyright 2020, Max-Planck-Institut für Eisenforschung GmbH"
     " - Computational Materials Design (CM) Department"
