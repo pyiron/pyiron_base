@@ -48,7 +48,7 @@ class TooLongDBEntry(Exception):
 
 class ColumnManager(ABC):
     """
-    A parent class for pyiron database columns
+    A parent class for pyiron database columns.
     """
 
     def __init__(
@@ -60,6 +60,19 @@ class ColumnManager(ABC):
             column_kwargs=None,
             type_kwargs=None
     ):
+        """
+        A column manager for holding all data needed for pyiron database columns.
+
+        Args:
+            column_name (str): The name of the column.
+            column_type (sqlalchemy.SchemaItem?): The class of the column.
+            object_to_entry_fnc (fnc): A function taking the object to be represented in the database and the settings
+                singlet and returning the database representation of that object in this column.
+            length_limit_is_critical (bool): When true, causes a hard crash if the entry exceeds the column specified
+                length, otherwise entry is just replaced with "OVERFLOW_ERROR". (Default is False, just replace.)
+            column_kwargs (dict): Kwargs for the `sqlalchemy.Column` object. (Default is None.)
+            type_kwargs (dict): Kwargs for the `sqlalchemy.SchemaItem` for this column. (Default is None.)
+        """
         column_kwargs = {} if column_kwargs is None else column_kwargs
         type_kwargs = {} if type_kwargs is None else type_kwargs
         self._name = column_name
@@ -103,7 +116,7 @@ class TableManager(ABC):
 
     @property
     @abstractmethod
-    def _columns(self):
+    def _columns(self) -> list[ColumnManager]:
         """A list of `ColumnManager` objects"""
         pass
 
@@ -119,7 +132,7 @@ class TableManager(ABC):
         return self._table
 
     @property
-    def columns(self):
+    def columns(self) -> list[Column]:
         return [Column("id", Integer, primary_key=True, autoincrement=True)] + [c.column for c in self._columns]
 
     def _create_table(self, table_name: str, metadata: MetaData, extend_existing: bool=True) -> Table:
