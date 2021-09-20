@@ -141,7 +141,7 @@ class HistoricalTable(TableManager):
         """
         for key in par_dict.keys():
             if par_dict[key] is not None and \
-                    len(par_dict[key]) > self._char_limit['key.lower()']:
+                    len(par_dict[key]) > self._char_limit[key.lower()]:
                 if key.lower() not in self._sensitive_keys:
                     par_dict[key] = "OVERFLOW_ERROR"
                 else:
