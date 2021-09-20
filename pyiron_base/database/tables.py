@@ -52,8 +52,9 @@ class TableManager(ABC):
     """
 
     def __init__(self, table_name, metadata, extend_existing=True):
-        self._table = self._create_table(table_name, metadata, extend_existing=extend_existing)
         self._char_limit = {}
+        self._update_char_limit()
+        self._table = self._create_table(table_name, metadata, extend_existing=extend_existing)
 
     def add(self, obj, settings):
         """Add data from an object to the database table."""
@@ -66,6 +67,15 @@ class TableManager(ABC):
     @property
     def table(self) -> Table:
         return self._table
+
+    @abstractmethod
+    def _update_char_limit(self) -> dict:
+        pass
+
+    @property
+    @abstractmethod
+    def _restrictively_limited_size_keys(self):
+        pass
 
     @abstractmethod
     def _create_table(self, table_name: str, metadata: MetaData, extend_existing: bool=True) -> Table:
@@ -87,11 +97,15 @@ class HistoricalTable(TableManager):
     """The historical table."""
     def __init__(self, table_name, metadata, extend_existing=True):
         super().__init__(table_name, metadata, extend_existing=extend_existing)
+
+    def _update_char_limit(self):
         self._char_limit.update({'projectpath': 50, 'project': 255, 'job': 50, 'subjob': 250,
                                  'chemicalformula': 50, 'status': 20, 'hamilton': 50, 'hamversion': 50,
                                  'username': 20, 'computer': 100})
-        self._restrictively_limited_size_keys = ['projectpath', 'project', 'job', 'subjob', 'hamilton',
-                                'hamversion', 'username', 'computer']
+
+    @property
+    def _restrictively_limited_size_keys(self):
+        return ['projectpath', 'project', 'job', 'subjob', 'hamilton', 'hamversion', 'username', 'computer']
 
     def _create_table(self, table_name, metadata, extend_existing=True):
         return Table(
