@@ -1158,7 +1158,6 @@ class GenericJob(JobCore):
         """
         self.to_hdf()
         job_id = self.project.db.add(self, s, self.project.db.historical)
-        # job_id = self.project.db.add_item_dict(self.db_entry())
         self._job_id = job_id
         self.refresh_job_status()
         if self._check_if_input_should_be_written():
@@ -1184,29 +1183,10 @@ class GenericJob(JobCore):
         """
         return True
 
-    def db_entry(self):
-        """
-        Generate the initial database entry for the current GenericJob
-
-        Returns:
-            (dict): database dictionary {"username", "projectpath", "project", "job", "subjob", "hamversion",
-                                         "hamilton", "status", "computer", "timestart", "masterid", "parentid"}
-        """
-        db_dict = {
-            "username": s.login_user,
-            "projectpath": self.project_hdf5.root_path,
-            "project": self.project_hdf5.project_path,
-            "job": self.job_name,
-            "subjob": self.project_hdf5.h5_path,
-            "hamversion": self.version,
-            "hamilton": self.__name__,
-            "status": self.status.string,
-            "computer": self._db_server_entry(),
-            "timestart": datetime.now(),
-            "masterid": self.master_id,
-            "parentid": self.parent_id,
-        }
-        return db_dict
+    @property
+    def chemical_formula(self):
+        """A necessary evil since atomistic properties are deeply buried in our database"""
+        return None
 
     def restart(self, job_name=None, job_type=None):
         """

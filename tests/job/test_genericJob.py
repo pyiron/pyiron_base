@@ -6,26 +6,18 @@ import unittest
 import os
 from pyiron_base.job.generic import GenericJob
 from pyiron_base._tests import TestWithCleanProject
+from pyiron_base.settings.generic import Settings
+
+s = Settings()
 
 
 class TestGenericJob(TestWithCleanProject):
-    def test_db_entry(self):
-        ham = self.project.create.job.ScriptJob("job_single_debug")
-        db_entry = ham.db_entry()
-        self.assertEqual(db_entry["project"], ham.project_hdf5.project_path)
-        self.assertEqual(db_entry["hamilton"], "Script")
-        self.assertEqual(db_entry["hamversion"], ham.version)
-        self.assertEqual(db_entry["status"], ham.status.string)
-        self.assertEqual(db_entry["job"], ham.job_name)
-        ham.save()
-        ham.remove()
-
     def test_reload_empty_job(self):
         job_empty = self.project.create_job(
             job_type=GenericJob,
             job_name="empty_reload"
         )
-        job_id = job_empty.project.db.add_item_dict(job_empty.db_entry())
+        job_id = job_empty.project.db.add(job_empty, s, job_empty.project.db.historical)
         job_empty_inspect = self.project.inspect(job_id)
         self.assertEqual(len(job_empty_inspect.list_nodes()), 0)
         self.assertTrue(job_empty_inspect.project_hdf5.is_empty)

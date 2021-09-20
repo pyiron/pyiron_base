@@ -103,6 +103,7 @@ class HistoricalTable(TableManager):
             "timestart": datetime.now(),
             "masterid": obj.master_id,
             "parentid": obj.parent_id,
+            "chemicalformula": obj.chemical_formula
         }
         return self._check_chem_formula_length(par_dict)
 
@@ -113,7 +114,7 @@ class HistoricalTable(TableManager):
         par_dict(dict): dictionary of the parameter
         limit(int): the limit for the length of checmical formular
         """
-        key_limited = 'ChemicalFormula'
+        key_limited = 'chemicalformula'
         if key_limited in par_dict.keys() and \
                 par_dict[key_limited] is not None and \
                 len(par_dict[key_limited]) > self.table.columns.chemicalformula.type.length:
