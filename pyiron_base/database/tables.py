@@ -32,6 +32,20 @@ __status__ = "development"
 __date__ = "Sep, 2021"
 
 
+class TooLongDBEntry(Exception):
+    """
+    Error: the value given as database exceeds the expected length
+    args:
+    key(str) : the column name which has the too long value
+    limit(int): the expected limit in the number of characters
+    val: the value given as the db entry
+    """
+    def __init__(self, key, limit, val):
+        message = f"Error: the value for the {key} in the database exceed the limit of {limit}" \
+                  f"the given value for the key: {val}"
+        super(TooLongDBEntry, self).__init__(message)
+
+
 class TableManager(ABC):
     """
     A parent class for pyiron database tables.
@@ -39,6 +53,7 @@ class TableManager(ABC):
 
     def __init__(self, table_name, metadata, extend_existing=True):
         self._table = self._create_table(table_name, metadata, extend_existing=extend_existing)
+        self._char_limit = {}
 
     def add(self, obj, settings):
         """Add data from an object to the database table."""
@@ -62,9 +77,21 @@ class TableManager(ABC):
         """Parse an object into a database entry."""
         pass
 
+    @abstractmethod
+    def _check_char_limits(self, par_dict) -> dict:
+        """ checks the character limits of each column"""
+        pass
+
 
 class HistoricalTable(TableManager):
     """The historical table."""
+    def __init__(self, table_name, metadata, extend_existing=True):
+        super(HistoricalTable, self).__init__(table_name, metadata, extend_existing=True)
+        self._char_limit.update({'projectpath': 50, 'project': 255, 'job': 50, 'subjob': 250,
+                                 'chemicalformula': 50, 'status': 20, 'hamilton': 50, 'hamversion': 50,
+                                 'username': 20, 'computer': 100})
+        self._sensitive_keys = ['projectpath', 'project', 'job', 'subjob', 'hamilton',
+                                'hamversion', 'username', 'computer']
 
     def _create_table(self, table_name, metadata, extend_existing=True):
         return Table(
@@ -73,16 +100,16 @@ class HistoricalTable(TableManager):
             Column("id", Integer, primary_key=True, autoincrement=True),
             Column("parentid", Integer),
             Column("masterid", Integer),
-            Column("projectpath", String(50)),
-            Column("project", String(255)),
-            Column("job", String(50)),
-            Column("subjob", String(255)),
-            Column("chemicalformula", String(50)),
-            Column("status", String(20)),
-            Column("hamilton", String(20)),
-            Column("hamversion", String(50)),
-            Column("username", String(20)),
-            Column("computer", String(100)),
+            Column("projectpath", String(self._char_limit["projectpath"])),
+            Column("project", String(self._char_limit["project"])),
+            Column("job", String(self._char_limit["job"])),
+            Column("subjob", String(self._char_limit["subjob"])),
+            Column("chemicalformula", String(self._char_limit["chemicalformula"])),
+            Column("status", String(self._char_limit["status"])),
+            Column("hamilton", String(self._char_limit["hamilton"])),
+            Column("hamversion", String(self._char_limit["hamversion"])),
+            Column("username", String(self._char_limit["username"])),
+            Column("computer", String(self._char_limit["computer"])),
             Column("timestart", DateTime),
             Column("timestop", DateTime),
             Column("totalcputime", Float),
@@ -104,18 +131,19 @@ class HistoricalTable(TableManager):
             "masterid": obj.master_id,
             "parentid": obj.parent_id,
         }
-        return self._check_chem_formula_length(par_dict)
+        return self._check_char_limits(par_dict)
 
-    def _check_chem_formula_length(self, par_dict):
+    def _check_char_limits(self, par_dict):
         """
-        performs a check whether the length of chemical formula exceeds the defined limit
+        performs a check whether the length of db entries do not exceed the defined limit
         args:
         par_dict(dict): dictionary of the parameter
-        limit(int): the limit for the length of checmical formular
         """
-        key_limited = 'ChemicalFormula'
-        if key_limited in par_dict.keys() and \
-                par_dict[key_limited] is not None and \
-                len(par_dict[key_limited]) > self.table.columns.chemicalformula.type.length:
-            par_dict[key_limited] = "OVERFLOW_ERROR"
+        for key in par_dict.keys():
+            if par_dict[key] is not None and \
+                    len(par_dict[key]) > self._char_limit['key.lower()']:
+                if key.lower() not in self._sensitive_keys:
+                    par_dict[key] = "OVERFLOW_ERROR"
+                else:
+                    raise TooLongDBEntry(key=key, limit=self._char_limit['key.lower()'], val=par_dict[key])
         return par_dict
