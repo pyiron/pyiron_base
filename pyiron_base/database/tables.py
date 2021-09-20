@@ -90,7 +90,7 @@ class HistoricalTable(TableManager):
         self._char_limit.update({'projectpath': 50, 'project': 255, 'job': 50, 'subjob': 250,
                                  'chemicalformula': 50, 'status': 20, 'hamilton': 50, 'hamversion': 50,
                                  'username': 20, 'computer': 100})
-        self._sensitive_keys = ['projectpath', 'project', 'job', 'subjob', 'hamilton',
+        self._restrictively_limited_size_keys = ['projectpath', 'project', 'job', 'subjob', 'hamilton',
                                 'hamversion', 'username', 'computer']
 
     def _create_table(self, table_name, metadata, extend_existing=True):
@@ -142,8 +142,8 @@ class HistoricalTable(TableManager):
         for key in par_dict.keys():
             if par_dict[key] is not None and \
                     len(par_dict[key]) > self._char_limit[key.lower()]:
-                if key.lower() not in self._sensitive_keys:
+                if key.lower() not in self._restrictively_limited_size_keys:
                     par_dict[key] = "OVERFLOW_ERROR"
                 else:
-                    raise TooLongDBEntry(key=key, limit=self._char_limit['key.lower()'], val=par_dict[key])
+                    raise TooLongDBEntry(key=key, limit=self._char_limit[key.lower()], val=par_dict[key])
         return par_dict
