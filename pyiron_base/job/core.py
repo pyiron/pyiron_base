@@ -894,7 +894,7 @@ class JobCore(HasGroups):
         """
         try:
             return self._hdf5[item]
-        except (ValueError, TypeError):
+        except ValueError:
             pass
 
         name_lst = item.split("/")
