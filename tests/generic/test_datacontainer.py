@@ -274,6 +274,18 @@ class TestDataContainer(TestWithCleanProject):
             return True
         self.assertTrue(rec(self.pl._repr_json_()), "_repr_json_ output not all str")
 
+    def test_create_group(self):
+        """create_group should not erase existing groups."""
+        cont = DataContainer()
+        sub1 = cont.create_group("sub")
+        self.assertTrue(isinstance(sub1, DataContainer), "create_group doesn't return DataContainer")
+        sub1.foo = 42
+        sub2 = cont.create_group("sub")
+        self.assertEqual(sub1.foo, sub2.foo, "create_group overwrites existing data.")
+        self.assertTrue(sub1 is sub2, "create_group return new DataContainer group instead of existing one.")
+        with self.assertRaises(ValueError, msg="No ValueError on existing data in Container"):
+            sub1.create_group("foo")
+
     def test_to_hdf_type(self):
         """Should write correct type information."""
         self.pl.to_hdf(hdf=self.hdf)

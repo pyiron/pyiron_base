@@ -631,14 +631,24 @@ class DataContainer(MutableMapping, HasGroups, HasHDF):
         Returns:
             DataContainer: the newly created subcontainer
 
+        Raises:
+            ValueError: name already exists in container and is not a sub container
+
         >>> pl = DataContainer({})
         >>> pl.create_group("group_name")
         DataContainer([])
         >>> list(pl.group_name)
         []
         """
-        self[name] = self.__class__()
-        return self[name]
+        if name not in self:
+            self[name] = self.__class__()
+            return self[name]
+        else:
+            v = self[name]
+            if isinstance(v, self.__class__):
+                return v
+            else:
+                raise ValueError(f"'{name}' already exists in DataContainer.")
 
     def has_keys(self):
         """
