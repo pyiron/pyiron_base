@@ -86,7 +86,7 @@ class TableManager(ABC):
 class HistoricalTable(TableManager):
     """The historical table."""
     def __init__(self, table_name, metadata, extend_existing=True):
-        super(HistoricalTable, self).__init__(table_name, metadata, extend_existing=True)
+        super().__init__(table_name, metadata, extend_existing=extend_existing)
         self._char_limit.update({'projectpath': 50, 'project': 255, 'job': 50, 'subjob': 250,
                                  'chemicalformula': 50, 'status': 20, 'hamilton': 50, 'hamversion': 50,
                                  'username': 20, 'computer': 100})
