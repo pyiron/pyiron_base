@@ -155,7 +155,8 @@ class HistoricalTable(TableManager):
         par_dict(dict): dictionary of the parameter
         """
         for key in par_dict.keys():
-            if par_dict[key] is not None and \
+            if key.lower() in self._char_limit.keys() and \
+                    par_dict[key] is not None and \
                     len(par_dict[key]) > self._char_limit[key.lower()]:
                 if key.lower() not in self._restrictively_limited_size_keys:
                     par_dict[key] = "OVERFLOW_ERROR"
