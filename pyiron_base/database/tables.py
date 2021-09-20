@@ -15,7 +15,7 @@ from sqlalchemy import (
     Table,
     MetaData
 )
-from typing import Type
+from typing import Type, List
 # from pyiron_base.job.generic import GenericJob
 from datetime import datetime
 
@@ -116,7 +116,7 @@ class TableManager(ABC):
 
     @property
     @abstractmethod
-    def _columns(self) -> list[ColumnManager]:
+    def _columns(self) -> List[ColumnManager]:
         """A list of `ColumnManager` objects"""
         pass
 
@@ -132,7 +132,7 @@ class TableManager(ABC):
         return self._table
 
     @property
-    def columns(self) -> list[Column]:
+    def columns(self) -> List[Column]:
         return [Column("id", Integer, primary_key=True, autoincrement=True)] + [c.column for c in self._columns]
 
     def _create_table(self, table_name: str, metadata: MetaData, extend_existing: bool=True) -> Table:
