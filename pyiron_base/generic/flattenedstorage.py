@@ -20,8 +20,9 @@ __date__ = "Jul 16, 2020"
 
 import numpy as np
 import h5py
+from pyiron_base.interfaces.has_hdf import HasHDF
 
-class FlattenedStorage:
+class FlattenedStorage(HasHDF):
     """
     Efficient storage of ragged arrays in flattened arrays.
 
@@ -460,20 +461,10 @@ class FlattenedStorage:
         #return last_chunk_index, last_element_index
 
 
-    def _type_to_hdf(self, hdf):
-        """
-        Internal helper function to save type and version in hdf root
+    def _get_hdf_group_name(self):
+        return "flat_storage"
 
-        Args:
-            hdf (ProjectHDFio): HDF5 group object
-        """
-        hdf["NAME"] = self.__class__.__name__
-        hdf["TYPE"] = str(type(self))
-        hdf["VERSION"] = self.__version__
-        hdf["HDF_VERSION"] = self.__hdf_version__
-        hdf["OBJECT"] = self.__class__.__name__
-
-    def to_hdf(self, hdf, group_name="flat_storage"):
+    def _to_hdf(self, hdf):
 
         def write_array(name, array, hdf):
             if array.dtype.char == "U":
@@ -493,22 +484,20 @@ class FlattenedStorage:
         self._resize_elements(self.num_elements)
         self._resize_chunks(self.num_chunks)
 
-        with hdf.open(group_name) as hdf_s_lst:
-            self._type_to_hdf(hdf_s_lst)
-            hdf_s_lst["num_elements"] =  self._num_elements_alloc
-            hdf_s_lst["num_chunks"] = self._num_chunks_alloc
+        hdf["num_elements"] =  self._num_elements_alloc
+        hdf["num_chunks"] = self._num_chunks_alloc
 
-            hdf_arrays = hdf_s_lst.open("element_arrays")
-            for k, a in self._per_element_arrays.items():
-                write_array(k, a, hdf_arrays)
+        hdf_arrays = hdf.open("element_arrays")
+        for k, a in self._per_element_arrays.items():
+            write_array(k, a, hdf_arrays)
 
-            hdf_arrays = hdf_s_lst.open("chunk_arrays")
-            for k, a in self._per_chunk_arrays.items():
-                write_array(k, a, hdf_arrays)
+        hdf_arrays = hdf.open("chunk_arrays")
+        for k, a in self._per_chunk_arrays.items():
+            write_array(k, a, hdf_arrays)
 
-            hdf_s_lst["_fill_values"] = self._fill_values
+        hdf["_fill_values"] = self._fill_values
 
-    def from_hdf(self, hdf, group_name="flat_storage"):
+    def _from_hdf(self, hdf, version):
 
         def read_array(name, hdf):
             a = np.array(hdf[name])
@@ -522,44 +511,42 @@ class FlattenedStorage:
                             dtype=f"U{a.dtype.itemsize//np.dtype('U1').itemsize}")
             return a
 
-        with hdf.open(group_name) as hdf_s_lst:
-            version = hdf_s_lst.get("HDF_VERSION", "0.0.0")
-            try:
-                num_chunks = hdf_s_lst["num_chunks"]
-                num_elements = hdf_s_lst["num_elements"]
-            except ValueError:
-                num_chunks = hdf_s_lst["num_structures"]
-                num_elements = hdf_s_lst["num_atoms"]
+        try:
+            num_chunks = hdf["num_chunks"]
+            num_elements = hdf["num_elements"]
+        except ValueError:
+            num_chunks = hdf["num_structures"]
+            num_elements = hdf["num_atoms"]
 
-            self._num_chunks_alloc = self.num_chunks = self.current_chunk_index = num_chunks
-            self._num_elements_alloc = self.num_elements = self.current_element_index = num_elements
+        self._num_chunks_alloc = self.num_chunks = self.current_chunk_index = num_chunks
+        self._num_elements_alloc = self.num_elements = self.current_element_index = num_elements
 
-            if version == "0.1.0":
-                with hdf_s_lst.open("arrays") as hdf_arrays:
-                    for k in hdf_arrays.list_nodes():
-                        a = read_array(k, hdf_arrays)
-                        if a.shape[0] == self._num_elements_alloc:
-                            self._per_element_arrays[k] = a
-                        elif a.shape[0] == self._num_chunks_alloc:
-                            self._per_chunk_arrays[k] = a
-            elif version == "0.2.0" or "0.3.0":
-                with hdf_s_lst.open("element_arrays") as hdf_arrays:
-                    for k in hdf_arrays.list_nodes():
-                        self._per_element_arrays[k] = read_array(k, hdf_arrays)
-                with hdf_s_lst.open("chunk_arrays") as hdf_arrays:
-                    for k in hdf_arrays.list_nodes():
-                        self._per_chunk_arrays[k] = read_array(k, hdf_arrays)
-            else:
-                raise RuntimeError(f"Unsupported HDF version {version}; use an older version of pyiron to load this job!")
+        if version == "0.1.0":
+            with hdf.open("arrays") as hdf_arrays:
+                for k in hdf_arrays.list_nodes():
+                    a = read_array(k, hdf_arrays)
+                    if a.shape[0] == self._num_elements_alloc:
+                        self._per_element_arrays[k] = a
+                    elif a.shape[0] == self._num_chunks_alloc:
+                        self._per_chunk_arrays[k] = a
+        elif version == "0.2.0" or "0.3.0":
+            with hdf.open("element_arrays") as hdf_arrays:
+                for k in hdf_arrays.list_nodes():
+                    self._per_element_arrays[k] = read_array(k, hdf_arrays)
+            with hdf.open("chunk_arrays") as hdf_arrays:
+                for k in hdf_arrays.list_nodes():
+                    self._per_chunk_arrays[k] = read_array(k, hdf_arrays)
+        else:
+            raise RuntimeError(f"Unsupported HDF version {version}; use an older version of pyiron to load this job!")
 
-            for k, a in self._per_chunk_arrays.items():
-                if a.shape[0] != self._num_chunks_alloc:
-                    raise RuntimeError(f"per-chunk array {k} read inconsistently from HDF: "
-                                       f"shape {a.shape[0]} does not match global allocation {self._num_chunks_alloc}!")
-            for k, a in self._per_element_arrays.items():
-                if a.shape[0] != self._num_elements_alloc:
-                    raise RuntimeError(f"per-element array {k} read inconsistently from HDF: "
-                                       f"shape {a.shape[0]} does not match global allocation {self._num_elements_alloc}!")
+        for k, a in self._per_chunk_arrays.items():
+            if a.shape[0] != self._num_chunks_alloc:
+                raise RuntimeError(f"per-chunk array {k} read inconsistently from HDF: "
+                                    f"shape {a.shape[0]} does not match global allocation {self._num_chunks_alloc}!")
+        for k, a in self._per_element_arrays.items():
+            if a.shape[0] != self._num_elements_alloc:
+                raise RuntimeError(f"per-element array {k} read inconsistently from HDF: "
+                                    f"shape {a.shape[0]} does not match global allocation {self._num_elements_alloc}!")
 
-            if version >= "0.3.0":
-                self._fill_values = hdf_s_lst["_fill_values"]
+        if version >= "0.3.0":
+            self._fill_values = hdf["_fill_values"]
