@@ -106,6 +106,35 @@ class HasHDF(ABC):
     >>> hdf.remove_file()
     >>> pr.remove(enable=True)
 
+    When using this class as a mixin that also derive from classes that have a
+    legacy implementation here's a simple recipe
+
+    >>> class MyOldClass:
+    ...     def to_hdf(self, hdf, group_name):
+    ...         pass # snip
+    ...     def from_hdf(self, hdf, group_name):
+    ...         pass # snip
+    >>> class MyDerivedClass(MyOldClass, HasHDF):
+    ...     def to_hdf(self, hdf, group_name):
+    ...         MyOldClass.to_hdf(self, hdf=hdf, group_name=group_name)
+    ...         HasHDF.to_hdf(self, hdf=hdf, group_name=group_name)
+    ...     def from_hdf(self, hdf, group_name):
+    ...         pass # snip
+
+    i.e. explicitly call both methods with the same group_name.  The call to
+    :meth:`.HasHDF.to_hdf` has to be last so that the type information is
+    consistently written to HDF.
+
+    If you're deriving from :class:`GenericJob` it will already take care of
+    descending into group_name, so you can pass `""` as the group_name like so
+
+    >>> class MyHybridJob(GenericJob, HasHDF):
+    ...     def to_hdf(self, hdf, group_name):
+    ...         GenericJob(self, hdf=hdf, group_name=group_name)
+    ...         HasHDF(self, hdf=self.project_hdf5, group_name="")
+    ...     def from_hdf(self, hdf, group_name):
+    ...         pass # snip
+
     .. document private methods
     .. automethod _from_hdf
     .. automethod _to_hdf
