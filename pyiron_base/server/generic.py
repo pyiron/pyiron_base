@@ -8,6 +8,7 @@ Server object class which is connected to each job containing the technical deta
 from collections import OrderedDict
 from pyiron_base.settings.generic import Settings
 from pyiron_base.server.runmode import Runmode
+from pyiron_base.interfaces.has_hdf import HasHDF
 import socket
 
 __author__ = "Jan Janssen"
@@ -24,7 +25,7 @@ __date__ = "Sep 1, 2017"
 s = Settings()
 
 
-class Server:  # add the option to return the job id and the hold id to the server object
+class Server(HasHDF):  # add the option to return the job id and the hold id to the server object
     """
     Generic Server object to handle the execution environment for the job
 
@@ -418,14 +419,7 @@ class Server:  # add the option to return the job id and the hold id to the serv
         else:
             return None
 
-    def to_hdf(self, hdf, group_name=None):
-        """
-        Store Server object in HDF5 file
-
-        Args:
-            hdf: HDF5 object
-            group_name (str): node name in the HDF5 file
-        """
+    def _to_hdf(self, hdf):
         hdf_dict = OrderedDict()
         hdf_dict["user"] = self._user
         hdf_dict["host"] = self._host
@@ -440,26 +434,10 @@ class Server:  # add the option to return the job id and the hold id to the serv
         hdf_dict["memory_limit"] = self.memory_limit
         hdf_dict["accept_crash"] = self.accept_crash
 
-        if group_name is not None:
-            with hdf.open(group_name) as hdf_group:
-                hdf_group["server"] = hdf_dict
-        else:
-            hdf["server"] = hdf_dict
+        hdf["server"] = hdf_dict
 
-    def from_hdf(self, hdf, group_name=None):
-        """
-        Recover Server object in HDF5 file
-
-        Args:
-            hdf: HDF5 object
-            group_name: node name in the HDF5 file
-
-        """
-        if group_name is not None:
-            with hdf.open(group_name) as hdf_group:
-                hdf_dict = hdf_group["server"]
-        else:
-            hdf_dict = hdf["server"]
+    def _from_hdf(self, hdf, version):
+        hdf_dict = hdf["server"]
         self._user = hdf_dict["user"]
         self._host = hdf_dict["host"]
         self._run_mode.mode = hdf_dict["run_mode"]
