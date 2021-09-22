@@ -5,7 +5,6 @@
 import os
 import shutil
 from pyiron_base.settings.install import install_pyiron
-import unittest
 from pyiron_base._tests import PyironTestCase
 
 
@@ -24,9 +23,9 @@ class TestInstall(PyironTestCase):
 
     def test_install(self):
         install_pyiron(
-                config_file_name = os.path.join(self.execution_path, "config"),
-                resource_directory = os.path.join(self.execution_path, "resources"),
-                project_path = os.path.join(self.execution_path, "project"),
+                config_file_name=os.path.join(self.execution_path, "config"),
+                resource_directory=os.path.join(self.execution_path, "resources"),
+                project_path=os.path.join(self.execution_path, "project"),
         )
 
         with open(os.path.join(self.execution_path, "config"), "r") as f:
@@ -36,6 +35,3 @@ class TestInstall(PyironTestCase):
         self.assertIn("RESOURCE_PATHS", content[2])
         self.assertTrue(os.path.exists(os.path.join(self.execution_path, "project")))
         self.assertTrue(os.path.exists(os.path.join(self.execution_path, "resources")))
-
-if __name__ == "__main__":
-    unittest.main()

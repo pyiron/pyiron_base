@@ -4,7 +4,6 @@
 
 from pyiron_base.settings.generic import Settings
 import os
-import unittest
 from pyiron_base._tests import PyironTestCase
 
 
@@ -52,7 +51,3 @@ class TestConfigSettingsStatic(PyironTestCase):
 
     def test_file_login_user(self):
         self.assertEqual(self.file_config.login_user, "pyiron")
-
-
-if __name__ == "__main__":
-    unittest.main()

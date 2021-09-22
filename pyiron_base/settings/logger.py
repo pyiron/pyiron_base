@@ -69,7 +69,10 @@ def setup_logger():
 
     return logger
 
+
 _logger = setup_logger()
+
+
 def get_logger():
     """
     Return global instance of the default logger to the log file at `pyiron.log`.
