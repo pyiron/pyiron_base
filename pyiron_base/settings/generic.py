@@ -75,6 +75,25 @@ class Settings(metaclass=Singleton):
             "project_check_enabled": True,
             "disable_database": False,
         }
+        self._update_configuration(config)
+
+        # Build the SQLalchemy connection strings
+        self._database_is_disabled = self._configuration["disable_database"]
+        if not self.database_is_disabled:
+            self._configuration = self.convert_database_config(
+                config=self._configuration
+            )
+        self._database = None
+        self._use_local_database = False
+        self._queue_adapter = None
+        self._queue_adapter = self._init_queue_adapter(
+            resource_path_lst=self._configuration["resource_paths"]
+        )
+        self.logger = setup_logger()
+        self._publication_lst = {}
+        self.publication_add(self.publication)
+
+    def _update_configuration(self, config):
         environment = os.environ
         if "PYIRONCONFIG" in environment.keys():
             config_file = environment["PYIRONCONFIG"]
@@ -107,22 +126,6 @@ class Settings(metaclass=Singleton):
         self._configuration["resource_paths"] = [
             convert_path(path) for path in self._configuration["resource_paths"]
         ]
-
-        # Build the SQLalchemy connection strings
-        self._database_is_disabled = self._configuration["disable_database"]
-        if not self.database_is_disabled:
-            self._configuration = self.convert_database_config(
-                config=self._configuration
-            )
-        self._database = None
-        self._use_local_database = False
-        self._queue_adapter = None
-        self._queue_adapter = self._init_queue_adapter(
-            resource_path_lst=self._configuration["resource_paths"]
-        )
-        self.logger = setup_logger()
-        self._publication_lst = {}
-        self.publication_add(self.publication)
 
     @property
     def using_local_database(self):
