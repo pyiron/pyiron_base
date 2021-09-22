@@ -232,15 +232,15 @@ class Settings(metaclass=Singleton):
             file_name (str): SQLite database file name
             cwd (str/None): directory where the SQLite database file is located in
         """
-        if not self._use_local_database:
+        if self._use_local_database:
+            print("Database is already in local mode or disabled!")
+        else:
             if cwd is None and not os.path.isabs(file_name):
                 file_name = os.path.join(os.path.abspath(os.path.curdir), file_name)
             elif cwd is not None:
                 file_name = os.path.join(cwd, file_name)
             self.close_connection()
             self.open_local_sqlite_connection(connection_string="sqlite:///" + file_name)
-        else:
-            print("Database is already in local mode or disabled!")
 
     def open_local_sqlite_connection(self, connection_string):
         self._database = DatabaseAccess(connection_string, self._configuration["sql_table_name"])
@@ -255,13 +255,14 @@ class Settings(metaclass=Singleton):
         if self._use_local_database:
             self.close_connection()
             self._database_is_disabled = self._configuration["disable_database"]
-            if not self.database_is_disabled:
+            if self.database_is_disabled:
+                self._database = None
+            else:
                 self._database = DatabaseAccess(
                     self._configuration["sql_connection_string"],
                     self._configuration["sql_table_name"],
                 )
-            else:
-                self._database = None
+
             self._use_local_database = False
         else:
             print("Database is already in central mode or disabled!")
@@ -271,15 +272,16 @@ class Settings(metaclass=Singleton):
         Switch from user mode to viewer mode - if viewer_mode is enable pyiron has read only access to the database.
         """
         if self._configuration["sql_view_connection_string"] is not None and not self.database_is_disabled:
-            if not self._database.viewer_mode:
+            if self._database.viewer_mode:
+                print("Database is already in viewer mode!")
+            else:
                 self.close_connection()
                 self._database = DatabaseAccess(
                     self._configuration["sql_view_connection_string"],
                     self._configuration["sql_view_table_name"],
                 )
                 self._database.viewer_mode = True
-            else:
-                print("Database is already in viewer mode!")
+
         else:
             print("Viewer Mode is not available on this pyiron installation.")
 
