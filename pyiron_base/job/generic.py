@@ -1183,11 +1183,6 @@ class GenericJob(JobCore):
         """
         return True
 
-    @property
-    def chemical_formula(self):
-        """A necessary evil since atomistic properties are deeply buried in our database"""
-        return None
-
     def restart(self, job_name=None, job_type=None):
         """
         Create an restart calculation from the current calculation - in the GenericJob this is the same as create_job().
