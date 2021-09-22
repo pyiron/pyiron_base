@@ -20,7 +20,10 @@ class TestInstall(PyironTestCase):
         shutil.rmtree(os.path.join(execution_path, "resources"))
         shutil.rmtree(os.path.join(execution_path, "project"))
         os.remove(os.path.join(execution_path, "config"))
-        os.remove(os.path.join(execution_path, "pyiron.log"))
+        try:
+            os.remove(os.path.join(execution_path, "pyiron.log"))
+        except FileNotFoundError:
+            pass
 
     def test_install(self):
         install_pyiron(
