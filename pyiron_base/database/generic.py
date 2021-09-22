@@ -472,11 +472,35 @@ class DatabaseAccess(object):
             par_dict[key_limited] = "OVERFLOW_ERROR"
         return par_dict
 
-    def add(self, obj, settings, target_manager: Type[TableManager]):
+    def _add_item(self, insertion_fnc, *insertion_args):
+        """
+                Create a new database item
+
+                Args:
+                    par_dict (dict): Dictionary with the item values and column names as keys, like:
+                                      {'chemicalformula': 'BO',
+                                     'computer': 'localhost',
+                                     'hamilton': 'VAMPS',
+                                     'hamversion': '1.1',
+                                     'job': 'testing',
+                                     'subjob' : 'SubJob',
+                                     'parentid': 0L,
+                                     'myCol': 'Blubbablub',
+                                     'project': 'database.testing',
+                                     'projectpath': '/root/directory/tmp',
+                                     'status': 'KAAAA',
+                                     'timestart': datetime(2016, 5, 2, 11, 31, 4, 253377),
+                                     'timestop': datetime(2016, 5, 2, 11, 31, 4, 371165),
+                                     'totalcputime': 0.117788,
+                                     'username': 'Test'}
+
+                Returns:
+                    int: Database ID of the item created as an int, like: 3
+                """
         if not self._viewer_mode:
             try:
                 result = self.conn.execute(
-                    target_manager.add(obj, settings)
+                    insertion_fnc(*insertion_args)
                 ).inserted_primary_key[-1]
                 if not self._keep_connection:
                     self.conn.close()
@@ -485,6 +509,9 @@ class DatabaseAccess(object):
                 raise ValueError("Error occurred: " + str(except_msg))
         else:
             raise PermissionError("Not avilable in viewer mode.")
+
+    def add(self, obj, settings, target_manager: Type[TableManager]):
+        return self._add_item(target_manager.add, obj, settings)
 
     # Item functions
     def add_item_dict(self, par_dict):
@@ -512,22 +539,11 @@ class DatabaseAccess(object):
         Returns:
             int: Database ID of the item created as an int, like: 3
         """
-        if not self._viewer_mode:
-            try:
-                par_dict = self._check_chem_formula_length(par_dict)
-                par_dict = dict(
-                    (key.lower(), value) for key, value in par_dict.items()
-                )  # make keys lowercase
-                result = self.conn.execute(
-                    self.simulation_table.insert(par_dict)
-                ).inserted_primary_key[-1]
-                if not self._keep_connection:
-                    self.conn.close()
-                return result
-            except Exception as except_msg:
-                raise ValueError("Error occurred: " + str(except_msg))
-        else:
-            raise PermissionError("Not avilable in viewer mode.")
+        par_dict = self._check_chem_formula_length(par_dict)
+        par_dict = dict(
+            (key.lower(), value) for key, value in par_dict.items()
+        )  # make keys lowercase
+        return self._add_item(self.simulation_table.insert, par_dict)
 
     def __get_items(self, col_name, var):
         """
