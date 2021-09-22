@@ -101,7 +101,7 @@ class Settings(metaclass=Singleton):
             self._configuration["resource_paths"].append(os.path.join(environment["CONDA_DIR"], "share", "pyiron"))
 
         self._configuration["project_paths"] = [
-            convert_path(path) + "/" if path[-1] != "/" else convert_path(path)
+            convert_path(path) if path.endswith("/") else convert_path(path) + "/"
             for path in self._configuration["project_paths"]
         ]
         self._configuration["resource_paths"] = [
