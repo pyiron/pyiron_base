@@ -497,7 +497,7 @@ class FlattenedStorage(HasHDF):
 
         hdf["_fill_values"] = self._fill_values
 
-    def _from_hdf(self, hdf, version):
+    def _from_hdf(self, hdf, version=None):
 
         def read_array(name, hdf):
             a = np.array(hdf[name])
