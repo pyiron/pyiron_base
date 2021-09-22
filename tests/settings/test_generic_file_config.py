@@ -11,6 +11,7 @@ from pyiron_base._tests import PyironTestCase
 class TestConfigSettingsStatic(PyironTestCase):
     @classmethod
     def setUpClass(cls):
+        super().setUpClass()
         cls.resource_path = os.path.abspath(
             os.path.join(os.path.dirname(os.path.abspath(__file__)), "../static")
         ).replace("\\", "/")

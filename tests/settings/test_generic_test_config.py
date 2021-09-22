@@ -12,6 +12,7 @@ from pyiron_base._tests import PyironTestCase
 class TestConfigSettingsStatic(PyironTestCase):
     @classmethod
     def setUpClass(cls):
+        super().setUpClass()
         cls.resource_path = (
             Path(__file__)
             .expanduser()

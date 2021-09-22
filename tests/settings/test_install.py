@@ -12,6 +12,7 @@ from pyiron_base._tests import PyironTestCase
 class TestInstall(PyironTestCase):
     @classmethod
     def setUpClass(cls):
+        super().setUpClass()
         cls.execution_path = os.path.dirname(os.path.abspath(__file__))
 
     @classmethod
