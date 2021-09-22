@@ -404,12 +404,10 @@ class Settings(metaclass=Singleton):
             ValueError("No project path identified!")
 
         if parser.has_option(section, "PROJECT_CHECK_ENABLED"):
-            self._configuration["project_check_enabled"] = \
-                parser.getboolean(section, "PROJECT_CHECK_ENABLED")
+            self._configuration["project_check_enabled"] = parser.getboolean(section, "PROJECT_CHECK_ENABLED")
 
         if parser.has_option(section, "DISABLE_DATABASE"):
-            self._configuration["disable_database"] = \
-                parser.getboolean(section, "DISABLE_DATABASE")
+            self._configuration["disable_database"] = parser.getboolean(section, "DISABLE_DATABASE")
 
         if parser.has_option(section, "RESOURCE_PATHS"):
             self._configuration["resource_paths"] = [
