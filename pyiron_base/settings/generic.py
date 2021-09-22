@@ -99,6 +99,7 @@ class Settings(metaclass=Singleton):
             config_file = environment["PYIRONCONFIG"]
         else:
             config_file = os.path.expanduser(os.path.join("~", ".pyiron"))
+
         if os.path.isfile(config_file):
             self._config_parse_file(config_file)
         elif any(["PYIRON" in e for e in environment.keys()]):
@@ -319,8 +320,10 @@ class Settings(metaclass=Singleton):
         """
         if full_path[-1] != "/":
             full_path += "/"
+
         if not self.project_check_enabled:
             return None
+
         for path in self._configuration["project_paths"]:
             if path in full_path:
                 return path
@@ -397,17 +400,21 @@ class Settings(metaclass=Singleton):
             ]
         else:
             ValueError("No project path identified!")
+
         if parser.has_option(section, "PROJECT_CHECK_ENABLED"):
             self._configuration["project_check_enabled"] = \
                 parser.getboolean(section, "PROJECT_CHECK_ENABLED")
+
         if parser.has_option(section, "DISABLE_DATABASE"):
             self._configuration["disable_database"] = \
                 parser.getboolean(section, "DISABLE_DATABASE")
+
         if parser.has_option(section, "RESOURCE_PATHS"):
             self._configuration["resource_paths"] = [
                 convert_path(c.strip())
                 for c in parser.get(section, "RESOURCE_PATHS").replace(",", ":").replace(";", ":").split(":")
             ]
+
         if self._configuration["sql_type"] in ["Postgres", "MySQL"]:
             if (
                 parser.has_option(section, "USER")
@@ -425,6 +432,7 @@ class Settings(metaclass=Singleton):
                     "If type Postgres or MySQL are selected the options USER, PASSWD, HOST and NAME are"
                     "required in the configuration file."
                 )
+
             if (
                 parser.has_option(section, "VIEWERUSER")
                 & parser.has_option(section, "VIEWERPASSWD")
@@ -452,6 +460,7 @@ class Settings(metaclass=Singleton):
                 self._configuration["sql_file"] = parser.get(
                     section, "DATABASE_FILE"
                 ).replace("\\", "/")
+
         if parser.has_option(section, "JOB_TABLE"):
             self._configuration["sql_table_name"] = parser.get(section, "JOB_TABLE")
 
