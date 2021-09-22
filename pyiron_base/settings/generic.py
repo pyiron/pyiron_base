@@ -102,7 +102,7 @@ class Settings(metaclass=Singleton):
         if os.path.isfile(config_file):
             self._config_parse_file(config_file)
         elif any(["PYIRON" in e for e in environment.keys()]):
-            self._configuration = self.get_config_from_environment(
+            self._configuration = self._get_config_from_environment(
                 environment=environment,
                 config=self._configuration
             )
@@ -529,7 +529,7 @@ class Settings(metaclass=Singleton):
                     )
 
     @staticmethod
-    def get_config_from_environment(environment, config):
+    def _get_config_from_environment(environment, config):
         env_key_mapping = {
             "PYIRONUSER": "user",
             "PYIRONRESOURCEPATHS": "resource_paths",

@@ -29,7 +29,7 @@ class TestConfigSettingsStatic(PyironTestCase):
         )
 
     def test_get_config_from_environment(self):
-        config = self.test_config.get_config_from_environment(
+        config = self.test_config._get_config_from_environment(
             environment={"PYIRONSQLFILE": '/a/b/c', "SYSTEM": 'linux'},
             config={'user': 'pyiron'}
         )
