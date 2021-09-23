@@ -33,6 +33,9 @@ class TestConfigSettingsStatic(PyironTestCase):
     # def test_file_db_name(self):
     #     self.assertEqual(self.file_config.db_name, 'DEFAULT')
 
+    def test_should_fail(self):
+        self.assertTrue(False)
+
     def test_file_top_path(self):
         self.assertTrue(
             self.file_config.top_path(self.project_path + "/test") in self.project_path
