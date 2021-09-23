@@ -1036,7 +1036,7 @@ class GenericJob(JobCore):
         job._init_child_job(self)
         return job
 
-    def update_master(self):
+    def update_master(self, force_update=False):
         """
         After a job is finished it checks whether it is linked to any metajob - meaning the master ID is pointing to
         this jobs job ID. If this is the case and the master job is in status suspended - the child wakes up the master
@@ -1048,16 +1048,16 @@ class GenericJob(JobCore):
         master_id = self.master_id
         project = self.project
         self._logger.info("update master: {} {} {}".format(master_id, self.get_job_id(), self.server.run_mode))
-        if (
-            master_id is not None
-            and not self.server.run_mode.thread
-            and not self.server.run_mode.modal
-            and not self.server.run_mode.interactive
-        ):
-            self._reload_update_master(
-                project=project,
-                master_id=master_id
-            )
+        if master_id is not None:
+            if force_update or (
+                not self.server.run_mode.thread
+                and not self.server.run_mode.modal
+                and not self.server.run_mode.interactive
+            ):
+                self._reload_update_master(
+                    project=project,
+                    master_id=master_id
+                )
 
     def job_file_name(self, file_name, cwd=None):
         """

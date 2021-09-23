@@ -277,6 +277,11 @@ class GenericMaster(GenericJob):
                 if new_database_entry and child.master_id:
                     new_child.master_id = self.job_id
 
+    def update_master(self, force_update=True):
+        super().update_master(force_update=force_update)
+
+    update_master.__doc__ = GenericJob.update_master.__doc__
+
     def to_hdf(self, hdf=None, group_name=None):
         """
         Store the GenericMaster in an HDF5 file
