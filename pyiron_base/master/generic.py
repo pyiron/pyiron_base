@@ -393,6 +393,26 @@ class GenericMaster(GenericJob):
                 item
             ))
 
+    def interactive_close(self):
+        """Not implemented for MetaJobs"""
+        pass
+
+    def interactive_fetch(self):
+        """Not implemented for MetaJobs"""
+        pass
+
+    def interactive_flush(self):
+        """Not implemented for MetaJobs"""
+        pass
+
+    def run_if_interactive_non_modal(self):
+        """Not implemented for MetaJobs"""
+        pass
+
+    def _run_if_busy(self):
+        """Not implemented for MetaJobs"""
+        pass
+
     def _load_all_child_jobs(self, job_to_load):
         """
         Helper function to load all child jobs to memory - like it was done in the previous implementation
