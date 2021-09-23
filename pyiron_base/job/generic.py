@@ -53,7 +53,8 @@ class GenericJob(JobCore):
     all specific Hamiltonians are derived. Therefore it should contain the properties/routines common to all jobs.
     The functions in this module should be as generic as possible.
 
-    Sub classes that need to add special behavior after :method:`.copy_to()` can override :method:`._after_generic_copy_to()`.
+    Sub classes that need to add special behavior after :method:`.copy_to()` can override
+    :method:`._after_generic_copy_to()`.
 
     Args:
         project (ProjectHDFio): ProjectHDFio instance which points to the HDF5 file the job is stored in
@@ -644,7 +645,7 @@ class GenericJob(JobCore):
             run_again (bool): Same as delete_existing_job (deprecated)
         """
         if run_again:
-            delete_existing_job=True
+            delete_existing_job = True
         try:
             self._logger.info(
                 "run {}, status: {}".format(self.job_info_str, self.status)
@@ -1445,7 +1446,7 @@ class GenericJob(JobCore):
             run_again (bool): Same as delete_existing_job (deprecated)
         """
         if run_again:
-            delete_existing_job=True
+            delete_existing_job = True
         if delete_existing_job:
             parent_id = self.parent_id
             self.parent_id = None
@@ -1633,7 +1634,7 @@ class GenericError(object):
         for message in [self.print_message(), self.print_queue()]:
             if message is True:
                 all_messages += message
-        if len(all_messages)==0:
+        if len(all_messages) == 0:
             all_messages = 'There is no error/warning'
         return all_messages
 
