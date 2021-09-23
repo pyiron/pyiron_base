@@ -1045,6 +1045,9 @@ class GenericJob(JobCore):
         status refresh. If another child calls update_master, while the master is in refresh the status of the master is
         set to busy and if the master is in status busy at the end of the update_master process another update is
         triggered.
+
+        Args:
+            force_update (bool): Whether to check run mode for updating master
         """
         master_id = self.master_id
         project = self.project
