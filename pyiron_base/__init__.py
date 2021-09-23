@@ -18,6 +18,7 @@ from pyiron_base.job.interactivewrapper import InteractiveWrapper
 from pyiron_base.job.jobstatus import JobStatus, job_status_successful_lst, job_status_finished_lst, job_status_lst
 from pyiron_base.job.jobtype import JOB_CLASS_DICT, JobType, JobTypeChoice
 from pyiron_base.job.template import TemplateJob, PythonTemplateJob
+from pyiron_base.job.factory import JobFactoryCore
 from pyiron_base.master.generic import GenericMaster, get_function_from_string
 from pyiron_base.master.list import ListMaster
 from pyiron_base.master.parallel import ParallelMaster, JobGenerator
@@ -31,6 +32,9 @@ from pyiron_base.settings.install import install_dialog
 from pyiron_base.table.datamining import PyironTable, TableJob
 from pyiron_base.generic.object import HasDatabase, HasStorage, PyironObject
 from pyiron_base.database.performance import get_database_statistics
+
+from pyiron_base.toolkit import Toolkit, BaseTools
+Project.register_tools('base', BaseTools)
 
 # optional API of the pyiron_base module
 try:

@@ -11,6 +11,7 @@ import os
 import unittest
 import warnings
 import numpy as np
+import pandas as pd
 
 
 class Sub(DataContainer):
@@ -273,6 +274,18 @@ class TestDataContainer(TestWithCleanProject):
             return True
         self.assertTrue(rec(self.pl._repr_json_()), "_repr_json_ output not all str")
 
+    def test_create_group(self):
+        """create_group should not erase existing groups."""
+        cont = DataContainer()
+        sub1 = cont.create_group("sub")
+        self.assertTrue(isinstance(sub1, DataContainer), "create_group doesn't return DataContainer")
+        sub1.foo = 42
+        sub2 = cont.create_group("sub")
+        self.assertEqual(sub1.foo, sub2.foo, "create_group overwrites existing data.")
+        self.assertTrue(sub1 is sub2, "create_group return new DataContainer group instead of existing one.")
+        with self.assertRaises(ValueError, msg="No ValueError on existing data in Container"):
+            sub1.create_group("foo")
+
     def test_to_hdf_type(self):
         """Should write correct type information."""
         self.pl.to_hdf(hdf=self.hdf)
@@ -402,6 +415,14 @@ class TestDataContainer(TestWithCleanProject):
         self.assertEqual(l, m, "List with nested mappings not restored from HDF.")
         self.assertTrue(isinstance(m[0], dict), "dicts wrapped after reading from HDF.")
         self.assertTrue(isinstance(m[1], list), "lists wrapped after reading from HDF.")
+
+    def test_hdf_pandas(self):
+        """Values that implement to_hdf/from_hdf, should write themselves to the HDF file correctly."""
+        pl = DataContainer(table_name="pandas")
+        pl.append(pd.DataFrame({"a": [1, 2], "b": ["x", "y"]}))
+        pl.to_hdf(hdf=self.hdf)
+        pl2 = self.hdf["pandas"].to_object()
+        self.assertEqual(type(pl[0]), type(pl2[0]))
 
     def test_groups_nodes(self):
         self.assertTrue(isinstance(self.pl.nodes(), Iterator), "nodes does not return an Iterator")

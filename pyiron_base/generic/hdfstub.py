@@ -60,11 +60,14 @@ class HDFStub:
         """
         Create new stub.
 
+        The given hdf object is copied, so that calls to its :meth:`ProjectHDFio.open` and :meth:`.ProjectHDFio.close`
+        between this initialization and later calls to :meth:.load` do not change the location this stub is pointing at.
+
         Args:
             hdf (:class:`.ProjectHDFio`): hdf object to load from
             group_name (str): node or group name to load from the hdf object
         """
-        self._hdf = hdf
+        self._hdf = hdf.copy()
         self._group_name = group_name
 
     @classmethod
