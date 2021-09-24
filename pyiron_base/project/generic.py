@@ -34,6 +34,7 @@ from pyiron_base.database.jobtable import (
 from pyiron_base.settings.logger import set_logging_level
 from pyiron_base.generic.hdfio import ProjectHDFio
 from pyiron_base.generic.filedata import load_file
+from pyiron_base.generic.util import deprecate
 from pyiron_base.interfaces.has_groups import HasGroups
 from pyiron_base.job.jobtype import JobType, JobTypeChoice, JobFactory
 from pyiron_base.server.queuestatus import (
@@ -486,27 +487,9 @@ class Project(ProjectPath, HasGroups):
         )
         return folder_size / (1024 * 1024.0)
 
-    @staticmethod
-    def get_repository_status():
-        """
-        Finds the hashes for every `pyiron` module available.
-
-        Returns:
-            pandas.DataFrame: The name of each module and the hash for its current git head.
-        """
-        module_names = [name for _, name, _ in pkgutil.iter_modules() if name.startswith("pyiron")]
-
-        report = pandas.DataFrame(columns=['Module', 'Git head'], index=range(len(module_names)))
-        for i, name in enumerate(module_names):
-            try:
-                module = importlib.import_module(name)
-                repo = Repo(os.path.dirname(os.path.dirname(module.__file__)))
-                hash_ = repo.head.reference.commit.hexsha
-                report.loc[i] = [name, hash_]
-            except InvalidGitRepositoryError:
-                report.loc[i] = [name, 'Not a repo']
-
-        return report
+    @deprecate('use maintenance.get_repository_status() instead.')
+    def get_repository_status(self):
+        return self.maintenance.get_repository_status()
 
     def groups(self):
         """
@@ -1566,6 +1549,33 @@ class Maintenance:
     @property
     def global_status(self):
         return self._global
+
+    @staticmethod
+    def get_repository_status():
+
+        """
+        Finds the hashes and versions for every `pyiron` module available.
+
+        Returns:
+            pandas.DataFrame: The name of each module and the hash and version for its current git head.
+        """
+        module_names = [name for _, name, _ in pkgutil.iter_modules() if name.startswith("pyiron")]
+
+        report = pandas.DataFrame(columns=['Module', 'Git head', 'Version'], index=range(len(module_names)))
+        for i, name in enumerate(module_names):
+            module = importlib.import_module(name)
+            try:
+                repo = Repo(os.path.dirname(os.path.dirname(module.__file__)))
+                hash_ = repo.head.reference.commit.hexsha
+            except InvalidGitRepositoryError:
+                hash_ = 'Not a repo'
+            if hasattr(module, '__version__'):
+                version = module.__version__
+            else:
+                version = "not defined"
+            report.loc[i] = [name, hash_, version]
+
+        return report
 
 
 class GlobalMaintenance:
