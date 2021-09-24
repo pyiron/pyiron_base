@@ -160,13 +160,6 @@ class DatabaseManager(metaclass=Singleton):
             self._database.conn.close()
             self._database = None
 
-    @property
-    def project_check_enabled(self):
-        if self.database_is_disabled:
-            return False
-        else:
-            return s.configuration["project_check_enabled"]
-
     def top_path(self, full_path):
         """
         Validated that the full_path is a sub directory of one of the pyrion environments loaded.
