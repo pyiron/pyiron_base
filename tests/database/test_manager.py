@@ -21,3 +21,4 @@ class TestDatabaseManager(PyironTestCase):
         self.dbm._database_is_disabled = True
         self.assertNotEqual(self.s.configuration["disable_database"], self.dbm.database_is_disabled,
                             msg="But after that it should be independent from the settings")
+        self.dbm._database_is_disabled = False  # Re-enable it at the end of the test
