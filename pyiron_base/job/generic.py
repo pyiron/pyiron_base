@@ -13,6 +13,7 @@ import posixpath
 import multiprocessing
 from pyiron_base.job.wrapper import JobWrapper
 from pyiron_base.settings.generic import Settings
+from pyiron_base.database.manager import DatabaseManager
 from pyiron_base.job.executable import Executable
 from pyiron_base.job.jobstatus import JobStatus
 from pyiron_base.job.core import JobCore
@@ -39,6 +40,7 @@ __status__ = "production"
 __date__ = "Sep 1, 2017"
 
 s = Settings()
+dbm = DatabaseManager()
 
 intercepted_signals = [
     signal.SIGINT,
@@ -749,7 +751,7 @@ class GenericJob(JobCore):
                 with open(error_file, "w") as f:
                     f.write(e.output)
                 if self.server.run_mode.non_modal:
-                    s.close_connection()
+                    dbm.close_connection()
                 raise RuntimeError("Job aborted")
             else:
                 job_crashed = True
@@ -773,7 +775,7 @@ class GenericJob(JobCore):
             transfer_back=True,
             delete_remote=s.queue_adapter.ssh_delete_file_on_remote
         )
-        if s.database_is_disabled:
+        if dbm.database_is_disabled:
             self.project.db.update()
         else:
             ft = FileTable(project=self.project_hdf5.path + "_hdf5/")
@@ -869,7 +871,7 @@ class GenericJob(JobCore):
         The run if non modal function is called by run to execute the simulation in the background. For this we use
         multiprocessing.Process()
         """
-        if not s.using_local_database:
+        if not dbm.using_local_database:
             p = multiprocessing.Process(
                 target=multiprocess_wrapper,
                 args=(self.job_id, self.project_hdf5.working_directory, False, None),
@@ -927,7 +929,7 @@ class GenericJob(JobCore):
                 file=self.project_hdf5.file_name,
                 transfer_back=False
             )
-        elif s.database_is_disabled:
+        elif dbm.database_is_disabled:
             command = "python -m pyiron_base.cli wrapper -p " \
                       + self.working_directory \
                       + " -f " + self.project_hdf5.file_name + self.project_hdf5.h5_path

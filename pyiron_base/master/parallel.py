@@ -17,6 +17,7 @@ from pyiron_base.master.submissionstatus import SubmissionStatus
 from pyiron_base.generic.parameters import GenericParameters
 from pyiron_base.job.jobstatus import JobStatus
 from pyiron_base.settings.generic import Settings
+from pyiron_base.database.manager import DatabaseManager
 from pyiron_base.job.wrapper import job_wrapper_function
 from pyiron_base.generic.util import deprecate
 
@@ -32,6 +33,7 @@ __status__ = "production"
 __date__ = "Sep 1, 2017"
 
 s = Settings()
+dbm = DatabaseManager()
 
 
 class ParallelMaster(GenericMaster):
@@ -609,7 +611,7 @@ class ParallelMaster(GenericMaster):
             job.save()
             job.project_hdf5.create_working_directory()
             job.write_input()
-            if s.database_is_disabled or (s.queue_adapter is not None and s.queue_adapter.remote_flag):
+            if dbm.database_is_disabled or (s.queue_adapter is not None and s.queue_adapter.remote_flag):
                 job_lst.append(
                     (
                         job.project.path,
@@ -630,7 +632,7 @@ class ParallelMaster(GenericMaster):
                     )
                 )
         pool.starmap(job_wrapper_function, job_lst)
-        if s.database_is_disabled:
+        if dbm.database_is_disabled:
             self.project.db.update()
         self.status.collect = True
         self.run()  # self.run_if_collect()

@@ -10,7 +10,7 @@ from abc import ABC
 from pyiron_base.generic.datacontainer import DataContainer
 from pyiron_base.interfaces.has_hdf import HasHDF
 from pyiron_base.generic.hdfio import ProjectHDFio
-from pyiron_base.settings.generic import Settings
+from pyiron_base.database.manager import DatabaseManager
 
 __author__ = "Liam Huber"
 __copyright__ = (
@@ -23,7 +23,7 @@ __email__ = "huber@mpie.de"
 __status__ = "development"
 __date__ = "Mar 23, 2021"
 
-s = Settings()
+dbm = DatabaseManager()
 
 
 class HasStorage(HasHDF, ABC):
@@ -45,7 +45,6 @@ class HasStorage(HasHDF, ABC):
         self.storage.from_hdf(hdf=hdf)
 
 
-
 class HasDatabase(ABC):
     """
     A base class for objects that are registered in pyiron's database
@@ -54,9 +53,9 @@ class HasDatabase(ABC):
     """
 
     def __init__(self, *args, **kwargs):
-        if not s.database_is_disabled:
-            s.open_connection()
-            self._database = s.database
+        if not dbm.database_is_disabled:
+            dbm.open_connection()
+            self._database = dbm.database
         else:
             raise NotImplementedError("WIP. For now only allowed with a database")
 
