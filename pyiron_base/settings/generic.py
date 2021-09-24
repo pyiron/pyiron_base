@@ -3,6 +3,8 @@
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 """
 The settings file provides the attributes of the configuration as properties.
+
+The settings object is additionally responsible for the queue adapter, the logger, and the publications list.
 """
 
 import os
@@ -76,7 +78,7 @@ class Settings(metaclass=Singleton):
         }
         self._update_configuration(config)
 
-        # Build the SQLalchemy connection strings
+        # Build the SQLalchemy connection strings from config data
         if not self._configuration["disable_database"]:
             self._configuration = self.convert_database_config(
                 config=self._configuration
