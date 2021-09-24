@@ -1052,12 +1052,14 @@ class GenericJob(JobCore):
         master_id = self.master_id
         project = self.project
         self._logger.info("update master: {} {} {}".format(master_id, self.get_job_id(), self.server.run_mode))
-        if master_id is not None:
-            if force_update or (
-                not self.server.run_mode.thread
-                and not self.server.run_mode.modal
-                and not self.server.run_mode.interactive
-            ):
+        if master_id is not None and (
+            force_update or
+            not (
+                self.server.run_mode.thread
+                or self.server.run_mode.modal
+                or self.server.run_mode.interactive
+            )
+        ):
                 self._reload_update_master(
                     project=project,
                     master_id=master_id
