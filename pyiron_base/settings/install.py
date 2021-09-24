@@ -103,7 +103,8 @@ def install_dialog():
     if not os.path.exists(os.path.expanduser(config_file)):
         while user_input not in ["yes", "no"]:
             user_input = input(
-                "It appears that pyiron is not yet configured, do you want to create a default start configuration (recommended: yes). [yes/no]:"
+                "It appears that pyiron is not yet configured, do you want to create a default start configuration "
+                "(recommended: yes). [yes/no]:"
             )
         if user_input.lower() == "yes" or user_input.lower() == "y":
             install_pyiron(
