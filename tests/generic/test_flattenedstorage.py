@@ -181,6 +181,17 @@ class TestFlattenedStorage(TestWithProject):
         with self.assertRaises(KeyError, msg="Non-existing identifier!"):
             store.get_array("even", "foo")
 
+    def test_get_array_full(self):
+        """get_array should return full array for all chunks if not given frame."""
+
+        store = FlattenedStorage(elem=[ [1], [2, 3], [4, 5, 6] ], chunk=[-1, -2, -3])
+        elem = store.get_array("elem")
+        self.assertTrue(np.array_equal(elem, [1, 2, 3, 4, 5, 6]),
+                        f"get_array return did not return correct flat array, but {elem}.")
+        chunk = store.get_array("chunk")
+        self.assertTrue(np.array_equal(chunk, [-1, -2, -3]),
+                        f"get_array return did not return correct flat array, but {chunk}.")
+
     def test_has_array(self):
         """hasarray should return correct information for added array; None otherwise."""
 
