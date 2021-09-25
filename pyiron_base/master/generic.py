@@ -277,23 +277,10 @@ class GenericMaster(GenericJob):
                 if new_database_entry and child.master_id:
                     new_child.master_id = self.job_id
 
-    def update_master(self):
-        """
-        After a job is finished it checks whether it is linked to any metajob - meaning the master ID is pointing to
-        this jobs job ID. If this is the case and the master job is in status suspended - the child wakes up the master
-        job, sets the status to refresh and execute run on the master job. During the execution the master job is set to
-        status refresh. If another child calls update_master, while the master is in refresh the status of the master is
-        set to busy and if the master is in status busy at the end of the update_master process another update is
-        triggered.
-        """
-        master_id = self.master_id
-        project = self.project
-        self._logger.info("update master: {} {} {}".format(master_id, self.get_job_id(), self.server.run_mode))
-        if master_id is not None:
-            self._reload_update_master(
-                project=project,
-                master_id=master_id
-            )
+    def update_master(self, force_update=True):
+        super().update_master(force_update=force_update)
+
+    update_master.__doc__ = GenericJob.update_master.__doc__
 
     def to_hdf(self, hdf=None, group_name=None):
         """
@@ -357,57 +344,6 @@ class GenericMaster(GenericJob):
             ]
         )
 
-    def write_input(self):
-        """
-        Write the input files for the external executable. This method has to be implemented in the individual
-        hamiltonians.
-        """
-        raise NotImplementedError(
-            "write procedure must be defined for derived Hamilton!"
-        )
-
-    def collect_output(self):
-        """
-        Collect the output files of the external executable and store the information in the HDF5 file. This method has
-        to be implemented in the individual hamiltonians.
-        """
-        raise NotImplementedError(
-            "read procedure must be defined for derived Hamilton!"
-        )
-
-    def run_if_interactive(self):
-        """
-        For jobs which executables are available as Python library, those can also be executed with a library call
-        instead of calling an external executable. This is usually faster than a single core python job.
-        """
-        raise NotImplementedError(
-            "This function needs to be implemented in the specific class."
-        )
-
-    def interactive_close(self):
-        """
-        interactive close is not implemtned for MetaJobs
-        """
-        pass
-
-    def interactive_fetch(self):
-        """
-        interactive fetch is not implemtned for MetaJobs
-        """
-        pass
-
-    def interactive_flush(self, path="generic", include_last_step=True):
-        """
-        interactive flush is not implemtned for MetaJobs
-        """
-        pass
-
-    def run_if_interactive_non_modal(self):
-        """
-        Run if interactive non modal is not implemented for MetaJobs
-        """
-        pass
-
     def __len__(self):
         """
         Length of the GenericMaster equal the number of childs appended.
@@ -456,6 +392,26 @@ class GenericMaster(GenericJob):
                 self.job_name,
                 item
             ))
+
+    def interactive_close(self):
+        """Not implemented for MetaJobs."""
+        pass
+
+    def interactive_fetch(self):
+        """Not implemented for MetaJobs."""
+        pass
+
+    def interactive_flush(self, path="generic", include_last_step=True):
+        """Not implemented for MetaJobs."""
+        pass
+
+    def run_if_interactive_non_modal(self):
+        """Not implemented for MetaJobs."""
+        pass
+
+    def _run_if_busy(self):
+        """Not implemented for MetaJobs."""
+        pass
 
     def _load_all_child_jobs(self, job_to_load):
         """
@@ -580,21 +536,6 @@ class GenericMaster(GenericJob):
         """
         pass
 
-    def run_if_refresh(self):
-        """
-        Internal helper function the run if refresh function is called when the job status is 'refresh'. If the job was
-        suspended previously, the job is going to be started again, to be continued.
-        """
-        raise NotImplementedError(
-            "Refresh is not supported for this job type for job  " + str(self.job_id)
-        )
-
-    def _run_if_busy(self):
-        """
-        Run if busy is not implemented for MetaJobs
-        """
-        pass
-
     def _init_child_job(self, parent):
         """
         Update our reference job.
@@ -603,6 +544,7 @@ class GenericMaster(GenericJob):
             parent (:class:`.GenericJob`): job instance that this job was created from
         """
         self.ref_job = parent
+
 
 def get_function_from_string(function_str):
     """

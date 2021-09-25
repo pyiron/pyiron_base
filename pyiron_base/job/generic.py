@@ -53,7 +53,8 @@ class GenericJob(JobCore):
     all specific Hamiltonians are derived. Therefore it should contain the properties/routines common to all jobs.
     The functions in this module should be as generic as possible.
 
-    Sub classes that need to add special behavior after :method:`.copy_to()` can override :method:`._after_generic_copy_to()`.
+    Sub classes that need to add special behavior after :method:`.copy_to()` can override
+    :method:`._after_generic_copy_to()`.
 
     Args:
         project (ProjectHDFio): ProjectHDFio instance which points to the HDF5 file the job is stored in
@@ -644,7 +645,7 @@ class GenericJob(JobCore):
             run_again (bool): Same as delete_existing_job (deprecated)
         """
         if run_again:
-            delete_existing_job=True
+            delete_existing_job = True
         try:
             self._logger.info(
                 "run {}, status: {}".format(self.job_info_str, self.status)
@@ -1036,7 +1037,7 @@ class GenericJob(JobCore):
         job._init_child_job(self)
         return job
 
-    def update_master(self):
+    def update_master(self, force_update=False):
         """
         After a job is finished it checks whether it is linked to any metajob - meaning the master ID is pointing to
         this jobs job ID. If this is the case and the master job is in status suspended - the child wakes up the master
@@ -1044,20 +1045,25 @@ class GenericJob(JobCore):
         status refresh. If another child calls update_master, while the master is in refresh the status of the master is
         set to busy and if the master is in status busy at the end of the update_master process another update is
         triggered.
+
+        Args:
+            force_update (bool): Whether to check run mode for updating master
         """
         master_id = self.master_id
         project = self.project
         self._logger.info("update master: {} {} {}".format(master_id, self.get_job_id(), self.server.run_mode))
-        if (
-            master_id is not None
-            and not self.server.run_mode.thread
-            and not self.server.run_mode.modal
-            and not self.server.run_mode.interactive
-        ):
-            self._reload_update_master(
-                project=project,
-                master_id=master_id
+        if master_id is not None and (
+            force_update or
+            not (
+                self.server.run_mode.thread
+                or self.server.run_mode.modal
+                or self.server.run_mode.interactive
             )
+        ):
+                self._reload_update_master(
+                    project=project,
+                    master_id=master_id
+                )
 
     def job_file_name(self, file_name, cwd=None):
         """
@@ -1445,7 +1451,7 @@ class GenericJob(JobCore):
             run_again (bool): Same as delete_existing_job (deprecated)
         """
         if run_again:
-            delete_existing_job=True
+            delete_existing_job = True
         if delete_existing_job:
             parent_id = self.parent_id
             self.parent_id = None
@@ -1633,7 +1639,7 @@ class GenericError(object):
         for message in [self.print_message(), self.print_queue()]:
             if message is True:
                 all_messages += message
-        if len(all_messages)==0:
+        if len(all_messages) == 0:
             all_messages = 'There is no error/warning'
         return all_messages
 
