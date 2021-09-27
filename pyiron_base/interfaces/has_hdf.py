@@ -106,7 +106,7 @@ class HasHDF(ABC):
     >>> hdf.remove_file()
     >>> pr.remove(enable=True)
 
-    When using this class as a mixin that also derive from classes that have a
+    When using this class as a mixin that also derives from classes having a
     legacy implementation here's a simple recipe
 
     >>> class MyOldClass:
