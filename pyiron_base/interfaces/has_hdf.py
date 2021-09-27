@@ -109,7 +109,6 @@ class HasHDF(ABC):
     When using this class as a mixin that also derive from classes that have a
     legacy implementation here's a simple recipe
 
-    >>> from pyiron_base.jobs.generic import GenericJob
     >>> class MyOldClass:
     ...     def to_hdf(self, hdf, group_name):
     ...         ... # whatever you need to save
@@ -130,6 +129,7 @@ class HasHDF(ABC):
     If you're deriving from :class:`GenericJob` it will already take care of
     descending into group_name, so you can pass `""` as the group_name like so
 
+    >>> from pyiron_base import GenericJob
     >>> class MyHybridJob(GenericJob, HasHDF):
     ...     def to_hdf(self, hdf, group_name):
     ...         GenericJob(self, hdf=hdf, group_name=group_name)
