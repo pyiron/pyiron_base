@@ -6,7 +6,7 @@
 Functions to update existing pyiron installations - mainly modify the database columns. 
 """
 
-from pyiron_base.settings.generic import Settings
+from pyiron_base.database.manager import DatabaseManager
 
 __author__ = "Joerg Neugebauer, Jan Janssen"
 __copyright__ = (
@@ -26,9 +26,9 @@ def database():
     database columns. This is only possible if no other pyiron session is accessing the database. Therefore the script
     might take some time to be executed successfully.
     """
-    s = Settings()
-    s.open_connection()
-    db = s.database
+    dbm = DatabaseManager()
+    dbm.open_connection()
+    db = dbm.database
     try:
         if "projectPath".lower() not in db.get_table_headings(db.table_name):
             print("add missing column: " + "projectPath")

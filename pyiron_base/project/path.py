@@ -8,7 +8,7 @@ Classes for representing the file system path in pyiron
 from copy import copy
 import os
 import posixpath
-from pyiron_base.settings.generic import Settings
+from pyiron_base.database.manager import DatabaseManager
 
 __author__ = "Jan Janssen, Joerg Neugebauer"
 __copyright__ = (
@@ -407,7 +407,7 @@ class ProjectPath(GenericPath):
         Returns:
             str, str: root_path, project_path
         """
-        root = Settings().top_path(full_path)
+        root = DatabaseManager().top_path(full_path)
         if root is not None:
             pr_path = posixpath.relpath(full_path, root)
             return root, pr_path

@@ -2,9 +2,10 @@
 # Copyright (c) Max-Planck-Institut für Eisenforschung GmbH - Computational Materials Design (CM) Department
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
-from pyiron_base.settings.generic import Settings
 import os
 from pyiron_base._tests import PyironTestCase
+from pyiron_base.settings.generic import Settings
+from pyiron_base.database.manager import DatabaseManager
 
 
 class TestConfigSettingsStatic(PyironTestCase):
@@ -15,7 +16,8 @@ class TestConfigSettingsStatic(PyironTestCase):
             os.path.join(os.path.dirname(os.path.abspath(__file__)), "../static")
         ).replace("\\", "/")
         cls.project_path = os.path.dirname(os.path.abspath(__file__)).replace("\\", "/")
-        cls.file_config = Settings()
+        cls.s = Settings()
+        cls.dbm = DatabaseManager()
 
     # def test_file_db_connection_name(self):
     #     self.assertEqual(self.file_config.db_connection_name, 'DEFAULT')
@@ -33,11 +35,6 @@ class TestConfigSettingsStatic(PyironTestCase):
     # def test_file_db_name(self):
     #     self.assertEqual(self.file_config.db_name, 'DEFAULT')
 
-    def test_file_top_path(self):
-        self.assertTrue(
-            self.file_config.top_path(self.project_path + "/test") in self.project_path
-        )
-
     # def test_file_resource_paths(self):
     #     self.assertTrue(
     #         any(
@@ -50,4 +47,4 @@ class TestConfigSettingsStatic(PyironTestCase):
     #     )
 
     def test_file_login_user(self):
-        self.assertEqual(self.file_config.login_user, "pyiron")
+        self.assertEqual(self.s.login_user, "pyiron")

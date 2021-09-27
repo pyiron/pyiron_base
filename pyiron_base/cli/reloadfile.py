@@ -5,10 +5,10 @@ import os
 import h5py
 import shutil
 from pyiron_base import Project
-from pyiron_base.settings.generic import Settings
+from pyiron_base.database.manager import DatabaseManager
 
 
-s = Settings()
+dbm = DatabaseManager()
 
 
 def register(parser):
@@ -29,7 +29,7 @@ def main(args):
     file = os.path.basename(project_path)
     job_name = os.path.splitext(file)[0]
 
-    db_project_path = s.top_path(project_path)
+    db_project_path = dbm.top_path(project_path)
     project = os.path.dirname(project_path)
     db_project = (project + "/")
     if db_project_path is not None:

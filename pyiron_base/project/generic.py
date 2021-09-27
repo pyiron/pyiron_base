@@ -18,6 +18,7 @@ from warnings import warn
 from pyiron_base.project.path import ProjectPath
 from pyiron_base.database.filetable import FileTable
 from pyiron_base.settings.generic import Settings
+from pyiron_base.database.manager import DatabaseManager
 from pyiron_base.settings.publications import list_publications
 from pyiron_base.database.performance import get_database_statistics
 from pyiron_base.database.jobtable import (
@@ -63,6 +64,7 @@ __status__ = "production"
 __date__ = "Sep 1, 2017"
 
 s = Settings()
+dbm = DatabaseManager()
 
 
 class Project(ProjectPath, HasGroups):
@@ -125,9 +127,9 @@ class Project(ProjectPath, HasGroups):
         self._data = None
         self._creator = Creator(project=self)
 
-        if not s.database_is_disabled:
-            s.open_connection()
-            self.db = s.database
+        if not dbm.database_is_disabled:
+            dbm.open_connection()
+            self.db = dbm.database
         else:
             self.db = FileTable(project=path)
         self.job_type = JobTypeChoice()
@@ -1115,18 +1117,18 @@ class Project(ProjectPath, HasGroups):
         Switch from user mode to viewer mode - if viewer_mode is enable pyiron has read only access to the database.
         """
         if not isinstance(self.db, FileTable):
-            s.switch_to_viewer_mode()
-            s.open_connection()
-            self.db = s.database
+            dbm.switch_to_viewer_mode()
+            dbm.open_connection()
+            self.db = dbm.database
 
     def switch_to_user_mode(self):
         """
         Switch from viewer mode to user mode - if viewer_mode is enable pyiron has read only access to the database.
         """
         if not isinstance(self.db, FileTable):
-            s.switch_to_user_mode()
-            s.open_connection()
-            self.db = s.database
+            dbm.switch_to_user_mode()
+            dbm.open_connection()
+            self.db = dbm.database
 
     def switch_to_local_database(self, file_name="pyiron.db", cwd=None):
         """
@@ -1138,21 +1140,21 @@ class Project(ProjectPath, HasGroups):
         """
         if cwd is None:
             cwd = self.path
-        if not s.project_check_enabled:
-            s.switch_to_local_database(file_name=file_name, cwd=cwd)
+        if not dbm.project_check_enabled:
+            dbm.switch_to_local_database(file_name=file_name, cwd=cwd)
             super(Project, self).__init__(path=self.path)
         else:
-            s.switch_to_local_database(file_name=file_name, cwd=cwd)
-        self.db = s.database
+            dbm.switch_to_local_database(file_name=file_name, cwd=cwd)
+        self.db = dbm.database
 
     def switch_to_central_database(self):
         """
         Switch from local mode to central mode - if local_mode is enable pyiron is using a local database.
         """
-        s.switch_to_central_database()
-        if not s.database_is_disabled:
-            s.open_connection()
-            self.db = s.database
+        dbm.switch_to_central_database()
+        if not dbm.database_is_disabled:
+            dbm.open_connection()
+            self.db = dbm.database
         else:
             self.db = FileTable(project=self.path)
             super(Project, self).__init__(path=self.path)

@@ -8,6 +8,7 @@ Set of functions to interact with the queuing system directly from within pyiron
 import pandas
 import time
 from pyiron_base.settings.generic import Settings
+from pyiron_base.database.manager import DatabaseManager
 from pyiron_base.generic.util import static_isinstance
 from pyiron_base.job.jobstatus import job_status_finished_lst
 
@@ -25,6 +26,7 @@ __date__ = "Sep 1, 2017"
 QUEUE_SCRIPT_PREFIX = "pi_"
 
 s = Settings()
+dbm = DatabaseManager()
 
 
 def queue_table(job_ids=[], project_only=True, full_table=False):
@@ -191,7 +193,7 @@ def wait_for_job(job, interval_in_s=5, max_iterations=100):
         else:
             finished = False
             for _ in range(max_iterations):
-                if s.database_is_disabled:
+                if dbm.database_is_disabled:
                     job.project.db.update()
                 job.refresh_job_status()
                 if job.status.string in job_status_finished_lst:
