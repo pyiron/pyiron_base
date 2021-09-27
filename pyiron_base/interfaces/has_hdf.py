@@ -109,6 +109,7 @@ class HasHDF(ABC):
     When using this class as a mixin that also derive from classes that have a
     legacy implementation here's a simple recipe
 
+    >>> from pyiron_base.jobs.generic import GenericJob
     >>> class MyOldClass:
     ...     def to_hdf(self, hdf, group_name):
     ...         pass # snip
