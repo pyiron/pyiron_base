@@ -106,6 +106,38 @@ class HasHDF(ABC):
     >>> hdf.remove_file()
     >>> pr.remove(enable=True)
 
+    When using this class as a mixin that also derives from classes having a
+    legacy implementation here's a simple recipe
+
+    >>> class MyOldClass:
+    ...     def to_hdf(self, hdf, group_name):
+    ...         ... # whatever you need to save
+    ...     def from_hdf(self, hdf, group_name):
+    ...         ... # whatever you need to restore
+    >>> class MyDerivedClass(MyOldClass, HasHDF):
+    ...     def to_hdf(self, hdf, group_name):
+    ...         MyOldClass.to_hdf(self, hdf=hdf, group_name=group_name)
+    ...         HasHDF.to_hdf(self, hdf=hdf, group_name=group_name)
+    ...     def from_hdf(self, hdf, group_name):
+    ...         MyOldClass.from_hdf(self, hdf=hdf, group_name=group_name)
+    ...         HasHDF.to_hdf(self, hdf=hdf, group_name=group_name)
+
+    i.e. explicitly call both methods with the same group_name.  The call to
+    :meth:`.HasHDF.to_hdf` has to be last so that the type information is
+    consistently written to HDF.
+
+    If you're deriving from :class:`GenericJob` it will already take care of
+    descending into group_name, so you can pass `""` as the group_name like so
+
+    >>> from pyiron_base import GenericJob
+    >>> class MyHybridJob(GenericJob, HasHDF):
+    ...     def to_hdf(self, hdf, group_name):
+    ...         GenericJob(self, hdf=hdf, group_name=group_name)
+    ...         HasHDF(self, hdf=self.project_hdf5, group_name="")
+    ...     def from_hdf(self, hdf, group_name):
+    ...         MyOldClass.from_hdf(self, hdf=hdf, group_name=group_name)
+    ...         HasHDF.to_hdf(self, hdf=self.project_hdf5, group_name="")
+
     .. document private methods
     .. automethod _from_hdf
     .. automethod _to_hdf
