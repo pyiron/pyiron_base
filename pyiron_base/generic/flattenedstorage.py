@@ -95,17 +95,25 @@ class FlattenedStorage(HasHDF):
     >>> store.get_array("even", 3)
     array([14, 16, 18, 20])
 
+    It is usually not necessary to call :method:`.add_array` before :method:`.add_chunk`, the type of the array will be
+    inferred in this case.
+
+    If you skip the `frame` argument to :meth:`.get_array` it will return a flat array of all the values for that array
+    in storage.
+
+    >>> store.get_array("sum")
+    array([  1,  18,  57, 119])
+    >>> store.get_array("even")
+    array([ 0,  4,  6,  8, 10, 12, 14, 16, 18, 20])
+
+    Arrays may be of more complicated shape, too, see :method:`.add_array` for details.
+
     Chunks may be given string names, either by passing `identifier` to :method:`.add_chunk` or by setting to the
     special per chunk array "identifier"
 
     >>> store.set_array("identifier", 1, "second")
     >>> all(store.get_array("even", "second") == store.get_array("even", 1))
     True
-
-    It is usually not necessary to call :method:`.add_array` before :method:`.add_chunk`, the type of the array will be
-    inferred in this case.
-
-    Arrays may be of more complicated shape, too, see :method:`.add_array` for details.
 
     When adding new arrays follow the convention that per-structure arrays should be named in singular and per-atom
     arrays should be named in plural.
@@ -298,7 +306,7 @@ class FlattenedStorage(HasHDF):
             store[name] = np.full(shape=shape, fill_value=fill, dtype=dtype)
             self._fill_values[name] = fill
 
-    def get_array(self, name, frame):
+    def get_array(self, name, frame=None):
         """
         Fetch array for given structure.
 
@@ -306,7 +314,8 @@ class FlattenedStorage(HasHDF):
 
         Args:
             name (str): name of the array to fetch
-            frame (int, str): selects structure to fetch, as in :method:`.get_structure()`
+            frame (int, str, optional): selects structure to fetch, as in :method:`.get_structure()`, if not given
+                                        return a flat array of all values for either all chunks or elements
 
         Returns:
             :class:`numpy.ndarray`: requested array
@@ -318,9 +327,15 @@ class FlattenedStorage(HasHDF):
         if isinstance(frame, str):
             frame = self.find_chunk(frame)
         if name in self._per_element_arrays:
-            return self._per_element_arrays[name][self._get_per_element_slice(frame)]
+            if frame is not None:
+                return self._per_element_arrays[name][self._get_per_element_slice(frame)]
+            else:
+                return self._per_element_arrays[name][:self.num_elements]
         elif name in self._per_chunk_arrays:
-            return self._per_chunk_arrays[name][frame]
+            if frame is not None:
+                return self._per_chunk_arrays[name][frame]
+            else:
+                return self._per_chunk_arrays[name][:self.num_chunks]
         else:
             raise KeyError(f"no array named {name}")
 
