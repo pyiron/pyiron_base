@@ -510,6 +510,43 @@ class DataContainer(MutableMapping, HasGroups, HasHDF):
         else:
             return super().get(key, default=default)
 
+    def search_tree(self, key, fail=True):
+        """
+        Search for ``key`` in the Container hierarchy.
+
+        This should be used if there is only one item in the hierarchy.
+        If the key appears multiple times, there is no control over which
+        item is found.
+
+        Args:
+            key (str):          the key to look for
+            fail (bool):        what to do if key is not found.
+                                True  => raise IndexError
+                                False => return None
+        Raise:
+            TypeError:  if key is not str
+            IndexError: if key is not found and fail is True.
+
+        Returns:
+            object: element at ``key``
+        """
+
+        if not isinstance (key,str):
+            raise TypeError ("Cannot search for non-string key.")
+
+        # search within current level
+        if (key in self): return self.get(key)
+
+        # descend into subgroups
+        for it in self.groups ():
+            pick = search_tree(self[it], key, False)
+            if (not pick is None): return pick
+
+        # handle error
+        if (fail):
+            raise IndexError("Could not find any element '" + key + "' in tree.")
+        return None
+
     def update(self, init, wrap=False, **kwargs):
         """
         Add all elements or key-value pairs from init to this container.  If wrap is
