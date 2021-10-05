@@ -6,6 +6,8 @@ import unittest
 from pyiron_base.job.template import PythonTemplateJob
 from pyiron_base._tests import TestWithProject
 
+import numpy as np
+
 class ToyJob(PythonTemplateJob):
     def __init__(self, project, job_name):
         super(ToyJob, self).__init__(project, job_name)
@@ -32,6 +34,7 @@ class TestProjectData(TestWithProject):
         self.table = self.project.create.table('test_table')
         self.table.filter_function = lambda j: j.name in ["test_a", "test_b"]
         self.table.add['name'] = lambda j: j.name
+        self.table.add['array'] = lambda j: np.arange(8)
         self.table.run()
 
     def tearDown(self):
@@ -50,6 +53,15 @@ class TestProjectData(TestWithProject):
             table_loaded = self.project.load(self.table.name)
         except:
             self.fail("Error on reloading table with filter lambda.")
+
+    def test_numpy_reload(self):
+        """Numpy arrays should be reloaded as such, not as strings."""
+        # regression test: previously tables were converted to json then saved, which caused numpy arrays to be loaded
+        # as strings
+        table_loaded = self.project.load(self.table.name)
+        df = table_loaded.get_dataframe()
+        self.assertTrue(isinstance(df.array[0], np.ndarray),
+                        "Numpy values not read correctly.")
 
 
 if __name__ == '__main__':
