@@ -100,9 +100,9 @@ class TestDataContainer(TestWithCleanProject):
         self.assertEqual(self.pl.search("depth"), 23, "search does not give correct element")
         self.assertTrue(self.pl.search("inexistent_key", fail_if_not_found=False) is None, "non-fail search does not return None")
         with self.assertRaises(IndexError, msg="search: no IndexError on inexistent key"):
-            print(self.assertEqual(self.pl.search("inexistent_key"))
+            print(self.pl.search("inexistent_key"))
         with self.assertRaises(TypeError, msg="search: no TypeError if key is not a string"):
-            print(self.assertEqual(self.pl.search(0.0))
+            print(self.pl.search(0.0))
 
     def test_get_attr(self):
         self.assertEqual(self.pl.tail, DataContainer([2, 4, 8]), "attribute access does not give correct element")
