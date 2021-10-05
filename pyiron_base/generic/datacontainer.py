@@ -510,7 +510,7 @@ class DataContainer(MutableMapping, HasGroups, HasHDF):
         else:
             return super().get(key, default=default)
 
-    def search_tree(self, key, fail=True):
+    def search(self, key, fail_if_not_found=True):
         """
         Search for ``key`` in the Container hierarchy.
 
@@ -519,13 +519,13 @@ class DataContainer(MutableMapping, HasGroups, HasHDF):
         item is found.
 
         Args:
-            key (str):          the key to look for
-            fail (bool):        what to do if key is not found.
-                                True  => raise IndexError
-                                False => return None
+            key (str):                the key to look for
+            fail_if_not_found (bool): what to do if key is not found.
+                                      True  => raise IndexError
+                                      False => return None
         Raise:
             TypeError:  if key is not str
-            IndexError: if key is not found and fail is True.
+            IndexError: if key is not found and fail_if_not_found is True.
 
         Returns:
             object: element at ``key``
@@ -539,11 +539,11 @@ class DataContainer(MutableMapping, HasGroups, HasHDF):
 
         # descend into subgroups
         for it in self.groups ():
-            pick = search_tree(self[it], key, False)
+            pick = self[it].search(key, False)
             if (not pick is None): return pick
 
         # handle error
-        if (fail):
+        if (fail_if_not_found):
             raise IndexError("Could not find any element '" + key + "' in tree.")
         return None
 
