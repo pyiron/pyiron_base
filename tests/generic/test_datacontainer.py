@@ -106,8 +106,12 @@ class TestDataContainer(TestWithCleanProject):
         # test if '...' in slash-notation triggers search
         self.assertEqual(self.pl[".../depth"], 23, "'.../' in key does not trigger search")
         self.pl["next/foo/bar/depth"] = 23
+        # test if .../ works in setting when search is intermediate (some more items follow)
         self.pl[".../bar/extra"] = "stuff"
-        self.assertEqual(self.pl["next/foo/bar/extra"], "stuff", "'.../' in setitem does not work as expected")
+        self.assertEqual(self.pl["next/foo/bar/extra"], "stuff", "'.../' in setitem does not work (intermediate item search)")
+        # test if .../ works in setting when search is final (no more items follow)
+        self.pl[".../extra"] = "other"
+        self.assertEqual(self.pl["next/foo/bar/extra"], "other", "'.../' in setitem does not work (final item search)")
 
     def test_get_attr(self):
         self.assertEqual(self.pl.tail, DataContainer([2, 4, 8]), "attribute access does not give correct element")
