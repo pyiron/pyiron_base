@@ -287,6 +287,9 @@ class DataContainer(MutableMapping, HasGroups, HasHDF):
         key = _normalize(key)
 
         if isinstance(key, tuple):
+            if (key[0] == "..." and len(key)>1):
+                res = self.search (key[1])
+                return res if (len(key)== 2) else res[key[2:]]
             return self[key[0]][key[1:]]
 
         elif isinstance(key, int):
@@ -324,6 +327,13 @@ class DataContainer(MutableMapping, HasGroups, HasHDF):
         key = _normalize(key)
 
         if isinstance(key, tuple):
+            if (key[0] == "..." and len(key)>1):
+                res = self.search (key[1])
+                if (len(key)== 2):
+                   res = val
+                else
+                   res[key[2:]] = val
+                return
             if key[0] not in self.keys():
                 self[key[0]] = type(self)()
             self[key[0]][key[1:]] = val

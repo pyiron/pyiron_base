@@ -103,6 +103,11 @@ class TestDataContainer(TestWithCleanProject):
             print(self.pl.search("inexistent_key"))
         with self.assertRaises(TypeError, msg="search: no TypeError if key is not a string"):
             print(self.pl.search(0.0))
+        # test if '...' in slash-notation triggers search
+        self.assertEqual(self.pl[".../depth"], 23, "'.../' in key does not trigger search")
+        self.pl["next/foo/bar/depth"] = 23
+        self.pl[".../bar/extra"] = "stuff"
+        self.assertEqual(self.pl["next/foo/bar/extra"], "stuff", "'.../' in setitem does not work as expected")
 
     def test_get_attr(self):
         self.assertEqual(self.pl.tail, DataContainer([2, 4, 8]), "attribute access does not give correct element")
