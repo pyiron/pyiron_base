@@ -331,7 +331,7 @@ class DataContainer(MutableMapping, HasGroups, HasHDF):
                 res = self.search (key[1])
                 if (len(key)== 2):
                    res = val
-                else
+                else:
                    res[key[2:]] = val
                 return
             if key[0] not in self.keys():
