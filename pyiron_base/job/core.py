@@ -541,14 +541,11 @@ class JobCore(HasGroups):
             convert_to_object=False
         )
 
-    def load_object(self, convert_to_object=True, project=None):
+    def load_object(self, project=None):
         """
         Load object to convert a JobPath to an GenericJob object.
 
         Args:
-            convert_to_object (bool): convert the object to an pyiron object or only access the HDF5 file - default=True
-                                      accessing only the HDF5 file is about an order of magnitude faster, but only
-                                      provides limited functionality. Compare the GenericJob object to JobCore object.
             project (ProjectHDFio): ProjectHDFio to load the object with - optional
 
         Returns:
@@ -556,11 +553,9 @@ class JobCore(HasGroups):
         """
         if not project:
             project = self.project_hdf5.copy()
-        if convert_to_object:
-            with project.open("..") as job_dir:
-                job_dir._mode = "a"
-                return self.to_object(project=job_dir, job_name=self._name)
-        return self
+        with project.open("..") as job_dir:
+            job_dir._mode = "a"
+            return self.to_object(project=job_dir, job_name=self._name)
 
     def is_master_id(self, job_id):
         """
