@@ -541,7 +541,7 @@ class JobCore(HasGroups):
             convert_to_object=False
         )
 
-    def load_object(self, project=None):
+    def load_object(self):
         """
         Load object to convert a JobPath to an GenericJob object.
 
@@ -551,9 +551,7 @@ class JobCore(HasGroups):
         Returns:
             GenericJob, JobPath: depending on convert_to_object
         """
-        if not project:
-            project = self.project_hdf5.copy()
-        with project.open("..") as job_dir:
+        with self.project_hdf5.open("..") as job_dir:
             job_dir._mode = "a"
             return self.to_object(project=job_dir, job_name=self._name)
 
