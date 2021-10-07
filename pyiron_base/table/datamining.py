@@ -611,14 +611,6 @@ class TableJob(GenericJob):
         else:
             raise TypeError()
 
-    @staticmethod
-    def convert_numpy_to_list(table_dict):
-        for k, v in table_dict.items():
-            for k1, v1 in v.items():
-                if isinstance(v1, np.ndarray):
-                    v[k1] = v1.tolist()
-        return table_dict
-
     def _save_output(self):
         with self.project_hdf5.open("output") as hdf5_output:
             df = self.pyiron_table._df
