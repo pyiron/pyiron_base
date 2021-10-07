@@ -879,6 +879,35 @@ class Project(ProjectPath, HasGroups):
         else:
             return None
 
+    def refresh_job_status(self, *jobs):
+        """
+        Check if job is still running or crashed on the cluster node.
+
+        If `jobs` is not given, check for all jobs listed as running in the current project.
+
+        Args:
+            *jobs (str, int): name of the job or job ID, any number of them
+        """
+        if len(jobs) == 0:
+            df = self.job_table()
+            jobs = df[df.status == "running"].id
+        if self.db is not None:
+            for job_specifier in jobs:
+                if isinstance(job_specifier, str):
+                    job_id = get_job_id(
+                        database=self.db,
+                        sql_query=self.sql_query,
+                        user=self.user,
+                        project_path=self.project_path,
+                        job_specifier=job_specifier,
+                    )
+                else:
+                    job_id = job_specifier
+                self.refresh_job_status_based_on_job_id(job_id)
+        else:
+            raise ValueError("Must have established database connection!")
+
+    @deprecate("use refresh_job_status()")
     def refresh_job_status_based_on_queue_status(self, job_specifier, status="running"):
         """
         Check if the job is still listed as running, while it is no longer listed in the queue.
@@ -889,15 +918,7 @@ class Project(ProjectPath, HasGroups):
         """
         if status != "running":
             raise NotImplementedError()
-        if self.db is not None:
-            job_id = get_job_id(
-                database=self.db,
-                sql_query=self.sql_query,
-                user=self.user,
-                project_path=self.project_path,
-                job_specifier=job_specifier,
-            )
-            self.refresh_job_status_based_on_job_id(job_id)
+        self.refresh_job_status(job_specifier)
 
     def refresh_job_status_based_on_job_id(self, job_id, que_mode=True):
         """
