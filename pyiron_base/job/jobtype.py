@@ -68,7 +68,7 @@ class JobType(object):
                 "No HDF5 file found - remove database entry and create new job! {}".format(job.job_name)
             )
             delete_existing_job = True
-        if delete_existing_job or job.status.aborted and delete_aborted_job:
+        if delete_existing_job or (job.status.aborted and delete_aborted_job):
             job.remove()
             job = job_class(project, job_name)
         if job.status.aborted:
