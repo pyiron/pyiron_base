@@ -360,6 +360,10 @@ class DataContainer(MutableMapping, HasGroups, HasHDF):
         key = _normalize(key)
 
         if isinstance(key, tuple):
+            if (key[0] == "..." and len(key)>1):
+                res = self._search_parent (key[1], False)
+                del res[key[1:]]
+                return
             del self[key[0]][key[1:]]
         elif isinstance(key, (str, int)):
             if isinstance(key, str):

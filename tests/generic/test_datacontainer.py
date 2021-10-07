@@ -116,6 +116,13 @@ class TestDataContainer(TestWithCleanProject):
             print(self.pl.search("depth", False))
         with self.assertRaises(ValueError, msg="search: no ValueError on multiple keys"):
             print(self.pl[".../depth"])
+        # test errors for deletion
+        del self.pl[".../bar/depth"]
+        with self.assertRaises(KeyError, msg="search: '.../' in del does not work (intermediate item search)"):
+            print(self.pl["next/foo/bar/depth"])
+        del self.pl[".../bar"]
+        with self.assertRaises(KeyError, msg="search: '.../' in del does not work (final item search)"):
+            print(self.pl["next/foo/bar"])
 
     def test_get_attr(self):
         self.assertEqual(self.pl.tail, DataContainer([2, 4, 8]), "attribute access does not give correct element")
