@@ -20,7 +20,7 @@ from pyiron_base.interfaces.has_hdf import HasHDF
 
 __author__ = "Marvin Poul"
 __copyright__ = (
-    "Copyright 2020, Max-Planck-Institut für Eisenforschung GmbH - "
+    "Copyright 2021, Max-Planck-Institut für Eisenforschung GmbH - "
     "Computational Materials Design (CM) Department"
 )
 __version__ = "1.1"
@@ -39,6 +39,7 @@ _internal_hdf_nodes = [
         "READ_ONLY"
 ]
 
+
 def _normalize(key):
     if isinstance(key, str):
         if key.isdecimal():
@@ -50,6 +51,7 @@ def _normalize(key):
         return _normalize(key[0])
 
     return key
+
 
 class DataContainer(MutableMapping, HasGroups, HasHDF):
     """
@@ -287,9 +289,9 @@ class DataContainer(MutableMapping, HasGroups, HasHDF):
         key = _normalize(key)
 
         if isinstance(key, tuple):
-            if (key[0] == "..." and len(key)>1):
-                res = self.search (key[1], False)
-                return res if (len(key)== 2) else res[key[2:]]
+            if key[0] == "..." and len(key) > 1:
+                res = self.search(key[1], False)
+                return res if (len(key) == 2) else res[key[2:]]
             return self[key[0]][key[1:]]
 
         elif isinstance(key, int):
@@ -327,8 +329,8 @@ class DataContainer(MutableMapping, HasGroups, HasHDF):
         key = _normalize(key)
 
         if isinstance(key, tuple):
-            if (key[0] == "..." and len(key)>1):
-                res = self._search_parent (key[1], False)
+            if key[0] == "..." and len(key) > 1:
+                res = self._search_parent(key[1], False)
                 res[key[1:]] = val
                 return
             if key[0] not in self.keys():
@@ -360,8 +362,8 @@ class DataContainer(MutableMapping, HasGroups, HasHDF):
         key = _normalize(key)
 
         if isinstance(key, tuple):
-            if (key[0] == "..." and len(key)>1):
-                res = self._search_parent (key[1], False)
+            if key[0] == "..." and len(key) > 1:
+                res = self._search_parent(key[1], False)
                 del res[key[1:]]
                 return
             del self[key[0]][key[1:]]
@@ -532,9 +534,8 @@ class DataContainer(MutableMapping, HasGroups, HasHDF):
 
         Args:
             key (str):                the key to look for
-            fail_if_not_found (bool): what to do if key is not found.
-                                      True  => raise IndexError
-                                      False => return None
+            stop_on_first_hit (bool): whether to stop on the first hit
+
         Raise:
             TypeError:  if key is not str
             KeyError:   if key is not found
@@ -544,11 +545,11 @@ class DataContainer(MutableMapping, HasGroups, HasHDF):
             object: element at ``key``
         """
 
-        if not isinstance (key,str):
-            raise TypeError ("Cannot search for non-string key.")
+        if not isinstance(key, str):
+            raise TypeError("Cannot search for non-string key.")
 
-        parent = self._search_parent (key, stop_on_first_hit)
-        if (parent is None):
+        parent = self._search_parent(key, stop_on_first_hit)
+        if parent is None:
             raise KeyError("Could not find any element '" + key + "' in tree.")
 
         return parent[key]
@@ -571,7 +572,7 @@ class DataContainer(MutableMapping, HasGroups, HasHDF):
             ValueError: if key is found twice and stop_on_first_hit is False
 
         Returns:
-            object: container that has ``key``
+            DataContainer: container that has ``key``
         """
         # search within current level
         if key in self:
@@ -583,13 +584,13 @@ class DataContainer(MutableMapping, HasGroups, HasHDF):
             first_hit = None
 
         # descend into subgroups
-        for it in self.groups ():
-            hit = self[it]._search_parent (key, stop_on_first_hit)
+        for it in self.groups():
+            hit = self[it]._search_parent(key, stop_on_first_hit)
             if isinstance(hit, DataContainer):
                 if stop_on_first_hit:
                     return hit
                 else:
-                    if isinstance(first_hit,DataContainer):
+                    if isinstance(first_hit, DataContainer):
                         raise ValueError("'" + key + "' exists more than once!")
                 first_hit = hit
         return first_hit
@@ -820,7 +821,6 @@ class DataContainer(MutableMapping, HasGroups, HasHDF):
             for g in hdf.list_groups():
                 items.append( (*normalize_key(g), hdf[g].to_object() if not self._lazy else HDFStub(hdf, g)) )
 
-
             for _, k, v in sorted(items, key=lambda x: x[0]):
                 self[k] = v
 
@@ -886,5 +886,6 @@ class DataContainer(MutableMapping, HasGroups, HasHDF):
         # called whenever a subclass of DataContainer is defined, then register all subclasses with the same function
         # that the DataContainer is registered
         HDFStub.register(cls, lambda h, g: h[g].to_object(lazy=True))
+
 
 HDFStub.register(DataContainer, lambda h, g: h[g].to_object(lazy=True))
