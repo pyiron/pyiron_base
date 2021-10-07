@@ -453,7 +453,7 @@ class PyironTable(HasGroups):
         diff_dict_lst = []
         for job_inspect in tqdm(job_lst):
             if self.convert_to_object:
-                job = job_inspect.load_object()
+                job = job_inspect.to_object()
             else:
                 job = job_inspect
             diff_dict = self._apply_list_of_functions_on_job(

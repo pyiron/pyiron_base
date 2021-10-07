@@ -541,20 +541,6 @@ class JobCore(HasGroups):
             convert_to_object=False
         )
 
-    def load_object(self):
-        """
-        Load object to convert a JobPath to an GenericJob object.
-
-        Args:
-            project (ProjectHDFio): ProjectHDFio to load the object with - optional
-
-        Returns:
-            GenericJob, JobPath: depending on convert_to_object
-        """
-        with self.project_hdf5.open("..") as job_dir:
-            job_dir._mode = "a"
-            return self.to_object(project=job_dir, job_name=self._name)
-
     def is_master_id(self, job_id):
         """
         Check if the job ID job_id is the master ID for any child job
