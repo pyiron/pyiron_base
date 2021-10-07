@@ -98,8 +98,7 @@ class TestDataContainer(TestWithCleanProject):
 
     def test_search(self):
         self.assertEqual(self.pl.search("depth"), 23, "search does not give correct element")
-        self.assertTrue(self.pl.search("inexistent_key", fail_if_not_found=False) is None, "non-fail search does not return None")
-        with self.assertRaises(IndexError, msg="search: no IndexError on inexistent key"):
+        with self.assertRaises(KeyError, msg="search: no IndexError on inexistent key"):
             print(self.pl.search("inexistent_key"))
         with self.assertRaises(TypeError, msg="search: no TypeError if key is not a string"):
             print(self.pl.search(0.0))
@@ -112,6 +111,11 @@ class TestDataContainer(TestWithCleanProject):
         # test if .../ works in setting when search is final (no more items follow)
         self.pl[".../extra"] = "other"
         self.assertEqual(self.pl["next/foo/bar/extra"], "other", "'.../' in setitem does not work (final item search)")
+        # test errors for multiple keys
+        with self.assertRaises(ValueError, msg="search: no ValueError on multiple keys"):
+            print(self.pl.search("depth", False))
+        with self.assertRaises(ValueError, msg="search: no ValueError on multiple keys"):
+            print(self.pl[".../depth"])
 
     def test_get_attr(self):
         self.assertEqual(self.pl.tail, DataContainer([2, 4, 8]), "attribute access does not give correct element")

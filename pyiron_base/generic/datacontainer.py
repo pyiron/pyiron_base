@@ -288,7 +288,7 @@ class DataContainer(MutableMapping, HasGroups, HasHDF):
 
         if isinstance(key, tuple):
             if (key[0] == "..." and len(key)>1):
-                res = self.search (key[1])
+                res = self.search (key[1], False)
                 return res if (len(key)== 2) else res[key[2:]]
             return self[key[0]][key[1:]]
 
@@ -328,11 +328,8 @@ class DataContainer(MutableMapping, HasGroups, HasHDF):
 
         if isinstance(key, tuple):
             if (key[0] == "..." and len(key)>1):
-                res = self.search (key[1])
-                if (len(key)== 2):
-                   res = val
-                else:
-                   res[key[2:]] = val
+                res = self._search_parent (key[1], False)
+                res[key[1:]] = val
                 return
             if key[0] not in self.keys():
                 self[key[0]] = type(self)()
@@ -520,13 +517,14 @@ class DataContainer(MutableMapping, HasGroups, HasHDF):
         else:
             return super().get(key, default=default)
 
-    def search(self, key, fail_if_not_found=True):
+    def search(self, key, stop_on_first_hit=True):
         """
         Search for ``key`` in the Container hierarchy.
 
-        This should be used if there is only one item in the hierarchy.
-        If the key appears multiple times, there is no control over which
-        item is found.
+        This should be used if there is only one such item in the hierarchy.
+
+        If stop_on_first_hit is True the first item found is taken.
+        Otherwise, a ValueError is raised if the key appears multiple times.
 
         Args:
             key (str):                the key to look for
@@ -535,7 +533,8 @@ class DataContainer(MutableMapping, HasGroups, HasHDF):
                                       False => return None
         Raise:
             TypeError:  if key is not str
-            IndexError: if key is not found and fail_if_not_found is True.
+            KeyError:   if key is not found
+            ValueError: if stop_on_first_hit is False and key is found twice
 
         Returns:
             object: element at ``key``
@@ -544,18 +543,52 @@ class DataContainer(MutableMapping, HasGroups, HasHDF):
         if not isinstance (key,str):
             raise TypeError ("Cannot search for non-string key.")
 
+        parent = self._search_parent (key, stop_on_first_hit)
+        if (parent is None):
+            raise KeyError("Could not find any element '" + key + "' in tree.")
+
+        return parent[key]
+
+    def _search_parent(self, key, stop_on_first_hit=True):
+        """
+        Search for container in hierarchy which has ``key``
+
+        This should be used if there is only one such item in the hierarchy.
+        If stop_on_first_hit is True the first item found is taken.
+        Otherwise, a ValueError is raised if the key appears multiple times.
+
+        Args:
+            key (str):                the key to look for
+            stop_on_first_hit (bool): what to do if key is found
+                                      True  => return
+                                      False => continue to check that it is
+                                               the only hit
+        Raise:
+            ValueError: if key is found twice and stop_on_first_hit is False
+
+        Returns:
+            object: container that has ``key``
+        """
         # search within current level
-        if (key in self): return self.get(key)
+        if key in self:
+            if stop_on_first_hit:
+                return self
+            else:
+                first_hit = self
+        else:
+            first_hit = None
 
         # descend into subgroups
         for it in self.groups ():
-            pick = self[it].search(key, False)
-            if (not pick is None): return pick
-
-        # handle error
-        if (fail_if_not_found):
-            raise IndexError("Could not find any element '" + key + "' in tree.")
-        return None
+            hit = self[it]._search_parent (key, stop_on_first_hit)
+            if isinstance(hit, DataContainer):
+                if stop_on_first_hit:
+                    return hit
+                else:
+                    if isinstance(first_hit,DataContainer):
+                        raise ValueError("'" + key + "' exists more than once!")
+                first_hit = hit
+        return first_hit
 
     def update(self, init, wrap=False, **kwargs):
         """
