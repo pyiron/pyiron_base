@@ -783,8 +783,6 @@ class Project(ProjectPath, HasGroups):
             job = jobpath(db=self.db, job_id=job_id, user=self.user)
             if convert_to_object:
                 job = job.load_object()
-            job._job_id = job_id
-            if convert_to_object:
                 job.reset_job_id(job_id=job_id)
                 job.set_input_to_read_only()
             return job
@@ -792,7 +790,6 @@ class Project(ProjectPath, HasGroups):
             job = jobpath(db=self.db, db_entry=db_entry)
             if convert_to_object:
                 job = job.load_object()
-            if convert_to_object:
                 job.set_input_to_read_only()
             return job
         else:
