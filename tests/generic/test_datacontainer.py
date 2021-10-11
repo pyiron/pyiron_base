@@ -96,6 +96,34 @@ class TestDataContainer(TestWithCleanProject):
         with self.assertRaises(ValueError, msg="no ValueError on invalid index type"):
             print(self.pl[{}])
 
+    def test_search(self):
+        self.assertEqual(self.pl.search("depth"), 23, "search does not give correct element")
+        with self.assertRaises(KeyError, msg="search: no IndexError on inexistent key"):
+            print(self.pl.search("inexistent_key"))
+        with self.assertRaises(TypeError, msg="search: no TypeError if key is not a string"):
+            print(self.pl.search(0.0))
+        # test if '...' in slash-notation triggers search
+        self.assertEqual(self.pl[".../depth"], 23, "'.../' in key does not trigger search")
+        self.pl["next/foo/bar/depth"] = 23
+        # test if .../ works in setting when search is intermediate (some more items follow)
+        self.pl[".../bar/extra"] = "stuff"
+        self.assertEqual(self.pl["next/foo/bar/extra"], "stuff", "'.../' in setitem does not work (intermediate item search)")
+        # test if .../ works in setting when search is final (no more items follow)
+        self.pl[".../extra"] = "other"
+        self.assertEqual(self.pl["next/foo/bar/extra"], "other", "'.../' in setitem does not work (final item search)")
+        # test errors for multiple keys
+        with self.assertRaises(ValueError, msg="search: no ValueError on multiple keys"):
+            print(self.pl.search("depth", False))
+        with self.assertRaises(ValueError, msg="search: no ValueError on multiple keys"):
+            print(self.pl[".../depth"])
+        # test errors for deletion
+        del self.pl[".../bar/depth"]
+        with self.assertRaises(KeyError, msg="search: '.../' in del does not work (intermediate item search)"):
+            print(self.pl["next/foo/bar/depth"])
+        del self.pl[".../bar"]
+        with self.assertRaises(KeyError, msg="search: '.../' in del does not work (final item search)"):
+            print(self.pl["next/foo/bar"])
+
     def test_get_attr(self):
         self.assertEqual(self.pl.tail, DataContainer([2, 4, 8]), "attribute access does not give correct element")
         self.assertEqual(
