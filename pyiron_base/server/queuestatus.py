@@ -221,7 +221,7 @@ def wait_for_jobs(project, interval_in_s=5, max_iterations=100, recursive=True):
     for _ in range(max_iterations):
         project.update_from_remote(recursive=True)
         df = project.job_table(recursive=recursive)
-        if all(df.status.isin(job_status_finished_lst)):
+        if len(df) > 0 and all(df.status.isin(job_status_finished_lst)):
             finished = True
             break
         time.sleep(interval_in_s)
