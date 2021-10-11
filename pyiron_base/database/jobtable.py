@@ -219,9 +219,7 @@ def job_table(
             pandas.reset_option('display.max_rows')
             pandas.reset_option('display.max_columns')
         pandas.set_option("display.max_colwidth", max_colwidth)
-        df = pandas.DataFrame(job_dict)
-        if len(job_dict) == 0:
-            return df
+        df = pandas.DataFrame(job_dict, columns=columns)
         if job_name_contains != '':
             df = df[df.job.str.contains(job_name_contains)]
         if sort_by in columns:
