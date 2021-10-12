@@ -512,7 +512,7 @@ class TableJob(GenericJob):
     def __init__(self, project, job_name):
         super(TableJob, self).__init__(project, job_name)
         self.__version__ = "0.1"
-        self.__hdf_version__ = "0.2"
+        self.__hdf_version__ = "0.3"
         self.__name__ = "TableJob"
         self._analysis_project = None
         self._system_function_lst = [get_job_id]
@@ -689,10 +689,24 @@ class TableJob(GenericJob):
             self._enforce_update = bool_dict["enforce_update"]
             self._pyiron_table.convert_to_object = bool_dict["convert_to_object"]
             self._pyiron_table.add._from_hdf(hdf5_input)
-        with self.project_hdf5.open("output") as hdf5_output:
-            if "table" in hdf5_output.list_groups():
-                data = hdf5_output["table"].to_object().to_builtin()
-                self._pyiron_table._df = pandas.DataFrame(data)
+        if version=="0.3.0":
+            with self.project_hdf5.open("output") as hdf5_output:
+                if "table" in hdf5_output.list_groups():
+                    data = hdf5_output["table"].to_object().to_builtin()
+                    self._pyiron_table._df = pandas.DataFrame(data)
+        else:
+            if os.path.exists(pyiron_table):
+                try:
+                    self._pyiron_table._df = pandas.read_csv(pyiron_table)
+                    self._pyiron_table._csv_file = pyiron_table
+                except EmptyDataError:
+                    pass
+            else:
+                with self.project_hdf5.open("output") as hdf5_output:
+                    if "table" in hdf5_output.list_nodes():
+                        self._pyiron_table._df = pandas.DataFrame(
+                            json.loads(hdf5_output["table"])
+                        )
 
     def validate_ready_to_run(self):
         if self._analysis_project is None:
