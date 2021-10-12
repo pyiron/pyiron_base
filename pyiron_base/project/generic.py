@@ -781,20 +781,15 @@ class Project(ProjectPath, HasGroups):
         jobpath = getattr(importlib.import_module("pyiron_base.job.path"), "JobPath")
         if job_id:
             job = jobpath(db=self.db, job_id=job_id, user=self.user)
-            job = job.load_object(
-                convert_to_object=convert_to_object, project=job.project_hdf5.copy()
-            )
-            job._job_id = job_id
             if convert_to_object:
+                job = job.to_object()
                 job.reset_job_id(job_id=job_id)
                 job.set_input_to_read_only()
             return job
         elif db_entry:
             job = jobpath(db=self.db, db_entry=db_entry)
-            job = job.load_object(
-                convert_to_object=convert_to_object, project=job.project_hdf5.copy()
-            )
             if convert_to_object:
+                job = job.to_object()
                 job.set_input_to_read_only()
             return job
         else:
@@ -1228,9 +1223,8 @@ class Project(ProjectPath, HasGroups):
         job = getattr(importlib.import_module("pyiron_base.job.path"), "JobPathBase")(
             job_path=job_path
         )
-        job = job.load_object(
-            convert_to_object=convert_to_object, project=job.project_hdf5.copy()
-        )
+        if convert_to_object:
+            job = job.to_object()
         job.set_input_to_read_only()
         return job
 
