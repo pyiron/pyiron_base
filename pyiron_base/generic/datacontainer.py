@@ -259,7 +259,7 @@ class DataContainer(MutableMapping, HasGroups, HasHDF):
 
         return instance
 
-    def __init__(self, init=None, table_name=None, lazy=False):
+    def __init__(self, init=None, table_name=None, lazy=False, wrap_blacklist=()):
         """
         Create new container.
 
@@ -268,11 +268,13 @@ class DataContainer(MutableMapping, HasGroups, HasHDF):
                                       translated to nested containers
             table_name (str): default name of the data container in HDF5
             lazy (bool): if True, use :class:`.HDFStub` to load values lazily from HDF5
+            wrap_blacklist (tuple of types): any values in `init` that are instances of the given types are *not*
+                                             wrapped in :class:`.DataContainer`
         """
         self.table_name = table_name
         self._lazy = lazy
         if init is not None:
-            self.update(init, wrap=True)
+            self.update(init, wrap=True, blacklist=wrap_blacklist)
 
     def __len__(self):
         return len(self._store)
@@ -432,13 +434,6 @@ class DataContainer(MutableMapping, HasGroups, HasHDF):
         else:
             return name + "([" + ", ".join("{!r}".format(v) for v in self._store) + "])"
 
-    @classmethod
-    def _wrap_val(cls, val):
-        if isinstance(val, (tuple, list, dict)):
-            return cls(val)
-        else:
-            return val
-
     @property
     def read_only(self):
         """
@@ -595,7 +590,14 @@ class DataContainer(MutableMapping, HasGroups, HasHDF):
                 first_hit = hit
         return first_hit
 
-    def update(self, init, wrap=False, **kwargs):
+    @classmethod
+    def _wrap_val(cls, val, blacklist):
+        if isinstance(val, (Sequence, Set, Mapping)) and not isinstance(val, blacklist):
+            return cls(val)
+        else:
+            return val
+
+    def update(self, init, wrap=False, blacklist=(), **kwargs):
         """
         Add all elements or key-value pairs from init to this container.  If wrap is
         not given, behaves as the generic method.
@@ -603,18 +605,20 @@ class DataContainer(MutableMapping, HasGroups, HasHDF):
         Args:
             init (Sequence, Set, Mapping): container to draw new elements from
             wrap (bool): if True wrap all encountered Sequences and Mappings in
-                        DataContainers recursively
+                         :class:`.DataContainer` recursively
+            blacklist (list of types): when `wrap` is True, don't wrap these types even if they're instances of Sequence
+                                       or Mapping
             **kwargs: update from this mapping as well
         """
-        if wrap:
+        if wrap and (isinstance(wrap, bool) or not isinstance(init, blacklist)):
             if isinstance(init, (Sequence, Set)):
                 for v in init:
-                    self.append(self._wrap_val(v))
+                    self.append(self._wrap_val(v, blacklist))
 
             elif isinstance(init, Mapping):
                 for i, (k, v) in enumerate(init.items()):
                     k = _normalize(k)
-                    v = self._wrap_val(v)
+                    v = self._wrap_val(v, blacklist)
                     if isinstance(k, int):
                         if k == i:
                             self.append(v)
@@ -629,7 +633,7 @@ class DataContainer(MutableMapping, HasGroups, HasHDF):
                 ValueError("init must be Sequence, Set or Mapping")
 
             for k in kwargs:
-                self[k] = kwargs[k]
+                self[k] = self._wrap_val(kwargs[k], blacklist)
         else:
             super().update(init, **kwargs)
 
