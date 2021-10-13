@@ -689,7 +689,7 @@ class TableJob(GenericJob):
             self._enforce_update = bool_dict["enforce_update"]
             self._pyiron_table.convert_to_object = bool_dict["convert_to_object"]
             self._pyiron_table.add._from_hdf(hdf5_input)
-        if version=="0.3.0":
+        if hdf_version=="0.3.0":
             with self.project_hdf5.open("output") as hdf5_output:
                 if "table" in hdf5_output.list_groups():
                     data = hdf5_output["table"].to_object().to_builtin()
