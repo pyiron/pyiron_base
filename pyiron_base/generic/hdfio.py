@@ -35,6 +35,7 @@ def open_hdf5(filename, mode="r", swmr=False):
     else:
         return h5py.File(filename, mode=mode, libver="latest", swmr=swmr)
 
+
 class FileHDFio(HasGroups, MutableMapping):
     """
     Class that provides all info to access a h5 file. This class is based on h5io.py, which allows to
@@ -78,9 +79,7 @@ class FileHDFio(HasGroups, MutableMapping):
         self.h5_path = h5_path
         self._filter = ["groups", "nodes", "objects"]
 
-
     # MutableMapping Impl
-
     def __contains__(self, item):
         nodes_groups = self.list_all()
         return item in nodes_groups["nodes"] or item in nodes_groups["groups"]
@@ -193,8 +192,6 @@ class FileHDFio(HasGroups, MutableMapping):
                     del store[key]
             except (AttributeError, KeyError):
                 pass
-
-
     @property
     def file_exists(self):
         """
