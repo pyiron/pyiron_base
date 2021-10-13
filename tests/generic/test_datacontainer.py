@@ -15,8 +15,8 @@ import pandas as pd
 
 
 class Sub(DataContainer):
-    def __init__(self, init=None, table_name=None, lazy=False):
-        super().__init__(init=init, table_name=table_name, lazy=lazy)
+    def __init__(self, init=None, table_name=None, lazy=False, wrap_blacklist=()):
+        super().__init__(init=init, table_name=table_name, lazy=lazy, wrap_blacklist=())
         self.foo = 42
 
 class TestDataContainer(TestWithCleanProject):
@@ -198,11 +198,10 @@ class TestDataContainer(TestWithCleanProject):
         pl = DataContainer()
         pl.update([ {"a": 1, "b": 2}, [{"c": 3, "d": 4}] ], wrap=True, blacklist=(dict,))
         self.assertTrue(isinstance(pl[0], dict), "nested dict wrapped, even if black listed")
-        breakpoint()
         self.assertTrue(isinstance(pl[1][0], dict), "nested dict wrapped, even if black listed")
         pl.clear()
 
-        pl.update({"a": [1, 2, 3], "b": {"c": [4, 5, 6]}}, wrap=True, blacklist=(dict,))
+        pl.update({"a": [1, 2, 3], "b": {"c": [4, 5, 6]}}, wrap=True, blacklist=(list,))
         self.assertTrue(isinstance(pl.a, list), "nested list wrapped, even if black listed")
         self.assertTrue(isinstance(pl.b.c, list), "nested list wrapped, even if black listed")
         pl.clear()

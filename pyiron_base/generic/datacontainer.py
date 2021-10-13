@@ -274,7 +274,7 @@ class DataContainer(MutableMapping, HasGroups, HasHDF):
         self.table_name = table_name
         self._lazy = lazy
         if init is not None:
-            self.update(init, wrap=True, blacklist=wrap_blacklist + (str,))
+            self.update(init, wrap=True, blacklist=wrap_blacklist)
 
     def __len__(self):
         return len(self._store)
@@ -593,7 +593,7 @@ class DataContainer(MutableMapping, HasGroups, HasHDF):
     @classmethod
     def _wrap_val(cls, val, blacklist):
         if isinstance(val, (Sequence, Set, Mapping)) and not isinstance(val, blacklist):
-            return cls(val)
+            return cls(val, wrap_blacklist=blacklist)
         else:
             return val
 
@@ -610,6 +610,8 @@ class DataContainer(MutableMapping, HasGroups, HasHDF):
                                        or Mapping
             **kwargs: update from this mapping as well
         """
+        if str not in blacklist:
+            blacklist += (str,)
         if wrap and (isinstance(wrap, bool) or not isinstance(init, blacklist)):
             if isinstance(init, (Sequence, Set)):
                 for v in init:
