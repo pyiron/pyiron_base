@@ -10,6 +10,7 @@ import copy
 import os
 import unittest
 import warnings
+import h5py
 import numpy as np
 import pandas as pd
 
@@ -205,6 +206,34 @@ class TestDataContainer(TestWithCleanProject):
         self.assertTrue(isinstance(pl.a, list), "nested list wrapped, even if black listed")
         self.assertTrue(isinstance(pl.b.c, list), "nested list wrapped, even if black listed")
         pl.clear()
+
+    def test_wrap_hdf(self):
+        """DataContainer should be able to be initialized by HDF objects."""
+        h = self.project.create_hdf(self.project.path, "wrap_test")
+        h["foo"] = 42
+        h.create_group("bar")["test"] = 23
+        h["bar"].create_group("nested")["test"] = 23
+        d = DataContainer(h)
+        self.assertTrue(isinstance(d.bar, DataContainer),
+                        "HDF group not wrapped from ProjectHDFio.")
+        self.assertTrue(isinstance(d.bar.nested, DataContainer),
+                        "Nested HDF group not wrapped from ProjectHDFio.")
+        self.assertEqual(d.foo, 42, "Top-level node not correctly wrapped from ProjectHDFio.")
+        self.assertEqual(d.bar.test, 23, "Nested node not correctly wrapped from ProjectHDFio.")
+        self.assertEqual(d.bar.nested.test, 23, "Nested node not correctly wrapped from ProjectHDFio.")
+
+        h = h5py.File(h.file_name)
+        d = DataContainer(h)
+        self.assertTrue(isinstance(d.wrap_test.bar, DataContainer),
+                        "HDF group not wrapped from h5py.File.")
+        self.assertTrue(isinstance(d.wrap_test.bar.nested, DataContainer),
+                        "Nested HDF group not wrapped from h5py.File.")
+        self.assertEqual(d.wrap_test.foo, h["wrap_test/foo"],
+                         "Top-level node not correctly wrapped from h5py.File.")
+        self.assertEqual(d.wrap_test.bar.test, h["wrap_test/bar/test"],
+                         "Nested node not correctly wrapped from h5py.File.")
+        self.assertEqual(d.wrap_test.bar.nested.test, h["wrap_test/bar/nested/test"],
+                         "Nested node not correctly wrapped from h5py.File.")
 
     def test_extend(self):
         pl = DataContainer()
