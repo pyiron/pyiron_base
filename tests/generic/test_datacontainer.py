@@ -19,7 +19,6 @@ class Sub(DataContainer):
         super().__init__(init=init, table_name=table_name, lazy=lazy)
         self.foo = 42
 
-
 class TestDataContainer(TestWithCleanProject):
 
     @property

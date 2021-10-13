@@ -274,7 +274,7 @@ class DataContainer(MutableMapping, HasGroups, HasHDF):
         self.table_name = table_name
         self._lazy = lazy
         if init is not None:
-            self.update(init, wrap=True, blacklist=wrap_blacklist)
+            self.update(init, wrap=True, blacklist=wrap_blacklist + (str,))
 
     def __len__(self):
         return len(self._store)
