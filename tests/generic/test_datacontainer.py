@@ -193,6 +193,20 @@ class TestDataContainer(TestWithCleanProject):
         pl.update(d)
         self.assertEqual(dict(pl), d, "update without options does not call generic method")
 
+    def test_update_blacklist(self):
+        """Wrapping nested mapping should only apply to types not in the blacklist."""
+        pl = DataContainer()
+        pl.update([ {"a": 1, "b": 2}, [{"c": 3, "d": 4}] ], wrap=True, blacklist=(dict,))
+        self.assertTrue(isinstance(pl[0], dict), "nested dict wrapped, even if black listed")
+        breakpoint()
+        self.assertTrue(isinstance(pl[1][0], dict), "nested dict wrapped, even if black listed")
+        pl.clear()
+
+        pl.update({"a": [1, 2, 3], "b": {"c": [4, 5, 6]}}, wrap=True, blacklist=(dict,))
+        self.assertTrue(isinstance(pl.a, list), "nested list wrapped, even if black listed")
+        self.assertTrue(isinstance(pl.b.c, list), "nested list wrapped, even if black listed")
+        pl.clear()
+
     def test_extend(self):
         pl = DataContainer()
         pl.extend([1, 2, 3])
