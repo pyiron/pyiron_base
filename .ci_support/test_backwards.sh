@@ -1,10 +1,14 @@
 #!/bin/bash
 
-pip install --no-deps pyiron_base==0.1.21
-echo "Before save";
-for t in tests/backwards/*save.py; do
-    echo "Running $t";
-    python $t
+versions=('0.1.48' '0.2.24' '0.3.0')
+
+for v in ${versions[@]}; do
+    pip install --no-deps pyiron_base==$v
+    echo "Before save";
+    for t in tests/backwards/*save.py; do
+        echo "Running $t";
+        python $t
+    done
 done
 
 pip install --no-deps .
