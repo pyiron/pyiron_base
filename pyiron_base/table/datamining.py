@@ -695,6 +695,7 @@ class TableJob(GenericJob):
                     data = hdf5_output["table"].to_object().to_builtin()
                     self._pyiron_table._df = pandas.DataFrame(data)
         else:
+            pyiron_table = os.path.join(self.working_directory, "pyirontable.csv")
             if os.path.exists(pyiron_table):
                 try:
                     self._pyiron_table._df = pandas.read_csv(pyiron_table)
