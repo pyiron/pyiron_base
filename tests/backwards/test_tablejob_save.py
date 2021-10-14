@@ -21,5 +21,4 @@ job.input["input_energy"] = 23
 job.run()
 tab = pr.create_table("toy_table")
 tab.add['name'] = lambda j: j.name
-tab.add['array'] = lambda j: np.arange(8)
 tab.run()
