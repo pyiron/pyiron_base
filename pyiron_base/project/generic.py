@@ -519,7 +519,7 @@ class Project(ProjectPath, HasGroups):
     def get_filtered_job_ids(self, recursive: bool = True, **kwargs: dict) -> list:
         if len(kwargs.keys()) == 0:
             return self.get_job_ids(recursive=recursive)
-        df = self.job_table(recursive=True)
+        df = self.job_table(recursive=recursive)
         if df.empty:
             return []
         mask = np.ones_like(df.index, dtype=bool)
@@ -529,7 +529,8 @@ class Project(ProjectPath, HasGroups):
             return []
         return df[mask]["id"].to_list()
 
-    def iter_jobs(self, path=None, recursive=True, convert_to_object=True, status=None, job_type=None, progress=True):
+    def iter_jobs(self, path=None, recursive=True, convert_to_object=True,
+                  status=None, job_type=None, progress=True):
         """
         Iterate over the jobs within the current project and it is sub projects
 

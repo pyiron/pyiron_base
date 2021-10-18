@@ -6,7 +6,7 @@ import unittest
 from os.path import dirname, join, abspath
 from os import remove
 from pyiron_base.project.generic import Project
-from pyiron_base._tests import PyironTestCase, TestWithProject
+from pyiron_base._tests import PyironTestCase, TestWithProject, TestWithFilledProject
 from pyiron_base.toolkit import BaseTools
 
 
@@ -55,6 +55,25 @@ class TestProjectData(PyironTestCase):
                 pass
         except:
             self.fail("Iterating over empty project with set status flag should not raise exception.")
+
+
+class TestProjectOperations(TestWithFilledProject):
+
+    def test_job_table(self):
+        df = self.project.job_table()
+        print(df)
+        self.assertEqual(len(df), 4)
+        self.assertEqual(" ".join(df.status.sort_values().unique()), "aborted finished suspended")
+
+    def test_get_filtered_job_ids(self):
+        self.assertEqual(len(self.project.get_filtered_job_ids(recursive=False)), 2)
+        self.assertEqual(len(self.project.get_filtered_job_ids(recursive=True)), 4)
+        self.assertEqual(len(self.project.get_filtered_job_ids(recursive=True, status="finished")), 2)
+        self.assertEqual(len(self.project.get_filtered_job_ids(recursive=False, status="finished")), 1)
+        self.assertEqual(len(self.project.get_filtered_job_ids(recursive=True, status="suspended")), 1)
+        self.assertEqual(len(self.project.get_filtered_job_ids(recursive=True, status="aborted")), 1)
+        self.assertEqual(len(self.project.get_filtered_job_ids(recursive=False, status="suspended")), 0)
+        self.assertEqual(len(self.project.get_filtered_job_ids(recursive=False, hamilton="ToyJob")), 2)
 
 
 class TestToolRegistration(TestWithProject):
