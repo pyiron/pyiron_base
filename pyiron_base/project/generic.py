@@ -524,7 +524,10 @@ class Project(ProjectPath, HasGroups):
             return []
         mask = np.ones_like(df.index, dtype=bool)
         for key, val in kwargs.items():
-            mask &= df[key] == val
+            if val is None:
+                mask &= df[key].isnull()
+            else:
+                mask &= df[key] == val
         if not mask.any():
             return []
         return df[mask]["id"].to_list()
