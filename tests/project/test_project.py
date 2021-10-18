@@ -6,7 +6,7 @@ import unittest
 from os.path import dirname, join, abspath
 from os import remove
 from pyiron_base.project.generic import Project
-from pyiron_base._tests import PyironTestCase, TestWithProject, TestWithFilledProject
+from pyiron_base._tests import PyironTestCase, TestWithProject, TestWithFilledProject, ToyJob
 from pyiron_base.toolkit import BaseTools
 
 
@@ -61,7 +61,6 @@ class TestProjectOperations(TestWithFilledProject):
 
     def test_job_table(self):
         df = self.project.job_table()
-        print(df)
         self.assertEqual(len(df), 4)
         self.assertEqual(" ".join(df.status.sort_values().unique()), "aborted finished suspended")
 
@@ -75,6 +74,21 @@ class TestProjectOperations(TestWithFilledProject):
         self.assertEqual(len(self.project.get_filtered_job_ids(recursive=False, status="suspended")), 0)
         self.assertEqual(len(self.project.get_filtered_job_ids(recursive=False, hamilton="ToyJob")), 2)
         self.assertEqual(len(self.project.get_filtered_job_ids(recursive=True, parentid=None)), 4)
+
+    def test_get_iter_jobs(self):
+        self.assertEqual([val["output/generic/energy_tot"] for val in self.project.iter_jobs(recursive=True)],
+                         [100] * 4)
+        self.assertEqual([val["output/generic/energy_tot"] for val in self.project.iter_jobs(recursive=False)],
+                         [100] * 2)
+        self.assertEqual([val["output/generic/energy_tot"] for val in self.project.iter_jobs(recursive=False,
+                                                                                             status="aborted")],
+                         [100])
+        self.assertEqual([val["output/generic/energy_tot"] for val in self.project.iter_jobs(recursive=True,
+                                                                                             job="toy_2")],
+                         [100] * 2)
+        self.assertEqual([val for val in self.project.iter_jobs(recursive=False, status="suspended")], [])
+        self.assertIsInstance([val for val in self.project.iter_jobs(recursive=True, status="suspended",
+                                                                     convert_to_object=True)][0], ToyJob)
 
 
 class TestToolRegistration(TestWithProject):

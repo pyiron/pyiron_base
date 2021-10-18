@@ -517,7 +517,17 @@ class Project(ProjectPath, HasGroups):
         return self.load(job_specifier=job_specifier, convert_to_object=False)
 
     def get_filtered_job_ids(self, recursive: bool = True, **kwargs: dict) -> list:
-        if len(kwargs.keys()) == 0:
+        """
+        Get a list of job ids in a project based on matching values from any column in the project database
+
+        Args:
+            recursive (bool): True if entries from subprojects are considered
+            **kwargs (dict): Optional arguments with keys matching the project database column name
+
+        Returns:
+            list: List of job IDs
+        """
+        if len(kwargs) == 0:
             return self.get_job_ids(recursive=recursive)
         df = self.job_table(recursive=recursive)
         if df.empty:
@@ -532,8 +542,7 @@ class Project(ProjectPath, HasGroups):
             return []
         return df[mask]["id"].to_list()
 
-    def iter_jobs(self, path=None, recursive=True, convert_to_object=True,
-                  status=None, job_type=None, progress=True):
+    def iter_jobs(self, path=None, recursive=True, convert_to_object=True, progress=True, **kwargs):
         """
         Iterate over the jobs within the current project and it is sub projects
 
@@ -541,26 +550,12 @@ class Project(ProjectPath, HasGroups):
             path (str): HDF5 path inside each job object
             recursive (bool): search subprojects [True/False] - True by default
             convert_to_object (bool): load the full GenericJob object (default) or just the HDF5 / JobCore object
-            status (str/None): status of the jobs to filter for - ['finished', 'aborted', 'submitted', ...]
-            job_type (str/None): job type to filter for, corresponds to the 'hamilton' column in the job table
             progress (bool): if True (default), add an interactive progress bar to the iteration
-
+            **kwargs (dict): Can be
         Returns:
             yield: Yield of GenericJob or JobCore
         """
-        if status is None and job_type is None:
-            job_id_lst = self.get_jobs(recursive)["id"]
-        else:
-            df = self.job_table(recursive=True)
-            if df.empty:
-                job_id_lst = []
-            else:
-                mask = np.ones_like(df.index, dtype=bool)
-                if status is not None:
-                    mask &= df["status"] == status
-                if job_type is not None:
-                    mask &= df["hamilton"] == job_type
-                job_id_lst = list(df[mask]["id"])
+        job_id_lst = self.get_filtered_job_ids(recursive=recursive, **kwargs)
         if progress:
             job_id_lst = tqdm(job_id_lst)
         for job_id in job_id_lst:
