@@ -516,6 +516,17 @@ class Project(ProjectPath, HasGroups):
         """
         return self.load(job_specifier=job_specifier, convert_to_object=False)
 
+    def get_filtered_job_ids(self, recursive: bool = True, **kwargs: dict) -> list:
+        if len(kwargs.keys()) == 0:
+            return self.get_job_ids(recursive=recursive)
+        df = self.job_table(recursive=True)
+        for key, val in kwargs.items():
+            df = df[df[key] == val]
+        if df.empty:
+            return []
+        else:
+            return df["id"]
+
     def iter_jobs(self, path=None, recursive=True, convert_to_object=True, status=None, job_type=None, progress=True):
         """
         Iterate over the jobs within the current project and it is sub projects
