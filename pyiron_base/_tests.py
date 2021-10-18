@@ -102,7 +102,7 @@ class ToyJob(PythonTemplateJob):
         self.status.finished = True
 
 
-class TestWithFilledProject(PyironTestCase, ABC):
+class TestWithFilledProject(TestWithProject, ABC):
 
     """
     Tests that creates a projects, creates jobs and sub jobs in it, and at the end of unit testing,
