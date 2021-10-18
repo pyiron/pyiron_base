@@ -10,6 +10,7 @@ from io import StringIO
 import unittest
 from os.path import split, join
 from os import remove
+from pyiron_base import PythonTemplateJob
 from pyiron_base.project.generic import Project
 from abc import ABC
 from inspect import getfile
@@ -87,5 +88,17 @@ class TestWithCleanProject(TestWithProject, ABC):
     def tearDown(self):
         self.project.remove_jobs_silently(recursive=True)
 
+
+class ToyJob(PythonTemplateJob):
+    def __init__(self, project, job_name):
+        """A toyjob to test export/import functionalities."""
+        super(ToyJob, self).__init__(project, job_name)
+        self.input['input_energy'] = 100
+
+    # This function is executed
+    def run_static(self):
+        with self.project_hdf5.open("output/generic") as h5out:
+            h5out["energy_tot"] = self.input["input_energy"]
+        self.status.finished = True
 
 _TO_SKIP = [PyironTestCase, TestWithProject, TestWithCleanProject]
