@@ -101,4 +101,40 @@ class ToyJob(PythonTemplateJob):
             h5out["energy_tot"] = self.input["input_energy"]
         self.status.finished = True
 
-_TO_SKIP = [PyironTestCase, TestWithProject, TestWithCleanProject]
+
+class TestWithFilledProject(PyironTestCase, ABC):
+
+    """
+    Tests that creates a projects, creates jobs and sub jobs in it, and at the end of unit testing,
+    removes the project.
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls.project_path = getfile(cls)[:-3].replace("\\", "/")
+        cls.file_location, cls.project_name = split(cls.project_path)
+        cls.project = Project(cls.project_path)
+        job = cls.project.create_job(job_type=ToyJob, job_name="toy_1")
+        job.run()
+        job = cls.project.create_job(job_type=ToyJob, job_name="toy_2")
+        job.run()
+        job.status.aborted = True
+
+        with cls.project.open("sub_project") as pr_sub:
+            job = pr_sub.create_job(job_type=ToyJob, job_name="toy_1")
+            job.run()
+            job = pr_sub.create_job(job_type=ToyJob, job_name="toy_2")
+            job.run()
+            job.status.aborted = True
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.project.remove(enable=True)
+        try:
+            remove(join(cls.file_location, "pyiron.log"))
+        except FileNotFoundError:
+            pass
+
+
+_TO_SKIP = [PyironTestCase, TestWithProject, TestWithCleanProject, TestWithFilledProject]
