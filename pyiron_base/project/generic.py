@@ -520,12 +520,14 @@ class Project(ProjectPath, HasGroups):
         if len(kwargs.keys()) == 0:
             return self.get_job_ids(recursive=recursive)
         df = self.job_table(recursive=True)
-        for key, val in kwargs.items():
-            df = df[df[key] == val]
         if df.empty:
             return []
-        else:
-            return df["id"]
+        mask = np.ones_like(df.index, dtype=bool)
+        for key, val in kwargs.items():
+            mask &= df[key] == val
+        if not mask.any():
+            return []
+        return df[mask]["id"].to_list()
 
     def iter_jobs(self, path=None, recursive=True, convert_to_object=True, status=None, job_type=None, progress=True):
         """
