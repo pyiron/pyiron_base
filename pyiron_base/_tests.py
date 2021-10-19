@@ -112,9 +112,6 @@ class TestWithFilledProject(TestWithProject, ABC):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        cls.project_path = getfile(cls)[:-3].replace("\\", "/")
-        cls.file_location, cls.project_name = split(cls.project_path)
-        cls.project = Project(cls.project_path)
         job = cls.project.create_job(job_type=ToyJob, job_name="toy_1")
         job.run()
         job = cls.project.create_job(job_type=ToyJob, job_name="toy_2")
