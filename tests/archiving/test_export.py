@@ -5,7 +5,6 @@ from pyiron_base.archiving.export_archive import export_database
 import pandas as pd
 from pandas._testing import assert_frame_equal
 from filecmp import dircmp
-from pyiron_base import PythonTemplateJob
 from shutil import rmtree
 from pyiron_base._tests import PyironTestCase, ToyJob
 
