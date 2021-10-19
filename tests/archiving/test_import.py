@@ -130,9 +130,9 @@ class TestUnpacking(PyironTestCase):
         self.pr.pack(destination_path=self.arch_dir_comp, compress=True)
         self.imp_pr.unpack(origin_path=self.arch_dir_comp, compress=True)
         j = self.imp_pr.load(self.job.name)
-        self.assertEqual(self.job.input["input_energy"], j.input["input_energy"],
+        self.assertEqual(self.job.input["data_in"], j.input["data_in"],
                          "Input values not properly copied to imported job.")
-        self.assertEqual(self.job["output/energy_tot"], j["output/energy_tot"],
+        self.assertEqual(self.job["data_out"], j["data_out"],
                          "Output values not properly copied to imported job.")
 
     def test_import_with_targz_extension(self):

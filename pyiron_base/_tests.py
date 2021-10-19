@@ -93,14 +93,15 @@ class ToyJob(PythonTemplateJob):
     def __init__(self, project, job_name):
         """A toyjob to test export/import functionalities."""
         super(ToyJob, self).__init__(project, job_name)
-        self.input['input_energy'] = 100
+        self.input.data_in = 100
 
     # This function is executed
     def run_static(self):
-        with self.project_hdf5.open("output/generic") as h5out:
-            h5out["energy_tot"] = self.input["input_energy"]
+        self.status.running = True
+        self.output.data_out = self.input.data_in + 1
         self.status.finished = True
-
+        self.to_hdf()
+        
 
 class TestWithFilledProject(TestWithProject, ABC):
 
@@ -112,9 +113,6 @@ class TestWithFilledProject(TestWithProject, ABC):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        cls.project_path = getfile(cls)[:-3].replace("\\", "/")
-        cls.file_location, cls.project_name = split(cls.project_path)
-        cls.project = Project(cls.project_path)
         job = cls.project.create_job(job_type=ToyJob, job_name="toy_1")
         job.run()
         job = cls.project.create_job(job_type=ToyJob, job_name="toy_2")
@@ -127,14 +125,6 @@ class TestWithFilledProject(TestWithProject, ABC):
             job = pr_sub.create_job(job_type=ToyJob, job_name="toy_2")
             job.run()
             job.status.suspended = True
-
-    @classmethod
-    def tearDownClass(cls):
-        cls.project.remove(enable=True)
-        try:
-            remove(join(cls.file_location, "pyiron.log"))
-        except FileNotFoundError:
-            pass
 
 
 _TO_SKIP = [PyironTestCase, TestWithProject, TestWithCleanProject, TestWithFilledProject]

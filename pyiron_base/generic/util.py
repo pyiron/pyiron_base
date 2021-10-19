@@ -6,6 +6,7 @@
 Utility functions used in pyiron.
 """
 
+from abc import ABCMeta
 from copy import copy
 import functools
 import types
@@ -23,7 +24,7 @@ __status__ = "production"
 __date__ = "Sep 1, 2017"
 
 
-class Singleton(type):
+class Singleton(ABCMeta):
     """
     Implemented with suggestions from
 

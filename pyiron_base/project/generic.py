@@ -22,11 +22,9 @@ from pyiron_base.database.manager import DatabaseManager
 from pyiron_base.settings.publications import list_publications
 from pyiron_base.database.performance import get_database_statistics
 from pyiron_base.database.jobtable import (
-    get_db_columns,
     get_job_ids,
     get_job_id,
     get_jobs,
-    job_table,
     set_job_status,
     get_child_ids,
     get_job_working_directory,
@@ -153,6 +151,7 @@ class Project(ProjectPath, HasGroups):
         return self.create_group("..")
 
     @property
+    @deprecate("use db.view_mode")
     def view_mode(self):
         """
         Get viewer_mode - if viewer_mode is enable pyiron has read only access to the database.
@@ -165,10 +164,7 @@ class Project(ProjectPath, HasGroups):
         Returns:
             bool: returns TRUE when viewer_mode is enabled
         """
-        if not isinstance(self.db, FileTable):
-            return self.db.viewer_mode
-        else:
-            return False
+        return self.db.view_mode
 
     @property
     def name(self):
@@ -370,7 +366,7 @@ class Project(ProjectPath, HasGroups):
                  'timestop',
                  'totalcputime']
         """
-        return get_db_columns(self.db)
+        return self.db.get_table_headings()
 
     def get_jobs(self, recursive=True, columns=None):
         """
@@ -642,8 +638,7 @@ class Project(ProjectPath, HasGroups):
         Returns:
             pandas.Dataframe: Return the result as a pandas.Dataframe object
         """
-        return job_table(
-            database=self.db,
+        return self.db.job_table(
             sql_query=self.sql_query,
             user=self.user,
             project_path=self.project_path,
