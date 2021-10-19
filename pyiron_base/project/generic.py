@@ -522,7 +522,8 @@ class Project(ProjectPath, HasGroups):
 
         Args:
             recursive (bool): True if entries from subprojects are considered
-            **kwargs (dict): Optional arguments with keys matching the project database column name
+            **kwargs (dict): Optional arguments for filtering with keys matching the project database column name
+                            (eg. status="finished")
 
         Returns:
             list: List of job IDs
@@ -533,6 +534,10 @@ class Project(ProjectPath, HasGroups):
         if df.empty:
             return []
         mask = np.ones_like(df.index, dtype=bool)
+        db_columns = self.get_db_columns()
+        for key in kwargs.keys():
+            if key not in db_columns:
+                raise ValueError("Column name {} does not exist in the project database!")
         for key, val in kwargs.items():
             if val is None:
                 mask &= df[key].isnull()
@@ -551,7 +556,9 @@ class Project(ProjectPath, HasGroups):
             recursive (bool): search subprojects [True/False] - True by default
             convert_to_object (bool): load the full GenericJob object (default) or just the HDF5 / JobCore object
             progress (bool): if True (default), add an interactive progress bar to the iteration
-            **kwargs (dict): Can be
+            **kwargs (dict): Optional arguments for filtering with keys matching the project database column name
+                            (eg. status="finished")
+
         Returns:
             yield: Yield of GenericJob or JobCore
         """
