@@ -93,7 +93,7 @@ class ToyJob(PythonTemplateJob):
     def __init__(self, project, job_name):
         """A toyjob to test export/import functionalities."""
         super(ToyJob, self).__init__(project, job_name)
-        self.input['input_energy'] = 100
+        self.input.in_data = 100
 
     # This function is executed
     def run_static(self):
