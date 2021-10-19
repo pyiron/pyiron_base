@@ -512,7 +512,7 @@ class Project(ProjectPath, HasGroups):
         """
         return self.load(job_specifier=job_specifier, convert_to_object=False)
 
-    def get_filtered_job_ids(self, recursive: bool = True, **kwargs: dict) -> list:
+    def get_filtered_job_ids(self, recursive: bool = True, **kwargs: dict) -> List[int]:
         """
         Get a list of job ids in a project based on matching values from any column in the project database
 
@@ -543,7 +543,7 @@ class Project(ProjectPath, HasGroups):
             return []
         return df[mask]["id"].to_list()
 
-    def iter_jobs(self, path=None, recursive=True, convert_to_object=True, progress=True, **kwargs):
+    def iter_jobs(self, path=None, recursive: bool=True, convert_to_object: bool=True, progress: bool=True, **kwargs) -> Iterator[GenericJob]:
         """
         Iterate over the jobs within the current project and it is sub projects
 
