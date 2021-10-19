@@ -124,7 +124,7 @@ class TestWithFilledProject(TestWithProject, ABC):
             job.run()
             job = pr_sub.create_job(job_type=ToyJob, job_name="toy_2")
             job.run()
-            job.status.aborted = True
+            job.status.suspended = True
 
 
 _TO_SKIP = [PyironTestCase, TestWithProject, TestWithCleanProject, TestWithFilledProject]
