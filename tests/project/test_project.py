@@ -79,16 +79,8 @@ class TestProjectOperations(TestWithFilledProject):
         self.assertRaises(ValueError, self.project.get_filtered_job_ids, gibberish=True)
 
     def test_get_iter_jobs(self):
-        self.assertEqual([val["output/generic/energy_tot"] for val in self.project.iter_jobs(recursive=True)],
-                         [100] * 4)
-        self.assertEqual([val["output/generic/energy_tot"] for val in self.project.iter_jobs(recursive=False)],
-                         [100] * 2)
-        self.assertEqual([val["output/generic/energy_tot"] for val in self.project.iter_jobs(recursive=False,
-                                                                                             status="aborted")],
-                         [100])
-        self.assertEqual([val["output/generic/energy_tot"] for val in self.project.iter_jobs(recursive=True,
-                                                                                             job="toy_2")],
-                         [100] * 2)
+        self.assertEqual([job.output.data_out for job in self.project.iter_jobs(recursive=True,
+                                                                                convert_to_object=True)], [101] * 4)
         self.assertEqual([val for val in self.project.iter_jobs(recursive=False, status="suspended")], [])
         self.assertIsInstance([val for val in self.project.iter_jobs(recursive=True, status="suspended",
                                                                      convert_to_object=True)][0], ToyJob)
