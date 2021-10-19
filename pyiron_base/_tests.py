@@ -127,5 +127,4 @@ class TestWithFilledProject(TestWithProject, ABC):
             job.status.aborted = True
 
 
-
 _TO_SKIP = [PyironTestCase, TestWithProject, TestWithCleanProject, TestWithFilledProject]
