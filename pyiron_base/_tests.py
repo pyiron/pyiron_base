@@ -100,7 +100,8 @@ class ToyJob(PythonTemplateJob):
         self.status.running = True
         self.output.data_out = self.input.data_in + 1
         self.status.finished = True
-
+        self.to_hdf()
+        
 
 class TestWithFilledProject(TestWithProject, ABC):
 
