@@ -10,6 +10,7 @@ from io import StringIO
 import unittest
 from os.path import split, join
 from os import remove
+from pyiron_base import PythonTemplateJob
 from pyiron_base.project.generic import Project
 from abc import ABC
 from inspect import getfile
@@ -88,4 +89,42 @@ class TestWithCleanProject(TestWithProject, ABC):
         self.project.remove_jobs_silently(recursive=True)
 
 
-_TO_SKIP = [PyironTestCase, TestWithProject, TestWithCleanProject]
+class ToyJob(PythonTemplateJob):
+    def __init__(self, project, job_name):
+        """A toyjob to test export/import functionalities."""
+        super(ToyJob, self).__init__(project, job_name)
+        self.input.data_in = 100
+
+    # This function is executed
+    def run_static(self):
+        self.status.running = True
+        self.output.data_out = self.input.data_in + 1
+        self.status.finished = True
+        self.to_hdf()
+        
+
+class TestWithFilledProject(TestWithProject, ABC):
+
+    """
+    Tests that creates a projects, creates jobs and sub jobs in it, and at the end of unit testing,
+    removes the project.
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        job = cls.project.create_job(job_type=ToyJob, job_name="toy_1")
+        job.run()
+        job = cls.project.create_job(job_type=ToyJob, job_name="toy_2")
+        job.run()
+        job.status.aborted = True
+
+        with cls.project.open("sub_project") as pr_sub:
+            job = pr_sub.create_job(job_type=ToyJob, job_name="toy_1")
+            job.run()
+            job = pr_sub.create_job(job_type=ToyJob, job_name="toy_2")
+            job.run()
+            job.status.aborted = True
+
+
+_TO_SKIP = [PyironTestCase, TestWithProject, TestWithCleanProject, TestWithFilledProject]
