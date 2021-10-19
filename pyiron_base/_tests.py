@@ -97,8 +97,8 @@ class ToyJob(PythonTemplateJob):
 
     # This function is executed
     def run_static(self):
-        with self.project_hdf5.open("output/generic") as h5out:
-            h5out["energy_tot"] = self.input["input_energy"]
+        self.status.running = True
+        self.output.data_out = self.input.data_in + 1
         self.status.finished = True
 
 
