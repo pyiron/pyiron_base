@@ -126,13 +126,6 @@ class TestWithFilledProject(TestWithProject, ABC):
             job.run()
             job.status.aborted = True
 
-    @classmethod
-    def tearDownClass(cls):
-        cls.project.remove(enable=True)
-        try:
-            remove(join(cls.file_location, "pyiron.log"))
-        except FileNotFoundError:
-            pass
 
 
 _TO_SKIP = [PyironTestCase, TestWithProject, TestWithCleanProject, TestWithFilledProject]
