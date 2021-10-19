@@ -74,6 +74,9 @@ class TestProjectOperations(TestWithFilledProject):
         self.assertEqual(len(self.project.get_filtered_job_ids(recursive=False, status="suspended")), 0)
         self.assertEqual(len(self.project.get_filtered_job_ids(recursive=False, hamilton="ToyJob")), 2)
         self.assertEqual(len(self.project.get_filtered_job_ids(recursive=True, parentid=None)), 4)
+        self.assertEqual(len(self.project.get_filtered_job_ids(recursive=True, status="finished", job="toy_1")), 2)
+        self.assertEqual(len(self.project.get_filtered_job_ids(recursive=False, status="finished", job="toy_1")), 1)
+        self.assertRaises(ValueError, self.project.get_filtered_job_ids, gibberish=True)
 
     def test_get_iter_jobs(self):
         self.assertEqual([val["output/generic/energy_tot"] for val in self.project.iter_jobs(recursive=True)],
