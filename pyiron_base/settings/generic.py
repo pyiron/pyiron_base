@@ -12,7 +12,7 @@ instantiated.
 It is possible to run pyiron only with default behaviour from the `Settings` class itself, but standard behaviour is to
 update the configuration by reading information stored on the system.
 First, `Settings` tries to read these updates from a file the operating system environment keys are searched for
-`'PYIRONCONFIG'`, and if this doesn't exist then a default location (~/.pyiron_config) is used.
+`'PYIRONCONFIG'`, and if this doesn't exist then a default location (~/.pyiron) is used.
 Second, if no file can be found in either of these locations, `Settings` tries to update the configuration by looking
 for system environment variables containing `'PYIRON'`.
 Additionally, if either of the conda flags `'CONDA_PREFIX'` or `'CONDA_DIR'` are system environment variables, they get
