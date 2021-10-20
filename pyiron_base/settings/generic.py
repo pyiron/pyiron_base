@@ -2,9 +2,27 @@
 # Copyright (c) Max-Planck-Institut für Eisenforschung GmbH - Computational Materials Design (CM) Department
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 """
-The settings file provides the attributes of the configuration as properties.
+The `Settings` object controls all the parameters of the pyiron environment that are specific to your particular
+configuration: your username, where on the filesystem to look for resources, and all flags necessary to define how
+pyiron objects relate to your database (or lack thereof).
+It is universally available for import an instantiation, and the python interpreter only ever sees a single instance of
+it, so modifications to the `Settings` in one place are available everywhere else that `Settings` gets/has gotten
+instantiated.
 
-The settings object is additionally responsible for the queue adapter, the logger, and the publications list.
+It is possible to run pyiron only with default behaviour from the `Settings` class itself, but standard behaviour is to
+update the configuration by reading information stored on the system.
+First, `Settings` tries to read these updates from a file the operating system environment keys are searched for
+`'PYIRONCONFIG'`, and if this doesn't exist then a default location (~/.pyiron_config) is used.
+Second, if no file can be found in either of these locations, `Settings` tries to update the configuration by looking
+for system environment variables containing `'PYIRON'`.
+Additionally, if either of the conda flags `'CONDA_PREFIX'` or `'CONDA_DIR'` are system environment variables, they get
+`/share/pyiron` appended to them and these values are *appended* to the resource paths.
+
+Finally, `Settings` converts any file paths to be in the appropriate format for your OS.
+
+In addition to these core responsibilities, at the moment `Settings` also hosts the logger, the queue adapter (for
+sending pyiron jobs off to remote resources), and a publication list (for keeping track of what should be cited
+depending on which parts of pyiron are actually used).
 """
 
 import os
