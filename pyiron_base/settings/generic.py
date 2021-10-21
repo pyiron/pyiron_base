@@ -226,37 +226,6 @@ class Settings(metaclass=Singleton):
         ]
 
     @property
-    def queue_adapter(self):
-        return self._queue_adapter
-
-    @property
-    def publication_lst(self):
-        """
-        List of publications currently in use.
-
-        Returns:
-            list: list of publications
-        """
-        all_publication = []
-        for v in self._publication_lst.values():
-            if isinstance(v, list):
-                all_publication += v
-            else:
-                all_publication.append(v)
-        return all_publication
-
-    def publication_add(self, pub_dict):
-        """
-        Add a publication to the list of publications
-
-        Args:
-            pub_dict (dict): The key should be the name of the code used and the value a list of publications to cite.
-        """
-        for key, value in pub_dict.items():
-            if key not in self._publication_lst.keys():
-                self._publication_lst[key] = value
-
-    @property
     def login_user(self):
         """
         Get the username of the current user
@@ -275,31 +244,6 @@ class Settings(metaclass=Singleton):
             list: path of paths
         """
         return self._configuration["resource_paths"]
-
-    @staticmethod
-    def _init_queue_adapter(resource_path_lst):
-        """
-        Initialize the queue adapter if a folder queues is found in one of the resource paths which contains a
-        queue configuration file (queue.yaml).
-
-        Args:
-            resource_path_lst (list): List of resource paths
-
-        Returns:
-            pysqa.QueueAdapter:
-        """
-        for resource_path in resource_path_lst:
-            if (
-                os.path.exists(resource_path)
-                and "queues" in os.listdir(resource_path)
-                and (
-                    "queue.yaml" in os.listdir(os.path.join(resource_path, "queues")) or
-                    "clusters.yaml" in os.listdir(os.path.join(resource_path, "queues"))
-                )
-            ):
-                queueadapter = getattr(importlib.import_module("pysqa"), "QueueAdapter")
-                return queueadapter(directory=os.path.join(resource_path, "queues"))
-        return None
 
     def _config_parse_file(self, config_file):
         """
@@ -489,6 +433,63 @@ class Settings(metaclass=Singleton):
                 else:
                     config[v] = environment[k]
         return config
+
+    @property
+    def queue_adapter(self):
+        return self._queue_adapter
+
+
+    @staticmethod
+    def _init_queue_adapter(resource_path_lst):
+        """
+        Initialize the queue adapter if a folder queues is found in one of the resource paths which contains a
+        queue configuration file (queue.yaml).
+
+        Args:
+            resource_path_lst (list): List of resource paths
+
+        Returns:
+            pysqa.QueueAdapter:
+        """
+        for resource_path in resource_path_lst:
+            if (
+                os.path.exists(resource_path)
+                and "queues" in os.listdir(resource_path)
+                and (
+                    "queue.yaml" in os.listdir(os.path.join(resource_path, "queues")) or
+                    "clusters.yaml" in os.listdir(os.path.join(resource_path, "queues"))
+                )
+            ):
+                queueadapter = getattr(importlib.import_module("pysqa"), "QueueAdapter")
+                return queueadapter(directory=os.path.join(resource_path, "queues"))
+        return None
+
+    @property
+    def publication_lst(self):
+        """
+        List of publications currently in use.
+
+        Returns:
+            list: list of publications
+        """
+        all_publication = []
+        for v in self._publication_lst.values():
+            if isinstance(v, list):
+                all_publication += v
+            else:
+                all_publication.append(v)
+        return all_publication
+
+    def publication_add(self, pub_dict):
+        """
+        Add a publication to the list of publications
+
+        Args:
+            pub_dict (dict): The key should be the name of the code used and the value a list of publications to cite.
+        """
+        for key, value in pub_dict.items():
+            if key not in self._publication_lst.keys():
+                self._publication_lst[key] = value
 
     @property
     def publication(self):
