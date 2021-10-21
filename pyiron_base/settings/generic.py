@@ -106,7 +106,7 @@ class Settings(metaclass=Singleton):
 
         # Build the SQLalchemy connection strings from config data
         if not self._configuration["disable_database"]:
-            self._configuration = self.convert_database_config(
+            self._configuration = self._convert_database_config(
                 config=self._configuration
             )
 
@@ -346,7 +346,7 @@ class Settings(metaclass=Singleton):
             self._configuration["sql_table_name"] = parser.get(section, "JOB_TABLE")
 
     @staticmethod
-    def convert_database_config(config):
+    def _convert_database_config(config):
         # Build the SQLalchemy connection strings
         if config["sql_type"] == "Postgres":
             config["sql_connection_string"] = (
