@@ -339,6 +339,59 @@ class FlattenedStorage(HasHDF):
         else:
             raise KeyError(f"no array named {name}")
 
+    def get_array_ragged(self, name):
+        """
+        Return elements of array `name` in all chunks.  Values are returned in a ragged array of dtype=object.
+
+        If `name` specifies a per chunk array, there's nothing to pad and this method is equivalent to
+        :method:`.get_array`.
+
+        Args:
+            name (str): name of array to fetch
+
+        Returns:
+            numpy.ndarray, dtype=object: ragged arrray of all elements in all chunks
+        """
+        if name in self._per_chunk_arrays:
+            return self._per_chunk_arrays[name].copy()
+        return np.array([self.get_array(name, i) for i in range(len(self))],
+                        dtype=object)
+
+    def get_array_filled(self, name):
+        """
+        Return elements of array `name` in all chunks.  Arrays are padded to be all of the same length.
+
+        The padding value depends on the datatpye of the array or can be configured via the `fill` parameter of
+        :method:`.add_array`.
+
+        If `name` specifies a per chunk array, there's nothing to pad and this method is equivalent to
+        :method:`.get_array`.
+
+        Args:
+            name (str): name of array to fetch
+
+        Returns:
+            numpy.ndarray: padded arrray of all elements in all chunks
+        """
+        if name in self._per_chunk_arrays:
+            return self._per_chunk_arrays[name].copy()
+        values = self.get_array_ragged(name)
+        max_len = self._per_chunk_arrays["length"].max()
+        def resize_and_pad(v):
+            l = len(v)
+            v = np.resize(v, max_len)
+            if name in self._fill_values:
+                fill = self._fill_values[name]
+            else:
+                fill = {np.dtype("int32"):   -1,
+                        np.dtype("int64"):   -1,
+                        np.dtype("float32"): np.nan,
+                        np.dtype("float64"): np.nan,
+                        }[self._per_element_arrays[name].dtype]
+            v[l:] = fill
+            return v
+        return np.array([ resize_and_pad(v) for v in values ])
+
     def set_array(self, name, frame, value):
         """
         Add array for given structure.

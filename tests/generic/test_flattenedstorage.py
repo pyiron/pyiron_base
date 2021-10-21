@@ -192,6 +192,33 @@ class TestFlattenedStorage(TestWithProject):
         self.assertTrue(np.array_equal(chunk, [-1, -2, -3]),
                         f"get_array return did not return correct flat array, but {chunk}.")
 
+    def test_get_array_filled(self):
+        """get_array_filled should return a padded array of all elements in the storage."""
+
+        store = FlattenedStorage(elem=[ [1], [2, 3], [4, 5, 6] ], chunk=[-1, -2, -3])
+        store.add_array("fill", fill=23.42)
+        store.set_array("fill", 0, [-1])
+        store.set_array("fill", 1, [-2, -3])
+        store.set_array("fill", 2, [-4, -5, -6])
+        val = store.get_array_filled("elem")
+        self.assertEqual(val.shape, (3, 3), "shape not correct!")
+        self.assertTrue(np.array_equal(val, [[1, -1, -1], [2, 3, -1], [4, 5, 6]]),
+                                       "values in returned array not the same as in original array!")
+        self.assertEqual(store.get_array_filled("fill")[0, 1], 23.42,
+                         "incorrect fill value!")
+
+    def test_get_array_ragged(self):
+        """get_array_ragged should return a raggend array of all elements in the storage."""
+
+        store = FlattenedStorage(elem=[ [1], [2, 3], [4, 5, 6] ], chunk=[-1, -2, -3])
+        val = store.get_array_ragged("elem")
+        self.assertEqual(val.shape, (3,), "shape not correct!")
+        for i, v in enumerate(val):
+            self.assertEqual(len(v), store._per_chunk_arrays["length"][i],
+                             f"array {i} has incorrect length!")
+            self.assertTrue(np.array_equal(v, [[1], [2, 3], [4, 5, 6]][i]),
+                            f"array {i} has incorrect values, {v}!")
+
     def test_has_array(self):
         """hasarray should return correct information for added array; None otherwise."""
 
