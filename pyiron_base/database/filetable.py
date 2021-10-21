@@ -168,7 +168,7 @@ class FileTable(IsDatabase, metaclass=Singleton):
             project = self._project
         if columns is None:
             columns = ["id", "project"]
-        df = self.job_table(project=project, recursive=recursive, columns=columns)
+        df = self.job_table(sql_query=None, user=s.login_user, project_path=project, recursive=recursive, columns=columns)
         if len(df) == 0:
             dictionary = {}
             for key in columns:
