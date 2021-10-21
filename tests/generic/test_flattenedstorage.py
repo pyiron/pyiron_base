@@ -200,12 +200,27 @@ class TestFlattenedStorage(TestWithProject):
         store.set_array("fill", 0, [-1])
         store.set_array("fill", 1, [-2, -3])
         store.set_array("fill", 2, [-4, -5, -6])
+        store.add_array("complex", shape=(3,), dtype=np.float64)
+        store.set_array("complex", 0, [ [1, 1, 1] ])
+        store.set_array("complex", 1, [ [2, 2, 2],
+                                        [2, 2, 2],
+                                      ])
+        store.set_array("complex", 2, [ [3, 3, 3],
+                                        [3, 3, 3],
+                                        [3, 3, 3],
+                                      ])
         val = store.get_array_filled("elem")
         self.assertEqual(val.shape, (3, 3), "shape not correct!")
         self.assertTrue(np.array_equal(val, [[1, -1, -1], [2, 3, -1], [4, 5, 6]]),
                                        "values in returned array not the same as in original array!")
         self.assertEqual(store.get_array_filled("fill")[0, 1], 23.42,
                          "incorrect fill value!")
+        val = store.get_array_filled("complex")
+        self.assertEqual(val.shape, (3, 3, 3), "shape not correct!")
+        self.assertTrue(np.array_equal(
+                           store.get_array("chunk"),
+                           store.get_array_filled("chunk"),
+                        ), "get_array_filled does not give same result as get_array for per chunk array")
 
     def test_get_array_ragged(self):
         """get_array_ragged should return a raggend array of all elements in the storage."""
@@ -218,6 +233,10 @@ class TestFlattenedStorage(TestWithProject):
                              f"array {i} has incorrect length!")
             self.assertTrue(np.array_equal(v, [[1], [2, 3], [4, 5, 6]][i]),
                             f"array {i} has incorrect values, {v}!")
+        self.assertTrue(np.array_equal(
+                           store.get_array("chunk"),
+                           store.get_array_ragged("chunk"),
+                        ), "get_array_ragged does not give same result as get_array for per chunk array")
 
     def test_has_array(self):
         """hasarray should return correct information for added array; None otherwise."""

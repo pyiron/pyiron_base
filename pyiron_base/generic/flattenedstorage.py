@@ -353,7 +353,7 @@ class FlattenedStorage(HasHDF):
             numpy.ndarray, dtype=object: ragged arrray of all elements in all chunks
         """
         if name in self._per_chunk_arrays:
-            return self._per_chunk_arrays[name].copy()
+            return self.get_array(name)
         return np.array([self.get_array(name, i) for i in range(len(self))],
                         dtype=object)
 
@@ -374,12 +374,14 @@ class FlattenedStorage(HasHDF):
             numpy.ndarray: padded arrray of all elements in all chunks
         """
         if name in self._per_chunk_arrays:
-            return self._per_chunk_arrays[name].copy()
+            return self.get_array(name)
         values = self.get_array_ragged(name)
         max_len = self._per_chunk_arrays["length"].max()
         def resize_and_pad(v):
             l = len(v)
-            v = np.resize(v, max_len)
+            per_shape = self._per_element_arrays[name].shape[1:]
+            v = np.resize(v, max_len * np.prod(per_shape, dtype=int))
+            v = v.reshape((max_len,) + per_shape)
             if name in self._fill_values:
                 fill = self._fill_values[name]
             else:
