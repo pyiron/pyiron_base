@@ -153,13 +153,13 @@ class FileTable(IsDatabase, metaclass=Singleton):
         element_lst=None
     ):
         self.update()
-        if project is None:
-            project = self._project
+        if project_path is None:
+            project_path = self._project
         if len(self._job_table) != 0:
             if recursive:
-                df = self._job_table[self._job_table.project.str.contains(project)]
+                return self._job_table[self._job_table.project.str.contains(project_path)]
             else:
-                df = self._job_table[self._job_table.project == project]
+                return self._job_table[self._job_table.project == project_path]
         else:
             return self._job_table
 
@@ -168,7 +168,7 @@ class FileTable(IsDatabase, metaclass=Singleton):
             project = self._project
         if columns is None:
             columns = ["id", "project"]
-        df = self.job_table(project=project, recursive=recursive, columns=columns)
+        df = self.job_table(sql_query=None, user=None, project_path=project, recursive=recursive, columns=columns)
         if len(df) == 0:
             dictionary = {}
             for key in columns:

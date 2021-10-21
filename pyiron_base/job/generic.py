@@ -781,7 +781,7 @@ class GenericJob(JobCore):
             self.project.db.update()
         else:
             ft = FileTable(project=self.project_hdf5.path + "_hdf5/")
-            df = ft.job_table(all_columns=True)
+            df = ft.job_table(sql_query=None, user=s.login_user, project_path=None, all_columns=True)
             db_dict_lst = []
             for j, st, sj, p, h, hv, c, ts, tp, tc in zip(
                     df.job.values,
