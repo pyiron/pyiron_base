@@ -157,9 +157,9 @@ class FileTable(IsDatabase, metaclass=Singleton):
             project_path = self._project
         if len(self._job_table) != 0:
             if recursive:
-                df = self._job_table[self._job_table.project.str.contains(project_path)]
+                return self._job_table[self._job_table.project.str.contains(project_path)]
             else:
-                df = self._job_table[self._job_table.project == project_path]
+                return self._job_table[self._job_table.project == project_path]
         else:
             return self._job_table
 
