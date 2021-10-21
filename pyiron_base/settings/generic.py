@@ -11,10 +11,11 @@ instantiated.
 
 It is possible to run pyiron only with default behaviour from the `Settings` class itself, but standard behaviour is to
 update the configuration by reading information stored on the system.
-First, `Settings` tries to read these updates from a file the operating system environment keys are searched for
-`'PYIRONCONFIG'`, and if this doesn't exist then a default location (~/.pyiron) is used.
-Second, if no file can be found in either of these locations, `Settings` tries to update the configuration by looking
-for system environment variables containing `'PYIRON'`.
+The highest priority is to read values to read a configuration file identified in the `'PYIRONCONFIG'` system
+environment variable.
+Next it looks for a configuration file in the standard location (~/.pyiron).
+Last, it looks in the other system environment variables.
+
 Additionally, if either of the conda flags `'CONDA_PREFIX'` or `'CONDA_DIR'` are system environment variables, they get
 `/share/pyiron` appended to them and these values are *appended* to the resource paths.
 
@@ -66,8 +67,33 @@ class Singleton(type):
 
 class Settings(metaclass=Singleton):
     """
-    The settings object can either search for an configuration file and use the default configuration only when no
-    other configuration file is found, or it can be forced to use the default configuration file.
+    The settings object reads configuration data from the following sources in decreasing order of priority: a
+    configuration file identified in the PYIRONCONFIG system environment variable, a default configuration file in
+    ~/.pyiron, and values in the system environment variables.
+
+    It also holds the logger and publication tracker.
+
+    Here are the configuration keys as the appear in the python code/config files/system env variables:
+
+        user / USER / PYIRONUSER (str):
+        resource_paths / RESOURCE_PATHS / PYIRONRESOURCEPATHS (list):
+        project_paths / PROJECT_PATHS / PYIRONPROJECTPATHS: (list),
+        connection_timeout / CONNECTION_TIMEOUT / PYIRONCONNECTIONTIMEOUT: (int),
+        sql_connection_string / CONNECTION / PYIRONSQLCONNECTIONSTRING (str):
+        sql_table_name / JOB_TABLE / PYIRONSQLTABLENAME (str):
+        sql_view_connection_string / - / - (str): Constructed, not available to be set in config files or sys env.
+        sql_view_table_name / VIEWER_TABLE / PYIRONSQLVIEWTABLENAME (str):
+        sql_view_user / VIEWERUSER / PYIRONSQLVIEWUSER (str):
+        sql_view_user_key / VIEWERPASSWD / PYIRONSQLVIEWUSERKEY (str):
+        sql_file / FILE / PYIRONSQLFILE (str):
+        sql_host / HOST / PYIRONSQHOST (str):
+        sql_type / TYPE / PYIRONSQLTYPE ("SQLite"|"Postgres"|"MySQL"): What type of SQL database to use. (Default is
+            "SQLite".)
+        sql_user_key / PASSWD / PYIRONSQLUSERKEY ():
+        sql_database / NAME / PYIRONSQLDATABASE ():
+        project_check_enabled / PROJECT_CHECK_ENABLED / PYIRONPROJECTCHECKENABLED (bool):
+        disable_database / DISABLE_DATABASE / PYIRONDISABLE (bool): Whether to turn off the database and use a
+            file-system-based hierarchy. (Default is False.)
 
     Args:
         config (dict): Provide a dict with the configuration.
@@ -75,25 +101,7 @@ class Settings(metaclass=Singleton):
 
     def __init__(self, config=None):
         # Default config dictionary
-        self._configuration = {
-            "user": "pyiron",
-            "resource_paths": [],
-            "project_paths": [],
-            "connection_timeout": 60,
-            "sql_connection_string": None,
-            "sql_table_name": "jobs_pyiron",
-            "sql_view_connection_string": None,
-            "sql_view_table_name": None,
-            "sql_view_user": None,
-            "sql_view_user_key": None,
-            "sql_file": None,
-            "sql_host": None,
-            "sql_type": "SQLite",
-            "sql_user_key": None,
-            "sql_database": None,
-            "project_check_enabled": True,
-            "disable_database": False,
-        }
+        self._configuration = dict(self._default_configuration)
         self._update_configuration(config)
 
         # Build the SQLalchemy connection strings from config data
@@ -113,6 +121,74 @@ class Settings(metaclass=Singleton):
     @property
     def configuration(self):
         return self._configuration
+
+    @property
+    def _default_configuration(self) -> dict:
+        return {
+            "user": "pyiron",
+            "resource_paths": [],
+            "project_paths": [],
+            "connection_timeout": 60,
+            "sql_connection_string": None,
+            "sql_table_name": "jobs_pyiron",
+            "sql_view_connection_string": None,
+            "sql_view_table_name": None,
+            "sql_view_user": None,
+            "sql_view_user_key": None,
+            "sql_file": None,
+            "sql_host": None,
+            "sql_type": "SQLite",
+            "sql_user_key": None,
+            "sql_database": None,
+            "project_check_enabled": True,
+            "disable_database": False,
+        }
+
+    @property
+    def _environment_configuration_map(self):
+        return {
+            "PYIRONUSER": "user",
+            "PYIRONRESOURCEPATHS": "resource_paths",
+            "PYIRONPROJECTPATHS": "project_paths",
+            "PYIRONCONNECTIONTIMEOUT": "connection_timeout",
+            "PYIRONSQLCONNECTIONSTRING": "sql_connection_string",
+            "PYIRONSQLTABLENAME": "sql_table_name",
+            # "PYIRONSQLVIEWCONNECTIONSTRING": "sql_view_connection_string",  # Constructed, not settable
+            "PYIRONSQLVIEWTABLENAME": "sql_view_table_name",
+            "PYIRONSQLVIEWUSER": "sql_view_user",
+            "PYIRONSQLVIEWUSERKEY": "sql_view_user_key",
+            "PYIRONSQLFILE": "sql_file",
+            "PYIRONSQHOST": "sql_host",
+            "PYIRONSQLTYPE": "sql_type",
+            "PYIRONSQLUSERKEY": "sql_user_key",
+            "PYIRONSQLDATABASE": "sql_database",
+            "PYIRONPROJECTCHECKENABLED": "project_check_enabled",
+            "PYIRONDISABLE": "disable_database",
+        }
+
+    @property
+    def _configfile_configuration_map(self):
+        return {
+            "USER": "user",
+            "RESOURCE_PATHS": "resource_paths",
+            "PROJECT_PATHS": "project_paths",
+            "TOP_LEVEL_DIRS": "project_paths",  # For backwards compatibility
+            "CONNECTION_TIMEOUT": "connection_timeout",
+            "CONNECTION": "sql_connection_string",
+            "JOB_TABLE": "sql_table_name",
+            # "SQL_VIEW_CONNECTION_STRING": "sql_view_connection_string",  # Constructed, not settable
+            "VIEWER_TABLE": "sql_view_table_name",
+            "VIEWERUSER": "sql_view_user",
+            "VIEWERPASSWD": "sql_view_user_key",
+            "FILE": "sql_file",
+            "DATABASE_FILE": "sql_file",  # Alternative name
+            "HOST": "sql_host",
+            "TYPE": "sql_type",
+            "PASSWD": "sql_user_key",
+            "NAME": "sql_database",
+            "PROJECT_CHECK_ENABLED": "project_check_enabled",
+            "DISABLE_DATABASE": "disable_database",
+        }
 
     def _update_configuration(self, config):
         environment = os.environ
@@ -200,7 +276,6 @@ class Settings(metaclass=Singleton):
         """
         return self._configuration["resource_paths"]
 
-    # private functions
     @staticmethod
     def _init_queue_adapter(resource_path_lst):
         """
@@ -238,6 +313,7 @@ class Settings(metaclass=Singleton):
         """
         # load config parser - depending on Python version
         parser = ConfigParser(inline_comment_prefixes=(";",))
+        key_map = self._configfile_configuration_map
 
         # read config
         parser.read(config_file)
@@ -402,26 +478,8 @@ class Settings(metaclass=Singleton):
                         "Config dictionary parameter type not recognized ", key, value
                     )
 
-    @staticmethod
-    def _get_config_from_environment(environment, config):
-        env_key_mapping = {
-            "PYIRONUSER": "user",
-            "PYIRONRESOURCEPATHS": "resource_paths",
-            "PYIRONPROJECTPATHS": "project_paths",
-            "PYIRONSQLCONNECTIONSTRING": "sql_connection_string",
-            "PYIRONSQLTABLENAME": "sql_table_name",
-            "PYIRONSQLVIEWCONNECTIONSTRING": "sql_view_connection_string",
-            "PYIRONSQLVIEWTABLENAME": "sql_view_table_name",
-            "PYIRONSQLVIEWUSER": "sql_view_user",
-            "PYIRONSQLVIEWUSERKEY": "sql_view_user_key",
-            "PYIRONSQLFILE": "sql_file",
-            "PYIRONSQHOST": "sql_host",
-            "PYIRONSQLTYPE": "sql_type",
-            "PYIRONSQLUSERKEY": "sql_user_key",
-            "PYIRONSQLDATABASE": "sql_database",
-            "PYIRONPROJECTCHECKENABLED": "project_check_enabled",
-            "PYIRONDISABLE": "disable_database",
-        }
+    def _get_config_from_environment(self, environment, config):
+        env_key_mapping = dict(self._environment_configuration_map)
         for k, v in env_key_mapping.items():
             if k in environment.keys():
                 if k in ["PYIRONPROJECTCHECKENABLED", "PYIRONDISABLE"]:
