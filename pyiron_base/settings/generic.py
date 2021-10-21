@@ -2,14 +2,14 @@
 # Copyright (c) Max-Planck-Institut für Eisenforschung GmbH - Computational Materials Design (CM) Department
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 """
-The `Settings` object controls all the parameters of the pyiron environment that are specific to your particular
+The :class:`Settings` object controls all the parameters of the pyiron environment that are specific to your particular
 configuration: your username, where on the filesystem to look for resources, and all flags necessary to define how
 pyiron objects relate to your database (or lack thereof).
 It is universally available for import an instantiation, and the python interpreter only ever sees a single instance of
-it, so modifications to the `Settings` in one place are available everywhere else that `Settings` gets/has gotten
+it, so modifications to the :class:`Settings` in one place are available everywhere else that `Settings` gets/has gotten
 instantiated.
 
-It is possible to run pyiron only with default behaviour from the `Settings` class itself, but standard behaviour is to
+It is possible to run pyiron only with default behaviour from the `Settings` class itself, but standard practice is to
 update the configuration by reading information stored on the system.
 The highest priority is to read values to read a configuration file identified in the `'PYIRONCONFIG'` system
 environment variable.
@@ -19,10 +19,10 @@ Last, it looks in the other system environment variables.
 Additionally, if either of the conda flags `'CONDA_PREFIX'` or `'CONDA_DIR'` are system environment variables, they get
 `/share/pyiron` appended to them and these values are *appended* to the resource paths.
 
-Finally, `Settings` converts any file paths to be in the appropriate format for your OS.
+Finally, :class:`Settings` converts any file paths from your OS to something pyiron-compatible.
 
-In addition to these core responsibilities, at the moment `Settings` also hosts the logger, the queue adapter (for
-sending pyiron jobs off to remote resources), and a publication list (for keeping track of what should be cited
+In addition to these core responsibilities, at the moment :class:`Settings` also hosts the logger, the queue adapter
+(for sending pyiron jobs off to remote resources), and a publication list (for keeping track of what should be cited
 depending on which parts of pyiron are actually used).
 """
 
@@ -247,17 +247,13 @@ class Settings(metaclass=Singleton):
 
     def _config_parse_file(self, config_file):
         """
-        Read section in configuration file and return a dictionary with the corresponding parameters.
+        Parse the config file and use it to populate the configuration.
 
         Args:
             config_file(str): confi file to parse
-
-        Returns:
-            dict: dictionary with the environment configuration
         """
         # load config parser - depending on Python version
         parser = ConfigParser(inline_comment_prefixes=(";",))
-        key_map = self._configfile_configuration_map
 
         # read config
         parser.read(config_file)
@@ -437,7 +433,6 @@ class Settings(metaclass=Singleton):
     @property
     def queue_adapter(self):
         return self._queue_adapter
-
 
     @staticmethod
     def _init_queue_adapter(resource_path_lst):
