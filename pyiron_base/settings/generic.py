@@ -93,10 +93,10 @@ class Settings(metaclass=Singleton):
         config (dict): Provide a dict with the configuration.
     """
 
-    def __init__(self, config=None):
+    def __init__(self):
         # Default config dictionary
         self._configuration = dict(self._default_configuration)
-        self._update_configuration(config)
+        self._update_configuration()
 
         # Build the SQLalchemy connection strings from config data
         if not self._configuration["disable_database"]:
@@ -184,7 +184,7 @@ class Settings(metaclass=Singleton):
             "DISABLE_DATABASE": "disable_database",
         }
 
-    def _update_configuration(self, config):
+    def _update_configuration(self):
         environment = os.environ
         if "PYIRONCONFIG" in environment.keys():
             config_file = environment["PYIRONCONFIG"]
@@ -202,8 +202,6 @@ class Settings(metaclass=Singleton):
             self._configuration["sql_file"] = "~/pyiron.db"
             self._configuration["project_check_enabled"] = False
 
-        # Take dictionary as primary source - overwrite everything
-        self._read_external_config(config=config)
         if "CONDA_PREFIX" in environment.keys() \
                 and os.path.exists(os.path.join(environment["CONDA_PREFIX"], "share", "pyiron")):
             self._configuration["resource_paths"].append(os.path.join(environment["CONDA_PREFIX"], "share", "pyiron"))
@@ -397,20 +395,6 @@ class Settings(metaclass=Singleton):
                 "sql_connection_string"
             ] = "sqlite:///" + sql_file.replace("\\", "/")
         return config
-
-    def _read_external_config(self, config):
-        if isinstance(config, dict):
-            for key, value in config.items():
-                if key not in ["resource_paths", "project_paths"] or isinstance(
-                    value, list
-                ):
-                    self._configuration[key] = value
-                elif isinstance(value, str):
-                    self._configuration[key] = [value]
-                else:
-                    TypeError(
-                        "Config dictionary parameter type not recognized ", key, value
-                    )
 
     def _get_config_from_environment(self, environment, config):
         env_key_mapping = dict(self._environment_configuration_map)

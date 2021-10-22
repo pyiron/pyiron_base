@@ -39,7 +39,7 @@ class TestSettings(TestCase):
         self.env["PYIRONSQLTYPE"] = str(env_val)
 
         # Now peel them off one at a time to make sure we have the promised order of resolution
-        self.s._update_configuration(self.s._configuration)
+        self.s._update_configuration()
         self.assertEqual(
             local_val, self.s._configuration["sql_type"],
             msg="A config file specified in the env takes top priority."
@@ -47,14 +47,14 @@ class TestSettings(TestCase):
 
         self.env.pop("PYIRONCONFIG")
         local_loc.unlink()
-        self.s._update_configuration(self.s._configuration)
+        self.s._update_configuration()
         self.assertEqual(
             default_val, self.s._configuration["sql_type"],
             msg="The default config file takes priority over the env variables"
         )
 
         default_loc.unlink()
-        self.s._update_configuration(self.s._configuration)
+        self.s._update_configuration()
         self.assertEqual(
             env_val, self.s._configuration["sql_type"],
             msg="Value should be read from system environment"
@@ -90,7 +90,7 @@ class TestSettings(TestCase):
 
     def test_appending_conda_resources(self):
         self._pop_conda_env_variables()
-        self.s._update_configuration(self.s._configuration)  # Clean out any old conda paths
+        self.s._update_configuration()  # Clean out any old conda paths
         before = len(self.s._configuration["resource_paths"])
 
         here = Path(".").resolve()
@@ -101,7 +101,7 @@ class TestSettings(TestCase):
         self.env["CONDA_PREFIX"] = str(here)  # Contains /share/pyiron -- should get added
         self.env["CONDA_DIR"] = str(pyiron)  # Does not contain /share/pyiron -- shouldn't get added
 
-        self.s._update_configuration(self.s._configuration)
+        self.s._update_configuration()
         self.assertTrue(
             any([pyiron.as_posix() in p for p in self.s._configuration["resource_paths"]]),
             msg="The new resource should have been added"
@@ -131,7 +131,7 @@ class TestSettings(TestCase):
         local.write_text(f"[DEFAULT]\nRESOURCE_PATHS = {p1}, {p2}\n")
         self.env["PYIRONCONFIG"] = str(local)
         self._pop_conda_env_variables()
-        self.s._update_configuration(self.s._configuration)
+        self.s._update_configuration()
         self.assertListEqual(
             [self._niceify_path(p1), self._niceify_path(p2)],
             self.s._configuration['resource_paths']
