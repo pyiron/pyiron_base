@@ -806,6 +806,8 @@ class DataContainer(MutableMapping, HasGroups, HasHDF):
             def normalize_key(name):
                 # split a dataset/group name into the position in the list and
                 # the key
+                if '__index_' not in name:
+                    return -1, name
                 k, i = name.split("__index_", maxsplit=1)
                 i = int(i)
                 if k == "":
