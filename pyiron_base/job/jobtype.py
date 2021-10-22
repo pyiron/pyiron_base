@@ -130,7 +130,7 @@ class JobFactory(PyironFactory):
 
     def __getattr__(self, name):
         if name in self._job_class_dict.keys():
-            def wrapper(job_name, delete_existing_job=False):
+            def wrapper(job_name, delete_existing_job=False, delete_aborted_job=False):
                 """
                 Create one of the following jobs:
                 - 'ExampleJob': example job just generating random number
@@ -142,6 +142,7 @@ class JobFactory(PyironFactory):
                 Args:
                     job_name (str): name of the job
                     delete_existing_job (bool): delete an existing job - default false
+                    delete_aborted_job (bool): delete an existing and aborted job - default false
 
                 Returns:
                     GenericJob: job object depending on the job_type selected
