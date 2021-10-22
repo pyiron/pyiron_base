@@ -75,14 +75,6 @@ class TestUnpacking(PyironTestCase):
         path_import = pr_imp.path
         path_original = getdir(path_original)
         path_import = getdir(path_import)
-        print(f"DEBUG \n"
-              f" print(path_original, path_import)\n"
-              f"> {path_original, path_import}\n"
-              f" os.listdir(path_original)\n"
-              f"> {os.listdir(path_original)}\n"
-              f" os.listdir(path_import)\n"
-              f"> {os.listdir(path_import)}\n"
-              f"END DEBUG")
         compare_obj = dircmp(path_original, path_import)
         self.assertEqual(len(compare_obj.diff_files), 0)
         pr.remove(enable=True)

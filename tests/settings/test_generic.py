@@ -132,8 +132,6 @@ class TestSettings(TestCase):
         self.env["PYIRONCONFIG"] = str(local)
         self._pop_conda_env_variables()
         self.s._update_configuration(self.s._configuration)
-        print("Manual list", [self._niceify_path(p1), self._niceify_path(p2)])
-        print("Read config", self.s._configuration['resource_paths'])
         self.assertListEqual(
             [self._niceify_path(p1), self._niceify_path(p2)],
             self.s._configuration['resource_paths']
