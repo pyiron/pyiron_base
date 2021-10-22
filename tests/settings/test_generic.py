@@ -102,6 +102,8 @@ class TestSettings(TestCase):
         self.env["CONDA_DIR"] = str(pyiron)  # Does not contain /share/pyiron -- shouldn't get added
 
         self.s._update_configuration(self.s._configuration)
+        print("Searched string", str(pyiron))
+        print("Actual resources", self.s._configuration["resource_paths"])
         self.assertTrue(
             str(pyiron) in self.s._configuration["resource_paths"],
             msg="The new resource should have been added"
