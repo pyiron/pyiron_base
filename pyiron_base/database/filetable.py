@@ -5,13 +5,14 @@ import datetime
 import h5io
 from pyfileindex import PyFileIndex
 from pyiron_base.generic.util import Singleton
+from pyiron_base.database.generic import IsDatabase
 
 
 def filter_function(file_name):
     return '.h5' in file_name
 
 
-class FileTable(metaclass=Singleton):
+class FileTable(IsDatabase, metaclass=Singleton):
     def __init__(self, project):
         self._fileindex = None
         self._job_table = None
@@ -21,9 +22,8 @@ class FileTable(metaclass=Singleton):
                          'username']
         self.force_reset()
 
-    @property
-    def viewer_mode(self):
-        return None
+    def _get_view_mode(self):
+        return False
 
     def force_reset(self):
         self._fileindex = PyFileIndex(
@@ -140,57 +140,35 @@ class FileTable(metaclass=Singleton):
             else:
                 self._job_table = df
 
-    def get_db_columns(self):
-        return self.get_table_headings()
-
-    def get_table_headings(self):
+    def _get_table_headings(self, table_name=None):
         return self._job_table.columns.values
 
-    def job_table(
-        self, 
-        project=None, 
-        recursive=True, 
-        columns=None, 
-        all_columns=False, 
-        sort_by="id", 
-        max_colwidth=200, 
-        full_table=False, 
-        job_name_contains=''
+    def _get_job_table(
+        self,
+        sql_query,
+        user,
+        project_path=None,
+        recursive=True,
+        columns=None,
+        element_lst=None
     ):
-        if project is None:
-            project = self._project
-        if columns is None:
-            columns = ["job", "project", "chemicalformula"]
-        if all_columns:
-            columns = self._columns
+        self.update()
+        if project_path is None:
+            project_path = self._project
         if len(self._job_table) != 0:
             if recursive:
-                df = self._job_table[self._job_table.project.str.contains(project)]
+                return self._job_table[self._job_table.project.str.contains(project_path)]
             else:
-                df = self._job_table[self._job_table.project == project]
+                return self._job_table[self._job_table.project == project_path]
         else:
-            df = self._job_table
-        if full_table:
-            pandas.set_option('display.max_rows', None)
-            pandas.set_option('display.max_columns', None)
-        else:
-            pandas.reset_option('display.max_rows')
-            pandas.reset_option('display.max_columns')
-        pandas.set_option("display.max_colwidth", max_colwidth)
-        if len(df) == 0:
-            return df
-        if job_name_contains != '':
-            df = df[df.job.str.contains(job_name_contains)]
-        if sort_by in columns:
-            return df[columns].sort_values(by=sort_by)
-        return df[columns]
+            return self._job_table
 
     def get_jobs(self, project=None, recursive=True, columns=None):
         if project is None:
             project = self._project
         if columns is None:
             columns = ["id", "project"]
-        df = self.job_table(project=project, recursive=recursive, columns=columns)
+        df = self.job_table(sql_query=None, user=None, project_path=project, recursive=recursive, columns=columns)
         if len(df) == 0:
             dictionary = {}
             for key in columns:

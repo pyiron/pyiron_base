@@ -693,6 +693,7 @@ class JobCore(HasGroups):
         new_job_core._parent_id = self._parent_id
         new_job_core._master_id = self._master_id
         new_job_core._status = self._status
+        new_job_core._create_working_directory()
         if new_job_name == self.job_name:
             self.project_hdf5.copy_to(destination=hdf5_project.open(".."))
         else:
@@ -708,9 +709,13 @@ class JobCore(HasGroups):
 
         # Copy files outside the HDF5 file
         if copy_files and os.path.exists(self.working_directory):
+            if len(os.listdir(new_job_core.working_directory)) == 0:
+                os.rmdir(new_job_core.working_directory)
+            else:
+                raise RuntimeError("Target directory for copy not empty!")
             shutil.copytree(
                 self.working_directory,
-                new_job_core.working_directory,
+                new_job_core.working_directory
             )
         return new_job_core, file_project, hdf5_project, False
 

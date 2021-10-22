@@ -22,11 +22,9 @@ from pyiron_base.database.manager import DatabaseManager
 from pyiron_base.settings.publications import list_publications
 from pyiron_base.database.performance import get_database_statistics
 from pyiron_base.database.jobtable import (
-    get_db_columns,
     get_job_ids,
     get_job_id,
     get_jobs,
-    job_table,
     set_job_status,
     get_child_ids,
     get_job_working_directory,
@@ -51,6 +49,7 @@ from pyiron_base.server.queuestatus import (
 from pyiron_base.job.external import Notebook
 from pyiron_base.project.data import ProjectData
 from pyiron_base.archiving import import_archive, export_archive
+from typing import List, Generator
 
 __author__ = "Joerg Neugebauer, Jan Janssen"
 __copyright__ = (
@@ -153,6 +152,7 @@ class Project(ProjectPath, HasGroups):
         return self.create_group("..")
 
     @property
+    @deprecate("use db.view_mode")
     def view_mode(self):
         """
         Get viewer_mode - if viewer_mode is enable pyiron has read only access to the database.
@@ -165,10 +165,7 @@ class Project(ProjectPath, HasGroups):
         Returns:
             bool: returns TRUE when viewer_mode is enabled
         """
-        if not isinstance(self.db, FileTable):
-            return self.db.viewer_mode
-        else:
-            return False
+        return self.db.view_mode
 
     @property
     def name(self):
@@ -370,7 +367,7 @@ class Project(ProjectPath, HasGroups):
                  'timestop',
                  'totalcputime']
         """
-        return get_db_columns(self.db)
+        return self.db.get_table_headings()
 
     def get_jobs(self, recursive=True, columns=None):
         """
@@ -516,7 +513,39 @@ class Project(ProjectPath, HasGroups):
         """
         return self.load(job_specifier=job_specifier, convert_to_object=False)
 
-    def iter_jobs(self, path=None, recursive=True, convert_to_object=True, status=None, job_type=None, progress=True):
+    def get_filtered_job_ids(self, recursive: bool = True, **kwargs: dict) -> List[int]:
+        """
+        Get a list of job ids in a project based on matching values from any column in the project database
+
+        Args:
+            recursive (bool): True if entries from subprojects are considered
+            **kwargs (dict): Optional arguments for filtering with keys matching the project database column name
+                            (eg. status="finished")
+
+        Returns:
+            list: List of job IDs
+        """
+        if len(kwargs) == 0:
+            return self.get_job_ids(recursive=recursive)
+        df = self.job_table(recursive=recursive)
+        if df.empty:
+            return []
+        mask = np.ones_like(df.index, dtype=bool)
+        db_columns = self.get_db_columns()
+        for key in kwargs.keys():
+            if key not in db_columns:
+                raise ValueError("Column name {} does not exist in the project database!")
+        for key, val in kwargs.items():
+            if val is None:
+                mask &= df[key].isnull()
+            else:
+                mask &= df[key] == val
+        if not mask.any():
+            return []
+        return df[mask]["id"].to_list()
+
+    def iter_jobs(self, path: str = None, recursive: bool = True, convert_to_object: bool = True, progress: bool = True,
+                  **kwargs: dict) -> Generator:
         """
         Iterate over the jobs within the current project and it is sub projects
 
@@ -524,26 +553,14 @@ class Project(ProjectPath, HasGroups):
             path (str): HDF5 path inside each job object
             recursive (bool): search subprojects [True/False] - True by default
             convert_to_object (bool): load the full GenericJob object (default) or just the HDF5 / JobCore object
-            status (str/None): status of the jobs to filter for - ['finished', 'aborted', 'submitted', ...]
-            job_type (str/None): job type to filter for, corresponds to the 'hamilton' column in the job table
             progress (bool): if True (default), add an interactive progress bar to the iteration
+            **kwargs (dict): Optional arguments for filtering with keys matching the project database column name
+                            (eg. status="finished")
 
         Returns:
             yield: Yield of GenericJob or JobCore
         """
-        if status is None and job_type is None:
-            job_id_lst = self.get_jobs(recursive)["id"]
-        else:
-            df = self.job_table(recursive=True)
-            if df.empty:
-                job_id_lst = []
-            else:
-                mask = np.ones_like(df.index, dtype=bool)
-                if status is not None:
-                    mask &= df["status"] == status
-                if job_type is not None:
-                    mask &= df["hamilton"] == job_type
-                job_id_lst = list(df[mask]["id"])
+        job_id_lst = self.get_filtered_job_ids(recursive=recursive, **kwargs)
         if progress:
             job_id_lst = tqdm(job_id_lst)
         for job_id in job_id_lst:
@@ -623,8 +640,7 @@ class Project(ProjectPath, HasGroups):
         Returns:
             pandas.Dataframe: Return the result as a pandas.Dataframe object
         """
-        return job_table(
-            database=self.db,
+        return self.db.job_table(
             sql_query=self.sql_query,
             user=self.user,
             project_path=self.project_path,
