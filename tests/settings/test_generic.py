@@ -16,6 +16,21 @@ class TestSettings(TestCase):
         cls.cwd = os.getcwd()
         cls.parser = ConfigParser(inline_comment_prefixes=(";",))
         cls.s = Settings()
+        # Backup the default config file, if it exists
+        cls.default_loc = Path("~/.pyiron").expanduser()
+        cls.backup_loc = Path("~/.pyiron_test_config_update_order_backup").expanduser()
+        try:
+            cls.default_loc.rename(cls.backup_loc)
+        except FileNotFoundError:
+            pass
+
+    @classmethod
+    def tearDownClass(cls) -> None:
+        # Restore the default config file, if it ever existed
+        try:  # Restore any preexisting config file
+            cls.backup_loc.rename(cls.default_loc)
+        except FileNotFoundError:
+            pass
 
     def test_config_update_order(self):
         # Config file in env
@@ -25,12 +40,7 @@ class TestSettings(TestCase):
         self.env["PYIRONCONFIG"] = str(local_loc)
 
         # Default config file
-        default_loc = Path("~/.pyiron").expanduser()
-        backup_loc = Path("~/.pyiron_test_config_update_order_backup").expanduser()
-        try:
-            default_loc.rename(backup_loc)
-        except FileNotFoundError:
-            pass
+        default_loc = self.default_loc
         default_val = "settings_test_default"
         default_loc.write_text(f"[DEFAULT]\nTYPE = {default_val}\n")
 
@@ -70,11 +80,6 @@ class TestSettings(TestCase):
         #       Right now it either retains the old value (even if you del s and re-instantiate)
         #       or doesn't know about the field at all (if you s._configuration.pop("sql_type")
         #       But right now I'm not trying to change behaviour, just refactor.
-
-        try:  # Restore any preexisting config file
-            backup_loc.rename(default_loc)
-        except FileNotFoundError:
-            pass
 
     def test_singleness(self):
         s2 = Settings()
