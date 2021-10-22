@@ -147,44 +147,17 @@ class JobFactory(PyironFactory):
                 Returns:
                     GenericJob: job object depending on the job_type selected
                 """
-                job = JobClass(
+                return JobType(
                     class_name=name,
-                    project=self._project,
-                    job_class_dict=self._job_class_dict
+                    project=ProjectHDFio(project=self._project.copy(), file_name=job_name),
+                    job_name=job_name,
+                    job_class_dict=self._job_class_dict,
+                    delete_existing_job=delete_existing_job,
+                    delete_aborted_job=delete_aborted_job
                 )
-                return job.create(job_name=job_name, delete_existing_job=delete_existing_job)
             return wrapper
         else:
             raise AttributeError("no job class named '{}' defined".format(name))
-
-
-class JobClass(object):
-    """
-    Small wrapper class to create object instances of any job type using pr.create.job.Code()
-    """
-    def __init__(self, class_name, project, job_class_dict):
-        self._class_name = class_name
-        self._project = project
-        self._job_class_dict = job_class_dict
-
-    def create(self, job_name, delete_existing_job=False):
-        """
-        Internal helper function for pr.create.job.Code()
-
-        Args:
-            job_name (str): name of the job
-            delete_existing_job (bool): delete an existing job - default false
-
-        Returns:
-            GenericJob: job object depending on the job_type selected
-        """
-        return JobType(
-            class_name=self._class_name,
-            project=ProjectHDFio(project=self._project.copy(), file_name=job_name),
-            job_name=job_name,
-            job_class_dict=self._job_class_dict,
-            delete_existing_job=delete_existing_job
-        )
 
 
 class JobTypeChoice(metaclass=Singleton):
