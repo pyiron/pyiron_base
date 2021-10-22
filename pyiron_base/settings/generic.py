@@ -88,9 +88,6 @@ class Settings(metaclass=Singleton):
         project_check_enabled / PROJECT_CHECK_ENABLED / PYIRONPROJECTCHECKENABLED (bool):
         disable_database / DISABLE_DATABASE / PYIRONDISABLE (bool): Whether to turn off the database and use a
             file-system-based hierarchy. (Default is False.)
-
-    Args:
-        config (dict): Provide a dict with the configuration.
     """
 
     def __init__(self):
