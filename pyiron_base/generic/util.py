@@ -6,7 +6,6 @@
 Utility functions used in pyiron.
 """
 
-from abc import ABCMeta
 from copy import copy
 import functools
 import types
@@ -22,22 +21,6 @@ __maintainer__ = "Jan Janssen"
 __email__ = "janssen@mpie.de"
 __status__ = "production"
 __date__ = "Sep 1, 2017"
-
-
-class Singleton(ABCMeta):
-    """
-    Implemented with suggestions from
-
-    http://stackoverflow.com/questions/6760685/creating-a-singleton-in-python
-
-    """
-
-    _instances = {}
-
-    def __call__(cls, *args, **kwargs):
-        if cls not in cls._instances:
-            cls._instances[cls] = super(Singleton, cls).__call__(*args, **kwargs)
-        return cls._instances[cls]
 
 
 def static_isinstance(obj, obj_type):

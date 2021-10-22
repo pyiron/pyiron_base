@@ -81,10 +81,6 @@ class TestSettings(TestCase):
         #       or doesn't know about the field at all (if you s._configuration.pop("sql_type")
         #       But right now I'm not trying to change behaviour, just refactor.
 
-    def test_singleness(self):
-        s2 = Settings()
-        self.assertIs(self.s, s2, msg="There should only ever be one Settings instance")
-
     def _pop_conda_env_variables(self):
         conda_keys = ["CONDA_PREFIX", "CONDA_DIR"]
         for conda_key in conda_keys:

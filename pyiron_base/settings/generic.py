@@ -29,6 +29,7 @@ depending on which parts of pyiron are actually used).
 import os
 import importlib
 from configparser import ConfigParser
+from pyiron_base.generic.singleton import Singleton  # Ok, this is the one exception to not importing from pyiron...
 from pyiron_base.settings.logger import setup_logger
 
 __author__ = "Jan Janssen"
@@ -41,22 +42,6 @@ __maintainer__ = "Jan Janssen"
 __email__ = "janssen@mpie.de"
 __status__ = "production"
 __date__ = "Sep 1, 2017"
-
-
-class Singleton(type):
-    """
-    Implemented with suggestions from
-
-    http://stackoverflow.com/questions/6760685/creating-a-singleton-in-python
-
-    """
-
-    _instances = {}
-
-    def __call__(cls, *args, **kwargs):
-        if cls not in cls._instances:
-            cls._instances[cls] = super(Singleton, cls).__call__(*args, **kwargs)
-        return cls._instances[cls]
 
 
 class Settings(metaclass=Singleton):

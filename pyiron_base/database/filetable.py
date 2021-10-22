@@ -4,7 +4,7 @@ import pandas
 import datetime
 import h5io
 from pyfileindex import PyFileIndex
-from pyiron_base.generic.util import Singleton
+from pyiron_base.generic.singleton import Singleton
 from pyiron_base.database.generic import IsDatabase
 
 
