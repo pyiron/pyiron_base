@@ -43,6 +43,7 @@ class TestScriptJob(TestWithCleanProject):
         self.job.run()
 
     def test_project_data(self):
+        print(self.project.ide.s.configuration)
         self.project.data.in_ = 6
         self.project.data.write()
         with open(self.complex_script, 'w') as f:
