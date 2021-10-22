@@ -80,7 +80,7 @@ class TestSettings(TestCase):
         s2 = Settings()
         self.assertIs(self.s, s2, msg="There should only ever be one Settings instance")
 
-    def test_appending_conda_resources(self):
+    def _pop_conda_env_variables(self):
         conda_keys = ["CONDA_PREFIX", "CONDA_DIR"]
         for conda_key in conda_keys:
             try:
@@ -88,6 +88,8 @@ class TestSettings(TestCase):
             except KeyError:
                 pass
 
+    def test_appending_conda_resources(self):
+        self._pop_conda_env_variables()
         self.s._update_configuration(self.s._configuration)  # Clean out any old conda paths
         before = len(self.s._configuration["resource_paths"])
 
@@ -96,8 +98,8 @@ class TestSettings(TestCase):
         pyiron = Path("./share/pyiron").resolve()
         pyiron.mkdir(parents=True)
 
-        self.env[conda_keys[0]] = str(here)  # Contains /share/pyiron -- should get added
-        self.env[conda_keys[1]] = str(pyiron)  # Does not contain /share/pyiron -- shouldn't get added
+        self.env["CONDA_PREFIX"] = str(here)  # Contains /share/pyiron -- should get added
+        self.env["CONDA_DIR"] = str(pyiron)  # Does not contain /share/pyiron -- shouldn't get added
 
         self.s._update_configuration(self.s._configuration)
         self.assertTrue(
@@ -127,7 +129,10 @@ class TestSettings(TestCase):
         p2 = 'here\\is\\another'  # TODO: Is this really good enough? Is it really windowsy enough?
         local.write_text(f"[DEFAULT]\nRESOURCE_PATHS = {p1}, {p2}\n")
         self.env["PYIRONCONFIG"] = str(local)
+        self._pop_conda_env_variables()
         self.s._update_configuration(self.s._configuration)
+        print("Manual list", [self._niceify_path(p1), self._niceify_path(p2)])
+        print("Read config", self.s._configuration['resource_paths'])
         self.assertListEqual(
             [self._niceify_path(p1), self._niceify_path(p2)],
             self.s._configuration['resource_paths']
