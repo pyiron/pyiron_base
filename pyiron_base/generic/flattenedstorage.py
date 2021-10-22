@@ -339,7 +339,7 @@ class FlattenedStorage(HasHDF):
         else:
             raise KeyError(f"no array named {name}")
 
-    def get_array_ragged(self, name):
+    def get_array_ragged(self, name: str) -> np.ndarray:
         """
         Return elements of array `name` in all chunks.  Values are returned in a ragged array of dtype=object.
 
@@ -357,7 +357,7 @@ class FlattenedStorage(HasHDF):
         return np.array([self.get_array(name, i) for i in range(len(self))],
                         dtype=object)
 
-    def get_array_filled(self, name):
+    def get_array_filled(self, name: str) -> np.ndarray:
         """
         Return elements of array `name` in all chunks.  Arrays are padded to be all of the same length.
 
