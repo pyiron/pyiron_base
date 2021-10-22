@@ -114,14 +114,15 @@ class TestSettings(TestCase):
         pyiron.rmdir()
         share.rmdir()
 
-    def _niceify_path(self, p: str):
+    @staticmethod
+    def _niceify_path(p: str):
         return (Path(p)
-         .expanduser()
-         .resolve()
-         .absolute()
-         .as_posix()
-         .replace("\\", "/")
-         )
+                .expanduser()
+                .resolve()
+                .absolute()
+                .as_posix()
+                .replace("\\", "/")
+                )
 
     def test_path_conversion(self):
         local = Path(self.cwd + "/.pyiron")
