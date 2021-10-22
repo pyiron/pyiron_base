@@ -6,7 +6,7 @@ Server object class which is connected to each job containing the technical deta
 """
 
 from collections import OrderedDict
-from pyiron_base.settings.generic import Settings
+from pyiron_base.ide.settings import Settings
 from pyiron_base.server.runmode import Runmode
 import socket
 

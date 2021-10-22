@@ -5,7 +5,7 @@ from shutil import rmtree
 from distutils.dir_util import copy_tree
 import tarfile
 from pyiron_base.generic.util import static_isinstance
-from pyiron_base.settings.generic import Settings
+from pyiron_base.ide.settings import Settings
 
 
 s = Settings()

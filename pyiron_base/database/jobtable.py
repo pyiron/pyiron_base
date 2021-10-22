@@ -7,7 +7,7 @@ The Jobtable module provides a set of top level functions to interact with the d
 
 import pandas
 import numpy as np
-from pyiron_base.settings.generic import Settings
+from pyiron_base.ide.settings import Settings
 from pyiron_base.database.filetable import FileTable
 
 __author__ = "Jan Janssen"

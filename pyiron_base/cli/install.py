@@ -5,7 +5,7 @@
 Install pyiron config and resources for the first time.
 """
 
-from pyiron_base.settings.install import install_pyiron
+from pyiron_base.ide.install import install_pyiron
 
 __author__ = "Marvin Poul"
 __copyright__ = (

@@ -5,7 +5,7 @@
 DatabaseAccess class deals with accessing the database
 """
 
-import pyiron_base.settings.logger
+import pyiron_base.ide.logger
 from abc import ABC, abstractmethod
 import numpy as np
 import re
@@ -489,7 +489,7 @@ class DatabaseAccess(IsDatabase):
             dict_clause["element_lst"] = element_lst
 
         # HACK: breaks circular dependency of Settings on DatabaseAccess
-        from pyiron_base.settings.generic import Settings
+        from pyiron_base.ide.settings import Settings
         s = Settings()
         s.logger.debug("sql_query: %s", str(dict_clause))
         return self.get_items_dict(dict_clause)

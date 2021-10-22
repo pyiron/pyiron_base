@@ -27,8 +27,8 @@ from pyiron_base.master.flexible import FlexibleMaster
 from pyiron_base.project.generic import Project, Creator
 from pyiron_base.pyio.parser import Logstatus, extract_data_from_file
 from pyiron_base.server.queuestatus import validate_que_request
-from pyiron_base.settings.generic import Settings
-from pyiron_base.settings.install import install_dialog
+from pyiron_base.ide.settings import Settings
+from pyiron_base.ide.install import install_dialog
 from pyiron_base.table.datamining import PyironTable, TableJob
 from pyiron_base.generic.object import HasDatabase, HasStorage, PyironObject
 from pyiron_base.database.performance import get_database_statistics

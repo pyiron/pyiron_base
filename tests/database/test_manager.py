@@ -4,7 +4,7 @@
 
 from pyiron_base._tests import TestWithProject
 from pyiron_base.database.manager import DatabaseManager
-from pyiron_base.settings.generic import Settings
+from pyiron_base.ide.settings import Settings
 from os import getcwd
 
 

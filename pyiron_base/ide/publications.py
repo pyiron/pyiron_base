@@ -3,7 +3,7 @@
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
 import pandas
-from pyiron_base.settings.generic import Settings
+from pyiron_base.ide.settings import Settings
 
 __author__ = "Joerg Neugebauer, Jan Janssen"
 __copyright__ = (

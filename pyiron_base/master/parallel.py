@@ -16,7 +16,7 @@ from pyiron_base.master.generic import GenericMaster
 from pyiron_base.master.submissionstatus import SubmissionStatus
 from pyiron_base.generic.parameters import GenericParameters
 from pyiron_base.job.jobstatus import JobStatus
-from pyiron_base.settings.generic import Settings
+from pyiron_base.ide.settings import Settings
 from pyiron_base.database.manager import DatabaseManager
 from pyiron_base.job.wrapper import job_wrapper_function
 from pyiron_base.generic.util import deprecate

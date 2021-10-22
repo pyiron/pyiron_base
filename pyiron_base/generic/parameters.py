@@ -12,7 +12,7 @@ import pandas
 import posixpath
 import warnings
 from ast import literal_eval
-from pyiron_base.settings.generic import Settings
+from pyiron_base.ide.settings import Settings
 
 __author__ = "Joerg Neugebauer"
 __copyright__ = (

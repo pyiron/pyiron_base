@@ -12,7 +12,7 @@ import os
 import posixpath
 import multiprocessing
 from pyiron_base.job.wrapper import JobWrapper
-from pyiron_base.settings.generic import Settings
+from pyiron_base.ide.settings import Settings
 from pyiron_base.database.manager import DatabaseManager
 from pyiron_base.job.executable import Executable
 from pyiron_base.job.jobstatus import JobStatus

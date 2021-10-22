@@ -17,9 +17,9 @@ from git import Repo, InvalidGitRepositoryError
 from warnings import warn
 from pyiron_base.project.path import ProjectPath
 from pyiron_base.database.filetable import FileTable
-from pyiron_base.settings.generic import Settings
+from pyiron_base.ide.settings import Settings
 from pyiron_base.database.manager import DatabaseManager
-from pyiron_base.settings.publications import list_publications
+from pyiron_base.ide.publications import list_publications
 from pyiron_base.database.performance import get_database_statistics
 from pyiron_base.database.jobtable import (
     get_job_ids,
@@ -30,7 +30,7 @@ from pyiron_base.database.jobtable import (
     get_job_working_directory,
     get_job_status
 )
-from pyiron_base.settings.logger import set_logging_level
+from pyiron_base.ide.logger import set_logging_level
 from pyiron_base.generic.hdfio import ProjectHDFio
 from pyiron_base.generic.filedata import load_file
 from pyiron_base.generic.util import deprecate

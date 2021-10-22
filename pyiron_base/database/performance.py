@@ -14,7 +14,7 @@ from sqlalchemy import (
     or_,
     false,
 )
-from pyiron_base.settings.generic import Settings
+from pyiron_base.ide.settings import Settings
 
 
 __author__ = "Muhammad Hassani"

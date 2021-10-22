@@ -30,7 +30,7 @@ from pyiron_base.job.util import \
     _job_delete_files, \
     _job_delete_hdf, \
     _job_remove_folder
-from pyiron_base.settings.generic import Settings
+from pyiron_base.ide.settings import Settings
 
 __author__ = "Jan Janssen"
 __copyright__ = (
