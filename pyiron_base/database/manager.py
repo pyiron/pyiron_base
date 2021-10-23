@@ -6,10 +6,10 @@ A class for mediating connections to SQL databases.
 """
 
 from pyiron_base.generic.singleton import Singleton
-from pyiron_base.ide.ide import IDE
+from pyiron_base.ide.settings import Settings
 from pyiron_base.database.generic import DatabaseAccess
 import os
-s = IDE.settings
+s = Settings()
 
 __author__ = "Jan Janssen, Liam Huber"
 __copyright__ = (
