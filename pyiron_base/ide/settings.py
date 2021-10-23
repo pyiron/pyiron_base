@@ -31,6 +31,7 @@ import importlib
 from configparser import ConfigParser
 from pyiron_base.generic.singleton import Singleton  # Ok, this is the one exception to not importing from pyiron...
 from pyiron_base.ide.logger import setup_logger
+from typing import List
 
 __author__ = "Jan Janssen"
 __copyright__ = (
@@ -244,17 +245,9 @@ class Settings(metaclass=Singleton):
 
         # read variables
         if parser.has_option(section, "PROJECT_PATHS"):
-            self._configuration["project_paths"] = [
-                convert_path(c.strip())
-                for c in parser.get(section, "PROJECT_PATHS").split(",")
-            ]
-        elif parser.has_option(
-            section, "TOP_LEVEL_DIRS"
-        ):  # for backwards compatibility
-            self._configuration["project_paths"] = [
-                convert_path(c.strip())
-                for c in parser.get(section, "TOP_LEVEL_DIRS").split(",")
-            ]
+            self._configuration["project_paths"] = split_paths(parser.get(section, "PROJECT_PATHS"))
+        elif parser.has_option(section, "TOP_LEVEL_DIRS"):  # for backwards compatibility
+            self._configuration["project_paths"] = split_paths(parser.get(section, "TOP_LEVEL_DIRS"))
         else:
             ValueError("No project path identified!")
 
@@ -385,9 +378,7 @@ class Settings(metaclass=Singleton):
                 if k in ["PYIRONPROJECTCHECKENABLED", "PYIRONDISABLE"]:
                     config[v] = environment[k].lower() in ['t', 'true', 'y', 'yes']
                 elif k in ["PYIRONRESOURCEPATHS", "PYIRONPROJECTPATHS"]:
-                    config[v] = [
-                        convert_path(p.strip()) for p in environment[k].replace(",", ":").replace(";", ":").split(':')
-                    ]
+                    config[v] = split_paths(environment[k])
                 else:
                     config[v] = environment[k]
         return config
@@ -474,6 +465,10 @@ class Settings(metaclass=Singleton):
                 }
             }
         }
+
+
+def split_paths(paths: str) -> List[str]:
+    return paths.replace(",", ":").replace(";", ":").split(":")
 
 
 def convert_path(path):
