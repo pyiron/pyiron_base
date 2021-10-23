@@ -3,9 +3,8 @@
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
 import unittest
-from os.path import dirname, abspath, join
+from os.path import join
 from os import remove
-from pyiron_base.project.generic import Project
 from pyiron_base._tests import TestWithCleanProject
 
 
