@@ -31,7 +31,7 @@ import importlib
 from configparser import ConfigParser
 from pyiron_base.generic.singleton import Singleton  # Ok, this is the one exception to not importing from pyiron...
 from pyiron_base.ide.logger import setup_logger
-from typing import List
+from pathlib import Path
 
 __author__ = "Jan Janssen"
 __copyright__ = (
@@ -474,4 +474,12 @@ def convert_path(path):
     Returns:
         str: absolute path in POSIX format
     """
-    return os.path.abspath(os.path.expanduser(path.strip())).replace("\\", "/")
+    print("converting", path)
+    return (Path(path.strip())
+            .expanduser()
+            .resolve()
+            .absolute()
+            .as_posix()
+            .replace("\\", "/")
+            )
+    # os.path.abspath(os.path.expanduser(path.strip())).replace("\\", "/")
