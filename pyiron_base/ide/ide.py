@@ -25,21 +25,10 @@ dbm = DatabaseManager()
 
 
 class IDE(metaclass=Singleton):
-    @property
-    def settings(self) -> Settings:
-        return s
-
-    @property
-    def database(self) -> DatabaseManager:
-        return dbm
-
-    @property
-    def logger(self):
-        return s.logger
-
-    @property
-    def queue_adapter(self):
-        return s.queue_adapter
-
-
-ide = IDE()
+    # With python >=3.9 we can just use @classmethod and @property together so these can be safe from being overwritten
+    # But with earlier versions the implementation is ugly, so live dangerously
+    # https://stackoverflow.com/questions/128573/using-property-on-classmethods
+    settings = s
+    database = dbm
+    logger = s.logger
+    queue_adapter = s.queue_adapter
