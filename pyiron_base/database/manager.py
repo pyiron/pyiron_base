@@ -180,6 +180,6 @@ class DatabaseManager(metaclass=Singleton):
             if path in full_path:
                 return path
         raise ValueError(
-            f"the current path {full_path} is not included in the .pyiron configuration: "
+            f"the current path {full_path} is not included in the .pyiron configuration 'project_paths': "
             f"{s.configuration['project_paths']}"
         )
