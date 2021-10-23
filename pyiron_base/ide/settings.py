@@ -385,9 +385,11 @@ class Settings(metaclass=Singleton):
                 if k in ["PYIRONPROJECTCHECKENABLED", "PYIRONDISABLE"]:
                     config[v] = environment[k].lower() in ['t', 'true', 'y', 'yes']
                 elif k in ["PYIRONRESOURCEPATHS", "PYIRONPROJECTPATHS"]:
-                    config[v] = [convert_path(p) for p in environment[k].replace(",", ":").replace(";", ":").split(':')]
+                    config[v] = [
+                        convert_path(p.strip()) for p in environment[k].replace(",", ":").replace(";", ":").split(':')
+                    ]
                 else:
-                    config[v] = convert_path(environment[k])
+                    config[v] = environment[k]
         return config
 
     @property
