@@ -122,9 +122,9 @@ class Project(ProjectPath, HasGroups):
         self._data = None
         self._creator = Creator(project=self)
 
-        if not ide.dbm.database_is_disabled:
-            ide.dbm.open_connection()
-            self.db = ide.dbm.database
+        if not ide.database.database_is_disabled:
+            ide.database.open_connection()
+            self.db = ide.database.database
         else:
             self.db = FileTable(project=path)
         self.job_type = JobTypeChoice()
@@ -1149,18 +1149,18 @@ class Project(ProjectPath, HasGroups):
         Switch from user mode to viewer mode - if viewer_mode is enable pyiron has read only access to the database.
         """
         if not isinstance(self.db, FileTable):
-            ide.dbm.switch_to_viewer_mode()
-            ide.dbm.open_connection()
-            self.db = ide.dbm.database
+            ide.database.switch_to_viewer_mode()
+            ide.database.open_connection()
+            self.db = ide.database.database
 
     def switch_to_user_mode(self):
         """
         Switch from viewer mode to user mode - if viewer_mode is enable pyiron has read only access to the database.
         """
         if not isinstance(self.db, FileTable):
-            ide.dbm.switch_to_user_mode()
-            ide.dbm.open_connection()
-            self.db = ide.dbm.database
+            ide.database.switch_to_user_mode()
+            ide.database.open_connection()
+            self.db = ide.database.database
 
     def switch_to_local_database(self, file_name="pyiron.db", cwd=None):
         """
@@ -1172,21 +1172,21 @@ class Project(ProjectPath, HasGroups):
         """
         if cwd is None:
             cwd = self.path
-        if not ide.dbm.project_check_enabled:
-            ide.dbm.switch_to_local_database(file_name=file_name, cwd=cwd)
+        if not ide.database.project_check_enabled:
+            ide.database.switch_to_local_database(file_name=file_name, cwd=cwd)
             super(Project, self).__init__(path=self.path)
         else:
-            ide.dbm.switch_to_local_database(file_name=file_name, cwd=cwd)
-        self.db = ide.dbm.database
+            ide.database.switch_to_local_database(file_name=file_name, cwd=cwd)
+        self.db = ide.database.database
 
     def switch_to_central_database(self):
         """
         Switch from local mode to central mode - if local_mode is enable pyiron is using a local database.
         """
-        ide.dbm.switch_to_central_database()
-        if not ide.dbm.database_is_disabled:
-            ide.dbm.open_connection()
-            self.db = ide.dbm.database
+        ide.database.switch_to_central_database()
+        if not ide.database.database_is_disabled:
+            ide.database.open_connection()
+            self.db = ide.database.database
         else:
             self.db = FileTable(project=self.path)
             super(Project, self).__init__(path=self.path)
@@ -1617,7 +1617,7 @@ class GlobalMaintenance:
         initialize the flag self._check_postgres, to control whether pyiron is
         set to communicate with a postgres database.
         """
-        connection_string = ide.s._configuration['sql_connection_string']
+        connection_string = ide.settings._configuration['sql_connection_string']
         if "postgresql" not in connection_string:
             warn(
                 """

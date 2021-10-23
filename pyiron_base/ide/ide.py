@@ -26,11 +26,11 @@ dbm = DatabaseManager()
 
 class IDE(metaclass=Singleton):
     @property
-    def s(self) -> Settings:
+    def settings(self) -> Settings:
         return s
 
     @property
-    def dbm(self) -> DatabaseManager:
+    def database(self) -> DatabaseManager:
         return dbm
 
     @property
