@@ -27,7 +27,7 @@ class QueueAdapters(metaclass=Singleton):
     For each resource path, if either of `queues/queue.yaml` and `queues/clusters.yaml` exist, then the `queues/`
     folder in that path is used to initialize a new object.
 
-    The :attribute:`adapter` property then lets you access the first of these that is found, or None if there were no
+    The :attribute:`adapter` property then lets you access the *first of these that was found*, or None if there were no
     queue configuration files.
     """
     def __init__(self):
@@ -45,7 +45,10 @@ class QueueAdapters(metaclass=Singleton):
 
     @property
     def adapter(self):
-        """Previous behaviour was to just give the first adapter you find, so keep doing that..."""
+        """
+        A :class:`pysqa.QueueAdapter` constructed from the first appropriate configuration files found among the
+        `queues/` subdirectory among the resource paths defined in the settings.
+        """
         return None if len(self._adapters) == 0 else self._adapters[0]
 
 
