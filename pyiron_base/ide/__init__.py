@@ -1,9 +1,9 @@
-from pyiron_base.database.manager import database
+from pyiron_base.database.manager import database as _database
 from pyiron_base.generic.singleton import Singleton
-from pyiron_base.ide.logger import logger
-from pyiron_base.ide.publications import publications
-from pyiron_base.ide.queue_adapter import queue_adapters
-from pyiron_base.ide.settings import settings
+from pyiron_base.ide.logger import logger as _logger
+from pyiron_base.ide.publications import publications as _publications
+from pyiron_base.ide.queue_adapter import queue_adapters as _queue_adapters
+from pyiron_base.ide.settings import settings as _settings
 
 __author__ = "Liam Huber"
 __copyright__ = (
@@ -31,8 +31,8 @@ class IDE(metaclass=Singleton):
     # With python >=3.9 we can just use @classmethod and @property together so these can be safe from being overwritten
     # But with earlier versions the implementation is ugly, so live dangerously
     # https://stackoverflow.com/questions/128573/using-property-on-classmethods
-    settings = settings
-    database = database
-    logger = logger
-    queue_adapter = queue_adapters.adapter
-    publications = publications
+    settings = _settings
+    database = _database
+    logger = _logger
+    queue_adapter = _queue_adapters.adapter
+    publications = _publications
