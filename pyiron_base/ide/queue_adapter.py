@@ -25,7 +25,7 @@ class QueueAdapters(metaclass=Singleton):
     settings.
 
     For each resource path, if either of `queues/queue.yaml` and `queues/clusters.yaml` exist, then the `queues/`
-    folder in that path is used to initialize a new object.
+    folder in that path is used to initialize a new object, with preference given to `queue.yaml`.
 
     The :attribute:`adapter` property then lets you access the *first of these that was found*, or None if there were no
     queue configuration files.
