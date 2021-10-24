@@ -9,6 +9,7 @@ from pyiron_base.generic.singleton import Singleton
 from pyiron_base.ide.settings import settings
 from pyiron_base.database.manager import database
 from pyiron_base.ide.logger import logger
+from pyiron_base.ide.queue_adapter import queue_adapters
 
 __author__ = "Liam Huber"
 __copyright__ = (
@@ -29,4 +30,4 @@ class IDE(metaclass=Singleton):
     settings = settings
     database = database
     logger = logger
-    queue_adapter = settings.queue_adapter
+    queue_adapter = queue_adapters.adapter

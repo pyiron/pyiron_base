@@ -87,10 +87,6 @@ class Settings(metaclass=Singleton):
                 config=self._configuration
             )
 
-        self._queue_adapter = None
-        self._queue_adapter = self._init_queue_adapter(
-            resource_path_lst=self._configuration["resource_paths"]
-        )
         self._publication_lst = {}
         self.publication_add(self.publication)
 
@@ -404,32 +400,8 @@ class Settings(metaclass=Singleton):
 
     @property
     def queue_adapter(self):
-        return self._queue_adapter
-
-    @staticmethod
-    def _init_queue_adapter(resource_path_lst):
-        """
-        Initialize the queue adapter if a folder queues is found in one of the resource paths which contains a
-        queue configuration file (queue.yaml).
-
-        Args:
-            resource_path_lst (list): List of resource paths
-
-        Returns:
-            pysqa.QueueAdapter:
-        """
-        for resource_path in resource_path_lst:
-            if (
-                os.path.exists(resource_path)
-                and "queues" in os.listdir(resource_path)
-                and (
-                    "queue.yaml" in os.listdir(os.path.join(resource_path, "queues")) or
-                    "clusters.yaml" in os.listdir(os.path.join(resource_path, "queues"))
-                )
-            ):
-                queueadapter = getattr(importlib.import_module("pysqa"), "QueueAdapter")
-                return queueadapter(directory=os.path.join(resource_path, "queues"))
-        return None
+        from pyiron_base.ide.ide import IDE
+        return IDE.queue_adapter
 
     @property
     def publication_lst(self):
