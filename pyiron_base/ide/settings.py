@@ -396,7 +396,7 @@ class Settings(metaclass=Singleton):
     @property
     # @deprecate("Use pyiron_base.ide.ide.IDE.queue_adapter")
     def queue_adapter(self):
-        from pyiron_base.ide.ide import IDE
+        from pyiron_base.ide import IDE
         return IDE.queue_adapter
 
     @property

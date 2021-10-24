@@ -10,7 +10,7 @@ from pyiron_base.generic.datacontainer import DataContainer
 from pyiron_base.generic.inputlist import InputList
 from pyiron_base.generic.parameters import GenericParameters
 from pyiron_base.generic.util import deprecate, deprecate_soon, ImportAlarm
-from pyiron_base.ide.ide import IDE
+from pyiron_base.ide import IDE
 from pyiron_base.job.executable import Executable
 from pyiron_base.job.external import Notebook
 from pyiron_base.job.generic import GenericJob

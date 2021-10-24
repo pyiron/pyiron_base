@@ -7,7 +7,7 @@ Set of functions to interact with the queuing system directly from within pyiron
 
 import pandas
 import time
-from pyiron_base.ide.ide import IDE
+from pyiron_base.ide import IDE
 from pyiron_base.generic.util import static_isinstance
 from pyiron_base.job.jobstatus import job_status_finished_lst
 

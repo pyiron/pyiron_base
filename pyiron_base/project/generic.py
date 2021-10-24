@@ -17,7 +17,7 @@ from git import Repo, InvalidGitRepositoryError
 from warnings import warn
 from pyiron_base.project.path import ProjectPath
 from pyiron_base.database.filetable import FileTable
-from pyiron_base.ide.ide import IDE
+from pyiron_base.ide import IDE
 from pyiron_base.database.performance import get_database_statistics
 from pyiron_base.database.jobtable import (
     get_job_ids,

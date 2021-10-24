@@ -8,7 +8,7 @@ Classes for representing the file system path in pyiron
 from copy import copy
 import os
 import posixpath
-from pyiron_base.ide.ide import IDE
+from pyiron_base.ide import IDE
 
 __author__ = "Jan Janssen, Joerg Neugebauer"
 __copyright__ = (

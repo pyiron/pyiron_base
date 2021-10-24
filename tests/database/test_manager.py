@@ -3,7 +3,7 @@
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
 from pyiron_base._tests import TestWithProject
-from pyiron_base.ide.ide import IDE
+from pyiron_base import IDE
 from os import getcwd
 
 

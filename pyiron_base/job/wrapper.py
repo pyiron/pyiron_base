@@ -8,7 +8,7 @@ The job wrapper is called from the run_job.py script, it restores the job from h
 import os
 import logging
 from pyiron_base.project.generic import Project
-from pyiron_base.ide.ide import IDE
+from pyiron_base.ide import IDE
 from pyiron_base.database.filetable import get_hamilton_from_file, get_hamilton_version_from_file, \
     get_job_status_from_file
 
