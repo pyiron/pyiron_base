@@ -32,6 +32,9 @@ class QueueAdapters(metaclass=Singleton):
     """
     def __init__(self):
         self._adapters = []
+        self.construct_adapters()
+
+    def construct_adapters(self):
         for resource_path in settings.configuration["resource_paths"]:
             if (
                 os.path.exists(resource_path)
