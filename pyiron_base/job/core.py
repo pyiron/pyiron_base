@@ -30,7 +30,7 @@ from pyiron_base.job.util import \
     _job_delete_files, \
     _job_delete_hdf, \
     _job_remove_folder
-from pyiron_base.ide.settings import Settings
+from pyiron_base.ide.ide import IDE
 
 __author__ = "Jan Janssen"
 __copyright__ = (
@@ -42,8 +42,6 @@ __maintainer__ = "Jan Janssen"
 __email__ = "janssen@mpie.de"
 __status__ = "production"
 __date__ = "Sep 1, 2017"
-
-s = Settings()
 
 
 class JobCore(HasGroups):
@@ -409,7 +407,7 @@ class JobCore(HasGroups):
         if len(self.child_ids) > 0:
             if _protect_childs:
                 if self._master_id is not None and not math.isnan(self._master_id):
-                    s.logger.error(
+                    IDE.logger.error(
                         "Job {0} is a child of a master job and cannot be deleted!".format(
                             str(self.job_id)
                         )

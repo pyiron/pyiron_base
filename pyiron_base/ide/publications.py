@@ -3,7 +3,7 @@
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
 import pandas
-from pyiron_base.ide.settings import Settings
+from pyiron_base.ide.settings import settings as s
 
 __author__ = "Joerg Neugebauer, Jan Janssen"
 __copyright__ = (
@@ -15,8 +15,6 @@ __maintainer__ = "Jan Janssen"
 __email__ = "janssen@mpie.de"
 __status__ = "production"
 __date__ = "Sep 1, 2017"
-
-s = Settings()
 
 
 def list_publications(bib_format="pandas"):

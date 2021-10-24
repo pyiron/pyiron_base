@@ -480,3 +480,6 @@ class Settings(metaclass=Singleton):
                 }
             }
         }
+
+
+settings = Settings()

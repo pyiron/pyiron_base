@@ -6,8 +6,8 @@ A helper class to give quick and easy access to all the singleton classes which 
 """
 
 from pyiron_base.generic.singleton import Singleton
-from pyiron_base.ide.settings import Settings
-from pyiron_base.database.manager import DatabaseManager
+from pyiron_base.ide.settings import settings
+from pyiron_base.database.manager import database
 
 __author__ = "Liam Huber"
 __copyright__ = (
@@ -20,15 +20,12 @@ __email__ = "huber@mpie.de"
 __status__ = "production"
 __date__ = "Oct 22, 2021"
 
-s = Settings()
-dbm = DatabaseManager()
-
 
 class IDE(metaclass=Singleton):
     # With python >=3.9 we can just use @classmethod and @property together so these can be safe from being overwritten
     # But with earlier versions the implementation is ugly, so live dangerously
     # https://stackoverflow.com/questions/128573/using-property-on-classmethods
-    settings = s
-    database = dbm
-    logger = s.logger
-    queue_adapter = s.queue_adapter
+    settings = settings
+    database = database
+    logger = settings.logger
+    queue_adapter = settings.queue_adapter

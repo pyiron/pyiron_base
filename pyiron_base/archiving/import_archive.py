@@ -5,10 +5,7 @@ from shutil import rmtree
 from distutils.dir_util import copy_tree
 import tarfile
 from pyiron_base.generic.util import static_isinstance
-from pyiron_base.ide.settings import Settings
-
-
-s = Settings()
+from pyiron_base.ide.ide import IDE
 
 
 def getdir(path):
@@ -96,7 +93,7 @@ def import_jobs(
         if 'timestop' in entry:
             entry["timestop"] = pandas.to_datetime(entry["timestop"])
         if 'username' not in entry:
-            entry["username"] = s.login_user
+            entry["username"] = IDE.settings.login_user
         job_id = pr_import.db.add_item_dict(par_dict=entry)
         job_id_lst.append(job_id)
 

@@ -6,10 +6,9 @@ A class for mediating connections to SQL databases.
 """
 
 from pyiron_base.generic.singleton import Singleton
-from pyiron_base.ide.settings import Settings
+from pyiron_base.ide.settings import settings as s
 from pyiron_base.database.generic import DatabaseAccess
 import os
-s = Settings()
 
 __author__ = "Jan Janssen, Liam Huber"
 __copyright__ = (
@@ -182,3 +181,6 @@ class DatabaseManager(metaclass=Singleton):
             f"the current path {full_path} is not included in the .pyiron configuration 'project_paths': "
             f"{s.configuration['project_paths']}"
         )
+
+
+database = DatabaseManager()

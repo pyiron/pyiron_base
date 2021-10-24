@@ -8,8 +8,7 @@ The job wrapper is called from the run_job.py script, it restores the job from h
 import os
 import logging
 from pyiron_base.project.generic import Project
-from pyiron_base.ide.settings import Settings
-from pyiron_base.database.manager import DatabaseManager
+from pyiron_base.ide.ide import IDE
 from pyiron_base.database.filetable import get_hamilton_from_file, get_hamilton_version_from_file, \
     get_job_status_from_file
 
@@ -23,9 +22,6 @@ __maintainer__ = "Jan Janssen"
 __email__ = "janssen@mpie.de"
 __status__ = "production"
 __date__ = "Sep 1, 2017"
-
-s = Settings()
-dbm = DatabaseManager()
 
 
 class JobWrapper(object):
@@ -46,12 +42,12 @@ class JobWrapper(object):
         self.working_directory = working_directory
         self._remote_flag = submit_on_remote
         if connection_string is not None:
-            dbm.open_local_sqlite_connection(connection_string=connection_string)
+            IDE.database.open_local_sqlite_connection(connection_string=connection_string)
         pr = Project(path=os.path.join(working_directory, '..', '..'))
         if job_id is not None:
             self.job = pr.load(int(job_id))
         else:
-            projectpath = dbm.top_path(hdf5_file)
+            projectpath = IDE.database.top_path(hdf5_file)
             if projectpath is None:
                 project = os.path.dirname(hdf5_file)
             else:
@@ -131,9 +127,9 @@ def job_wrapper_function(working_directory, job_id=None, file_path=None, submit_
 
     # always close the database connection in calculations on the cluster to avoid high number of concurrent
     # connections.
-    dbm.close_connection()
-    dbm.connection_timeout = 0
-    dbm.open_connection()
+    IDE.database.close_connection()
+    IDE.database.connection_timeout = 0
+    IDE.database.open_connection()
 
     if job_id is not None:
         job = JobWrapper(
