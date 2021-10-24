@@ -30,7 +30,7 @@ import os
 import importlib
 from configparser import ConfigParser
 from pyiron_base.generic.singleton import Singleton  # Ok, this is the one exception to not importing from pyiron...
-from pyiron_base.ide.logger import setup_logger
+from pyiron_base.ide.logger import logger
 from pathlib import Path
 
 __author__ = "Jan Janssen"
@@ -91,9 +91,13 @@ class Settings(metaclass=Singleton):
         self._queue_adapter = self._init_queue_adapter(
             resource_path_lst=self._configuration["resource_paths"]
         )
-        self.logger = setup_logger()
         self._publication_lst = {}
         self.publication_add(self.publication)
+
+    @property
+    def logger(self):
+        # Deprecated, use pyiron_base.ide.ide.IDE.logger instead
+        return logger
 
     @property
     def configuration(self):

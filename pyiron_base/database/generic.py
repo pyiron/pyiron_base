@@ -5,7 +5,7 @@
 DatabaseAccess class deals with accessing the database
 """
 
-import pyiron_base.ide.logger
+from pyiron_base.ide.logger import logger
 from abc import ABC, abstractmethod
 import numpy as np
 import re
@@ -293,7 +293,7 @@ class AutorestoredConnection:
         self._conn = None
         self._lock = Lock()
         self._watchdog = None
-        self._logger = pyiron_base.settings.logger.get_logger()
+        self._logger = logger
         self._timeout = timeout
 
     def execute(self, *args, **kwargs):
@@ -488,7 +488,7 @@ class DatabaseAccess(IsDatabase):
         if element_lst is not None:
             dict_clause["element_lst"] = element_lst
 
-        pyiron_base.ide.logger.get_logger().debug("sql_query: %s", str(dict_clause))
+        logger.debug("sql_query: %s", str(dict_clause))
         return self.get_items_dict(dict_clause)
 
     def _get_job_table(
