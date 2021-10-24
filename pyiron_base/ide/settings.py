@@ -20,10 +20,6 @@ Additionally, if either of the conda flags `'CONDA_PREFIX'` or `'CONDA_DIR'` are
 `/share/pyiron` appended to them and these values are *appended* to the resource paths.
 
 Finally, :class:`Settings` converts any file paths from your OS to something pyiron-compatible.
-
-In addition to these core responsibilities, at the moment :class:`Settings` also hosts the logger, the queue adapter
-(for sending pyiron jobs off to remote resources), and a publication list (for keeping track of what should be cited
-depending on which parts of pyiron are actually used).
 """
 
 import os
@@ -32,6 +28,7 @@ from pyiron_base.generic.singleton import Singleton  # Ok, this is the one excep
 from pyiron_base.ide.logger import logger
 from pyiron_base.ide.publications import publications
 from pathlib import Path
+from pyiron_base.generic.util import deprecate
 
 __author__ = "Jan Janssen"
 __copyright__ = (
@@ -39,8 +36,8 @@ __copyright__ = (
     "Computational Materials Design (CM) Department"
 )
 __version__ = "1.0"
-__maintainer__ = "Jan Janssen"
-__email__ = "janssen@mpie.de"
+__maintainer__ = "Liam Huber"
+__email__ = "huber@mpie.de"
 __status__ = "production"
 __date__ = "Sep 1, 2017"
 
@@ -86,11 +83,6 @@ class Settings(metaclass=Singleton):
             self._configuration = self._convert_database_config(
                 config=self._configuration
             )
-
-    @property
-    def logger(self):
-        # Deprecated, use pyiron_base.ide.ide.IDE.logger instead
-        return logger
 
     @property
     def configuration(self):
@@ -396,11 +388,19 @@ class Settings(metaclass=Singleton):
         return config
 
     @property
+    @deprecate("Use pyiron_base.ide.ide.IDE.logger")
+    def logger(self):
+        # Deprecated, use pyiron_base.ide.ide.IDE.logger instead
+        return logger
+
+    @property
+    @deprecate("Use pyiron_base.ide.ide.IDE.queue_adapter")
     def queue_adapter(self):
         from pyiron_base.ide.ide import IDE
         return IDE.queue_adapter
 
     @property
+    @deprecate("Use pyiron_base.ide.ide.IDE.publications.list()")
     def publication_lst(self):
         """
         List of publications currently in use.
@@ -410,6 +410,7 @@ class Settings(metaclass=Singleton):
         """
         return publications.list()
 
+    @deprecate("Use pyiron_base.ide.ide.IDE.publications.add")
     def publication_add(self, pub_dict):
         """
         Add a publication to the list of publications
@@ -420,6 +421,7 @@ class Settings(metaclass=Singleton):
         return publications.add(pub_dict)
 
     @property
+    @deprecate("Use pyiron_base.ide.ide.IDE.publications.pyiron_publication")
     def publication(self):
         return publications.pyiron_publication
 
