@@ -30,6 +30,7 @@ import os
 from configparser import ConfigParser
 from pyiron_base.generic.singleton import Singleton  # Ok, this is the one exception to not importing from pyiron...
 from pyiron_base.ide.logger import logger
+from pyiron_base.ide.publications import publications
 from pathlib import Path
 
 __author__ = "Jan Janssen"
@@ -85,9 +86,6 @@ class Settings(metaclass=Singleton):
             self._configuration = self._convert_database_config(
                 config=self._configuration
             )
-
-        self._publication_lst = {}
-        self.publication_add(self.publication)
 
     @property
     def logger(self):
@@ -410,13 +408,7 @@ class Settings(metaclass=Singleton):
         Returns:
             list: list of publications
         """
-        all_publication = []
-        for v in self._publication_lst.values():
-            if isinstance(v, list):
-                all_publication += v
-            else:
-                all_publication.append(v)
-        return all_publication
+        return publications.list()
 
     def publication_add(self, pub_dict):
         """
@@ -425,36 +417,11 @@ class Settings(metaclass=Singleton):
         Args:
             pub_dict (dict): The key should be the name of the code used and the value a list of publications to cite.
         """
-        for key, value in pub_dict.items():
-            if key not in self._publication_lst.keys():
-                self._publication_lst[key] = value
+        return publications.add(pub_dict)
 
     @property
     def publication(self):
-        return {
-            "pyiron": {
-                "pyiron-paper": {
-                    "author": [
-                        "Jan Janssen",
-                        "Sudarsan Surendralal",
-                        "Yury Lysogorskiy",
-                        "Mira Todorova",
-                        "Tilmann Hickel",
-                        "Ralf Drautz",
-                        "Jörg Neugebauer",
-                    ],
-                    "title": "pyiron: An integrated development environment for computational "
-                    "materials science",
-                    "journal": "Computational Materials Science",
-                    "volume": "161",
-                    "pages": "24 - 36",
-                    "issn": "0927-0256",
-                    "doi": "https://doi.org/10.1016/j.commatsci.2018.07.043",
-                    "url": "http://www.sciencedirect.com/science/article/pii/S0927025618304786",
-                    "year": "2019",
-                }
-            }
-        }
+        return publications.pyiron_publication
 
 
 settings = Settings()

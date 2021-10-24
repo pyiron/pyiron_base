@@ -3,7 +3,7 @@
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
 import pandas
-from pyiron_base.ide.settings import settings as s
+from pyiron_base.generic.singleton import Singleton
 
 __author__ = "Joerg Neugebauer, Jan Janssen"
 __copyright__ = (
@@ -11,89 +11,153 @@ __copyright__ = (
     "Computational Materials Design (CM) Department"
 )
 __version__ = "1.0"
-__maintainer__ = "Jan Janssen"
-__email__ = "janssen@mpie.de"
+__maintainer__ = "Liam Huber"
+__email__ = "huber@mpie.de"
 __status__ = "production"
 __date__ = "Sep 1, 2017"
 
 
-def list_publications(bib_format="pandas"):
-    """
-    List the publications used in this project.
+class Publications(metaclass=Singleton):
+    def __init__(self):
+        self._publications = {}
+        self.add(self.pyiron_publication)
 
-    Args:
-        bib_format (str): ['pandas', 'dict', 'bibtex', 'apa']
+    @property
+    def pyiron_publication(self):
+        return {
+            "pyiron": {
+                "pyiron-paper": {
+                    "author": [
+                        "Jan Janssen",
+                        "Sudarsan Surendralal",
+                        "Yury Lysogorskiy",
+                        "Mira Todorova",
+                        "Tilmann Hickel",
+                        "Ralf Drautz",
+                        "Jörg Neugebauer",
+                    ],
+                    "title": "pyiron: An integrated development environment for computational "
+                             "materials science",
+                    "journal": "Computational Materials Science",
+                    "volume": "161",
+                    "pages": "24 - 36",
+                    "issn": "0927-0256",
+                    "doi": "https://doi.org/10.1016/j.commatsci.2018.07.043",
+                    "url": "http://www.sciencedirect.com/science/article/pii/S0927025618304786",
+                    "year": "2019",
+                }
+            }
+        }
 
-    Returns:
-        pandas.DataFrame/ list: list of publications in Bibtex format.
-    """
+    def list(self):
+        """
+        List of publications currently in use.
 
-    def get_bibtex(k, v):
-        total_keys = [
-            "title",
-            "journal",
-            "volume",
-            "issue",
-            "number",
-            "pages",
-            "numpages",
-            "year",
-            "month",
-            "publisher",
-            "url",
-            "doi",
-            "issn",
-        ]
-        bibtex_str = (
-                "@article{"
-                + k
-                + ",\n"
-                + "    author={"
-                + " and ".join(v["author"])
-                + "},\n"
-        )
-        for kt in total_keys:
-            if kt in value.keys():
-                bibtex_str += "    " + kt + "={" + v[kt] + "},\n"
-        bibtex_str += "}\n"
-        return bibtex_str
+        Returns:
+            list: list of publications
+        """
+        all_publications = []
+        for v in self._publications.values():
+            if isinstance(v, list):
+                all_publications += v
+            else:
+                all_publications.append(v)
+        return all_publications
 
-    def get_apa(v):
-        apa_str = " & ".join(v["author"])
-        if "year" in v.keys():
-            apa_str += " (" + v["year"] + "). "
-        if "title" in v.keys():
-            apa_str += v["title"] + ". "
-        if "journal" in v.keys():
-            apa_str += v["journal"] + ", "
-        if "volume" in v.keys():
-            apa_str += v["volume"] + ", "
-        if "pages" in v.keys():
-            apa_str += v["pages"] + ". "
-        if "doi" in v.keys():
-            apa_str += "doi: " + v["doi"] + "\n"
-        return apa_str
+    def add(self, pub_dict: dict):
+        """
+        Add a publication to the list of publications
 
-    publication_dict = s.publication_lst
-    if bib_format.lower() == "dict":
-        return publication_dict
-    elif bib_format.lower() == "pandas":
-        publication_lst = []
-        for p in publication_dict:
-            for v in p.values():
-                publication_lst.append(v)
-        return pandas.DataFrame(publication_lst)
-    elif bib_format.lower() == "bibtex":
-        total_str = ""
-        for pub in publication_dict:
-            for key, value in pub.items():
-                total_str += get_bibtex(k=key, v=value)
-        return total_str
-    elif bib_format.lower() == "apa":
-        total_str = ""
-        for pub in publication_dict:
-            for key, value in pub.items():
-                total_str += get_apa(v=value)
-        return total_str
-    else:
-        raise ValueError("Supported Bibformats are ['dict', 'bibtex', 'apa']")
+        Args:
+            pub_dict (dict): The key should be the name of the code used and the value a list of publications to cite.
+        """
+        for key, value in pub_dict.items():
+            if key not in self._publications.keys():
+                self._publications[key] = value
+
+    def show(self, bib_format="pandas"):
+        """
+        List the publications used in this project.
+
+        Args:
+            bib_format (str): ['pandas', 'dict', 'bibtex', 'apa']
+
+        Returns:
+            pandas.DataFrame/ list: list of publications in Bibtex format.
+        """
+
+        def get_bibtex(k, v):
+            total_keys = [
+                "title",
+                "journal",
+                "volume",
+                "issue",
+                "number",
+                "pages",
+                "numpages",
+                "year",
+                "month",
+                "publisher",
+                "url",
+                "doi",
+                "issn",
+            ]
+            bibtex_str = (
+                    "@article{"
+                    + k
+                    + ",\n"
+                    + "    author={"
+                    + " and ".join(v["author"])
+                    + "},\n"
+            )
+            for kt in total_keys:
+                if kt in value.keys():
+                    bibtex_str += "    " + kt + "={" + v[kt] + "},\n"
+            bibtex_str += "}\n"
+            return bibtex_str
+
+        def get_apa(v):
+            apa_str = " & ".join(v["author"])
+            if "year" in v.keys():
+                apa_str += " (" + v["year"] + "). "
+            if "title" in v.keys():
+                apa_str += v["title"] + ". "
+            if "journal" in v.keys():
+                apa_str += v["journal"] + ", "
+            if "volume" in v.keys():
+                apa_str += v["volume"] + ", "
+            if "pages" in v.keys():
+                apa_str += v["pages"] + ". "
+            if "doi" in v.keys():
+                apa_str += "doi: " + v["doi"] + "\n"
+            return apa_str
+
+        publication_dict = self.list()
+        if bib_format.lower() == "dict":
+            return self._publications
+        elif bib_format.lower() == "pandas":
+            publication_lst = []
+            for p in publication_dict:
+                for v in p.values():
+                    publication_lst.append(v)
+            return pandas.DataFrame(publication_lst)
+        elif bib_format.lower() == "bibtex":
+            total_str = ""
+            for pub in publication_dict:
+                for key, value in pub.items():
+                    total_str += get_bibtex(k=key, v=value)
+            return total_str
+        elif bib_format.lower() == "apa":
+            total_str = ""
+            for pub in publication_dict:
+                for key, value in pub.items():
+                    total_str += get_apa(v=value)
+            return total_str
+        else:
+            raise ValueError("Supported Bibformats are ['dict', 'bibtex', 'apa']")
+
+    def reset(self):
+        self.__init__()
+
+
+publications = Publications()

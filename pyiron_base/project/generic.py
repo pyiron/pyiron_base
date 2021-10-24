@@ -18,7 +18,6 @@ from warnings import warn
 from pyiron_base.project.path import ProjectPath
 from pyiron_base.database.filetable import FileTable
 from pyiron_base.ide.ide import IDE
-from pyiron_base.ide.publications import list_publications
 from pyiron_base.database.performance import get_database_statistics
 from pyiron_base.database.jobtable import (
     get_job_ids,
@@ -1270,7 +1269,7 @@ class Project(ProjectPath, HasGroups):
         Returns:
             pandas.DataFrame/ list: list of publications in Bibtex format.
         """
-        return list_publications(bib_format=bib_format)
+        return IDE.publications.show(bib_format=bib_format)
 
     @staticmethod
     def queue_is_empty():

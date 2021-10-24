@@ -10,6 +10,7 @@ from pyiron_base.ide.settings import settings
 from pyiron_base.database.manager import database
 from pyiron_base.ide.logger import logger
 from pyiron_base.ide.queue_adapter import queue_adapters
+from pyiron_base.ide.publications import publications
 
 __author__ = "Liam Huber"
 __copyright__ = (
@@ -31,3 +32,4 @@ class IDE(metaclass=Singleton):
     database = database
     logger = logger
     queue_adapter = queue_adapters.adapter
+    publications = publications
