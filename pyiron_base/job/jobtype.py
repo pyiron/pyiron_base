@@ -9,7 +9,7 @@ import importlib
 import inspect
 import os
 from pyiron_base.generic.hdfio import ProjectHDFio
-from pyiron_base.generic.singleton import Singleton
+from pyiron_base.generic.util import Singleton
 from pyiron_base.generic.factory import PyironFactory
 from pyiron_base.job.jobstatus import job_status_finished_lst
 

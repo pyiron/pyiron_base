@@ -2,7 +2,7 @@
 # Copyright (c) Max-Planck-Institut für Eisenforschung GmbH - Computational Materials Design (CM) Department
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
-from pyiron_base.generic.singleton import Singleton
+from pyiron_base.generic.util import Singleton
 from pysqa import QueueAdapter as PySQAAdpter
 import os
 from pyiron_base.ide.settings import settings

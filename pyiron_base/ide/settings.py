@@ -24,11 +24,10 @@ Finally, :class:`Settings` converts any file paths from your OS to something pyi
 
 import os
 from configparser import ConfigParser
-from pyiron_base.generic.singleton import Singleton  # Ok, this is the one exception to not importing from pyiron...
 from pyiron_base.ide.logger import logger
 from pyiron_base.ide.publications import publications
 from pathlib import Path
-from pyiron_base.generic.util import deprecate
+from pyiron_base.generic.util import deprecate, Singleton
 
 __author__ = "Jan Janssen"
 __copyright__ = (

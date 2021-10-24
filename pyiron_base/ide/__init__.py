@@ -1,5 +1,5 @@
 from pyiron_base.database.manager import database as _database
-from pyiron_base.generic.singleton import Singleton
+from pyiron_base.generic.util import Singleton
 from pyiron_base.ide.logger import logger as _logger
 from pyiron_base.ide.publications import publications as _publications
 from pyiron_base.ide.queue_adapter import queue_adapters as _queue_adapters

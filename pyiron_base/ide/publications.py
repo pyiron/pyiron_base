@@ -3,7 +3,7 @@
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
 import pandas
-from pyiron_base.generic.singleton import Singleton
+from pyiron_base.generic.util import Singleton
 
 __author__ = "Joerg Neugebauer, Jan Janssen"
 __copyright__ = (
