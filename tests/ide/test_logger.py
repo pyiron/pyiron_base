@@ -5,6 +5,7 @@
 from unittest import TestCase
 from pyiron_base.ide.logger import logger
 import os
+import shutil
 
 
 class TestLogger(TestCase):
@@ -12,19 +13,16 @@ class TestLogger(TestCase):
     @classmethod
     def setUpClass(cls) -> None:
         cls.logger_file = os.path.join(os.getcwd(), 'pyiron.log')
+        cls.backup_file = os.path.join(os.getcwd(), 'pyiron.log.test_logger_backup')
+        shutil.copy(cls.logger_file, cls.backup_file)
 
     @classmethod
     def tearDownClass(cls) -> None:
-        try:
-            os.remove(cls.logger_file)
-        except OSError:
-            pass
+        shutil.move(cls.backup_file, cls.logger_file)
 
     def test_logger(self):
         logsize = os.path.getsize(self.logger_file)
-
         logger.warning("Here is a warning")
-
         self.assertGreater(os.path.getsize(self.logger_file), logsize)
 
     def test_set_logging_level(self):
