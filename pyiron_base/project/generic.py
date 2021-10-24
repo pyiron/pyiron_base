@@ -29,7 +29,6 @@ from pyiron_base.database.jobtable import (
     get_job_working_directory,
     get_job_status
 )
-from pyiron_base.ide.logger import set_logging_level
 from pyiron_base.generic.hdfio import ProjectHDFio
 from pyiron_base.generic.filedata import load_file
 from pyiron_base.generic.util import deprecate
@@ -1346,6 +1345,7 @@ class Project(ProjectPath, HasGroups):
         )
 
     @staticmethod
+    @deprecate(message="Use IDE.logger.set_logging_level instead.")
     def set_logging_level(level, channel=None):
         """
         Set level for logger
@@ -1354,7 +1354,7 @@ class Project(ProjectPath, HasGroups):
             level (str): 'DEBUG, INFO, WARN'
             channel (int): 0: file_log, 1: stream, None: both
         """
-        set_logging_level(level=level, channel=channel)
+        IDE.logger.set_logging_level(level=level, channel=channel)
 
     @staticmethod
     def list_clusters():
