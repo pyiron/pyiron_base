@@ -177,7 +177,7 @@ class DatabaseManager(metaclass=Singleton):
         for path in s.configuration["project_paths"]:
             if path in full_path:
                 return path
-        print("!!!IS IT A SINGLETON", s)
+
         raise ValueError(
             f"the current path {full_path} is not included in the .pyiron configuration 'project_paths': "
             f"{s.configuration['project_paths']}"
