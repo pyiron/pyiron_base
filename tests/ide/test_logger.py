@@ -8,20 +8,24 @@ import os
 
 
 class TestLogger(TestCase):
+
     @classmethod
     def setUpClass(cls) -> None:
         cls.logger_file = os.path.join(os.getcwd(), 'pyiron.log')
 
     @classmethod
     def tearDownClass(cls) -> None:
-        os.unlink(cls.logger_file)
+        try:
+            os.remove(cls.logger_file)
+        except OSError:
+            pass
 
     def test_logger(self):
-        self.assertEqual(0, os.path.getsize(self.logger_file))
+        logsize = os.path.getsize(self.logger_file)
 
         logger.warning("Here is a warning")
 
-        self.assertGreater(os.path.getsize(self.logger_file), 0)
+        self.assertGreater(os.path.getsize(self.logger_file), logsize)
 
     def test_set_logging_level(self):
         logger.set_logging_level(10)
