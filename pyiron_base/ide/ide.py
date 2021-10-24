@@ -8,6 +8,7 @@ A helper class to give quick and easy access to all the singleton classes which 
 from pyiron_base.generic.singleton import Singleton
 from pyiron_base.ide.settings import settings
 from pyiron_base.database.manager import database
+from pyiron_base.ide.logger import logger
 
 __author__ = "Liam Huber"
 __copyright__ = (
@@ -27,5 +28,5 @@ class IDE(metaclass=Singleton):
     # https://stackoverflow.com/questions/128573/using-property-on-classmethods
     settings = settings
     database = database
-    logger = settings.logger
+    logger = logger
     queue_adapter = settings.queue_adapter
