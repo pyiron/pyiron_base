@@ -388,19 +388,19 @@ class Settings(metaclass=Singleton):
         return config
 
     @property
-    @deprecate("Use pyiron_base.ide.ide.IDE.logger")
+    # @deprecate("Use pyiron_base.ide.ide.IDE.logger")
     def logger(self):
         # Deprecated, use pyiron_base.ide.ide.IDE.logger instead
         return logger
 
     @property
-    @deprecate("Use pyiron_base.ide.ide.IDE.queue_adapter")
+    # @deprecate("Use pyiron_base.ide.ide.IDE.queue_adapter")
     def queue_adapter(self):
         from pyiron_base.ide.ide import IDE
         return IDE.queue_adapter
 
     @property
-    @deprecate("Use pyiron_base.ide.ide.IDE.publications.list()")
+    # @deprecate("Use pyiron_base.ide.ide.IDE.publications.list()")
     def publication_lst(self):
         """
         List of publications currently in use.
@@ -410,7 +410,7 @@ class Settings(metaclass=Singleton):
         """
         return publications.list()
 
-    @deprecate("Use pyiron_base.ide.ide.IDE.publications.add")
+    # @deprecate("Use pyiron_base.ide.ide.IDE.publications.add")
     def publication_add(self, pub_dict):
         """
         Add a publication to the list of publications
@@ -421,7 +421,7 @@ class Settings(metaclass=Singleton):
         return publications.add(pub_dict)
 
     @property
-    @deprecate("Use pyiron_base.ide.ide.IDE.publications.pyiron_publication")
+    # @deprecate("Use pyiron_base.ide.ide.IDE.publications.pyiron_publication")
     def publication(self):
         return publications.pyiron_publication
 
