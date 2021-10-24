@@ -193,12 +193,31 @@ class Settings(metaclass=Singleton):
             self._configuration["resource_paths"].append(os.path.join(environment["CONDA_DIR"], "share", "pyiron"))
 
         self._configuration["project_paths"] = [
-            convert_path(path) if path.endswith("/") else convert_path(path) + "/"
+            self.convert_path(path) if path.endswith("/") else self.convert_path(path) + "/"
             for path in self._configuration["project_paths"]
         ]
         self._configuration["resource_paths"] = [
-            convert_path(path) for path in self._configuration["resource_paths"]
+            self.convert_path(path) for path in self._configuration["resource_paths"]
         ]
+
+    @staticmethod
+    def convert_path(path):
+        """
+        Convert path to POSIX path
+
+        Args:
+            path(str): input path
+
+        Returns:
+            str: absolute path in POSIX format
+        """
+        return (Path(path.strip())
+                .expanduser()
+                .resolve()
+                .absolute()
+                .as_posix()
+                .replace("\\", "/")
+                )
 
     @property
     def login_user(self):
@@ -309,8 +328,7 @@ class Settings(metaclass=Singleton):
         if parser.has_option(section, "JOB_TABLE"):
             self._configuration["sql_table_name"] = parser.get(section, "JOB_TABLE")
 
-    @staticmethod
-    def _convert_database_config(config):
+    def _convert_database_config(self, config):
         # Build the SQLalchemy connection strings
         if config["sql_type"] == "Postgres":
             config["sql_connection_string"] = (
@@ -356,7 +374,7 @@ class Settings(metaclass=Singleton):
                     config["sql_file"] = "/".join(
                         ["~", "pyiron.db"]
                     )
-            sql_file = convert_path(path=config["sql_file"])
+            sql_file = self.convert_path(path=config["sql_file"])
             if os.path.dirname(
                 sql_file
             ) != "" and not os.path.exists(
@@ -462,24 +480,3 @@ class Settings(metaclass=Singleton):
                 }
             }
         }
-
-
-def convert_path(path):
-    """
-    Convert path to POSIX path
-
-    Args:
-        path(str): input path
-
-    Returns:
-        str: absolute path in POSIX format
-    """
-    print("converting", path)
-    return (Path(path.strip())
-            .expanduser()
-            .resolve()
-            .absolute()
-            .as_posix()
-            .replace("\\", "/")
-            )
-    # os.path.abspath(os.path.expanduser(path.strip())).replace("\\", "/")
