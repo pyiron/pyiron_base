@@ -169,7 +169,7 @@ class DatabaseManager(metaclass=Singleton):
         Returns:
             str: path
         """
-        full_path = s.convert_path(full_path if full_path.endswith("/") else full_path + "/")
+        full_path = full_path if full_path.endswith("/") else full_path + "/"
 
         if not self.project_check_enabled:
             return None
