@@ -27,7 +27,6 @@ depending on which parts of pyiron are actually used).
 """
 
 import os
-import importlib
 from configparser import ConfigParser
 from pyiron_base.generic.singleton import Singleton  # Ok, this is the one exception to not importing from pyiron...
 from pyiron_base.ide.logger import logger
