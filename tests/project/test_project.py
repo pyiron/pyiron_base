@@ -75,6 +75,9 @@ class TestProjectOperations(TestWithFilledProject):
         self.assertEqual(len(self.project.job_table(recursive=False, hamilton="ToyJob")), 2)
         self.assertEqual(len(self.project.job_table(recursive=True, parentid=None)), 4)
         self.assertEqual(len(self.project.job_table(recursive=True, status="finished", job="toy_1")), 2)
+        self.assertEqual(len(self.project.job_table(recursive=True, job="toy*")), 4)
+        self.assertEqual(len(self.project.job_table(recursive=True, job="*_1*")), 2)
+        self.assertEqual(len(self.project.job_table(recursive=True, job="*_*")), 4)
         self.assertEqual(len(self.project.job_table(recursive=False, status="finished", job="toy_1")), 1)
         self.assertRaises(ValueError, self.project.job_table, gibberish=True)
 
