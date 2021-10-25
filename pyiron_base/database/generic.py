@@ -92,7 +92,6 @@ class IsDatabase(ABC):
             full_table=False,
             element_lst=None,
             job_name_contains='',
-            **kwargs,
     ):
         """
         Access the job_table.
@@ -112,8 +111,6 @@ class IsDatabase(ABC):
             full_table (bool): Whether to show the entire pandas table
             element_lst (list): list of elements required in the chemical formular - by default None
             job_name_contains (str): (deprecated) A string which should be contained in every job_name
-            **kwargs (dict): Optional arguments for filtering with keys matching the project database column name
-                            (eg. status="finished")
 
         Returns:
             pandas.Dataframe: Return the result as a pandas.Dataframe object

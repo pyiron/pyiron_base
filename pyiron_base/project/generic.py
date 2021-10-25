@@ -555,7 +555,8 @@ class Project(ProjectPath, HasGroups):
             convert_to_object (bool): load the full GenericJob object (default) or just the HDF5 / JobCore object
             progress (bool): if True (default), add an interactive progress bar to the iteration
             **kwargs (dict): Optional arguments for filtering with keys matching the project database column name
-                            (eg. status="finished")
+                            (eg. status="finished"). Asterisk can be used to denote a wildcard, for zero or more
+                            instances of any character
 
         Returns:
             yield: Yield of GenericJob or JobCore
@@ -624,6 +625,28 @@ class Project(ProjectPath, HasGroups):
         job_name_contains='',
         **kwargs: dict,
     ):
+        """
+        Access the job_table.
+
+        Args:
+            recursive (bool): search subprojects [True/False]
+            columns (list): by default only the columns ['job', 'project', 'chemicalformula'] are selected, but the
+                            user can select a subset of ['id', 'status', 'chemicalformula', 'job', 'subjob', 'project',
+                            'projectpath', 'timestart', 'timestop', 'totalcputime', 'computer', 'hamilton', 'hamversion',
+                            'parentid', 'masterid']
+            all_columns (bool): Select all columns - this overwrites the columns option.
+            sort_by (str): Sort by a specific column
+            max_colwidth (int): set the column width
+            full_table (bool): Whether to show the entire pandas table
+            element_lst (list): list of elements required in the chemical formular - by default None
+            job_name_contains (str): (deprecated) A string which should be contained in every job_name
+            **kwargs (dict): Optional arguments for filtering with keys matching the project database column name
+                            (eg. status="finished"). Asterisk can be used to denote a wildcard, for zero or more
+                            instances of any character
+
+        Returns:
+            pandas.Dataframe: Return the result as a pandas.Dataframe object
+        """
         if job_name_contains != '':
             warnings.warn("`job_name_contains` is deprecated - use `job='*term*'` instead")
             kwargs['job'] = '*{}*'.format(job_name_contains)
@@ -640,10 +663,6 @@ class Project(ProjectPath, HasGroups):
             **kwargs,
         )
         return self._get_filtered_job_table(jt, **kwargs)
-    job_table.__doc__ = '\n'.join([
-        line for line in FileTable.job_table.__doc__.split('\n')
-        if all([item not in line for item in ['sql_query (str)', 'user (str)', 'project_path (str)']])
-    ])
 
     def get_jobs_status(self, recursive=True, element_lst=None):
         """
