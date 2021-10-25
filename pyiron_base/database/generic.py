@@ -7,6 +7,7 @@ DatabaseAccess class deals with accessing the database
 
 import pyiron_base.settings.logger
 from abc import ABC, abstractmethod
+import warnings
 import numpy as np
 import re
 import time
@@ -79,6 +80,38 @@ class IsDatabase(ABC):
     ):
         pass
 
+    @staticmethod
+    def _get_filtered_job_table(df: pandas.DataFrame, **kwargs: dict) -> pandas.DataFrame:
+        """
+        Get a job table in a project based on matching values from any column in the project database
+
+        Args:
+            df (pandas.DataFrame): DataFrame to be filtered
+            **kwargs (dict): Optional arguments for filtering with keys matching the project database column name
+                            (eg. status="finished")
+
+        Returns:
+            list: DataFrame containing filtered jobs
+        """
+        if len(kwargs) == 0 or df.empty:
+            return df
+        mask = np.ones_like(df.index, dtype=bool)
+        for key in kwargs.keys():
+            if key not in list(df.columns):
+                raise ValueError("Column name {} does not exist in the project database!")
+        for key, val in kwargs.items():
+            if val is None:
+                mask &= df[key].isnull()
+            elif str(val).startswith('*') and str(val).endswith('*'):
+                mask &= df[key].str.contains(str(val).replace('*', ''))
+            elif str(val).endswith('*'):
+                mask &= df[key].str.startswith(str(val).replace('*', ''))
+            elif str(val).startswith('*'):
+                mask &= df[key].str.endswith(str(val).replace('*', ''))
+            else:
+                mask &= df[key] == val
+        return df[mask]
+
     def job_table(
             self,
             sql_query,
@@ -92,6 +125,7 @@ class IsDatabase(ABC):
             full_table=False,
             element_lst=None,
             job_name_contains='',
+            **kwargs,
     ):
         """
         Access the job_table.
@@ -110,7 +144,10 @@ class IsDatabase(ABC):
             max_colwidth (int): set the column width
             full_table (bool): Whether to show the entire pandas table
             element_lst (list): list of elements required in the chemical formular - by default None
-            job_name_contains (str): a string which should be contained in every job_name
+            job_name_contains (str): (deprecated) A string which should be contained in every job_name
+            **kwargs (dict): Optional arguments for filtering with keys matching the project database column name
+                            (eg. status="finished"). Asterisk can be used to denote a wildcard, for zero or more
+                            instances of any character
 
         Returns:
             pandas.Dataframe: Return the result as a pandas.Dataframe object
@@ -152,7 +189,9 @@ class IsDatabase(ABC):
                 columns=columns,
         )
         if job_name_contains != '':
-            df = df[df.job.str.contains(job_name_contains)]
+            warnings.warn("`job_name_contains` is deprecated - use `job='*term*'` instead")
+            kwargs['job'] = '*{}*'.format(job_name_contains)
+        df = self._get_filtered_job_table(df, **kwargs)
         if sort_by is not None:
             return df.sort_values(by=sort_by)
         return df
