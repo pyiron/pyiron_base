@@ -49,7 +49,7 @@ from pyiron_base.server.queuestatus import (
 from pyiron_base.job.external import Notebook
 from pyiron_base.project.data import ProjectData
 from pyiron_base.archiving import import_archive, export_archive
-from typing import List, Generator
+from typing import Generator
 
 __author__ = "Joerg Neugebauer, Jan Janssen"
 __copyright__ = (
@@ -513,37 +513,6 @@ class Project(ProjectPath, HasGroups):
         """
         return self.load(job_specifier=job_specifier, convert_to_object=False)
 
-    def _get_filtered_job_table(self, df, **kwargs: dict) -> List[int]:
-        """
-        Get a list of job ids in a project based on matching values from any column in the project database
-
-        Args:
-            df (pandas.DataFrame): DataFrame to be filtered
-            **kwargs (dict): Optional arguments for filtering with keys matching the project database column name
-                            (eg. status="finished")
-
-        Returns:
-            list: List of job IDs
-        """
-        if len(kwargs) == 0 or df.empty:
-            return df
-        mask = np.ones_like(df.index, dtype=bool)
-        for key in kwargs.keys():
-            if key not in list(df.columns):
-                raise ValueError("Column name {} does not exist in the project database!")
-        for key, val in kwargs.items():
-            if val is None:
-                mask &= df[key].isnull()
-            elif str(val).startswith('*') and str(val).endswith('*'):
-                mask &= df[key].str.contains(str(val).replace('*', ''))
-            elif str(val).endswith('*'):
-                mask &= df[key].str.startswith(str(val).replace('*', ''))
-            elif str(val).startswith('*'):
-                mask &= df[key].str.endswith(str(val).replace('*', ''))
-            else:
-                mask &= df[key] == val
-        return df[mask]
-
     def iter_jobs(self, path: str = None, recursive: bool = True, convert_to_object: bool = True, progress: bool = True,
                   **kwargs: dict) -> Generator:
         """
@@ -561,8 +530,7 @@ class Project(ProjectPath, HasGroups):
         Returns:
             yield: Yield of GenericJob or JobCore
         """
-        df = self.job_table(recursive=recursive)
-        job_id_lst = self._get_filtered_job_table(df=df, **kwargs)['id']
+        job_id_lst = self.job_table(recursive=recursive, **kwargs)['id']
         if progress:
             job_id_lst = tqdm(job_id_lst)
         for job_id in job_id_lst:
@@ -647,10 +615,7 @@ class Project(ProjectPath, HasGroups):
         Returns:
             pandas.Dataframe: Return the result as a pandas.Dataframe object
         """
-        if job_name_contains != '':
-            warn("`job_name_contains` is deprecated - use `job='*term*'` instead")
-            kwargs['job'] = '*{}*'.format(job_name_contains)
-        jt = self.db.job_table(
+        return self.db.job_table(
             sql_query=self.sql_query,
             user=self.user,
             project_path=self.project_path,
@@ -662,7 +627,6 @@ class Project(ProjectPath, HasGroups):
             element_lst=element_lst,
             **kwargs,
         )
-        return self._get_filtered_job_table(jt, **kwargs)
 
     def get_jobs_status(self, recursive=True, element_lst=None):
         """
