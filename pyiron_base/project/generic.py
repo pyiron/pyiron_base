@@ -648,7 +648,7 @@ class Project(ProjectPath, HasGroups):
             pandas.Dataframe: Return the result as a pandas.Dataframe object
         """
         if job_name_contains != '':
-            warnings.warn("`job_name_contains` is deprecated - use `job='*term*'` instead")
+            warn("`job_name_contains` is deprecated - use `job='*term*'` instead")
             kwargs['job'] = '*{}*'.format(job_name_contains)
         jt = self.db.job_table(
             sql_query=self.sql_query,
