@@ -81,7 +81,7 @@ class IsDatabase(ABC):
         pass
 
     @staticmethod
-    def _get_filtered_job_table(df, **kwargs: dict):
+    def _get_filtered_job_table(df: pd.DataFrame, **kwargs: dict) -> pd.DataFrame:
         """
         Get a list of job ids in a project based on matching values from any column in the project database
 
