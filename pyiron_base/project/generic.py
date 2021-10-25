@@ -593,28 +593,6 @@ class Project(ProjectPath, HasGroups):
         job_name_contains='',
         **kwargs: dict,
     ):
-        """
-        Access the job_table.
-
-        Args:
-            recursive (bool): search subprojects [True/False]
-            columns (list): by default only the columns ['job', 'project', 'chemicalformula'] are selected, but the
-                            user can select a subset of ['id', 'status', 'chemicalformula', 'job', 'subjob', 'project',
-                            'projectpath', 'timestart', 'timestop', 'totalcputime', 'computer', 'hamilton', 'hamversion',
-                            'parentid', 'masterid']
-            all_columns (bool): Select all columns - this overwrites the columns option.
-            sort_by (str): Sort by a specific column
-            max_colwidth (int): set the column width
-            full_table (bool): Whether to show the entire pandas table
-            element_lst (list): list of elements required in the chemical formular - by default None
-            job_name_contains (str): (deprecated) A string which should be contained in every job_name
-            **kwargs (dict): Optional arguments for filtering with keys matching the project database column name
-                            (eg. status="finished"). Asterisk can be used to denote a wildcard, for zero or more
-                            instances of any character
-
-        Returns:
-            pandas.Dataframe: Return the result as a pandas.Dataframe object
-        """
         return self.db.job_table(
             sql_query=self.sql_query,
             user=self.user,
@@ -627,6 +605,10 @@ class Project(ProjectPath, HasGroups):
             element_lst=element_lst,
             **kwargs,
         )
+    job_table.__doc__ = '\n'.join([
+        ll for ll in FileTable.job_table.__doc__.split('\n')
+        if not any([item in ll for item in ['sql_query (str)', 'user (str)', 'project_path (str)']])
+    ])
 
     def get_jobs_status(self, recursive=True, element_lst=None):
         """
