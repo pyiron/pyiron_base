@@ -304,6 +304,16 @@ class FlattenedStorage(HasHDF):
             store[name] = np.empty(shape=shape, dtype=dtype)
         else:
             store[name] = np.full(shape=shape, fill_value=fill, dtype=dtype)
+
+        _default_fill_values = {
+                np.dtype("int32"):   -1,
+                np.dtype("int64"):   -1,
+                np.dtype("float32"): np.nan,
+                np.dtype("float64"): np.nan,
+        }
+        if fill is None and store[name].dtype in _default_fill_values:
+            fill = _default_fill_values[store[name].dtype]
+        if fill is not None:
             self._fill_values[name] = fill
 
     def get_array(self, name, frame=None):
@@ -385,11 +395,7 @@ class FlattenedStorage(HasHDF):
             if name in self._fill_values:
                 fill = self._fill_values[name]
             else:
-                fill = {np.dtype("int32"):   -1,
-                        np.dtype("int64"):   -1,
-                        np.dtype("float32"): np.nan,
-                        np.dtype("float64"): np.nan,
-                        }[self._per_element_arrays[name].dtype]
+                fill = np.zeros(1, dtype=self._per_element_arrays[name].dtype)[0]
             v[l:] = fill
             return v
         return np.array([ resize_and_pad(v) for v in values ])
