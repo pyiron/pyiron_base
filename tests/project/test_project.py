@@ -64,19 +64,19 @@ class TestProjectOperations(TestWithFilledProject):
         self.assertEqual(len(df), 4)
         self.assertEqual(" ".join(df.status.sort_values().unique()), "aborted finished suspended")
 
-    def test_get_filtered_job_ids(self):
-        self.assertEqual(len(self.project.get_filtered_job_ids(recursive=False)), 2)
-        self.assertEqual(len(self.project.get_filtered_job_ids(recursive=True)), 4)
-        self.assertEqual(len(self.project.get_filtered_job_ids(recursive=True, status="finished")), 2)
-        self.assertEqual(len(self.project.get_filtered_job_ids(recursive=False, status="finished")), 1)
-        self.assertEqual(len(self.project.get_filtered_job_ids(recursive=True, status="suspended")), 1)
-        self.assertEqual(len(self.project.get_filtered_job_ids(recursive=True, status="aborted")), 1)
-        self.assertEqual(len(self.project.get_filtered_job_ids(recursive=False, status="suspended")), 0)
-        self.assertEqual(len(self.project.get_filtered_job_ids(recursive=False, hamilton="ToyJob")), 2)
-        self.assertEqual(len(self.project.get_filtered_job_ids(recursive=True, parentid=None)), 4)
-        self.assertEqual(len(self.project.get_filtered_job_ids(recursive=True, status="finished", job="toy_1")), 2)
-        self.assertEqual(len(self.project.get_filtered_job_ids(recursive=False, status="finished", job="toy_1")), 1)
-        self.assertRaises(ValueError, self.project.get_filtered_job_ids, gibberish=True)
+    def test_filtered_job_table(self):
+        self.assertEqual(len(self.project.job_table(recursive=False)), 2)
+        self.assertEqual(len(self.project.job_table(recursive=True)), 4)
+        self.assertEqual(len(self.project.job_table(recursive=True, status="finished")), 2)
+        self.assertEqual(len(self.project.job_table(recursive=False, status="finished")), 1)
+        self.assertEqual(len(self.project.job_table(recursive=True, status="suspended")), 1)
+        self.assertEqual(len(self.project.job_table(recursive=True, status="aborted")), 1)
+        self.assertEqual(len(self.project.job_table(recursive=False, status="suspended")), 0)
+        self.assertEqual(len(self.project.job_table(recursive=False, hamilton="ToyJob")), 2)
+        self.assertEqual(len(self.project.job_table(recursive=True, parentid=None)), 4)
+        self.assertEqual(len(self.project.job_table(recursive=True, status="finished", job="toy_1")), 2)
+        self.assertEqual(len(self.project.job_table(recursive=False, status="finished", job="toy_1")), 1)
+        self.assertRaises(ValueError, self.project.job_table, gibberish=True)
 
     def test_get_iter_jobs(self):
         self.assertEqual([job.output.data_out for job in self.project.iter_jobs(recursive=True,
