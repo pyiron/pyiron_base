@@ -857,8 +857,7 @@ class Project(ProjectPath, HasGroups):
             *jobs (str, int): name of the job or job ID, any number of them
         """
         if len(jobs) == 0:
-            df = self.job_table()
-            jobs = df[df.status == "running"].id
+            jobs = self.job_table(status='running').id
         if self.db is not None:
             for job_specifier in jobs:
                 if isinstance(job_specifier, str):
