@@ -624,7 +624,10 @@ class Project(ProjectPath, HasGroups):
         job_name_contains='',
         **kwargs: dict,
     ):
-        return self.db.job_table(
+        if job_name_contains != '':
+            warnings.warn("`job_name_contains` is deprecated - use `job='*term*'` instead")
+            kwargs['job'] = '*{}*'.format(job_name_contains)
+        jt = self.db.job_table(
             sql_query=self.sql_query,
             user=self.user,
             project_path=self.project_path,
@@ -634,9 +637,9 @@ class Project(ProjectPath, HasGroups):
             sort_by=sort_by,
             full_table=full_table,
             element_lst=element_lst,
-            job_name_contains=job_name_contains,
             **kwargs,
         )
+        return self._get_filtered_job_table(jt, **kwargs)
     job_table.__doc__ = '\n'.join([
         line for line in FileTable.job_table.__doc__.split('\n')
         if all([item not in line for item in ['sql_query (str)', 'user (str)', 'project_path (str)']])
