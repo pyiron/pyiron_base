@@ -627,25 +627,8 @@ class Project(ProjectPath, HasGroups):
         full_table=False,
         element_lst=None,
         job_name_contains='',
+        **kwargs: dict,
     ):
-        """
-        Access the job_table
-
-        Args:
-            recursive (bool): search subprojects [True/False] - default=True
-            columns (list): by default only the columns ['job', 'project', 'chemicalformula'] are selected, but the
-                            user can select a subset of ['id', 'status', 'chemicalformula', 'job', 'subjob', 'project',
-                            'projectpath', 'timestart', 'timestop', 'totalcputime', 'computer', 'hamilton',
-                            'hamversion', 'parentid', 'masterid']
-            all_columns (bool): Select all columns - this overwrites the columns option.
-            sort_by (str): Sort by a specific column
-            full_table (bool): Whether to show the entire pandas table
-            element_lst (list): list of elements required in the chemical formular - by default None
-            job_name_contains (str): a string which should be contained in every job_name
-
-        Returns:
-            pandas.Dataframe: Return the result as a pandas.Dataframe object
-        """
         return self.db.job_table(
             sql_query=self.sql_query,
             user=self.user,
@@ -657,7 +640,12 @@ class Project(ProjectPath, HasGroups):
             full_table=full_table,
             element_lst=element_lst,
             job_name_contains=job_name_contains,
+            **kwargs,
         )
+    job_table.__doc__ = '\n'.join([
+        line for line in FileTable.job_table.__doc__.split('\n')
+        if all([item not in line for item in ['sql_query (str)', 'user (str)', 'project_path (str)']])
+    ])
 
     def get_jobs_status(self, recursive=True, element_lst=None):
         """
