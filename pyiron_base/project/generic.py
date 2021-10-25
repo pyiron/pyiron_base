@@ -538,6 +538,12 @@ class Project(ProjectPath, HasGroups):
         for key, val in kwargs.items():
             if val is None:
                 mask &= df[key].isnull()
+            elif str(val).startswith('*') and str(val).endswith('*'):
+                mask &= df[key].str.contains(str(val).replace('*', ''))
+            elif str(val).endswith('*'):
+                mask &= df[key].str.startswith(str(val).replace('*', ''))
+            elif str(val).startswith('*'):
+                mask &= df[key].str.endswith(str(val).replace('*', ''))
             else:
                 mask &= df[key] == val
         if not mask.any():
@@ -1539,7 +1545,7 @@ class Project(ProjectPath, HasGroups):
         Add a new creator to the project class.
 
         Example)
-        
+
         >>> from pyiron_base import Project, Toolkit
         >>> class MyTools(Toolkit):
         ...     @property
