@@ -513,27 +513,23 @@ class Project(ProjectPath, HasGroups):
         """
         return self.load(job_specifier=job_specifier, convert_to_object=False)
 
-    def get_filtered_job_ids(self, recursive: bool = True, **kwargs: dict) -> List[int]:
+    def _get_filtered_job_table(self, df, **kwargs: dict) -> List[int]:
         """
         Get a list of job ids in a project based on matching values from any column in the project database
 
         Args:
-            recursive (bool): True if entries from subprojects are considered
+            df (pandas.DataFrame): DataFrame to be filtered
             **kwargs (dict): Optional arguments for filtering with keys matching the project database column name
                             (eg. status="finished")
 
         Returns:
             list: List of job IDs
         """
-        if len(kwargs) == 0:
-            return self.get_job_ids(recursive=recursive)
-        df = self.job_table(recursive=recursive)
-        if df.empty:
-            return []
+        if len(kwargs) == 0 or df.empty:
+            return df
         mask = np.ones_like(df.index, dtype=bool)
-        db_columns = self.get_db_columns()
         for key in kwargs.keys():
-            if key not in db_columns:
+            if key not in list(df.columns):
                 raise ValueError("Column name {} does not exist in the project database!")
         for key, val in kwargs.items():
             if val is None:
@@ -546,9 +542,7 @@ class Project(ProjectPath, HasGroups):
                 mask &= df[key].str.endswith(str(val).replace('*', ''))
             else:
                 mask &= df[key] == val
-        if not mask.any():
-            return []
-        return df[mask]["id"].to_list()
+        return df[mask]
 
     def iter_jobs(self, path: str = None, recursive: bool = True, convert_to_object: bool = True, progress: bool = True,
                   **kwargs: dict) -> Generator:
@@ -566,7 +560,8 @@ class Project(ProjectPath, HasGroups):
         Returns:
             yield: Yield of GenericJob or JobCore
         """
-        job_id_lst = self.get_filtered_job_ids(recursive=recursive, **kwargs)
+        df = self.job_table(recursive=recursive)
+        job_id_lst = self._get_filtered_job_table(df=df, **kwargs)['id']
         if progress:
             job_id_lst = tqdm(job_id_lst)
         for job_id in job_id_lst:
