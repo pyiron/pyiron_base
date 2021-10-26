@@ -2,9 +2,28 @@
 # Copyright (c) Max-Planck-Institut für Eisenforschung GmbH - Computational Materials Design (CM) Department
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 """
-The settings file provides the attributes of the configuration as properties.
+The :class:`Settings` object controls all the parameters of the pyiron environment that are specific to your particular
+configuration: your username, where on the filesystem to look for resources, and all flags necessary to define how
+pyiron objects relate to your database (or lack thereof).
+It is universally available for import an instantiation, and the python interpreter only ever sees a single instance of
+it, so modifications to the :class:`Settings` in one place are available everywhere else that `Settings` gets/has gotten
+instantiated.
 
-The settings object is additionally responsible for the queue adapter, the logger, and the publications list.
+It is possible to run pyiron only with default behaviour from the `Settings` class itself, but standard practice is to
+update the configuration by reading information stored on the system.
+The highest priority is to read values to read a configuration file identified in the `'PYIRONCONFIG'` system
+environment variable.
+Next it looks for a configuration file in the standard location (~/.pyiron).
+Last, it looks in the other system environment variables.
+
+Additionally, if either of the conda flags `'CONDA_PREFIX'` or `'CONDA_DIR'` are system environment variables, they get
+`/share/pyiron` appended to them and these values are *appended* to the resource paths.
+
+Finally, :class:`Settings` converts any file paths from your OS to something pyiron-compatible.
+
+In addition to these core responsibilities, at the moment :class:`Settings` also hosts the logger, the queue adapter
+(for sending pyiron jobs off to remote resources), and a publication list (for keeping track of what should be cited
+depending on which parts of pyiron are actually used).
 """
 
 import os
@@ -48,8 +67,33 @@ class Singleton(type):
 
 class Settings(metaclass=Singleton):
     """
-    The settings object can either search for an configuration file and use the default configuration only when no
-    other configuration file is found, or it can be forced to use the default configuration file.
+    The settings object reads configuration data from the following sources in decreasing order of priority: a
+    configuration file identified in the PYIRONCONFIG system environment variable, a default configuration file in
+    ~/.pyiron, and values in the system environment variables.
+
+    It also holds the logger and publication tracker.
+
+    Here are the configuration keys as the appear in the python code/config files/system env variables:
+
+        user / USER / PYIRONUSER (str):
+        resource_paths / RESOURCE_PATHS / PYIRONRESOURCEPATHS (list):
+        project_paths / PROJECT_PATHS / PYIRONPROJECTPATHS: (list),
+        connection_timeout / CONNECTION_TIMEOUT / PYIRONCONNECTIONTIMEOUT: (int),
+        sql_connection_string / CONNECTION / PYIRONSQLCONNECTIONSTRING (str):
+        sql_table_name / JOB_TABLE / PYIRONSQLTABLENAME (str):
+        sql_view_connection_string / - / - (str): Constructed, not available to be set in config files or sys env.
+        sql_view_table_name / VIEWER_TABLE / PYIRONSQLVIEWTABLENAME (str):
+        sql_view_user / VIEWERUSER / PYIRONSQLVIEWUSER (str):
+        sql_view_user_key / VIEWERPASSWD / PYIRONSQLVIEWUSERKEY (str):
+        sql_file / FILE / PYIRONSQLFILE (str):
+        sql_host / HOST / PYIRONSQHOST (str):
+        sql_type / TYPE / PYIRONSQLTYPE ("SQLite"|"Postgres"|"MySQL"): What type of SQL database to use. (Default is
+            "SQLite".)
+        sql_user_key / PASSWD / PYIRONSQLUSERKEY ():
+        sql_database / NAME / PYIRONSQLDATABASE ():
+        project_check_enabled / PROJECT_CHECK_ENABLED / PYIRONPROJECTCHECKENABLED (bool):
+        disable_database / DISABLE_DATABASE / PYIRONDISABLE (bool): Whether to turn off the database and use a
+            file-system-based hierarchy. (Default is False.)
 
     Args:
         config (dict): Provide a dict with the configuration.
@@ -57,7 +101,30 @@ class Settings(metaclass=Singleton):
 
     def __init__(self, config=None):
         # Default config dictionary
-        self._configuration = {
+        self._configuration = dict(self._default_configuration)
+        self._update_configuration(config)
+
+        # Build the SQLalchemy connection strings from config data
+        if not self._configuration["disable_database"]:
+            self._configuration = self._convert_database_config(
+                config=self._configuration
+            )
+
+        self._queue_adapter = None
+        self._queue_adapter = self._init_queue_adapter(
+            resource_path_lst=self._configuration["resource_paths"]
+        )
+        self.logger = setup_logger()
+        self._publication_lst = {}
+        self.publication_add(self.publication)
+
+    @property
+    def configuration(self):
+        return self._configuration
+
+    @property
+    def _default_configuration(self) -> dict:
+        return {
             "user": "pyiron",
             "resource_paths": [],
             "project_paths": [],
@@ -76,25 +143,52 @@ class Settings(metaclass=Singleton):
             "project_check_enabled": True,
             "disable_database": False,
         }
-        self._update_configuration(config)
-
-        # Build the SQLalchemy connection strings from config data
-        if not self._configuration["disable_database"]:
-            self._configuration = self.convert_database_config(
-                config=self._configuration
-            )
-
-        self._queue_adapter = None
-        self._queue_adapter = self._init_queue_adapter(
-            resource_path_lst=self._configuration["resource_paths"]
-        )
-        self.logger = setup_logger()
-        self._publication_lst = {}
-        self.publication_add(self.publication)
 
     @property
-    def configuration(self):
-        return self._configuration
+    def _environment_configuration_map(self):
+        return {
+            "PYIRONUSER": "user",
+            "PYIRONRESOURCEPATHS": "resource_paths",
+            "PYIRONPROJECTPATHS": "project_paths",
+            "PYIRONCONNECTIONTIMEOUT": "connection_timeout",
+            "PYIRONSQLCONNECTIONSTRING": "sql_connection_string",
+            "PYIRONSQLTABLENAME": "sql_table_name",
+            # "PYIRONSQLVIEWCONNECTIONSTRING": "sql_view_connection_string",  # Constructed, not settable
+            "PYIRONSQLVIEWTABLENAME": "sql_view_table_name",
+            "PYIRONSQLVIEWUSER": "sql_view_user",
+            "PYIRONSQLVIEWUSERKEY": "sql_view_user_key",
+            "PYIRONSQLFILE": "sql_file",
+            "PYIRONSQHOST": "sql_host",
+            "PYIRONSQLTYPE": "sql_type",
+            "PYIRONSQLUSERKEY": "sql_user_key",
+            "PYIRONSQLDATABASE": "sql_database",
+            "PYIRONPROJECTCHECKENABLED": "project_check_enabled",
+            "PYIRONDISABLE": "disable_database",
+        }
+
+    @property
+    def _configfile_configuration_map(self):
+        return {
+            "USER": "user",
+            "RESOURCE_PATHS": "resource_paths",
+            "PROJECT_PATHS": "project_paths",
+            "TOP_LEVEL_DIRS": "project_paths",  # For backwards compatibility
+            "CONNECTION_TIMEOUT": "connection_timeout",
+            "CONNECTION": "sql_connection_string",
+            "JOB_TABLE": "sql_table_name",
+            # "SQL_VIEW_CONNECTION_STRING": "sql_view_connection_string",  # Constructed, not settable
+            "VIEWER_TABLE": "sql_view_table_name",
+            "VIEWERUSER": "sql_view_user",
+            "VIEWERPASSWD": "sql_view_user_key",
+            "FILE": "sql_file",
+            "DATABASE_FILE": "sql_file",  # Alternative name
+            "HOST": "sql_host",
+            "TYPE": "sql_type",
+            "PASSWD": "sql_user_key",
+            "NAME": "sql_database",
+            "PROJECT_CHECK_ENABLED": "project_check_enabled",
+            "DISABLE_DATABASE": "disable_database",
+        }
 
     def _update_configuration(self, config):
         environment = os.environ
@@ -132,37 +226,6 @@ class Settings(metaclass=Singleton):
         ]
 
     @property
-    def queue_adapter(self):
-        return self._queue_adapter
-
-    @property
-    def publication_lst(self):
-        """
-        List of publications currently in use.
-
-        Returns:
-            list: list of publications
-        """
-        all_publication = []
-        for v in self._publication_lst.values():
-            if isinstance(v, list):
-                all_publication += v
-            else:
-                all_publication.append(v)
-        return all_publication
-
-    def publication_add(self, pub_dict):
-        """
-        Add a publication to the list of publications
-
-        Args:
-            pub_dict (dict): The key should be the name of the code used and the value a list of publications to cite.
-        """
-        for key, value in pub_dict.items():
-            if key not in self._publication_lst.keys():
-                self._publication_lst[key] = value
-
-    @property
     def login_user(self):
         """
         Get the username of the current user
@@ -182,41 +245,12 @@ class Settings(metaclass=Singleton):
         """
         return self._configuration["resource_paths"]
 
-    # private functions
-    @staticmethod
-    def _init_queue_adapter(resource_path_lst):
-        """
-        Initialize the queue adapter if a folder queues is found in one of the resource paths which contains a
-        queue configuration file (queue.yaml).
-
-        Args:
-            resource_path_lst (list): List of resource paths
-
-        Returns:
-            pysqa.QueueAdapter:
-        """
-        for resource_path in resource_path_lst:
-            if (
-                os.path.exists(resource_path)
-                and "queues" in os.listdir(resource_path)
-                and (
-                    "queue.yaml" in os.listdir(os.path.join(resource_path, "queues")) or
-                    "clusters.yaml" in os.listdir(os.path.join(resource_path, "queues"))
-                )
-            ):
-                queueadapter = getattr(importlib.import_module("pysqa"), "QueueAdapter")
-                return queueadapter(directory=os.path.join(resource_path, "queues"))
-        return None
-
     def _config_parse_file(self, config_file):
         """
-        Read section in configuration file and return a dictionary with the corresponding parameters.
+        Parse the config file and use it to populate the configuration.
 
         Args:
             config_file(str): confi file to parse
-
-        Returns:
-            dict: dictionary with the environment configuration
         """
         # load config parser - depending on Python version
         parser = ConfigParser(inline_comment_prefixes=(";",))
@@ -312,7 +346,7 @@ class Settings(metaclass=Singleton):
             self._configuration["sql_table_name"] = parser.get(section, "JOB_TABLE")
 
     @staticmethod
-    def convert_database_config(config):
+    def _convert_database_config(config):
         # Build the SQLalchemy connection strings
         if config["sql_type"] == "Postgres":
             config["sql_connection_string"] = (
@@ -384,26 +418,8 @@ class Settings(metaclass=Singleton):
                         "Config dictionary parameter type not recognized ", key, value
                     )
 
-    @staticmethod
-    def _get_config_from_environment(environment, config):
-        env_key_mapping = {
-            "PYIRONUSER": "user",
-            "PYIRONRESOURCEPATHS": "resource_paths",
-            "PYIRONPROJECTPATHS": "project_paths",
-            "PYIRONSQLCONNECTIONSTRING": "sql_connection_string",
-            "PYIRONSQLTABLENAME": "sql_table_name",
-            "PYIRONSQLVIEWCONNECTIONSTRING": "sql_view_connection_string",
-            "PYIRONSQLVIEWTABLENAME": "sql_view_table_name",
-            "PYIRONSQLVIEWUSER": "sql_view_user",
-            "PYIRONSQLVIEWUSERKEY": "sql_view_user_key",
-            "PYIRONSQLFILE": "sql_file",
-            "PYIRONSQHOST": "sql_host",
-            "PYIRONSQLTYPE": "sql_type",
-            "PYIRONSQLUSERKEY": "sql_user_key",
-            "PYIRONSQLDATABASE": "sql_database",
-            "PYIRONPROJECTCHECKENABLED": "project_check_enabled",
-            "PYIRONDISABLE": "disable_database",
-        }
+    def _get_config_from_environment(self, environment, config):
+        env_key_mapping = dict(self._environment_configuration_map)
         for k, v in env_key_mapping.items():
             if k in environment.keys():
                 if k in ["PYIRONPROJECTCHECKENABLED", "PYIRONDISABLE"]:
@@ -413,6 +429,62 @@ class Settings(metaclass=Singleton):
                 else:
                     config[v] = environment[k]
         return config
+
+    @property
+    def queue_adapter(self):
+        return self._queue_adapter
+
+    @staticmethod
+    def _init_queue_adapter(resource_path_lst):
+        """
+        Initialize the queue adapter if a folder queues is found in one of the resource paths which contains a
+        queue configuration file (queue.yaml).
+
+        Args:
+            resource_path_lst (list): List of resource paths
+
+        Returns:
+            pysqa.QueueAdapter:
+        """
+        for resource_path in resource_path_lst:
+            if (
+                os.path.exists(resource_path)
+                and "queues" in os.listdir(resource_path)
+                and (
+                    "queue.yaml" in os.listdir(os.path.join(resource_path, "queues")) or
+                    "clusters.yaml" in os.listdir(os.path.join(resource_path, "queues"))
+                )
+            ):
+                queueadapter = getattr(importlib.import_module("pysqa"), "QueueAdapter")
+                return queueadapter(directory=os.path.join(resource_path, "queues"))
+        return None
+
+    @property
+    def publication_lst(self):
+        """
+        List of publications currently in use.
+
+        Returns:
+            list: list of publications
+        """
+        all_publication = []
+        for v in self._publication_lst.values():
+            if isinstance(v, list):
+                all_publication += v
+            else:
+                all_publication.append(v)
+        return all_publication
+
+    def publication_add(self, pub_dict):
+        """
+        Add a publication to the list of publications
+
+        Args:
+            pub_dict (dict): The key should be the name of the code used and the value a list of publications to cite.
+        """
+        for key, value in pub_dict.items():
+            if key not in self._publication_lst.keys():
+                self._publication_lst[key] = value
 
     @property
     def publication(self):
