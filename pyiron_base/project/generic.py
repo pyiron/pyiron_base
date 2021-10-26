@@ -22,11 +22,9 @@ from pyiron_base.database.manager import DatabaseManager
 from pyiron_base.settings.publications import list_publications
 from pyiron_base.database.performance import get_database_statistics
 from pyiron_base.database.jobtable import (
-    get_db_columns,
     get_job_ids,
     get_job_id,
     get_jobs,
-    job_table,
     set_job_status,
     get_child_ids,
     get_job_working_directory,
@@ -51,6 +49,7 @@ from pyiron_base.server.queuestatus import (
 from pyiron_base.job.external import Notebook
 from pyiron_base.project.data import ProjectData
 from pyiron_base.archiving import import_archive, export_archive
+from typing import Generator
 
 __author__ = "Joerg Neugebauer, Jan Janssen"
 __copyright__ = (
@@ -153,6 +152,7 @@ class Project(ProjectPath, HasGroups):
         return self.create_group("..")
 
     @property
+    @deprecate("use db.view_mode")
     def view_mode(self):
         """
         Get viewer_mode - if viewer_mode is enable pyiron has read only access to the database.
@@ -165,10 +165,7 @@ class Project(ProjectPath, HasGroups):
         Returns:
             bool: returns TRUE when viewer_mode is enabled
         """
-        if not isinstance(self.db, FileTable):
-            return self.db.viewer_mode
-        else:
-            return False
+        return self.db.view_mode
 
     @property
     def name(self):
@@ -370,7 +367,7 @@ class Project(ProjectPath, HasGroups):
                  'timestop',
                  'totalcputime']
         """
-        return get_db_columns(self.db)
+        return self.db.get_table_headings()
 
     def get_jobs(self, recursive=True, columns=None):
         """
@@ -516,7 +513,8 @@ class Project(ProjectPath, HasGroups):
         """
         return self.load(job_specifier=job_specifier, convert_to_object=False)
 
-    def iter_jobs(self, path=None, recursive=True, convert_to_object=True, status=None, job_type=None, progress=True):
+    def iter_jobs(self, path: str = None, recursive: bool = True, convert_to_object: bool = True, progress: bool = True,
+                  **kwargs: dict) -> Generator:
         """
         Iterate over the jobs within the current project and it is sub projects
 
@@ -524,26 +522,15 @@ class Project(ProjectPath, HasGroups):
             path (str): HDF5 path inside each job object
             recursive (bool): search subprojects [True/False] - True by default
             convert_to_object (bool): load the full GenericJob object (default) or just the HDF5 / JobCore object
-            status (str/None): status of the jobs to filter for - ['finished', 'aborted', 'submitted', ...]
-            job_type (str/None): job type to filter for, corresponds to the 'hamilton' column in the job table
             progress (bool): if True (default), add an interactive progress bar to the iteration
+            **kwargs (dict): Optional arguments for filtering with keys matching the project database column name
+                            (eg. status="finished"). Asterisk can be used to denote a wildcard, for zero or more
+                            instances of any character
 
         Returns:
             yield: Yield of GenericJob or JobCore
         """
-        if status is None and job_type is None:
-            job_id_lst = self.get_jobs(recursive)["id"]
-        else:
-            df = self.job_table(recursive=True)
-            if df.empty:
-                job_id_lst = []
-            else:
-                mask = np.ones_like(df.index, dtype=bool)
-                if status is not None:
-                    mask &= df["status"] == status
-                if job_type is not None:
-                    mask &= df["hamilton"] == job_type
-                job_id_lst = list(df[mask]["id"])
+        job_id_lst = self.job_table(recursive=recursive, **kwargs)['id']
         if progress:
             job_id_lst = tqdm(job_id_lst)
         for job_id in job_id_lst:
@@ -604,27 +591,9 @@ class Project(ProjectPath, HasGroups):
         full_table=False,
         element_lst=None,
         job_name_contains='',
+        **kwargs: dict,
     ):
-        """
-        Access the job_table
-
-        Args:
-            recursive (bool): search subprojects [True/False] - default=True
-            columns (list): by default only the columns ['job', 'project', 'chemicalformula'] are selected, but the
-                            user can select a subset of ['id', 'status', 'chemicalformula', 'job', 'subjob', 'project',
-                            'projectpath', 'timestart', 'timestop', 'totalcputime', 'computer', 'hamilton',
-                            'hamversion', 'parentid', 'masterid']
-            all_columns (bool): Select all columns - this overwrites the columns option.
-            sort_by (str): Sort by a specific column
-            full_table (bool): Whether to show the entire pandas table
-            element_lst (list): list of elements required in the chemical formular - by default None
-            job_name_contains (str): a string which should be contained in every job_name
-
-        Returns:
-            pandas.Dataframe: Return the result as a pandas.Dataframe object
-        """
-        return job_table(
-            database=self.db,
+        return self.db.job_table(
             sql_query=self.sql_query,
             user=self.user,
             project_path=self.project_path,
@@ -634,8 +603,12 @@ class Project(ProjectPath, HasGroups):
             sort_by=sort_by,
             full_table=full_table,
             element_lst=element_lst,
-            job_name_contains=job_name_contains,
+            **kwargs,
         )
+    job_table.__doc__ = '\n'.join([
+        ll for ll in FileTable.job_table.__doc__.split('\n')
+        if not any([item in ll for item in ['sql_query (str)', 'user (str)', 'project_path (str)']])
+    ])
 
     def get_jobs_status(self, recursive=True, element_lst=None):
         """
@@ -781,20 +754,15 @@ class Project(ProjectPath, HasGroups):
         jobpath = getattr(importlib.import_module("pyiron_base.job.path"), "JobPath")
         if job_id:
             job = jobpath(db=self.db, job_id=job_id, user=self.user)
-            job = job.load_object(
-                convert_to_object=convert_to_object, project=job.project_hdf5.copy()
-            )
-            job._job_id = job_id
             if convert_to_object:
+                job = job.to_object()
                 job.reset_job_id(job_id=job_id)
                 job.set_input_to_read_only()
             return job
         elif db_entry:
             job = jobpath(db=self.db, db_entry=db_entry)
-            job = job.load_object(
-                convert_to_object=convert_to_object, project=job.project_hdf5.copy()
-            )
             if convert_to_object:
+                job = job.to_object()
                 job.set_input_to_read_only()
             return job
         else:
@@ -879,6 +847,34 @@ class Project(ProjectPath, HasGroups):
         else:
             return None
 
+    def refresh_job_status(self, *jobs):
+        """
+        Check if job is still running or crashed on the cluster node.
+
+        If `jobs` is not given, check for all jobs listed as running in the current project.
+
+        Args:
+            *jobs (str, int): name of the job or job ID, any number of them
+        """
+        if len(jobs) == 0:
+            jobs = self.job_table(status='running').id
+        if self.db is not None:
+            for job_specifier in jobs:
+                if isinstance(job_specifier, str):
+                    job_id = get_job_id(
+                        database=self.db,
+                        sql_query=self.sql_query,
+                        user=self.user,
+                        project_path=self.project_path,
+                        job_specifier=job_specifier,
+                    )
+                else:
+                    job_id = job_specifier
+                self.refresh_job_status_based_on_job_id(job_id)
+        else:
+            raise ValueError("Must have established database connection!")
+
+    @deprecate("use refresh_job_status()")
     def refresh_job_status_based_on_queue_status(self, job_specifier, status="running"):
         """
         Check if the job is still listed as running, while it is no longer listed in the queue.
@@ -889,15 +885,7 @@ class Project(ProjectPath, HasGroups):
         """
         if status != "running":
             raise NotImplementedError()
-        if self.db is not None:
-            job_id = get_job_id(
-                database=self.db,
-                sql_query=self.sql_query,
-                user=self.user,
-                project_path=self.project_path,
-                job_specifier=job_specifier,
-            )
-            self.refresh_job_status_based_on_job_id(job_id)
+        self.refresh_job_status(job_specifier)
 
     def refresh_job_status_based_on_job_id(self, job_id, que_mode=True):
         """
@@ -1207,9 +1195,8 @@ class Project(ProjectPath, HasGroups):
         job = getattr(importlib.import_module("pyiron_base.job.path"), "JobPathBase")(
             job_path=job_path
         )
-        job = job.load_object(
-            convert_to_object=convert_to_object, project=job.project_hdf5.copy()
-        )
+        if convert_to_object:
+            job = job.to_object()
         job.set_input_to_read_only()
         return job
 
@@ -1508,7 +1495,7 @@ class Project(ProjectPath, HasGroups):
         Add a new creator to the project class.
 
         Example)
-        
+
         >>> from pyiron_base import Project, Toolkit
         >>> class MyTools(Toolkit):
         ...     @property

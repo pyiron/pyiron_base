@@ -38,7 +38,7 @@ class JobType(object):
     The JobTypeBase class creates a new object of a given class type.
     """
 
-    def __new__(cls, class_name, project, job_name, job_class_dict, delete_existing_job=False):
+    def __new__(cls, class_name, project, job_name, job_class_dict, delete_existing_job=False, delete_aborted_job=False):
         """
         The __new__() method allows to create objects from other classes - the class selected by class_name
 
@@ -47,6 +47,8 @@ class JobType(object):
             project (Project): Project object (defines path where job will be created and stored)
             job_name (str): name of the job (must be unique within this project path)
             job_class_dict (dict): dictionary with the jobtypes to choose from.
+            delete_existing_job (bool): delete an existing job - default false
+            delete_aborted_job (bool): delete an existing and aborted job - default false
 
         Returns:
             GenericJob: object of type class_name
@@ -66,7 +68,7 @@ class JobType(object):
                 "No HDF5 file found - remove database entry and create new job! {}".format(job.job_name)
             )
             delete_existing_job = True
-        if delete_existing_job:
+        if delete_existing_job or (job.status.aborted and delete_aborted_job):
             job.remove()
             job = job_class(project, job_name)
         if job.status.aborted:
@@ -128,7 +130,7 @@ class JobFactory(PyironFactory):
 
     def __getattr__(self, name):
         if name in self._job_class_dict.keys():
-            def wrapper(job_name, delete_existing_job=False):
+            def wrapper(job_name, delete_existing_job=False, delete_aborted_job=False):
                 """
                 Create one of the following jobs:
                 - 'ExampleJob': example job just generating random number
@@ -140,48 +142,22 @@ class JobFactory(PyironFactory):
                 Args:
                     job_name (str): name of the job
                     delete_existing_job (bool): delete an existing job - default false
+                    delete_aborted_job (bool): delete an existing and aborted job - default false
 
                 Returns:
                     GenericJob: job object depending on the job_type selected
                 """
-                job = JobClass(
+                return JobType(
                     class_name=name,
-                    project=self._project,
-                    job_class_dict=self._job_class_dict
+                    project=ProjectHDFio(project=self._project.copy(), file_name=job_name),
+                    job_name=job_name,
+                    job_class_dict=self._job_class_dict,
+                    delete_existing_job=delete_existing_job,
+                    delete_aborted_job=delete_aborted_job
                 )
-                return job.create(job_name=job_name, delete_existing_job=delete_existing_job)
             return wrapper
         else:
             raise AttributeError("no job class named '{}' defined".format(name))
-
-
-class JobClass(object):
-    """
-    Small wrapper class to create object instances of any job type using pr.create.job.Code()
-    """
-    def __init__(self, class_name, project, job_class_dict):
-        self._class_name = class_name
-        self._project = project
-        self._job_class_dict = job_class_dict
-
-    def create(self, job_name, delete_existing_job=False):
-        """
-        Internal helper function for pr.create.job.Code()
-
-        Args:
-            job_name (str): name of the job
-            delete_existing_job (bool): delete an existing job - default false
-
-        Returns:
-            GenericJob: job object depending on the job_type selected
-        """
-        return JobType(
-            class_name=self._class_name,
-            project=ProjectHDFio(project=self._project.copy(), file_name=job_name),
-            job_name=job_name,
-            job_class_dict=self._job_class_dict,
-            delete_existing_job=delete_existing_job
-        )
 
 
 class JobTypeChoice(metaclass=Singleton):

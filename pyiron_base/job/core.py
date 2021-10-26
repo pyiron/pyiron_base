@@ -541,27 +541,6 @@ class JobCore(HasGroups):
             convert_to_object=False
         )
 
-    def load_object(self, convert_to_object=True, project=None):
-        """
-        Load object to convert a JobPath to an GenericJob object.
-
-        Args:
-            convert_to_object (bool): convert the object to an pyiron object or only access the HDF5 file - default=True
-                                      accessing only the HDF5 file is about an order of magnitude faster, but only
-                                      provides limited functionality. Compare the GenericJob object to JobCore object.
-            project (ProjectHDFio): ProjectHDFio to load the object with - optional
-
-        Returns:
-            GenericJob, JobPath: depending on convert_to_object
-        """
-        if not project:
-            project = self.project_hdf5.copy()
-        if convert_to_object:
-            with project.open("..") as job_dir:
-                job_dir._mode = "a"
-                return self.to_object(project=job_dir, job_name=self._name)
-        return self
-
     def is_master_id(self, job_id):
         """
         Check if the job ID job_id is the master ID for any child job
@@ -714,6 +693,7 @@ class JobCore(HasGroups):
         new_job_core._parent_id = self._parent_id
         new_job_core._master_id = self._master_id
         new_job_core._status = self._status
+        new_job_core._create_working_directory()
         if new_job_name == self.job_name:
             self.project_hdf5.copy_to(destination=hdf5_project.open(".."))
         else:
@@ -729,9 +709,13 @@ class JobCore(HasGroups):
 
         # Copy files outside the HDF5 file
         if copy_files and os.path.exists(self.working_directory):
+            if len(os.listdir(new_job_core.working_directory)) == 0:
+                os.rmdir(new_job_core.working_directory)
+            else:
+                raise RuntimeError("Target directory for copy not empty!")
             shutil.copytree(
                 self.working_directory,
-                new_job_core.working_directory,
+                new_job_core.working_directory
             )
         return new_job_core, file_project, hdf5_project, False
 

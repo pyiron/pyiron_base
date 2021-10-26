@@ -24,6 +24,7 @@ run_mode_lst = [
     "queue",
     "manual",
     "thread",
+    "worker",
     "interactive",
     "interactive_non_modal",
 ]

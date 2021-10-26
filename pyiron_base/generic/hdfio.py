@@ -7,6 +7,7 @@ Classes to map the Python objects to HDF5 data structures
 
 import h5py
 import os
+from collections.abc import MutableMapping
 import importlib
 import pandas
 import posixpath
@@ -34,7 +35,8 @@ def open_hdf5(filename, mode="r", swmr=False):
     else:
         return h5py.File(filename, mode=mode, libver="latest", swmr=swmr)
 
-class FileHDFio(HasGroups):
+
+class FileHDFio(HasGroups, MutableMapping):
     """
     Class that provides all info to access a h5 file. This class is based on h5io.py, which allows to
     get and put a large variety of jobs to/from h5
@@ -77,6 +79,119 @@ class FileHDFio(HasGroups):
         self.h5_path = h5_path
         self._filter = ["groups", "nodes", "objects"]
 
+    # MutableMapping Impl
+    def __contains__(self, item):
+        nodes_groups = self.list_all()
+        return item in nodes_groups["nodes"] or item in nodes_groups["groups"]
+
+    def __len__(self):
+        nodes_groups = self.list_all()
+        return len(nodes_groups['nodes']) + len(nodes_groups["groups"])
+
+    def __iter__(self):
+        return iter(self.keys())
+
+    def __getitem__(self, item):
+        """
+        Get/ read data from the HDF5 file
+
+        Args:
+            item (str, slice): path to the data or key of the data object
+
+        Returns:
+            dict, list, float, int: data or data object
+        """
+        if isinstance(item, slice):
+            if not (item.start or item.stop or item.step):
+                return self.values()
+            raise NotImplementedError("Implement if needed, e.g. for [:]")
+        else:
+            item_lst = item.split("/")
+            if len(item_lst) == 1 and item_lst[0] != "..":
+                if item in self.list_nodes():
+                    obj = h5io.read_hdf5(self.file_name, title=self._get_h5_path(item))
+                    return obj
+                if item in self.list_groups():
+                    with self.open(item) as hdf_item:
+                        obj = hdf_item.copy()
+                        return obj
+                raise ValueError("Unknown item: {} {} {}".format(item, self.file_name, self.h5_path))
+            else:
+                if item_lst[0] == "":  # item starting with '/', thus we have an absoute HDF5 path
+                    item_abs_lst = os.path.normpath(item).replace("\\", "/").split("/")
+                else:  # relative HDF5 path
+                    # The self.h5_path is an absolute path (/h5_path/in/h5/file), however, to
+                    # reach any directory super to root, we start with a
+                    # relative path = ./h5_path/in/h5/file and add whatever we get as item.
+                    # The normpath finally returns a path to the item which is relative to the hdf-root.
+                    item_abs_lst = (
+                        os.path.normpath(os.path.join('.' + self.h5_path, item))
+                        .replace("\\", "/")
+                        .split("/")
+                    )
+                # print('h5_path=', self.h5_path, 'item=', item, 'item_abs_lst=', item_abs_lst)
+                if (
+                        item_abs_lst[0] == "." and len(item_abs_lst) == 1
+                ):
+                    # Here, we are asked to return the root of the HDF5-file. The resulting self.path would be the
+                    # same as the self.file_path and, thus, the path of the pyiron Project this HDF5-file belongs to:
+                    return self.create_project_from_hdf5()
+                elif item_abs_lst[0] == "..":
+                    # Here, we are asked to return a path super to the root of the HDF5-file, a.k.a. the path of it's
+                    # pyiron Project, thus we pass the relative path to the pyiron Project to handle it:
+                    return self.create_project_from_hdf5()["/".join(item_abs_lst)]
+                else:
+                    hdf_object = self.copy()
+                    hdf_object.h5_path = "/".join(item_abs_lst[:-1])
+                    return hdf_object[item_abs_lst[-1]]
+
+    def __setitem__(self, key, value):
+        """
+        Store data inside the HDF5 file
+
+        Args:
+            key (str): key to store the data
+            value (pandas.DataFrame, pandas.Series, dict, list, float, int): basically any kind of data is supported
+        """
+        use_json = True
+        if hasattr(value, "to_hdf") & (
+            not isinstance(value, (pandas.DataFrame, pandas.Series))
+        ):
+            value.to_hdf(self, key)
+        elif (
+            isinstance(value, (list, np.ndarray))
+            and len(value) > 0
+            and isinstance(value[0], (list, np.ndarray))
+            and len(value[0]) > 0
+            and not isinstance(value[0][0], str)
+        ):
+            shape_lst = [np.shape(sub) for sub in value]
+            if all([shape_lst[0][1:] == t[1:] for t in shape_lst]):
+                value = np.array([np.array(v) for v in value], dtype=object)
+                use_json=False
+        elif isinstance(value, tuple):
+            value = list(value)
+        h5io.write_hdf5(
+            self.file_name,
+            value,
+            title=posixpath.join(self.h5_path, key),
+            overwrite="update",
+            use_json=use_json,
+        )
+
+    def __delitem__(self, key):
+        """
+        Delete item from the HDF5 file
+
+        Args:
+            key (str): key of the item to delete
+        """
+        if self.file_exists:
+            try:
+                with open_hdf5(self.file_name, mode="a") as store:
+                    del store[key]
+            except (AttributeError, KeyError):
+                pass
     @property
     def file_exists(self):
         """
@@ -634,54 +749,6 @@ class FileHDFio(HasGroups):
         self.remove_file()
         os.rename(hdf_new.file_name, file_name)
 
-    def __setitem__(self, key, value):
-        """
-        Store data inside the HDF5 file
-
-        Args:
-            key (str): key to store the data
-            value (pandas.DataFrame, pandas.Series, dict, list, float, int): basically any kind of data is supported
-        """
-        use_json = True
-        if hasattr(value, "to_hdf") & (
-            not isinstance(value, (pandas.DataFrame, pandas.Series))
-        ):
-            value.to_hdf(self, key)
-        elif (
-            isinstance(value, (list, np.ndarray))
-            and len(value) > 0
-            and isinstance(value[0], (list, np.ndarray))
-            and len(value[0]) > 0
-            and not isinstance(value[0][0], str)
-        ):
-            shape_lst = [np.shape(sub) for sub in value]
-            if all([shape_lst[0][1:] == t[1:] for t in shape_lst]):
-                value = np.array([np.array(v) for v in value], dtype=object)
-                use_json=False
-        elif isinstance(value, tuple):
-            value = list(value)
-        h5io.write_hdf5(
-            self.file_name,
-            value,
-            title=posixpath.join(self.h5_path, key),
-            overwrite="update",
-            use_json=use_json,
-        )
-
-    def __delitem__(self, key):
-        """
-        Delete item from the HDF5 file
-
-        Args:
-            key (str): key of the item to delete
-        """
-        if self.file_exists:
-            try:
-                with open_hdf5(self.file_name, mode="a") as store:
-                    del store[key]
-            except (AttributeError, KeyError):
-                pass
-
     def __str__(self):
         """
         Machine readable string representation
@@ -720,60 +787,6 @@ class FileHDFio(HasGroups):
             self._store.close()
         except AttributeError:
             pass
-
-    def __getitem__(self, item):
-        """
-        Get/ read data from the HDF5 file
-
-        Args:
-            item (str, slice): path to the data or key of the data object
-
-        Returns:
-            dict, list, float, int: data or data object
-        """
-        if isinstance(item, slice):
-            if not (item.start or item.stop or item.step):
-                return self.values()
-            raise NotImplementedError("Implement if needed, e.g. for [:]")
-        else:
-            item_lst = item.split("/")
-            if len(item_lst) == 1 and item_lst[0] != "..":
-                if item in self.list_nodes():
-                    obj = h5io.read_hdf5(self.file_name, title=self._get_h5_path(item))
-                    return obj
-                if item in self.list_groups():
-                    with self.open(item) as hdf_item:
-                        obj = hdf_item.copy()
-                        return obj
-                raise ValueError("Unknown item: {} {} {}".format(item, self.file_name, self.h5_path))
-            else:
-                if item_lst[0] == "":  # item starting with '/', thus we have an absoute HDF5 path
-                    item_abs_lst = os.path.normpath(item).replace("\\", "/").split("/")
-                else:  # relative HDF5 path
-                    # The self.h5_path is an absolute path (/h5_path/in/h5/file), however, to
-                    # reach any directory super to root, we start with a
-                    # relative path = ./h5_path/in/h5/file and add whatever we get as item.
-                    # The normpath finally returns a path to the item which is relative to the hdf-root.
-                    item_abs_lst = (
-                        os.path.normpath(os.path.join('.' + self.h5_path, item))
-                        .replace("\\", "/")
-                        .split("/")
-                    )
-                # print('h5_path=', self.h5_path, 'item=', item, 'item_abs_lst=', item_abs_lst)
-                if (
-                        item_abs_lst[0] == "." and len(item_abs_lst) == 1
-                ):
-                    # Here, we are asked to return the root of the HDF5-file. The resulting self.path would be the
-                    # same as the self.file_path and, thus, the path of the pyiron Project this HDF5-file belongs to:
-                    return self.create_project_from_hdf5()
-                elif item_abs_lst[0] == "..":
-                    # Here, we are asked to return a path super to the root of the HDF5-file, a.k.a. the path of it's
-                    # pyiron Project, thus we pass the relative path to the pyiron Project to handle it:
-                    return self.create_project_from_hdf5()["/".join(item_abs_lst)]
-                else:
-                    hdf_object = self.copy()
-                    hdf_object.h5_path = "/".join(item_abs_lst[:-1])
-                    return hdf_object[item_abs_lst[-1]]
 
     def _read(self, item):
         """

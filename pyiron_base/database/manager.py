@@ -119,10 +119,10 @@ class DatabaseManager(metaclass=Singleton):
 
     def switch_to_viewer_mode(self):
         """
-        Switch from user mode to viewer mode - if viewer_mode is enable pyiron has read only access to the database.
+        Switch from user mode to viewer mode - if view_mode is enable pyiron has read only access to the database.
         """
         if s.configuration["sql_view_connection_string"] is not None and not self.database_is_disabled:
-            if self._database.viewer_mode:
+            if self._database.view_mode:
                 s.logger.log("Database is already in viewer mode!")
             else:
                 self.close_connection()
@@ -130,23 +130,23 @@ class DatabaseManager(metaclass=Singleton):
                     s.configuration["sql_view_connection_string"],
                     s.configuration["sql_view_table_name"],
                 )
-                self._database.viewer_mode = True
+                self._database.view_mode = True
 
         else:
             print("Viewer Mode is not available on this pyiron installation.")
 
     def switch_to_user_mode(self):
         """
-        Switch from viewer mode to user mode - if viewer_mode is enable pyiron has read only access to the database.
+        Switch from viewer mode to user mode - if view_mode is enable pyiron has read only access to the database.
         """
         if s.configuration["sql_view_connection_string"] is not None and not self.database_is_disabled:
-            if self._database.viewer_mode:
+            if self._database.view_mode:
                 self.close_connection()
                 self._database = DatabaseAccess(
                     s.configuration["sql_connection_string"],
                     s.configuration["sql_table_name"],
                 )
-                self._database.viewer_mode = True
+                self._database.view_mode = True
             else:
                 s.logger.log("Database is already in user mode!")
         else:

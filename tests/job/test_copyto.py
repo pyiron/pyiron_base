@@ -28,7 +28,7 @@ class TestCopyTo(TestWithProject):
 
         jobc = self.project.inspect(job.id)
         copyc = jobc.copy_to(jobc.project_hdf5, "job_core_copy")
-        self.assertEqual(jobc.load_object().script_path, copyc.load_object().script_path,
+        self.assertEqual(jobc.to_object().script_path, copyc.to_object().script_path,
                          "Script path not equal after JobCore copy.")
 
         os.remove("foo.py")
