@@ -253,7 +253,7 @@ class Settings(metaclass=Singleton):
             if config["sql_file"] is None:
                 # SQLite is raising ugly error messages when the database directory does not exist.
                 raise ValueError("For sql_type SQLite, the sql_file must not be None")
-            sql_file = self.convert_path_to_abs_posix(path=config["sql_file"])
+            sql_file = config["sql_file"]
             if os.path.dirname(
                 sql_file
             ) != "" and not os.path.exists(
