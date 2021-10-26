@@ -22,20 +22,31 @@ class State(metaclass=Singleton):
     A helper class to give quick and easy access to all the singleton classes which together define the IDE.
 
     Attributes:
+        logger: Self-explanatory.
+        publications: Bibliography of papers which should be cited based on the code that was used (alpha release).
         settings: System settings.
         database: Database (or file base) connection.
-        logger: Self-explanatory.
         queue_adapter: Configuration for using remote resources.
-        publications: Bibliography of papers which should be cited based on the code that was used (alpha release).
     """
-    # With python >=3.9 we can just use @classmethod and @property together so these can be safe from being overwritten
-    # But with earlier versions the implementation is ugly, so live dangerously
-    # https://stackoverflow.com/questions/128573/using-property-on-classmethods
-    settings = _settings
-    database = _database
-    logger = _logger
-    queue_adapter = _queue_adapters.adapter
-    publications = _publications
+    @property
+    def logger(self):
+        return _logger
+
+    @property
+    def publications(self):
+        return _publications
+
+    @property
+    def settings(self):
+        return _settings
+
+    @property
+    def database(self):
+        return _database
+
+    @property
+    def queue_adapter(self):
+        return _queue_adapters.adapter
 
 
 state = State()
