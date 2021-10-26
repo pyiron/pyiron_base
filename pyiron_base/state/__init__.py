@@ -1,3 +1,19 @@
+# coding: utf-8
+# Copyright (c) Max-Planck-Institut für Eisenforschung GmbH - Computational Materials Design (CM) Department
+# Distributed under the terms of "New BSD License", see the LICENSE file.
+"""
+The `state` module holds (almost!) all the code for defining the global state of a pyiron instance.
+Such "global" behaviour is achieved by using the `Singleton` metaclass to guarantee that each class only even has a
+single instance per session.
+These are all instantiated for the first time inside their respective module for easy access, and collected here in the
+init under the `state` object to give a single, even easier point of access.
+
+Here's the "almost": Right now the database management still lives off in its own module but is referenced here and
+ultimately should probably be relocated here (work is ongoing on our database interaction...), and there is a
+`JobTypeChoice` class that is anyhow on the chopping block and will be deleted once we don't need it for backwards
+compatibility.
+"""
+
 from pyiron_base.database.manager import database as _database
 from pyiron_base.generic.util import Singleton
 from pyiron_base.state.logger import logger as _logger
@@ -19,7 +35,7 @@ __date__ = "Oct 22, 2021"
 
 class State(metaclass=Singleton):
     """
-    A helper class to give quick and easy access to all the singleton classes which together define the IDE.
+    A helper class to give quick and easy access to all the singleton classes which together define the state module.
 
     Attributes:
         logger: Self-explanatory.
