@@ -6,7 +6,7 @@ A class for mediating connections to SQL databases.
 """
 
 from pyiron_base.generic.util import Singleton
-from pyiron_base.ide.settings import settings as s
+from pyiron_base.state.settings import settings as s
 from pyiron_base.database.generic import DatabaseAccess
 import os
 

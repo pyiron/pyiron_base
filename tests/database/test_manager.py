@@ -3,7 +3,7 @@
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
 from pyiron_base._tests import TestWithProject
-from pyiron_base import IDE
+from pyiron_base import state
 from os import getcwd
 
 
@@ -12,8 +12,8 @@ class TestDatabaseManager(TestWithProject):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        cls.dbm = IDE.database
-        cls.s = IDE.settings
+        cls.dbm = state.database
+        cls.s = state.settings
 
     def test_database_is_disabled(self):
         self.assertEqual(self.s.configuration["disable_database"], self.dbm.database_is_disabled,

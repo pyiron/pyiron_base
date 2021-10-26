@@ -16,7 +16,7 @@ from pyiron_base.master.generic import GenericMaster
 from pyiron_base.master.submissionstatus import SubmissionStatus
 from pyiron_base.generic.parameters import GenericParameters
 from pyiron_base.job.jobstatus import JobStatus
-from pyiron_base.ide import IDE
+from pyiron_base.state import state
 from pyiron_base.job.wrapper import job_wrapper_function
 from pyiron_base.generic.util import deprecate
 
@@ -607,7 +607,7 @@ class ParallelMaster(GenericMaster):
             job.save()
             job.project_hdf5.create_working_directory()
             job.write_input()
-            if IDE.database.database_is_disabled or (IDE.queue_adapter is not None and IDE.queue_adapter.remote_flag):
+            if state.database.database_is_disabled or (state.queue_adapter is not None and state.queue_adapter.remote_flag):
                 job_lst.append(
                     (
                         job.project.path,
@@ -628,7 +628,7 @@ class ParallelMaster(GenericMaster):
                     )
                 )
         pool.starmap(job_wrapper_function, job_lst)
-        if IDE.database.database_is_disabled:
+        if state.database.database_is_disabled:
             self.project.db.update()
         self.status.collect = True
         self.run()  # self.run_if_collect()

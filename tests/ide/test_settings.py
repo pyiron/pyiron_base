@@ -3,7 +3,7 @@
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
 from unittest import TestCase
-from pyiron_base.ide.settings import settings as s
+from pyiron_base.state.settings import settings as s
 import os
 from pathlib import Path
 from configparser import ConfigParser

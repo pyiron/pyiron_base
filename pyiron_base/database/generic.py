@@ -5,7 +5,7 @@
 DatabaseAccess class deals with accessing the database
 """
 
-from pyiron_base.ide.logger import logger
+from pyiron_base.state.logger import logger
 from abc import ABC, abstractmethod
 import warnings
 import numpy as np

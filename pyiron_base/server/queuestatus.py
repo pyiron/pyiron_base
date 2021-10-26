@@ -7,7 +7,7 @@ Set of functions to interact with the queuing system directly from within pyiron
 
 import pandas
 import time
-from pyiron_base.ide import IDE
+from pyiron_base.state import state
 from pyiron_base.generic.util import static_isinstance
 from pyiron_base.job.jobstatus import job_status_finished_lst
 
@@ -39,14 +39,14 @@ def queue_table(job_ids=[], project_only=True, full_table=False):
     """
     if project_only and not job_ids:
         return []
-    if IDE.queue_adapter is not None:
+    if state.queue_adapter is not None:
         if full_table:
             pandas.set_option('display.max_rows', None)
             pandas.set_option('display.max_columns', None)
         else:
             pandas.reset_option('display.max_rows')
             pandas.reset_option('display.max_columns')
-        df = IDE.queue_adapter.get_status_of_my_jobs()
+        df = state.queue_adapter.get_status_of_my_jobs()
         if not project_only:
             return df[
                 [
@@ -77,8 +77,8 @@ def queue_check_job_is_waiting_or_running(item):
         bool: [True/False]
     """
     que_id = validate_que_request(item)
-    if IDE.queue_adapter is not None:
-        return IDE.queue_adapter.get_status_of_job(process_id=que_id) in [
+    if state.queue_adapter is not None:
+        return state.queue_adapter.get_status_of_job(process_id=que_id) in [
             "pending",
             "running",
         ]
@@ -97,8 +97,8 @@ def queue_info_by_job_id(job_id):
     Returns:
         dict: Dictionary with the output from the queuing system - optimized for the Sun grid engine
     """
-    if IDE.queue_adapter is not None:
-        return IDE.queue_adapter.get_status_of_job(process_id=job_id)
+    if state.queue_adapter is not None:
+        return state.queue_adapter.get_status_of_job(process_id=job_id)
     else:
         return None
 
@@ -110,8 +110,8 @@ def queue_is_empty():
     Returns:
         bool: True if the table is empty, else False - optimized for the Sun grid engine
     """
-    if IDE.queue_adapter is not None:
-        return len(IDE.queue_adapter.get_status_of_my_jobs()) == 0
+    if state.queue_adapter is not None:
+        return len(state.queue_adapter.get_status_of_my_jobs()) == 0
     else:
         return True
 
@@ -127,8 +127,8 @@ def queue_delete_job(item):
         str: Output from the queuing system as string - optimized for the Sun grid engine
     """
     que_id = validate_que_request(item)
-    if IDE.queue_adapter is not None:
-        return IDE.queue_adapter.delete_job(process_id=que_id)
+    if state.queue_adapter is not None:
+        return state.queue_adapter.delete_job(process_id=que_id)
     else:
         return None
 
@@ -144,11 +144,11 @@ def queue_enable_reservation(item):
         str: Output from the queuing system as string - optimized for the Sun grid engine
     """
     que_id = validate_que_request(item)
-    if IDE.queue_adapter is not None:
+    if state.queue_adapter is not None:
         if isinstance(que_id, list):
-            return [IDE.queue_adapter.enable_reservation(process_id=q) for q in que_id]
+            return [state.queue_adapter.enable_reservation(process_id=q) for q in que_id]
         else:
-            return IDE.queue_adapter.enable_reservation(process_id=que_id)
+            return state.queue_adapter.enable_reservation(process_id=que_id)
     else:
         return None
 
@@ -166,11 +166,11 @@ def wait_for_job(job, interval_in_s=5, max_iterations=100):
         ValueError: max_iterations reached, job still running
     """
     if job.status.string not in job_status_finished_lst:
-        if IDE.queue_adapter is not None and IDE.queue_adapter.remote_flag and job.server.queue is not None:
+        if state.queue_adapter is not None and state.queue_adapter.remote_flag and job.server.queue is not None:
             finished = False
             for _ in range(max_iterations):
                 if not queue_check_job_is_waiting_or_running(item=job):
-                    IDE.queue_adapter.transfer_file_to_remote(
+                    state.queue_adapter.transfer_file_to_remote(
                         file=job.project_hdf5.file_name,
                         transfer_back=True,
                         delete_remote=False
@@ -189,7 +189,7 @@ def wait_for_job(job, interval_in_s=5, max_iterations=100):
         else:
             finished = False
             for _ in range(max_iterations):
-                if IDE.database.database_is_disabled:
+                if state.database.database_is_disabled:
                     job.project.db.update()
                 job.refresh_job_status()
                 if job.status.string in job_status_finished_lst:
@@ -233,11 +233,11 @@ def update_from_remote(project, recursive=True):
         project: Project instance the jobs is located in
         recursive (bool): search subprojects [True/False] - default=True
     """
-    if IDE.queue_adapter is not None and IDE.queue_adapter.remote_flag:
+    if state.queue_adapter is not None and state.queue_adapter.remote_flag:
         df_project = project.job_table(recursive=recursive)
         df_submitted = df_project[df_project.status == "submitted"]
         df_combined = df_project[df_project.status.isin(["running", "submitted"])]
-        df_queue = IDE.queue_adapter.get_status_of_my_jobs()
+        df_queue = state.queue_adapter.get_status_of_my_jobs()
         if len(df_queue) > 0 and len(df_queue[df_queue.jobname.str.startswith("pi_")]) > 0:
             df_queue = df_queue[df_queue.jobname.str.startswith("pi_")]
             df_queue["pyiron_id"] = df_queue.apply(
@@ -254,7 +254,7 @@ def update_from_remote(project, recursive=True):
         for job_id in df_combined.id.values:
             if job_id not in jobs_now_running_lst:
                 job = project.inspect(job_id)
-                IDE.queue_adapter.transfer_file_to_remote(
+                state.queue_adapter.transfer_file_to_remote(
                     file=job.project_hdf5.file_name,
                     transfer_back=True,
                     delete_remote=False

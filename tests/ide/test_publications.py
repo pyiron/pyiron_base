@@ -3,7 +3,7 @@
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
 from unittest import TestCase
-from pyiron_base.ide.publications import publications
+from pyiron_base.state.publications import publications
 
 
 class TestPublications(TestCase):

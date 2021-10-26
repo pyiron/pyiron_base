@@ -10,7 +10,7 @@ from pyiron_base.generic.datacontainer import DataContainer
 from pyiron_base.generic.inputlist import InputList
 from pyiron_base.generic.parameters import GenericParameters
 from pyiron_base.generic.util import deprecate, deprecate_soon, ImportAlarm
-from pyiron_base.ide import IDE
+from pyiron_base.state import state
 from pyiron_base.job.executable import Executable
 from pyiron_base.job.external import Notebook
 from pyiron_base.job.generic import GenericJob
@@ -28,8 +28,8 @@ from pyiron_base.master.flexible import FlexibleMaster
 from pyiron_base.project.generic import Project, Creator
 from pyiron_base.pyio.parser import Logstatus, extract_data_from_file
 from pyiron_base.server.queuestatus import validate_que_request
-from pyiron_base.ide.settings import Settings
-from pyiron_base.ide.install import install_dialog
+from pyiron_base.state.settings import Settings
+from pyiron_base.state.install import install_dialog
 from pyiron_base.table.datamining import PyironTable, TableJob
 from pyiron_base.generic.object import HasDatabase, HasStorage, PyironObject
 from pyiron_base.database.performance import get_database_statistics

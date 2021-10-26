@@ -4,7 +4,7 @@
 
 import os
 import shutil
-from pyiron_base.ide.install import install_pyiron
+from pyiron_base.state.install import install_pyiron
 from pyiron_base._tests import PyironTestCase
 
 

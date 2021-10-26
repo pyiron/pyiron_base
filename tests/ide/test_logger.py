@@ -3,7 +3,7 @@
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
 from unittest import TestCase
-from pyiron_base.ide.logger import logger
+from pyiron_base.state.logger import logger
 import os
 import shutil
 

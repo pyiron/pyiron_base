@@ -5,7 +5,7 @@
 from pyiron_base.generic.util import Singleton
 from pysqa import QueueAdapter as PySQAAdpter
 import os
-from pyiron_base.ide.settings import settings
+from pyiron_base.state.settings import settings
 
 __author__ = "Liam Huber"
 __copyright__ = (

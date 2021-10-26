@@ -24,8 +24,8 @@ Finally, :class:`Settings` converts any file paths from your OS to something pyi
 
 import os
 from configparser import ConfigParser
-from pyiron_base.ide.logger import logger
-from pyiron_base.ide.publications import publications
+from pyiron_base.state.logger import logger
+from pyiron_base.state.publications import publications
 from pathlib import Path
 from pyiron_base.generic.util import deprecate, Singleton
 
@@ -387,19 +387,18 @@ class Settings(metaclass=Singleton):
         return config
 
     @property
-    # @deprecate("Use pyiron_base.ide.ide.IDE.logger")
+    # @deprecate("Use pyiron_base.state.state.logger")
     def logger(self):
-        # Deprecated, use pyiron_base.ide.ide.IDE.logger instead
         return logger
 
     @property
-    # @deprecate("Use pyiron_base.ide.ide.IDE.queue_adapter")
+    # @deprecate("Use pyiron_base.state.state.queue_adapter")
     def queue_adapter(self):
-        from pyiron_base.ide import IDE
-        return IDE.queue_adapter
+        from pyiron_base.state import state
+        return state.queue_adapter
 
     @property
-    # @deprecate("Use pyiron_base.ide.ide.IDE.publications.list()")
+    # @deprecate("Use pyiron_base.state.state.publications.list()")
     def publication_lst(self):
         """
         List of publications currently in use.
@@ -409,7 +408,7 @@ class Settings(metaclass=Singleton):
         """
         return publications.list()
 
-    # @deprecate("Use pyiron_base.ide.ide.IDE.publications.add")
+    # @deprecate("Use pyiron_base.state.state.publications.add")
     def publication_add(self, pub_dict):
         """
         Add a publication to the list of publications
@@ -420,7 +419,7 @@ class Settings(metaclass=Singleton):
         return publications.add(pub_dict)
 
     @property
-    # @deprecate("Use pyiron_base.ide.ide.IDE.publications.pyiron_publication")
+    # @deprecate("Use pyiron_base.state.state.publications.pyiron_publication")
     def publication(self):
         return publications.pyiron_publication
 

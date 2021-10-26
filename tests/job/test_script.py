@@ -45,8 +45,8 @@ class TestScriptJob(TestWithCleanProject):
         self.project.data.in_ = 6
         self.project.data.write()
         with open(self.complex_script, 'w') as f:
-            f.write("from pyiron_base import Project, IDE\n")
-            f.write("IDE.settings.configuration['project_check_enabled'] = False\n")
+            f.write("from pyiron_base import Project, state\n")
+            f.write("state.settings.configuration['project_check_enabled'] = False\n")
             f.write(f"pr = Project('{self.project_path}')\n")
             f.write("pr.data.out = pr.data.in_ * 7\n")
             f.write("pr.data.write()\n")

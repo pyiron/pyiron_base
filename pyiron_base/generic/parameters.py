@@ -12,7 +12,7 @@ import pandas
 import posixpath
 import warnings
 from ast import literal_eval
-from pyiron_base.ide import IDE
+from pyiron_base.state import state
 
 __author__ = "Joerg Neugebauer"
 __copyright__ = (
@@ -320,7 +320,7 @@ class GenericParameters:
             file_name (str): absolute path to the input file
             ignore_trigger (str): trigger for lines to be ignored
         """
-        IDE.logger.debug("file: %s %s", file_name, os.path.isfile(file_name))
+        state.logger.debug("file: %s %s", file_name, os.path.isfile(file_name))
         if not os.path.isfile(file_name):
             raise ValueError("file does not exist: " + file_name)
         with open(file_name, "r") as f:
@@ -827,7 +827,7 @@ class GenericParameters:
                 )
                 return True
         else:
-            IDE.logger.warning(
+            state.logger.warning(
                 "Unknown parameter (does not exist in block_dict): {}".format(
                     parameter_name
                 )

@@ -3,8 +3,8 @@
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
 from unittest import TestCase
-from pyiron_base.ide.queue_adapter import queue_adapters
-from pyiron_base.ide.settings import settings
+from pyiron_base.state.queue_adapter import queue_adapters
+from pyiron_base.state.settings import settings
 from pysqa import QueueAdapter
 import os
 import shutil

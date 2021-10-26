@@ -1,9 +1,9 @@
 from pyiron_base.database.manager import database as _database
 from pyiron_base.generic.util import Singleton
-from pyiron_base.ide.logger import logger as _logger
-from pyiron_base.ide.publications import publications as _publications
-from pyiron_base.ide.queue_adapter import queue_adapters as _queue_adapters
-from pyiron_base.ide.settings import settings as _settings
+from pyiron_base.state.logger import logger as _logger
+from pyiron_base.state.publications import publications as _publications
+from pyiron_base.state.queue_adapter import queue_adapters as _queue_adapters
+from pyiron_base.state.settings import settings as _settings
 
 __author__ = "Liam Huber"
 __copyright__ = (
@@ -17,7 +17,7 @@ __status__ = "production"
 __date__ = "Oct 22, 2021"
 
 
-class IDE(metaclass=Singleton):
+class State(metaclass=Singleton):
     """
     A helper class to give quick and easy access to all the singleton classes which together define the IDE.
 
@@ -36,3 +36,6 @@ class IDE(metaclass=Singleton):
     logger = _logger
     queue_adapter = _queue_adapters.adapter
     publications = _publications
+
+
+state = State()

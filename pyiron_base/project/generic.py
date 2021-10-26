@@ -17,7 +17,7 @@ from git import Repo, InvalidGitRepositoryError
 from warnings import warn
 from pyiron_base.project.path import ProjectPath
 from pyiron_base.database.filetable import FileTable
-from pyiron_base.ide import IDE
+from pyiron_base.state import state
 from pyiron_base.database.performance import get_database_statistics
 from pyiron_base.database.jobtable import (
     get_job_ids,
@@ -120,9 +120,9 @@ class Project(ProjectPath, HasGroups):
         self._data = None
         self._creator = Creator(project=self)
 
-        if not IDE.database.database_is_disabled:
-            IDE.database.open_connection()
-            self.db = IDE.database.database
+        if not state.database.database_is_disabled:
+            state.database.open_connection()
+            self.db = state.database.database
         else:
             self.db = FileTable(project=path)
         self.job_type = JobTypeChoice()
@@ -131,7 +131,7 @@ class Project(ProjectPath, HasGroups):
 
     @property
     def ide(self):
-        return IDE
+        return state
 
     @property
     def maintenance(self):
@@ -243,7 +243,7 @@ class Project(ProjectPath, HasGroups):
         """
         job_id = self.get_job_id(new_job_name)
         if job_id is not None:
-            IDE.logger.info("create_from_job has already job_id {}!".format(job_id))
+            state.logger.info("create_from_job has already job_id {}!".format(job_id))
             return None
 
         print("job_old: ", job_old.status)
@@ -253,7 +253,7 @@ class Project(ProjectPath, HasGroups):
             input_only=False,
             new_database_entry=True
         )
-        IDE.logger.debug(
+        state.logger.debug(
             "create_job:: {} {} from id {}".format(
                 self.path, new_job_name, job_old.job_id
             )
@@ -724,12 +724,12 @@ class Project(ProjectPath, HasGroups):
             GenericJob, JobCore: Either the full GenericJob object or just a reduced JobCore object
         """
         if self.sql_query is not None:
-            IDE.logger.warning(
+            state.logger.warning(
                 "SQL filter '%s' is active (may exclude job) ", self.sql_query
             )
         job_id = self.get_job_id(job_specifier=job_specifier)
         if job_id is None:
-            IDE.logger.warning("Job '%s' does not exist and cannot be loaded", job_specifier)
+            state.logger.warning("Job '%s' does not exist and cannot be loaded", job_specifier)
             return None
         return self.load_from_jobpath(
             job_id=job_id, convert_to_object=convert_to_object
@@ -939,7 +939,7 @@ class Project(ProjectPath, HasGroups):
                 try:
                     job = self.load(job_specifier=job_specifier, convert_to_object=False)
                     if job is None:
-                        IDE.logger.warning(
+                        state.logger.warning(
                             "Job '%s' does not exist and could not be removed",
                             str(job_specifier),
                         )
@@ -948,7 +948,7 @@ class Project(ProjectPath, HasGroups):
                     else:
                         job.remove()
                 except IOError as _:
-                    IDE.logger.debug(
+                    state.logger.debug(
                         "hdf file does not exist. Removal from database will be attempted."
                     )
                     job_id = self.get_job_id(job_specifier)
@@ -1002,9 +1002,9 @@ class Project(ProjectPath, HasGroups):
                 else:
                     try:
                         self.remove_job(job_specifier=job_id)
-                        IDE.logger.debug("Remove job with ID {0} ".format(job_id))
+                        state.logger.debug("Remove job with ID {0} ".format(job_id))
                     except (IndexError, Exception):
-                        IDE.logger.debug(
+                        state.logger.debug(
                             "Could not remove job with ID {0} ".format(job_id)
                         )
         else:
@@ -1103,18 +1103,18 @@ class Project(ProjectPath, HasGroups):
         Switch from user mode to viewer mode - if viewer_mode is enable pyiron has read only access to the database.
         """
         if not isinstance(self.db, FileTable):
-            IDE.database.switch_to_viewer_mode()
-            IDE.database.open_connection()
-            self.db = IDE.database.database
+            state.database.switch_to_viewer_mode()
+            state.database.open_connection()
+            self.db = state.database.database
 
     def switch_to_user_mode(self):
         """
         Switch from viewer mode to user mode - if viewer_mode is enable pyiron has read only access to the database.
         """
         if not isinstance(self.db, FileTable):
-            IDE.database.switch_to_user_mode()
-            IDE.database.open_connection()
-            self.db = IDE.database.database
+            state.database.switch_to_user_mode()
+            state.database.open_connection()
+            self.db = state.database.database
 
     def switch_to_local_database(self, file_name="pyiron.db", cwd=None):
         """
@@ -1126,21 +1126,21 @@ class Project(ProjectPath, HasGroups):
         """
         if cwd is None:
             cwd = self.path
-        if not IDE.database.project_check_enabled:
-            IDE.database.switch_to_local_database(file_name=file_name, cwd=cwd)
+        if not state.database.project_check_enabled:
+            state.database.switch_to_local_database(file_name=file_name, cwd=cwd)
             super(Project, self).__init__(path=self.path)
         else:
-            IDE.database.switch_to_local_database(file_name=file_name, cwd=cwd)
-        self.db = IDE.database.database
+            state.database.switch_to_local_database(file_name=file_name, cwd=cwd)
+        self.db = state.database.database
 
     def switch_to_central_database(self):
         """
         Switch from local mode to central mode - if local_mode is enable pyiron is using a local database.
         """
-        IDE.database.switch_to_central_database()
-        if not IDE.database.database_is_disabled:
-            IDE.database.open_connection()
-            self.db = IDE.database.database
+        state.database.switch_to_central_database()
+        if not state.database.database_is_disabled:
+            state.database.open_connection()
+            self.db = state.database.database
         else:
             self.db = FileTable(project=self.path)
             super(Project, self).__init__(path=self.path)
@@ -1225,7 +1225,7 @@ class Project(ProjectPath, HasGroups):
         Returns:
             pandas.DataFrame/ list: list of publications in Bibtex format.
         """
-        return IDE.publications.show(bib_format=bib_format)
+        return state.publications.show(bib_format=bib_format)
 
     @staticmethod
     def queue_is_empty():
@@ -1309,7 +1309,7 @@ class Project(ProjectPath, HasGroups):
             level (str): 'DEBUG, INFO, WARN'
             channel (int): 0: file_log, 1: stream, None: both
         """
-        IDE.logger.set_logging_level(level=level, channel=channel)
+        state.logger.set_logging_level(level=level, channel=channel)
 
     @staticmethod
     def list_clusters():
@@ -1319,7 +1319,7 @@ class Project(ProjectPath, HasGroups):
         Returns:
             list: List of computing clusters
         """
-        return IDE.queue_adapter.list_clusters()
+        return state.queue_adapter.list_clusters()
 
     @staticmethod
     def switch_cluster(cluster_name):
@@ -1329,7 +1329,7 @@ class Project(ProjectPath, HasGroups):
         Args:
             cluster_name (str): name of the computing cluster
         """
-        IDE.queue_adapter.switch_cluster(cluster_name=cluster_name)
+        state.queue_adapter.switch_cluster(cluster_name=cluster_name)
 
     @staticmethod
     def _is_hdf5_dir(item):
@@ -1431,7 +1431,7 @@ class Project(ProjectPath, HasGroups):
 
             pattern = posixpath.join(self.path, pattern)
             for f in glob.glob(pattern):
-                IDE.logger.info("remove file {}".format(posixpath.basename(f)))
+                state.logger.info("remove file {}".format(posixpath.basename(f)))
                 os.remove(f)
         else:
             raise EnvironmentError("copy_to: is not available in Viewermode !")
@@ -1572,7 +1572,7 @@ class GlobalMaintenance:
         initialize the flag self._check_postgres, to control whether pyiron is
         set to communicate with a postgres database.
         """
-        connection_string = IDE.settings._configuration['sql_connection_string']
+        connection_string = state.settings._configuration['sql_connection_string']
         if "postgresql" not in connection_string:
             warn(
                 """
