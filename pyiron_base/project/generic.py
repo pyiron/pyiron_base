@@ -46,7 +46,7 @@ from pyiron_base.server.queuestatus import (
 from pyiron_base.job.external import Notebook
 from pyiron_base.project.data import ProjectData
 from pyiron_base.archiving import import_archive, export_archive
-from typing import List, Generator
+from typing import Generator
 
 __author__ = "Joerg Neugebauer, Jan Janssen"
 __copyright__ = (
@@ -511,37 +511,6 @@ class Project(ProjectPath, HasGroups):
         """
         return self.load(job_specifier=job_specifier, convert_to_object=False)
 
-    def get_filtered_job_ids(self, recursive: bool = True, **kwargs: dict) -> List[int]:
-        """
-        Get a list of job ids in a project based on matching values from any column in the project database
-
-        Args:
-            recursive (bool): True if entries from subprojects are considered
-            **kwargs (dict): Optional arguments for filtering with keys matching the project database column name
-                            (eg. status="finished")
-
-        Returns:
-            list: List of job IDs
-        """
-        if len(kwargs) == 0:
-            return self.get_job_ids(recursive=recursive)
-        df = self.job_table(recursive=recursive)
-        if df.empty:
-            return []
-        mask = np.ones_like(df.index, dtype=bool)
-        db_columns = self.get_db_columns()
-        for key in kwargs.keys():
-            if key not in db_columns:
-                raise ValueError("Column name {} does not exist in the project database!")
-        for key, val in kwargs.items():
-            if val is None:
-                mask &= df[key].isnull()
-            else:
-                mask &= df[key] == val
-        if not mask.any():
-            return []
-        return df[mask]["id"].to_list()
-
     def iter_jobs(self, path: str = None, recursive: bool = True, convert_to_object: bool = True, progress: bool = True,
                   **kwargs: dict) -> Generator:
         """
@@ -553,12 +522,13 @@ class Project(ProjectPath, HasGroups):
             convert_to_object (bool): load the full GenericJob object (default) or just the HDF5 / JobCore object
             progress (bool): if True (default), add an interactive progress bar to the iteration
             **kwargs (dict): Optional arguments for filtering with keys matching the project database column name
-                            (eg. status="finished")
+                            (eg. status="finished"). Asterisk can be used to denote a wildcard, for zero or more
+                            instances of any character
 
         Returns:
             yield: Yield of GenericJob or JobCore
         """
-        job_id_lst = self.get_filtered_job_ids(recursive=recursive, **kwargs)
+        job_id_lst = self.job_table(recursive=recursive, **kwargs)['id']
         if progress:
             job_id_lst = tqdm(job_id_lst)
         for job_id in job_id_lst:
@@ -619,25 +589,8 @@ class Project(ProjectPath, HasGroups):
         full_table=False,
         element_lst=None,
         job_name_contains='',
+        **kwargs: dict,
     ):
-        """
-        Access the job_table
-
-        Args:
-            recursive (bool): search subprojects [True/False] - default=True
-            columns (list): by default only the columns ['job', 'project', 'chemicalformula'] are selected, but the
-                            user can select a subset of ['id', 'status', 'chemicalformula', 'job', 'subjob', 'project',
-                            'projectpath', 'timestart', 'timestop', 'totalcputime', 'computer', 'hamilton',
-                            'hamversion', 'parentid', 'masterid']
-            all_columns (bool): Select all columns - this overwrites the columns option.
-            sort_by (str): Sort by a specific column
-            full_table (bool): Whether to show the entire pandas table
-            element_lst (list): list of elements required in the chemical formular - by default None
-            job_name_contains (str): a string which should be contained in every job_name
-
-        Returns:
-            pandas.Dataframe: Return the result as a pandas.Dataframe object
-        """
         return self.db.job_table(
             sql_query=self.sql_query,
             user=self.user,
@@ -648,8 +601,12 @@ class Project(ProjectPath, HasGroups):
             sort_by=sort_by,
             full_table=full_table,
             element_lst=element_lst,
-            job_name_contains=job_name_contains,
+            **kwargs,
         )
+    job_table.__doc__ = '\n'.join([
+        ll for ll in FileTable.job_table.__doc__.split('\n')
+        if not any([item in ll for item in ['sql_query (str)', 'user (str)', 'project_path (str)']])
+    ])
 
     def get_jobs_status(self, recursive=True, element_lst=None):
         """
@@ -898,8 +855,7 @@ class Project(ProjectPath, HasGroups):
             *jobs (str, int): name of the job or job ID, any number of them
         """
         if len(jobs) == 0:
-            df = self.job_table()
-            jobs = df[df.status == "running"].id
+            jobs = self.job_table(status='running').id
         if self.db is not None:
             for job_specifier in jobs:
                 if isinstance(job_specifier, str):
@@ -1538,7 +1494,7 @@ class Project(ProjectPath, HasGroups):
         Add a new creator to the project class.
 
         Example)
-        
+
         >>> from pyiron_base import Project, Toolkit
         >>> class MyTools(Toolkit):
         ...     @property

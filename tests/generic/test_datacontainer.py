@@ -10,15 +10,15 @@ import copy
 import os
 import unittest
 import warnings
+import h5py
 import numpy as np
 import pandas as pd
 
 
 class Sub(DataContainer):
-    def __init__(self, init=None, table_name=None, lazy=False):
-        super().__init__(init=init, table_name=table_name, lazy=lazy)
+    def __init__(self, init=None, table_name=None, lazy=False, wrap_blacklist=()):
+        super().__init__(init=init, table_name=table_name, lazy=lazy, wrap_blacklist=())
         self.foo = 42
-
 
 class TestDataContainer(TestWithCleanProject):
 
@@ -193,6 +193,47 @@ class TestDataContainer(TestWithCleanProject):
         d = {"a": 0, "b": 1, "c": 2}
         pl.update(d)
         self.assertEqual(dict(pl), d, "update without options does not call generic method")
+
+    def test_update_blacklist(self):
+        """Wrapping nested mapping should only apply to types not in the blacklist."""
+        pl = DataContainer()
+        pl.update([ {"a": 1, "b": 2}, [{"c": 3, "d": 4}] ], wrap=True, blacklist=(dict,))
+        self.assertTrue(isinstance(pl[0], dict), "nested dict wrapped, even if black listed")
+        self.assertTrue(isinstance(pl[1][0], dict), "nested dict wrapped, even if black listed")
+        pl.clear()
+
+        pl.update({"a": [1, 2, 3], "b": {"c": [4, 5, 6]}}, wrap=True, blacklist=(list,))
+        self.assertTrue(isinstance(pl.a, list), "nested list wrapped, even if black listed")
+        self.assertTrue(isinstance(pl.b.c, list), "nested list wrapped, even if black listed")
+        pl.clear()
+
+    def test_wrap_hdf(self):
+        """DataContainer should be able to be initialized by HDF objects."""
+        h = self.project.create_hdf(self.project.path, "wrap_test")
+        h["foo"] = 42
+        h.create_group("bar")["test"] = 23
+        h["bar"].create_group("nested")["test"] = 23
+        d = DataContainer(h)
+        self.assertTrue(isinstance(d.bar, DataContainer),
+                        "HDF group not wrapped from ProjectHDFio.")
+        self.assertTrue(isinstance(d.bar.nested, DataContainer),
+                        "Nested HDF group not wrapped from ProjectHDFio.")
+        self.assertEqual(d.foo, 42, "Top-level node not correctly wrapped from ProjectHDFio.")
+        self.assertEqual(d.bar.test, 23, "Nested node not correctly wrapped from ProjectHDFio.")
+        self.assertEqual(d.bar.nested.test, 23, "Nested node not correctly wrapped from ProjectHDFio.")
+
+        h = h5py.File(h.file_name)
+        d = DataContainer(h)
+        self.assertTrue(isinstance(d.wrap_test.bar, DataContainer),
+                        "HDF group not wrapped from h5py.File.")
+        self.assertTrue(isinstance(d.wrap_test.bar.nested, DataContainer),
+                        "Nested HDF group not wrapped from h5py.File.")
+        self.assertEqual(d.wrap_test.foo, h["wrap_test/foo"],
+                         "Top-level node not correctly wrapped from h5py.File.")
+        self.assertEqual(d.wrap_test.bar.test, h["wrap_test/bar/test"],
+                         "Nested node not correctly wrapped from h5py.File.")
+        self.assertEqual(d.wrap_test.bar.nested.test, h["wrap_test/bar/nested/test"],
+                         "Nested node not correctly wrapped from h5py.File.")
 
     def test_extend(self):
         pl = DataContainer()
