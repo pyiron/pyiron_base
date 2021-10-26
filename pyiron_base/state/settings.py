@@ -250,16 +250,9 @@ class Settings(metaclass=Singleton):
                 "mysql+pymysql", config["user"], config["sql_user_key"], config["sql_host"], config["sql_database"]
             )
         elif config["sql_type"] == "SQLite":
-            # SQLite is raising ugly error messages when the database directory does not exist.
             if config["sql_file"] is None:
-                if len(config["resource_paths"]) >= 1:
-                    config["sql_file"] = "/".join(
-                        [config["resource_paths"][0], "pyiron.db"]
-                    )
-                else:
-                    config["sql_file"] = "/".join(
-                        ["~", "pyiron.db"]
-                    )
+                # SQLite is raising ugly error messages when the database directory does not exist.
+                raise ValueError("For sql_type SQLite, the sql_file must not be None")
             sql_file = self.convert_path_to_abs_posix(path=config["sql_file"])
             if os.path.dirname(
                 sql_file
