@@ -32,53 +32,56 @@ class TestSettings(TestCase):
             pass
 
     def test_config_update_order(self):
+        # System environment variables
+        env_val = 1
+        self.env["PYIRONCONNECTIONTIMEOUT"] = str(env_val)
+
         # Config file in env
         local_loc = Path(self.cwd + "/.pyiron")
-        local_val = "settings_test_local"
-        local_loc.write_text(f"[DEFAULT]\nTYPE = {local_val}\n")
+        local_val = 2
+        local_loc.write_text(f"[DEFAULT]\nCONNECTION_TIMEOUT = {local_val}\n")
         self.env["PYIRONCONFIG"] = str(local_loc)
 
         # Default config file
         default_loc = self.default_loc
-        default_val = "settings_test_default"
-        default_loc.write_text(f"[DEFAULT]\nTYPE = {default_val}\n")
-
-        # System environment variables
-        env_val = "settings_test_env"
-        self.env["PYIRONSQLTYPE"] = str(env_val)
+        default_val = 3
+        default_loc.write_text(f"[DEFAULT]\nCONNECTION_TIMEOUT = {default_val}\n")
 
         # Now peel them off one at a time to make sure we have the promised order of resolution
-        s._update_configuration()
+        user_val = 0
+        s.update({"connection_timeout": user_val})
         self.assertEqual(
-            local_val, s._configuration["sql_type"],
-            msg="A config file specified in the env takes top priority."
+            user_val, s.configuration["connection_timeout"],
+            msg="User-specified update values should take top priority"
+        )
+
+        s.update()
+        self.assertEqual(
+            env_val, s.configuration["connection_timeout"],
+            msg="System environment values take second priority"
+        )
+
+        self.env.pop("PYIRONCONNECTIONTIMEOUT")
+        s.update()
+        self.assertEqual(
+            local_val, s.configuration["connection_timeout"],
+            msg="A config file specified in the env takes third priority."
         )
 
         self.env.pop("PYIRONCONFIG")
         local_loc.unlink()
-        s._update_configuration()
+        s.update()
         self.assertEqual(
-            default_val, s._configuration["sql_type"],
-            msg="The default config file takes priority over the env variables"
+            default_val, s.configuration["connection_timeout"],
+            msg="The default config file is the last thing to be read"
         )
 
         default_loc.unlink()
-        s._update_configuration()
+        s.update()
         self.assertEqual(
-            env_val, s._configuration["sql_type"],
-            msg="Value should be read from system environment"
+            s._default_configuration["connection_timeout"], s.configuration["connection_timeout"],
+            msg="Code base default should be used after all other options are exhausted"
         )
-
-        # self.env.pop("PYIRONSQLTYPE")
-        # s._update_configuration(self.s._configuration)
-        # self.assertEqual(
-        #     s._default_configuration["sql_type"], s._configuration["sql_type"],
-        #     msg="Code base default should be used after all other options are exhausted"
-        # )
-        # TODO: Include the default value in the update loop
-        #       Right now it either retains the old value (even if you del s and re-instantiate)
-        #       or doesn't know about the field at all (if you s._configuration.pop("sql_type")
-        #       But right now I'm not trying to change behaviour, just refactor.
 
     def _pop_conda_env_variables(self):
         conda_keys = ["CONDA_PREFIX", "CONDA_DIR"]
@@ -90,8 +93,8 @@ class TestSettings(TestCase):
 
     def test_appending_conda_resources(self):
         self._pop_conda_env_variables()
-        s._update_configuration()  # Clean out any old conda paths
-        before = len(s._configuration["resource_paths"])
+        s.update()  # Clean out any old conda paths
+        before = len(s.configuration["resource_paths"])
 
         here = Path(".").resolve()
         share = Path("./share").resolve()
@@ -101,14 +104,14 @@ class TestSettings(TestCase):
         self.env["CONDA_PREFIX"] = str(here)  # Contains /share/pyiron -- should get added
         self.env["CONDA_DIR"] = str(pyiron)  # Does not contain /share/pyiron -- shouldn't get added
 
-        s._update_configuration()
+        s.update()
         self.assertTrue(
-            any([pyiron.as_posix() in p for p in s._configuration["resource_paths"]]),
+            any([pyiron.as_posix() in p for p in s.configuration["resource_paths"]]),
             msg="The new resource should have been added"
         )
         self.assertEqual(
             before + 1,
-            len(s._configuration["resource_paths"]),
+            len(s.configuration["resource_paths"]),
             msg="The new resource should only have been added once, as the other path didn't have share/pyiron"
         )
         pyiron.rmdir()
@@ -125,15 +128,10 @@ class TestSettings(TestCase):
                 )
 
     def test_path_conversion(self):
-        local = Path(self.cwd + "/.pyiron")
         p1 = '~/here/is/a/path/'
-        p2 = 'here\\is\\another'  # TODO: Is this really good enough? Is it really windowsy enough?
-        local.write_text(f"[DEFAULT]\nRESOURCE_PATHS = {p1}, {p2}\n")
-        self.env["PYIRONCONFIG"] = str(local)
-        self._pop_conda_env_variables()
-        s._update_configuration()
+        p2 = 'here\\is\\another'
+        s.update({'resource_paths': f'{p1}, {p2}'})
         self.assertListEqual(
             [self._niceify_path(p1), self._niceify_path(p2)],
-            s._configuration['resource_paths']
+            s.configuration['resource_paths']
         )
-        local.unlink()

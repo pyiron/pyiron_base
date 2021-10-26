@@ -40,7 +40,7 @@ class TestQueueAdapters(TestCase):
                 _write_queue_config(file_name=os.path.join(queue_dir, stem + ".yaml"), queue_name=stem)
 
         cls.resource_paths = list(settings.resource_paths)
-        settings.configuration["resource_paths"] = [settings.convert_path(p) for p in resources]
+        settings.configuration["resource_paths"] = [settings.convert_path_to_abs_posix(p) for p in resources]
 
         queue_adapters.construct_adapters()
 

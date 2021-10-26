@@ -33,7 +33,7 @@ class TestDatabaseManager(TestWithProject):
         self.assertIs(self.dbm.top_path(self.project_path + "/test"), None)
 
         self.s.configuration["project_check_enabled"] = True
-        self.s.configuration["project_paths"] = [self.s.convert_path(getcwd())]
+        self.s.configuration["project_paths"] = [self.s.convert_path_to_abs_posix(getcwd())]
         self.s.configuration["disable_database"] = False  # Otherwise has the chance to override project_check_enabled..
         self.assertTrue(self.dbm.top_path(self.project_path + "/test") in self.project_path)
 

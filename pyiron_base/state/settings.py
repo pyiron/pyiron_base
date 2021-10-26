@@ -10,16 +10,22 @@ it, so modifications to the :class:`Settings` in one place are available everywh
 instantiated.
 
 It is possible to run pyiron only with default behaviour from the `Settings` class itself, but standard practice is to
-update the configuration by reading information stored on the system.
-The highest priority is to read values to read a configuration file identified in the `'PYIRONCONFIG'` system
-environment variable.
-Next it looks for a configuration file in the standard location (~/.pyiron).
-Last, it looks in the other system environment variables.
+overwrite part or all of the default configuration by reading information stored on the system.
+The highest priority is to read values to read from system environment variables starting with 'PYIRON'.
+If none of these except 'PYIRONCONFIG' are found, next `Settings` will try to read a configuration file stored at this
+location.
+If 'PYIRONCONFIG' was not specified, `Settings` will instead try to read a file at the default location: `~/.pyiron`.
+Finally, if none of these were specified the default values from the codebase are used.
+
+The configuration can later be updated by calling the `update` method.
+Before going through the update cycle specified above, this routine first checks to see if a dictionary was passed in
+and if so uses that to update the default configuration instead.
 
 Additionally, if either of the conda flags `'CONDA_PREFIX'` or `'CONDA_DIR'` are system environment variables, they get
 `/share/pyiron` appended to them and these values are *appended* to the resource paths.
 
-Finally, :class:`Settings` converts any file paths from your OS to something pyiron-compatible.
+Finally, :class:`Settings` converts any file paths from your OS to something pyiron-compatible, and does some other
+cleaning and consistency checks.
 """
 
 import os
@@ -28,6 +34,9 @@ from pyiron_base.state.logger import logger
 from pyiron_base.state.publications import publications
 from pathlib import Path
 from pyiron_base.generic.util import deprecate, Singleton
+from typing import Union, Dict, List
+from distutils.util import strtobool
+from copy import deepcopy
 
 __author__ = "Jan Janssen"
 __copyright__ = (
@@ -73,9 +82,38 @@ class Settings(metaclass=Singleton):
     """
 
     def __init__(self):
-        # Default config dictionary
+        self._configuration = None
+        self.update()
+
+    @property
+    def configuration(self):
+        return self._configuration
+
+    def update(self, user_dict=None):
         self._configuration = dict(self._default_configuration)
-        self._update_configuration()
+        env_dict = self._get_config_from_environment()
+        file_dict = self._get_config_from_file()
+        if user_dict is not None:
+            self._update_from_dict(user_dict)
+        elif env_dict is not None:
+            self._update_from_dict(env_dict)
+        elif file_dict is not None:
+            self._update_from_dict(file_dict)
+
+        if self._configuration["sql_type"] in ["Postgres", "MySQL"]:
+            # TODO: Is this really necessary? At least let's deal with it downstream, e.g. by ignoring the field here...
+            self._configuration["sql_file"] = None
+
+        if "CONDA_PREFIX" in os.environ.keys() \
+                and os.path.exists(os.path.join(os.environ["CONDA_PREFIX"], "share", "pyiron")):
+            self._configuration["resource_paths"].append(
+                self.convert_path_to_abs_posix(os.path.join(os.environ["CONDA_PREFIX"], "share", "pyiron"))
+            )
+        elif "CONDA_DIR" in os.environ.keys() \
+                and os.path.exists(os.path.join(os.environ["CONDA_DIR"], "share", "pyiron")):
+            self._configuration["resource_paths"].append(
+                self.convert_path_to_abs_posix(os.path.join(os.environ["CONDA_DIR"], "share", "pyiron"))
+            )
 
         # Build the SQLalchemy connection strings from config data
         if not self._configuration["disable_database"]:
@@ -84,12 +122,8 @@ class Settings(metaclass=Singleton):
             )
 
     @property
-    def configuration(self):
-        return self._configuration
-
-    @property
     def _default_configuration(self) -> dict:
-        return {
+        return deepcopy({
             "user": "pyiron",
             "resource_paths": [],
             "project_paths": [],
@@ -100,14 +134,14 @@ class Settings(metaclass=Singleton):
             "sql_view_table_name": None,
             "sql_view_user": None,
             "sql_view_user_key": None,
-            "sql_file": None,
+            "sql_file": self.convert_path_to_abs_posix("~/pyiron.db"),
             "sql_host": None,
             "sql_type": "SQLite",
             "sql_user_key": None,
             "sql_database": None,
-            "project_check_enabled": True,
+            "project_check_enabled": False,
             "disable_database": False,
-        }
+        })
 
     @property
     def _environment_configuration_map(self):
@@ -118,7 +152,7 @@ class Settings(metaclass=Singleton):
             "PYIRONCONNECTIONTIMEOUT": "connection_timeout",
             "PYIRONSQLCONNECTIONSTRING": "sql_connection_string",
             "PYIRONSQLTABLENAME": "sql_table_name",
-            # "PYIRONSQLVIEWCONNECTIONSTRING": "sql_view_connection_string",  # Constructed, not settable
+            "PYIRONSQLVIEWCONNECTIONSTRING": "INVALID_KEY_PYIRONSQLVIEWCONNECTIONSTRING",  # Constructed, not settable
             "PYIRONSQLVIEWTABLENAME": "sql_view_table_name",
             "PYIRONSQLVIEWUSER": "sql_view_user",
             "PYIRONSQLVIEWUSERKEY": "sql_view_user_key",
@@ -132,7 +166,7 @@ class Settings(metaclass=Singleton):
         }
 
     @property
-    def _configfile_configuration_map(self):
+    def _file_configuration_map(self):
         return {
             "USER": "user",
             "RESOURCE_PATHS": "resource_paths",
@@ -141,7 +175,7 @@ class Settings(metaclass=Singleton):
             "CONNECTION_TIMEOUT": "connection_timeout",
             "CONNECTION": "sql_connection_string",
             "JOB_TABLE": "sql_table_name",
-            # "SQL_VIEW_CONNECTION_STRING": "sql_view_connection_string",  # Constructed, not settable
+            "SQL_VIEW_CONNECTION_STRING": "INVALID_KEY_SQL_VIEW_CONNECTION_STRING",  # Constructed, not settable
             "VIEWER_TABLE": "sql_view_table_name",
             "VIEWERUSER": "sql_view_user",
             "VIEWERPASSWD": "sql_view_user_key",
@@ -155,41 +189,79 @@ class Settings(metaclass=Singleton):
             "DISABLE_DATABASE": "disable_database",
         }
 
-    def _update_configuration(self):
-        environment = os.environ
-        if "PYIRONCONFIG" in environment.keys():
-            config_file = environment["PYIRONCONFIG"]
-        else:
-            config_file = os.path.expanduser(os.path.join("~", ".pyiron"))
+    def _update_from_dict(self, config: Dict, map: Union[None, Dict] = None) -> None:
+        """
+        Overwrite values of the configuration dictionary based on a new dictionary.
 
-        if os.path.isfile(config_file):
-            self._config_parse_file(config_file)
-        elif any(["PYIRON" in e for e in environment.keys()]):
-            self._configuration = self._get_config_from_environment(
-                environment=environment,
-                config=self._configuration
-            )
-        else:
-            self._configuration["sql_file"] = "~/pyiron.db"
-            self._configuration["project_check_enabled"] = False
+        Non-string non-None items are converted to the expected type and paths are converted to absolute POSIX paths.
+        """
+        for key, value in config.items():
+            key = key if map is None else map[key]
 
-        if "CONDA_PREFIX" in environment.keys() \
-                and os.path.exists(os.path.join(environment["CONDA_PREFIX"], "share", "pyiron")):
-            self._configuration["resource_paths"].append(os.path.join(environment["CONDA_PREFIX"], "share", "pyiron"))
-        elif "CONDA_DIR" in environment.keys() \
-                and os.path.exists(os.path.join(environment["CONDA_DIR"], "share", "pyiron")):
-            self._configuration["resource_paths"].append(os.path.join(environment["CONDA_DIR"], "share", "pyiron"))
+            if key in ["resource_paths", "project_paths"]:
+                self._configuration[key] = self._convert_to_list_of_paths(
+                    value,
+                    ensure_ends_with="/" if key == "project_paths" else None
+                )
+            elif key == "connection_timeout":
+                self._configuration[key] = int(value)
+            elif key == "sql_file":
+                self._configuration[key] = self.convert_path_to_abs_posix(value)
+            elif key == "sql_type":
+                if value not in self._valid_sql_types:
+                    raise ValueError(f"Got sql_type {value} but expected one of {self._valid_sql_types}.")
+                else:
+                    self._configuration[key] = value
+            elif key in ["project_check_enabled", "disable_database"]:
+                self._configuration[key] = value if isinstance(value, bool) else strtobool(value)
+            elif key not in self._configuration.keys():
+                raise KeyError(
+                    f"Got unexpected configuration key {key}, please choose from among {self._configuration.keys()}"
+                )
+            else:
+                self._configuration[key] = value
 
-        self._configuration["project_paths"] = [
-            self.convert_path(path) if path.endswith("/") else self.convert_path(path) + "/"
-            for path in self._configuration["project_paths"]
+    def _convert_to_list_of_paths(self, paths: Union[str, List[str]], ensure_ends_with=Union[None, str]) -> List[str]:
+        if isinstance(paths, str):
+            paths = paths.replace(',', os.pathsep).split(os.pathsep)
+        return [
+            self.convert_path_to_abs_posix(p)
+            if ensure_ends_with is None or self.convert_path_to_abs_posix(p).endswith(ensure_ends_with)
+            else self.convert_path_to_abs_posix(p) + ensure_ends_with
+            for p in paths
         ]
-        self._configuration["resource_paths"] = [
-            self.convert_path(path) for path in self._configuration["resource_paths"]
-        ]
+
+    @property
+    def _valid_sql_types(self) -> List[str]:
+        return ["SQLite", "Postgres", "MySQL", "SQLalchemy"]
 
     @staticmethod
-    def convert_path(path):
+    def _validate_sql_configuration_completeness(config: Dict):
+        try:
+            sql_type = config["sql_type"]
+            if sql_type in ["Postgres", "MySQL"]:
+                required_keys = ["user", "sql_user_key", "sql_host", "sql_database"]
+                if not all([k in config.keys() for k in [required_keys]]):
+                    raise KeyError(f"For SQL type {sql_type}, {required_keys} are all required but got {config.keys()}")
+            elif sql_type in ["SQLalchemy"] and "sql_connection_string" not in config.keys():
+                raise KeyError("sql_type was SQLalchemy but did not find a sql_connection_string setting.")
+        except KeyError:
+            pass
+
+    @staticmethod
+    def _validate_viewer_configuration_completeness(config: Dict):
+        key_group = ["sql_view_table_name", "sql_view_user", "sql_view_user_key"]
+        present = [k in config.keys() for k in key_group]
+        if any(present):
+            if not all(present):
+                raise KeyError(f"If any of {key_group} is included they all must be, but got {config.keys()}")
+            if "sql_type" not in config or config["sql_type"] != "Postgres":
+                # Note: This requirement is *implicit* when the sql_view_connection_string is constructed
+                #       I don't actually understand the constraint, I am just making it *explicit* as I refactor. -Liam
+                raise ValueError("Got sql_view arguments, but sql_type is not Postgres")
+
+    @staticmethod
+    def convert_path_to_abs_posix(path):
         """
         Convert path to POSIX path
 
@@ -226,95 +298,6 @@ class Settings(metaclass=Singleton):
             list: path of paths
         """
         return self._configuration["resource_paths"]
-
-    def _config_parse_file(self, config_file):
-        """
-        Parse the config file and use it to populate the configuration.
-
-        Args:
-            config_file(str): confi file to parse
-        """
-        # load config parser - depending on Python version
-        parser = ConfigParser(inline_comment_prefixes=(";",))
-
-        # read config
-        parser.read(config_file)
-
-        # load first section or default section [DEFAULT]
-        if len(parser.sections()) > 0:
-            section = parser.sections()[0]
-        else:
-            section = "DEFAULT"
-
-        # identify SQL type
-        if parser.has_option(section, "TYPE"):
-            self._configuration["sql_type"] = parser.get(section, "TYPE")
-
-        # read variables
-        if parser.has_option(section, "PROJECT_PATHS"):
-            self._configuration["project_paths"] = parser.get(section, "PROJECT_PATHS").split(',')
-        elif parser.has_option(section, "TOP_LEVEL_DIRS"):  # for backwards compatibility
-            self._configuration["project_paths"] = parser.get(section, "TOP_LEVEL_DIRS").split(',')
-        else:
-            ValueError("No project path identified!")
-
-        if parser.has_option(section, "PROJECT_CHECK_ENABLED"):
-            self._configuration["project_check_enabled"] = parser.getboolean(section, "PROJECT_CHECK_ENABLED")
-
-        if parser.has_option(section, "DISABLE_DATABASE"):
-            self._configuration["disable_database"] = parser.getboolean(section, "DISABLE_DATABASE")
-
-        if parser.has_option(section, "RESOURCE_PATHS"):
-            self._configuration["resource_paths"] = parser.get(section, "RESOURCE_PATHS").split(',')
-
-        if self._configuration["sql_type"] in ["Postgres", "MySQL"]:
-            if (
-                parser.has_option(section, "USER")
-                & parser.has_option(section, "PASSWD")
-                & parser.has_option(section, "HOST")
-                & parser.has_option(section, "NAME")
-            ):
-                self._configuration["user"] = parser.get(section, "USER")
-                self._configuration["sql_user_key"] = parser.get(section, "PASSWD")
-                self._configuration["sql_host"] = parser.get(section, "HOST")
-                self._configuration["sql_database"] = parser.get(section, "NAME")
-                self._configuration["sql_file"] = None
-            else:
-                raise ValueError(
-                    "If type Postgres or MySQL are selected the options USER, PASSWD, HOST and NAME are"
-                    "required in the configuration file."
-                )
-
-            if (
-                parser.has_option(section, "VIEWERUSER")
-                & parser.has_option(section, "VIEWERPASSWD")
-                & parser.has_option(section, "VIEWER_TABLE")
-            ):
-                self._configuration["sql_view_table_name"] = parser.get(
-                    section, "VIEWER_TABLE"
-                )
-                self._configuration["sql_view_user"] = parser.get(section, "VIEWERUSER")
-                self._configuration["sql_view_user_key"] = parser.get(
-                    section, "VIEWERPASSWD"
-                )
-            self._configuration["connection_timeout"] = parser.getint(section, "CONNECTION_TIMEOUT", fallback=60)
-        elif self._configuration["sql_type"] == "SQLalchemy":
-            self._configuration["sql_connection_string"] = parser.get(
-                section, "CONNECTION"
-            )
-            self._configuration["connection_timeout"] = parser.getint(section, "CONNECTION_TIMEOUT", fallback=60)
-        else:  # finally we assume an SQLite connection
-            if parser.has_option(section, "FILE"):
-                self._configuration["sql_file"] = parser.get(section, "FILE").replace(
-                    "\\", "/"
-                )
-            if parser.has_option(section, "DATABASE_FILE"):
-                self._configuration["sql_file"] = parser.get(
-                    section, "DATABASE_FILE"
-                ).replace("\\", "/")
-
-        if parser.has_option(section, "JOB_TABLE"):
-            self._configuration["sql_table_name"] = parser.get(section, "JOB_TABLE")
 
     def _convert_database_config(self, config):
         # Build the SQLalchemy connection strings
@@ -362,7 +345,7 @@ class Settings(metaclass=Singleton):
                     config["sql_file"] = "/".join(
                         ["~", "pyiron.db"]
                     )
-            sql_file = self.convert_path(path=config["sql_file"])
+            sql_file = self.convert_path_to_abs_posix(path=config["sql_file"])
             if os.path.dirname(
                 sql_file
             ) != "" and not os.path.exists(
@@ -374,16 +357,34 @@ class Settings(metaclass=Singleton):
             ] = "sqlite:///" + sql_file.replace("\\", "/")
         return config
 
-    def _get_config_from_environment(self, environment, config):
-        env_key_mapping = dict(self._environment_configuration_map)
-        for k, v in env_key_mapping.items():
-            if k in environment.keys():
-                if k in ["PYIRONPROJECTCHECKENABLED", "PYIRONDISABLE"]:
-                    config[v] = environment[k].lower() in ['t', 'true', 'y', 'yes']
-                elif k in ["PYIRONRESOURCEPATHS", "PYIRONPROJECTPATHS"]:
-                    config[v] = environment[k].split(os.pathsep)
-                else:
-                    config[v] = environment[k]
+    def _get_config_from_environment(self) -> Union[Dict, None]:
+        config = {}
+        for k, v in os.environ.items():
+            try:
+                config[self._environment_configuration_map[k]] = v
+            except KeyError:
+                pass
+        return config if len(config) > 0 else None
+
+    def _get_config_from_file(self) -> Union[Dict, None]:
+        if "PYIRONCONFIG" in os.environ.keys():
+            config_file = os.environ["PYIRONCONFIG"]
+        else:
+            config_file = os.path.expanduser(os.path.join("~", ".pyiron"))
+
+        if os.path.isfile(config_file):
+            parser = ConfigParser(inline_comment_prefixes=(";",))
+            parser.read(config_file)
+            config = {}
+            for sec_name, section in parser.items():
+                for k, v in section.items():
+                    try:
+                        config[self._file_configuration_map[k.upper()]] = v
+                    except KeyError:
+                        pass
+        else:
+            config = None
+
         return config
 
     @property
