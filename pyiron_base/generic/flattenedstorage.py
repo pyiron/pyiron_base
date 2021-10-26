@@ -304,6 +304,16 @@ class FlattenedStorage(HasHDF):
             store[name] = np.empty(shape=shape, dtype=dtype)
         else:
             store[name] = np.full(shape=shape, fill_value=fill, dtype=dtype)
+
+        _default_fill_values = {
+                np.dtype("int32"):   -1,
+                np.dtype("int64"):   -1,
+                np.dtype("float32"): np.nan,
+                np.dtype("float64"): np.nan,
+        }
+        if fill is None and store[name].dtype in _default_fill_values:
+            fill = _default_fill_values[store[name].dtype]
+        if fill is not None:
             self._fill_values[name] = fill
 
     def get_array(self, name, frame=None):
@@ -338,6 +348,57 @@ class FlattenedStorage(HasHDF):
                 return self._per_chunk_arrays[name][:self.num_chunks]
         else:
             raise KeyError(f"no array named {name}")
+
+    def get_array_ragged(self, name: str) -> np.ndarray:
+        """
+        Return elements of array `name` in all chunks.  Values are returned in a ragged array of dtype=object.
+
+        If `name` specifies a per chunk array, there's nothing to pad and this method is equivalent to
+        :method:`.get_array`.
+
+        Args:
+            name (str): name of array to fetch
+
+        Returns:
+            numpy.ndarray, dtype=object: ragged arrray of all elements in all chunks
+        """
+        if name in self._per_chunk_arrays:
+            return self.get_array(name)
+        return np.array([self.get_array(name, i) for i in range(len(self))],
+                        dtype=object)
+
+    def get_array_filled(self, name: str) -> np.ndarray:
+        """
+        Return elements of array `name` in all chunks.  Arrays are padded to be all of the same length.
+
+        The padding value depends on the datatpye of the array or can be configured via the `fill` parameter of
+        :method:`.add_array`.
+
+        If `name` specifies a per chunk array, there's nothing to pad and this method is equivalent to
+        :method:`.get_array`.
+
+        Args:
+            name (str): name of array to fetch
+
+        Returns:
+            numpy.ndarray: padded arrray of all elements in all chunks
+        """
+        if name in self._per_chunk_arrays:
+            return self.get_array(name)
+        values = self.get_array_ragged(name)
+        max_len = self._per_chunk_arrays["length"].max()
+        def resize_and_pad(v):
+            l = len(v)
+            per_shape = self._per_element_arrays[name].shape[1:]
+            v = np.resize(v, max_len * np.prod(per_shape, dtype=int))
+            v = v.reshape((max_len,) + per_shape)
+            if name in self._fill_values:
+                fill = self._fill_values[name]
+            else:
+                fill = np.zeros(1, dtype=self._per_element_arrays[name].dtype)[0]
+            v[l:] = fill
+            return v
+        return np.array([ resize_and_pad(v) for v in values ])
 
     def set_array(self, name, frame, value):
         """
