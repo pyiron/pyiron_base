@@ -230,38 +230,24 @@ class Settings(metaclass=Singleton):
 
     def _convert_database_config(self, config):
         # Build the SQLalchemy connection strings
+        def _sqlalchemy_string(prefix, user, key, host, database):
+            return f"{prefix}://{user}:{key}@{host}/{database}"
+
         if config["sql_type"] == "Postgres":
-            config["sql_connection_string"] = (
-                "postgresql://"
-                + config["user"]
-                + ":"
-                + config["sql_user_key"]
-                + "@"
-                + config["sql_host"]
-                + "/"
-                + config["sql_database"]
+            config["sql_connection_string"] = _sqlalchemy_string(
+                "postgresql", config["user"], config["sql_user_key"], config["sql_host"], config["sql_database"]
             )
             if config["sql_view_user"] is not None:
-                config["sql_view_connection_string"] = (
-                    "postgresql://"
-                    + config["sql_view_user"]
-                    + ":"
-                    + config["sql_view_user_key"]
-                    + "@"
-                    + config["sql_host"]
-                    + "/"
-                    + config["sql_database"]
+                config["sql_view_connection_string"] = _sqlalchemy_string(
+                    "postgresql",
+                    config["sql_view_user"],
+                    config["sql_view_user_key"],
+                    config["sql_host"],
+                    config["sql_database"]
                 )
         elif config["sql_type"] == "MySQL":
-            config["sql_connection_string"] = (
-                "mysql+pymysql://"
-                + config["user"]
-                + ":"
-                + config["sql_user_key"]
-                + "@"
-                + config["sql_host"]
-                + "/"
-                + config["sql_database"]
+            config["sql_connection_string"] = _sqlalchemy_string(
+                "mysql+pymysql", config["user"], config["sql_user_key"], config["sql_host"], config["sql_database"]
             )
         else:
             # SQLite is raising ugly error messages when the database directory does not exist.
