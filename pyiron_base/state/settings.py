@@ -249,7 +249,7 @@ class Settings(metaclass=Singleton):
             config["sql_connection_string"] = _sqlalchemy_string(
                 "mysql+pymysql", config["user"], config["sql_user_key"], config["sql_host"], config["sql_database"]
             )
-        else:
+        elif config["sql_type"] == "SQLite":
             # SQLite is raising ugly error messages when the database directory does not exist.
             if config["sql_file"] is None:
                 if len(config["resource_paths"]) >= 1:
