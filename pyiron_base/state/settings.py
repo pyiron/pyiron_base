@@ -90,7 +90,7 @@ class Settings(metaclass=Singleton):
         return self._configuration
 
     def update(self, user_dict=None):
-        self._configuration = dict(self._default_configuration)
+        self._configuration = dict(self.default_configuration)
         env_dict = self._get_config_from_environment()
         file_dict = self._get_config_from_file()
         if user_dict is not None:
@@ -122,7 +122,7 @@ class Settings(metaclass=Singleton):
             )
 
     @property
-    def _default_configuration(self) -> dict:
+    def default_configuration(self) -> dict:
         return deepcopy({
             "user": "pyiron",
             "resource_paths": [],
@@ -144,7 +144,7 @@ class Settings(metaclass=Singleton):
         })
 
     @property
-    def _environment_configuration_map(self):
+    def environment_configuration_map(self):
         return {
             "PYIRONUSER": "user",
             "PYIRONRESOURCEPATHS": "resource_paths",
@@ -166,7 +166,7 @@ class Settings(metaclass=Singleton):
         }
 
     @property
-    def _file_configuration_map(self):
+    def file_configuration_map(self):
         return {
             "USER": "user",
             "RESOURCE_PATHS": "resource_paths",
@@ -188,77 +188,6 @@ class Settings(metaclass=Singleton):
             "PROJECT_CHECK_ENABLED": "project_check_enabled",
             "DISABLE_DATABASE": "disable_database",
         }
-
-    def _update_from_dict(self, config: Dict, map: Union[None, Dict] = None) -> None:
-        """
-        Overwrite values of the configuration dictionary based on a new dictionary.
-
-        Non-string non-None items are converted to the expected type and paths are converted to absolute POSIX paths.
-        """
-        for key, value in config.items():
-            key = key if map is None else map[key]
-
-            if key in ["resource_paths", "project_paths"]:
-                self._configuration[key] = self._convert_to_list_of_paths(
-                    value,
-                    ensure_ends_with="/" if key == "project_paths" else None
-                )
-            elif key == "connection_timeout":
-                self._configuration[key] = int(value)
-            elif key == "sql_file":
-                self._configuration[key] = self.convert_path_to_abs_posix(value)
-            elif key == "sql_type":
-                if value not in self._valid_sql_types:
-                    raise ValueError(f"Got sql_type {value} but expected one of {self._valid_sql_types}.")
-                else:
-                    self._configuration[key] = value
-            elif key in ["project_check_enabled", "disable_database"]:
-                self._configuration[key] = value if isinstance(value, bool) else strtobool(value)
-            elif key not in self._configuration.keys():
-                raise KeyError(
-                    f"Got unexpected configuration key {key}, please choose from among {self._configuration.keys()}"
-                )
-            else:
-                self._configuration[key] = value
-
-    def _convert_to_list_of_paths(self, paths: Union[str, List[str]], ensure_ends_with=Union[None, str]) -> List[str]:
-        if isinstance(paths, str):
-            paths = paths.replace(',', os.pathsep).split(os.pathsep)
-        return [
-            self.convert_path_to_abs_posix(p)
-            if ensure_ends_with is None or self.convert_path_to_abs_posix(p).endswith(ensure_ends_with)
-            else self.convert_path_to_abs_posix(p) + ensure_ends_with
-            for p in paths
-        ]
-
-    @property
-    def _valid_sql_types(self) -> List[str]:
-        return ["SQLite", "Postgres", "MySQL", "SQLalchemy"]
-
-    @staticmethod
-    def _validate_sql_configuration_completeness(config: Dict):
-        try:
-            sql_type = config["sql_type"]
-            if sql_type in ["Postgres", "MySQL"]:
-                required_keys = ["user", "sql_user_key", "sql_host", "sql_database"]
-                if not all([k in config.keys() for k in [required_keys]]):
-                    raise KeyError(f"For SQL type {sql_type}, {required_keys} are all required but got {config.keys()}")
-            elif sql_type in ["SQLalchemy"] and "sql_connection_string" not in config.keys():
-                raise KeyError("sql_type was SQLalchemy but did not find a sql_connection_string setting.")
-        except KeyError:
-            pass
-
-    @staticmethod
-    def _validate_viewer_configuration_completeness(config: Dict):
-        key_group = ["sql_view_table_name", "sql_view_user", "sql_view_user_key"]
-        present = [k in config.keys() for k in key_group]
-        if any(present):
-            if not all(present):
-                raise KeyError(f"If any of {key_group} is included they all must be, but got {config.keys()}")
-            if "sql_type" not in config or config["sql_type"] != "Postgres":
-                # Note: This requirement is *implicit* when the sql_view_connection_string is constructed
-                #       I don't actually understand the constraint, I am just making it *explicit* as I refactor. -Liam
-                raise ValueError("Got sql_view arguments, but sql_type is not Postgres")
 
     @staticmethod
     def convert_path_to_abs_posix(path):
@@ -357,11 +286,40 @@ class Settings(metaclass=Singleton):
             ] = "sqlite:///" + sql_file.replace("\\", "/")
         return config
 
+    @property
+    def _valid_sql_types(self) -> List[str]:
+        return ["SQLite", "Postgres", "MySQL", "SQLalchemy"]
+
+    @staticmethod
+    def _validate_sql_configuration_completeness(config: Dict):
+        try:
+            sql_type = config["sql_type"]
+            if sql_type in ["Postgres", "MySQL"]:
+                required_keys = ["user", "sql_user_key", "sql_host", "sql_database"]
+                if not all([k in config.keys() for k in [required_keys]]):
+                    raise KeyError(f"For SQL type {sql_type}, {required_keys} are all required but got {config.keys()}")
+            elif sql_type in ["SQLalchemy"] and "sql_connection_string" not in config.keys():
+                raise KeyError("sql_type was SQLalchemy but did not find a sql_connection_string setting.")
+        except KeyError:
+            pass
+
+    @staticmethod
+    def _validate_viewer_configuration_completeness(config: Dict):
+        key_group = ["sql_view_table_name", "sql_view_user", "sql_view_user_key"]
+        present = [k in config.keys() for k in key_group]
+        if any(present):
+            if not all(present):
+                raise KeyError(f"If any of {key_group} is included they all must be, but got {config.keys()}")
+            if "sql_type" not in config or config["sql_type"] != "Postgres":
+                # Note: This requirement is *implicit* when the sql_view_connection_string is constructed
+                #       I don't actually understand the constraint, I am just making it *explicit* as I refactor. -Liam
+                raise ValueError("Got sql_view arguments, but sql_type is not Postgres")
+
     def _get_config_from_environment(self) -> Union[Dict, None]:
         config = {}
         for k, v in os.environ.items():
             try:
-                config[self._environment_configuration_map[k]] = v
+                config[self.environment_configuration_map[k]] = v
             except KeyError:
                 pass
         return config if len(config) > 0 else None
@@ -379,13 +337,55 @@ class Settings(metaclass=Singleton):
             for sec_name, section in parser.items():
                 for k, v in section.items():
                     try:
-                        config[self._file_configuration_map[k.upper()]] = v
+                        config[self.file_configuration_map[k.upper()]] = v
                     except KeyError:
                         pass
         else:
             config = None
 
         return config
+
+    def _update_from_dict(self, config: Dict, map: Union[None, Dict] = None) -> None:
+        """
+        Overwrite values of the configuration dictionary based on a new dictionary.
+
+        Non-string non-None items are converted to the expected type and paths are converted to absolute POSIX paths.
+        """
+        for key, value in config.items():
+            key = key if map is None else map[key]
+
+            if key in ["resource_paths", "project_paths"]:
+                self._configuration[key] = self._convert_to_list_of_paths(
+                    value,
+                    ensure_ends_with="/" if key == "project_paths" else None
+                )
+            elif key == "connection_timeout":
+                self._configuration[key] = int(value)
+            elif key == "sql_file":
+                self._configuration[key] = self.convert_path_to_abs_posix(value)
+            elif key == "sql_type":
+                if value not in self._valid_sql_types:
+                    raise ValueError(f"Got sql_type {value} but expected one of {self._valid_sql_types}.")
+                else:
+                    self._configuration[key] = value
+            elif key in ["project_check_enabled", "disable_database"]:
+                self._configuration[key] = value if isinstance(value, bool) else strtobool(value)
+            elif key not in self._configuration.keys():
+                raise KeyError(
+                    f"Got unexpected configuration key {key}, please choose from among {self._configuration.keys()}"
+                )
+            else:
+                self._configuration[key] = value
+
+    def _convert_to_list_of_paths(self, paths: Union[str, List[str]], ensure_ends_with=Union[None, str]) -> List[str]:
+        if isinstance(paths, str):
+            paths = paths.replace(',', os.pathsep).split(os.pathsep)
+        return [
+            self.convert_path_to_abs_posix(p)
+            if ensure_ends_with is None or self.convert_path_to_abs_posix(p).endswith(ensure_ends_with)
+            else self.convert_path_to_abs_posix(p) + ensure_ends_with
+            for p in paths
+        ]
 
     @property
     # @deprecate("Use pyiron_base.state.state.logger")

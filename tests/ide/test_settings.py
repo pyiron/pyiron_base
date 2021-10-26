@@ -79,7 +79,7 @@ class TestSettings(TestCase):
         default_loc.unlink()
         s.update()
         self.assertEqual(
-            s._default_configuration["connection_timeout"], s.configuration["connection_timeout"],
+            s.default_configuration["connection_timeout"], s.configuration["connection_timeout"],
             msg="Code base default should be used after all other options are exhausted"
         )
 
