@@ -15,7 +15,8 @@ class TestSettings(TestCase):
         cls.env = os.environ
         cls.cwd = os.getcwd()
         cls.parser = ConfigParser(inline_comment_prefixes=(";",))
-        # Backup the default config file, if it exists
+        # Backup the existing configuration
+        cls.backup_env = dict(cls.env)
         cls.default_loc = Path("~/.pyiron").expanduser()
         cls.backup_loc = Path("~/.pyiron_test_config_update_order_backup").expanduser()
         try:
@@ -25,7 +26,8 @@ class TestSettings(TestCase):
 
     @classmethod
     def tearDownClass(cls) -> None:
-        # Restore the default config file, if it ever existed
+        # Restore the configuration
+        cls.env = cls.backup_env
         try:  # Restore any preexisting config file
             cls.backup_loc.rename(cls.default_loc)
         except FileNotFoundError:
