@@ -33,7 +33,7 @@ class TestSettings(TestCase):
         except FileNotFoundError:
             pass
 
-    def test_config_update_order(self):
+    def test_update(self):
         # System environment variables
         env_val = 1
         self.env["PYIRONCONNECTIONTIMEOUT"] = str(env_val)
