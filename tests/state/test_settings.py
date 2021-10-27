@@ -33,6 +33,12 @@ class TestSettings(TestCase):
         except FileNotFoundError:
             pass
 
+    def setUp(self) -> None:
+        self.default_loc.unlink(missing_ok=True)
+        for k, _ in self.env.items():
+            if "PYIRON" in k:
+                self.env.pop(k)
+
     def test_update(self):
         # System environment variables
         env_val = 1
