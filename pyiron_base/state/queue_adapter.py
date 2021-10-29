@@ -55,5 +55,9 @@ class QueueAdapters(metaclass=Singleton):
         """
         return None if len(self._adapters) == 0 else self._adapters[0]
 
+    def update(self):
+        """Constructs new queue adapters based on the current settings configuration."""
+        self.construct_adapters()
+
 
 queue_adapters = QueueAdapters()
