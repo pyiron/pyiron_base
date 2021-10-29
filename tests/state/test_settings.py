@@ -129,11 +129,16 @@ class TestSettings(TestCase):
             "SQL_FILE = bar\n"
             "[HEADING2]\n"
             "PROJECT_PATHS = baz\n"
+            ";USER = boa\n"
         )
         file_dict = s._get_config_from_file()
         self.assertNotIn(
             "foo", file_dict.values(),
             msg="It needs to be a real key"
+        )
+        self.assertNotIn(
+            "boa", file_dict.values(),
+            msg="This was commented out and shouldn't be read"
         )
         ref_dict = {
             "sql_file": "bar",
