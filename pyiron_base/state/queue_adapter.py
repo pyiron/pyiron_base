@@ -31,10 +31,11 @@ class QueueAdapters(metaclass=Singleton):
     queue configuration files.
     """
     def __init__(self):
-        self._adapters = []
+        self._adapters = None
         self.construct_adapters()
 
     def construct_adapters(self):
+        self._adapters = []
         for resource_path in settings.configuration["resource_paths"]:
             if (
                 os.path.exists(resource_path)
