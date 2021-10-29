@@ -64,5 +64,17 @@ class State(metaclass=Singleton):
     def queue_adapter(self):
         return _queue_adapters.adapter
 
+    def update(self, config_dict=None):
+        """
+        Re-reads the settings configuration, then reconstructs the queue adapter and reboots the database.
+
+        Args:
+            config_dict (dict): A new set of configuration parameters to use. (Default is None, which attempts to read
+                the configuration from system environment xor configuration files.)
+        """
+        self.settings.update(user_dict=config_dict)
+        self.queue_adapter.update()
+        self.database.update()
+
 
 state = State()
