@@ -251,3 +251,17 @@ class TestSettings(TestCase):
             [self._niceify_path(p1), self._niceify_path(p2)],
             s.configuration['resource_paths']
         )
+
+    def test_convert_to_list_of_paths(self):
+        paths = f"foo, bar{os.pathsep}baz/"
+
+        self.assertIsInstance(s._convert_to_list_of_paths(paths), list, msg="Wrong output type")
+
+        for p in s._convert_to_list_of_paths(paths):
+            self.assertEqual(self._niceify_path(p), p, msg="Failed to convert element from string input")
+
+        for p in s._convert_to_list_of_paths(paths.replace(',', os.pathsep).split(os.pathsep)):
+            self.assertEqual(self._niceify_path(p), p, msg="Failed to convert element from list input")
+
+        for p in s._convert_to_list_of_paths(paths, ensure_ends_with='/'):
+            self.assertEqual('/', p[-1], msg="End was not ensured")

@@ -351,7 +351,9 @@ class Settings(metaclass=Singleton):
             else:
                 self._configuration[key] = value
 
-    def _convert_to_list_of_paths(self, paths: Union[str, List[str]], ensure_ends_with=Union[None, str]) -> List[str]:
+    def _convert_to_list_of_paths(
+            self, paths: Union[str, List[str]], ensure_ends_with: Union[None, str] = None
+    ) -> List[str]:
         if isinstance(paths, str):
             paths = paths.replace(',', os.pathsep).split(os.pathsep)
         return [
