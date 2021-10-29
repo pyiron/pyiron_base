@@ -66,7 +66,7 @@ class State(metaclass=Singleton):
 
     def update(self, config_dict=None):
         """
-        Re-reads the settings configuration, then reconstructs the queue adapter and reboots the database.
+        Re-reads the settings configuration, then reconstructs the queue adapter and reboots the database connection.
 
         Args:
             config_dict (dict): A new set of configuration parameters to use. (Default is None, which attempts to read
