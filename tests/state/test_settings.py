@@ -122,6 +122,26 @@ class TestSettings(TestCase):
         for k, v in env_dict.items():
             self.assertEqual(ref_dict[k], v, msg="Valid item failed to read from environment")
 
+    def test_get_config_from_file(self):
+        self.default_loc.write_text(
+            "[HEADING]\n"
+            "FOO = foo\n"
+            "SQL_FILE = bar\n"
+            "[HEADING2]\n"
+            "PROJECT_PATHS = baz\n"
+        )
+        file_dict = s._get_config_from_file()
+        self.assertNotIn(
+            "foo", file_dict.values(),
+            msg="It needs to be a real key"
+        )
+        ref_dict = {
+            "sql_file": "bar",
+            "project_paths": "baz"
+        }
+        for k, v in file_dict.items():
+            self.assertEqual(ref_dict[k], v, msg="Valid item failed to read from file")
+
     def test_update(self):
         # System environment variables
         env_val = 1
