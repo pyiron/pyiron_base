@@ -182,5 +182,15 @@ class DatabaseManager(metaclass=Singleton):
             f"{s.configuration['project_paths']}"
         )
 
+    def update(self):
+        """
+        Warning: Database interaction does not have written spec. This method does a thing. It might not be the thing
+                 you want.
+        """
+        self.close_connection()
+        self._use_local_database = False
+        self._database_is_disabled = s.configuration["disable_database"]
+        self.open_connection()
+
 
 database = DatabaseManager()
