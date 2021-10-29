@@ -47,7 +47,7 @@ class TestSettings(TestCase):
             "sql_host": "something",
             "sql_database": "something"
         })
-        with self.assertRaises(ValueError):
+        with self.assertRaises(ValueError):  # All other values missing
             s._validate_sql_configuration_completeness({
                 "sql_type": "MySQL",
                 # "user": "something",
@@ -63,7 +63,7 @@ class TestSettings(TestCase):
             "sql_host": "something",
             "sql_database": "something"
         })
-        with self.assertRaises(ValueError):
+        with self.assertRaises(ValueError):  # One other value missing
             s._validate_sql_configuration_completeness({
                 "sql_type": "Postgres",
                 "user": "something",
@@ -73,12 +73,38 @@ class TestSettings(TestCase):
             })
 
         s._validate_sql_configuration_completeness({"sql_type": "SQLalchemy", "sql_connection_string": "something"})
-        with self.assertRaises(ValueError):
+        with self.assertRaises(ValueError):  # Connection string missing
             s._validate_sql_configuration_completeness({"sql_type": "SQLalchemy"})
 
         s._validate_sql_configuration_completeness({"sql_type": "SQLite"})
 
         s._validate_sql_configuration_completeness({"user": "nothing_about_sql_type"})
+
+    def test_validate_viewer_configuration_completeness(self):
+        s._validate_viewer_configuration_completeness({
+            "sql_type": "Postgres",
+            "sql_view_table_name": "something",
+            "sql_view_user": "something",
+            "sql_view_user_key": "something"
+        })
+
+        with self.assertRaises(ValueError):
+            s._validate_viewer_configuration_completeness({
+                "sql_type": "Postgres",
+                # "sql_view_table_name": "something",
+                "sql_view_user": "something",
+                "sql_view_user_key": "something"
+            })
+
+        with self.assertRaises(ValueError):
+            s._validate_viewer_configuration_completeness({
+                "sql_type": "MySQL",  # Right now it ONLY works for postgres
+                "sql_view_table_name": "something",
+                "sql_view_user": "something",
+                "sql_view_user_key": "something"
+            })
+
+        s._validate_sql_configuration_completeness({"user": "nothing_about_sql_view"})
 
     def test_update(self):
         # System environment variables

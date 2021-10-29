@@ -283,7 +283,7 @@ class Settings(metaclass=Singleton):
         present = [k in config.keys() for k in key_group]
         if any(present):
             if not all(present):
-                raise KeyError(f"If any of {key_group} is included they all must be, but got {config.keys()}")
+                raise ValueError(f"If any of {key_group} is included they all must be, but got {config.keys()}")
             if "sql_type" not in config or config["sql_type"] != "Postgres":
                 # Note: This requirement is *implicit* when the sql_view_connection_string is constructed
                 #       I don't actually understand the constraint, I am just making it *explicit* as I refactor. -Liam
