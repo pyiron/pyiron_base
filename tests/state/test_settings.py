@@ -106,6 +106,22 @@ class TestSettings(TestCase):
 
         s._validate_sql_configuration_completeness({"user": "nothing_about_sql_view"})
 
+    def test_get_config_from_environment(self):
+        os.environ["PYIRONFOO"] = "foo"
+        os.environ["PYIRONSQLFILE"] = "bar"
+        os.environ["PYIRONPROJECTPATHS"] = "baz"
+        env_dict = s._get_config_from_environment()
+        self.assertNotIn(
+            "foo", env_dict.values(),
+            msg="Just having PYIRON in the key isn't enough, it needs to be a real key"
+        )
+        ref_dict = {
+            "sql_file": "bar",
+            "project_paths": "baz"
+        }
+        for k, v in env_dict.items():
+            self.assertEqual(ref_dict[k], v, msg="Valid item failed to read from environment")
+
     def test_update(self):
         # System environment variables
         env_val = 1
