@@ -39,6 +39,47 @@ class TestSettings(TestCase):
             if "PYIRON" in k:
                 self.env.pop(k)
 
+    def test_validate_sql_configuration_completeness(self):
+        s._validate_sql_configuration_completeness({
+            "sql_type": "MySQL",
+            "user": "something",
+            "sql_user_key": "something",
+            "sql_host": "something",
+            "sql_database": "something"
+        })
+        with self.assertRaises(ValueError):
+            s._validate_sql_configuration_completeness({
+                "sql_type": "MySQL",
+                # "user": "something",
+                # "sql_user_key": "something",
+                # "sql_host": "something",
+                # "sql_database": "something"
+            })
+
+        s._validate_sql_configuration_completeness({
+            "sql_type": "Postgres",
+            "user": "something",
+            "sql_user_key": "something",
+            "sql_host": "something",
+            "sql_database": "something"
+        })
+        with self.assertRaises(ValueError):
+            s._validate_sql_configuration_completeness({
+                "sql_type": "Postgres",
+                "user": "something",
+                "sql_user_key": "something",
+                # "sql_host": "something",
+                "sql_database": "something"
+            })
+
+        s._validate_sql_configuration_completeness({"sql_type": "SQLalchemy", "sql_connection_string": "something"})
+        with self.assertRaises(ValueError):
+            s._validate_sql_configuration_completeness({"sql_type": "SQLalchemy"})
+
+        s._validate_sql_configuration_completeness({"sql_type": "SQLite"})
+
+        s._validate_sql_configuration_completeness({"user": "nothing_about_sql_type"})
+
     def test_update(self):
         # System environment variables
         env_val = 1

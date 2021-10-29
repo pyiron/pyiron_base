@@ -270,10 +270,10 @@ class Settings(metaclass=Singleton):
             sql_type = config["sql_type"]
             if sql_type in ["Postgres", "MySQL"]:
                 required_keys = ["user", "sql_user_key", "sql_host", "sql_database"]
-                if not all([k in config.keys() for k in [required_keys]]):
-                    raise KeyError(f"For SQL type {sql_type}, {required_keys} are all required but got {config.keys()}")
+                if not all([k in config.keys() for k in required_keys]):
+                    raise ValueError(f"For SQL type {sql_type}, {required_keys} are all required but got {config.keys()}")
             elif sql_type in ["SQLalchemy"] and "sql_connection_string" not in config.keys():
-                raise KeyError("sql_type was SQLalchemy but did not find a sql_connection_string setting.")
+                raise ValueError("sql_type was SQLalchemy but did not find a sql_connection_string setting.")
         except KeyError:
             pass
 
