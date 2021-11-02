@@ -79,6 +79,21 @@ class TestSettings(TestCase):
 
         s._validate_sql_configuration_completeness({"sql_type": "SQLite"})
 
+        with self.assertRaises(ValueError):  # SQL file can't be None
+            s._validate_sql_configuration_completeness({"sql_type": "SQLite", "sql_file": None})
+
+        sql_dir = Path("./foo").resolve()
+        sql_file = Path("./foo/thedatabase.db").resolve()
+        s._validate_sql_configuration_completeness({
+            "sql_type": "SQLite",
+            "sql_file": sql_file
+        })
+        self.assertTrue(os.path.isdir(sql_dir), msg="Failed to create host dir for SQL file")
+        rmtree(sql_dir)
+
+        with self.assertRaises(ValueError):  # Connection string missing
+            s._validate_sql_configuration_completeness({"sql_type": "SQLalchemy"})
+
         s._validate_sql_configuration_completeness({"user": "nothing_about_sql_type"})
 
     def test_validate_viewer_configuration_completeness(self):

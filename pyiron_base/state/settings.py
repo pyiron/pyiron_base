@@ -245,13 +245,7 @@ class Settings(metaclass=Singleton):
             config["sql_file"] = None  # TODO: Is this even necessary? Don't we just ignore it?
 
         elif config["sql_type"] == "SQLite":
-            if config["sql_file"] is None:
-                # SQLite is raising ugly error messages when the database directory does not exist.
-                raise ValueError("For sql_type SQLite, the sql_file must not be None")
-            sql_file = config["sql_file"]
-            if os.path.dirname(sql_file) != "" and not os.path.exists(os.path.dirname(sql_file)):
-                os.makedirs(os.path.dirname(sql_file))
-            config["sql_connection_string"] = "sqlite:///" + sql_file.replace("\\", "/")
+            config["sql_connection_string"] = "sqlite:///" + config["sql_file"].replace("\\", "/")
 
         return config
 
@@ -266,7 +260,16 @@ class Settings(metaclass=Singleton):
             if sql_type in ["Postgres", "MySQL"]:
                 required_keys = ["user", "sql_user_key", "sql_host", "sql_database"]
                 if not all([k in config.keys() for k in required_keys]):
-                    raise ValueError(f"For SQL type {sql_type}, {required_keys} are all required but got {config.keys()}")
+                    raise ValueError(
+                        f"For SQL type {sql_type}, {required_keys} are all required but got {config.keys()}"
+                    )
+            elif sql_type == "SQLite":
+                sql_file = config["sql_file"]
+                if sql_file is None:
+                    # SQLite is raising ugly error messages when the database directory does not exist.
+                    raise ValueError("For sql_type SQLite, the sql_file must not be None")
+                elif os.path.dirname(sql_file) != "" and not os.path.exists(os.path.dirname(sql_file)):
+                    os.makedirs(os.path.dirname(sql_file))
             elif sql_type in ["SQLalchemy"] and "sql_connection_string" not in config.keys():
                 raise ValueError("sql_type was SQLalchemy but did not find a sql_connection_string setting.")
         except KeyError:
