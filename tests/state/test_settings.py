@@ -41,7 +41,7 @@ class TestSettings(TestCase):
                 self.env.pop(k)
 
     def test_validate_sql_configuration_completeness(self):
-        s._validate_sql_configuration_completeness({
+        s._validate_sql_configuration({
             "sql_type": "MySQL",
             "user": "something",
             "sql_user_key": "something",
@@ -49,7 +49,7 @@ class TestSettings(TestCase):
             "sql_database": "something"
         })
         with self.assertRaises(ValueError):  # All other values missing
-            s._validate_sql_configuration_completeness({
+            s._validate_sql_configuration({
                 "sql_type": "MySQL",
                 # "user": "something",
                 # "sql_user_key": "something",
@@ -57,7 +57,7 @@ class TestSettings(TestCase):
                 # "sql_database": "something"
             })
 
-        s._validate_sql_configuration_completeness({
+        s._validate_sql_configuration({
             "sql_type": "Postgres",
             "user": "something",
             "sql_user_key": "something",
@@ -65,7 +65,7 @@ class TestSettings(TestCase):
             "sql_database": "something"
         })
         with self.assertRaises(ValueError):  # One other value missing
-            s._validate_sql_configuration_completeness({
+            s._validate_sql_configuration({
                 "sql_type": "Postgres",
                 "user": "something",
                 "sql_user_key": "something",
@@ -73,18 +73,18 @@ class TestSettings(TestCase):
                 "sql_database": "something"
             })
 
-        s._validate_sql_configuration_completeness({"sql_type": "SQLalchemy", "sql_connection_string": "something"})
+        s._validate_sql_configuration({"sql_type": "SQLalchemy", "sql_connection_string": "something"})
         with self.assertRaises(ValueError):  # Connection string missing
-            s._validate_sql_configuration_completeness({"sql_type": "SQLalchemy"})
+            s._validate_sql_configuration({"sql_type": "SQLalchemy"})
 
-        s._validate_sql_configuration_completeness({"sql_type": "SQLite"})
+        s._validate_sql_configuration({"sql_type": "SQLite"})
 
         with self.assertRaises(ValueError):  # SQL file can't be None
-            s._validate_sql_configuration_completeness({"sql_type": "SQLite", "sql_file": None})
+            s._validate_sql_configuration({"sql_type": "SQLite", "sql_file": None})
 
         sql_dir = Path("./foo").resolve()
         sql_file = Path("./foo/thedatabase.db").resolve()
-        s._validate_sql_configuration_completeness({
+        s._validate_sql_configuration({
             "sql_type": "SQLite",
             "sql_file": sql_file
         })
@@ -92,12 +92,12 @@ class TestSettings(TestCase):
         rmtree(sql_dir)
 
         with self.assertRaises(ValueError):  # Connection string missing
-            s._validate_sql_configuration_completeness({"sql_type": "SQLalchemy"})
+            s._validate_sql_configuration({"sql_type": "SQLalchemy"})
 
-        s._validate_sql_configuration_completeness({"user": "nothing_about_sql_type"})
+        s._validate_sql_configuration({"user": "nothing_about_sql_type"})
 
     def test_validate_viewer_configuration_completeness(self):
-        s._validate_viewer_configuration_completeness({
+        s._validate_viewer_configuration({
             "sql_type": "Postgres",
             "sql_view_table_name": "something",
             "sql_view_user": "something",
@@ -105,7 +105,7 @@ class TestSettings(TestCase):
         })
 
         with self.assertRaises(ValueError):
-            s._validate_viewer_configuration_completeness({
+            s._validate_viewer_configuration({
                 "sql_type": "Postgres",
                 # "sql_view_table_name": "something",
                 "sql_view_user": "something",
@@ -113,14 +113,17 @@ class TestSettings(TestCase):
             })
 
         with self.assertRaises(ValueError):
-            s._validate_viewer_configuration_completeness({
+            s._validate_viewer_configuration({
                 "sql_type": "MySQL",  # Right now it ONLY works for postgres
                 "sql_view_table_name": "something",
                 "sql_view_user": "something",
                 "sql_view_user_key": "something"
             })
 
-        s._validate_sql_configuration_completeness({"user": "nothing_about_sql_view"})
+        s._validate_sql_configuration({"user": "nothing_about_sql_view"})
+
+        with self.assertRaises(ValueError):
+            s._validate_sql_configuration({"sql_type": "not_a_valid_type"})
 
     def test_get_config_from_environment(self):
         os.environ["PYIRONFOO"] = "foo"

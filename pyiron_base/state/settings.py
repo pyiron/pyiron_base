@@ -216,10 +216,9 @@ class Settings(metaclass=Singleton):
 
     @property
     def _valid_sql_types(self) -> List[str]:
-        return ["SQLite", "Postgres", "MySQL", "SQLalchemy"]
+        return ['SQLite', 'Postgres', 'MySQL', 'SQLalchemy']
 
-    @staticmethod
-    def _validate_sql_configuration_completeness(config: Dict):
+    def _validate_sql_configuration(self, config: Dict):
         try:
             sql_type = config["sql_type"]
             if sql_type in ["Postgres", "MySQL"]:
@@ -235,13 +234,15 @@ class Settings(metaclass=Singleton):
                     raise ValueError("For sql_type SQLite, the sql_file must not be None")
                 elif os.path.dirname(sql_file) != "" and not os.path.exists(os.path.dirname(sql_file)):
                     os.makedirs(os.path.dirname(sql_file))
-            elif sql_type in ["SQLalchemy"] and "sql_connection_string" not in config.keys():
+            elif sql_type == "SQLalchemy" and "sql_connection_string" not in config.keys():
                 raise ValueError("sql_type was SQLalchemy but did not find a sql_connection_string setting.")
+            elif sql_type not in self._valid_sql_types:
+                raise ValueError(f"sql_type {sql_type} not recognized, please choose among {self._valid_sql_types}")
         except KeyError:
             pass
 
     @staticmethod
-    def _validate_viewer_configuration_completeness(config: Dict):
+    def _validate_viewer_configuration(config: Dict):
         key_group = ["sql_view_table_name", "sql_view_user", "sql_view_user_key"]
         present = [k in config.keys() for k in key_group]
         if any(present):
@@ -300,11 +301,6 @@ class Settings(metaclass=Singleton):
                 self._configuration[key] = int(value)
             elif key == "sql_file":
                 self._configuration[key] = self.convert_path_to_abs_posix(value)
-            elif key == "sql_type":
-                if value not in self._valid_sql_types:
-                    raise ValueError(f"Got sql_type {value} but expected one of {self._valid_sql_types}.")
-                else:
-                    self._configuration[key] = value
             elif key in ["project_check_enabled", "disable_database"]:
                 self._configuration[key] = value if isinstance(value, bool) else strtobool(value)
             elif key not in self._configuration.keys():
