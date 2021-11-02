@@ -15,6 +15,7 @@ from tqdm import tqdm
 import types
 
 from pyiron_base.job.generic import GenericJob
+from pyiron_base.generic.datacontainer import DataContainer
 from pyiron_base.generic.hdfio import FileHDFio
 from pyiron_base.interfaces.has_groups import HasGroups
 from pyiron_base.master.generic import get_function_from_string
@@ -511,7 +512,7 @@ class TableJob(GenericJob):
     def __init__(self, project, job_name):
         super(TableJob, self).__init__(project, job_name)
         self.__version__ = "0.1"
-        self.__hdf_version__ = "0.2"
+        self.__hdf_version__ = "0.3.0"
         self.__name__ = "TableJob"
         self._analysis_project = None
         self._system_function_lst = [get_job_id]
@@ -610,13 +611,11 @@ class TableJob(GenericJob):
         else:
             raise TypeError()
 
-    @staticmethod
-    def convert_numpy_to_list(table_dict):
-        for k, v in table_dict.items():
-            for k1, v1 in v.items():
-                if isinstance(v1, np.ndarray):
-                    v[k1] = v1.tolist()
-        return table_dict
+    def _save_output(self):
+        with self.project_hdf5.open("output") as hdf5_output:
+            df = self.pyiron_table._df
+            cont = DataContainer(df.to_dict())
+            cont.to_hdf(hdf=hdf5_output, group_name="table")
 
     def to_hdf(self, hdf=None, group_name=None):
         """
@@ -647,9 +646,7 @@ class TableJob(GenericJob):
             if self.pyiron_table._db_filter_function is not None:
                 _to_pickle(hdf5_input, "db_filter", self.pyiron_table._db_filter_function)
         if len(self.pyiron_table._df) != 0:
-            with self.project_hdf5.open("output") as hdf5_output:
-                table_dict = self.convert_numpy_to_list(self.pyiron_table._df.to_dict())
-                hdf5_output["table"] = json.dumps(table_dict)
+            self._save_output()
 
     def from_hdf(self, hdf=None, group_name=None):
         """
@@ -692,19 +689,25 @@ class TableJob(GenericJob):
             self._enforce_update = bool_dict["enforce_update"]
             self._pyiron_table.convert_to_object = bool_dict["convert_to_object"]
             self._pyiron_table.add._from_hdf(hdf5_input)
-        pyiron_table = os.path.join(self.working_directory, "pyirontable.csv")
-        if os.path.exists(pyiron_table):
-            try:
-                self._pyiron_table._df = pandas.read_csv(pyiron_table)
-                self._pyiron_table._csv_file = pyiron_table
-            except EmptyDataError:
-                pass
-        else:
+        if hdf_version=="0.3.0":
             with self.project_hdf5.open("output") as hdf5_output:
-                if "table" in hdf5_output.list_nodes():
-                    self._pyiron_table._df = pandas.DataFrame(
-                        json.loads(hdf5_output["table"])
-                    )
+                if "table" in hdf5_output.list_groups():
+                    data = hdf5_output["table"].to_object().to_builtin()
+                    self._pyiron_table._df = pandas.DataFrame(data)
+        else:
+            pyiron_table = os.path.join(self.working_directory, "pyirontable.csv")
+            if os.path.exists(pyiron_table):
+                try:
+                    self._pyiron_table._df = pandas.read_csv(pyiron_table)
+                    self._pyiron_table._csv_file = pyiron_table
+                except EmptyDataError:
+                    pass
+            else:
+                with self.project_hdf5.open("output") as hdf5_output:
+                    if "table" in hdf5_output.list_nodes():
+                        self._pyiron_table._df = pandas.DataFrame(
+                            json.loads(hdf5_output["table"])
+                        )
 
     def validate_ready_to_run(self):
         if self._analysis_project is None:
@@ -737,9 +740,7 @@ class TableJob(GenericJob):
         self._pyiron_table._df.to_csv(
             os.path.join(self.working_directory, "pyirontable.csv"), index=False
         )
-        with self.project_hdf5.open("output") as hdf5_output:
-            table_dict = self.convert_numpy_to_list(self.pyiron_table._df.to_dict())
-            hdf5_output["table"] = json.dumps(table_dict)
+        self._save_output()
         self.project.db.item_update(self._runtime(), self.job_id)
 
     def write_input(self):
