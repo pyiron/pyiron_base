@@ -7,6 +7,7 @@ from pyiron_base.state.settings import settings as s
 import os
 from pathlib import Path
 from configparser import ConfigParser
+from shutil import rmtree
 
 
 class TestSettings(TestCase):
@@ -199,39 +200,56 @@ class TestSettings(TestCase):
             msg="Code base default should be used after all other options are exhausted"
         )
 
-    def _pop_conda_env_variables(self):
-        conda_keys = ["CONDA_PREFIX", "CONDA_DIR"]
-        for conda_key in conda_keys:
+    def test_adding_conda_path_to_resources(self):
+        for conda_key in ["CONDA_PREFIX", "CONDA_DIR"]:
             try:
                 self.env.pop(conda_key)
             except KeyError:
                 pass
-
-    def test_appending_conda_resources(self):
-        self._pop_conda_env_variables()
-        s.update()  # Clean out any old conda paths
+        s.update()
         before = len(s.configuration["resource_paths"])
+        s.update()
+        self.assertEqual(
+            before, len(s.configuration["resource_paths"]),
+            msg="No conda dirs exist, resources length should not change"
+        )
 
-        here = Path(".").resolve()
-        share = Path("./share").resolve()
-        pyiron = Path("./share/pyiron").resolve()
-        pyiron.mkdir(parents=True)
+        roots = []
+        stems = []
+        for p in ["pref", "dir"]:
+            root = Path(f"./{p}").resolve()
+            stem = Path(f"./{p}/share/pyiron").resolve()
+            stem.mkdir(parents=True)
+            roots.append(root)
+            stems.append(stem)
 
-        self.env["CONDA_PREFIX"] = str(here)  # Contains /share/pyiron -- should get added
-        self.env["CONDA_DIR"] = str(pyiron)  # Does not contain /share/pyiron -- shouldn't get added
+        self.env["CONDA_PREFIX"] = str(roots[0])
+        self.env["CONDA_DIR"] = str(roots[1])
 
         s.update()
         self.assertTrue(
-            any([pyiron.as_posix() in p for p in s.configuration["resource_paths"]]),
+            any([stems[0].as_posix() in p for p in s.configuration["resource_paths"]]),
             msg="The new resource should have been added"
         )
-        self.assertEqual(
-            before + 1,
-            len(s.configuration["resource_paths"]),
-            msg="The new resource should only have been added once, as the other path didn't have share/pyiron"
+        self.assertFalse(
+            any([stems[1].as_posix() in p for p in s.configuration["resource_paths"]]),
+            msg="Once CONDA_PREFIX path is found, CONDA_DIR should be ignored"
         )
-        pyiron.rmdir()
-        share.rmdir()
+
+        stems[0].rmdir()
+        s.update()
+        self.assertFalse(
+            any([stems[0].as_posix() in p for p in s.configuration["resource_paths"]]),
+            msg="The CONDA_PREFIX no longer contains /share/pyiron and should not be present"
+        )
+        self.assertTrue(
+            any([stems[1].as_posix() in p for p in s.configuration["resource_paths"]]),
+            msg="CONDA_DIR is still valid and should be found after CONDA_PREFIX fails"
+        )
+
+        # Clean up
+        for r in roots:
+            rmtree(str(r))
 
     @staticmethod
     def _niceify_path(p: str):

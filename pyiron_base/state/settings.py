@@ -104,16 +104,12 @@ class Settings(metaclass=Singleton):
             # TODO: Is this really necessary? At least let's deal with it downstream, e.g. by ignoring the field here...
             self._configuration["sql_file"] = None
 
-        if "CONDA_PREFIX" in os.environ.keys() \
-                and os.path.exists(os.path.join(os.environ["CONDA_PREFIX"], "share", "pyiron")):
-            self._configuration["resource_paths"].append(
-                self.convert_path_to_abs_posix(os.path.join(os.environ["CONDA_PREFIX"], "share", "pyiron"))
-            )
-        elif "CONDA_DIR" in os.environ.keys() \
-                and os.path.exists(os.path.join(os.environ["CONDA_DIR"], "share", "pyiron")):
-            self._configuration["resource_paths"].append(
-                self.convert_path_to_abs_posix(os.path.join(os.environ["CONDA_DIR"], "share", "pyiron"))
-            )
+        for k in ["CONDA_PREFIX", "CONDA_DIR"]:
+            if k in os.environ.keys():
+                res_path = os.path.join(os.environ[k], "share", "pyiron")
+                if os.path.exists(res_path):
+                    self._configuration["resource_paths"].append(self.convert_path_to_abs_posix(res_path))
+                    break  # If the first one is there, don't look for the second
 
         # Build the SQLalchemy connection strings from config data
         if not self._configuration["disable_database"]:
