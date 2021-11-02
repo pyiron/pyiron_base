@@ -107,12 +107,6 @@ class Settings(metaclass=Singleton):
                     self._configuration["resource_paths"].append(self.convert_path_to_abs_posix(res_path))
                     break  # If the first one is there, don't look for the second
 
-        # Build the SQLalchemy connection strings from config data
-        if not self._configuration["disable_database"]:
-            self._configuration = self._convert_database_config(
-                config=self._configuration
-            )
-
     @property
     def default_configuration(self) -> dict:
         return deepcopy({
@@ -219,35 +213,6 @@ class Settings(metaclass=Singleton):
             list: path of paths
         """
         return self._configuration["resource_paths"]
-
-    def _convert_database_config(self, config):
-        # Build the SQLalchemy connection strings
-        def _sqlalchemy_string(prefix, user, key, host, database):
-            return f"{prefix}://{user}:{key}@{host}/{database}"
-
-        if config["sql_type"] == "Postgres":
-            config["sql_connection_string"] = _sqlalchemy_string(
-                "postgresql", config["user"], config["sql_user_key"], config["sql_host"], config["sql_database"]
-            )
-            config["sql_file"] = None  # TODO: Is this even necessary? Don't we just ignore it?
-            if config["sql_view_user"] is not None:
-                config["sql_view_connection_string"] = _sqlalchemy_string(
-                    "postgresql",
-                    config["sql_view_user"],
-                    config["sql_view_user_key"],
-                    config["sql_host"],
-                    config["sql_database"]
-                )
-        elif config["sql_type"] == "MySQL":
-            config["sql_connection_string"] = _sqlalchemy_string(
-                "mysql+pymysql", config["user"], config["sql_user_key"], config["sql_host"], config["sql_database"]
-            )
-            config["sql_file"] = None  # TODO: Is this even necessary? Don't we just ignore it?
-
-        elif config["sql_type"] == "SQLite":
-            config["sql_connection_string"] = "sqlite:///" + config["sql_file"].replace("\\", "/")
-
-        return config
 
     @property
     def _valid_sql_types(self) -> List[str]:

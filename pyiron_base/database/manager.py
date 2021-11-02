@@ -61,6 +61,57 @@ class DatabaseManager(metaclass=Singleton):
     def connection_timeout(self, val):
         s.configuration["connection_timeout"] = val
 
+    @staticmethod
+    def _sqlalchemy_string(prefix, user, key, host, database):
+        return f"{prefix}://{user}:{key}@{host}/{database}"
+
+    def _credentialed_sqalchemy_string(self, prefix):
+        return self._sqlalchemy_string(
+            prefix,
+            s.configuration["user"],
+            s.configuration["sql_user_key"],
+            s.configuration["sql_host"],
+            s.configuration["sql_database"]
+        )
+
+    @property
+    def sql_connection_string(self):
+        sql_type = s.configuration["sql_type"]
+        if sql_type == "Postgres":
+            return self._credentialed_sqalchemy_string("postgresql")
+        elif sql_type == "MySQL":
+            return self._credentialed_sqalchemy_string("mysql+pymysql")
+        elif sql_type == "SQLalchemy":
+            return s.configuration["sql_connection_string"]
+        elif sql_type == "SQLite":
+            return "sqlite:///" + s.configuration["sql_file"].replace("\\", "/")
+        else:
+            raise ValueError(
+                f"Invalid SQL type {sql_type} -- This should have been caught at input processing, please contact the "
+                f"developers"
+            )
+
+    @property
+    def sql_view_connection_string(self):
+        if s.configuration["sql_view_user"] is None:
+            return None
+        else:
+            return self._sqlalchemy_string(
+                "postgresql",
+                s.configuration["sql_view_user"],
+                s.configuration["sql_view_user_key"],
+                s.configuration["sql_host"],
+                s.configuration["sql_database"]
+            )
+
+    @property
+    def sql_table_name(self):
+        return s.configuration["sql_table_name"]
+
+    @property
+    def sql_view_table_name(self):
+        return s.configuration["sql_view_table_name"]
+
     def open_connection(self):
         """
         Internal function to open the connection to the database. Only after this function is called the database is
@@ -68,9 +119,9 @@ class DatabaseManager(metaclass=Singleton):
         """
         if self._database is None and not self.database_is_disabled:
             self._database = DatabaseAccess(
-                s.configuration["sql_connection_string"],
-                s.configuration["sql_table_name"],
-                timeout=s.configuration["connection_timeout"]
+                self.sql_connection_string,
+                self.sql_table_name,
+                timeout=self.connection_timeout
             )
 
     def switch_to_local_database(self, file_name="pyiron.db", cwd=None):
@@ -92,7 +143,7 @@ class DatabaseManager(metaclass=Singleton):
             self.open_local_sqlite_connection(connection_string="sqlite:///" + file_name)
 
     def open_local_sqlite_connection(self, connection_string):
-        self._database = DatabaseAccess(connection_string, s.configuration["sql_table_name"])
+        self._database = DatabaseAccess(connection_string, self.sql_table_name)
         self._use_local_database = True
         self._database_is_disabled = False
 
@@ -107,8 +158,8 @@ class DatabaseManager(metaclass=Singleton):
                 self._database = None
             else:
                 self._database = DatabaseAccess(
-                    s.configuration["sql_connection_string"],
-                    s.configuration["sql_table_name"],
+                    self.sql_connection_string,
+                    self.sql_table_name,
                 )
 
             self._use_local_database = False
@@ -119,14 +170,14 @@ class DatabaseManager(metaclass=Singleton):
         """
         Switch from user mode to viewer mode - if view_mode is enable pyiron has read only access to the database.
         """
-        if s.configuration["sql_view_connection_string"] is not None and not self.database_is_disabled:
+        if self.sql_view_connection_string is not None and not self.database_is_disabled:
             if self._database.view_mode:
                 s.logger.log("Database is already in viewer mode!")
             else:
                 self.close_connection()
                 self._database = DatabaseAccess(
-                    s.configuration["sql_view_connection_string"],
-                    s.configuration["sql_view_table_name"],
+                    self.sql_view_connection_string,
+                    self.sql_view_table_name,
                 )
                 self._database.view_mode = True
 
@@ -141,8 +192,8 @@ class DatabaseManager(metaclass=Singleton):
             if self._database.view_mode:
                 self.close_connection()
                 self._database = DatabaseAccess(
-                    s.configuration["sql_connection_string"],
-                    s.configuration["sql_table_name"],
+                    self.sql_connection_string,
+                    self.sql_table_name,
                 )
                 self._database.view_mode = True
             else:
@@ -190,7 +241,6 @@ class DatabaseManager(metaclass=Singleton):
         self.close_connection()
         self._use_local_database = False
         self._database_is_disabled = s.configuration["disable_database"]
-        self.open_connection()
 
 
 database = DatabaseManager()
