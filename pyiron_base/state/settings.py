@@ -100,10 +100,6 @@ class Settings(metaclass=Singleton):
         elif file_dict is not None:
             self._update_from_dict(file_dict)
 
-        if self._configuration["sql_type"] in ["Postgres", "MySQL"]:
-            # TODO: Is this really necessary? At least let's deal with it downstream, e.g. by ignoring the field here...
-            self._configuration["sql_file"] = None
-
         for k in ["CONDA_PREFIX", "CONDA_DIR"]:
             if k in os.environ.keys():
                 res_path = os.path.join(os.environ[k], "share", "pyiron")
@@ -233,6 +229,7 @@ class Settings(metaclass=Singleton):
             config["sql_connection_string"] = _sqlalchemy_string(
                 "postgresql", config["user"], config["sql_user_key"], config["sql_host"], config["sql_database"]
             )
+            config["sql_file"] = None  # TODO: Is this even necessary? Don't we just ignore it?
             if config["sql_view_user"] is not None:
                 config["sql_view_connection_string"] = _sqlalchemy_string(
                     "postgresql",
@@ -245,6 +242,8 @@ class Settings(metaclass=Singleton):
             config["sql_connection_string"] = _sqlalchemy_string(
                 "mysql+pymysql", config["user"], config["sql_user_key"], config["sql_host"], config["sql_database"]
             )
+            config["sql_file"] = None  # TODO: Is this even necessary? Don't we just ignore it?
+
         elif config["sql_type"] == "SQLite":
             if config["sql_file"] is None:
                 # SQLite is raising ugly error messages when the database directory does not exist.
