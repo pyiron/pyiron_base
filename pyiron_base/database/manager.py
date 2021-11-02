@@ -195,7 +195,7 @@ class DatabaseManager(metaclass=Singleton):
                     self.sql_connection_string,
                     self.sql_table_name,
                 )
-                self._database.view_mode = True
+                self._database.view_mode = False
             else:
                 s.logger.log("Database is already in user mode!")
         else:
