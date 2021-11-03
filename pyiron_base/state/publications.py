@@ -1,9 +1,17 @@
 # coding: utf-8
 # Copyright (c) Max-Planck-Institut für Eisenforschung GmbH - Computational Materials Design (CM) Department
 # Distributed under the terms of "New BSD License", see the LICENSE file.
+"""
+Wouldn't it be nice to automate your bibliography?
+Well we can't, but that's the idea behind this alpha-stage feature.
+The idea is that various pyiron submodules and objects will register their relevant publications and you can just ask
+your project for a list of everything you should cite.
+`Publications` is the way we work towards this goal.
+"""
 
 import pandas
 from pyiron_base.generic.util import Singleton
+from typing import Dict, Union, List, Literal
 
 __author__ = "Joerg Neugebauer, Jan Janssen"
 __copyright__ = (
@@ -23,7 +31,7 @@ class Publications(metaclass=Singleton):
         self.add(self.pyiron_publication)
 
     @property
-    def pyiron_publication(self):
+    def pyiron_publication(self) -> Dict:
         return {
             "pyiron": {
                 "pyiron-paper": {
@@ -49,7 +57,7 @@ class Publications(metaclass=Singleton):
             }
         }
 
-    def list(self):
+    def list(self) -> List[Dict]:
         """
         List of publications currently in use.
 
@@ -64,9 +72,9 @@ class Publications(metaclass=Singleton):
                 all_publications.append(v)
         return all_publications
 
-    def add(self, pub_dict: dict):
+    def add(self, pub_dict: Dict) -> None:
         """
-        Add a publication to the list of publications
+        Add a publication to the list of publications.
 
         Args:
             pub_dict (dict): The key should be the name of the code used and the value a list of publications to cite.
@@ -75,15 +83,17 @@ class Publications(metaclass=Singleton):
             if key not in self._publications.keys():
                 self._publications[key] = value
 
-    def show(self, bib_format="pandas"):
+    def show(self, bib_format: Literal['pandas', 'dict', 'bibtex', 'apa'] = "pandas") \
+            -> Union[Dict, pandas.DataFrame, str]:
         """
         List the publications used in this project.
 
         Args:
-            bib_format (str): ['pandas', 'dict', 'bibtex', 'apa']
+            bib_format ('pandas'|'dict'|'bibtex'|'apa'): Which format to use. Pandas (dataframe) and dict return the
+                corresponding python object, while bibtex and apa give formatted strings.
 
         Returns:
-            pandas.DataFrame/ list: list of publications in Bibtex format.
+            pandas.DataFrame|dict|str: Publication data.
         """
 
         def get_bibtex(k, v):
@@ -156,7 +166,8 @@ class Publications(metaclass=Singleton):
         else:
             raise ValueError("Supported Bibformats are ['dict', 'bibtex', 'apa']")
 
-    def reset(self):
+    def reset(self) -> None:
+        """Clean the publication list back to the default pyiron publication."""
         self.__init__()
 
 
