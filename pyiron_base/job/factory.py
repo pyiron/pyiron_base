@@ -17,6 +17,8 @@ from pyiron_base.job.script import ScriptJob
 from pyiron_base.master.serial import SerialMasterBase
 from pyiron_base.table.datamining import TableJob
 from pyiron_base.generic.hdfio import ProjectHDFio
+from pyiron_base.settings.generic import Settings
+s = Settings()
 
 __author__ = "Liam Huber, Jan Janssen"
 __copyright__ = (
@@ -85,7 +87,7 @@ class JobFactoryCore(PyironFactory, ABC):
             GenericJob: job object depending on the job_type selected
         """
         job_name = job_name.replace(".", "_")
-        return JobType(
+        job = JobType(
             class_name=self._job_class_dict[job_type],  # Pass the class directly, JobType can handle that
             project=ProjectHDFio(project=self._project.copy(), file_name=job_name),
             job_name=job_name,
@@ -93,6 +95,9 @@ class JobFactoryCore(PyironFactory, ABC):
             delete_existing_job=delete_existing_job,
             delete_aborted_job=delete_aborted_job
         )
+        if s.login_user is not None:
+            job.user = s.login_user
+        return job
 
 
 class JobFactory(JobFactoryCore):
