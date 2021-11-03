@@ -14,8 +14,7 @@ from sqlalchemy import (
     or_,
     false,
 )
-from pyiron_base.settings.generic import Settings
-
+from pyiron_base.state import state
 
 __author__ = "Muhammad Hassani"
 __version__ = "1.0"
@@ -79,9 +78,8 @@ class DatabaseStatistics:
     """
 
     def __init__(self):
-        s = Settings()
-        connection_string = s._configuration['sql_connection_string']
-        self._job_table = s._configuration['sql_view_table_name']
+        connection_string = state.settings.configuration['sql_connection_string']
+        self._job_table = state.settings.configuration['sql_view_table_name']
         if "postgresql" not in connection_string:
             raise RuntimeError(
                 """

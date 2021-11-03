@@ -5,9 +5,7 @@
 The Jobtable module provides a set of top level functions to interact with the database.
 """
 
-import pandas
 import numpy as np
-from pyiron_base.settings.generic import Settings
 from pyiron_base.database.filetable import FileTable
 
 __author__ = "Jan Janssen"
@@ -20,8 +18,6 @@ __maintainer__ = "Jan Janssen"
 __email__ = "janssen@mpie.de"
 __status__ = "production"
 __date__ = "Sep 1, 2017"
-
-s = Settings()
 
 
 def get_jobs(database, sql_query, user, project_path, recursive=True, columns=None):

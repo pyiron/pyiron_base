@@ -6,11 +6,11 @@
 Functions to update existing pyiron installations - mainly modify the database columns. 
 """
 
-from pyiron_base.database.manager import DatabaseManager
+from pyiron_base.state import state
 
 __author__ = "Joerg Neugebauer, Jan Janssen"
 __copyright__ = (
-    "Copyright 2020, Max-Planck-Institut für Eisenforschung GmbH - "
+    "Copyright 2021, Max-Planck-Institut für Eisenforschung GmbH - "
     "Computational Materials Design (CM) Department"
 )
 __version__ = "1.0"
@@ -26,9 +26,8 @@ def database():
     database columns. This is only possible if no other pyiron session is accessing the database. Therefore the script
     might take some time to be executed successfully.
     """
-    dbm = DatabaseManager()
-    dbm.open_connection()
-    db = dbm.database
+    state.database.open_connection()
+    db = state.database.database
     try:
         if "projectPath".lower() not in db.get_table_headings(db.table_name):
             print("add missing column: " + "projectPath")

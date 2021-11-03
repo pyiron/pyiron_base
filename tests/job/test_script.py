@@ -3,9 +3,8 @@
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
 import unittest
-from os.path import dirname, abspath, join
+from os.path import join
 from os import remove
-from pyiron_base.project.generic import Project
 from pyiron_base._tests import TestWithCleanProject
 
 
@@ -46,7 +45,8 @@ class TestScriptJob(TestWithCleanProject):
         self.project.data.in_ = 6
         self.project.data.write()
         with open(self.complex_script, 'w') as f:
-            f.write("from pyiron_base import Project\n")
+            f.write("from pyiron_base import Project, state\n")
+            f.write("state.settings.configuration['project_check_enabled'] = False\n")
             f.write(f"pr = Project('{self.project_path}')\n")
             f.write("pr.data.out = pr.data.in_ * 7\n")
             f.write("pr.data.write()\n")

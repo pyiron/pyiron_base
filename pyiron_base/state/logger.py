@@ -3,10 +3,11 @@
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
 import logging
+from types import MethodType
 
 __author__ = "Joerg Neugebauer"
 __copyright__ = (
-    "Copyright 2020, Max-Planck-Institut für Eisenforschung GmbH - "
+    "Copyright 2021, Max-Planck-Institut für Eisenforschung GmbH - "
     "Computational Materials Design (CM) Department"
 )
 __version__ = "1.0"
@@ -21,7 +22,7 @@ Set the logging level for pyiron
 """
 
 
-def set_logging_level(level, channel=None):
+def set_logging_level(self, level, channel=None):
     """
     Set level for logger
 
@@ -29,14 +30,12 @@ def set_logging_level(level, channel=None):
         level (str): 'DEBUG, INFO, WARN'
         channel (int): 0: file_log, 1: stream, None: both
     """
-    from pyiron_base.settings.generic import Settings
 
-    s = Settings()
     if channel:
-        s.logger.handlers[channel].setLevel(level)
+        self.handlers[channel].setLevel(level)
     else:
-        s.logger.handlers[0].setLevel(level)
-        s.logger.handlers[1].setLevel(level)
+        self.handlers[0].setLevel(level)
+        self.handlers[1].setLevel(level)
 
 
 def setup_logger():
@@ -70,14 +69,5 @@ def setup_logger():
     return logger
 
 
-_logger = setup_logger()
-
-
-def get_logger():
-    """
-    Return global instance of the default logger to the log file at `pyiron.log`.
-
-    This exists only to circumvent recursive imports for modules that implement functionality for :class:`.Settings`,
-    normal code should rely on the logger defined at :attribute:`.Settings.logger`.
-    """
-    return _logger
+logger = setup_logger()
+logger.set_logging_level = MethodType(set_logging_level, logger)
