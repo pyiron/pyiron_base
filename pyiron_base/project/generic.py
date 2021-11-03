@@ -1300,7 +1300,7 @@ class Project(ProjectPath, HasGroups):
         )
 
     @staticmethod
-    @deprecate(message="Use IDE.logger.set_logging_level instead.")
+    @deprecate(message="Use state.logger.set_logging_level instead.")
     def set_logging_level(level, channel=None):
         """
         Set level for logger
