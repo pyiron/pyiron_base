@@ -20,6 +20,7 @@ from pyiron_base.state.logger import logger as _logger
 from pyiron_base.state.publications import publications as _publications
 from pyiron_base.state.queue_adapter import queue_adapters as _queue_adapters
 from pyiron_base.state.settings import settings as _settings
+from typing import Dict, Union
 
 __author__ = "Liam Huber"
 __copyright__ = (
@@ -39,7 +40,7 @@ class State(metaclass=Singleton):
 
     Attributes:
         logger: Self-explanatory.
-        publications: Bibliography of papers which should be cited based on the code that was used (alpha release).
+        publications: Bibliography of papers which should be cited based on the code that was used (alpha feature).
         settings: System settings.
         database: Database (or file base) connection.
         queue_adapter: Configuration for using remote resources.
@@ -64,7 +65,7 @@ class State(metaclass=Singleton):
     def queue_adapter(self):
         return _queue_adapters.adapter
 
-    def update(self, config_dict=None):
+    def update(self, config_dict: Union[Dict, None] = None) -> None:
         """
         Re-reads the settings configuration, then reconstructs the queue adapter and reboots the database connection.
 
