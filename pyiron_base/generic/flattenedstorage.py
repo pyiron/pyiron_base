@@ -364,8 +364,12 @@ class FlattenedStorage(HasHDF):
         """
         if name in self._per_chunk_arrays:
             return self.get_array(name)
-        return np.array([self.get_array(name, i) for i in range(len(self))],
-                        dtype=object)
+        # pre-allocated as dtype=object, then setting individual elements makes sure that element arrays retain their
+        # dtype
+        result = np.empty(len(self), dtype=object)
+        for i in range(len(self)):
+            result[i] = self.get_array(name, i)
+        return result
 
     def get_array_filled(self, name: str) -> np.ndarray:
         """
