@@ -71,6 +71,29 @@ class JobFactoryCore(PyironFactory, ABC):
         else:
             raise AttributeError("no job class named '{}' defined".format(name))
 
+    def __call__(self, job_type, job_name, delete_existing_job=False, delete_aborted_job=False):
+        """
+        Create a job.
+
+        Args:
+            job_type (str): The job class to be instantiated.
+            job_name (str): name of the job
+            delete_existing_job (bool): delete an existing job - default false
+            delete_aborted_job (bool): delete an existing and aborted job - default false
+
+        Returns:
+            GenericJob: job object depending on the job_type selected
+        """
+        job_name = job_name.replace(".", "_")
+        return JobType(
+            class_name=self._job_class_dict[job_type],  # Pass the class directly, JobType can handle that
+            project=ProjectHDFio(project=self._project.copy(), file_name=job_name),
+            job_name=job_name,
+            job_class_dict=self._job_class_dict,
+            delete_existing_job=delete_existing_job,
+            delete_aborted_job=delete_aborted_job
+        )
+
 
 class JobFactory(JobFactoryCore):
     @property

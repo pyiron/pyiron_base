@@ -4,6 +4,7 @@
 
 from pyiron_base._tests import TestWithCleanProject
 from pyiron_base.job.factory import JobFactory
+from pyiron_base.job.script import ScriptJob
 
 
 class TestJobFactory(TestWithCleanProject):
@@ -24,3 +25,8 @@ class TestJobFactory(TestWithCleanProject):
 
     def test_base(self):
         self.assertGreater(len(self.factory._job_class_dict), 0)
+
+    def test_call(self):
+        job = self.factory('ScriptJob', 'foo.bar')
+        self.assertIsInstance(job, ScriptJob, msg=f"Got a {type(job)} instead of a ScriptJob")
+        self.assertEqual('foo_bar', job.name, msg=f"Job name failed to set, expected foo but got {job.name}")
