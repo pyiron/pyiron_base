@@ -34,6 +34,11 @@ class JobFactoryCore(PyironFactory, ABC):
     def __init__(self, project: Project):
         self._project = project
 
+    @property
+    @abstractmethod
+    def _job_class_dict(self):
+        pass
+
     def __dir__(self):
         """
         Enable autocompletion by overwriting the __dir__() function.
@@ -65,11 +70,6 @@ class JobFactoryCore(PyironFactory, ABC):
             return wrapper
         else:
             raise AttributeError("no job class named '{}' defined".format(name))
-
-    @property
-    @abstractmethod
-    def _job_class_dict(self):
-        pass
 
 
 class JobFactory(JobFactoryCore):
