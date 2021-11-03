@@ -1,6 +1,12 @@
 # coding: utf-8
 # Copyright (c) Max-Planck-Institut für Eisenforschung GmbH - Computational Materials Design (CM) Department
 # Distributed under the terms of "New BSD License", see the LICENSE file.
+"""
+This is a central control point for all the queue adapters, i.e. how we talk to remote computing power.
+Before this class was written, we only ever used the first queue adapter we found defined in the resources.
+That behaviour is maintained, but now with `QueueAdapters` we can trivially extend to using multiple resources and
+multiple adapters.
+"""
 
 from pyiron_base.generic.util import Singleton
 from pysqa import QueueAdapter as PySQAAdpter
@@ -34,7 +40,8 @@ class QueueAdapters(metaclass=Singleton):
         self._adapters = None
         self.construct_adapters()
 
-    def construct_adapters(self):
+    def construct_adapters(self) -> None:
+        """Read through the resources and construct queue adapters for all the queue configuration files found."""
         self._adapters = []
         for resource_path in settings.configuration["resource_paths"]:
             if (
@@ -48,14 +55,14 @@ class QueueAdapters(metaclass=Singleton):
                 self._adapters.append(PySQAAdpter(directory=os.path.join(resource_path, "queues")))
 
     @property
-    def adapter(self):
+    def adapter(self) -> PySQAAdpter:
         """
         A :class:`pysqa.QueueAdapter` constructed from the first appropriate configuration files found among the
         `queues/` subdirectory among the resource paths defined in the settings.
         """
         return None if len(self._adapters) == 0 else self._adapters[0]
 
-    def update(self):
+    def update(self) -> None:
         """Constructs new queue adapters based on the current settings configuration."""
         self.construct_adapters()
 
