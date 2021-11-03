@@ -103,10 +103,10 @@ class Settings(metaclass=Singleton):
         self.update()
 
     @property
-    def configuration(self):
+    def configuration(self) -> Dict:
         return self._configuration
 
-    def update(self, user_dict=None):
+    def update(self, user_dict: Union[Dict, None] = None) -> None:
         """
         Starting from a clean set of defaults, overwrite with input from exactly one source with the following priority:
         - User input
@@ -136,7 +136,7 @@ class Settings(metaclass=Singleton):
                     break  # If the first one is there, don't look for the second
 
     @property
-    def default_configuration(self) -> dict:
+    def default_configuration(self) -> Dict:
         return deepcopy({
             "user": "pyiron",
             "resource_paths": [],
@@ -158,7 +158,7 @@ class Settings(metaclass=Singleton):
         })
 
     @property
-    def environment_configuration_map(self):
+    def environment_configuration_map(self) -> Dict:
         return {
             "PYIRONUSER": "user",
             "PYIRONRESOURCEPATHS": "resource_paths",
@@ -180,7 +180,7 @@ class Settings(metaclass=Singleton):
         }
 
     @property
-    def file_configuration_map(self):
+    def file_configuration_map(self) -> Dict:
         return {
             "USER": "user",
             "RESOURCE_PATHS": "resource_paths",
@@ -204,7 +204,7 @@ class Settings(metaclass=Singleton):
         }
 
     @staticmethod
-    def convert_path_to_abs_posix(path):
+    def convert_path_to_abs_posix(path: str) -> str:
         """
         Convert path to an absolute POSIX path
 
@@ -223,7 +223,7 @@ class Settings(metaclass=Singleton):
                 )
 
     @property
-    def login_user(self):
+    def login_user(self) -> str:
         """
         Get the username of the current user
 
@@ -233,7 +233,7 @@ class Settings(metaclass=Singleton):
         return self._configuration["user"]
 
     @property
-    def resource_paths(self):
+    def resource_paths(self) -> List[str]:
         """
         Paths for pyiron resources, e.g. executables, queue adapter config files, etc.
 
@@ -246,7 +246,7 @@ class Settings(metaclass=Singleton):
     def _valid_sql_types(self) -> List[str]:
         return ['SQLite', 'Postgres', 'MySQL', 'SQLalchemy']
 
-    def _validate_sql_configuration(self, config: Dict):
+    def _validate_sql_configuration(self, config: Dict) -> None:
         try:
             sql_type = config["sql_type"]
             if sql_type in ["Postgres", "MySQL"]:
@@ -270,7 +270,7 @@ class Settings(metaclass=Singleton):
             pass
 
     @staticmethod
-    def _validate_viewer_configuration(config: Dict):
+    def _validate_viewer_configuration(config: Dict) -> None:
         key_group = ["sql_view_table_name", "sql_view_user", "sql_view_user_key"]
         present = [k in config.keys() for k in key_group]
         if any(present):
