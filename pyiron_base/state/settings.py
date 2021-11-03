@@ -311,14 +311,14 @@ class Settings(metaclass=Singleton):
 
         return config
 
-    def _update_from_dict(self, config: Dict, map: Union[None, Dict] = None) -> None:
+    def _update_from_dict(self, config: Dict, map_: Union[None, Dict] = None) -> None:
         """
         Overwrite values of the configuration dictionary based on a new dictionary.
 
         Non-string non-None items are converted to the expected type and paths are converted to absolute POSIX paths.
         """
         for key, value in config.items():
-            key = key if map is None else map[key]
+            key = key if map_ is None else map_[key]
 
             if key in ["resource_paths", "project_paths"]:
                 self._configuration[key] = self._convert_to_list_of_paths(
