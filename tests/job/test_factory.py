@@ -5,8 +5,7 @@
 from pyiron_base._tests import TestWithCleanProject
 from pyiron_base.job.factory import JobFactory
 from pyiron_base.job.script import ScriptJob
-from pyiron_base.settings.generic import Settings
-s = Settings()
+from pyiron_base.state import state
 
 
 class TestJobFactory(TestWithCleanProject):
@@ -33,6 +32,6 @@ class TestJobFactory(TestWithCleanProject):
         self.assertIsInstance(job, ScriptJob, msg=f"Got a {type(job)} instead of a ScriptJob")
         self.assertEqual('foo_bar', job.name, msg=f"Job name failed to set, expected foo but got {job.name}")
         self.assertEqual(
-            s.login_user, job.user,
-            msg=f"Expected user from settings, {s.login_user}, but got user {job.user}."
+            state.settings.login_user, job.user,
+            msg=f"Expected user from settings, {state.settings.login_user}, but got user {job.user}."
         )
