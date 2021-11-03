@@ -11,11 +11,15 @@ instantiated.
 
 It is possible to run pyiron only with default behaviour from the `Settings` class itself, but standard practice is to
 overwrite part or all of the default configuration by reading information stored on the system.
-The highest priority is to read values to read from system environment variables starting with 'PYIRON'.
+This is done in an XOR priority order, where input from only one source is used to overwrite the default values:
+The highest priority is available only with the `update` method after the `Settings` object already exists, and is to
+take values from a user-provided dictionary.
+If no such dictionary is provided, or at initialization time then the highest priority is to read values to read from
+system environment variables starting with 'PYIRON'.
 If none of these except 'PYIRONCONFIG' are found, next `Settings` will try to read a configuration file stored at this
 location.
 If 'PYIRONCONFIG' was not specified, `Settings` will instead try to read a file at the default location: `~/.pyiron`.
-Finally, if none of these were specified the default values from the codebase are used.
+Finally, if none of these were specified, only the default values from the codebase are used.
 
 The configuration can later be updated by calling the `update` method.
 Before going through the update cycle specified above, this routine first checks to see if a dictionary was passed in
@@ -38,7 +42,7 @@ from typing import Union, Dict, List
 from distutils.util import strtobool
 from copy import deepcopy
 
-__author__ = "Jan Janssen"
+__author__ = "Jan Janssen, Liam Huber"
 __copyright__ = (
     "Copyright 2021, Max-Planck-Institut für Eisenforschung GmbH - "
     "Computational Materials Design (CM) Department"
@@ -52,18 +56,17 @@ __date__ = "Sep 1, 2017"
 
 class Settings(metaclass=Singleton):
     """
-    The settings object reads configuration data from the following sources in decreasing order of priority: a
-    configuration file identified in the PYIRONCONFIG system environment variable, a default configuration file in
-    ~/.pyiron, and values in the system environment variables.
-
-    It also holds the logger and publication tracker.
+    The settings object reads configuration data from the following sources in decreasing order of priority: system
+    environment values (starting with 'PYIRON'), a configuration file identified in the PYIRONCONFIG system environment
+    variable, or a default configuration file in ~/.pyiron. One (or none) of these is used to overwrite default values
+    specified in the codebase.
 
     Here are the configuration keys as the appear in the python code/config files/system env variables:
 
         user / USER / PYIRONUSER (str):
         resource_paths / RESOURCE_PATHS / PYIRONRESOURCEPATHS (list):
-        project_paths / PROJECT_PATHS / PYIRONPROJECTPATHS: (list),
-        connection_timeout / CONNECTION_TIMEOUT / PYIRONCONNECTIONTIMEOUT: (int),
+        project_paths / PROJECT_PATHS / PYIRONPROJECTPATHS (list):
+        connection_timeout / CONNECTION_TIMEOUT / PYIRONCONNECTIONTIMEOUT (int):
         sql_connection_string / CONNECTION / PYIRONSQLCONNECTIONSTRING (str):
         sql_table_name / JOB_TABLE / PYIRONSQLTABLENAME (str):
         sql_view_connection_string / - / - (str): Constructed, not available to be set in config files or sys env.
@@ -79,6 +82,20 @@ class Settings(metaclass=Singleton):
         project_check_enabled / PROJECT_CHECK_ENABLED / PYIRONPROJECTCHECKENABLED (bool):
         disable_database / DISABLE_DATABASE / PYIRONDISABLE (bool): Whether to turn off the database and use a
             file-system-based hierarchy. (Default is False.)
+
+    Properties:
+        configuration (dict): Global variables for configuring the pyiron experience.
+        resource_paths (list[str]): A shortcut to the configuration value for locations with pyiron resources.
+        login_user (str): A shortcut to the configuration value for the user name.
+        default_configuration (dict): Default values for configuration items.
+        environment_configuration_map (dict): A map between system environment variable names and the configuration.
+        file_configuration_map (dict): A map between config file variable names and the configuration.
+
+    Methods:
+        update:  After instantiation, the configuration can be refreshed with this method, which optionally takes a
+            dictionary (cf keys above) as the primary (overriding) source but otherwise has the same primacy order as
+            the initialization.
+        convert_path_to_abs_posix: A path converter, since pyiron internally uses posix style regardless of OS.
     """
 
     def __init__(self):
@@ -90,6 +107,17 @@ class Settings(metaclass=Singleton):
         return self._configuration
 
     def update(self, user_dict=None):
+        """
+        Starting from a clean set of defaults, overwrite with input from exactly one source with the following priority:
+        - User input
+        - System environment variables
+        - A config file at a locations specified in the PYIRONCONFIG system environment variable
+        - A config file at ~/.pyiron
+        - Nothing, just use defaults.
+
+        Args:
+            user_dict (dict): Configuration items
+        """
         self._configuration = dict(self.default_configuration)
         env_dict = self._get_config_from_environment()
         file_dict = self._get_config_from_file()
@@ -178,10 +206,10 @@ class Settings(metaclass=Singleton):
     @staticmethod
     def convert_path_to_abs_posix(path):
         """
-        Convert path to POSIX path
+        Convert path to an absolute POSIX path
 
         Args:
-            path(str): input path
+            path (str): input path.
 
         Returns:
             str: absolute path in POSIX format
@@ -207,7 +235,7 @@ class Settings(metaclass=Singleton):
     @property
     def resource_paths(self):
         """
-        Get the path where the potentials for the individual Hamiltons are located
+        Paths for pyiron resources, e.g. executables, queue adapter config files, etc.
 
         Returns:
             list: path of paths
