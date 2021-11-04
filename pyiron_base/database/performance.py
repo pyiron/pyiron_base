@@ -78,8 +78,8 @@ class DatabaseStatistics:
     """
 
     def __init__(self):
-        connection_string = state.settings.configuration['sql_connection_string']
-        self._job_table = state.settings.configuration['sql_view_table_name']
+        connection_string = state.database.sql_connection_string
+        self._job_table = state.database.sql_view_table_name
         if "postgresql" not in connection_string:
             raise RuntimeError(
                 """
