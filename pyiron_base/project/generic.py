@@ -130,7 +130,7 @@ class Project(ProjectPath, HasGroups):
         self._maintenance = None
 
     @property
-    def ide(self):
+    def state(self):
         return state
 
     @property
