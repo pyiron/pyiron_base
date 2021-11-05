@@ -40,38 +40,37 @@ def worker_function(queue):
 class WorkerJob(PythonTemplateJob):
     def __init__(self, project, job_name):
         super(WorkerJob, self).__init__(project, job_name)
-        self.input['project'] = None
-        self.input['cores_per_job'] = 1
-        self.input['sleep_interval'] = 10
-        self.pool = None
+        self.input.project = None
+        self.input.cores_per_job = 1
+        self.input.sleep_interval = 10
 
     @property
     def project_to_watch(self):
         rel_path = os.path.relpath(
-            self.input["project"],
+            self.input.project,
             self.project.path
         )
         return self.project.open(rel_path)
 
     @project_to_watch.setter
     def project_to_watch(self, pr):
-        self.input['project'] = pr.path
+        self.input.project = pr.path
 
     @property
     def cores_per_job(self):
-        return self.input['cores_per_job']
+        return self.input.cores_per_job
 
     @cores_per_job.setter
     def cores_per_job(self, cores):
-        self.input['cores_per_job'] = int(cores)
+        self.input.cores_per_job = int(cores)
 
     @property
     def sleep_interval(self):
-        return self.input['sleep_interval']
+        return self.input.sleep_interval
 
     @sleep_interval.setter
     def sleep_interval(self, interval):
-        self.input['sleep_interval'] = int(interval)
+        self.input.sleep_interval = int(interval)
 
     # This function is executed
     def run_static(self):
@@ -93,7 +92,6 @@ class WorkerJob(PythonTemplateJob):
                     (~df["id"].isin(active_job_ids))
                 ]
                 if len(df_sub) > 0:
-                    print("Found new jobs: ", len(df_sub))
                     path_lst = [
                         [pp, p, job_id]
                         for pp, p, job_id in zip(
@@ -110,4 +108,4 @@ class WorkerJob(PythonTemplateJob):
                     active_job_ids += [j[1] for j in job_lst]
                     _ = [queue.put(j) for j in job_lst]
                 else:
-                    time.sleep(self.input['sleep_interval'])
+                    time.sleep(self.input.sleep_interval)
