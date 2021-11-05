@@ -725,13 +725,14 @@ class GenericJob(JobCore):
             ]
             shell = False
         try:
-            out = subprocess.check_output(
+            out = subprocess.run(
                 executable,
                 cwd=self.project_hdf5.working_directory,
                 shell=shell,
+                stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
                 universal_newlines=True,
-            )
+            ).stdout
             with open(
                 posixpath.join(self.project_hdf5.working_directory, "error.out"),
                 mode="w",
