@@ -8,7 +8,7 @@ import os
 import time
 import multiprocessing
 from pyiron_base.job.template import PythonTemplateJob
-from pyiron_base.job.wrapper import job_wrapper_function
+from pyiron_base.job.wrapper import JobWrapper
 
 
 __author__ = "Jan Janssen"
@@ -25,17 +25,16 @@ __date__ = "Nov 5, 2021"
 
 def worker_function(queue):
     while True:
-        working_directory, job_id, file_path, submit_on_remote, debug = queue.get(
+        working_directory, job_id, _, submit_on_remote, debug = queue.get(
             block=True,
             timeout=None
         )
-        job_wrapper_function(
+        JobWrapper(
             working_directory=working_directory,
             job_id=job_id,
-            file_path=file_path,
             submit_on_remote=submit_on_remote,
             debug=debug
-        )
+        ).run()
 
 
 class WorkerJob(PythonTemplateJob):
@@ -80,39 +79,35 @@ class WorkerJob(PythonTemplateJob):
         master_id = self.job_id
         pr = self.project_to_watch
         queue = multiprocessing.Queue()
-        self.pool = multiprocessing.Pool(
+        active_job_ids = []
+        with multiprocessing.Pool(
             processes=int(self.server.cores/self.cores_per_job),
             initializer=worker_function,
             initargs=(queue,)
-        )
-        active_job_ids = []
-        while True:
-            df = pr.job_table()
-            df_sub = df[
-                (df["status"] == "submitted") &
-                (df["masterid"] == master_id) &
-                (~df["id"].isin(active_job_ids))
-            ]
-            if len(df_sub) > 0:
-                print("Found new jobs: ", len(df_sub))
-                path_lst = [
-                    [pp, p, job_id]
-                    for pp, p, job_id in zip(
-                        df_sub["projectpath"].values,
-                        df_sub["project"].values,
-                        df_sub["id"].values
-                    ) if job_id not in active_job_ids]
-                job_lst = [
-                    [p, job_id, None, False, False]
-                    if pp is None else
-                    [os.path.join(pp, p), job_id, None, False, False]
-                    for pp, p, job_id in path_lst
+        ):
+            while True:
+                df = pr.job_table()
+                df_sub = df[
+                    (df["status"] == "submitted") &
+                    (df["masterid"] == master_id) &
+                    (~df["id"].isin(active_job_ids))
                 ]
-                active_job_ids += [j[1] for j in job_lst]
-                _ = [queue.put(j) for j in job_lst]
-            else:
-                time.sleep(self.input['sleep_interval'])
-
-    def signal_intercept(self, sig, frame):
-        self.pool.terminate()
-        super().signal_intercept(sig=sig, frame=frame)
+                if len(df_sub) > 0:
+                    print("Found new jobs: ", len(df_sub))
+                    path_lst = [
+                        [pp, p, job_id]
+                        for pp, p, job_id in zip(
+                            df_sub["projectpath"].values,
+                            df_sub["project"].values,
+                            df_sub["id"].values
+                        ) if job_id not in active_job_ids]
+                    job_lst = [
+                        [p, job_id, None, False, False]
+                        if pp is None else
+                        [os.path.join(pp, p), job_id, None, False, False]
+                        for pp, p, job_id in path_lst
+                    ]
+                    active_job_ids += [j[1] for j in job_lst]
+                    _ = [queue.put(j) for j in job_lst]
+                else:
+                    time.sleep(self.input['sleep_interval'])
