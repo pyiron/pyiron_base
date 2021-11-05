@@ -1061,6 +1061,7 @@ class GenericJob(JobCore):
                 self.server.run_mode.thread
                 or self.server.run_mode.modal
                 or self.server.run_mode.interactive
+                or self.server.run_mode.worker
             )
         ):
                 self._reload_update_master(
@@ -1340,7 +1341,7 @@ class GenericJob(JobCore):
             self.run_if_manually(_manually_print=False)
         elif self.server.run_mode.modal:
             self.run_static()
-        elif self.server.run_mode.non_modal or self.server.run_mode.thread:
+        elif self.server.run_mode.non_modal or self.server.run_mode.thread or self.server.run_mode.worker:
             self.run_if_non_modal()
         elif self.server.run_mode.queue:
             self.run_if_scheduler()
