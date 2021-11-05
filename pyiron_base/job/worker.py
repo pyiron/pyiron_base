@@ -25,17 +25,20 @@ __date__ = "Nov 5, 2021"
 
 def worker_function(queue):
     while True:
-        working_directory, job_id, _, submit_on_remote, debug = queue.get(
+        status, working_directory, job_id, _, submit_on_remote, debug = queue.get(
             block=True,
             timeout=None
         )
-        JobWrapper(
-            working_directory=working_directory,
-            job_id=job_id,
-            submit_on_remote=submit_on_remote,
-            debug=debug
-        ).run()
-
+        if status:
+            job_wrap = JobWrapper(
+                working_directory=working_directory,
+                job_id=job_id,
+                submit_on_remote=submit_on_remote,
+                debug=debug,
+            )
+            job_wrap.run()
+        else:
+            break
 
 class WorkerJob(PythonTemplateJob):
     def __init__(self, project, job_name):
@@ -83,7 +86,7 @@ class WorkerJob(PythonTemplateJob):
             processes=int(self.server.cores/self.cores_per_job),
             initializer=worker_function,
             initargs=(queue,)
-        ):
+        ) as pool:
             while True:
                 df = pr.job_table()
                 df_sub = df[
@@ -100,12 +103,20 @@ class WorkerJob(PythonTemplateJob):
                             df_sub["id"].values
                         ) if job_id not in active_job_ids]
                     job_lst = [
-                        [p, job_id, None, False, False]
+                        [True, p, job_id, None, False, False]
                         if pp is None else
-                        [os.path.join(pp, p), job_id, None, False, False]
+                        [True, os.path.join(pp, p), job_id, None, False, False]
                         for pp, p, job_id in path_lst
                     ]
-                    active_job_ids += [j[1] for j in job_lst]
+                    active_job_ids += [j[2] for j in job_lst]
                     _ = [queue.put(j) for j in job_lst]
+                elif self.status.collect:
+                    break
                 else:
                     time.sleep(self.input.sleep_interval)
+            for i in range(int(self.server.cores / self.cores_per_job)):
+                queue.put([False, False, False, False, False, False])
+            pool.close()
+            pool.join()
+            pool.terminate()
+        self.status.finished = True
