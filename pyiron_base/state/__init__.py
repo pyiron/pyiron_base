@@ -74,7 +74,7 @@ class State(metaclass=Singleton):
                 the configuration from system environment xor configuration files.)
         """
         self.settings.update(user_dict=config_dict)
-        self.queue_adapter.update()
+        _queue_adapters.update()
         self.database.update()
 
 
