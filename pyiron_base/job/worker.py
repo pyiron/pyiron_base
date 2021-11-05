@@ -23,12 +23,28 @@ __status__ = "production"
 __date__ = "Nov 5, 2021"
 
 
+def worker_function(queue):
+    while True:
+        working_directory, job_id, file_path, submit_on_remote, debug = queue.get(
+            block=True,
+            timeout=None
+        )
+        job_wrapper_function(
+            working_directory=working_directory,
+            job_id=job_id,
+            file_path=file_path,
+            submit_on_remote=submit_on_remote,
+            debug=debug
+        )
+
+
 class WorkerJob(PythonTemplateJob):
     def __init__(self, project, job_name):
         super(WorkerJob, self).__init__(project, job_name)
         self.input['project'] = None
         self.input['cores_per_job'] = 1
         self.input['sleep_interval'] = 10
+        self.pool = None
 
     @property
     def project_to_watch(self):
@@ -63,17 +79,22 @@ class WorkerJob(PythonTemplateJob):
         self.status.running = True
         master_id = self.job_id
         pr = self.project_to_watch
-        pool = multiprocessing.Pool(
-            processes=int(self.server.cores/self.cores_per_job)
+        queue = multiprocessing.Queue()
+        self.pool = multiprocessing.Pool(
+            processes=int(self.server.cores/self.cores_per_job),
+            initializer=worker_function,
+            initargs=(queue,)
         )
         active_job_ids = []
         while True:
             df = pr.job_table()
             df_sub = df[
                 (df["status"] == "submitted") &
-                (df["masterid"] == master_id)
+                (df["masterid"] == master_id) &
+                (~df["id"].isin(active_job_ids))
             ]
             if len(df_sub) > 0:
+                print("Found new jobs: ", len(df_sub))
                 path_lst = [
                     [pp, p, job_id]
                     for pp, p, job_id in zip(
@@ -88,9 +109,10 @@ class WorkerJob(PythonTemplateJob):
                     for pp, p, job_id in path_lst
                 ]
                 active_job_ids += [j[1] for j in job_lst]
-                pool.starmap_async(
-                    func=job_wrapper_function,
-                    iterable=job_lst
-                )
+                _ = [queue.put(j) for j in job_lst]
             else:
                 time.sleep(self.input['sleep_interval'])
+
+    def signal_intercept(self, sig, frame):
+        self.pool.terminate()
+        super().signal_intercept(sig=sig, frame=frame)
