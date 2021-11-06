@@ -24,6 +24,13 @@ __date__ = "Nov 5, 2021"
 
 
 def worker_function(queue):
+    """
+    The worker function is executed inside a multi processing pool. It receives a queue object and from the queue
+    it received the calculation details for the jobs to execute.
+
+    Args:
+        queue (Queue): receive jobs via the queue to execute them inside the worker
+    """
     while True:
         status, working_directory, job_id, _, submit_on_remote, debug = queue.get(
             block=True,
@@ -40,7 +47,11 @@ def worker_function(queue):
         else:
             break
 
+
 class WorkerJob(PythonTemplateJob):
+    """
+    The WorkerJob executes jobs linked to its master id.
+    """
     def __init__(self, project, job_name):
         super(WorkerJob, self).__init__(project, job_name)
         self.input.project = None
@@ -88,13 +99,14 @@ class WorkerJob(PythonTemplateJob):
             initargs=(queue,)
         ) as pool:
             while True:
+                # Check the database if there are more calculation to execute
                 df = pr.job_table()
                 df_sub = df[
                     (df["status"] == "submitted") &
                     (df["masterid"] == master_id) &
                     (~df["id"].isin(active_job_ids))
                 ]
-                if len(df_sub) > 0:
+                if len(df_sub) > 0:  # Check if there are jobs to execute
                     path_lst = [
                         [pp, p, job_id]
                         for pp, p, job_id in zip(
@@ -110,13 +122,17 @@ class WorkerJob(PythonTemplateJob):
                     ]
                     active_job_ids += [j[2] for j in job_lst]
                     _ = [queue.put(j) for j in job_lst]
-                elif self.status.collect:
+                elif self.status.collect:  # The infinite loop can be stopped by setting the job status to collect.
                     break
-                else:
+                else:  # The sleep interval can be set as part of the input
                     time.sleep(self.input.sleep_interval)
+
+            # Close the multiprocessing queue - otherwise orphan processes remain
             for i in range(int(self.server.cores / self.cores_per_job)):
                 queue.put([False, False, False, False, False, False])
             pool.close()
             pool.join()
             pool.terminate()
+
+        # The job is finished
         self.status.finished = True
