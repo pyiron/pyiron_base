@@ -6,9 +6,8 @@ Worker Class to execute calculation in an asynchronous way
 """
 import os
 import time
-import multiprocessing
+from aproc import Pool
 from pyiron_base.job.template import PythonTemplateJob
-from pyiron_base.job.wrapper import JobWrapper
 
 
 __author__ = "Jan Janssen"
@@ -23,29 +22,30 @@ __status__ = "production"
 __date__ = "Nov 5, 2021"
 
 
-def worker_function(queue):
+def worker_function(args):
     """
-    The worker function is executed inside a multi processing pool. It receives a queue object and from the queue
-    it received the calculation details for the jobs to execute.
+    The worker function is executed inside an aproc processing pool.
 
     Args:
-        queue (Queue): receive jobs via the queue to execute them inside the worker
+        args (list): A list of arguments
+
+    Arguments inside the argument list:
+        working_directory (str): working directory of the job
+        job_id (int/ None): job ID
+        hdf5_file (str): path to the HDF5 file of the job
+        h5_path (str): path inside the HDF5 file to load the job
+        submit_on_remote (bool): submit to queuing system on remote host
+        debug (bool): enable debug mode [True/False] (optional)
     """
-    while True:
-        status, working_directory, job_id, _, submit_on_remote, debug = queue.get(
-            block=True,
-            timeout=None
-        )
-        if status:
-            job_wrap = JobWrapper(
-                working_directory=working_directory,
-                job_id=job_id,
-                submit_on_remote=submit_on_remote,
-                debug=debug,
-            )
-            job_wrap.run()
-        else:
-            break
+    status, working_directory, job_id, _, submit_on_remote, debug = args
+    from pyiron_base.job.wrapper import JobWrapper
+    job_wrap = JobWrapper(
+        working_directory=working_directory,
+        job_id=job_id,
+        submit_on_remote=submit_on_remote,
+        debug=debug,
+    )
+    job_wrap.run()
 
 
 class WorkerJob(PythonTemplateJob):
@@ -91,12 +91,10 @@ class WorkerJob(PythonTemplateJob):
         self.status.running = True
         master_id = self.job_id
         pr = self.project_to_watch
-        queue = multiprocessing.Queue()
         active_job_ids = []
-        with multiprocessing.Pool(
+        with Pool(
             processes=int(self.server.cores/self.cores_per_job),
             initializer=worker_function,
-            initargs=(queue,)
         ) as pool:
             while True:
                 # Check the database if there are more calculation to execute
@@ -121,18 +119,11 @@ class WorkerJob(PythonTemplateJob):
                         for pp, p, job_id in path_lst
                     ]
                     active_job_ids += [j[2] for j in job_lst]
-                    _ = [queue.put(j) for j in job_lst]
+                    _ = [pool.put(j) for j in job_lst]
                 elif self.status.collect:  # The infinite loop can be stopped by setting the job status to collect.
                     break
                 else:  # The sleep interval can be set as part of the input
                     time.sleep(self.input.sleep_interval)
-
-            # Close the multiprocessing queue - otherwise orphan processes remain
-            for i in range(int(self.server.cores / self.cores_per_job)):
-                queue.put([False, False, False, False, False, False])
-            pool.close()
-            pool.join()
-            pool.terminate()
 
         # The job is finished
         self.status.finished = True
