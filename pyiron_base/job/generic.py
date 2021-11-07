@@ -714,27 +714,25 @@ class GenericJob(JobCore):
         if self.job_id is not None:
             self.project.db.item_update({"timestart": datetime.now()}, self.job_id)
         job_crashed, out = False, None
+        if self.server.cores == 1 or not self.executable.mpi:
+            executable = str(self.executable)
+            shell = True
+        else:
+            executable = [
+                self.executable.executable_path,
+                str(self.server.cores),
+                str(self.server.threads),
+            ]
+            shell = False
         try:
-            if self.server.cores == 1 or not self.executable.mpi:
-                out = subprocess.check_output(
-                    str(self.executable),
-                    cwd=self.project_hdf5.working_directory,
-                    shell=True,
-                    stderr=subprocess.STDOUT,
-                    universal_newlines=True,
-                )
-            else:
-                out = subprocess.check_output(
-                    [
-                        self.executable.executable_path,
-                        str(self.server.cores),
-                        str(self.server.threads),
-                    ],
-                    cwd=self.project_hdf5.working_directory,
-                    shell=False,
-                    stderr=subprocess.STDOUT,
-                    universal_newlines=True,
-                )
+            out = subprocess.run(
+                executable,
+                cwd=self.project_hdf5.working_directory,
+                shell=shell,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                universal_newlines=True,
+            ).stdout
             with open(
                 posixpath.join(self.project_hdf5.working_directory, "error.out"),
                 mode="w",
@@ -874,15 +872,13 @@ class GenericJob(JobCore):
         multiprocessing.Process()
         """
         if not dbm.using_local_database:
-            p = multiprocessing.Process(
-                target=multiprocess_wrapper,
-                args=(self.job_id, self.project_hdf5.working_directory, False, None),
-            )
+            args = (self.job_id, self.project_hdf5.working_directory, False, None)
         else:
-            p = multiprocessing.Process(
-                target=multiprocess_wrapper,
-                args=(self.job_id, self.project_hdf5.working_directory, False, str(self.project.db.conn.engine.url)),
-            )
+            args = (self.job_id, self.project_hdf5.working_directory, False, str(self.project.db.conn.engine.url))
+        p = multiprocessing.Process(
+            target=multiprocess_wrapper,
+            args=args,
+        )
         if self.master_id and self.server.run_mode.non_modal:
             del self
             p.start()
