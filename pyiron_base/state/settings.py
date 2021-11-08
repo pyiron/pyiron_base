@@ -317,6 +317,9 @@ class Settings(metaclass=Singleton):
 
         Non-string non-None items are converted to the expected type and paths are converted to absolute POSIX paths.
         """
+        self._validate_sql_configuration(config=config)
+        self._validate_viewer_configuration(config=config)
+
         for key, value in config.items():
             key = key if map_ is None else map_[key]
 
