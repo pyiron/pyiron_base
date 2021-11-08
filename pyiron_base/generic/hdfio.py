@@ -14,6 +14,7 @@ import posixpath
 import h5io
 import numpy as np
 import sys
+from typing import Union
 from pyiron_base.interfaces.has_groups import HasGroups
 
 __author__ = "Joerg Neugebauer, Jan Janssen"
@@ -26,6 +27,19 @@ __maintainer__ = "Jan Janssen"
 __email__ = "janssen@mpie.de"
 __status__ = "production"
 __date__ = "Sep 1, 2017"
+
+def _is_ragged_array(value: Union[np.ndarray, list]) -> bool:
+    """
+    Checks whether array or list of lists is ragged.
+
+    Args:
+        value (ndarray/list): array to check
+
+    Returns:
+        bool: True if elements of value are not all of the same shape
+    """
+    shape_lst = [np.shape(sub) for sub in value]
+    return len(set(shape_lst)) > 1
 
 def open_hdf5(filename, mode="r", swmr=False):
     if swmr and mode != "r":
@@ -165,8 +179,7 @@ class FileHDFio(HasGroups, MutableMapping):
             and len(value[0]) > 0
             and not isinstance(value[0][0], str)
         ):
-            shape_lst = [np.shape(sub) for sub in value]
-            if all([shape_lst[0][1:] == t[1:] for t in shape_lst]):
+            if _is_ragged_array(value):
                 value = np.array([np.array(v) for v in value], dtype=object)
                 use_json=False
         elif isinstance(value, tuple):
