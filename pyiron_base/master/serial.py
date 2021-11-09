@@ -262,13 +262,12 @@ class SerialMasterBase(GenericMaster):
             nodes = ham_lst[0]["output/generic"].list_nodes()
             with self.project_hdf5.open("output/generic") as hh:
                 for node in nodes:
-                    try:
-                        
+                    if ham_lst[0]["output/generic/{}".format(node)] is not None:
                         hh[node] = np.concatenate(
                             [ham["output/generic/{}".format(node)] for ham in ham_lst],
                             axis=0,
                         )
-                    except ValueError:
+                    else:
                         hh[node] = None
 
     def collect_logfiles(self):
