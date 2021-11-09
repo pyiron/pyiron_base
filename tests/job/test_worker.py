@@ -17,13 +17,12 @@ class TestScriptJob(TestWithCleanProject):
         self.worker.project_to_watch = self.sub_project
         self.worker.server.run_mode.thread = True
         self.worker.run()
-        for i in range(5):
-            job = self.sub_project.create.job.ScriptJob("scrpt_" + str(i))
-            job.script_path = self.script_path
-            job.server.run_mode.worker = True
-            job.master_id = self.worker.job_id
-            job.run()
+        job = self.sub_project.create.job.ScriptJob("script")
+        job.script_path = self.script_path
+        job.server.run_mode.worker = True
+        job.master_id = self.worker.job_id
+        job.run()
         self.sub_project.wait_for_jobs()
         self.worker.status.collect = True
         df = self.sub_project.job_table()
-        self.assertEqual(len(df[df.status == "finished"]), 5)
+        self.assertEqual(len(df[df.status == "finished"]), 1)
