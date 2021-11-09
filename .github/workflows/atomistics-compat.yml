@@ -36,7 +36,8 @@ jobs:
     - name: Setup
       shell: bash -l {0}
       run: |
-        echo "DEBUG: ToJson(github.event) \n ${{ToJson(github.event)}}"
+        echo "DEBUG: github.event using the to Json function:" 
+        echo ${{ToJson(github.event)}}
         
         pip install --no-deps .
         cd .. 
