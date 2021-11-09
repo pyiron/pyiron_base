@@ -8,7 +8,7 @@ on:
     branches: [ master ]
   pull_request:
     branches: [ master ]
-    types: [labeled, opened, synchronize]
+    types: [labeled, opened, synchronize, reopened]
 
 jobs:
   build:
@@ -36,8 +36,8 @@ jobs:
     - name: Setup
       shell: bash -l {0}
       run: |
-        echo "DEBUG: github.event.type = ${{github.event.type}}"
-        echo "DEBUG: github.event.pull_request.labels.*.name ${{github.event.pull_request.labels.*.name}}"
+        echo "DEBUG: ToJson(github.event) \n ${{ToJson(github.event)}}"
+        
         pip install --no-deps .
         cd .. 
         git clone https://github.com/pyiron/pyiron_atomistics
