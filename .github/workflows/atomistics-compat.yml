@@ -36,6 +36,8 @@ jobs:
     - name: Setup
       shell: bash -l {0}
       run: |
+        echo "DEBUG: github.event.type = ${{github.event.type}}"
+        echo "DEBUG: github.event.pull_request.labels.*.name ${{github.event.pull_request.labels.*.name}}"
         pip install --no-deps .
         cd .. 
         git clone https://github.com/pyiron/pyiron_atomistics
