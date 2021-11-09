@@ -26,4 +26,4 @@ class TestScriptJob(TestWithCleanProject):
         self.sub_project.wait_for_jobs()
         self.worker.status.collect = True
         df = self.sub_project.job_table()
-        self.assertEqual(len(df[df.status == "finished"]), 6)
+        self.assertEqual(len(df[df.status == "finished"]), 5)
