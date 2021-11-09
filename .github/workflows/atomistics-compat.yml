@@ -36,8 +36,11 @@ jobs:
     - name: Setup
       shell: bash -l {0}
       run: |
+        echo "run = ${{ github.event.type == 'PushEvent' ||
+          ( github.event.type == 'PullRequestEvent'  && contains(github.event.pull_request.labels.*.name, 'integration' ))
+          }} "
         echo "DEBUG: github.event using the to Json function:" 
-        echo ${{ToJson(github.event)}}
+        echo ${{ToJson(github)}}
         
         pip install --no-deps .
         cd .. 
