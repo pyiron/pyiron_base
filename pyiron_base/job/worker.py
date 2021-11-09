@@ -6,7 +6,7 @@ Worker Class to execute calculation in an asynchronous way
 """
 import os
 import time
-from aproc import Pool
+import multiprocessing
 from pyiron_base.job.template import PythonTemplateJob
 
 
@@ -37,8 +37,8 @@ def worker_function(args):
         submit_on_remote (bool): submit to queuing system on remote host
         debug (bool): enable debug mode [True/False] (optional)
     """
-    status, working_directory, job_id, _, submit_on_remote, debug = args
     from pyiron_base.job.wrapper import JobWrapper
+    working_directory, job_id, _, submit_on_remote, debug = args
     job_wrap = JobWrapper(
         working_directory=working_directory,
         job_id=job_id,
@@ -92,9 +92,8 @@ class WorkerJob(PythonTemplateJob):
         master_id = self.job_id
         pr = self.project_to_watch
         active_job_ids = []
-        with Pool(
+        with multiprocessing.Pool(
             processes=int(self.server.cores/self.cores_per_job),
-            initializer=worker_function,
         ) as pool:
             while True:
                 # Check the database if there are more calculation to execute
@@ -113,13 +112,13 @@ class WorkerJob(PythonTemplateJob):
                             df_sub["id"].values
                         ) if job_id not in active_job_ids]
                     job_lst = [
-                        [True, p, job_id, None, False, False]
+                        [p, job_id, None, False, False]
                         if pp is None else
-                        [True, os.path.join(pp, p), job_id, None, False, False]
+                        [os.path.join(pp, p), job_id, None, False, False]
                         for pp, p, job_id in path_lst
                     ]
-                    active_job_ids += [j[2] for j in job_lst]
-                    _ = [pool.put(j) for j in job_lst]
+                    active_job_ids += [j[1] for j in job_lst]
+                    pool.map_async(worker_function, job_lst)
                 elif self.status.collect:  # The infinite loop can be stopped by setting the job status to collect.
                     break
                 else:  # The sleep interval can be set as part of the input

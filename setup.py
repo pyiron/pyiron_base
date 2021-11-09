@@ -29,7 +29,6 @@ setup(
     keywords='pyiron',
     packages=find_packages(exclude=["*tests*", "*docs*", "*binder*", "*conda*", "*notebooks*", "*.ci_support*"]),
     install_requires=[
-        'aproc==0.0.1',
         'dill==0.3.4',
         'future==0.18.2',
         'gitpython==3.1.24',
