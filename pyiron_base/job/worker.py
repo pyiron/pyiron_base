@@ -51,6 +51,47 @@ def worker_function(args):
 class WorkerJob(PythonTemplateJob):
     """
     The WorkerJob executes jobs linked to its master id.
+
+    The worker can either be in the same project as the calculation it should execute
+    or a different project. For the example two projects are created:
+
+    >>> from pyiron_base import Project
+    >>> pr_worker = Project("worker")
+    >>> pr_calc = Project("calc")
+
+    The worker is configured to be executed in the background using the non_modal mode,
+    with the number of cores defining the total number avaiable to the worker and the
+    cores_per_job definitng the per job allocation. It is recommended to use the same
+    number of cores for each task the worker executes to optimise the load balancing.
+
+    >>> job_worker = pr_worker.create.job.WorkerJob("runner")
+    >>> job_worker.server.run_mode.non_modal = True
+    >>> job_worker.server.cores = 4
+    >>> job_worker.input.cores_per_job = 2
+    >>> job_worker.run()
+
+    The calculation are assinged to the worker by setting the run_mode to worker and
+    assigning the job_id of the worker as master_id of each job. In this example a total
+    of ten toyjobs are attached to the worker, with each toyjob using two cores.
+
+    >>> for i in range(10):
+    >>>     job = pr_calc.create.job.ToyJob("toy_" + str(i))
+    >>>     job.server.run_mode.worker = True
+    >>>     job.server.cores = 2
+    >>>     job.master_id = job_worker.job_id
+    >>>     job.run()
+
+    The execution can be monitored using the job_table of the calculation object:
+
+    >>> pr_calc.job_table()
+
+    Finally after all calculation are finished the status of the worker is set to collect,
+    which internally stops the execution of the worker and afterwards updates the job status
+    to finished:
+
+    >>> pr_calc.wait_for_jobs()
+    >>> job_worker.status.collect = True
+
     """
     def __init__(self, project, job_name):
         super(WorkerJob, self).__init__(project, job_name)
