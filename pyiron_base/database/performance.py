@@ -132,8 +132,7 @@ class DatabaseStatistics:
 
     def _index_size(self, conn):
         """
-        returns the total size of indexes for the pyiron job table (defined in the
-        pyiron_base.Setting._configuration)
+        returns the total size of indexes for the pyiron job table
         """
         stmt = """
             SELECT
