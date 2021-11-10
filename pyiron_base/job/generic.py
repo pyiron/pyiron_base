@@ -38,9 +38,6 @@ __email__ = "janssen@mpie.de"
 __status__ = "production"
 __date__ = "Sep 1, 2017"
 
-s = Settings()
-dbm = DatabaseManager()
-
 intercepted_signals = [
     signal.SIGINT,
     signal.SIGTERM,
