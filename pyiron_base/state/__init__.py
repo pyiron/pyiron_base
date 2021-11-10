@@ -14,12 +14,12 @@ ultimately should probably be relocated here (work is ongoing on our database in
 compatibility.
 """
 
-from pyiron_base.database.manager import database as _database
-from pyiron_base.generic.util import Singleton
 from pyiron_base.state.logger import logger as _logger
+from pyiron_base.database.manager import database as _database
 from pyiron_base.state.publications import publications as _publications
 from pyiron_base.state.queue_adapter import queue_adapters as _queue_adapters
 from pyiron_base.state.settings import settings as _settings
+from pyiron_base.generic.util import Singleton
 from typing import Dict, Union
 
 __author__ = "Liam Huber"
