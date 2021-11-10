@@ -49,55 +49,47 @@ class TestFileHDFio(PyironTestCase):
         with self.subTest('content/array'):
             array = hdf["content/array"]
             self.assertTrue(
-                all(np.equal(array, np.array([1, 2, 3, 4, 5, 6])))
+                np.array_equal(array, np.array([1, 2, 3, 4, 5, 6]))
             )
             self.assertIsInstance(array, np.ndarray)
-            self.assertEqual(array.dtype, np.dtype('int'))
+            self.assertEqual(array.dtype, np.dtype(int))
 
         with self.subTest('content/array_3d'):
             array = hdf["content"]["array_3d"]
             self.assertTrue(
-                all(
-                    np.equal(
-                        array,
-                        np.array([[1, 2, 3], [4, 5, 6]]),
-                    ).flatten()
+                np.array_equal(
+                    array,
+                    np.array([[1, 2, 3], [4, 5, 6]]),
                 )
             )
             self.assertIsInstance(array, np.ndarray)
-            self.assertEqual(array.dtype, np.dtype('int'))
+            self.assertEqual(array.dtype, np.dtype(int))
 
         with self.subTest('content/indices'):
             array = hdf['content/indices']
             self.assertTrue(
-                all(
-                    np.equal(
-                        array,
-                        np.array([1, 1, 1, 1, 6])
-                    ).flatten()
+                np.array_equal(
+                    array,
+                    np.array([1, 1, 1, 1, 6])
                 )
             )
             self.assertIsInstance(array, np.ndarray)
-            self.assertEqual(array.dtype, np.dtype('int'))
+            self.assertEqual(array.dtype, np.dtype(int))
 
         with self.subTest('content/traj'):
             array = hdf["content/traj"]
             self.assertTrue(
-                all(
-                    np.equal(
-                        array[0], np.array([[1, 2, 3], [4, 5, 6]])
-                    ).flatten()
+                np.array_equal(
+                    array[0], np.array([[1, 2, 3], [4, 5, 6]])
                 )
             )
             self.assertTrue(
-                all(
-                    np.equal(
-                        array[1], np.array([[7, 8, 9]])
-                    ).flatten()
+                np.array_equal(
+                    array[1], np.array([[7, 8, 9]])
                 )
             )
             self.assertIsInstance(array, np.ndarray)
-            self.assertEqual(array.dtype, np.dtype('O'))
+            self.assertEqual(array.dtype, np.dtype(object))
 
         with self.subTest('content/dict'):
             content_dict = hdf["content/dict"]
@@ -109,11 +101,9 @@ class TestFileHDFio(PyironTestCase):
             content_dict = hdf["content/dict_numpy"]
             self.assertEqual(content_dict["key_1"], 1)
             self.assertTrue(
-                all(
-                    np.equal(
-                        content_dict["key_2"],
-                        np.array([1, 2, 3, 4, 5, 6]),
-                    )
+                np.array_equal(
+                    content_dict["key_2"],
+                    np.array([1, 2, 3, 4, 5, 6]),
                 )
             )
 
