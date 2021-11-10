@@ -238,6 +238,20 @@ class TestFlattenedStorage(TestWithProject):
                            store.get_array_ragged("chunk"),
                         ), "get_array_ragged does not give same result as get_array for per chunk array")
 
+    def test_get_array_ragged_dtype_stability(self):
+        """get_array_ragged should (only!) convert top-most dimension to dtype=object and be of shape (n,) """
+        # regression test
+        store = FlattenedStorage(elem=[ [1, 2], [3, 4], [5, 6] ])
+        ragged = store.get_array_ragged("elem")
+        self.assertEqual(ragged.dtype, np.dtype("O"),
+                         "Top most dtype not object!")
+        self.assertEqual(len(ragged.shape), 1,
+                         "Shape not (n,)!")
+        for array in store._per_element_arrays:
+            for a in ragged:
+                self.assertEqual(a.dtype, store._per_element_arrays[array].dtype,
+                                 "Nested array returned from get_array_ragged has wrong dtype!")
+
     def test_has_array(self):
         """hasarray should return correct information for added array; None otherwise."""
 

@@ -130,7 +130,7 @@ class Project(ProjectPath, HasGroups):
         self._maintenance = None
 
     @property
-    def ide(self):
+    def state(self):
         return state
 
     @property
@@ -1572,11 +1572,11 @@ class GlobalMaintenance:
         initialize the flag self._check_postgres, to control whether pyiron is
         set to communicate with a postgres database.
         """
-        connection_string = state.settings._configuration['sql_connection_string']
+        connection_string = state.database.sql_connection_string
         if "postgresql" not in connection_string:
             warn(
                 """
-                The detabase statistics is only available for a Postgresql database
+                The database statistics is only available for a Postgresql database
                 """
             )
             self._check_postgres = False

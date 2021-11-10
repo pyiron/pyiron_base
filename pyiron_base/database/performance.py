@@ -78,8 +78,8 @@ class DatabaseStatistics:
     """
 
     def __init__(self):
-        connection_string = state.settings.configuration['sql_connection_string']
-        self._job_table = state.settings.configuration['sql_view_table_name']
+        connection_string = state.database.sql_connection_string
+        self._job_table = state.database.sql_view_table_name
         if "postgresql" not in connection_string:
             raise RuntimeError(
                 """
@@ -132,8 +132,7 @@ class DatabaseStatistics:
 
     def _index_size(self, conn):
         """
-        returns the total size of indexes for the pyiron job table (defined in the
-        pyiron_base.Setting._configuration)
+        returns the total size of indexes for the pyiron job table
         """
         stmt = """
             SELECT

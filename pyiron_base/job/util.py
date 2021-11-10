@@ -220,7 +220,7 @@ def _job_compress(job, files_to_compress=None):
         job (JobCore): job object to compress
         files_to_compress (list): list of files to compress
     """
-    if not any([".tar.bz2" in file for file in job.list_files()]):
+    if not _job_is_compressed(job):
         if files_to_compress is None:
             files_to_compress = list(job.list_files())
         cwd = os.getcwd()

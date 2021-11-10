@@ -2,6 +2,7 @@
 # Copyright (c) Max-Planck-Institut für Eisenforschung GmbH - Computational Materials Design (CM) Department
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
+from pyiron_base.state import state
 # API of the pyiron_base module - in alphabetical order
 from pyiron_base.generic.factory import PyironFactory
 from pyiron_base.generic.flattenedstorage import FlattenedStorage
@@ -10,7 +11,6 @@ from pyiron_base.generic.datacontainer import DataContainer
 from pyiron_base.generic.inputlist import InputList
 from pyiron_base.generic.parameters import GenericParameters
 from pyiron_base.generic.util import deprecate, deprecate_soon, ImportAlarm
-from pyiron_base.state import state
 from pyiron_base.job.executable import Executable
 from pyiron_base.job.external import Notebook
 from pyiron_base.job.generic import GenericJob
