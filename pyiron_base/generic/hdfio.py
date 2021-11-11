@@ -116,7 +116,7 @@ class FileHDFio(HasGroups, MutableMapping):
                 # try to read it here and one more time to verify it's not a group below).
                 obj = h5io.read_hdf5(self.file_name, title=self._get_h5_path(item))
                 return obj
-            except ValueError:
+            except (ValueError, OSError):
                 # h5io couldn't find a dataset with name item, but there still might be a group with that name, which we
                 # check in the rest of the method
                 pass
