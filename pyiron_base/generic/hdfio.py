@@ -123,11 +123,24 @@ class FileHDFio(HasGroups, MutableMapping):
                 return self.values()
             raise NotImplementedError("Implement if needed, e.g. for [:]")
         else:
+            try:
+                # fast path, a good amount of accesses will want to fetch a specific dataset it knows exists in the
+                # file, there's therefor no point in checking whether item is a group or a node or even worse recursing
+                # in case when item contains '/'.  In most cases read_hdf5 will grab the correct data straight away and
+                # if not we will still check thoroughly below.  Since list_nodes()/list_groups() each open the
+                # underlying file once, this reduces the number of file opens in the most-likely case from 2 to 1 (1 to
+                # check whether the data is there and 1 to read it) and increases in the worst case from 1 to 2 (1 to
+                # try to read it here and one more time to verify it's not a group below).
+                obj = h5io.read_hdf5(self.file_name, title=self._get_h5_path(item))
+                return obj
+            except (ValueError, OSError):
+                # h5io couldn't find a dataset with name item, but there still might be a group with that name, which we
+                # check in the rest of the method
+                pass
+
             item_lst = item.split("/")
             if len(item_lst) == 1 and item_lst[0] != "..":
-                if item in self.list_nodes():
-                    obj = h5io.read_hdf5(self.file_name, title=self._get_h5_path(item))
-                    return obj
+                # if item in self.list_nodes() we would have caught it in the fast path above
                 if item in self.list_groups():
                     with self.open(item) as hdf_item:
                         obj = hdf_item.copy()
