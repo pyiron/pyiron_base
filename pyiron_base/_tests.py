@@ -10,6 +10,7 @@ from io import StringIO
 import unittest
 from os.path import split, join
 from os import remove
+import posixpath
 from pyiron_base import PythonTemplateJob
 from pyiron_base.project.generic import Project
 from abc import ABC
@@ -95,12 +96,20 @@ class ToyJob(PythonTemplateJob):
         super(ToyJob, self).__init__(project, job_name)
         self.input.data_in = 100
 
+    def write_input(self):
+        self.input.write(posixpath.join(self.working_directory, "input.yml"))
+
+    # Allow writing of the input file
+    def _check_if_input_should_be_written(self):
+        return True
+
     # This function is executed
     def run_static(self):
         self.status.running = True
         self.output.data_out = self.input.data_in + 1
         self.status.finished = True
         self.to_hdf()
+        self.compress()
         
 
 class TestWithFilledProject(TestWithProject, ABC):
