@@ -8,8 +8,7 @@ from contextlib import redirect_stdout
 import doctest
 from io import StringIO
 import unittest
-from os import remove
-import posixpath
+import os
 from pyiron_base import PythonTemplateJob
 from pyiron_base.project.generic import Project
 from abc import ABC
@@ -69,14 +68,14 @@ class TestWithProject(PyironTestCase, ABC):
         super().setUpClass()
         print("TestWithProject: Setting up test project")
         cls.project_path = getfile(cls)[:-3].replace("\\", "/")
-        cls.file_location, cls.project_name = posixpath.split(cls.project_path)
+        cls.file_location, cls.project_name = os.path.split(cls.project_path)
         cls.project = Project(cls.project_path)
 
     @classmethod
     def tearDownClass(cls):
         cls.project.remove(enable=True)
         try:
-            remove(posixpath.join(cls.file_location, "pyiron.log"))
+            os.remove(os.path.join(cls.file_location, "pyiron.log"))
         except FileNotFoundError:
             pass
 
@@ -96,7 +95,7 @@ class ToyJob(PythonTemplateJob):
         self.input.data_in = 100
 
     def write_input(self):
-        self.input.write(posixpath.join(self.working_directory, "input.yml"))
+        self.input.write(os.path.join(self.working_directory, "input.yml"))
 
     # Allow writing of the input file
     def _check_if_input_should_be_written(self):
