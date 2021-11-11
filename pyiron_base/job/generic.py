@@ -1236,7 +1236,8 @@ class GenericJob(JobCore):
             new_ham = self.copy_to(
                 new_job_name=job_name,
                 new_database_entry=False,
-                input_only=True
+                input_only=True,
+                copy_files=False
             )
         else:
             new_ham = self.create_job(job_type, job_name)
