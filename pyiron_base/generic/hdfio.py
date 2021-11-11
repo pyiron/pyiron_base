@@ -38,8 +38,11 @@ def _is_ragged_array(value: Union[np.ndarray, list]) -> bool:
     Returns:
         bool: True if elements of value are not all of the same shape
     """
-    shape_lst = [np.shape(sub) for sub in value]
-    return len(set(shape_lst)) > 1
+    if isinstance(value, np.ndarray) and value.dtype != np.dtype("O"):
+        return False
+    else:
+        shape_lst = [np.shape(sub) for sub in value]
+        return len(set(shape_lst)) > 1
 
 def open_hdf5(filename, mode="r", swmr=False):
     if swmr and mode != "r":
