@@ -123,11 +123,8 @@ class FileHDFio(HasGroups, MutableMapping):
 
             item_lst = item.split("/")
             if len(item_lst) == 1 and item_lst[0] != "..":
-                content = self.list_all()
-                if item in content["nodes"]:
-                    obj = h5io.read_hdf5(self.file_name, title=self._get_h5_path(item))
-                    return obj
-                if item in content["groups"]:
+                # if item in self.list_nodes() we would have caught it in the fast path above
+                if item in self.list_groups():
                     with self.open(item) as hdf_item:
                         obj = hdf_item.copy()
                         return obj
