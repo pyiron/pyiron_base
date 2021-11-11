@@ -8,7 +8,6 @@ from contextlib import redirect_stdout
 import doctest
 from io import StringIO
 import unittest
-from os.path import split, join
 from os import remove
 import posixpath
 from pyiron_base import PythonTemplateJob
@@ -70,14 +69,14 @@ class TestWithProject(PyironTestCase, ABC):
         super().setUpClass()
         print("TestWithProject: Setting up test project")
         cls.project_path = getfile(cls)[:-3].replace("\\", "/")
-        cls.file_location, cls.project_name = split(cls.project_path)
+        cls.file_location, cls.project_name = posixpath.split(cls.project_path)
         cls.project = Project(cls.project_path)
 
     @classmethod
     def tearDownClass(cls):
         cls.project.remove(enable=True)
         try:
-            remove(join(cls.file_location, "pyiron.log"))
+            remove(posixpath.join(cls.file_location, "pyiron.log"))
         except FileNotFoundError:
             pass
 
@@ -110,7 +109,7 @@ class ToyJob(PythonTemplateJob):
         self.status.finished = True
         self.to_hdf()
         self.compress()
-        
+
 
 class TestWithFilledProject(TestWithProject, ABC):
 
