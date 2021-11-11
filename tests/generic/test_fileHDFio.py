@@ -6,7 +6,7 @@ import os
 import sys
 from io import StringIO
 import numpy as np
-from pyiron_base.generic.hdfio import FileHDFio
+from pyiron_base.generic.hdfio import FileHDFio, _is_ragged_array
 from pyiron_base._tests import PyironTestCase
 import unittest
 
@@ -302,6 +302,13 @@ class TestFileHDFio(PyironTestCase):
         self.assertFalse(grp in self.i_o_hdf5.list_nodes())
         # This should not raise an error, albeit the group of hdf is removed
         hdf.remove_group()
+
+    def test_ragged_array(self):
+        """Should correctly identify ragged arrays/lists."""
+        self.assertTrue(_is_ragged_array([ [1], [1, 2] ]), "Ragged nested list not detected!")
+        self.assertTrue(_is_ragged_array([ np.array([1]), np.array([1, 2]) ]), "Ragged list of arrays not detected!")
+        self.assertFalse(_is_ragged_array([ [1, 2], [3, 4] ]), "Non-ragged nested list detected incorrectly!")
+        self.assertFalse(_is_ragged_array(np.array([ [1, 2], [3, 4] ])), "Non-ragged array detected incorrectly!")
 
 
 if __name__ == "__main__":
