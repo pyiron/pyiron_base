@@ -97,7 +97,7 @@ class JobFactoryCore(PyironFactory, ABC):
         """
         job_name = job_name.replace(".", "_")
         job = JobType(
-            class_name=self._job_class_dict[job_type],  # Pass the class directly, JobType can handle that
+            class_name=job_type,  # Pass the class directly, JobType can handle that
             project=ProjectHDFio(project=self._project.copy(), file_name=job_name),
             job_name=job_name,
             job_class_dict=self._job_class_dict,
