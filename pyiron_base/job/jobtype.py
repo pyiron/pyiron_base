@@ -99,12 +99,13 @@ class JobType(object):
             job_type = class_name.split(".")[-1]
         else:
             job_type = job_type_lst[-1]
-        for job_class_name in list(
-            job_class_dict.keys()
-        ):  # for job_class in cls.JOB_CLASSES:
+
+        for job_class_name in list(job_class_dict.keys()):
             if job_type == job_class_name:
-                job_module = importlib.import_module(job_class_dict[job_class_name])
-                job_class = getattr(job_module, job_class_name)
+                job_class = job_class_dict[job_class_name]
+                if isinstance(job_class, str):
+                    job_module = importlib.import_module(job_class)
+                    job_class = getattr(job_module, job_class_name)
                 return job_class
         raise ValueError(
             "Unknown job type: ",
