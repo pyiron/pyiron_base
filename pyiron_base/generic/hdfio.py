@@ -14,6 +14,7 @@ import posixpath
 import h5io
 import numpy as np
 import sys
+from typing import Union
 from pyiron_base.interfaces.has_groups import HasGroups
 
 __author__ = "Joerg Neugebauer, Jan Janssen"
@@ -26,6 +27,22 @@ __maintainer__ = "Jan Janssen"
 __email__ = "janssen@mpie.de"
 __status__ = "production"
 __date__ = "Sep 1, 2017"
+
+def _is_ragged_array(value: Union[np.ndarray, list]) -> bool:
+    """
+    Checks whether array or list of lists is ragged.
+
+    Args:
+        value (ndarray/list): array to check
+
+    Returns:
+        bool: True if elements of value are not all of the same shape
+    """
+    if isinstance(value, np.ndarray) and value.dtype != np.dtype("O"):
+        return False
+    else:
+        shape_lst = [np.shape(sub) for sub in value]
+        return len(set(shape_lst)) > 1
 
 def open_hdf5(filename, mode="r", swmr=False):
     if swmr and mode != "r":
@@ -106,11 +123,24 @@ class FileHDFio(HasGroups, MutableMapping):
                 return self.values()
             raise NotImplementedError("Implement if needed, e.g. for [:]")
         else:
+            try:
+                # fast path, a good amount of accesses will want to fetch a specific dataset it knows exists in the
+                # file, there's therefor no point in checking whether item is a group or a node or even worse recursing
+                # in case when item contains '/'.  In most cases read_hdf5 will grab the correct data straight away and
+                # if not we will still check thoroughly below.  Since list_nodes()/list_groups() each open the
+                # underlying file once, this reduces the number of file opens in the most-likely case from 2 to 1 (1 to
+                # check whether the data is there and 1 to read it) and increases in the worst case from 1 to 2 (1 to
+                # try to read it here and one more time to verify it's not a group below).
+                obj = h5io.read_hdf5(self.file_name, title=self._get_h5_path(item))
+                return obj
+            except (ValueError, OSError):
+                # h5io couldn't find a dataset with name item, but there still might be a group with that name, which we
+                # check in the rest of the method
+                pass
+
             item_lst = item.split("/")
             if len(item_lst) == 1 and item_lst[0] != "..":
-                if item in self.list_nodes():
-                    obj = h5io.read_hdf5(self.file_name, title=self._get_h5_path(item))
-                    return obj
+                # if item in self.list_nodes() we would have caught it in the fast path above
                 if item in self.list_groups():
                     with self.open(item) as hdf_item:
                         obj = hdf_item.copy()
@@ -165,8 +195,7 @@ class FileHDFio(HasGroups, MutableMapping):
             and len(value[0]) > 0
             and not isinstance(value[0][0], str)
         ):
-            shape_lst = [np.shape(sub) for sub in value]
-            if all([shape_lst[0][1:] == t[1:] for t in shape_lst]):
+            if _is_ragged_array(value):
                 value = np.array([np.array(v) for v in value], dtype=object)
                 use_json=False
         elif isinstance(value, tuple):
