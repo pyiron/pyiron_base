@@ -243,7 +243,7 @@ class Project(ProjectPath, HasGroups):
         """
         job_id = self.get_job_id(new_job_name)
         if job_id is not None:
-            state.logger.info("create_from_job has already job_id {}!".format(job_id))
+            state.logger.info(f"create_from_job: {new_job_name} has already job_id {job_id}!")
             return None
 
         print("job_old: ", job_old.status)
