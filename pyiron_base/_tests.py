@@ -56,7 +56,7 @@ class PyironTestCase(unittest.TestCase, ABC):
         with StringIO() as buf, redirect_stdout(buf):
             result = doctest.testmod(self.docstring_module)
             output = buf.getvalue()
-        self.failIf(result.failed > 0, msg=output)
+        self.assertFalse(result.failed > 0, msg=output)
 
 
 class TestWithProject(PyironTestCase, ABC):
