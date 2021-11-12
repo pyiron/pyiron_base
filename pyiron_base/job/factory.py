@@ -10,7 +10,7 @@ from pyiron_base.generic.factory import PyironFactory
 from abc import ABC, abstractmethod
 from pyiron_base.job.jobtype import JobType
 from pyiron_base.job.generic import GenericJob
-from typing import Type, Dict, List
+from typing import Type, Dict, List, Union
 
 from pyiron_base.master.flexible import FlexibleMaster
 from pyiron_base.job.script import ScriptJob
@@ -78,7 +78,7 @@ class JobFactoryCore(PyironFactory, ABC):
 
     def __call__(
             self,
-            job_type: str,
+            job_type: Union[str, Type[GenericJob]],
             job_name: str,
             delete_existing_job: bool = False,
             delete_aborted_job: bool = False
@@ -87,10 +87,11 @@ class JobFactoryCore(PyironFactory, ABC):
         Create a job.
 
         Args:
-            job_type (str): The job class to be instantiated.
-            job_name (str): name of the job
-            delete_existing_job (bool): delete an existing job - default false
-            delete_aborted_job (bool): delete an existing and aborted job - default false
+            job_type (str|Type[GenericJob]): The job class to be instantiated, either the string from a known class, or
+                an actual class, e.g. in the case of custom user-made jobs.
+            job_name (str): name of the job.
+            delete_existing_job (bool): delete an existing job. (Default is False.)
+            delete_aborted_job (bool): delete an existing and aborted job. (Default is False.)
 
         Returns:
             GenericJob: job object depending on the job_type selected
