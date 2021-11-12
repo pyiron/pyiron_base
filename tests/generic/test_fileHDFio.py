@@ -6,7 +6,7 @@ import os
 import sys
 from io import StringIO
 import numpy as np
-from pyiron_base.generic.hdfio import FileHDFio
+from pyiron_base.generic.hdfio import FileHDFio, _is_ragged_array
 from pyiron_base._tests import PyironTestCase
 import unittest
 
@@ -27,6 +27,7 @@ class TestFileHDFio(PyironTestCase):
             hdf["traj"] = np.array([[[1, 2, 3], [4, 5, 6]], [[7, 8, 9]]], dtype=object)
             hdf["dict"] = {"key_1": 1, "key_2": "hallo"}
             hdf["dict_numpy"] = {"key_1": 1, "key_2": np.array([1, 2, 3, 4, 5, 6])}
+            hdf['indices'] = np.array([1, 1, 1, 1, 6], dtype=int)
             with hdf.open('group') as grp:
                 grp['some_entry'] = 'present'
         with cls.i_o_hdf5.open("content") as hdf:
@@ -45,43 +46,69 @@ class TestFileHDFio(PyironTestCase):
         os.remove(cls.current_dir + "/filehdfio_io.h5")
 
     def _check_full_hdf_values(self, hdf):
-        self.assertTrue(
-            all(np.equal(hdf["content/array"], np.array([1, 2, 3, 4, 5, 6])))
-        )
-        self.assertTrue(
-            all(
-                np.equal(
-                    hdf["content"]["array_3d"],
+        with self.subTest('content/array'):
+            array = hdf["content/array"]
+            self.assertTrue(
+                np.array_equal(array, np.array([1, 2, 3, 4, 5, 6]))
+            )
+            self.assertIsInstance(array, np.ndarray)
+            self.assertEqual(array.dtype, np.dtype(int))
+
+        with self.subTest('content/array_3d'):
+            array = hdf["content"]["array_3d"]
+            self.assertTrue(
+                np.array_equal(
+                    array,
                     np.array([[1, 2, 3], [4, 5, 6]]),
-                ).flatten()
+                )
             )
-        )
-        self.assertTrue(
-            all(
-                np.equal(
-                    hdf["content/traj"][0], np.array([[1, 2, 3], [4, 5, 6]])
-                ).flatten()
+            self.assertIsInstance(array, np.ndarray)
+            self.assertEqual(array.dtype, np.dtype(int))
+
+        with self.subTest('content/indices'):
+            array = hdf['content/indices']
+            self.assertTrue(
+                np.array_equal(
+                    array,
+                    np.array([1, 1, 1, 1, 6])
+                )
             )
-        )
-        self.assertTrue(
-            all(
-                np.equal(
-                    hdf["content/traj"][1], np.array([[7, 8, 9]])
-                ).flatten()
+            self.assertIsInstance(array, np.ndarray)
+            self.assertEqual(array.dtype, np.dtype(int))
+
+        with self.subTest('content/traj'):
+            array = hdf["content/traj"]
+            self.assertTrue(
+                np.array_equal(
+                    array[0], np.array([[1, 2, 3], [4, 5, 6]])
+                )
             )
-        )
-        self.assertEqual(hdf["content/dict"]["key_1"], 1)
-        self.assertEqual(hdf["content/dict"]["key_2"], "hallo")
-        self.assertEqual(hdf["content/dict_numpy"]["key_1"], 1)
-        self.assertTrue(
-            all(
-                np.equal(
-                    hdf["content/dict_numpy"]["key_2"],
+            self.assertTrue(
+                np.array_equal(
+                    array[1], np.array([[7, 8, 9]])
+                )
+            )
+            self.assertIsInstance(array, np.ndarray)
+            self.assertEqual(array.dtype, np.dtype(object))
+
+        with self.subTest('content/dict'):
+            content_dict = hdf["content/dict"]
+            self.assertEqual(content_dict["key_1"], 1)
+            self.assertEqual(content_dict["key_2"], "hallo")
+            self.assertIsInstance(content_dict, dict)
+
+        with self.subTest('content/dict_numpy'):
+            content_dict = hdf["content/dict_numpy"]
+            self.assertEqual(content_dict["key_1"], 1)
+            self.assertTrue(
+                np.array_equal(
+                    content_dict["key_2"],
                     np.array([1, 2, 3, 4, 5, 6]),
                 )
             )
-        )
-        self.assertEqual(hdf['content/group/some_entry'], 'present')
+
+        with self.subTest('content/group/some_entry'):
+            self.assertEqual(hdf['content/group/some_entry'], 'present')
 
     def test_get_item(self):
         self._check_full_hdf_values(self.full_hdf5)
@@ -217,7 +244,7 @@ class TestFileHDFio(PyironTestCase):
         sys.stdout = sys_stdout
         self.assertEqual(result_string,
                          'group:  content\n  node array\n  node array_3d\n  node dict\n  node dict_numpy\n' +
-                         '  node traj\n  group:  group\n    node some_entry\n'
+                         '  node indices\n  node traj\n  group:  group\n    node some_entry\n'
                          )
 
     def test_is_empty(self):
@@ -275,6 +302,13 @@ class TestFileHDFio(PyironTestCase):
         self.assertFalse(grp in self.i_o_hdf5.list_nodes())
         # This should not raise an error, albeit the group of hdf is removed
         hdf.remove_group()
+
+    def test_ragged_array(self):
+        """Should correctly identify ragged arrays/lists."""
+        self.assertTrue(_is_ragged_array([ [1], [1, 2] ]), "Ragged nested list not detected!")
+        self.assertTrue(_is_ragged_array([ np.array([1]), np.array([1, 2]) ]), "Ragged list of arrays not detected!")
+        self.assertFalse(_is_ragged_array([ [1, 2], [3, 4] ]), "Non-ragged nested list detected incorrectly!")
+        self.assertFalse(_is_ragged_array(np.array([ [1, 2], [3, 4] ])), "Non-ragged array detected incorrectly!")
 
 
 if __name__ == "__main__":
