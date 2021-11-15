@@ -5,6 +5,7 @@
 Classes to map the Python objects to HDF5 data structures
 """
 
+import numbers
 import h5py
 import os
 from collections.abc import MutableMapping
@@ -16,6 +17,8 @@ import numpy as np
 import sys
 from typing import Union
 from pyiron_base.interfaces.has_groups import HasGroups
+from pyiron_base.state import state
+from pyiron_base.generic.util import deprecate
 
 __author__ = "Joerg Neugebauer, Jan Janssen"
 __copyright__ = (
@@ -144,6 +147,8 @@ class FileHDFio(HasGroups, MutableMapping):
                 if item in self.list_groups():
                     with self.open(item) as hdf_item:
                         obj = hdf_item.copy()
+                        if self._is_convertable_dtype_object_array(obj):
+                            obj = self._convert_dtype_obj_array(obj)
                         return obj
                 raise ValueError("Unknown item: {} {} {}".format(item, self.file_name, self.h5_path))
             else:
@@ -174,6 +179,31 @@ class FileHDFio(HasGroups, MutableMapping):
                     hdf_object = self.copy()
                     hdf_object.h5_path = "/".join(item_abs_lst[:-1])
                     return hdf_object[item_abs_lst[-1]]
+
+    #TODO: remove this function upon 1.0.0 release
+    @staticmethod
+    def _is_convertable_dtype_object_array(obj):
+        if isinstance(obj, np.ndarray) and obj.dtype == np.dtype(object):
+            first_element = obj[tuple([0 for _ in range(obj.ndim)])]
+            last_element = obj[tuple([-1 for _ in range(obj.ndim)])]
+            if isinstance(first_element, numbers.Number) and isinstance(last_element, numbers.Number) \
+                    and not _is_ragged_array(obj):
+                return True
+        return False
+
+    #TODO: remove this function upon 1.0.0 release
+    @staticmethod
+    def _convert_dtype_obj_array(obj: np.ndarray):
+        result = np.array(obj.tolist())
+        if result.dtype != np.dtype(object):
+            state.logger.warning(f"Deprecated data structure! "
+                                 f"Returned array was converted from dtype='O' to dtype={result.dtype} "
+                                 f"via `np.array(result.tolist())`.\n"
+                                 f"Please run rewrite_hdf5() to update this data! "
+                                 f"To update all your data run update tool.")
+            return result
+        else:
+            return obj
 
     def __setitem__(self, key, value):
         """
