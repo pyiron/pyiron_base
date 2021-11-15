@@ -27,6 +27,7 @@ class DatabaseManager(metaclass=Singleton):
         self._database = None
         self._use_local_database = False
         self._database_is_disabled = s.configuration["disable_database"]
+        self.open_connection()
 
     @property
     def database(self):
@@ -241,6 +242,7 @@ class DatabaseManager(metaclass=Singleton):
         self.close_connection()
         self._use_local_database = False
         self._database_is_disabled = s.configuration["disable_database"]
+        self.open_connection()
 
 
 database = DatabaseManager()

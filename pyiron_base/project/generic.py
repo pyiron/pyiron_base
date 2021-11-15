@@ -120,11 +120,6 @@ class Project(ProjectPath, HasGroups):
         self._data = None
         self._creator = Creator(project=self)
 
-        if not state.database.database_is_disabled:
-            state.database.open_connection()
-            self.db = state.database.database
-        else:
-            self.db = FileTable(project=path)
         self.job_type = JobTypeChoice()
 
         self._maintenance = None
@@ -132,6 +127,13 @@ class Project(ProjectPath, HasGroups):
     @property
     def state(self):
         return state
+
+    @property
+    def db(self):
+        if not state.database.database_is_disabled:
+            return state.database.database
+        else:
+            return FileTable(project=self.path)
 
     @property
     def maintenance(self):
