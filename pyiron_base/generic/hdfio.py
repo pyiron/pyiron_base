@@ -18,7 +18,6 @@ import sys
 from typing import Union
 from pyiron_base.interfaces.has_groups import HasGroups
 from pyiron_base.state import state
-from pyiron_base.generic.util import deprecate
 
 __author__ = "Joerg Neugebauer, Jan Janssen"
 __copyright__ = (
