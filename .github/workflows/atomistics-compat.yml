@@ -12,10 +12,7 @@ on:
 
 jobs:
   build:
-    if: |
-      ${{ "fail" == 'PushEvent' ||
-          ( "some" == "some"  && 'fail' == 'yes' )
-       }}
+    if: false
 
     runs-on: ${{ matrix.operating-system }}
     strategy:
