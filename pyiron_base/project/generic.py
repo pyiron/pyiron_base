@@ -1106,8 +1106,6 @@ class Project(ProjectPath, HasGroups):
         """
         if not isinstance(self.db, FileTable):
             state.database.switch_to_viewer_mode()
-            state.database.open_connection()
-            self.db = state.database.database
 
     def switch_to_user_mode(self):
         """
@@ -1115,8 +1113,6 @@ class Project(ProjectPath, HasGroups):
         """
         if not isinstance(self.db, FileTable):
             state.database.switch_to_user_mode()
-            state.database.open_connection()
-            self.db = state.database.database
 
     def switch_to_local_database(self, file_name="pyiron.db", cwd=None):
         """
@@ -1126,26 +1122,14 @@ class Project(ProjectPath, HasGroups):
             file_name (str): file name or file path for the local database
             cwd (str): directory where the local database is located
         """
-        if cwd is None:
-            cwd = self.path
-        if not state.database.project_check_enabled:
-            state.database.switch_to_local_database(file_name=file_name, cwd=cwd)
-            super(Project, self).__init__(path=self.path)
-        else:
-            state.database.switch_to_local_database(file_name=file_name, cwd=cwd)
-        self.db = state.database.database
+        cwd = self.path if cwd is None else cwd
+        state.database.switch_to_local_database(file_name=file_name, cwd=cwd)
 
     def switch_to_central_database(self):
         """
         Switch from local mode to central mode - if local_mode is enable pyiron is using a local database.
         """
         state.database.switch_to_central_database()
-        if not state.database.database_is_disabled:
-            state.database.open_connection()
-            self.db = state.database.database
-        else:
-            self.db = FileTable(project=self.path)
-            super(Project, self).__init__(path=self.path)
 
     def queue_delete_job(self, item):
         """

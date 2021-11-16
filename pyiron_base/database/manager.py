@@ -142,6 +142,7 @@ class DatabaseManager(metaclass=Singleton):
                 file_name = os.path.join(cwd, file_name)
             self.close_connection()
             self.open_local_sqlite_connection(connection_string="sqlite:///" + file_name)
+            self.open_connection()
 
     def open_local_sqlite_connection(self, connection_string):
         self._database = DatabaseAccess(connection_string, self.sql_table_name)
@@ -164,6 +165,7 @@ class DatabaseManager(metaclass=Singleton):
                 )
 
             self._use_local_database = False
+            self.open_connection()
         else:
             s.logger.log("Database is already in central mode or disabled!")
 
@@ -181,7 +183,7 @@ class DatabaseManager(metaclass=Singleton):
                     self.sql_view_table_name,
                 )
                 self._database.view_mode = True
-
+                self.open_connection()
         else:
             print("Viewer Mode is not available on this pyiron installation.")
 
@@ -197,6 +199,7 @@ class DatabaseManager(metaclass=Singleton):
                     self.sql_table_name,
                 )
                 self._database.view_mode = False
+                self.open_connection()
             else:
                 s.logger.log("Database is already in user mode!")
         else:
