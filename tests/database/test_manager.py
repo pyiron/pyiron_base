@@ -34,10 +34,16 @@ class TestDatabaseManager(TestWithProject):
                 self.assertIs(self.dbm.top_path(self.project_path + "/test"), None)
 
             with self.subTest('enable project_check_enabled'):
+                new_root_path = self.s.convert_path_to_abs_posix(getcwd())
                 self.s.configuration["project_check_enabled"] = True
-                self.s.configuration["project_paths"] = [self.s.convert_path_to_abs_posix(getcwd())]
+                self.s.configuration["project_paths"] = [new_root_path]
                 self.s.configuration["disable_database"] = False  # Otherwise has the chance to override project_check_enabled..
                 self.assertTrue(self.dbm.top_path(self.project_path + "/test") in self.project_path)
+
+            with self.subTest("test Project.root_path and Project.project_path for a new sub-Project"):
+                sub_pr = self.project.open('sub_project')
+                self.assertEqual(sub_pr.root_path, new_root_path + '/')
+                self.assertEqual(sub_pr.project_path, 'test_manager/sub_project/')
         finally:
             # Put things back the way you found them
             self.s.configuration["project_check_enabled"] = check_before
