@@ -28,6 +28,7 @@ class TestDatabaseManager(TestWithProject):
         check_before = self.s.configuration["project_check_enabled"]
         paths_before = list(self.s.configuration["project_paths"])
         disable_before = self.s.configuration["disable_database"]
+
         try:
             with self.subTest('disable project_check_enabled'):
                 self.s.configuration["project_check_enabled"] = False
@@ -52,3 +53,11 @@ class TestDatabaseManager(TestWithProject):
             self.s.configuration["project_check_enabled"] = check_before
             self.s.configuration["project_paths"] = paths_before
             self.s.configuration["disable_database"] = disable_before
+
+    def test_update_project_coupling(self):
+        self.dbm.update()
+        self.assertEqual(
+            self.dbm.database, self.project.db,
+            msg="Expected the database access instance to stay coupled between state and project."
+        )
+

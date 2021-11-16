@@ -33,6 +33,7 @@ class TestSettings(TestCase):
             cls.backup_loc.rename(cls.default_loc)
         except FileNotFoundError:
             pass
+        s.update()
 
     def setUp(self) -> None:
         self.default_loc.unlink(missing_ok=True)
