@@ -153,7 +153,7 @@ class Settings(metaclass=Singleton):
             "sql_type": "SQLite",
             "sql_user_key": None,
             "sql_database": None,
-            "project_check_enabled": False,
+            "project_check_enabled": True,
             "disable_database": False,
         })
 
