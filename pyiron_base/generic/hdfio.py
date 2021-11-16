@@ -199,7 +199,7 @@ class FileHDFio(HasGroups, MutableMapping):
                                  f"Returned array was converted from dtype='O' to dtype={result.dtype} "
                                  f"via `np.array(result.tolist())`.\n"
                                  f"Please run rewrite_hdf5() to update this data! "
-                                 f"To update all your data run update tool.")
+                                 f"To update all your data run update_scripts/pyiron_base_0.3_to_0.4.py")
             return result
         else:
             return obj
