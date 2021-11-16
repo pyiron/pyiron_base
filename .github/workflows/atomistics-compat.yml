@@ -22,6 +22,7 @@ jobs:
       matrix:
         operating-system: [ ubuntu-latest, windows-latest, macos-latest ]
         python-version: [ 3.9 ]
+        test_timeout: 10 # this allows only 10 minutes for the test step to be completed.
 
     steps:
     - uses: actions/checkout@v2
@@ -46,6 +47,7 @@ jobs:
         pip install --no-deps .
     - name: Test
       shell: bash -l {0}
+      timeout-minutes: ${{matrix.test_timeout}}
       run: |
         cd ../pyiron_atomistics
         python -m unittest discover tests/
