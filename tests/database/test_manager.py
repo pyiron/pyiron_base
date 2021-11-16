@@ -4,7 +4,7 @@
 
 from pyiron_base._tests import TestWithProject
 from pyiron_base import state
-from os import getcwd
+import os
 
 
 class TestDatabaseManager(TestWithProject):
@@ -34,16 +34,19 @@ class TestDatabaseManager(TestWithProject):
                 self.assertIs(self.dbm.top_path(self.project_path + "/test"), None)
 
             with self.subTest('enable project_check_enabled'):
-                new_root_path = self.s.convert_path_to_abs_posix(getcwd())
+                new_root_path = self.s.convert_path_to_abs_posix(os.getcwd())
                 self.s.configuration["project_check_enabled"] = True
                 self.s.configuration["project_paths"] = [new_root_path]
-                self.s.configuration["disable_database"] = False  # Otherwise has the chance to override project_check_enabled..
+                # Otherwise has the chance to override project_check_enabled... Thus:
+                self.s.configuration["disable_database"] = False
                 self.assertTrue(self.dbm.top_path(self.project_path + "/test") in self.project_path)
 
             with self.subTest("test Project.root_path and Project.project_path for a new sub-Project"):
                 sub_pr = self.project.open('sub_project')
                 self.assertEqual(sub_pr.root_path, new_root_path + '/')
-                self.assertEqual(sub_pr.project_path, 'test_manager/sub_project/')
+                self.assertEqual(sub_pr.project_path,
+                                 os.path.join(os.path.relpath(self.project_path, os.getcwd()),
+                                              'sub_project').replace("\\", '/') + '/')
         finally:
             # Put things back the way you found them
             self.s.configuration["project_check_enabled"] = check_before
