@@ -36,6 +36,7 @@ jobs:
         git clone https://github.com/pyiron/pyiron_contrib
         cd pyiron_contrib
         conda env update --name test --file .ci_support/environment.yml
+        python .ci_support/pyironconfig.py
         pip install --no-deps .
         cd ../pyiron_base
         pip install --no-deps .
