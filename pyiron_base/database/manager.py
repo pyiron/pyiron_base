@@ -142,7 +142,6 @@ class DatabaseManager(metaclass=Singleton):
                 file_name = os.path.join(cwd, file_name)
             self.close_connection()
             self.open_local_sqlite_connection(connection_string="sqlite:///" + file_name)
-            self.open_connection()
 
     def open_local_sqlite_connection(self, connection_string):
         self._database = DatabaseAccess(connection_string, self.sql_table_name)
