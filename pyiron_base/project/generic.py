@@ -139,7 +139,7 @@ class Project(ProjectPath, HasGroups):
     @property
     def maintenance(self):
         if self._maintenance is None:
-            self._maintenance = Maintenance()
+            self._maintenance = Maintenance(self)
         return self._maintenance
 
     @property
