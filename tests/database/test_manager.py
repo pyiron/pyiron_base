@@ -4,7 +4,7 @@
 
 from pyiron_base._tests import TestWithProject
 from pyiron_base import state
-from os import getcwd
+import os
 
 
 class TestDatabaseManager(TestWithProject):
@@ -29,18 +29,30 @@ class TestDatabaseManager(TestWithProject):
         paths_before = list(self.s.configuration["project_paths"])
         disable_before = self.s.configuration["disable_database"]
 
-        self.s.configuration["project_check_enabled"] = False
-        self.assertIs(self.dbm.top_path(self.project_path + "/test"), None)
+        try:
+            with self.subTest('disable project_check_enabled'):
+                self.s.configuration["project_check_enabled"] = False
+                self.assertIs(self.dbm.top_path(self.project_path + "/test"), None)
 
-        self.s.configuration["project_check_enabled"] = True
-        self.s.configuration["project_paths"] = [self.s.convert_path_to_abs_posix(getcwd())]
-        self.s.configuration["disable_database"] = False  # Otherwise has the chance to override project_check_enabled..
-        self.assertTrue(self.dbm.top_path(self.project_path + "/test") in self.project_path)
+            with self.subTest('enable project_check_enabled'):
+                new_root_path = self.s.convert_path_to_abs_posix(os.getcwd())
+                self.s.configuration["project_check_enabled"] = True
+                self.s.configuration["project_paths"] = [new_root_path]
+                # Otherwise has the chance to override project_check_enabled... Thus:
+                self.s.configuration["disable_database"] = False
+                self.assertTrue(self.dbm.top_path(self.project_path + "/test") in self.project_path)
 
-        # Put things back the way you found them
-        self.s.configuration["project_check_enabled"] = check_before
-        self.s.configuration["project_paths"] = paths_before
-        self.s.configuration["disable_database"] = disable_before
+            with self.subTest("test Project.root_path and Project.project_path for a new sub-Project"):
+                sub_pr = self.project.open('sub_project')
+                self.assertEqual(sub_pr.root_path, new_root_path + '/')
+                self.assertEqual(sub_pr.project_path,
+                                 os.path.join(os.path.relpath(self.project_path, os.getcwd()),
+                                              'sub_project').replace("\\", '/') + '/')
+        finally:
+            # Put things back the way you found them
+            self.s.configuration["project_check_enabled"] = check_before
+            self.s.configuration["project_paths"] = paths_before
+            self.s.configuration["disable_database"] = disable_before
 
     def test_update_project_coupling(self):
         self.dbm.update()
@@ -48,3 +60,4 @@ class TestDatabaseManager(TestWithProject):
             self.dbm.database, self.project.db,
             msg="Expected the database access instance to stay coupled between state and project."
         )
+
