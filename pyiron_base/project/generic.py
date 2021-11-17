@@ -12,13 +12,11 @@ from tqdm import tqdm
 import pandas
 import importlib
 import numpy as np
-import pkgutil
-from git import Repo, InvalidGitRepositoryError
-from warnings import warn
+
+from pyiron_base.project.maintenance import Maintenance
 from pyiron_base.project.path import ProjectPath
 from pyiron_base.database.filetable import FileTable
 from pyiron_base.state import state
-from pyiron_base.database.performance import get_database_statistics
 from pyiron_base.database.jobtable import (
     get_job_ids,
     get_job_id,
@@ -139,7 +137,7 @@ class Project(ProjectPath, HasGroups):
     @property
     def maintenance(self):
         if self._maintenance is None:
-            self._maintenance = Maintenance()
+            self._maintenance = Maintenance(self)
         return self._maintenance
 
     @property
@@ -1511,79 +1509,6 @@ class Project(ProjectPath, HasGroups):
                 f'{cls.__name__} already has an attribute {name}. Please use a new name for registration.'
             )
         setattr(cls, name, property(lambda self: tools(self)))
-
-
-class Maintenance:
-    """
-    The purpose of maintenance class is to provide
-    some measures of perfomance for pyiron, whether local to the project
-    or global (describing the status of pyiron on the running machine)
-    """
-    def __init__(self):
-        """
-        initialize the local and global attributes
-        """
-        self._global = GlobalMaintenance()
-        self._local = None
-
-    @property
-    def global_status(self):
-        return self._global
-
-    @staticmethod
-    def get_repository_status():
-
-        """
-        Finds the hashes and versions for every `pyiron` module available.
-
-        Returns:
-            pandas.DataFrame: The name of each module and the hash and version for its current git head.
-        """
-        module_names = [name for _, name, _ in pkgutil.iter_modules() if name.startswith("pyiron")]
-
-        report = pandas.DataFrame(columns=['Module', 'Git head', 'Version'], index=range(len(module_names)))
-        for i, name in enumerate(module_names):
-            module = importlib.import_module(name)
-            try:
-                repo = Repo(os.path.dirname(os.path.dirname(module.__file__)))
-                hash_ = repo.head.reference.commit.hexsha
-            except InvalidGitRepositoryError:
-                hash_ = 'Not a repo'
-            if hasattr(module, '__version__'):
-                version = module.__version__
-            else:
-                version = "not defined"
-            report.loc[i] = [name, hash_, version]
-
-        return report
-
-
-class GlobalMaintenance:
-    def __init__(self):
-        """
-        initialize the flag self._check_postgres, to control whether pyiron is
-        set to communicate with a postgres database.
-        """
-        connection_string = state.database.sql_connection_string
-        if "postgresql" not in connection_string:
-            warn(
-                """
-                The database statistics is only available for a Postgresql database
-                """
-            )
-            self._check_postgres = False
-        else:
-            self._check_postgres = True
-
-    def get_database_statistics(self):
-        if self._check_postgres:
-            return get_database_statistics()
-        else:
-            raise RuntimeError(
-                """
-                The detabase statistics is only available for a Postgresql database
-                """
-            )
 
 
 class Creator:
