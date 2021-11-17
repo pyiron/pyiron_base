@@ -6,7 +6,8 @@ from _warnings import warn
 import pandas
 from git import Repo, InvalidGitRepositoryError
 
-from pyiron_base import state, get_database_statistics
+from pyiron_base import state
+from pyiron_base.database.performance import get_database_statistics
 
 
 class Maintenance:
