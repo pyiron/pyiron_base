@@ -154,7 +154,6 @@ class DatabaseManager(metaclass=Singleton):
         """
         if self._use_local_database:
             self.close_connection()
-            self._database_is_disabled = s.configuration["disable_database"]
             if self.database_is_disabled:
                 self._database = None
             else:
@@ -164,7 +163,7 @@ class DatabaseManager(metaclass=Singleton):
                 )
 
             self._use_local_database = False
-            self.open_connection()
+            self._database_is_disabled = s.configuration["disable_database"]
         else:
             s.logger.log("Database is already in central mode or disabled!")
 
@@ -182,7 +181,6 @@ class DatabaseManager(metaclass=Singleton):
                     self.sql_view_table_name,
                 )
                 self._database.view_mode = True
-                self.open_connection()
         else:
             print("Viewer Mode is not available on this pyiron installation.")
 
@@ -198,7 +196,6 @@ class DatabaseManager(metaclass=Singleton):
                     self.sql_table_name,
                 )
                 self._database.view_mode = False
-                self.open_connection()
             else:
                 s.logger.log("Database is already in user mode!")
         else:
