@@ -178,7 +178,7 @@ class DatabaseManager(metaclass=Singleton):
         """
         Switch from viewer mode to user mode - if view_mode is enable pyiron has read only access to the database.
         """
-        if s.configuration["sql_view_connection_string"] is not None and not self.database_is_disabled:
+        if self.sql_view_connection_string is not None and not self.database_is_disabled:
             if self._database.view_mode:
                 self.close_connection()
                 self._database = DatabaseAccess(
