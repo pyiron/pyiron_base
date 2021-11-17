@@ -431,6 +431,19 @@ class FlattenedStorage(HasHDF):
         else:
             raise KeyError(f"no array named {name}")
 
+    def __getitem__(self, index):
+        if isinstance(index, tuple) and len(index) == 2:
+            return self.get_array(index[0], index[1])
+        else:
+            return self.get_array(index)
+
+    def __setitem__(self, index, value):
+        if isinstance(index, tuple) and len(index) == 2:
+            self.set_array(index[0], index[1], value)
+        else:
+            raise IndexError("Must specify chunk index.")
+
+
     def has_array(self, name):
         """
         Checks whether an array of the given name exists and returns meta data given to :method:`.add_array()`.
