@@ -152,18 +152,8 @@ class DatabaseManager(metaclass=Singleton):
         """
         Switch to central database
         """
-        if self._use_local_database:
-            self.close_connection()
-            if self.database_is_disabled:
-                self._database = None
-            else:
-                self._database = DatabaseAccess(
-                    self.sql_connection_string,
-                    self.sql_table_name,
-                )
-
-            self._use_local_database = False
-            self._database_is_disabled = s.configuration["disable_database"]
+        if self.using_local_database:
+            self.update()
         else:
             s.logger.log("Database is already in central mode or disabled!")
 
