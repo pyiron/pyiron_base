@@ -35,4 +35,5 @@ jobs:
         pip install --no-deps .
     - name: Tests
       shell: bash -l {0}
+      timeout-minutes: 30
       run: python -m unittest discover test_benchmarks
