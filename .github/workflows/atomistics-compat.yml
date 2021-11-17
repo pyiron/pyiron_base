@@ -22,7 +22,6 @@ jobs:
       matrix:
         operating-system: [ ubuntu-latest, windows-latest, macos-latest ]
         python-version: [ 3.9 ]
-        test_timeout: 30 # this allows only 10 minutes for the test step to be completed.
 
     steps:
     - uses: actions/checkout@v2
