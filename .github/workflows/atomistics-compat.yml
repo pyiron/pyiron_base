@@ -47,7 +47,7 @@ jobs:
         pip install --no-deps .
     - name: Test
       shell: bash -l {0}
-      timeout-minutes: ${{matrix.test_timeout}}
+      timeout-minutes: ${{ fromJSON(matrix.test_timeout) }}
       run: |
         cd ../pyiron_atomistics
         python -m unittest discover tests/
