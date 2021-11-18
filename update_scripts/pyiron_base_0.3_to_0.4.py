@@ -46,12 +46,25 @@ if __name__ == "__main__":
         total_size += int(l.split()[0])
 
     pr = Project(sys.argv[1])
+    n_skip = 0
+    n_err  = 0
     with tqdm(total=total_size, unit="B", unit_scale=1) as t:
         for j in pr.iter_jobs(convert_to_object=False, recursive=True, progress=False):
-            file_size = os.stat(j.project_hdf5.file_name)[stat.ST_SIZE]
+            try:
+                file_size = os.stat(j.project_hdf5.file_name)[stat.ST_SIZE]
+            except FileNotFoundError:
+                n_err += 1
+                print(f"Job {j.name}/{j.id} is in the database, but points to non-existing HDF5 file {j.project_hdf5.file_name}!")
+                t.update(file_size)
+                continue
+
             if detect_bug(j.project_hdf5.file_name):
                 try:
                     j.project_hdf5.rewrite_hdf5(j.name)
-                except e:
-                    print(f"WARNING: rewriting job {j.name} failed with {e}")
+                except Exception as e:
+                    n_err += 1
+                    print(f"WARNING: rewriting job {j.name}/{j.id} failed with {e}")
+            else:
+                n_skip += 1
             t.update(file_size)
+    print(f"Errors: {n_err}\tSkipped: {n_skip}")
