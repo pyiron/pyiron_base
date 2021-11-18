@@ -170,15 +170,15 @@ class TestFileHDFio(PyironTestCase):
             array = hdf['int_array_as_objects_array']
             np.array_equal(array, int_array_as_objects_array)
             self.assertIsInstance(array, np.ndarray)
-            self.assertEqual(array.dtype, np.dtype(int), msg=f"dtype=object array containing only int not converted "
-                                                             f"to dtype int array.")
+            self.assertEqual(array.dtype, np.dtype(int), msg="dtype=object array containing only int not converted "
+                                                             "to dtype int array.")
 
         with self.subTest('float_array_as_objects_array'):
             array = hdf['float_array_as_objects_array']
             np.array_equal(array, float_array_as_objects_array)
             self.assertIsInstance(array, np.ndarray)
-            self.assertEqual(array.dtype, np.dtype(float), msg=f"dtype=object array containing only float not converted"
-                                                               f" to dtype float array.")
+            self.assertEqual(array.dtype, np.dtype(float), msg="dtype=object array containing only float not converted"
+                                                               " to dtype float array.")
 
         hdf.remove_group()
 
