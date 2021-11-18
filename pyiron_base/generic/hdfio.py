@@ -134,6 +134,8 @@ class FileHDFio(HasGroups, MutableMapping):
                 # check whether the data is there and 1 to read it) and increases in the worst case from 1 to 2 (1 to
                 # try to read it here and one more time to verify it's not a group below).
                 obj = h5io.read_hdf5(self.file_name, title=self._get_h5_path(item))
+                if self._is_convertable_dtype_object_array(obj):
+                    obj = self._convert_dtype_obj_array(obj.copy())
                 return obj
             except (ValueError, OSError):
                 # h5io couldn't find a dataset with name item, but there still might be a group with that name, which we
