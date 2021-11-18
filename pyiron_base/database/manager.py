@@ -5,6 +5,7 @@
 A class for mediating connections to SQL databases.
 """
 
+from pyiron_base.state.logger import logger
 from pyiron_base.generic.util import Singleton
 from pyiron_base.state.settings import settings as s
 from pyiron_base.database.generic import DatabaseAccess
@@ -27,6 +28,7 @@ class DatabaseManager(metaclass=Singleton):
         self._database = None
         self._use_local_database = False
         self._database_is_disabled = s.configuration["disable_database"]
+        self.open_connection()
 
     @property
     def database(self):
@@ -133,7 +135,7 @@ class DatabaseManager(metaclass=Singleton):
             cwd (str/None): directory where the SQLite database file is located in
         """
         if self.using_local_database:
-            s.logger.log("Database is already in local mode or disabled!")
+            logger.log("Database is already in local mode or disabled!")
         else:
             if cwd is None and not os.path.isabs(file_name):
                 file_name = os.path.join(os.path.abspath(os.path.curdir), file_name)
@@ -151,20 +153,10 @@ class DatabaseManager(metaclass=Singleton):
         """
         Switch to central database
         """
-        if self._use_local_database:
-            self.close_connection()
-            self._database_is_disabled = s.configuration["disable_database"]
-            if self.database_is_disabled:
-                self._database = None
-            else:
-                self._database = DatabaseAccess(
-                    self.sql_connection_string,
-                    self.sql_table_name,
-                )
-
-            self._use_local_database = False
+        if self.using_local_database:
+            self.update()
         else:
-            s.logger.log("Database is already in central mode or disabled!")
+            logger.log("Database is already in central mode or disabled!")
 
     def switch_to_viewer_mode(self):
         """
@@ -172,7 +164,7 @@ class DatabaseManager(metaclass=Singleton):
         """
         if self.sql_view_connection_string is not None and not self.database_is_disabled:
             if self._database.view_mode:
-                s.logger.log("Database is already in viewer mode!")
+                logger.log("Database is already in viewer mode!")
             else:
                 self.close_connection()
                 self._database = DatabaseAccess(
@@ -180,7 +172,6 @@ class DatabaseManager(metaclass=Singleton):
                     self.sql_view_table_name,
                 )
                 self._database.view_mode = True
-
         else:
             print("Viewer Mode is not available on this pyiron installation.")
 
@@ -188,7 +179,7 @@ class DatabaseManager(metaclass=Singleton):
         """
         Switch from viewer mode to user mode - if view_mode is enable pyiron has read only access to the database.
         """
-        if s.configuration["sql_view_connection_string"] is not None and not self.database_is_disabled:
+        if self.sql_view_connection_string is not None and not self.database_is_disabled:
             if self._database.view_mode:
                 self.close_connection()
                 self._database = DatabaseAccess(
@@ -197,7 +188,7 @@ class DatabaseManager(metaclass=Singleton):
                 )
                 self._database.view_mode = False
             else:
-                s.logger.log("Database is already in user mode!")
+                logger.log("Database is already in user mode!")
         else:
             print("Viewer Mode is not available on this pyiron installation.")
 
@@ -241,6 +232,7 @@ class DatabaseManager(metaclass=Singleton):
         self.close_connection()
         self._use_local_database = False
         self._database_is_disabled = s.configuration["disable_database"]
+        self.open_connection()
 
 
 database = DatabaseManager()
