@@ -338,6 +338,10 @@ class TestFlattenedStorage(TestWithProject):
         self.assertTrue(np.array_equal(store.get_array("even", 0), [4]), "setitem did not set item correctly.")
         self.assertTrue(np.array_equal(store.get_array("even", 1), [2, 0]), "setitem did not set item correctly.")
 
+        with self.assertRaises(IndexError, msg="Calling setitem with out index doesn't raise Error!"):
+            store["mylen"] = [1,2,3]
+
+
     def test_hdf_chunklength_one(self):
         """Reading a storage with all chunks of length one should give back exactly what was written!"""
         # Regression test if all stored chunks are of length 1: there used to be a bug that read all arrays as per
