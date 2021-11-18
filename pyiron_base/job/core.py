@@ -12,8 +12,6 @@ import posixpath
 import shutil
 import warnings
 
-from tables import NoSuchNodeError
-
 from pyiron_base.interfaces.has_groups import HasGroups
 from pyiron_base.job.util import \
     _get_project_for_copy, \
@@ -462,7 +460,7 @@ class JobCore(HasGroups):
             with self.project_hdf5.open("..") as hdf_parent:
                 try:
                     del hdf_parent[self.job_name]
-                except (NoSuchNodeError, KeyError, OSError):
+                except (AttributeError, LookupError, KeyError, OSError):
                     print(
                         "This group does not exist in the HDF5 file {}".format(
                             self.job_name
