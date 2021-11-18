@@ -6,11 +6,9 @@ A class for mediating connections to SQL databases.
 """
 
 from pyiron_base.generic.util import Singleton
-from pyiron_base.settings.generic import Settings
+from pyiron_base.state.settings import settings as s
 from pyiron_base.database.generic import DatabaseAccess
 import os
-
-s = Settings()
 
 __author__ = "Jan Janssen, Liam Huber"
 __copyright__ = (
@@ -63,6 +61,57 @@ class DatabaseManager(metaclass=Singleton):
     def connection_timeout(self, val):
         s.configuration["connection_timeout"] = val
 
+    @staticmethod
+    def _sqlalchemy_string(prefix, user, key, host, database):
+        return f"{prefix}://{user}:{key}@{host}/{database}"
+
+    def _credentialed_sqalchemy_string(self, prefix):
+        return self._sqlalchemy_string(
+            prefix,
+            s.configuration["user"],
+            s.configuration["sql_user_key"],
+            s.configuration["sql_host"],
+            s.configuration["sql_database"]
+        )
+
+    @property
+    def sql_connection_string(self):
+        sql_type = s.configuration["sql_type"]
+        if sql_type == "Postgres":
+            return self._credentialed_sqalchemy_string("postgresql")
+        elif sql_type == "MySQL":
+            return self._credentialed_sqalchemy_string("mysql+pymysql")
+        elif sql_type == "SQLalchemy":
+            return s.configuration["sql_connection_string"]
+        elif sql_type == "SQLite":
+            return "sqlite:///" + s.configuration["sql_file"].replace("\\", "/")
+        else:
+            raise ValueError(
+                f"Invalid SQL type {sql_type} -- This should have been caught at input processing, please contact the "
+                f"developers"
+            )
+
+    @property
+    def sql_view_connection_string(self):
+        if s.configuration["sql_view_user"] is None:
+            return None
+        else:
+            return self._sqlalchemy_string(
+                "postgresql",
+                s.configuration["sql_view_user"],
+                s.configuration["sql_view_user_key"],
+                s.configuration["sql_host"],
+                s.configuration["sql_database"]
+            )
+
+    @property
+    def sql_table_name(self):
+        return s.configuration["sql_table_name"]
+
+    @property
+    def sql_view_table_name(self):
+        return s.configuration["sql_view_table_name"]
+
     def open_connection(self):
         """
         Internal function to open the connection to the database. Only after this function is called the database is
@@ -70,9 +119,9 @@ class DatabaseManager(metaclass=Singleton):
         """
         if self._database is None and not self.database_is_disabled:
             self._database = DatabaseAccess(
-                s.configuration["sql_connection_string"],
-                s.configuration["sql_table_name"],
-                timeout=s.configuration["connection_timeout"]
+                self.sql_connection_string,
+                self.sql_table_name,
+                timeout=self.connection_timeout
             )
 
     def switch_to_local_database(self, file_name="pyiron.db", cwd=None):
@@ -94,7 +143,7 @@ class DatabaseManager(metaclass=Singleton):
             self.open_local_sqlite_connection(connection_string="sqlite:///" + file_name)
 
     def open_local_sqlite_connection(self, connection_string):
-        self._database = DatabaseAccess(connection_string, s.configuration["sql_table_name"])
+        self._database = DatabaseAccess(connection_string, self.sql_table_name)
         self._use_local_database = True
         self._database_is_disabled = False
 
@@ -109,8 +158,8 @@ class DatabaseManager(metaclass=Singleton):
                 self._database = None
             else:
                 self._database = DatabaseAccess(
-                    s.configuration["sql_connection_string"],
-                    s.configuration["sql_table_name"],
+                    self.sql_connection_string,
+                    self.sql_table_name,
                 )
 
             self._use_local_database = False
@@ -121,14 +170,14 @@ class DatabaseManager(metaclass=Singleton):
         """
         Switch from user mode to viewer mode - if view_mode is enable pyiron has read only access to the database.
         """
-        if s.configuration["sql_view_connection_string"] is not None and not self.database_is_disabled:
+        if self.sql_view_connection_string is not None and not self.database_is_disabled:
             if self._database.view_mode:
                 s.logger.log("Database is already in viewer mode!")
             else:
                 self.close_connection()
                 self._database = DatabaseAccess(
-                    s.configuration["sql_view_connection_string"],
-                    s.configuration["sql_view_table_name"],
+                    self.sql_view_connection_string,
+                    self.sql_view_table_name,
                 )
                 self._database.view_mode = True
 
@@ -143,10 +192,10 @@ class DatabaseManager(metaclass=Singleton):
             if self._database.view_mode:
                 self.close_connection()
                 self._database = DatabaseAccess(
-                    s.configuration["sql_connection_string"],
-                    s.configuration["sql_table_name"],
+                    self.sql_connection_string,
+                    self.sql_table_name,
                 )
-                self._database.view_mode = True
+                self._database.view_mode = False
             else:
                 s.logger.log("Database is already in user mode!")
         else:
@@ -170,8 +219,7 @@ class DatabaseManager(metaclass=Singleton):
         Returns:
             str: path
         """
-        if full_path[-1] != "/":
-            full_path += "/"
+        full_path = full_path if full_path.endswith("/") else full_path + "/"
 
         if not self.project_check_enabled:
             return None
@@ -179,8 +227,20 @@ class DatabaseManager(metaclass=Singleton):
         for path in s.configuration["project_paths"]:
             if path in full_path:
                 return path
+
         raise ValueError(
-            "the current path {0} is not included in the .pyiron configuration. {1}".format(
-                full_path, s.configuration["project_paths"]
-            )
+            f"the current path {full_path} is not included in the .pyiron configuration 'project_paths': "
+            f"{s.configuration['project_paths']}"
         )
+
+    def update(self):
+        """
+        Warning: Database interaction does not have written spec. This method does a thing. It might not be the thing
+                 you want.
+        """
+        self.close_connection()
+        self._use_local_database = False
+        self._database_is_disabled = s.configuration["disable_database"]
+
+
+database = DatabaseManager()

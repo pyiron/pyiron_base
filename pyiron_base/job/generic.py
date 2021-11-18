@@ -12,8 +12,7 @@ import os
 import posixpath
 import multiprocessing
 from pyiron_base.job.wrapper import JobWrapper
-from pyiron_base.settings.generic import Settings
-from pyiron_base.database.manager import DatabaseManager
+from pyiron_base.state import state
 from pyiron_base.job.executable import Executable
 from pyiron_base.job.jobstatus import JobStatus
 from pyiron_base.job.core import JobCore
@@ -38,9 +37,6 @@ __maintainer__ = "Jan Janssen"
 __email__ = "janssen@mpie.de"
 __status__ = "production"
 __date__ = "Sep 1, 2017"
-
-s = Settings()
-dbm = DatabaseManager()
 
 intercepted_signals = [
     signal.SIGINT,
@@ -160,7 +156,7 @@ class GenericJob(JobCore):
         self.__version__ = "0.4"
         self.__hdf_version__ = "0.1.0"
         self._server = Server()
-        self._logger = s.logger
+        self._logger = state.logger
         self._executable = None
         self._status = JobStatus(db=project.db, job_id=self.job_id)
         self.refresh_job_status()
@@ -751,7 +747,7 @@ class GenericJob(JobCore):
                 with open(error_file, "w") as f:
                     f.write(e.output)
                 if self.server.run_mode.non_modal:
-                    dbm.close_connection()
+                    state.database.close_connection()
                 raise RuntimeError("Job aborted")
             else:
                 job_crashed = True
@@ -766,20 +762,20 @@ class GenericJob(JobCore):
             self.status.aborted = True
 
     def transfer_from_remote(self):
-        s.queue_adapter.get_job_from_remote(
+        state.queue_adapter.get_job_from_remote(
             working_directory='/'.join(self.working_directory.split('/')[:-1]),
-            delete_remote=s.queue_adapter.ssh_delete_file_on_remote
+            delete_remote=state.queue_adapter.ssh_delete_file_on_remote
         )
-        s.queue_adapter.transfer_file_to_remote(
+        state.queue_adapter.transfer_file_to_remote(
             file=self.project_hdf5.file_name,
             transfer_back=True,
-            delete_remote=s.queue_adapter.ssh_delete_file_on_remote
+            delete_remote=state.queue_adapter.ssh_delete_file_on_remote
         )
-        if dbm.database_is_disabled:
+        if state.database.database_is_disabled:
             self.project.db.update()
         else:
             ft = FileTable(project=self.project_hdf5.path + "_hdf5/")
-            df = ft.job_table(sql_query=None, user=s.login_user, project_path=None, all_columns=True)
+            df = ft.job_table(sql_query=None, user=state.settings.login_user, project_path=None, all_columns=True)
             db_dict_lst = []
             for j, st, sj, p, h, hv, c, ts, tp, tc in zip(
                     df.job.values,
@@ -795,7 +791,7 @@ class GenericJob(JobCore):
             ):
                 gp = self.project._convert_str_to_generic_path(p)
                 db_dict_lst.append({
-                    "username": s.login_user,
+                    "username": state.settings.login_user,
                     "projectpath": gp.root_path,
                     "project": gp.project_path,
                     "job": j,
@@ -871,14 +867,16 @@ class GenericJob(JobCore):
         The run if non modal function is called by run to execute the simulation in the background. For this we use
         multiprocessing.Process()
         """
-        if not dbm.using_local_database:
+        if not state.database.using_local_database:
             args = (self.job_id, self.project_hdf5.working_directory, False, None)
         else:
             args = (self.job_id, self.project_hdf5.working_directory, False, str(self.project.db.conn.engine.url))
+
         p = multiprocessing.Process(
             target=multiprocess_wrapper,
             args=args,
         )
+
         if self.master_id and self.server.run_mode.non_modal:
             del self
             p.start()
@@ -914,20 +912,20 @@ class GenericJob(JobCore):
         Returns:
             int: Returns the queue ID for the job.
         """
-        if s.queue_adapter is None:
+        if state.queue_adapter is None:
             raise TypeError("No queue adapter defined.")
-        if s.queue_adapter.remote_flag:
-            filename = s.queue_adapter.convert_path_to_remote(path=self.project_hdf5.file_name)
-            working_directory = s.queue_adapter.convert_path_to_remote(path=self.working_directory)
+        if state.queue_adapter.remote_flag:
+            filename = state.queue_adapter.convert_path_to_remote(path=self.project_hdf5.file_name)
+            working_directory = state.queue_adapter.convert_path_to_remote(path=self.working_directory)
             command = "python -m pyiron_base.cli wrapper -p " \
                       + working_directory \
                       + " -f " + filename + self.project_hdf5.h5_path \
                       + " --submit"
-            s.queue_adapter.transfer_file_to_remote(
+            state.queue_adapter.transfer_file_to_remote(
                 file=self.project_hdf5.file_name,
                 transfer_back=False
             )
-        elif dbm.database_is_disabled:
+        elif state.database.database_is_disabled:
             command = "python -m pyiron_base.cli wrapper -p " \
                       + self.working_directory \
                       + " -f " + self.project_hdf5.file_name + self.project_hdf5.h5_path
@@ -935,7 +933,7 @@ class GenericJob(JobCore):
             command = "python -m pyiron_base.cli wrapper -p " \
                       + self.working_directory \
                       + " -j " + str(self.job_id)
-        que_id = s.queue_adapter.submit_job(
+        que_id = state.queue_adapter.submit_job(
             queue=self.server.queue,
             job_name="pi_" + str(self.job_id),
             working_directory=self.project_hdf5.working_directory,
@@ -952,7 +950,7 @@ class GenericJob(JobCore):
             self._logger.warning("Job aborted")
             self.status.aborted = True
             raise ValueError("run_queue.sh crashed")
-        s.logger.debug("submitted %s", self.job_name)
+        state.logger.debug("submitted %s", self.job_name)
         self._logger.debug("job status: %s", self.status)
         self._logger.info(
             "{}, status: {}, submitted: queue id {}".format(
@@ -1057,6 +1055,7 @@ class GenericJob(JobCore):
                 self.server.run_mode.thread
                 or self.server.run_mode.modal
                 or self.server.run_mode.interactive
+                or self.server.run_mode.worker
             )
         ):
                 self._reload_update_master(
@@ -1197,7 +1196,7 @@ class GenericJob(JobCore):
                                          "hamilton", "status", "computer", "timestart", "masterid", "parentid"}
         """
         db_dict = {
-            "username": s.login_user,
+            "username": state.settings.login_user,
             "projectpath": self.project_hdf5.root_path,
             "project": self.project_hdf5.project_path,
             "job": self.job_name,
@@ -1235,7 +1234,8 @@ class GenericJob(JobCore):
             new_ham = self.copy_to(
                 new_job_name=job_name,
                 new_database_entry=False,
-                input_only=True
+                input_only=True,
+                copy_files=False
             )
         else:
             new_ham = self.create_job(job_type, job_name)
@@ -1336,7 +1336,7 @@ class GenericJob(JobCore):
             self.run_if_manually(_manually_print=False)
         elif self.server.run_mode.modal:
             self.run_static()
-        elif self.server.run_mode.non_modal or self.server.run_mode.thread:
+        elif self.server.run_mode.non_modal or self.server.run_mode.thread or self.server.run_mode.worker:
             self.run_if_non_modal()
         elif self.server.run_mode.queue:
             self.run_if_scheduler()
@@ -1361,7 +1361,7 @@ class GenericJob(JobCore):
             self.server.run_mode.queue
             and not self.project.queue_check_job_is_waiting_or_running(self)
         ):
-            if not s.queue_adapter.remote_flag:
+            if not state.queue_adapter.remote_flag:
                 self.run(delete_existing_job=True)
             else:
                 self.transfer_from_remote()
@@ -1475,11 +1475,11 @@ class GenericJob(JobCore):
                 self._executable = Executable(
                     codename=self.__name__,
                     module=self.__module__.split(".")[-2],
-                    path_binary_codes=s.resource_paths,
+                    path_binary_codes=state.settings.resource_paths,
                 )
             else:
                 self._executable = Executable(
-                    codename=self.__name__, path_binary_codes=s.resource_paths
+                    codename=self.__name__, path_binary_codes=state.settings.resource_paths
                 )
 
     def _type_to_hdf(self):

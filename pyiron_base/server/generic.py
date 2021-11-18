@@ -6,7 +6,7 @@ Server object class which is connected to each job containing the technical deta
 """
 
 from collections import OrderedDict
-from pyiron_base.settings.generic import Settings
+from pyiron_base.state import state
 from pyiron_base.server.runmode import Runmode
 import socket
 
@@ -20,8 +20,6 @@ __maintainer__ = "Jan Janssen"
 __email__ = "janssen@mpie.de"
 __status__ = "production"
 __date__ = "Sep 1, 2017"
-
-s = Settings()
 
 
 class Server:  # add the option to return the job id and the hold id to the server object
@@ -81,7 +79,7 @@ class Server:  # add the option to return the job id and the hold id to the serv
 
         self._active_queue = queue
 
-        self._user = s.login_user
+        self._user = state.settings.login_user
         self._run_mode = Runmode()
         self.run_mode = run_mode
 
@@ -168,8 +166,8 @@ class Server:  # add the option to return the job id and the hold id to the serv
             self._run_time = None
             self.memory_limit = None
         else:
-            if s.queue_adapter is not None:
-                cores, run_time_max, memory_max = s.queue_adapter.check_queue_parameters(
+            if state.queue_adapter is not None:
+                cores, run_time_max, memory_max = state.queue_adapter.check_queue_parameters(
                     queue=new_scheduler,
                     cores=self.cores,
                     run_time_max=self.run_time,
@@ -177,17 +175,17 @@ class Server:  # add the option to return the job id and the hold id to the serv
                 )
                 if cores != self.cores:
                     self._cores = cores
-                    s.logger.debug(
+                    state.logger.debug(
                         "Updated the number of cores to: {}".format(cores)
                     )
                 if run_time_max != self.run_time:
                     self._run_time = run_time_max
-                    s.logger.debug(
+                    state.logger.debug(
                         "Updated the run time limit to: {}".format(run_time_max)
                     )
                 if memory_max != self.memory_limit:
                     self._memory_limit = memory_max
-                    s.logger.debug(
+                    state.logger.debug(
                         "Updated the memory limit to: {}".format(memory_max)
                     )
                 self._active_queue = new_scheduler
@@ -242,8 +240,8 @@ class Server:  # add the option to return the job id and the hold id to the serv
         Args:
             new_cores (int): number of cores
         """
-        if s.queue_adapter is not None and self._active_queue is not None:
-            cores = s.queue_adapter.check_queue_parameters(
+        if state.queue_adapter is not None and self._active_queue is not None:
+            cores = state.queue_adapter.check_queue_parameters(
                 queue=self.queue,
                 cores=new_cores,
                 run_time_max=self.run_time,
@@ -251,7 +249,7 @@ class Server:  # add the option to return the job id and the hold id to the serv
             )[0]
             if cores != new_cores:
                 self._cores = cores
-                s.logger.debug(
+                state.logger.debug(
                     "Updated the number of cores to: ", cores
                 )
             else:
@@ -281,8 +279,8 @@ class Server:  # add the option to return the job id and the hold id to the serv
             ValueError: if new_run_time cannot be converted to int
         """
         new_run_time = int(new_run_time)
-        if s.queue_adapter is not None and self._active_queue is not None:
-            run_time_max = s.queue_adapter.check_queue_parameters(
+        if state.queue_adapter is not None and self._active_queue is not None:
+            run_time_max = state.queue_adapter.check_queue_parameters(
                 queue=self.queue,
                 cores=self.cores,
                 run_time_max=new_run_time,
@@ -290,7 +288,7 @@ class Server:  # add the option to return the job id and the hold id to the serv
             )[1]
             if run_time_max != new_run_time:
                 self._run_time = run_time_max
-                s.logger.debug(
+                state.logger.debug(
                     "Updated the run time limit to: ", run_time_max
                 )
             else:
@@ -304,8 +302,8 @@ class Server:  # add the option to return the job id and the hold id to the serv
 
     @memory_limit.setter
     def memory_limit(self, limit):
-        if s.queue_adapter is not None and self._active_queue is not None:
-            memory_max = s.queue_adapter.check_queue_parameters(
+        if state.queue_adapter is not None and self._active_queue is not None:
+            memory_max = state.queue_adapter.check_queue_parameters(
                 queue=self.queue,
                 cores=self.cores,
                 run_time_max=self.run_time,
@@ -313,7 +311,7 @@ class Server:  # add the option to return the job id and the hold id to the serv
             )[2]
             if memory_max != limit:
                 self._memory_limit = memory_max
-                s.logger.debug(
+                state.logger.debug(
                     "Updated the memory limit to: ", memory_max
                 )
             else:
@@ -341,10 +339,10 @@ class Server:  # add the option to return the job id and the hold id to the serv
         """
         self._run_mode.mode = new_mode
         if new_mode == "queue":
-            if s.queue_adapter is None:
+            if state.queue_adapter is None:
                 raise TypeError("No queue adapter defined.")
             if self._active_queue is None:
-                self.queue = s.queue_adapter.config["queue_primary"]
+                self.queue = state.queue_adapter.config["queue_primary"]
 
     @property
     def new_hdf(self):
@@ -400,8 +398,8 @@ class Server:  # add the option to return the job id and the hold id to the serv
         Returns:
             (list)
         """
-        if s.queue_adapter is not None:
-            return s.queue_adapter.queue_list
+        if state.queue_adapter is not None:
+            return state.queue_adapter.queue_list
         else:
             return None
 
@@ -413,8 +411,8 @@ class Server:  # add the option to return the job id and the hold id to the serv
         Returns:
             (pandas.DataFrame)
         """
-        if s.queue_adapter is not None:
-            return s.queue_adapter.queue_view
+        if state.queue_adapter is not None:
+            return state.queue_adapter.queue_view
         else:
             return None
 
