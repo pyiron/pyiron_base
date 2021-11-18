@@ -7,6 +7,7 @@ the correct dtype, this then writes this correct dtype.
 """
 
 import os
+import re
 import stat
 import sys
 import subprocess
@@ -14,6 +15,30 @@ import subprocess
 from pyiron_base import Project
 
 from tqdm import tqdm
+
+def detect_bug(file_name):
+    """
+    Checks whether HDF5 file has at least one group setup like
+    /foo       Group
+    /foo/data  Dataset {...}
+    /foo/index Dataset {...}
+    which is how h5io stores dtype=object arrays.  If a file doesn't have any
+    of them there's no need to rewrite them.  If there is it might be a
+    corrupted record from our bug or a legitimate dtype=object array.  In that
+    case just rewrite anyway.
+    """
+    out = subprocess.getoutput(f"h5ls -r {file_name}")
+    lines = out.split('\n')
+    for i, l in enumerate(lines[:-2]):
+        if not l.endswith("Group"):
+            continue
+        group_name = l.split()[0]
+        data_match = re.match(f"^{group_name}/data[ \t]*Dataset {'{.*}'}$", lines[i+1])
+        index_match = re.match(f"^{group_name}/index[ \t]*Dataset {'{.*}'}$", lines[i+2])
+        if data_match and index_match:
+            return True
+    return False
+
 
 if __name__ == "__main__":
     total_size = 0
@@ -23,10 +48,10 @@ if __name__ == "__main__":
     pr = Project(sys.argv[1])
     with tqdm(total=total_size, unit="B", unit_scale=1) as t:
         for j in pr.iter_jobs(convert_to_object=False, recursive=True, progress=False):
-            try:
-                j.project_hdf5.rewrite_hdf5(j.name)
-            except e:
-                print(f"WARNING: rewriting job {j.name} failed with {e}")
-
             file_size = os.stat(j.project_hdf5.file_name)[stat.ST_SIZE]
+            if detect_bug(j.project_hdf5.file_name):
+                try:
+                    j.project_hdf5.rewrite_hdf5(j.name)
+                except e:
+                    print(f"WARNING: rewriting job {j.name} failed with {e}")
             t.update(file_size)
