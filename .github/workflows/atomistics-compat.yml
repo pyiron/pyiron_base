@@ -46,6 +46,7 @@ jobs:
         pip install --no-deps .
     - name: Test
       shell: bash -l {0}
+      timeout-minutes: 30
       run: |
         cd ../pyiron_atomistics
         python -m unittest discover tests/
