@@ -317,6 +317,26 @@ class TestFlattenedStorage(TestWithProject):
             self.assertEqual(v.dtype, some_sub._per_element_arrays[k].dtype,
                             f"Element array {k} present in sample storage, but wrong dtype!")
 
+    def test_getitem_setitem(self):
+        """Using __getitem__/__setitem__ should be equivalent to using get_array/set_array."""
+        store = FlattenedStorage(even=self.even, odd=self.odd, mylen=[1, 2, 3])
+        for i in range(len(store)):
+            self.assertTrue(np.array_equal(
+                    store["even", i], store.get_array("even", i),
+                ), f"getitem returned different value ({store['even', i]}) than get_array ({store.get_array('even', i)}) for chunk {i}"
+            )
+            self.assertEqual(store["mylen", i], store.get_array("mylen", i),
+                             f"getitem returned different value ({store['mylen', i]}) than get_array ({store.get_array('mylen', i)}) for chunk {i}")
+        self.assertTrue(np.array_equal(store["even"], store.get_array("even")),
+                        f"getitem returned different value ({store['even']}) than get_array ({store.get_array('even')})")
+        self.assertTrue(np.array_equal(store["mylen"], store.get_array("mylen")),
+                        f"getitem returned different value ({store['mylen']}) than get_array ({store.get_array('mylen')})")
+        store["even", 0] = [4]
+        store["even", 1] = [2, 0]
+        store["mylen", 0] = 4
+        self.assertEqual(store.get_array("mylen", 0), 4, "setitem did not set item correctly.")
+        self.assertTrue(np.array_equal(store.get_array("even", 0), [4]), "setitem did not set item correctly.")
+        self.assertTrue(np.array_equal(store.get_array("even", 1), [2, 0]), "setitem did not set item correctly.")
 
     def test_hdf_chunklength_one(self):
         """Reading a storage with all chunks of length one should give back exactly what was written!"""
