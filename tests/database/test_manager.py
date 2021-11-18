@@ -56,7 +56,7 @@ class TestDatabaseManager(TestWithProject):
 
     def test_update_project_coupling(self):
         self.dbm.update()
-        self.assertEqual(
+        self.assertIs(
             self.dbm.database, self.project.db,
             msg="Expected the database access instance to stay coupled between state and project."
         )
