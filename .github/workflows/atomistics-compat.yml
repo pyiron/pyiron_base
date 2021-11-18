@@ -8,14 +8,13 @@ on:
     branches: [ master ]
   pull_request:
     branches: [ master ]
-    types: [labeled, opened, synchronize]
+    types: [labeled, opened, synchronize, reopened]
 
 jobs:
   build:
     if: |
-      ${{ github.event.type == 'PushEvent' ||
-          ( github.event.type == 'PullRequestEvent'  && contains(github.event.pull_request.labels.*.name, 'integration' ))
-       }}
+      github.event.type == 'PushEvent' ||
+      ( github.event.type == 'PullRequestEvent'  && contains(github.event.pull_request.labels.*.name, 'integration' ))
 
     runs-on: ${{ matrix.operating-system }}
     strategy:
@@ -46,6 +45,7 @@ jobs:
         pip install --no-deps .
     - name: Test
       shell: bash -l {0}
+      timeout-minutes: 30
       run: |
         cd ../pyiron_atomistics
         python -m unittest discover tests/

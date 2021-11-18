@@ -5,10 +5,10 @@
 import unittest
 import os
 from pyiron_base.job.generic import GenericJob
-from pyiron_base._tests import TestWithCleanProject
+from pyiron_base._tests import TestWithFilledProject
 
 
-class TestGenericJob(TestWithCleanProject):
+class TestGenericJob(TestWithFilledProject):
     def test_db_entry(self):
         ham = self.project.create.job.ScriptJob("job_single_debug")
         db_entry = ham.db_entry()
@@ -305,6 +305,24 @@ class TestGenericJob(TestWithCleanProject):
         self.assertEqual(ham.error.print_queue(), '')
         self.assertEqual(ham.error.print_message(), '')
         self.assertTrue('no error' in ham.error.__repr__())
+
+    def test_compress(self):
+        job = self.project.load(self.project.get_job_ids()[0])
+        wd_files = job.list_files()
+        self.assertEqual(len(wd_files), 1, "Only one zipped file should be present in the working directory")
+        self.assertEqual(wd_files[0], f"{job.name}.tar.bz2", "Inconsistent name for the zipped file")
+
+    def test_restart(self):
+        job = self.project.load(self.project.get_job_ids()[0])
+        job_restart = job.restart()
+        job_restart.run()
+        wd_files = job_restart.list_files()
+        self.assertEqual(len(wd_files), 1, "Only one zipped file should be present in the working directory")
+        self.assertEqual(wd_files[0], f"{job_restart.name}.tar.bz2", "Inconsistent name for the zipped file")
+        job_restart.decompress()
+        wd_files = job_restart.list_files()
+        self.assertEqual(len(wd_files), 1, "Only one input file should be present in the working directory")
+        self.assertEqual(wd_files[0], "input.yml", "Inconsistent name for the zipped file")
 
 
 if __name__ == "__main__":
