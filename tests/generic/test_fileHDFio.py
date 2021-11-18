@@ -154,7 +154,7 @@ class TestFileHDFio(PyironTestCase):
             array = hdf['object_array_with_lists']
             np.array_equal(array, object_array_with_lists)
             self.assertIsInstance(array, np.ndarray)
-            self.assertTrue(array.dtype == np.dtype(object))
+            self.assertEqual(array.dtype, np.dtype(object), msg="dtype=object array falsely converted.")
 
         #  Here I got:  TypeError: Object dtype dtype('O') has no native HDF5 equivalent
         #
@@ -170,13 +170,15 @@ class TestFileHDFio(PyironTestCase):
             array = hdf['int_array_as_objects_array']
             np.array_equal(array, int_array_as_objects_array)
             self.assertIsInstance(array, np.ndarray)
-            self.assertTrue(array.dtype == np.dtype(int))
+            self.assertEqual(array.dtype, np.dtype(int), msg=f"dtype=object array containing only int not converted "
+                                                             f"to dtype int array.")
 
         with self.subTest('float_array_as_objects_array'):
             array = hdf['float_array_as_objects_array']
             np.array_equal(array, float_array_as_objects_array)
             self.assertIsInstance(array, np.ndarray)
-            self.assertTrue(array.dtype == np.dtype(float))
+            self.assertEqual(array.dtype, np.dtype(float), msg=f"dtype=object array containing only float not converted"
+                                                               f" to dtype float array.")
 
         hdf.remove_group()
 
