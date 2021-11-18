@@ -39,7 +39,7 @@ class FlattenedStorage(HasHDF):
     >>> a_flat = [ 1,  2, 3,  4,  5,  6 ]
     >>> b_flat = [ 2,  4, 6,  8, 10, 12 ]
 
-    with additional metadata to indicate where the boundaries of each chunk are. 
+    with additional metadata to indicate where the boundaries of each chunk are.
 
     First add arrays and chunks like this
 
@@ -62,6 +62,17 @@ class FlattenedStorage(HasHDF):
     >>> store.set_array("even", 0, [0])
     >>> store.get_array("even", 0)
     array([0])
+
+    As a shorthand you can use regular index syntax
+
+    >>> store["even", 0] = [2]
+    >>> store["even", 0]
+    array([2])
+    >>> store["even", 1]
+    array([4, 6])
+    >>> store["even"]
+    array([2, 4, 6, 8, 10, 12])
+    >>> store["even", 0] = [0]
 
     You can add arrays to the storage even after you added already other arrays and chunks.
 
