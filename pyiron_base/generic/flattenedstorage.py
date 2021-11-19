@@ -150,8 +150,10 @@ class FlattenedStorage(HasHDF):
             num_elements (int): pre-allocation for per elements arrays
         """
         # tracks allocated versed as yet used number of chunks/elements
-        self._num_chunks_alloc = self.num_chunks = num_chunks
-        self._num_elements_alloc = self.num_elements = num_elements
+        self._num_chunks_alloc = num_chunks
+        self._num_elements_alloc = num_elements
+        self.num_chunks = 0
+        self.num_elements = 0
         # store the starting index for properties with unknown length
         self.current_element_index = 0
         # store the index for properties of known size, stored at the same index as the chunk
