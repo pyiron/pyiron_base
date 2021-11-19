@@ -271,6 +271,21 @@ class TestFlattenedStorage(TestWithProject):
 
         self.assertEqual(store.has_array("missing"), None, "has_array does not return None for nonexisting array.")
 
+    def test_hdf_empty(self):
+        """Writing an empty storage should result in an empty storage when reading."""
+        store = FlattenedStorage()
+        hdf = self.project.create_hdf(self.project.path, "empty")
+        store.to_hdf(hdf, "empty")
+        store_read = hdf["empty"].to_object()
+        self.assertEqual(len(store), len(store_read),
+                         "Length of empty storage not equal after writing/reading!")
+
+        store = FlattenedStorage(num_chunks=5, num_elements=10)
+        hdf = self.project.create_hdf(self.project.path, "empty")
+        store.to_hdf(hdf, "empty")
+        store_read = hdf["empty"].to_object()
+        self.assertEqual(len(store), len(store_read),
+                         "Length of empty storage not equal after writing/reading!")
 
     def test_hdf_chunklength_one(self):
         """Reading a storage with all chunks of length one should give back exactly what was written!"""
