@@ -6,7 +6,7 @@ import os
 import sys
 from io import StringIO
 import numpy as np
-from pyiron_base.generic.hdfio import FileHDFio, _is_ragged_array
+from pyiron_base.generic.hdfio import FileHDFio, _is_ragged_in_1st_dim_only
 from pyiron_base._tests import PyironTestCase
 import unittest
 
@@ -377,10 +377,18 @@ class TestFileHDFio(PyironTestCase):
 
     def test_ragged_array(self):
         """Should correctly identify ragged arrays/lists."""
-        self.assertTrue(_is_ragged_array([ [1], [1, 2] ]), "Ragged nested list not detected!")
-        self.assertTrue(_is_ragged_array([ np.array([1]), np.array([1, 2]) ]), "Ragged list of arrays not detected!")
-        self.assertFalse(_is_ragged_array([ [1, 2], [3, 4] ]), "Non-ragged nested list detected incorrectly!")
-        self.assertFalse(_is_ragged_array(np.array([ [1, 2], [3, 4] ])), "Non-ragged array detected incorrectly!")
+        self.assertTrue(_is_ragged_in_1st_dim_only([ [1], [1, 2] ]),
+                        "Ragged nested list not detected!")
+        self.assertTrue(_is_ragged_in_1st_dim_only([ np.array([1]), np.array([1, 2]) ]),
+                        "Ragged list of arrays not detected!")
+        self.assertFalse(_is_ragged_in_1st_dim_only([ [1, 2], [3, 4] ]),
+                         "Non-ragged nested list detected incorrectly!")
+        self.assertFalse(_is_ragged_in_1st_dim_only(np.array([ [1, 2], [3, 4] ])),
+                         "Non-ragged array detected incorrectly!")
+        self.assertTrue(_is_ragged_in_1st_dim_only([ [[1]], [[2], [3]] ]),
+                        "Ragged nested list not detected even though shape[1:] matches!")
+        self.assertFalse(_is_ragged_in_1st_dim_only([ [[1, 2, 3]], [[2]], [[3]] ]),
+                         "Ragged nested list detected incorrectly even though shape[1:] don't match!")
 
 
 if __name__ == "__main__":
