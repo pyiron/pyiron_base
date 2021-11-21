@@ -12,7 +12,7 @@ also provide a way to actually access the contained objects.  This is done via `
 distinguished from a node by containing other objects it also represents a vertex "containing" or "linked-to" other
 vertices.  From this we formulate the requirements for this interface
 
-1. `__getitem__()` must return any or a non-`None` object for each string returned by `list_nodes()` or `list_groups()`, repectively.
+1. `__getitem__()` must return a python object for each string returned by `list_nodes()` or `list_groups()`. 
 2. Objects listed in `list_groups` must be instances of `HasGroups`.
 3. Objects listed in `list_nodes` must not be instances of `HasGroups`; the output of `list_nodes()` and `list_groups` is
    therefore mutually exclusive.
