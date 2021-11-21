@@ -13,10 +13,9 @@ on:
 jobs:
   build:
     if: |
-      ${{ github.event.type == 'PushEvent' ||
-          ( github.event.type == 'PullRequestEvent'  && contains(github.event.pull_request.labels.*.name, 'integration' ))
-       }}
-
+      github.event_name == 'push' ||
+      ( github.event_name == 'pull_request'  && contains(github.event.pull_request.labels.*.name, 'integration' ))
+    
     runs-on: ubuntu-latest
 
     steps:
