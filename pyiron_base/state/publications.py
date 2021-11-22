@@ -11,7 +11,8 @@ your project for a list of everything you should cite.
 
 import pandas
 from pyiron_base.generic.util import Singleton
-from typing import Dict, Union, List, Literal
+from typing import Dict, Union, List
+from typing_extensions import Literal
 
 __author__ = "Joerg Neugebauer, Jan Janssen"
 __copyright__ = (
