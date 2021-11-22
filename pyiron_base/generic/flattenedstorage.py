@@ -460,6 +460,15 @@ class FlattenedStorage(HasHDF):
     def sample(self, selector: Callable[["FlattenedStorage", int], bool]) -> "FlattenedStorage":
         """
         Create a new storage with chunks selected by given function.
+
+        If called on a subclass this correctly returns an instance of that subclass instead.
+
+        Args:
+            select (callable): function that takes this storage as the first argument and the chunk index to sample as
+                               the second argument; if it returns True it will be part of the new storage.
+
+        Returns:
+            :class:`.FlattenedStorage` or subclass: storage with the selected chunks
         """
         new = self.__class__()
         for k, a in self._per_chunk_arrays.items():
