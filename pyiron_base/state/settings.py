@@ -127,8 +127,6 @@ class Settings(metaclass=Singleton):
             self._update_from_dict(env_dict)
         elif file_dict is not None:
             self._update_from_dict(file_dict)
-        else:
-            self._configuration['project_check_enabled'] = False
 
         for k in ["CONDA_PREFIX", "CONDA_DIR"]:
             if k in os.environ.keys():
@@ -155,7 +153,7 @@ class Settings(metaclass=Singleton):
             "sql_type": "SQLite",
             "sql_user_key": None,
             "sql_database": None,
-            "project_check_enabled": True,
+            "project_check_enabled": False,
             "disable_database": False,
         })
 
