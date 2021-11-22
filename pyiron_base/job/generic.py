@@ -735,7 +735,9 @@ class GenericJob(JobCore):
             ) as f_err:
                 f_err.write(out)
         except subprocess.CalledProcessError as e:
-            if not self.server.accept_crash:
+            if e.returncode in self.executable.accepted_return_codes:
+                pass
+            elif not self.server.accept_crash:
                 self._logger.warning("Job aborted")
                 self._logger.warning(e.output)
                 self.status.aborted = True
