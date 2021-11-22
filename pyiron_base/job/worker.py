@@ -147,6 +147,7 @@ class WorkerJob(PythonTemplateJob):
             processes=int(self.server.cores / self.cores_per_job)
         ) as pool:
             while True:
+                # Check the database if there are more calculation to execute
                 df = pr.job_table()
                 df_sub = df[
                     (df["status"] == "submitted") &
