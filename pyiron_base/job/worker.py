@@ -6,7 +6,7 @@ Worker Class to execute calculation in an asynchronous way
 """
 import os
 import time
-import multiprocessing
+from multiprocessing.pool import ThreadPool
 from pyiron_base.job.template import PythonTemplateJob
 
 
@@ -143,8 +143,8 @@ class WorkerJob(PythonTemplateJob):
         master_id = self.job_id
         pr = self.project_to_watch
         active_job_ids = []
-        with multiprocessing.pool.ThreadPool(
-                processes=int(self.server.cores / self.cores_per_job)
+        with ThreadPool(
+            processes=int(self.server.cores / self.cores_per_job)
         ) as pool:
             while True:
                 df = pr.job_table()
