@@ -50,8 +50,8 @@ def worker_function(args):
             executable,
             cwd=working_directory,
             shell=False,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
             universal_newlines=True,
         )
     except subprocess.CalledProcessError:
