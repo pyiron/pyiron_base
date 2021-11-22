@@ -291,6 +291,7 @@ class TestFlattenedStorage(TestWithProject):
                          "Length of empty storage not equal after writing/reading!")
 
     def test_sample(self):
+        """Calling sample should return a storage with the selected chunks only."""
         store = FlattenedStorage(even=self.even, odd=self.odd, even_sum = self.even_sum, odd_sum=self.odd_sum)
         all_sub = store.sample(lambda s, i: True)
         self.assertEqual(len(store), len(all_sub), "Length not equal after sampling all chunks!")
@@ -298,6 +299,8 @@ class TestFlattenedStorage(TestWithProject):
         self.assertEqual(len(empty_sub), 0, "Length not zero after sampling no chunks!")
         some_sub = store.sample(lambda s, i: i%2==1)
         self.assertEqual(len(some_sub), 1, "Length not one after sampling one chunk!")
+        self.assertEqual("1", some_sub.get_array("identifier", 0),
+                         "sample selected wrong chunk!")
 
     def test_hdf_chunklength_one(self):
         """Reading a storage with all chunks of length one should give back exactly what was written!"""
