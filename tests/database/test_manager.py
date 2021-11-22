@@ -66,6 +66,12 @@ class TestDatabaseManager(TestWithProject):
                 self.assertIs(self.dbm.top_path(os.path.abspath('..')), None,
                               msg="Non-None top_path for path not in the config and project_check_enabled is False.")
 
+            self.s.configuration["project_paths"] = []
+            with self.subTest("test setting for old 'project_check_enabled is False' behavior"):
+                sub_pr = self.project.open('sub_project')
+                self.assertIs(sub_pr.root_path, None)
+                self.assertEqual(sub_pr.project_path, self.project_path + '/sub_project/')
+
         finally:
             # Put things back the way you found them
             self.s.configuration["project_check_enabled"] = check_before
