@@ -18,6 +18,7 @@ import sys
 from typing import Union
 from pyiron_base.interfaces.has_groups import HasGroups
 from pyiron_base.state import state
+import warnings
 
 __author__ = "Joerg Neugebauer, Jan Janssen"
 __copyright__ = (
@@ -30,9 +31,11 @@ __email__ = "janssen@mpie.de"
 __status__ = "production"
 __date__ = "Sep 1, 2017"
 
-def _is_ragged_array(value: Union[np.ndarray, list]) -> bool:
+def _is_ragged_in_1st_dim_only(value: Union[np.ndarray, list]) -> bool:
     """
-    Checks whether array or list of lists is ragged.
+    Checks whether array or list of lists is ragged in the first dimension.
+
+    That means all other dimensions (except the first one) still have to match.
 
     Args:
         value (ndarray/list): array to check
@@ -43,8 +46,13 @@ def _is_ragged_array(value: Union[np.ndarray, list]) -> bool:
     if isinstance(value, np.ndarray) and value.dtype != np.dtype("O"):
         return False
     else:
-        shape_lst = [np.shape(sub) for sub in value]
-        return len(set(shape_lst)) > 1
+        def extract_dims(v):
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore")
+                s = np.shape(v)
+            return s[0], s[1:]
+        dim1, dim_other = zip(*map(extract_dims, value))
+        return len(set(dim1)) > 1 and len(set(dim_other)) == 1
 
 def open_hdf5(filename, mode="r", swmr=False):
     if swmr and mode != "r":
@@ -185,10 +193,10 @@ class FileHDFio(HasGroups, MutableMapping):
     @staticmethod
     def _is_convertable_dtype_object_array(obj):
         if isinstance(obj, np.ndarray) and obj.dtype == np.dtype(object):
-            first_element = obj[tuple([0 for _ in range(obj.ndim)])]
-            last_element = obj[tuple([-1 for _ in range(obj.ndim)])]
+            first_element = obj[(0,) * obj.ndim]
+            last_element = obj[(-1,) * obj.ndim]
             if isinstance(first_element, numbers.Number) and isinstance(last_element, numbers.Number) \
-                    and not _is_ragged_array(obj):
+                    and not _is_ragged_in_1st_dim_only(obj):
                 return True
         return False
 
@@ -225,10 +233,13 @@ class FileHDFio(HasGroups, MutableMapping):
             and isinstance(value[0], (list, np.ndarray))
             and len(value[0]) > 0
             and not isinstance(value[0][0], str)
+            and _is_ragged_in_1st_dim_only(value)
         ):
-            if _is_ragged_array(value):
-                value = np.array([np.array(v) for v in value], dtype=object)
-                use_json=False
+            # if the sub-arrays in value all share shape[1:], h5io comes up with a more efficient storage format than
+            # just writing a dataset for each element, by concatenating along the first axis and storing the indices
+            # where to break the concatenated array again
+            value = np.array([np.asarray(v) for v in value], dtype=object)
+            use_json=False
         elif isinstance(value, tuple):
             value = list(value)
         h5io.write_hdf5(

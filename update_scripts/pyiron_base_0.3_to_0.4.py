@@ -43,19 +43,24 @@ def detect_bug(file_name):
 if __name__ == "__main__":
     total_size = 0
     for l in subprocess.getoutput(f"find {sys.argv[1]} -regex \".*\.h5\" -exec wc -c '{{}}' \;").split("\n"):
+        if l == "":
+            print(f"ERROR: no HDF5 files found in {sys.argv[1]}!")
+            sys.exit(1)
         total_size += int(l.split()[0])
 
     pr = Project(sys.argv[1])
+    n_proc = 0
     n_skip = 0
     n_err  = 0
     with tqdm(total=total_size, unit="B", unit_scale=1) as t:
         for j in pr.iter_jobs(convert_to_object=False, recursive=True, progress=False):
+            n_proc += 1
             try:
                 file_size = os.stat(j.project_hdf5.file_name)[stat.ST_SIZE]
             except FileNotFoundError:
                 n_err += 1
                 print(f"Job {j.name}/{j.id} is in the database, but points to non-existing HDF5 file {j.project_hdf5.file_name}!")
-                t.update(file_size)
+                t.update(0)
                 continue
 
             if detect_bug(j.project_hdf5.file_name):
@@ -67,4 +72,4 @@ if __name__ == "__main__":
             else:
                 n_skip += 1
             t.update(file_size)
-    print(f"Errors: {n_err}\tSkipped: {n_skip}")
+    print(f"Total Jobs: {n_proc}\tErrors: {n_err}\tSkipped: {n_skip}")
