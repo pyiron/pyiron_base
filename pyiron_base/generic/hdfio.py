@@ -18,6 +18,7 @@ import sys
 from typing import Union
 from pyiron_base.interfaces.has_groups import HasGroups
 from pyiron_base.state import state
+import warnings
 
 __author__ = "Joerg Neugebauer, Jan Janssen"
 __copyright__ = (
@@ -46,7 +47,9 @@ def _is_ragged_in_1st_dim_only(value: Union[np.ndarray, list]) -> bool:
         return False
     else:
         def extract_dims(v):
-            s = np.shape(v)
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore")
+                s = np.shape(v)
             return s[0], s[1:]
         dim1, dim_other = zip(*map(extract_dims, value))
         return len(set(dim1)) > 1 and len(set(dim_other)) == 1
