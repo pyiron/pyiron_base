@@ -19,9 +19,11 @@ class TestDatabaseManager(TestWithProject):
         self.assertEqual(self.s.configuration["disable_database"], self.dbm.database_is_disabled,
                          msg="Database manager should be initialized by settings.")
         self.dbm._database_is_disabled = True
-        self.assertNotEqual(self.s.configuration["disable_database"], self.dbm.database_is_disabled,
-                            msg="But after that it should be independent from the settings")
-        self.dbm._database_is_disabled = False  # Re-enable it at the end of the test
+        try:
+            self.assertNotEqual(self.s.configuration["disable_database"], self.dbm.database_is_disabled,
+                                msg="But after that it should be independent from the settings")
+        finally:
+            self.dbm._database_is_disabled = False  # Re-enable it at the end of the test
 
     def test_file_top_path(self):
         # Store settings
@@ -30,24 +32,46 @@ class TestDatabaseManager(TestWithProject):
         disable_before = self.s.configuration["disable_database"]
 
         try:
-            with self.subTest('disable project_check_enabled'):
-                self.s.configuration["project_check_enabled"] = False
-                self.assertIs(self.dbm.top_path(self.project_path + "/test"), None)
+            new_root_path = self.s.convert_path_to_abs_posix(os.getcwd())
+            self.s.configuration["project_check_enabled"] = True
+            self.s.configuration["project_paths"] = [new_root_path]
+            self.s.configuration["disable_database"] = False
 
-            with self.subTest('enable project_check_enabled'):
-                new_root_path = self.s.convert_path_to_abs_posix(os.getcwd())
-                self.s.configuration["project_check_enabled"] = True
-                self.s.configuration["project_paths"] = [new_root_path]
+            with self.subTest('enabled'):
                 # Otherwise has the chance to override project_check_enabled... Thus:
-                self.s.configuration["disable_database"] = False
                 self.assertTrue(self.dbm.top_path(self.project_path + "/test") in self.project_path)
 
-            with self.subTest("test Project.root_path and Project.project_path for a new sub-Project"):
+            with self.subTest("enabled: test Project.root_path and Project.project_path for a new sub-Project"):
                 sub_pr = self.project.open('sub_project')
                 self.assertEqual(sub_pr.root_path, new_root_path + '/')
                 self.assertEqual(sub_pr.project_path,
                                  os.path.join(os.path.relpath(self.project_path, os.getcwd()),
                                               'sub_project').replace("\\", '/') + '/')
+            with self.subTest("enabled: path not in config"):
+                self.assertRaises(ValueError, self.dbm.top_path, os.path.abspath('..'))
+
+            self.s.configuration["project_check_enabled"] = False
+
+            with self.subTest('disabled'):
+                # Otherwise has the chance to override project_check_enabled... Thus:
+                self.assertTrue(self.dbm.top_path(self.project_path + "/test") in self.project_path)
+
+            with self.subTest("disabled: test Project.root_path and Project.project_path for a new sub-Project"):
+                sub_pr = self.project.open('sub_project')
+                self.assertEqual(sub_pr.root_path, new_root_path + '/')
+                self.assertEqual(sub_pr.project_path,
+                                 os.path.join(os.path.relpath(self.project_path, os.getcwd()),
+                                              'sub_project').replace("\\", '/') + '/')
+            with self.subTest("disabled: path not in config"):
+                self.assertIs(self.dbm.top_path(os.path.abspath('..')), None,
+                              msg="Non-None top_path for path not in the config and project_check_enabled is False.")
+
+            self.s.configuration["project_paths"] = []
+            with self.subTest("test setting for old 'project_check_enabled is False' behavior"):
+                sub_pr = self.project.open('sub_project')
+                self.assertIs(sub_pr.root_path, None)
+                self.assertEqual(sub_pr.project_path, self.project_path + '/sub_project/')
+
         finally:
             # Put things back the way you found them
             self.s.configuration["project_check_enabled"] = check_before
