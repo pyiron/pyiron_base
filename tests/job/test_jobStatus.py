@@ -256,6 +256,8 @@ class TestJobStatus(PyironTestCase):
         self.assertTrue(self.jobstatus.finished)
         self.assertEqual(str(self.jobstatus), "finished")
         self.assertEqual(self.jobstatus.string, "finished")
+        with self.assertRaises(ValueError, msg="No error raised when setting invalid job status!"):
+            self.jobstatus.string = "xyzzy"
 
     def test_database_connection(self):
         current_status = self.database.get_item_by_id(self.job_id)["status"]
