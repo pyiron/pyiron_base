@@ -18,6 +18,8 @@ __status__ = "production"
 __date__ = "Jul 16, 2020"
 
 
+from typing import Callable
+
 import numpy as np
 import h5py
 from pyiron_base.interfaces.has_hdf import HasHDF
@@ -454,6 +456,35 @@ class FlattenedStorage(HasHDF):
         else:
             return None
         return {"shape": a.shape[1:], "dtype": a.dtype, "per": per}
+
+    def sample(self, selector: Callable[["FlattenedStorage", int], bool]) -> "FlattenedStorage":
+        """
+        Create a new storage with chunks selected by given function.
+
+        If called on a subclass this correctly returns an instance of that subclass instead.
+
+        Args:
+            select (callable): function that takes this storage as the first argument and the chunk index to sample as
+                               the second argument; if it returns True it will be part of the new storage.
+
+        Returns:
+            :class:`.FlattenedStorage` or subclass: storage with the selected chunks
+        """
+        new = self.__class__()
+        for k, a in self._per_chunk_arrays.items():
+            if k not in ("start_index", "length", "identifier"):
+                new.add_array(k, shape=a.shape[1:], dtype=a.dtype, per="chunk")
+        for k, a in self._per_element_arrays.items():
+            new.add_array(k, shape=a.shape[1:], dtype=a.dtype, per="element")
+        for i in range(len(self)):
+            if selector(self, i):
+                new.add_chunk(self.get_array("length", i), identifier=self.get_array("identifier", i))
+                for k in self._per_chunk_arrays:
+                    if k not in ("start_index", "length", "identifier"):
+                        new.set_array(k, len(new) - 1, self.get_array(k, i))
+                for k in self._per_element_arrays:
+                    new.set_array(k, len(new) - 1, self.get_array(k, i))
+        return new
 
 
     def add_chunk(self, chunk_length, identifier=None, **arrays):

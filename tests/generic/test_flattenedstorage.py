@@ -12,6 +12,8 @@ class TestFlattenedStorage(TestWithProject):
 
         cls.even = [ list(range(0, 2, 2)), list(range(2, 6, 2)), list(range(6, 12, 2)) ]
         cls.odd = np.array([ np.arange(1, 2, 2), np.arange(3, 6, 2), np.arange(7, 12, 2) ], dtype=object)
+        cls.even_sum = list(map(sum, cls.even))
+        cls.odd_sum = list(map(sum, cls.odd))
 
 
     def test_add_array(self):
@@ -271,6 +273,7 @@ class TestFlattenedStorage(TestWithProject):
 
         self.assertEqual(store.has_array("missing"), None, "has_array does not return None for nonexisting array.")
 
+
     def test_hdf_empty(self):
         """Writing an empty storage should result in an empty storage when reading."""
         store = FlattenedStorage()
@@ -286,6 +289,34 @@ class TestFlattenedStorage(TestWithProject):
         store_read = hdf["empty"].to_object()
         self.assertEqual(len(store), len(store_read),
                          "Length of empty storage not equal after writing/reading!")
+
+    def test_sample(self):
+        """Calling sample should return a storage with the selected chunks only."""
+        store = FlattenedStorage(even=self.even, odd=self.odd, even_sum = self.even_sum, odd_sum=self.odd_sum)
+        all_sub = store.sample(lambda s, i: True)
+        self.assertEqual(len(store), len(all_sub), "Length not equal after sampling all chunks!")
+        empty_sub = store.sample(lambda s, i: False)
+        self.assertEqual(len(empty_sub), 0, "Length not zero after sampling no chunks!")
+        some_sub = store.sample(lambda s, i: i%2==1)
+        self.assertEqual(len(some_sub), 1, "Length not one after sampling one chunk!")
+        self.assertEqual("1", some_sub.get_array("identifier", 0),
+                         "sample selected wrong chunk!")
+        for k, v in store._per_chunk_arrays.items():
+            self.assertTrue(k in some_sub._per_chunk_arrays,
+                            f"Chunk array {k} not present in sample storage!")
+            self.assertEqual(v.shape[1:], some_sub._per_chunk_arrays[k].shape[1:],
+                            f"Chunk array {k} present in sample storage, but wrong shape!")
+            self.assertEqual(v.dtype, some_sub._per_chunk_arrays[k].dtype,
+                            f"Chunk array {k} present in sample storage, but wrong dtype!")
+
+        for k, v in store._per_element_arrays.items():
+            self.assertTrue(k in some_sub._per_element_arrays,
+                            f"Element array {k} not present in sample storage!")
+            self.assertEqual(v.shape[1:], some_sub._per_element_arrays[k].shape[1:],
+                            f"Element array {k} present in sample storage, but wrong shape!")
+            self.assertEqual(v.dtype, some_sub._per_element_arrays[k].dtype,
+                            f"Element array {k} present in sample storage, but wrong dtype!")
+
 
     def test_hdf_chunklength_one(self):
         """Reading a storage with all chunks of length one should give back exactly what was written!"""
