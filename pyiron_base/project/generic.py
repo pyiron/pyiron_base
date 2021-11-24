@@ -1000,10 +1000,9 @@ class Project(ProjectPath, HasGroups):
         if not isinstance(recursive, bool):
             raise ValueError('recursive must be a boolean')
         if not self.view_mode:
-            if progress:
-                job_id_lst = tqdm(self.get_job_ids(recursive=recursive))
-            else:
-                job_id_lst = self.get_job_ids(recursive=recursive)
+            job_id_lst = self.get_job_ids(recursive=recursive)
+            if progress and len(job_id_lst) > 0:
+                job_id_lst = tqdm(job_id_lst)
             for job_id in job_id_lst:
                 if job_id not in self.get_job_ids(recursive=recursive):
                     continue
