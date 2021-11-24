@@ -301,6 +301,22 @@ class TestFlattenedStorage(TestWithProject):
         self.assertEqual(len(some_sub), 1, "Length not one after sampling one chunk!")
         self.assertEqual("1", some_sub.get_array("identifier", 0),
                          "sample selected wrong chunk!")
+        for k, v in store._per_chunk_arrays.items():
+            self.assertTrue(k in some_sub._per_chunk_arrays,
+                            f"Chunk array {k} not present in sample storage!")
+            self.assertEqual(store._per_chunk_arrays[k].shape[1:], some_sub._per_chunk_arrays[k].shape[1:],
+                            f"Chunk array {k} present in sample storage, but wrong shape!")
+            self.assertEqual(store._per_chunk_arrays[k].dtype, some_sub._per_chunk_arrays[k].dtype,
+                            f"Chunk array {k} present in sample storage, but wrong dtype!")
+
+        for k, v in store._per_element_arrays.items():
+            self.assertTrue(k in some_sub._per_element_arrays,
+                            f"Element array {k} not present in sample storage!")
+            self.assertEqual(store._per_element_arrays[k].shape[1:], some_sub._per_element_arrays[k].shape[1:],
+                            f"Element array {k} present in sample storage, but wrong shape!")
+            self.assertEqual(store._per_element_arrays[k].dtype, some_sub._per_element_arrays[k].dtype,
+                            f"Element array {k} present in sample storage, but wrong dtype!")
+
 
     def test_hdf_chunklength_one(self):
         """Reading a storage with all chunks of length one should give back exactly what was written!"""
