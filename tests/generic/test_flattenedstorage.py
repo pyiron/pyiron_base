@@ -304,17 +304,17 @@ class TestFlattenedStorage(TestWithProject):
         for k, v in store._per_chunk_arrays.items():
             self.assertTrue(k in some_sub._per_chunk_arrays,
                             f"Chunk array {k} not present in sample storage!")
-            self.assertEqual(store._per_chunk_arrays[k].shape[1:], some_sub._per_chunk_arrays[k].shape[1:],
+            self.assertEqual(v.shape[1:], some_sub._per_chunk_arrays[k].shape[1:],
                             f"Chunk array {k} present in sample storage, but wrong shape!")
-            self.assertEqual(store._per_chunk_arrays[k].dtype, some_sub._per_chunk_arrays[k].dtype,
+            self.assertEqual(v.dtype, some_sub._per_chunk_arrays[k].dtype,
                             f"Chunk array {k} present in sample storage, but wrong dtype!")
 
         for k, v in store._per_element_arrays.items():
             self.assertTrue(k in some_sub._per_element_arrays,
                             f"Element array {k} not present in sample storage!")
-            self.assertEqual(store._per_element_arrays[k].shape[1:], some_sub._per_element_arrays[k].shape[1:],
+            self.assertEqual(v.shape[1:], some_sub._per_element_arrays[k].shape[1:],
                             f"Element array {k} present in sample storage, but wrong shape!")
-            self.assertEqual(store._per_element_arrays[k].dtype, some_sub._per_element_arrays[k].dtype,
+            self.assertEqual(v.dtype, some_sub._per_element_arrays[k].dtype,
                             f"Element array {k} present in sample storage, but wrong dtype!")
 
 
