@@ -51,8 +51,10 @@ def _get_safe_job_name(name, ndigits=8, extension=None):
         job_name = name
     if extension is not None and job_name.endswith(extension):
         job_name = job_name[:job_name.rfind(extension)]
+    job_name = job_name.split('/')
     for k, v in _special_symbol_replacements.items():
-        job_name = job_name.replace(k, v)
+        job_name[-1] = job_name[-1].replace(k, v)
+    job_name = '/'.join(job_name)
     if extension is not None:
         job_name += extension
     return job_name
