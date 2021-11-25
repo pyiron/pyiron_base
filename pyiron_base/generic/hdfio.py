@@ -27,6 +27,34 @@ __email__ = "janssen@mpie.de"
 __status__ = "production"
 __date__ = "Sep 1, 2017"
 
+
+_special_symbol_replacements = {
+    '.': 'd',
+    '-': 'm',
+    '+': 'p',
+    ',': 'c',
+}
+
+
+def _get_safe_job_name(name, ndigits=8, extension=None):
+    def round_(value, ndigits=ndigits):
+        if isinstance(value, float) and ndigits is not None:
+            return round(value, ndigits=ndigits)
+        return value
+    if not isinstance(name, str):
+        name_rounded = [round_(nn) for nn in name]
+        job_name = '_'.join([str(nn) for nn in name_rounded])
+    else:
+        job_name = name
+    if extension is not None and job_name.endswith(extension):
+        job_name = job_name[:job_name.rfind(extension)]
+    for k, v in _special_symbol_replacements.items():
+        job_name = job_name.replace(k, v)
+    if extension is not None:
+        job_name += extension
+    return job_name
+
+
 def open_hdf5(filename, mode="r", swmr=False):
     if swmr and mode != "r":
         store = h5py.File(filename, mode=mode, libver="latest")
@@ -70,7 +98,7 @@ class FileHDFio(HasGroups, MutableMapping):
     """
 
     def __init__(self, file_name, h5_path="/", mode="a"):
-        file_name += ".h5" if not file_name.endswith(".h5") else ""
+        file_name = _get_safe_job_name(file_name, extension='.h5')
         if not os.path.isabs(file_name):
             raise ValueError("file_name must be given as absolute path name")
         self._file_name = None
@@ -988,7 +1016,7 @@ class ProjectHDFio(FileHDFio):
     """
 
     def __init__(self, project, file_name, h5_path=None, mode=None):
-        file_name += ".h5" if not file_name.endswith(".h5") else ""
+        file_name = _get_safe_job_name(file_name, extension='.h5')
         self._file_name = file_name.replace("\\", "/")
         if h5_path is None:
             h5_path = "/"

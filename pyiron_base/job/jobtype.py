@@ -8,7 +8,7 @@ Jobtype class to create GenericJob type objects
 import importlib
 import inspect
 import os
-from pyiron_base.generic.hdfio import ProjectHDFio
+from pyiron_base.generic.hdfio import ProjectHDFio, _get_safe_job_name
 from pyiron_base.generic.util import Singleton
 from pyiron_base.generic.factory import PyironFactory
 from pyiron_base.job.jobstatus import job_status_finished_lst
@@ -54,6 +54,7 @@ class JobType(object):
         Returns:
             GenericJob: object of type class_name
         """
+        job_name = _get_safe_job_name(job_name)
         cls.job_class_dict = job_class_dict
         if isinstance(class_name, str):
             job_class = cls.convert_str_to_class(
@@ -148,6 +149,7 @@ class JobFactory(PyironFactory):
                 Returns:
                     GenericJob: job object depending on the job_type selected
                 """
+                job_name = _get_safe_job_name(job_name)
                 return JobType(
                     class_name=name,
                     project=ProjectHDFio(project=self._project.copy(), file_name=job_name),
