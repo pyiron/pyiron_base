@@ -39,15 +39,25 @@ def worker_function(args):
         submit_on_remote (bool): submit to queuing system on remote host
         debug (bool): enable debug mode [True/False] (optional)
     """
-    from pyiron_base.job.wrapper import JobWrapper
-    working_directory, job_id, _, submit_on_remote, debug = args
-    job_wrap = JobWrapper(
-        working_directory=working_directory,
-        job_id=job_id,
-        submit_on_remote=submit_on_remote,
-        debug=debug,
-    )
-    job_wrap.run()
+    import subprocess
+    working_directory, job_id, _, _, _ = args
+    executable = [
+        "python",
+        "-m", "pyiron_base.cli", "wrapper",
+        "-p", working_directory,
+        "-j", str(job_id)
+    ]
+    try:
+        _ = subprocess.run(
+            executable,
+            cwd=working_directory,
+            shell=False,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            universal_newlines=True,
+        )
+    except subprocess.CalledProcessError:
+        pass
 
 
 class WorkerJob(PythonTemplateJob):
