@@ -613,7 +613,7 @@ class TableJob(GenericJob):
 
     def _save_output(self):
         with self.project_hdf5.open("output") as hdf5_output:
-            self.pyiron_table._df.to_hdf(hdf5_output, "table")
+            self.pyiron_table._df.to_hdf(hdf5_output.file_name, hdf5_output.h5_path + "/table")
 
     def to_hdf(self, hdf=None, group_name=None):
         """
@@ -690,7 +690,7 @@ class TableJob(GenericJob):
         if hdf_version=="0.3.0":
             with self.project_hdf5.open("output") as hdf5_output:
                 if "table" in hdf5_output.list_groups():
-                    self._pyiron_table._df = pandas.read_hdf(hdf5_output, "table")
+                    self._pyiron_table._df = pandas.read_hdf(hdf5_output.file_name, hdf5_output.h5_path + "/table")
         else:
             pyiron_table = os.path.join(self.working_directory, "pyirontable.csv")
             if os.path.exists(pyiron_table):
