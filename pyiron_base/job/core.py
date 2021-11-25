@@ -104,7 +104,7 @@ class JobCore(HasGroups):
     """
 
     def __init__(self, project, job_name):
-        _is_valid_job_name(job_name)
+        job_name = _get_safe_job_name(job_name)
         self._name = job_name
         self._hdf5 = project.open(self._name)
         self._job_id = None

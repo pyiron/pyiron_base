@@ -113,12 +113,42 @@ def _get_project_for_copy(job, project, new_job_name):
     return file_project, hdf5_project
 
 
+_special_symbol_replacements = {
+    '.': 'd',
+    '-': 'm',
+    '+': 'p',
+    ',': 'c',
+    ' ': '_',
+}
+
+
+def _get_safe_job_name(name, ndigits=8, extension=None):
+    def round_(value, ndigits=ndigits):
+        if isinstance(value, float) and ndigits is not None:
+            return round(value, ndigits=ndigits)
+        return value
+    if not isinstance(name, str):
+        name_rounded = [round_(nn) for nn in name]
+        job_name = '_'.join([str(nn) for nn in name_rounded])
+    else:
+        job_name = name
+    if extension is not None and job_name.endswith(extension):
+        job_name = job_name[:job_name.rfind(extension)]
+    job_name = job_name.split('/')
+    for k, v in _special_symbol_replacements.items():
+        job_name[-1] = job_name[-1].replace(k, v)
+    job_name = '/'.join(job_name)
+    if extension is not None:
+        job_name += extension
+    _is_valid_job_name(job_name=job_name)
+    return job_name
+
+
 def _rename_job(job, new_job_name):
     """
 
     """
-    new_job_name = new_job_name.replace(".", "_")
-    _is_valid_job_name(job_name=new_job_name)
+    new_job_name = _get_safe_job_name(new_job_name)
     child_ids = job.child_ids
     if child_ids:
         for child_id in child_ids:

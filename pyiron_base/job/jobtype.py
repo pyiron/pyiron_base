@@ -8,7 +8,8 @@ Jobtype class to create GenericJob type objects
 import importlib
 import inspect
 import os
-from pyiron_base.generic.hdfio import ProjectHDFio, _get_safe_job_name
+from pyiron_base.job.util import _get_safe_job_name
+from pyiron_base.generic.hdfio import ProjectHDFio
 from pyiron_base.generic.util import Singleton
 from pyiron_base.generic.factory import PyironFactory
 from pyiron_base.job.jobstatus import job_status_finished_lst
