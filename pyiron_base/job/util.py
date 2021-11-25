@@ -122,7 +122,7 @@ _special_symbol_replacements = {
 }
 
 
-def _get_safe_job_name(name, ndigits=8, extension=None):
+def _get_safe_job_name(name, ndigits=8):
     def round_(value, ndigits=ndigits):
         if isinstance(value, float) and ndigits is not None:
             return round(value, ndigits=ndigits)
@@ -132,14 +132,8 @@ def _get_safe_job_name(name, ndigits=8, extension=None):
         job_name = '_'.join([str(nn) for nn in name_rounded])
     else:
         job_name = name
-    if extension is not None and job_name.endswith(extension):
-        job_name = job_name[:job_name.rfind(extension)]
-    job_name = job_name.split('/')
     for k, v in _special_symbol_replacements.items():
-        job_name[-1] = job_name[-1].replace(k, v)
-    job_name = '/'.join(job_name)
-    if extension is not None:
-        job_name += extension
+        job_name = job_name.replace(k, v)
     _is_valid_job_name(job_name=job_name)
     return job_name
 
