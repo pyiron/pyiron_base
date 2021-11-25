@@ -6,7 +6,9 @@ Worker Class to execute calculation in an asynchronous way
 """
 import os
 import time
+from datetime import datetime
 from multiprocessing.pool import ThreadPool
+import numpy as np
 from pyiron_base.job.template import PythonTemplateJob
 
 
@@ -37,25 +39,15 @@ def worker_function(args):
         submit_on_remote (bool): submit to queuing system on remote host
         debug (bool): enable debug mode [True/False] (optional)
     """
-    import subprocess
-    working_directory, job_id, _, _, _ = args
-    executable = [
-        "python",
-        "-m", "pyiron_base.cli", "wrapper",
-        "-p", working_directory,
-        "-j", str(job_id)
-    ]
-    try:
-        _ = subprocess.run(
-            executable,
-            cwd=working_directory,
-            shell=False,
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
-            universal_newlines=True,
-        )
-    except subprocess.CalledProcessError:
-        pass
+    from pyiron_base.job.wrapper import JobWrapper
+    working_directory, job_id, _, submit_on_remote, debug = args
+    job_wrap = JobWrapper(
+        working_directory=working_directory,
+        job_id=job_id,
+        submit_on_remote=submit_on_remote,
+        debug=debug,
+    )
+    job_wrap.run()
 
 
 class WorkerJob(PythonTemplateJob):
@@ -108,6 +100,7 @@ class WorkerJob(PythonTemplateJob):
         self.input.project = None
         self.input.cores_per_job = 1
         self.input.sleep_interval = 10
+        self.input.child_runtime = 0
 
     @property
     def project_to_watch(self):
@@ -130,6 +123,14 @@ class WorkerJob(PythonTemplateJob):
         self.input.cores_per_job = int(cores)
 
     @property
+    def child_runtime(self):
+        return self.input.child_runtime
+
+    @child_runtime.setter
+    def child_runtime(self, time_in_sec):
+        self.input.child_runtime = time_in_sec
+
+    @property
     def sleep_interval(self):
         return self.input.sleep_interval
 
@@ -142,6 +143,8 @@ class WorkerJob(PythonTemplateJob):
         self.status.running = True
         master_id = self.job_id
         pr = self.project_to_watch
+        self.project_hdf5.create_working_directory()
+        log_file = os.path.join(self.working_directory, "worker.log")
         active_job_ids = []
         with ThreadPool(
             processes=int(self.server.cores / self.cores_per_job)
@@ -173,7 +176,24 @@ class WorkerJob(PythonTemplateJob):
                 elif self.status.collect:  # The infinite loop can be stopped by setting the job status to collect.
                     break
                 else:  # The sleep interval can be set as part of the input
+                    if self.input.child_runtime > 0:
+                        df_run = df[
+                            (df["status"] == "running") &
+                            (df["masterid"] == master_id)
+                        ]
+                        if len(df_run) > 0:
+                            for job_id in df_run[
+                                (
+                                    np.array(datetime.now(), dtype='datetime64[ns]') - df_run.timestart.values
+                                ).astype('timedelta64[s]') > np.array(self.input.child_runtime).astype('timedelta64[s]')
+                            ].id.values:
+                                self.project.db.set_job_status(job_id=job_id, status="aborted")
                     time.sleep(self.input.sleep_interval)
+
+                # job submission
+                with open(log_file, "a") as f:
+                    f.write(str(datetime.today()) + " " + str(len(active_job_ids)) + " " + str(len(df)) + " " + str(
+                        len(df_sub)) + "\n")
 
         # The job is finished
         self.status.finished = True
