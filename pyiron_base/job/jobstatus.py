@@ -173,12 +173,7 @@ class JobStatus(object):
             self._status_dict[status] = True
             self._status_write()
         else:
-            raise (
-                "No valid job status: ",
-                status,
-                " Instead use [initialized, appended, created, submitted, running,"
-                "aborted, collect, suspended, refresh, busy, finished, not_converged].",
-            )
+            raise ValueError(f"'{status}' is not a valid job status. Instead use [{', '.join(job_status_lst)}]")
 
     def refresh_status(self):
         """
@@ -189,11 +184,7 @@ class JobStatus(object):
             try:
                 status = self.database.get_job_status(job_id=self.job_id)
             except IndexError:
-                raise (
-                    "The job with the job ID "
-                    + str(self.job_id)
-                    + " is not listed in the database anymore."
-                )
+                raise ValueError(f"The job with ID {self.job_id} is not listed in the database anymore.") from None
             self._reset()
             self._status_dict[status] = True
 

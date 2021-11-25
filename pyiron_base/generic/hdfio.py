@@ -5,6 +5,7 @@
 Classes to map the Python objects to HDF5 data structures
 """
 
+import numbers
 import h5py
 import os
 from collections.abc import MutableMapping
@@ -14,7 +15,10 @@ import posixpath
 import h5io
 import numpy as np
 import sys
+from typing import Union
 from pyiron_base.interfaces.has_groups import HasGroups
+from pyiron_base.state import state
+import warnings
 
 __author__ = "Joerg Neugebauer, Jan Janssen"
 __copyright__ = (
@@ -26,7 +30,6 @@ __maintainer__ = "Jan Janssen"
 __email__ = "janssen@mpie.de"
 __status__ = "production"
 __date__ = "Sep 1, 2017"
-
 
 _special_symbol_replacements = {
     '.': 'd',
@@ -53,6 +56,30 @@ def _get_safe_job_name(name, ndigits=8, extension=None):
     if extension is not None:
         job_name += extension
     return job_name
+
+
+def _is_ragged_in_1st_dim_only(value: Union[np.ndarray, list]) -> bool:
+    """
+    Checks whether array or list of lists is ragged in the first dimension.
+
+    That means all other dimensions (except the first one) still have to match.
+
+    Args:
+        value (ndarray/list): array to check
+
+    Returns:
+        bool: True if elements of value are not all of the same shape
+    """
+    if isinstance(value, np.ndarray) and value.dtype != np.dtype("O"):
+        return False
+    else:
+        def extract_dims(v):
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore")
+                s = np.shape(v)
+            return s[0], s[1:]
+        dim1, dim_other = zip(*map(extract_dims, value))
+        return len(set(dim1)) > 1 and len(set(dim_other)) == 1
 
 
 def open_hdf5(filename, mode="r", swmr=False):
@@ -134,14 +161,31 @@ class FileHDFio(HasGroups, MutableMapping):
                 return self.values()
             raise NotImplementedError("Implement if needed, e.g. for [:]")
         else:
+            try:
+                # fast path, a good amount of accesses will want to fetch a specific dataset it knows exists in the
+                # file, there's therefor no point in checking whether item is a group or a node or even worse recursing
+                # in case when item contains '/'.  In most cases read_hdf5 will grab the correct data straight away and
+                # if not we will still check thoroughly below.  Since list_nodes()/list_groups() each open the
+                # underlying file once, this reduces the number of file opens in the most-likely case from 2 to 1 (1 to
+                # check whether the data is there and 1 to read it) and increases in the worst case from 1 to 2 (1 to
+                # try to read it here and one more time to verify it's not a group below).
+                obj = h5io.read_hdf5(self.file_name, title=self._get_h5_path(item))
+                if self._is_convertable_dtype_object_array(obj):
+                    obj = self._convert_dtype_obj_array(obj.copy())
+                return obj
+            except (ValueError, OSError):
+                # h5io couldn't find a dataset with name item, but there still might be a group with that name, which we
+                # check in the rest of the method
+                pass
+
             item_lst = item.split("/")
             if len(item_lst) == 1 and item_lst[0] != "..":
-                if item in self.list_nodes():
-                    obj = h5io.read_hdf5(self.file_name, title=self._get_h5_path(item))
-                    return obj
+                # if item in self.list_nodes() we would have caught it in the fast path above
                 if item in self.list_groups():
                     with self.open(item) as hdf_item:
                         obj = hdf_item.copy()
+                        if self._is_convertable_dtype_object_array(obj):
+                            obj = self._convert_dtype_obj_array(obj)
                         return obj
                 raise ValueError("Unknown item: {} {} {}".format(item, self.file_name, self.h5_path))
             else:
@@ -173,6 +217,31 @@ class FileHDFio(HasGroups, MutableMapping):
                     hdf_object.h5_path = "/".join(item_abs_lst[:-1])
                     return hdf_object[item_abs_lst[-1]]
 
+    #TODO: remove this function upon 1.0.0 release
+    @staticmethod
+    def _is_convertable_dtype_object_array(obj):
+        if isinstance(obj, np.ndarray) and obj.dtype == np.dtype(object):
+            first_element = obj[(0,) * obj.ndim]
+            last_element = obj[(-1,) * obj.ndim]
+            if isinstance(first_element, numbers.Number) and isinstance(last_element, numbers.Number) \
+                    and not _is_ragged_in_1st_dim_only(obj):
+                return True
+        return False
+
+    #TODO: remove this function upon 1.0.0 release
+    @staticmethod
+    def _convert_dtype_obj_array(obj: np.ndarray):
+        result = np.array(obj.tolist())
+        if result.dtype != np.dtype(object):
+            state.logger.warning(f"Deprecated data structure! "
+                                 f"Returned array was converted from dtype='O' to dtype={result.dtype} "
+                                 f"via `np.array(result.tolist())`.\n"
+                                 f"Please run rewrite_hdf5() to update this data! "
+                                 f"To update all your data run update_scripts/pyiron_base_0.3_to_0.4.py")
+            return result
+        else:
+            return obj
+
     def __setitem__(self, key, value):
         """
         Store data inside the HDF5 file
@@ -192,11 +261,13 @@ class FileHDFio(HasGroups, MutableMapping):
             and isinstance(value[0], (list, np.ndarray))
             and len(value[0]) > 0
             and not isinstance(value[0][0], str)
+            and _is_ragged_in_1st_dim_only(value)
         ):
-            shape_lst = [np.shape(sub) for sub in value]
-            if all([shape_lst[0][1:] == t[1:] for t in shape_lst]):
-                value = np.array([np.array(v) for v in value], dtype=object)
-                use_json=False
+            # if the sub-arrays in value all share shape[1:], h5io comes up with a more efficient storage format than
+            # just writing a dataset for each element, by concatenating along the first axis and storing the indices
+            # where to break the concatenated array again
+            value = np.array([np.asarray(v) for v in value], dtype=object)
+            use_json=False
         elif isinstance(value, tuple):
             value = list(value)
         h5io.write_hdf5(

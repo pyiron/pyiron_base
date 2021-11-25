@@ -12,6 +12,8 @@ class TestFlattenedStorage(TestWithProject):
 
         cls.even = [ list(range(0, 2, 2)), list(range(2, 6, 2)), list(range(6, 12, 2)) ]
         cls.odd = np.array([ np.arange(1, 2, 2), np.arange(3, 6, 2), np.arange(7, 12, 2) ], dtype=object)
+        cls.even_sum = list(map(sum, cls.even))
+        cls.odd_sum = list(map(sum, cls.odd))
 
 
     def test_add_array(self):
@@ -270,6 +272,74 @@ class TestFlattenedStorage(TestWithProject):
         self.assertEqual(info["per"], "element", "has_array returns wrong per for per atom array.")
 
         self.assertEqual(store.has_array("missing"), None, "has_array does not return None for nonexisting array.")
+
+
+    def test_hdf_empty(self):
+        """Writing an empty storage should result in an empty storage when reading."""
+        store = FlattenedStorage()
+        hdf = self.project.create_hdf(self.project.path, "empty")
+        store.to_hdf(hdf, "empty")
+        store_read = hdf["empty"].to_object()
+        self.assertEqual(len(store), len(store_read),
+                         "Length of empty storage not equal after writing/reading!")
+
+        store = FlattenedStorage(num_chunks=5, num_elements=10)
+        hdf = self.project.create_hdf(self.project.path, "empty")
+        store.to_hdf(hdf, "empty")
+        store_read = hdf["empty"].to_object()
+        self.assertEqual(len(store), len(store_read),
+                         "Length of empty storage not equal after writing/reading!")
+
+    def test_sample(self):
+        """Calling sample should return a storage with the selected chunks only."""
+        store = FlattenedStorage(even=self.even, odd=self.odd, even_sum = self.even_sum, odd_sum=self.odd_sum)
+        all_sub = store.sample(lambda s, i: True)
+        self.assertEqual(len(store), len(all_sub), "Length not equal after sampling all chunks!")
+        empty_sub = store.sample(lambda s, i: False)
+        self.assertEqual(len(empty_sub), 0, "Length not zero after sampling no chunks!")
+        some_sub = store.sample(lambda s, i: i%2==1)
+        self.assertEqual(len(some_sub), 1, "Length not one after sampling one chunk!")
+        self.assertEqual("1", some_sub.get_array("identifier", 0),
+                         "sample selected wrong chunk!")
+        for k, v in store._per_chunk_arrays.items():
+            self.assertTrue(k in some_sub._per_chunk_arrays,
+                            f"Chunk array {k} not present in sample storage!")
+            self.assertEqual(v.shape[1:], some_sub._per_chunk_arrays[k].shape[1:],
+                            f"Chunk array {k} present in sample storage, but wrong shape!")
+            self.assertEqual(v.dtype, some_sub._per_chunk_arrays[k].dtype,
+                            f"Chunk array {k} present in sample storage, but wrong dtype!")
+
+        for k, v in store._per_element_arrays.items():
+            self.assertTrue(k in some_sub._per_element_arrays,
+                            f"Element array {k} not present in sample storage!")
+            self.assertEqual(v.shape[1:], some_sub._per_element_arrays[k].shape[1:],
+                            f"Element array {k} present in sample storage, but wrong shape!")
+            self.assertEqual(v.dtype, some_sub._per_element_arrays[k].dtype,
+                            f"Element array {k} present in sample storage, but wrong dtype!")
+
+    def test_getitem_setitem(self):
+        """Using __getitem__/__setitem__ should be equivalent to using get_array/set_array."""
+        store = FlattenedStorage(even=self.even, odd=self.odd, mylen=[1, 2, 3])
+        for i in range(len(store)):
+            self.assertTrue(np.array_equal(
+                    store["even", i], store.get_array("even", i),
+                ), f"getitem returned different value ({store['even', i]}) than get_array ({store.get_array('even', i)}) for chunk {i}"
+            )
+            self.assertEqual(store["mylen", i], store.get_array("mylen", i),
+                             f"getitem returned different value ({store['mylen', i]}) than get_array ({store.get_array('mylen', i)}) for chunk {i}")
+        self.assertTrue(np.array_equal(store["even"], store.get_array("even")),
+                        f"getitem returned different value ({store['even']}) than get_array ({store.get_array('even')})")
+        self.assertTrue(np.array_equal(store["mylen"], store.get_array("mylen")),
+                        f"getitem returned different value ({store['mylen']}) than get_array ({store.get_array('mylen')})")
+        store["even", 0] = [4]
+        store["even", 1] = [2, 0]
+        store["mylen", 0] = 4
+        self.assertEqual(store.get_array("mylen", 0), 4, "setitem did not set item correctly.")
+        self.assertTrue(np.array_equal(store.get_array("even", 0), [4]), "setitem did not set item correctly.")
+        self.assertTrue(np.array_equal(store.get_array("even", 1), [2, 0]), "setitem did not set item correctly.")
+
+        with self.assertRaises(IndexError, msg="Calling setitem with out index doesn't raise Error!"):
+            store["mylen"] = [1,2,3]
 
 
     def test_hdf_chunklength_one(self):

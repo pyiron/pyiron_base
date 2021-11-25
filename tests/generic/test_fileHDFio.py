@@ -7,6 +7,7 @@ import sys
 from io import StringIO
 import numpy as np
 from pyiron_base.generic.hdfio import FileHDFio, _get_safe_job_name
+from pyiron_base.generic.hdfio import FileHDFio, _is_ragged_in_1st_dim_only
 from pyiron_base._tests import PyironTestCase
 import unittest
 
@@ -109,6 +110,78 @@ class TestFileHDFio(PyironTestCase):
 
         with self.subTest('content/group/some_entry'):
             self.assertEqual(hdf['content/group/some_entry'], 'present')
+
+    def test__is_convertable_dtype_object_array(self):
+        object_array_with_lists = np.array([[[1, 2, 3], [2, 3, 4]], [[4, 5, 6]]], dtype=object)
+        int_array_as_objects_array = np.array([[1, 2, 3], [3, 4, 5]], dtype=object)
+        float_array_as_objects_array = np.array([[1.1, 1.3, 1.5], [2, 2.1, 2.2]], dtype=object)
+        object_array_with_none = np.array([[1.1, None, 1.5], [None, 2.1, 2.2]], dtype=object)
+
+        self.assertFalse(self.i_o_hdf5._is_convertable_dtype_object_array(object_array_with_lists))
+        self.assertTrue(self.i_o_hdf5._is_convertable_dtype_object_array(int_array_as_objects_array))
+        self.assertTrue(self.i_o_hdf5._is_convertable_dtype_object_array(float_array_as_objects_array))
+        self.assertTrue(self.i_o_hdf5._is_convertable_dtype_object_array(object_array_with_none),
+                        msg="This array should be considered convertable, since first and last element are numbers.")
+
+    def test__convert_dtype_obj_array(self):
+        object_array_with_lists = np.array([[[1, 2, 3], [2, 3, 4]], [[4, 5, 6]]], dtype=object)
+        int_array_as_objects_array = np.array([[1, 2, 3], [3, 4, 5]], dtype=object)
+        float_array_as_objects_array = np.array([[1.1, 1.3, 1.5], [2, 2.1, 2.2]], dtype=object)
+        object_array_with_none = np.array([[1.1, None, 1.5], [None, 2.1, 2.2]], dtype=object)
+
+        self.assertIs(self.i_o_hdf5._convert_dtype_obj_array(object_array_with_lists), object_array_with_lists)
+        self.assertIs(self.i_o_hdf5._convert_dtype_obj_array(object_array_with_none), object_array_with_none)
+
+        array = self.i_o_hdf5._convert_dtype_obj_array(int_array_as_objects_array)
+        self.assertTrue(np.array_equal(array, int_array_as_objects_array))
+        self.assertEqual(array.dtype, np.dtype(int))
+
+        array = self.i_o_hdf5._convert_dtype_obj_array(float_array_as_objects_array)
+        self.assertTrue(np.array_equal(array, float_array_as_objects_array))
+        self.assertEqual(array.dtype, np.dtype(float))
+
+    def test_array_type_conversion(self):
+        object_array_with_lists = np.array([[[1, 2, 3], [2, 3, 4]], [[4, 5, 6]]], dtype=object)
+        int_array_as_objects_array = np.array([[1, 2, 3], [3, 4, 5]], dtype=object)
+        float_array_as_objects_array = np.array([[1.1, 1.3, 1.5], [2, 2.1, 2.2]], dtype=object)
+
+        hdf = self.i_o_hdf5.open("arrays")
+
+        hdf['object_array_with_lists'] = object_array_with_lists
+        hdf['int_array_as_objects_array'] = int_array_as_objects_array
+        hdf['float_array_as_objects_array'] = float_array_as_objects_array
+
+        with self.subTest("object_array_with_lists"):
+            array = hdf['object_array_with_lists']
+            np.array_equal(array, object_array_with_lists)
+            self.assertIsInstance(array, np.ndarray)
+            self.assertEqual(array.dtype, np.dtype(object), msg="dtype=object array falsely converted.")
+
+        #  Here I got:  TypeError: Object dtype dtype('O') has no native HDF5 equivalent
+        #
+        # object_array_with_none = np.array([[1.1, None, 1.5], [None, 2.1, 2.2]], dtype=object)
+        # hdf['object_array_with_none'] = object_array_with_none
+        # with self.subTest("object_array_with_none"):
+        #     array = hdf['object_array_with_none']
+        #     np.array_equal(array, object_array_with_none)
+        #     self.assertIsInstance(array, np.ndarray)
+        #     self.assertTrue(array.dtype == np.dtype(object))
+
+        with self.subTest('int_array_as_objects_array'):
+            array = hdf['int_array_as_objects_array']
+            np.array_equal(array, int_array_as_objects_array)
+            self.assertIsInstance(array, np.ndarray)
+            self.assertEqual(array.dtype, np.dtype(int), msg="dtype=object array containing only int not converted "
+                                                             "to dtype int array.")
+
+        with self.subTest('float_array_as_objects_array'):
+            array = hdf['float_array_as_objects_array']
+            np.array_equal(array, float_array_as_objects_array)
+            self.assertIsInstance(array, np.ndarray)
+            self.assertEqual(array.dtype, np.dtype(float), msg="dtype=object array containing only float not converted"
+                                                               " to dtype float array.")
+
+        hdf.remove_group()
 
     def test_get_item(self):
         self._check_full_hdf_values(self.full_hdf5)
@@ -307,6 +380,21 @@ class TestFileHDFio(PyironTestCase):
         T = 300.8000000000002
         p = 0.30000000000000004
         self.assertEqual(_get_safe_job_name(('job', T, 'K', p, 'GPa')), 'job_300d8_K_0d3_GPa')
+
+    def test_ragged_array(self):
+        """Should correctly identify ragged arrays/lists."""
+        self.assertTrue(_is_ragged_in_1st_dim_only([ [1], [1, 2] ]),
+                        "Ragged nested list not detected!")
+        self.assertTrue(_is_ragged_in_1st_dim_only([ np.array([1]), np.array([1, 2]) ]),
+                        "Ragged list of arrays not detected!")
+        self.assertFalse(_is_ragged_in_1st_dim_only([ [1, 2], [3, 4] ]),
+                         "Non-ragged nested list detected incorrectly!")
+        self.assertFalse(_is_ragged_in_1st_dim_only(np.array([ [1, 2], [3, 4] ])),
+                         "Non-ragged array detected incorrectly!")
+        self.assertTrue(_is_ragged_in_1st_dim_only([ [[1]], [[2], [3]] ]),
+                        "Ragged nested list not detected even though shape[1:] matches!")
+        self.assertFalse(_is_ragged_in_1st_dim_only([ [[1, 2, 3]], [[2]], [[3]] ]),
+                         "Ragged nested list detected incorrectly even though shape[1:] don't match!")
 
 
 if __name__ == "__main__":
