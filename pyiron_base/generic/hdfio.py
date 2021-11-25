@@ -99,6 +99,7 @@ class FileHDFio(HasGroups, MutableMapping):
     """
 
     def __init__(self, file_name, h5_path="/", mode="a"):
+        file_name += ".h5" if not file_name.endswith(".h5") else ""
         if not os.path.isabs(file_name):
             raise ValueError("file_name must be given as absolute path name")
         self._file_name = None
@@ -1060,6 +1061,7 @@ class ProjectHDFio(FileHDFio):
     """
 
     def __init__(self, project, file_name, h5_path=None, mode=None):
+        file_name += ".h5" if not file_name.endswith(".h5") else ""
         self._file_name = file_name.replace("\\", "/")
         if h5_path is None:
             h5_path = "/"
