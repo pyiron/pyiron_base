@@ -614,7 +614,7 @@ class TableJob(GenericJob):
     def _save_output(self):
         with self.project_hdf5.open("output") as hdf5_output:
             df = self.pyiron_table._df
-            cont = DataContainer(df.to_dict())
+            cont = DataContainer(df)
             cont.to_hdf(hdf=hdf5_output, group_name="table")
 
     def to_hdf(self, hdf=None, group_name=None):
