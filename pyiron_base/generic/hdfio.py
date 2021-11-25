@@ -36,6 +36,7 @@ _special_symbol_replacements = {
     '-': 'm',
     '+': 'p',
     ',': 'c',
+    ' ': '_',
 }
 
 
