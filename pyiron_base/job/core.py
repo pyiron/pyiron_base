@@ -18,7 +18,7 @@ from pyiron_base.job.util import \
     _copy_database_entry, \
     _copy_to_delete_existing, \
     _rename_job, \
-    _is_valid_job_name, \
+    _get_safe_job_name, \
     _job_is_archived, \
     _job_archive, \
     _job_unarchive, \
