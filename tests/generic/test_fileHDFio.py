@@ -379,9 +379,14 @@ class TestFileHDFio(PyironTestCase):
     def test_get_safe_job_name(self):
         T = 300.8000000000002
         p = 0.30000000000000004
-        self.assertEqual(_get_safe_job_name(('job', T, 'K', p, 'GPa')), 'job_300d8_K_0d3_GPa')
-        self.assertEqual(_get_safe_job_name('file_name.h5', extension='.h5'), 'file_name.h5')
-        self.assertEqual(_get_safe_job_name('file_name', extension='.h5'), 'file_name.h5')
+        with self.subTest("Round floats"):
+            self.assertEqual(_get_safe_job_name(('job', T, 'K', p, 'GPa')), 'job_300d8_K_0d3_GPa')
+        with self.subTest("File name with extention"):    
+            self.assertEqual(_get_safe_job_name('file_name.h5', extension='.h5'), 'file_name.h5')
+        with self.subTest("File name with extention"):
+            self.assertEqual(_get_safe_job_name('file_name', extension='.h5'), 'file_name.h5')
+        with self.subTest("unsafe string"):
+            self.assertEqual(_get_safe_job_name("2-be the.most+awful,string"), "2mbe_thedmostpawfulcstring")
 
     def test_ragged_array(self):
         """Should correctly identify ragged arrays/lists."""
