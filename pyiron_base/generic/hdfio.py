@@ -31,6 +31,7 @@ __email__ = "janssen@mpie.de"
 __status__ = "production"
 __date__ = "Sep 1, 2017"
 
+
 def _is_ragged_in_1st_dim_only(value: Union[np.ndarray, list]) -> bool:
     """
     Checks whether array or list of lists is ragged in the first dimension.
@@ -53,6 +54,7 @@ def _is_ragged_in_1st_dim_only(value: Union[np.ndarray, list]) -> bool:
             return s[0], s[1:]
         dim1, dim_other = zip(*map(extract_dims, value))
         return len(set(dim1)) > 1 and len(set(dim_other)) == 1
+
 
 def open_hdf5(filename, mode="r", swmr=False):
     if swmr and mode != "r":
