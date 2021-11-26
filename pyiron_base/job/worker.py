@@ -183,8 +183,8 @@ class WorkerJob(PythonTemplateJob):
                     ]
                     active_job_ids += [j[1] for j in job_lst]
                     pool.map_async(worker_function, job_lst)
-                elif self.status.collect:  # The infinite loop can be stopped by setting the job status to collect.
-                    break
+                elif self.status.collect or self.status.aborted or self.status.finished:
+                    break  # The infinite loop can be stopped by setting the job status to collect.
                 else:  # The sleep interval can be set as part of the input
                     if self.input.child_runtime > 0:
                         df_run = df[
