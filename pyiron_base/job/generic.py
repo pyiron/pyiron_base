@@ -728,6 +728,7 @@ class GenericJob(JobCore):
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
                 universal_newlines=True,
+                check=True
             ).stdout
             with open(
                 posixpath.join(self.project_hdf5.working_directory, "error.out"),
