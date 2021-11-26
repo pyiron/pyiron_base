@@ -4,9 +4,24 @@
 
 import unittest
 import os
+from pyiron_base.generic.parameters import GenericParameters
 from pyiron_base.job.generic import GenericJob
 from pyiron_base._tests import TestWithFilledProject
 
+class ReturnCodeJob(GenericJob):
+    def __init__(self, project, job_name):
+        super().__init__(project, job_name)
+        self.input = GenericParameters(table_name="input")
+        self.input["return_code"] = 0
+        self.input["accepted_codes"] = []
+        self.executable = f"exit {self.input['return_code']}"
+
+    def write_input(self):
+        self.executable = f"exit {self.input['return_code']}"
+        self.executable.accepted_return_codes += self.input["accepted_codes"]
+
+    def collect_output(self):
+        pass
 
 class TestGenericJob(TestWithFilledProject):
     def test_db_entry(self):
@@ -324,6 +339,34 @@ class TestGenericJob(TestWithFilledProject):
         self.assertEqual(len(wd_files), 1, "Only one input file should be present in the working directory")
         self.assertEqual(wd_files[0], "input.yml", "Inconsistent name for the zipped file")
 
+    def test_return_codes(self):
+        """Jobs exiting with return codes other than job.executable.allowed_codes should be marked as 'aborted'"""
+
+        j = self.project.create_job(ReturnCodeJob, "success_0")
+        j.run()
+        self.assertTrue(not j.status.aborted, "Job aborted even though return code is 0!")
+
+        j = self.project.create_job(ReturnCodeJob, "aborted_1")
+        j.input["return_code"] = 1
+        try:
+            j.run()
+        except RuntimeError:
+            pass
+        self.assertTrue(j.status.aborted, "Job did not abort even though return code is 1!")
+
+        j = self.project.create_job(ReturnCodeJob, "success_1")
+        j.input["accepted_codes"] = [1]
+        j.run()
+        self.assertTrue(not j.status.aborted, "Job aborted even though return code 1 is explicitely accepted!")
+
+        j = self.project.create_job(ReturnCodeJob, "aborted_2")
+        j.input["return_code"] = 2
+        j.input["accepted_codes"] = [1]
+        try:
+            j.run()
+        except RuntimeError:
+            pass
+        self.assertTrue(j.status.aborted, "Job did not abort even though return code is 2!")
 
 if __name__ == "__main__":
     unittest.main()
