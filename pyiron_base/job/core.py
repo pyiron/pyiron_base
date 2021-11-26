@@ -492,17 +492,26 @@ class JobCore(HasGroups):
             )
         return self.project_hdf5.to_object(object_type, **qwargs)
 
-    def get(self, name):
+    def get(self, name, default=None):
         """
         Internal wrapper function for __getitem__() - self[name]
 
         Args:
             key (str, slice): path to the data or key of the data object
+            default (any, optional): return this if key cannot be found
 
         Returns:
             dict, list, float, int: data or data object
+
+        Raises:
+            ValueError: key cannot be found and default is not given
         """
-        return self.__getitem__(name)
+        try:
+            return self.__getitem__(name)
+        except ValueError:
+            if default is not None:
+                return default
+            raise
 
     def load(self, job_specifier, convert_to_object=True):
         """
