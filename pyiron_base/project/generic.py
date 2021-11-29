@@ -1595,7 +1595,8 @@ class Creator:
     def job(self):
         return self._job_factory
 
-    def job_name(self, job_name, ndigits=8, special_symbols={}):
+    @staticmethod
+    def job_name(job_name, ndigits=8, special_symbols=None):
         """
         Creation of job names with special symbol replacement and rounding of floating numbers
 
