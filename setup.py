@@ -32,8 +32,8 @@ setup(
         'dill==0.3.4',
         'future==0.18.2',
         'gitpython==3.1.24',
-        'h5io==0.1.2',
-        'h5py==3.3.0',
+        'h5io==0.1.4',
+        'h5py==3.6.0',
         'numpy==1.21.4',
         'pandas==1.3.4',
         'pathlib2==2.3.6',
@@ -43,7 +43,8 @@ setup(
         'pysqa==0.0.15',
         'sqlalchemy==1.4.27',
         'tables==3.6.1',
-        'tqdm==4.62.3'
+        'tqdm==4.62.3',
+        'typing_extensions==4.0.0'
     ],
     cmdclass=versioneer.get_cmdclass(),
 

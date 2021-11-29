@@ -12,15 +12,13 @@ import posixpath
 import shutil
 import warnings
 
-from tables import NoSuchNodeError
-
 from pyiron_base.interfaces.has_groups import HasGroups
 from pyiron_base.job.util import \
     _get_project_for_copy, \
     _copy_database_entry, \
     _copy_to_delete_existing, \
     _rename_job, \
-    _is_valid_job_name, \
+    _get_safe_job_name, \
     _job_is_archived, \
     _job_archive, \
     _job_unarchive, \
@@ -106,7 +104,7 @@ class JobCore(HasGroups):
     """
 
     def __init__(self, project, job_name):
-        _is_valid_job_name(job_name)
+        job_name = _get_safe_job_name(job_name)
         self._name = job_name
         self._hdf5 = project.open(self._name)
         self._job_id = None
@@ -462,7 +460,7 @@ class JobCore(HasGroups):
             with self.project_hdf5.open("..") as hdf_parent:
                 try:
                     del hdf_parent[self.job_name]
-                except (NoSuchNodeError, KeyError, OSError):
+                except (AttributeError, LookupError, KeyError, OSError):
                     print(
                         "This group does not exist in the HDF5 file {}".format(
                             self.job_name
@@ -494,17 +492,26 @@ class JobCore(HasGroups):
             )
         return self.project_hdf5.to_object(object_type, **qwargs)
 
-    def get(self, name):
+    def get(self, name, default=None):
         """
         Internal wrapper function for __getitem__() - self[name]
 
         Args:
             key (str, slice): path to the data or key of the data object
+            default (any, optional): return this if key cannot be found
 
         Returns:
             dict, list, float, int: data or data object
+
+        Raises:
+            ValueError: key cannot be found and default is not given
         """
-        return self.__getitem__(name)
+        try:
+            return self.__getitem__(name)
+        except ValueError:
+            if default is not None:
+                return default
+            raise
 
     def load(self, job_specifier, convert_to_object=True):
         """

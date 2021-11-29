@@ -6,7 +6,7 @@ import os
 import sys
 from io import StringIO
 import numpy as np
-from pyiron_base.generic.hdfio import FileHDFio, _is_ragged_array
+from pyiron_base.generic.hdfio import FileHDFio, _is_ragged_in_1st_dim_only
 from pyiron_base._tests import PyironTestCase
 import unittest
 
@@ -154,7 +154,7 @@ class TestFileHDFio(PyironTestCase):
             array = hdf['object_array_with_lists']
             np.array_equal(array, object_array_with_lists)
             self.assertIsInstance(array, np.ndarray)
-            self.assertTrue(array.dtype == np.dtype(object))
+            self.assertEqual(array.dtype, np.dtype(object), msg="dtype=object array falsely converted.")
 
         #  Here I got:  TypeError: Object dtype dtype('O') has no native HDF5 equivalent
         #
@@ -170,13 +170,15 @@ class TestFileHDFio(PyironTestCase):
             array = hdf['int_array_as_objects_array']
             np.array_equal(array, int_array_as_objects_array)
             self.assertIsInstance(array, np.ndarray)
-            self.assertTrue(array.dtype == np.dtype(int))
+            self.assertEqual(array.dtype, np.dtype(int), msg="dtype=object array containing only int not converted "
+                                                             "to dtype int array.")
 
         with self.subTest('float_array_as_objects_array'):
             array = hdf['float_array_as_objects_array']
             np.array_equal(array, float_array_as_objects_array)
             self.assertIsInstance(array, np.ndarray)
-            self.assertTrue(array.dtype == np.dtype(float))
+            self.assertEqual(array.dtype, np.dtype(float), msg="dtype=object array containing only float not converted"
+                                                               " to dtype float array.")
 
         hdf.remove_group()
 
@@ -375,10 +377,18 @@ class TestFileHDFio(PyironTestCase):
 
     def test_ragged_array(self):
         """Should correctly identify ragged arrays/lists."""
-        self.assertTrue(_is_ragged_array([ [1], [1, 2] ]), "Ragged nested list not detected!")
-        self.assertTrue(_is_ragged_array([ np.array([1]), np.array([1, 2]) ]), "Ragged list of arrays not detected!")
-        self.assertFalse(_is_ragged_array([ [1, 2], [3, 4] ]), "Non-ragged nested list detected incorrectly!")
-        self.assertFalse(_is_ragged_array(np.array([ [1, 2], [3, 4] ])), "Non-ragged array detected incorrectly!")
+        self.assertTrue(_is_ragged_in_1st_dim_only([ [1], [1, 2] ]),
+                        "Ragged nested list not detected!")
+        self.assertTrue(_is_ragged_in_1st_dim_only([ np.array([1]), np.array([1, 2]) ]),
+                        "Ragged list of arrays not detected!")
+        self.assertFalse(_is_ragged_in_1st_dim_only([ [1, 2], [3, 4] ]),
+                         "Non-ragged nested list detected incorrectly!")
+        self.assertFalse(_is_ragged_in_1st_dim_only(np.array([ [1, 2], [3, 4] ])),
+                         "Non-ragged array detected incorrectly!")
+        self.assertTrue(_is_ragged_in_1st_dim_only([ [[1]], [[2], [3]] ]),
+                        "Ragged nested list not detected even though shape[1:] matches!")
+        self.assertFalse(_is_ragged_in_1st_dim_only([ [[1, 2, 3]], [[2]], [[3]] ]),
+                         "Ragged nested list detected incorrectly even though shape[1:] don't match!")
 
 
 if __name__ == "__main__":

@@ -36,7 +36,10 @@ class TestSettings(TestCase):
         s.update()
 
     def setUp(self) -> None:
-        self.default_loc.unlink(missing_ok=True)
+        try:
+            self.default_loc.unlink()
+        except FileNotFoundError:
+            pass
         for k, _ in self.env.items():
             if "PYIRON" in k:
                 self.env.pop(k)

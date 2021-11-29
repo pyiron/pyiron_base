@@ -18,6 +18,8 @@ __status__ = "production"
 __date__ = "Jul 16, 2020"
 
 
+from typing import Callable
+
 import numpy as np
 import h5py
 from pyiron_base.interfaces.has_hdf import HasHDF
@@ -37,7 +39,7 @@ class FlattenedStorage(HasHDF):
     >>> a_flat = [ 1,  2, 3,  4,  5,  6 ]
     >>> b_flat = [ 2,  4, 6,  8, 10, 12 ]
 
-    with additional metadata to indicate where the boundaries of each chunk are. 
+    with additional metadata to indicate where the boundaries of each chunk are.
 
     First add arrays and chunks like this
 
@@ -60,6 +62,17 @@ class FlattenedStorage(HasHDF):
     >>> store.set_array("even", 0, [0])
     >>> store.get_array("even", 0)
     array([0])
+
+    As a shorthand you can use regular index syntax
+
+    >>> store["even", 0] = [2]
+    >>> store["even", 0]
+    array([2])
+    >>> store["even", 1]
+    array([4, 6])
+    >>> store["even"]
+    array([2, 4, 6, 8, 10, 12])
+    >>> store["even", 0] = [0]
 
     You can add arrays to the storage even after you added already other arrays and chunks.
 
@@ -150,8 +163,10 @@ class FlattenedStorage(HasHDF):
             num_elements (int): pre-allocation for per elements arrays
         """
         # tracks allocated versed as yet used number of chunks/elements
-        self._num_chunks_alloc = self.num_chunks = num_chunks
-        self._num_elements_alloc = self.num_elements = num_elements
+        self._num_chunks_alloc = num_chunks
+        self._num_elements_alloc = num_elements
+        self.num_chunks = 0
+        self.num_elements = 0
         # store the starting index for properties with unknown length
         self.current_element_index = 0
         # store the index for properties of known size, stored at the same index as the chunk
@@ -427,6 +442,19 @@ class FlattenedStorage(HasHDF):
         else:
             raise KeyError(f"no array named {name}")
 
+    def __getitem__(self, index):
+        if isinstance(index, tuple) and len(index) == 2:
+            return self.get_array(index[0], index[1])
+        else:
+            return self.get_array(index)
+
+    def __setitem__(self, index, value):
+        if isinstance(index, tuple) and len(index) == 2:
+            self.set_array(index[0], index[1], value)
+        else:
+            raise IndexError("Must specify chunk index.")
+
+
     def has_array(self, name):
         """
         Checks whether an array of the given name exists and returns meta data given to :method:`.add_array()`.
@@ -452,6 +480,35 @@ class FlattenedStorage(HasHDF):
         else:
             return None
         return {"shape": a.shape[1:], "dtype": a.dtype, "per": per}
+
+    def sample(self, selector: Callable[["FlattenedStorage", int], bool]) -> "FlattenedStorage":
+        """
+        Create a new storage with chunks selected by given function.
+
+        If called on a subclass this correctly returns an instance of that subclass instead.
+
+        Args:
+            select (callable): function that takes this storage as the first argument and the chunk index to sample as
+                               the second argument; if it returns True it will be part of the new storage.
+
+        Returns:
+            :class:`.FlattenedStorage` or subclass: storage with the selected chunks
+        """
+        new = self.__class__()
+        for k, a in self._per_chunk_arrays.items():
+            if k not in ("start_index", "length", "identifier"):
+                new.add_array(k, shape=a.shape[1:], dtype=a.dtype, per="chunk")
+        for k, a in self._per_element_arrays.items():
+            new.add_array(k, shape=a.shape[1:], dtype=a.dtype, per="element")
+        for i in range(len(self)):
+            if selector(self, i):
+                new.add_chunk(self.get_array("length", i), identifier=self.get_array("identifier", i))
+                for k in self._per_chunk_arrays:
+                    if k not in ("start_index", "length", "identifier"):
+                        new.set_array(k, len(new) - 1, self.get_array(k, i))
+                for k in self._per_element_arrays:
+                    new.set_array(k, len(new) - 1, self.get_array(k, i))
+        return new
 
 
     def add_chunk(self, chunk_length, identifier=None, **arrays):

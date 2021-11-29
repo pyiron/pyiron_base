@@ -958,7 +958,7 @@ class Project(ProjectPath, HasGroups):
             else:
                 raise EnvironmentError("copy_to: is not available in Viewermode !")
 
-    def remove_jobs(self, recursive=False):
+    def remove_jobs(self, recursive=False, progress=True):
         """
         Remove all jobs in the current project and in all subprojects if recursive=True is selected - see also
         remove_job().
@@ -968,6 +968,7 @@ class Project(ProjectPath, HasGroups):
 
         Args:
             recursive (bool): [True/False] delete all jobs in all subprojects - default=False
+            progress (bool): if True (default), add an interactive progress bar to the iteration
         """
         if not isinstance(recursive, bool):
             raise ValueError('recursive must be a boolean')
@@ -983,22 +984,26 @@ class Project(ProjectPath, HasGroups):
                     "Invalid response. Please enter 'y' (yes) or 'n' (no): "
                     ).lower()
         if confirmed == "y":
-            self.remove_jobs_silently(recursive=recursive)
+            self.remove_jobs_silently(recursive=recursive, progress=progress)
         else:
             print(f"No jobs removed from '{self.base_name}'.")
 
-    def remove_jobs_silently(self, recursive=False):
+    def remove_jobs_silently(self, recursive=False, progress=True):
         """
         Remove all jobs in the current project and in all subprojects if recursive=True is selected - see also
         remove_job()
 
         Args:
             recursive (bool): [True/False] delete all jobs in all subprojects - default=False
+            progress (bool): if True (default), add an interactive progress bar to the iteration
         """
         if not isinstance(recursive, bool):
             raise ValueError('recursive must be a boolean')
         if not self.view_mode:
-            for job_id in self.get_job_ids(recursive=recursive):
+            job_id_lst = self.get_job_ids(recursive=recursive)
+            if progress and len(job_id_lst) > 0:
+                job_id_lst = tqdm(job_id_lst)
+            for job_id in job_id_lst:
                 if job_id not in self.get_job_ids(recursive=recursive):
                     continue
                 else:

@@ -242,6 +242,7 @@ class ImportAlarm:
     get an early warning when they instantiate a job that won't work when run.
 
     Example:
+
     >>> try:
     ...     from mystery_package import Enigma, Puzzle, Conundrum
     ...     import_alarm = ImportAlarm()
@@ -258,11 +259,12 @@ class ImportAlarm:
     ...         self.riddles = [Enigma(), Puzzle(), Conundrum()]
 
     This class is also a context manager that can be used as a short-cut, like this:
+
     >>> with ImportAlarm("MysteryJob relies on mystery_package, but this was unavailable.") as import_alarm:
     ...     import mystery_package
 
     If you do not use `import_alarm` as a decorator, but only to get a consistent warning message, call
-    :method:`.warn_if_failed()` after the with statement.
+    :meth:`.warn_if_failed()` after the with statement.
 
     >>> import_alarm.warn_if_failed()
     """
