@@ -275,6 +275,7 @@ class InteractiveBase(GenericJob):
         Must be called before :meth:`.run()` is called.
         """
         self.server.run_mode.interactive = True
+        return self
 
     def interactive_close(self):
         """
@@ -310,7 +311,6 @@ class InteractiveBase(GenericJob):
     #     self.interactive_close()
 
     def __enter__(self):
-        self.interactive_open()
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
