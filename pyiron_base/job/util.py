@@ -122,7 +122,8 @@ _special_symbol_replacements = {
 }
 
 
-def _get_safe_job_name(name, ndigits=8):
+def _get_safe_job_name(name, ndigits=8, special_symbols={}):
+    _special_symbol_replacements.update(special_symbols)
     def round_(value, ndigits=ndigits):
         if isinstance(value, float) and ndigits is not None:
             return round(value, ndigits=ndigits)
