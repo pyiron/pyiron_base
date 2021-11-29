@@ -728,6 +728,7 @@ class GenericJob(JobCore):
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
                 universal_newlines=True,
+                check=True
             ).stdout
             with open(
                 posixpath.join(self.project_hdf5.working_directory, "error.out"),
@@ -735,7 +736,9 @@ class GenericJob(JobCore):
             ) as f_err:
                 f_err.write(out)
         except subprocess.CalledProcessError as e:
-            if not self.server.accept_crash:
+            if e.returncode in self.executable.accepted_return_codes:
+                pass
+            elif not self.server.accept_crash:
                 self._logger.warning("Job aborted")
                 self._logger.warning(e.output)
                 self.status.aborted = True

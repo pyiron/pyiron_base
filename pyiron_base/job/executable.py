@@ -73,6 +73,20 @@ class Executable(object):
         self._mpi = False
         if self._executable_lst:
             self.version = self.default_version
+        self._accepted_return_codes = [0]
+
+    @property
+    def accepted_return_codes(self):
+        """
+        list of int: accept all of the return codes in this list as the result of a successful run
+        """
+        return self._accepted_return_codes
+
+    @accepted_return_codes.setter
+    def accepted_return_codes(self, value):
+        if not isinstance(value, list) or any(not isinstance(c, int) or c > 255 for c in value):
+            raise ValueError("accepted_return_codes must be a list of integers <= 255!")
+        self._accepted_return_codes = value
 
     @property
     def version(self):
