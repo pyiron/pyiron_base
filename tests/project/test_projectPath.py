@@ -76,7 +76,3 @@ class TestProjectPath(PyironTestCase):
             self.assertEqual(pr_path, path)
         finally:
             state.settings.configuration["project_check_enabled"] = old_state
-
-
-if __name__ == "__main__":
-    unittest.main()
