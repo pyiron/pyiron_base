@@ -47,7 +47,7 @@ from pyiron_base.server.queuestatus import (
 from pyiron_base.job.external import Notebook
 from pyiron_base.project.data import ProjectData
 from pyiron_base.archiving import import_archive, export_archive
-from typing import Generator
+from typing import Generator, Union, Dict
 
 __author__ = "Joerg Neugebauer, Jan Janssen"
 __copyright__ = (
@@ -1594,8 +1594,6 @@ class Creator:
     @property
     def job(self):
         return self._job_factory
-
-
 
     @staticmethod
     def job_name(
