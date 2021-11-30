@@ -31,6 +31,7 @@ from pyiron_base.database.jobtable import (
 from pyiron_base.generic.hdfio import ProjectHDFio
 from pyiron_base.generic.filedata import load_file
 from pyiron_base.generic.util import deprecate
+from pyiron_base.job.util import _special_symbol_replacements, _get_safe_job_name
 from pyiron_base.interfaces.has_groups import HasGroups
 from pyiron_base.job.jobtype import JobType, JobTypeChoice, JobFactory
 from pyiron_base.server.queuestatus import (
@@ -46,7 +47,7 @@ from pyiron_base.server.queuestatus import (
 from pyiron_base.job.external import Notebook
 from pyiron_base.project.data import ProjectData
 from pyiron_base.archiving import import_archive, export_archive
-from typing import Generator
+from typing import Generator, Union, Dict
 
 __author__ = "Joerg Neugebauer, Jan Janssen"
 __copyright__ = (
@@ -1593,6 +1594,33 @@ class Creator:
     @property
     def job(self):
         return self._job_factory
+
+    @staticmethod
+    def job_name(
+        job_name: str, ndigits: Union[int, None] = 8, special_symbols: Union[Dict, None] = None
+    ):
+        """
+        Creation of job names with special symbol replacement and rounding of floating numbers
+
+        Args:
+            job_name (str/list): Job name
+            ndigits (int/None): Decimal digits to round floats to a given precision. `None` if
+                no rounding should be performed.
+            special_symbols (dict): Replacement of special symbols.
+
+        Returns:
+            (str): Job name
+
+        Default `special_symbols`: default_special_symbols_to_be_replaced
+        """
+        return _get_safe_job_name(
+            name=job_name, ndigits=ndigits, special_symbols=special_symbols
+        )
+
+    job_name.__doc__ = job_name.__doc__.replace(
+        'default_special_symbols_to_be_replaced',
+        str(_special_symbol_replacements)
+    )
 
     def table(self, job_name="table", delete_existing_job=False):
         """
