@@ -1595,8 +1595,12 @@ class Creator:
     def job(self):
         return self._job_factory
 
+
+
     @staticmethod
-    def job_name(job_name, ndigits=8, special_symbols=None):
+    def job_name(
+        job_name: str, ndigits: Union[int, None] = 8, special_symbols: Union[Dict, None] = None
+    ):
         """
         Creation of job names with special symbol replacement and rounding of floating numbers
 
