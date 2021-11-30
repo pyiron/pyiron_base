@@ -11,6 +11,7 @@ from pyiron_base.generic.util import static_isinstance
 import tarfile
 import stat
 import shutil
+from typing import Union, Dict
 
 __author__ = "Jan Janssen"
 __copyright__ = (
