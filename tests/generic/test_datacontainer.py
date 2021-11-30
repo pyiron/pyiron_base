@@ -5,7 +5,7 @@ from pyiron_base._tests import TestWithCleanProject, PyironTestCase
 from pyiron_base.generic.datacontainer import DataContainer
 from pyiron_base.generic.hdfstub import HDFStub
 from pyiron_base.generic.inputlist import InputList
-from collections import Iterator
+from collections.abc import Iterator
 import copy
 import os
 import unittest
