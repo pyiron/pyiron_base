@@ -890,6 +890,55 @@ class GenericJob(JobCore):
                 self._process = p
                 self._process.start()
 
+    def run_if_srun(self):
+        """
+        Use the srun command of the SLURM queuing system to reserve a whole node for the execution of the job. This is
+        primarly used for the worker jobs to send them to a separate node rather than the background. 
+        """
+        self.project_hdf5.create_working_directory()
+        command = "srun -N 1 python -m pyiron_base.cli wrapper -p " \
+                  + self.working_directory \
+                  + " -j " + str(self.job_id)
+        job_crashed, out = False, None
+        try:
+            out = subprocess.run(
+                command,
+                cwd=self.project_hdf5.working_directory,
+                shell=True,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                universal_newlines=True,
+                check=True
+            )
+        except subprocess.CalledProcessError as e:
+            if e.returncode in self.executable.accepted_return_codes:
+                pass
+            elif not self.server.accept_crash:
+                self._logger.warning("Job aborted")
+                self._logger.warning(e.output)
+                self.status.aborted = True
+                if self.job_id is not None:
+                    self.project.db.item_update(self._runtime(), self.job_id)
+                error_file = posixpath.join(
+                    self.project_hdf5.working_directory, "error.msg"
+                )
+                with open(error_file, "w") as f:
+                    f.write(e.output)
+                if self.server.run_mode.non_modal:
+                    state.database.close_connection()
+                raise RuntimeError("Job aborted")
+            else:
+                job_crashed = True
+
+        self.set_input_to_read_only()
+        self.status.collect = True
+        self._logger.info(
+            "{}, status: {}, output: {}".format(self.job_info_str, self.status, out)
+        )
+        self.run()
+        if job_crashed:
+            self.status.aborted = True
+                
     def run_if_manually(self, _manually_print=True):
         """
         The run if manually function is called by run if the user decides to execute the simulation manually - this
@@ -1341,6 +1390,8 @@ class GenericJob(JobCore):
             self.run_static()
         elif self.server.run_mode.non_modal or self.server.run_mode.thread or self.server.run_mode.worker:
             self.run_if_non_modal()
+        elif self.server.run_mode.srun:
+            self.run_if_srun()
         elif self.server.run_mode.queue:
             self.run_if_scheduler()
         elif self.server.run_mode.interactive:
