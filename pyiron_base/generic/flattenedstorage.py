@@ -18,6 +18,7 @@ __status__ = "production"
 __date__ = "Jul 16, 2020"
 
 
+import copy
 from typing import Callable
 
 import numpy as np
@@ -202,6 +203,15 @@ class FlattenedStorage(HasHDF):
 
     def __len__(self):
         return self.current_chunk_index
+
+    def copy(self):
+        """
+        Return a deep copy of the storage.
+
+        Returns:
+            :class:`.FlattenedStorage`: copy of self
+        """
+        return copy.deepcopy(self)
 
     def find_chunk(self, identifier):
         """

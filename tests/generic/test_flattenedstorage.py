@@ -405,3 +405,21 @@ class TestFlattenedStorage(TestWithProject):
             else:
                 self.assertEqual(v, read._fill_values[k], "value read from hdf differs from original value")
         self.assertEqual(read._fill_values.keys(), store._fill_values.keys(), "keys read from hdf differ from original keys")
+
+    def test_copy(self):
+        """copy should give the same data and be a deep copy."""
+        store = FlattenedStorage(even=self.even, odd=self.odd, even_sum=self.even_sum, odd_sum=self.odd_sum)
+        copy  = store.copy()
+
+        for k in "even", "odd", "even_sum", "odd_sum":
+            with self.subTest(k=k):
+                self.assertTrue((store[k] == copy[k]).all(), f"Array {k} not equal after copy!")
+
+        even_before = copy["even"]
+        even_sum_before = copy["even_sum"]
+        store["even", 2] *= 2
+        store["even", 2] *= 2
+        self.assertTrue((even_before == copy["even"]).all(),
+                        f"Per element array changed in copy when original is!")
+        self.assertTrue((even_sum_before == copy["even_sum"]).all(),
+                        f"Per element array changed in copy when original is!")
