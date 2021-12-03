@@ -19,7 +19,7 @@ __date__ = "Jul 16, 2020"
 
 
 import copy
-from typing import Callable
+from typing import Callable, Iterable
 
 import numpy as np
 import h5py
@@ -520,6 +520,35 @@ class FlattenedStorage(HasHDF):
                 for k in self._per_element_arrays:
                     new.set_array(k, len(new) - 1, self.get_array(k, i))
         return new
+
+    def split(self, array_names: Iterable[str]) -> "FlattenedStorage":
+        """
+        Return a new storage with only the selected arrays present.
+
+        Arrays are deep-copied from `self`.
+
+        Args:
+            array_names (list of str): names of the arrays to present in new storage
+
+        Returns:
+            :class:`.FlattenedStorage`: storage with split arrays
+        """
+        for k in array_names:
+            if k not in self._per_element_arrays and k not in self._per_chunk_arrays:
+                raise ValueError(f"Array name {k} not present in FlattenedStorage!")
+
+        split = copy.copy(self)
+        for k in list(split._per_element_arrays):
+            if k not in array_names:
+                del split._per_element_arrays[k]
+            else:
+                split._per_element_arrays[k] = np.copy(split._per_element_arrays[k])
+        for k in list(split._per_chunk_arrays):
+            if k not in array_names and k not in ("start_index", "length", "identifier"):
+                del split._per_chunk_arrays[k]
+            else:
+                split._per_chunk_arrays[k] = np.copy(split._per_chunk_arrays[k])
+        return split
 
     def merge(self, store: "FlattenedStorage") -> "FlattenedStorage":
         """

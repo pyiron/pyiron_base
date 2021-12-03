@@ -325,11 +325,35 @@ class TestFlattenedStorage(TestWithProject):
         self.assertTrue((both_store["even"] == even_store["even"]).all(),
                         "Per element array 'even' not present after merge!")
         self.assertTrue((both_store["odd"] == odd_store["odd"]).all(),
-                        "Per element array 'odd' not present after merge!")
+                        "Per chunk array 'odd' not present after merge!")
         self.assertTrue((both_store["even_sum"] == even_store["even_sum"]).all(),
                         "Per element array 'even_sum' not present after merge!")
         self.assertTrue((both_store["odd_sum"] == odd_store["odd_sum"]).all(),
-                        "Per element array 'odd_sum' not present after merge!")
+                        "Per chunk array 'odd_sum' not present after merge!")
+
+    def test_split(self):
+        """split deep copy all the selected arrays to the new storage."""
+        store = FlattenedStorage(even=self.even, odd=self.odd, even_sum = self.even_sum, odd_sum=self.odd_sum)
+        odd_store = store.split(("odd", "odd_sum"))
+
+        self.assertTrue("odd" in odd_store._per_element_arrays,
+                        "Per element array 'odd' not present after split!")
+        self.assertTrue((store["odd"] == odd_store["odd"]).all(),
+                        "Per element array 'odd' incorrectly copied after split!")
+        self.assertTrue("odd_sum" in odd_store._per_chunk_arrays,
+                        "Per chunk array 'odd_sum' not present after split!")
+        self.assertTrue((store["odd_sum"] == odd_store["odd_sum"]).all(),
+                        "Per chunk array 'odd_sum' incorrectly copied after split!")
+
+        odd_before = odd_store["odd"]
+        odd_sum_before = odd_store["odd_sum"]
+        store["odd", 2] *= 2
+        store["odd_sum", 2] *= 2
+        self.assertTrue((odd_before == odd_store["odd"]).all(),
+                        f"Per element array changed in copy when original is!")
+        self.assertTrue((odd_sum_before == odd_store["odd_sum"]).all(),
+                        f"Per chunk array changed in copy when original is!")
+
 
     def test_getitem_setitem(self):
         """Using __getitem__/__setitem__ should be equivalent to using get_array/set_array."""
@@ -432,8 +456,8 @@ class TestFlattenedStorage(TestWithProject):
         even_before = copy["even"]
         even_sum_before = copy["even_sum"]
         store["even", 2] *= 2
-        store["even", 2] *= 2
+        store["even_sum", 2] *= 2
         self.assertTrue((even_before == copy["even"]).all(),
                         f"Per element array changed in copy when original is!")
         self.assertTrue((even_sum_before == copy["even_sum"]).all(),
-                        f"Per element array changed in copy when original is!")
+                        f"Per chunk array changed in copy when original is!")
