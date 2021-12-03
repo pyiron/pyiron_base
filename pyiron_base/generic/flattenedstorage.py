@@ -491,6 +491,7 @@ class FlattenedStorage(HasHDF):
             return None
         return {"shape": a.shape[1:], "dtype": a.dtype, "per": per}
 
+
     def sample(self, selector: Callable[["FlattenedStorage", int], bool]) -> "FlattenedStorage":
         """
         Create a new storage with chunks selected by given function.
@@ -519,6 +520,41 @@ class FlattenedStorage(HasHDF):
                 for k in self._per_element_arrays:
                     new.set_array(k, len(new) - 1, self.get_array(k, i))
         return new
+
+    def merge(self, store: "FlattenedStorage") -> "FlattenedStorage":
+        """
+        Merge given storage into this one.
+
+        `self` and `store` may not share any arrays.  Arrays defined on `stores` are copied and then added to `self`.
+
+        Args:
+            store (:class:`.FlattenedStorage`): storage to merge
+
+        Returns:
+            :class:`.FlattenedStorage`: self
+        """
+        if len(self) != len(store):
+            raise ValueError("FlattenedStorages to be merged have to be of the same length!")
+        if (self["length"] != store["length"]).any():
+            raise ValueError("FlattenedStorages to be merged have to have same length chunks everywhere!")
+        shared_elements = set(self._per_element_arrays).intersection(store._per_element_arrays)
+        shared_chunks = set(self._per_chunk_arrays).intersection(store._per_chunk_arrays)
+        shared_chunks.remove("start_index")
+        shared_chunks.remove("length")
+        shared_chunks.remove("identifier")
+        if len(shared_elements) > 0 or len(shared_chunks) > 0:
+            raise ValueError("FlattenedStorages to be merged may not have any common arrays!")
+
+        for k, a in store._per_element_arrays.items():
+            self._per_element_arrays[k] = a
+
+        for k, a in store._per_chunk_arrays.items():
+            if k not in ("start_index", "length", "identifier"):
+                self._per_chunk_arrays[k] = a
+
+        self._resize_elements(self._num_elements_alloc)
+        self._resize_chunks(self._num_chunks_alloc)
+        return self
 
 
     def add_chunk(self, chunk_length, identifier=None, **arrays):

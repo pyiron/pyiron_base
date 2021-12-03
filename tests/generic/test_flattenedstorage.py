@@ -317,6 +317,20 @@ class TestFlattenedStorage(TestWithProject):
             self.assertEqual(v.dtype, some_sub._per_element_arrays[k].dtype,
                             f"Element array {k} present in sample storage, but wrong dtype!")
 
+    def test_merge(self):
+        """All arrays should be present in merged storage."""
+        even_store = FlattenedStorage(even=self.even, even_sum=self.even_sum)
+        odd_store = FlattenedStorage(odd=self.odd, odd_sum=self.odd_sum)
+        both_store = even_store.copy().merge(odd_store)
+        self.assertTrue((both_store["even"] == even_store["even"]).all(),
+                        "Per element array 'even' not present after merge!")
+        self.assertTrue((both_store["odd"] == odd_store["odd"]).all(),
+                        "Per element array 'odd' not present after merge!")
+        self.assertTrue((both_store["even_sum"] == even_store["even_sum"]).all(),
+                        "Per element array 'even_sum' not present after merge!")
+        self.assertTrue((both_store["odd_sum"] == odd_store["odd_sum"]).all(),
+                        "Per element array 'odd_sum' not present after merge!")
+
     def test_getitem_setitem(self):
         """Using __getitem__/__setitem__ should be equivalent to using get_array/set_array."""
         store = FlattenedStorage(even=self.even, odd=self.odd, mylen=[1, 2, 3])
