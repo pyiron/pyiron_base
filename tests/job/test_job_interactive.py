@@ -18,3 +18,4 @@ class TestJobInteractive(TestWithProject):
         job = self.project.create_job(InteractiveBase, "job_interactive")
         with job.interactive_open() as _:
             pass
+        self.assertTrue(job.server.run_mode.interactive)
