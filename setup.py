@@ -44,7 +44,7 @@ setup(
         'sqlalchemy==1.4.27',
         'tables==3.6.1',
         'tqdm==4.62.3',
-        'typing_extensions==4.0.0'
+        'typing_extensions==4.0.1'
     ],
     cmdclass=versioneer.get_cmdclass(),
 
