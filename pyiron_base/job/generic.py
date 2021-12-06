@@ -1655,6 +1655,12 @@ class GenericError(object):
             return ''
         elif print_yes:
             return string.join(self._job[file_name])
+    
+    def __enter__(self):
+        raise NotImplementedError("With statement is only available for interactive jobs.")
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        raise NotImplementedError("With statement is only available for interactive jobs.")
 
 
 def multiprocess_wrapper(job_id, working_dir, debug=False, connection_string=None):
