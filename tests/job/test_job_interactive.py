@@ -15,6 +15,6 @@ class TestJobInteractive(TestWithProject):
                 pass
                 
     def test_job_interactive_with(self):
-        job = self.project.create_job(InteractiveBase, "test")
+        job = self.project.create_job(InteractiveBase, "interactive")
         with job.interactive_open() as _:
             pass
