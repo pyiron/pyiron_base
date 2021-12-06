@@ -1629,12 +1629,6 @@ class GenericJob(JobCore):
                 "busy master: {} {}".format(master_id, self.get_job_id())
             )
             del self
-            
-    def __enter__(self):
-        raise NotImplementedError("With statement is only available for interactive jobs.")
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        raise NotImplementedError("With statement is only available for interactive jobs.")
 
 
 class GenericError(object):
