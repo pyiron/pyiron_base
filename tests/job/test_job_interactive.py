@@ -16,6 +16,6 @@ class TestJobInteractive(TestWithProject):
                 
     def test_job_interactive_with(self):
         job = self.project.create_job(InteractiveBase, "job_interactive")
-        with job.interactive_open() as _:
-            pass
+        with job.interactive_open() as job_int:
+            job_int.to_hdf()
         self.assertTrue(job.server.run_mode.interactive)
