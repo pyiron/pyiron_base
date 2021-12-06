@@ -9,12 +9,12 @@ from pyiron_base._tests import TestWithProject
 
 class TestJobInteractive(TestWithProject):
     def test_job_with(self):
-        job = self.project.create_job(InteractiveBase, "test")
+        job = self.project.create_job(InteractiveBase, "job_modal")
         with self.assertRaises(NotImplementedError):
             with job as _:
                 pass
                 
     def test_job_interactive_with(self):
-        job = self.project.create_job(InteractiveBase, "interactive")
+        job = self.project.create_job(InteractiveBase, "job_interactive")
         with job.interactive_open() as _:
             pass
