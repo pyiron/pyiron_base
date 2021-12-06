@@ -1482,7 +1482,7 @@ class GenericJob(JobCore):
                 )
             elif self.__module__ == "__main__":
                 # Special case when the job classes defined in Jupyter notebooks
-                parent_class = job.__class__.__bases__[0]
+                parent_class = self.__class__.__bases__[0]
                 self._executable = Executable(
                     codename=parent_class.__name__,
                     module=parent_class.__module__.split(".")[-2],
