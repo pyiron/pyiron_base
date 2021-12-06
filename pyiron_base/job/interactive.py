@@ -323,7 +323,10 @@ class InteractiveBase(GenericJob):
     #     self.interactive_close()
 
     def __enter__(self):
-        return self
+        if self.server.run_mode.interactive:
+            return self
+        else: 
+            super(InteractiveBase, self).__enter__()
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.interactive_close()
