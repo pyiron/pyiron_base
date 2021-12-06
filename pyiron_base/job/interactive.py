@@ -110,6 +110,18 @@ class InteractiveBase(GenericJob):
 
             Job type object with all the available job types: ['ExampleJob', 'SerialMaster', 'ParallelMaster', 'ScriptJob',
                                                                'ListMaster']
+
+    Examples:
+        In the default 'modal' mode calculation jobs can only be executed ones: 
+        
+        >>> job.run()
+        
+        Still if you want to execute multiple similar calculations, you can execute them in interactive mode: 
+        
+        >>> with job.interactive_open() as job_int:
+        >>>     # Do something with job_int
+        >>>     job_int.run()
+
     """
 
     def __init__(self, project, job_name):
