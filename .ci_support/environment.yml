@@ -19,4 +19,4 @@ dependencies:
 - pytables =3.6.1
 - sqlalchemy =1.4.27
 - tqdm =4.62.3
-- typing_extensions =4.0.0
+- typing_extensions =4.0.1
