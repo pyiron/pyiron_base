@@ -217,6 +217,7 @@ class WorkerJob(PythonTemplateJob):
         j = 0
         log_file = os.path.join(self.working_directory, "process.log")
         pr = self.project_to_watch
+        master_id = self.job_id
         while not finished:
             df = pr.job_table()
             df_sub = df[
