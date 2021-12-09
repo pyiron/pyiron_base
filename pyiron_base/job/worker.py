@@ -40,7 +40,7 @@ def worker_function(args):
         debug (bool): enable debug mode [True/False] (optional)
     """
     import subprocess
-    working_directory, job_id, _, _, _ = args
+    working_directory, job_id = args
     executable = [
         "python",
         "-m", "pyiron_base.cli", "wrapper",
@@ -176,9 +176,9 @@ class WorkerJob(PythonTemplateJob):
                             df_sub["id"].values
                         ) if job_id not in active_job_ids]
                     job_lst = [
-                        [p, job_id, None, False, False]
+                        [p, job_id]
                         if pp is None else
-                        [os.path.join(pp, p), job_id, None, False, False]
+                        [os.path.join(pp, p), job_id]
                         for pp, p, job_id in path_lst
                     ]
                     active_job_ids += [j[1] for j in job_lst]
@@ -208,7 +208,7 @@ class WorkerJob(PythonTemplateJob):
         # The job is finished
         self.status.finished = True
 
-    def wait_for_worker(self):
+    def wait_for_worker(self, counter=10, sleeptime=60)::
         """
         Wait for the workerjob to finish the execution of all jobs. If no job is in status running or submitted the 
         workerjob shuts down automatically after 10 minutes. 
@@ -226,7 +226,7 @@ class WorkerJob(PythonTemplateJob):
             ]
             if len(df_sub) == 0:
                 j += 1
-                if j > 10:
+                if j > counter:
                     finished = True
             else:
                 j = 0
@@ -238,5 +238,5 @@ class WorkerJob(PythonTemplateJob):
                     "   finished: " + str(len(df[df.status == "finished"])) +
                     "   aborted: " + str(len(df[df.status == "aborted"])) + "\n"
                 )
-            time.sleep(60)
+            time.sleep(sleeptime)
         self.status.collect = True
