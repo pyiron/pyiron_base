@@ -210,19 +210,19 @@ class DatabaseManager(metaclass=Singleton):
         Returns:
             str: path
         """
-        full_path = full_path if full_path.endswith("/") else full_path + "/"
+        if not self.project_check_enabled:
+            return None
+        else:
+            full_path = full_path if full_path.endswith("/") else full_path + "/"
 
-        for path in s.configuration["project_paths"]:
-            if path in full_path:
-                return path
+            for path in s.configuration["project_paths"]:
+                if path in full_path:
+                    return path
 
-        if self.project_check_enabled:
             raise ValueError(
                 f"the current path {full_path} is not included in the .pyiron configuration 'project_paths': "
                 f"{s.configuration['project_paths']}"
             )
-        else:
-            return None
 
     def update(self):
         """
