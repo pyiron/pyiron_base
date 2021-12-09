@@ -334,6 +334,13 @@ class Settings(metaclass=Singleton):
                 self._configuration[key] = self.convert_path_to_abs_posix(value)
             elif key in ["project_check_enabled", "disable_database"]:
                 self._configuration[key] = value if isinstance(value, bool) else strtobool(value)
+                if self._configuration["disable_database"]:
+                    self._configuration = {
+                        key: value
+                        for key, value in self._configuration.items()
+                        if key not in ['project_paths', 'connection_timeout'] and "sql_" not in key
+                    }
+                    self._configuration["project_check_enabled"] = False
             elif key not in self._configuration.keys():
                 raise KeyError(
                     f"Got unexpected configuration key {key}, please choose from among {self._configuration.keys()}"
