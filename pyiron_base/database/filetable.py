@@ -309,4 +309,7 @@ def get_hamilton_version_from_file(hdf5_file, job_name):
 
 
 def get_job_status_from_file(hdf5_file, job_name):
-    return h5io.read_hdf5(hdf5_file, job_name + '/status')
+    try:
+        return h5io.read_hdf5(hdf5_file, job_name + '/status')
+    except OSError:
+        return None
