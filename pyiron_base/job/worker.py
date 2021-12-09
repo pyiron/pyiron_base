@@ -231,12 +231,10 @@ class WorkerJob(PythonTemplateJob):
             else:
                 j = 0
             with open(log_file, 'a') as f:
-                f.write(
-                    str(datetime.today()) + " j: " + str(j) +
-                    "   submitted: " + str(len(df[df.status == "submitted"])) +
-                    "   running: " + str(len(df[df.status == "running"])) +
-                    "   finished: " + str(len(df[df.status == "finished"])) +
-                    "   aborted: " + str(len(df[df.status == "aborted"])) + "\n"
-                )
+                log_str = tr(datetime.today()) + " j: " + str(j)
+                for status in ["submitted", "running", "finished", "aborted"]:
+                    log_str += "   " + status + " : " + str(len(df[df.status == status]))
+                log_str += "\n"
+                f.write(log_str)
             time.sleep(sleeptime)
         self.status.collect = True
