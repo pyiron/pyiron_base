@@ -1469,15 +1469,33 @@ class GenericJob(JobCore):
                                 "'delete_existing_job=True in create_job'".format(self.job_name))
             self.from_hdf()
 
-    def _executable_activate(self, enforce=False):
+    def _executable_activate(self, enforce=False, codename=None):
         """
         Internal helper function to koad the executable object, if it was not loaded already.
+
+        Args:
+            enforce (bool): Force the executable module to reinitialize
+            codename (str): Name of the resource directory and run script.
         """
         if self._executable is None or enforce:
-            if len(self.__module__.split(".")) > 1:
+            if codename is not None:
+                self._executable = Executable(
+                    codename=codename,
+                    module=codename,
+                    path_binary_codes=state.settings.resource_paths,
+                )
+            elif len(self.__module__.split(".")) > 1:
                 self._executable = Executable(
                     codename=self.__name__,
                     module=self.__module__.split(".")[-2],
+                    path_binary_codes=state.settings.resource_paths,
+                )
+            elif self.__module__ == "__main__":
+                # Special case when the job classes defined in Jupyter notebooks
+                parent_class = self.__class__.__bases__[0]
+                self._executable = Executable(
+                    codename=parent_class.__name__,
+                    module=parent_class.__module__.split(".")[-2],
                     path_binary_codes=state.settings.resource_paths,
                 )
             else:
