@@ -110,6 +110,18 @@ class InteractiveBase(GenericJob):
 
             Job type object with all the available job types: ['ExampleJob', 'SerialMaster', 'ParallelMaster', 'ScriptJob',
                                                                'ListMaster']
+
+    Examples:
+        In the default 'modal' mode calculation jobs can only be executed ones: 
+        
+        >>> job.run()
+        
+        Still if you want to execute multiple similar calculations, you can execute them in interactive mode: 
+        
+        >>> with job.interactive_open() as job_int:
+        >>>     # Do something with job_int
+        >>>     job_int.run()
+
     """
 
     def __init__(self, project, job_name):
@@ -275,6 +287,7 @@ class InteractiveBase(GenericJob):
         Must be called before :meth:`.run()` is called.
         """
         self.server.run_mode.interactive = True
+        return _WithInteractiveOpen(self)
 
     def interactive_close(self):
         """
@@ -351,3 +364,28 @@ class InteractiveBase(GenericJob):
                     ]
                 else:
                     self._interactive_write_frequency = 1
+
+
+class _WithInteractiveOpen:
+    def __init__(self, job):
+        self._job = job
+
+    def __repr__(self):
+        return 'Interactive ready'
+
+    def __enter__(self):
+        return self._job
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        return self._job.interactive_close()
+
+    def __getattr__(self, attr):
+        error_message = (
+                'Syntax:\n'
+                + '`your_job.interactive_open()`\n'
+                + '`your_job.run()`\n'
+                + 'Alternatively you can use the `with`-statement:\n'
+                + '`with your_job.interactive_open() as job_int:`\n'
+                + '`    job_int.run()`\n'
+        )
+        raise ValueError(error_message)
