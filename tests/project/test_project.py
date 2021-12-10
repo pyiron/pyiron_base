@@ -56,6 +56,12 @@ class TestProjectData(PyironTestCase):
         except:
             self.fail("Iterating over empty project with set status flag should not raise exception.")
 
+    def test_create_job_name(self):
+        self.assertEqual(self.project.create.job_name(['job', 0.1]), 'job_0d1')
+        self.assertEqual(self.project.create.job_name(['job', 0.1], special_symbols={'.': 'c'}), 'job_0c1')
+        self.assertEqual(self.project.create.job_name(['job', 1.0000000000005]), 'job_1d0')
+        self.assertEqual(self.project.create.job_name(['job', 1.0000000000005], ndigits=None), 'job_1d0000000000005')
+
 
 class TestProjectOperations(TestWithFilledProject):
 

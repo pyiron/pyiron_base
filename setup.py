@@ -20,10 +20,10 @@ setup(
                  'License :: OSI Approved :: BSD License',
                  'Intended Audience :: Science/Research',
                  'Operating System :: OS Independent',
-                 'Programming Language :: Python :: 3.6',
                  'Programming Language :: Python :: 3.7',
                  'Programming Language :: Python :: 3.8',
-                 'Programming Language :: Python :: 3.9'
+                 'Programming Language :: Python :: 3.9',
+                 'Programming Language :: Python :: 3.10'
                 ],
 
     keywords='pyiron',
@@ -33,7 +33,7 @@ setup(
         'future==0.18.2',
         'gitpython==3.1.24',
         'h5io==0.1.4',
-        'h5py==3.3.0',
+        'h5py==3.6.0',
         'numpy==1.21.4',
         'pandas==1.3.4',
         'pathlib2==2.3.6',
@@ -44,7 +44,7 @@ setup(
         'sqlalchemy==1.4.27',
         'tables==3.6.1',
         'tqdm==4.62.3',
-        'typing_extensions==4.0.0'
+        'typing_extensions==4.0.1'
     ],
     cmdclass=versioneer.get_cmdclass(),
 
