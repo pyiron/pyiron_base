@@ -10,7 +10,7 @@ from pyiron_base._tests import TestWithProject
 class TestJobInteractive(TestWithProject):
     def test_job_with(self):
         job = self.project.create_job(InteractiveBase, "job_modal")
-        with self.assertRaises(NotImplementedError):
+        with self.assertRaises(AttributeError):
             with job as _:
                 pass
                 
