@@ -208,7 +208,7 @@ class WorkerJob(PythonTemplateJob):
         # The job is finished
         self.status.finished = True
 
-    def wait_for_worker(self, counter=10, sleeptime=60)::
+    def wait_for_worker(self, counter=10, sleeptime=60):
         """
         Wait for the workerjob to finish the execution of all jobs. If no job is in status running or submitted the 
         workerjob shuts down automatically after 10 minutes. 
