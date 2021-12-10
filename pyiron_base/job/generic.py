@@ -865,7 +865,7 @@ class GenericJob(JobCore):
             "This function needs to be implemented in the specific class."
         )
 
-   def run_if_non_modal(self):
+    def run_if_non_modal(self):
         """
         The run if non modal function is called by run to execute the simulation in the background. For this we use
         multiprocessing.Process()
