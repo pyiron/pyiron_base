@@ -14,6 +14,11 @@ class TestNoDatabaseProject(TestWithProject):
         super().setUpClass()
         state.update(config_dict={"disable_database": True})
 
+    @classmethod
+    def tearDownClass(cls):
+        state.update()
+        super().tearDownClass()
+        
     def test_validate_database_is_disables(self):
         self.assertTrue(state.settings.configuration["disable_database"])
 
