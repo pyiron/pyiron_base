@@ -42,7 +42,13 @@ jobs:
         cd ../pyiron_atomistics
         python .ci_support/pyironconfig.py
         cd ../pyiron_base
-    - name: Setup
+    - name: Install pyiron_atomistics
+      shell: bash -l {0}
+      run: |
+        cd ../pyiron_atomistics
+        pip install --no-deps .
+        cd ../pyiron_base
+    - name: Install pyiron_base
       shell: bash -l {0}
       run: |
         pip install --no-deps .
