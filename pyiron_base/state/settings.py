@@ -284,12 +284,12 @@ class Settings(metaclass=Singleton):
     @staticmethod
     def _validate_no_database_configuration(config: Dict) -> None:
         if "disable_database" in config.keys() and config["disable_database"]:
-            if config["project_check_enabled"]:
+            if "project_check_enabled" in config.keys() and config["project_check_enabled"]:
                 raise ValueError(
                     "When the database is disabled 'disable_database=True' the project " +
                     "check cannot be enabled, so you have to set 'project_check_enabled=False'."
                 )
-            if len(config["project_paths"]) > 0:
+            if "project_paths" in config.keys() and len(config["project_paths"]) > 0:
                 raise ValueError(
                     "When the database is disabled 'disable_database=True' the project " +
                     "paths list should be empty 'project_paths=[]'. Currently it is: " +
