@@ -283,7 +283,7 @@ class Settings(metaclass=Singleton):
 
     @staticmethod
     def _validate_no_database_configuration(config: Dict) -> None:
-        if config["disable_database"]:
+        if "disable_database" in config.keys() and config["disable_database"]:
             if config["project_check_enabled"]:
                 raise ValueError(
                     "When the database is disabled 'disable_database=True' the project " +
