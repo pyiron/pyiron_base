@@ -20,27 +20,27 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
+    - name: pyiron_contrib
+      run: |
+        git clone https://github.com/pyiron/pyiron_contrib ../pyiron_contrib
+        grep -v "pyiron_base" ../pyiron_contrib/.ci_support/environment.yml > environment.yml
+        tail -n +4 .ci_support/environment.yml >> environment.yml
     - uses: conda-incubator/setup-miniconda@v2
       with:
-        python-version: "3.9"
+        python-version: "3.10"
         mamba-version: "*"
         channels: conda-forge
         channel-priority: strict
         auto-update-conda: true  
-        environment-file: .ci_support/environment.yml
+        environment-file: environment.yml
     - name: Setup
       shell: bash -l {0}
       run: |
-        cd ..
-        git clone https://github.com/pyiron/pyiron_contrib
-        cd pyiron_contrib
-        conda env update --name test --file .ci_support/environment.yml
         python .ci_support/pyironconfig.py
-        pip install --no-deps .
-        cd ../pyiron_base
         pip install --no-deps .
     - name: Test
       shell: bash -l {0}
+      timeout-minutes: 30
       run: |
         cd ../pyiron_contrib
         python -m unittest discover tests/
