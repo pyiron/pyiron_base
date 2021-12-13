@@ -335,12 +335,17 @@ class Settings(metaclass=Singleton):
             elif key in ["project_check_enabled", "disable_database"]:
                 self._configuration[key] = value if isinstance(value, bool) else strtobool(value)
                 if self._configuration["disable_database"]:
-                    self._configuration = {
-                        key: value
-                        for key, value in self._configuration.items()
-                        if key not in ['project_paths', 'connection_timeout'] and "sql_" not in key
-                    }
-                    self._configuration["project_check_enabled"] = False
+                    if self._configuration["project_check_enabled"]:
+                        raise ValueError(
+                            "When the database is disabled 'disable_database=True' the project " + 
+                            "check cannot be enabled, so you have to set 'project_check_enabled=False'."
+                        )
+                    if len(self._configuration["project_paths"]) > 0:
+                        raise ValueError(
+                            "When the database is disabled 'disable_database=True' the project " + 
+                            "paths list should be empty 'project_paths=[]'. Currently it is: " + 
+                            str(self._configuration["project_paths"])
+                        )
             elif key not in self._configuration.keys():
                 raise KeyError(
                     f"Got unexpected configuration key {key}, please choose from among {self._configuration.keys()}"
