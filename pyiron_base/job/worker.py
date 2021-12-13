@@ -208,7 +208,7 @@ class WorkerJob(PythonTemplateJob):
         # The job is finished
         self.status.finished = True
 
-    def wait_for_worker(self, counter=10, sleeptime=60):
+    def wait_for_worker(self, interval_in_s=60, max_iterations=100):
         """
         Wait for the workerjob to finish the execution of all jobs. If no job is in status running or submitted the 
         workerjob shuts down automatically after 10 minutes. 
@@ -226,7 +226,7 @@ class WorkerJob(PythonTemplateJob):
             ]
             if len(df_sub) == 0:
                 j += 1
-                if j > counter:
+                if j > max_iterations:
                     finished = True
             else:
                 j = 0
@@ -236,5 +236,5 @@ class WorkerJob(PythonTemplateJob):
                     log_str += "   " + status + " : " + str(len(df[df.status == status]))
                 log_str += "\n"
                 f.write(log_str)
-            time.sleep(sleeptime)
+            time.sleep(interval_in_s)
         self.status.collect = True
