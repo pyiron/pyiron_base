@@ -21,7 +21,7 @@ def merge_dependencies(env_base, env_add):
     for k,v in add_dict.items():
         if k not in base_dict.keys():
             base_dict[k] = v
-    return base_dict
+    return list(base_dict.values())
 
 
 def merge_channels(env_base, env_add):
@@ -37,21 +37,19 @@ def merge_env(env_base, env_add):
             env_base=env_base['channels'], 
             env_add=env_add['channels']
         ),
-        'dependencies': list(merge_dependencies(
+        'dependencies': merge_dependencies(
             env_base=env_base['dependencies'], 
             env_add=env_add['dependencies']
-        ).values())
+        )
     }
 
 
 if __name__ == '__main__':
     arguments = parse_args(argv=None)
-    env_base = read_file(arguments.base)
-    env_add = read_file(arguments.add)
     yaml.dump(
         merge_env(
-            env_base=env_base, 
-            env_add=env_add
+            env_base=read_file(arguments.base), 
+            env_add=read_file(arguments.add)
         ),
         sys.stdout, 
         indent=2, 
