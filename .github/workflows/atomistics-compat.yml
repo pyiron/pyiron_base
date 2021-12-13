@@ -25,6 +25,7 @@ jobs:
     - uses: actions/checkout@v2
     - name: pyiron_atomistic
       run: |
+        pip install PyYAML
         git clone https://github.com/pyiron/pyiron_atomistics ../pyiron_atomistics
         grep -v "pyiron_base" ../pyiron_atomistics/.ci_support/environment.yml > ../pyiron_atomistics/environment.yml
         python .ci_support/condamerge.py --base .ci_support/environment.yml --add ../pyiron_atomistics/environment.yml > environment.yml
