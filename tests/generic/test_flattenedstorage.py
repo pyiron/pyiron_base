@@ -331,6 +331,29 @@ class TestFlattenedStorage(TestWithProject):
         self.assertTrue((both_store["odd_sum"] == odd_store["odd_sum"]).all(),
                         "Per chunk array 'odd_sum' not present after join!")
 
+    def test_join_conflict(self):
+        """Joining storages with same named arrays should raise an error or rename the arrays."""
+        even_store = FlattenedStorage(even=self.even, even_sum=self.even_sum)
+        even2_store = FlattenedStorage(even=self.even, even_sum=self.even_sum)
+        with self.assertRaises(ValueError, msg="Joining should raise an error if storages share an array name"):
+            even_store.join(even2_store)
+
+        for lsuffix, rsuffix in ( ("_left", ""), ("", "_suffix"), ("_left", "_right") ):
+            with self.subTest(lsuffix=lsuffix, rsuffix=rsuffix):
+                join_store = even_store.copy().join(even2_store, lsuffix=lsuffix, rsuffix=rsuffix)
+                self.assertTrue(join_store.has_array(f"even{lsuffix}"),
+                                "left array not present after join.")
+                self.assertTrue(join_store.has_array(f"even{rsuffix}"),
+                                "right array not present after join.")
+                self.assertTrue(join_store.has_array(f"even_sum{lsuffix}"),
+                                "left array not present after join.")
+                self.assertTrue(join_store.has_array(f"even_sum{rsuffix}"),
+                                "right array not present after join.")
+                self.assertTrue(np.array_equal(join_store[f"even{lsuffix}"], even_store["even"]),
+                                "right array not the same after join.")
+                self.assertTrue(np.array_equal(join_store[f"even{rsuffix}"], even2_store["even"]),
+                                "left array not the same after join.")
+
     def test_split(self):
         """split deep copy all the selected arrays to the new storage."""
         store = FlattenedStorage(even=self.even, odd=self.odd, even_sum = self.even_sum, odd_sum=self.odd_sum)

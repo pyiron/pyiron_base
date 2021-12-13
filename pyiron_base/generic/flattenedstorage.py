@@ -550,7 +550,7 @@ class FlattenedStorage(HasHDF):
                 split._per_chunk_arrays[k] = np.copy(split._per_chunk_arrays[k])
         return split
 
-    def join(self, store: "FlattenedStorage") -> "FlattenedStorage":
+    def join(self, store: "FlattenedStorage", lsuffix: str="", rsuffix: str="") -> "FlattenedStorage":
         """
         Merge given storage into this one.
 
@@ -566,19 +566,29 @@ class FlattenedStorage(HasHDF):
             raise ValueError("FlattenedStorages to be joined have to be of the same length!")
         if (self["length"] != store["length"]).any():
             raise ValueError("FlattenedStorages to be joined have to have same length chunks everywhere!")
-        shared_elements = set(self._per_element_arrays).intersection(store._per_element_arrays)
-        shared_chunks = set(self._per_chunk_arrays).intersection(store._per_chunk_arrays)
-        shared_chunks.remove("start_index")
-        shared_chunks.remove("length")
-        shared_chunks.remove("identifier")
-        if len(shared_elements) > 0 or len(shared_chunks) > 0:
-            raise ValueError("FlattenedStorages to be joined may not have any common arrays!")
+        if lsuffix == rsuffix != "":
+            raise ValueError("lsuffix and rsuffix may not be equal!")
+        rename = lsuffix != "" or rsuffix != ""
+        if not rename:
+            shared_elements = set(self._per_element_arrays).intersection(store._per_element_arrays)
+            shared_chunks = set(self._per_chunk_arrays).intersection(store._per_chunk_arrays)
+            shared_chunks.remove("start_index")
+            shared_chunks.remove("length")
+            shared_chunks.remove("identifier")
+            if len(shared_elements) > 0 or len(shared_chunks) > 0:
+                raise ValueError("FlattenedStorages to be joined may have common arrays only if lsuffix or rsuffix are given!")
 
         for k, a in store._per_element_arrays.items():
+            if k in self._per_element_arrays and rename:
+                self._per_element_arrays[k + lsuffix] = self._per_element_arrays[k]
+                k += rsuffix
             self._per_element_arrays[k] = a
 
         for k, a in store._per_chunk_arrays.items():
             if k not in ("start_index", "length", "identifier"):
+                if k in self._per_chunk_arrays and rename:
+                    self._per_chunk_arrays[k + lsuffix] = self._per_chunk_arrays[k]
+                    k += rsuffix
                 self._per_chunk_arrays[k] = a
 
         self._resize_elements(self._num_elements_alloc)
