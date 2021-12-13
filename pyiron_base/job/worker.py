@@ -54,7 +54,7 @@ def worker_function(args):
             "python",
             "-m", "pyiron_base.cli", "wrapper",
             "-p", working_directory,
-            "-f", file
+            "-f", job_link
         ]
     try:
         _ = subprocess.run(
