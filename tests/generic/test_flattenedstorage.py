@@ -373,9 +373,9 @@ class TestFlattenedStorage(TestWithProject):
         store["odd", 2] *= 2
         store["odd_sum", 2] *= 2
         self.assertTrue((odd_before == odd_store["odd"]).all(),
-                        f"Per element array changed in copy when original is!")
+                        "Per element array changed in copy when original is!")
         self.assertTrue((odd_sum_before == odd_store["odd_sum"]).all(),
-                        f"Per chunk array changed in copy when original is!")
+                        "Per chunk array changed in copy when original is!")
 
 
     def test_getitem_setitem(self):
