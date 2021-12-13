@@ -39,7 +39,13 @@ jobs:
         cd ../pyiron_contrib
         python .ci_support/pyironconfig.py
         cd ../pyiron_base
-    - name: Setup
+    - name: Install pyiron_contrib
+      shell: bash -l {0}
+      run: |
+        cd ../pyiron_contrib
+        pip install --no-deps .
+        cd ../pyiron_base
+    - name: Install pyiron_base
       shell: bash -l {0}
       run: |
         pip install --no-deps .
