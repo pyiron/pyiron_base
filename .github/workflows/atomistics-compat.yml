@@ -39,6 +39,7 @@ jobs:
     - name: Setup
       shell: bash -l {0}
       run: |
+        cd ../pyiron_atomistics
         python .ci_support/pyironconfig.py
         pip install --no-deps .
     - name: Test
