@@ -26,8 +26,8 @@ jobs:
     - name: pyiron_atomistic
       run: |
         git clone https://github.com/pyiron/pyiron_atomistics ../pyiron_atomistics
-        grep -v "pyiron_base" ../pyiron_atomistics/.ci_support/environment.yml > environment.yml
-        tail -n +4 .ci_support/environment.yml >> environment.yml
+        grep -v "pyiron_base" ../pyiron_atomistics/.ci_support/environment.yml > ../pyiron_atomistics/environment.yml
+        python .ci_support/condamerge.py --base .ci_support/environment.yml --add ../pyiron_atomistics/environment.yml > environment.yml
     - uses: conda-incubator/setup-miniconda@v2
       with:
         python-version: "3.10"
