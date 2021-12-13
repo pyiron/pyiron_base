@@ -129,6 +129,20 @@ class TestSettings(TestCase):
         with self.assertRaises(ValueError):
             s._validate_sql_configuration({"sql_type": "not_a_valid_type"})
 
+    def test_validate_no_database_configuration(self):
+        with self.assertRaises(ValueError):
+            s._validate_no_database_configuration({
+                "disable_database": True,
+                "project_check_enabled": True,
+                "project_paths": [],
+            })
+        with self.assertRaises(ValueError):
+            s._validate_no_database_configuration({
+                "disable_database": True,
+                "project_check_enabled": False,
+                "project_paths": ["/my/path/a"],
+            })
+    
     def test_get_config_from_environment(self):
         os.environ["PYIRONFOO"] = "foo"
         os.environ["PYIRONSQLFILE"] = "bar"

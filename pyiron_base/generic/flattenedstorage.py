@@ -18,7 +18,8 @@ __status__ = "production"
 __date__ = "Jul 16, 2020"
 
 
-from typing import Callable
+import copy
+from typing import Callable, Iterable
 
 import numpy as np
 import h5py
@@ -121,6 +122,31 @@ class FlattenedStorage(HasHDF):
 
     Arrays may be of more complicated shape, too, see :method:`.add_array` for details.
 
+    Use :method:`.copy` to obtain a deep copy of the storage, for shallow copies using the builting `copy.copy` is
+    sufficient.
+
+    >>> copy = store.copy()
+    >>> copy["even", 0]
+    array([0])
+    >>> copy["even", 1]
+    array([4, 6])
+    >>> copy["even"]
+    array([0, 4, 6, 8, 10, 12])
+
+    Storages can be :method:`.split` and :method:`.join` again as long as their internal chunk structure is consistent,
+    i.e. same number of chunks and same chunk lengths.  If this is not the case a `ValueError` is raised.
+
+    >>> even = store.split(["even"])
+    >>> bool(even.has_array("even"))
+    True
+    >>> bool(even.has_array("odd"))
+    False
+    >>> odd = store.split(["odd"])
+
+    :method:`.join` adds new arrays to the storage it is called on in-place.  To leave it unchanged, simply call copy
+    before join.
+    >>> both = even.copy().join(odd)
+
     Chunks may be given string names, either by passing `identifier` to :method:`.add_chunk` or by setting to the
     special per chunk array "identifier"
 
@@ -202,6 +228,15 @@ class FlattenedStorage(HasHDF):
 
     def __len__(self):
         return self.current_chunk_index
+
+    def copy(self):
+        """
+        Return a deep copy of the storage.
+
+        Returns:
+            :class:`.FlattenedStorage`: copy of self
+        """
+        return copy.deepcopy(self)
 
     def find_chunk(self, identifier):
         """
@@ -481,6 +516,7 @@ class FlattenedStorage(HasHDF):
             return None
         return {"shape": a.shape[1:], "dtype": a.dtype, "per": per}
 
+
     def sample(self, selector: Callable[["FlattenedStorage", int], bool]) -> "FlattenedStorage":
         """
         Create a new storage with chunks selected by given function.
@@ -509,6 +545,80 @@ class FlattenedStorage(HasHDF):
                 for k in self._per_element_arrays:
                     new.set_array(k, len(new) - 1, self.get_array(k, i))
         return new
+
+    def split(self, array_names: Iterable[str]) -> "FlattenedStorage":
+        """
+        Return a new storage with only the selected arrays present.
+
+        Arrays are deep-copied from `self`.
+
+        Args:
+            array_names (list of str): names of the arrays to present in new storage
+
+        Returns:
+            :class:`.FlattenedStorage`: storage with split arrays
+        """
+        for k in array_names:
+            if k not in self._per_element_arrays and k not in self._per_chunk_arrays:
+                raise ValueError(f"Array name {k} not present in FlattenedStorage!")
+
+        split = copy.copy(self)
+        for k in list(split._per_element_arrays):
+            if k not in array_names:
+                del split._per_element_arrays[k]
+            else:
+                split._per_element_arrays[k] = np.copy(split._per_element_arrays[k])
+        for k in list(split._per_chunk_arrays):
+            if k not in array_names and k not in ("start_index", "length", "identifier"):
+                del split._per_chunk_arrays[k]
+            else:
+                split._per_chunk_arrays[k] = np.copy(split._per_chunk_arrays[k])
+        return split
+
+    def join(self, store: "FlattenedStorage", lsuffix: str="", rsuffix: str="") -> "FlattenedStorage":
+        """
+        Merge given storage into this one.
+
+        `self` and `store` may not share any arrays.  Arrays defined on `stores` are copied and then added to `self`.
+
+        Args:
+            store (:class:`.FlattenedStorage`): storage to join
+
+        Returns:
+            :class:`.FlattenedStorage`: self
+        """
+        if len(self) != len(store):
+            raise ValueError("FlattenedStorages to be joined have to be of the same length!")
+        if (self["length"] != store["length"]).any():
+            raise ValueError("FlattenedStorages to be joined have to have same length chunks everywhere!")
+        if lsuffix == rsuffix != "":
+            raise ValueError("lsuffix and rsuffix may not be equal!")
+        rename = lsuffix != "" or rsuffix != ""
+        if not rename:
+            shared_elements = set(self._per_element_arrays).intersection(store._per_element_arrays)
+            shared_chunks = set(self._per_chunk_arrays).intersection(store._per_chunk_arrays)
+            shared_chunks.remove("start_index")
+            shared_chunks.remove("length")
+            shared_chunks.remove("identifier")
+            if len(shared_elements) > 0 or len(shared_chunks) > 0:
+                raise ValueError("FlattenedStorages to be joined may have common arrays only if lsuffix or rsuffix are given!")
+
+        for k, a in store._per_element_arrays.items():
+            if k in self._per_element_arrays and rename:
+                self._per_element_arrays[k + lsuffix] = self._per_element_arrays[k]
+                k += rsuffix
+            self._per_element_arrays[k] = a
+
+        for k, a in store._per_chunk_arrays.items():
+            if k not in ("start_index", "length", "identifier"):
+                if k in self._per_chunk_arrays and rename:
+                    self._per_chunk_arrays[k + lsuffix] = self._per_chunk_arrays[k]
+                    k += rsuffix
+                self._per_chunk_arrays[k] = a
+
+        self._resize_elements(self._num_elements_alloc)
+        self._resize_chunks(self._num_chunks_alloc)
+        return self
 
 
     def add_chunk(self, chunk_length, identifier=None, **arrays):

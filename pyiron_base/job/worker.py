@@ -25,7 +25,7 @@ __status__ = "production"
 __date__ = "Nov 5, 2021"
 
 
-def worker_function_with_database(args):
+def worker_function(args):
     """
     The worker function is executed inside an aproc processing pool.
 
@@ -41,35 +41,21 @@ def worker_function_with_database(args):
         debug (bool): enable debug mode [True/False] (optional)
     """
     import subprocess
-    working_directory, job_id = args
-    executable = [
-        "python",
-        "-m", "pyiron_base.cli", "wrapper",
-        "-p", working_directory,
-        "-j", str(job_id)
-    ]
-    try:
-        _ = subprocess.run(
-            executable,
-            cwd=working_directory,
-            shell=False,
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
-            universal_newlines=True,
-        )
-    except subprocess.CalledProcessError:
-        pass
-
-
-def worker_function_without_database(args):
-    import subprocess
-    working_directory, file = args
-    executable = [
-        "python",
-        "-m", "pyiron_base.cli", "wrapper",
-        "-p", working_directory,
-        "-f", file
-    ]
+    working_directory, job_link = args
+    if isinstance(job_link, int) or str(job_link).isdigit():
+        executable = [
+            "python",
+            "-m", "pyiron_base.cli", "wrapper",
+            "-p", working_directory,
+            "-j", str(job_link)
+        ]
+    else:
+        executable = [
+            "python",
+            "-m", "pyiron_base.cli", "wrapper",
+            "-p", working_directory,
+            "-f", file
+        ]
     try:
         _ = subprocess.run(
             executable,
@@ -211,7 +197,7 @@ class WorkerJob(PythonTemplateJob):
                         for pp, p, job_id in path_lst
                     ]
                     active_job_ids += [j[1] for j in job_lst]
-                    pool.map_async(worker_function_with_database, job_lst)
+                    pool.map_async(worker_function, job_lst)
                 elif self.status.collect or self.status.aborted or self.status.finished:
                     break  # The infinite loop can be stopped by setting the job status to collect.
                 else:  # The sleep interval can be set as part of the input
@@ -244,16 +230,6 @@ class WorkerJob(PythonTemplateJob):
         parent_dir = "/".join(path_split[:-1])
         return parent_dir + "/" + job_name + "_hdf5/" + job_name, path + "/" + job_name
 
-    @staticmethod
-    def get_command(working_directory, file):
-        executable = [
-            "python",
-            "-m", "pyiron_base.cli", "wrapper",
-            "-p", working_directory,
-            "-f", file
-        ]
-        print(executable)
-
     def run_static_without_database(self):
         self.project_hdf5.create_working_directory()
         working_directory = self.working_directory
@@ -273,9 +249,7 @@ class WorkerJob(PythonTemplateJob):
                 if len(file_lst) > 0:
                     job_submit_lst = [self._get_working_directory_and_h5path(path=f) for f in file_lst]
                     file_memory_lst += file_lst
-                    for wd, fl in job_submit_lst:
-                        self.get_command(working_directory=wd, file=fl)
-                    pool.map_async(worker_function_without_database, job_submit_lst)
+                    pool.map_async(worker_function, job_submit_lst)
                 elif self.project_hdf5["status"] in ["collect", "finished"]:
                     break
                 time.sleep(self.input.sleep_interval)
@@ -286,7 +260,15 @@ class WorkerJob(PythonTemplateJob):
         # The job is finished
         self.status.finished = True
 
-    def wait_for_worker(self, counter=10, sleeptime=60):
+    def wait_for_worker(self, interval_in_s=60, max_iterations=10):
+        """
+        Wait for the workerjob to finish the execution of all jobs. If no job is in status running or submitted the 
+        workerjob shuts down automatically after 10 minutes. 
+        
+        Args:
+            interval_in_s (int): interval when the job status is queried from the database - default 60 sec.
+            max_iterations (int): maximum number of iterations - default 10     
+        """
         finished = False
         j = 0
         log_file = os.path.join(self.working_directory, "process.log")
@@ -309,7 +291,7 @@ class WorkerJob(PythonTemplateJob):
                 ]
             if len(df_sub) == 0:
                 j += 1
-                if j > counter:
+                if j > max_iterations:
                     finished = True
             else:
                 j = 0
@@ -319,5 +301,5 @@ class WorkerJob(PythonTemplateJob):
                     log_str += "   " + status + " : " + str(len(df[df.status == status]))
                 log_str += "\n"
                 f.write(log_str)
-            time.sleep(sleeptime)
+            time.sleep(interval_in_s)
         self.status.collect = True

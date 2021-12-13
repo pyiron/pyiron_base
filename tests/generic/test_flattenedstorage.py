@@ -317,6 +317,67 @@ class TestFlattenedStorage(TestWithProject):
             self.assertEqual(v.dtype, some_sub._per_element_arrays[k].dtype,
                             f"Element array {k} present in sample storage, but wrong dtype!")
 
+    def test_join(self):
+        """All arrays should be present in joined storage."""
+        even_store = FlattenedStorage(even=self.even, even_sum=self.even_sum)
+        odd_store = FlattenedStorage(odd=self.odd, odd_sum=self.odd_sum)
+        both_store = even_store.copy().join(odd_store)
+        self.assertTrue((both_store["even"] == even_store["even"]).all(),
+                        "Per element array 'even' not present after join!")
+        self.assertTrue((both_store["odd"] == odd_store["odd"]).all(),
+                        "Per chunk array 'odd' not present after join!")
+        self.assertTrue((both_store["even_sum"] == even_store["even_sum"]).all(),
+                        "Per element array 'even_sum' not present after join!")
+        self.assertTrue((both_store["odd_sum"] == odd_store["odd_sum"]).all(),
+                        "Per chunk array 'odd_sum' not present after join!")
+
+    def test_join_conflict(self):
+        """Joining storages with same named arrays should raise an error or rename the arrays."""
+        even_store = FlattenedStorage(even=self.even, even_sum=self.even_sum)
+        even2_store = FlattenedStorage(even=self.even, even_sum=self.even_sum)
+        with self.assertRaises(ValueError, msg="Joining should raise an error if storages share an array name"):
+            even_store.join(even2_store)
+
+        for lsuffix, rsuffix in ( ("_left", ""), ("", "_suffix"), ("_left", "_right") ):
+            with self.subTest(lsuffix=lsuffix, rsuffix=rsuffix):
+                join_store = even_store.copy().join(even2_store, lsuffix=lsuffix, rsuffix=rsuffix)
+                self.assertTrue(join_store.has_array(f"even{lsuffix}"),
+                                "left array not present after join.")
+                self.assertTrue(join_store.has_array(f"even{rsuffix}"),
+                                "right array not present after join.")
+                self.assertTrue(join_store.has_array(f"even_sum{lsuffix}"),
+                                "left array not present after join.")
+                self.assertTrue(join_store.has_array(f"even_sum{rsuffix}"),
+                                "right array not present after join.")
+                self.assertTrue(np.array_equal(join_store[f"even{lsuffix}"], even_store["even"]),
+                                "right array not the same after join.")
+                self.assertTrue(np.array_equal(join_store[f"even{rsuffix}"], even2_store["even"]),
+                                "left array not the same after join.")
+
+    def test_split(self):
+        """split should deep copy all the selected arrays to the new storage."""
+        store = FlattenedStorage(even=self.even, odd=self.odd, even_sum = self.even_sum, odd_sum=self.odd_sum)
+        odd_store = store.split(("odd", "odd_sum"))
+
+        self.assertTrue("odd" in odd_store._per_element_arrays,
+                        "Per element array 'odd' not present after split!")
+        self.assertTrue((store["odd"] == odd_store["odd"]).all(),
+                        "Per element array 'odd' incorrectly copied after split!")
+        self.assertTrue("odd_sum" in odd_store._per_chunk_arrays,
+                        "Per chunk array 'odd_sum' not present after split!")
+        self.assertTrue((store["odd_sum"] == odd_store["odd_sum"]).all(),
+                        "Per chunk array 'odd_sum' incorrectly copied after split!")
+
+        odd_before = odd_store["odd"]
+        odd_sum_before = odd_store["odd_sum"]
+        store["odd", 2] *= 2
+        store["odd_sum", 2] *= 2
+        self.assertTrue((odd_before == odd_store["odd"]).all(),
+                        "Per element array changed in copy when original is!")
+        self.assertTrue((odd_sum_before == odd_store["odd_sum"]).all(),
+                        "Per chunk array changed in copy when original is!")
+
+
     def test_getitem_setitem(self):
         """Using __getitem__/__setitem__ should be equivalent to using get_array/set_array."""
         store = FlattenedStorage(even=self.even, odd=self.odd, mylen=[1, 2, 3])
@@ -405,3 +466,21 @@ class TestFlattenedStorage(TestWithProject):
             else:
                 self.assertEqual(v, read._fill_values[k], "value read from hdf differs from original value")
         self.assertEqual(read._fill_values.keys(), store._fill_values.keys(), "keys read from hdf differ from original keys")
+
+    def test_copy(self):
+        """copy should give the same data and be a deep copy."""
+        store = FlattenedStorage(even=self.even, odd=self.odd, even_sum=self.even_sum, odd_sum=self.odd_sum)
+        copy  = store.copy()
+
+        for k in "even", "odd", "even_sum", "odd_sum":
+            with self.subTest(k=k):
+                self.assertTrue((store[k] == copy[k]).all(), f"Array {k} not equal after copy!")
+
+        even_before = copy["even"]
+        even_sum_before = copy["even_sum"]
+        store["even", 2] *= 2
+        store["even_sum", 2] *= 2
+        self.assertTrue((even_before == copy["even"]).all(),
+                        "Per element array changed in copy when original is!")
+        self.assertTrue((even_sum_before == copy["even_sum"]).all(),
+                        "Per chunk array changed in copy when original is!")
