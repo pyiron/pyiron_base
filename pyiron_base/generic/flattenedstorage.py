@@ -122,6 +122,31 @@ class FlattenedStorage(HasHDF):
 
     Arrays may be of more complicated shape, too, see :method:`.add_array` for details.
 
+    Use :method:`.copy` to obtain a deep copy of the storage, for shallow copies using the builting `copy.copy` is
+    sufficient.
+
+    >>> copy = store.copy()
+    >>> copy["even", 0]
+    array([0])
+    >>> copy["even", 1]
+    array([4, 6])
+    >>> copy["even"]
+    array([0, 4, 6, 8, 10, 12])
+
+    Storages can be :method:`.split` and :method:`.join` again as long as their internal chunk structure is consistent,
+    i.e. same number of chunks and same chunk lengths.  If this is not the case a `ValueError` is raised.
+
+    >>> even = store.split(["even"])
+    >>> bool(even.has_array("even"))
+    True
+    >>> bool(even.has_array("odd"))
+    False
+    >>> odd = store.split(["odd"])
+
+    :method:`.join` adds new arrays to the storage it is called on in-place.  To leave it unchanged, simply call copy
+    before join.
+    >>> both = even.copy().join(odd)
+
     Chunks may be given string names, either by passing `identifier` to :method:`.add_chunk` or by setting to the
     special per chunk array "identifier"
 
