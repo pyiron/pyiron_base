@@ -317,19 +317,19 @@ class TestFlattenedStorage(TestWithProject):
             self.assertEqual(v.dtype, some_sub._per_element_arrays[k].dtype,
                             f"Element array {k} present in sample storage, but wrong dtype!")
 
-    def test_merge(self):
-        """All arrays should be present in merged storage."""
+    def test_join(self):
+        """All arrays should be present in joined storage."""
         even_store = FlattenedStorage(even=self.even, even_sum=self.even_sum)
         odd_store = FlattenedStorage(odd=self.odd, odd_sum=self.odd_sum)
-        both_store = even_store.copy().merge(odd_store)
+        both_store = even_store.copy().join(odd_store)
         self.assertTrue((both_store["even"] == even_store["even"]).all(),
-                        "Per element array 'even' not present after merge!")
+                        "Per element array 'even' not present after join!")
         self.assertTrue((both_store["odd"] == odd_store["odd"]).all(),
-                        "Per chunk array 'odd' not present after merge!")
+                        "Per chunk array 'odd' not present after join!")
         self.assertTrue((both_store["even_sum"] == even_store["even_sum"]).all(),
-                        "Per element array 'even_sum' not present after merge!")
+                        "Per element array 'even_sum' not present after join!")
         self.assertTrue((both_store["odd_sum"] == odd_store["odd_sum"]).all(),
-                        "Per chunk array 'odd_sum' not present after merge!")
+                        "Per chunk array 'odd_sum' not present after join!")
 
     def test_split(self):
         """split deep copy all the selected arrays to the new storage."""

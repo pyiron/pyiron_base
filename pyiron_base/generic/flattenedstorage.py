@@ -550,29 +550,29 @@ class FlattenedStorage(HasHDF):
                 split._per_chunk_arrays[k] = np.copy(split._per_chunk_arrays[k])
         return split
 
-    def merge(self, store: "FlattenedStorage") -> "FlattenedStorage":
+    def join(self, store: "FlattenedStorage") -> "FlattenedStorage":
         """
         Merge given storage into this one.
 
         `self` and `store` may not share any arrays.  Arrays defined on `stores` are copied and then added to `self`.
 
         Args:
-            store (:class:`.FlattenedStorage`): storage to merge
+            store (:class:`.FlattenedStorage`): storage to join
 
         Returns:
             :class:`.FlattenedStorage`: self
         """
         if len(self) != len(store):
-            raise ValueError("FlattenedStorages to be merged have to be of the same length!")
+            raise ValueError("FlattenedStorages to be joined have to be of the same length!")
         if (self["length"] != store["length"]).any():
-            raise ValueError("FlattenedStorages to be merged have to have same length chunks everywhere!")
+            raise ValueError("FlattenedStorages to be joined have to have same length chunks everywhere!")
         shared_elements = set(self._per_element_arrays).intersection(store._per_element_arrays)
         shared_chunks = set(self._per_chunk_arrays).intersection(store._per_chunk_arrays)
         shared_chunks.remove("start_index")
         shared_chunks.remove("length")
         shared_chunks.remove("identifier")
         if len(shared_elements) > 0 or len(shared_chunks) > 0:
-            raise ValueError("FlattenedStorages to be merged may not have any common arrays!")
+            raise ValueError("FlattenedStorages to be joined may not have any common arrays!")
 
         for k, a in store._per_element_arrays.items():
             self._per_element_arrays[k] = a
