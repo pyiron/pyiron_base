@@ -40,7 +40,7 @@ def worker_function(args):
         debug (bool): enable debug mode [True/False] (optional)
     """
     import subprocess
-    working_directory, job_id, _, _, _ = args
+    working_directory, job_id = args
     executable = [
         "python",
         "-m", "pyiron_base.cli", "wrapper",
@@ -176,9 +176,9 @@ class WorkerJob(PythonTemplateJob):
                             df_sub["id"].values
                         ) if job_id not in active_job_ids]
                     job_lst = [
-                        [p, job_id, None, False, False]
+                        [p, job_id]
                         if pp is None else
-                        [os.path.join(pp, p), job_id, None, False, False]
+                        [os.path.join(pp, p), job_id]
                         for pp, p, job_id in path_lst
                     ]
                     active_job_ids += [j[1] for j in job_lst]
@@ -207,3 +207,38 @@ class WorkerJob(PythonTemplateJob):
 
         # The job is finished
         self.status.finished = True
+
+    def wait_for_worker(self, interval_in_s=60, max_iterations=10):
+        """
+        Wait for the workerjob to finish the execution of all jobs. If no job is in status running or submitted the 
+        workerjob shuts down automatically after 10 minutes. 
+        
+        Args:
+            interval_in_s (int): interval when the job status is queried from the database - default 60 sec.
+            max_iterations (int): maximum number of iterations - default 10     
+        """
+        finished = False
+        j = 0
+        log_file = os.path.join(self.working_directory, "process.log")
+        pr = self.project_to_watch
+        master_id = self.job_id
+        while not finished:
+            df = pr.job_table()
+            df_sub = df[
+                ((df["status"] == "submitted") | (df.status == "running")) &
+                (df["masterid"] == master_id)
+            ]
+            if len(df_sub) == 0:
+                j += 1
+                if j > max_iterations:
+                    finished = True
+            else:
+                j = 0
+            with open(log_file, 'a') as f:
+                log_str = str(datetime.today()) + " j: " + str(j)
+                for status in ["submitted", "running", "finished", "aborted"]:
+                    log_str += "   " + status + " : " + str(len(df[df.status == status]))
+                log_str += "\n"
+                f.write(log_str)
+            time.sleep(interval_in_s)
+        self.status.collect = True
