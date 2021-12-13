@@ -281,6 +281,21 @@ class Settings(metaclass=Singleton):
                 #       I don't actually understand the constraint, I am just making it *explicit* as I refactor. -Liam
                 raise ValueError("Got sql_view arguments, but sql_type is not Postgres")
 
+    @staticmethod
+    def _validate_no_database_configuration(config: Dict) -> None:
+        if config["disable_database"]:
+            if config["project_check_enabled"]:
+                raise ValueError(
+                    "When the database is disabled 'disable_database=True' the project " +
+                    "check cannot be enabled, so you have to set 'project_check_enabled=False'."
+                )
+            if len(config["project_paths"]) > 0:
+                raise ValueError(
+                    "When the database is disabled 'disable_database=True' the project " +
+                    "paths list should be empty 'project_paths=[]'. Currently it is: " +
+                    str(config["project_paths"])
+                )
+
     def _get_config_from_environment(self) -> Union[Dict, None]:
         config = {}
         for k, v in os.environ.items():
@@ -319,6 +334,7 @@ class Settings(metaclass=Singleton):
         """
         self._validate_sql_configuration(config=config)
         self._validate_viewer_configuration(config=config)
+        self._validate_no_database_configuration(config=config)
 
         for key, value in config.items():
             key = key if map_ is None else map_[key]
@@ -334,18 +350,6 @@ class Settings(metaclass=Singleton):
                 self._configuration[key] = self.convert_path_to_abs_posix(value)
             elif key in ["project_check_enabled", "disable_database"]:
                 self._configuration[key] = value if isinstance(value, bool) else strtobool(value)
-                if self._configuration["disable_database"]:
-                    if self._configuration["project_check_enabled"]:
-                        raise ValueError(
-                            "When the database is disabled 'disable_database=True' the project " + 
-                            "check cannot be enabled, so you have to set 'project_check_enabled=False'."
-                        )
-                    if len(self._configuration["project_paths"]) > 0:
-                        raise ValueError(
-                            "When the database is disabled 'disable_database=True' the project " + 
-                            "paths list should be empty 'project_paths=[]'. Currently it is: " + 
-                            str(self._configuration["project_paths"])
-                        )
             elif key not in self._configuration.keys():
                 raise KeyError(
                     f"Got unexpected configuration key {key}, please choose from among {self._configuration.keys()}"
