@@ -938,7 +938,7 @@ class Project(ProjectPath, HasGroups):
             for job_id in job_specifier:
                 self.remove_job(job_specifier=job_id, _unprotect=_unprotect)
         else:
-            if not self.view_mode:
+            if not self.db.view_mode:
                 try:
                     job = self.load(job_specifier=job_specifier, convert_to_object=False)
                     if job is None:
@@ -1000,7 +1000,7 @@ class Project(ProjectPath, HasGroups):
         """
         if not isinstance(recursive, bool):
             raise ValueError('recursive must be a boolean')
-        if not self.view_mode:
+        if not self.db.view_mode:
             job_id_lst = self.get_job_ids(recursive=recursive)
             if progress and len(job_id_lst) > 0:
                 job_id_lst = tqdm(job_id_lst)
@@ -1060,7 +1060,7 @@ class Project(ProjectPath, HasGroups):
             raise ValueError(
                 "To prevent users from accidentally deleting files - enable has to be set to True."
             )
-        if not self.view_mode:
+        if not self.db.view_mode:
             for sub_project_name in self.list_groups():
                 if "_hdf5" not in sub_project_name:
                     sub_project = self.open(sub_project_name)
