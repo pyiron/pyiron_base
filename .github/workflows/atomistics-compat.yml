@@ -36,11 +36,15 @@ jobs:
         channel-priority: strict
         auto-update-conda: true  
         environment-file: environment.yml
-    - name: Setup
+    - name: pyironconfig
       shell: bash -l {0}
       run: |
         cd ../pyiron_atomistics
         python .ci_support/pyironconfig.py
+        cd ../pyiron_base
+    - name: Setup
+      shell: bash -l {0}
+      run: |
         pip install --no-deps .
     - name: Test
       shell: bash -l {0}
