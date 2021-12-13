@@ -53,8 +53,8 @@ class TestJobFactory(TestWithCleanProject):
         job = self.factory(CustomJob, 'custom')
         job.run()
         table = self.project.job_table()
-        self.assertIn(job.name, table.job.values, msg="Project failed so save job name")
-        self.assertIn(job.__class__.__name__, table.hamilton.values, msg="Project failed so save job type")
+        self.assertIn(job.name, table.job.values, msg="Project failed to save job name")
+        self.assertIn(job.__class__.__name__, table.hamilton.values, msg="Project failed to save job type")
         self.assertEqual(7, job.output.bar, msg="Job failed to save output correctly")
 
         loaded = self.project.load(job.name)
