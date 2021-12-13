@@ -355,7 +355,7 @@ class TestFlattenedStorage(TestWithProject):
                                 "left array not the same after join.")
 
     def test_split(self):
-        """split deep copy all the selected arrays to the new storage."""
+        """split should deep copy all the selected arrays to the new storage."""
         store = FlattenedStorage(even=self.even, odd=self.odd, even_sum = self.even_sum, odd_sum=self.odd_sum)
         odd_store = store.split(("odd", "odd_sum"))
 
@@ -481,6 +481,6 @@ class TestFlattenedStorage(TestWithProject):
         store["even", 2] *= 2
         store["even_sum", 2] *= 2
         self.assertTrue((even_before == copy["even"]).all(),
-                        f"Per element array changed in copy when original is!")
+                        "Per element array changed in copy when original is!")
         self.assertTrue((even_sum_before == copy["even_sum"]).all(),
-                        f"Per chunk array changed in copy when original is!")
+                        "Per chunk array changed in copy when original is!")
