@@ -728,6 +728,7 @@ class GenericJob(JobCore):
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
                 universal_newlines=True,
+                check=True
             ).stdout
             with open(
                 posixpath.join(self.project_hdf5.working_directory, "error.out"),
@@ -735,7 +736,9 @@ class GenericJob(JobCore):
             ) as f_err:
                 f_err.write(out)
         except subprocess.CalledProcessError as e:
-            if not self.server.accept_crash:
+            if e.returncode in self.executable.accepted_return_codes:
+                pass
+            elif not self.server.accept_crash:
                 self._logger.warning("Job aborted")
                 self._logger.warning(e.output)
                 self.status.aborted = True
@@ -867,25 +870,42 @@ class GenericJob(JobCore):
         The run if non modal function is called by run to execute the simulation in the background. For this we use
         multiprocessing.Process()
         """
-        if not state.database.using_local_database:
-            args = (self.job_id, self.project_hdf5.working_directory, False, None)
-        else:
-            args = (self.job_id, self.project_hdf5.working_directory, False, str(self.project.db.conn.engine.url))
+        if not state.database.database_is_disabled:
+            if not state.database.using_local_database:
+                args = (self.job_id, self.project_hdf5.working_directory, False, None)
+            else:
+                args = (self.job_id, self.project_hdf5.working_directory, False, str(self.project.db.conn.engine.url))
 
-        p = multiprocessing.Process(
-            target=multiprocess_wrapper,
-            args=args,
-        )
+            p = multiprocessing.Process(
+                target=multiprocess_wrapper,
+                args=args,
+            )
 
-        if self.master_id and self.server.run_mode.non_modal:
-            del self
-            p.start()
-        else:
-            if self.server.run_mode.non_modal:
+            if self.master_id and self.server.run_mode.non_modal:
+                del self
                 p.start()
             else:
-                self._process = p
-                self._process.start()
+                if self.server.run_mode.non_modal:
+                    p.start()
+                else:
+                    self._process = p
+                    self._process.start()
+        else:
+            command = "python -m pyiron_base.cli wrapper -p " \
+                      + self.working_directory \
+                      + " -f " + self.project_hdf5.file_name + self.project_hdf5.h5_path
+            working_directory = self.project_hdf5.working_directory
+            if not os.path.exists(working_directory):
+                os.makedirs(working_directory)
+            del self
+            subprocess.Popen(
+                command,
+                cwd=working_directory,
+                shell=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                universal_newlines=True,
+            )
 
     def run_if_manually(self, _manually_print=True):
         """
@@ -1466,15 +1486,33 @@ class GenericJob(JobCore):
                                 "'delete_existing_job=True in create_job'".format(self.job_name))
             self.from_hdf()
 
-    def _executable_activate(self, enforce=False):
+    def _executable_activate(self, enforce=False, codename=None):
         """
         Internal helper function to koad the executable object, if it was not loaded already.
+
+        Args:
+            enforce (bool): Force the executable module to reinitialize
+            codename (str): Name of the resource directory and run script.
         """
         if self._executable is None or enforce:
-            if len(self.__module__.split(".")) > 1:
+            if codename is not None:
+                self._executable = Executable(
+                    codename=codename,
+                    module=codename,
+                    path_binary_codes=state.settings.resource_paths,
+                )
+            elif len(self.__module__.split(".")) > 1:
                 self._executable = Executable(
                     codename=self.__name__,
                     module=self.__module__.split(".")[-2],
+                    path_binary_codes=state.settings.resource_paths,
+                )
+            elif self.__module__ == "__main__":
+                # Special case when the job classes defined in Jupyter notebooks
+                parent_class = self.__class__.__bases__[0]
+                self._executable = Executable(
+                    codename=parent_class.__name__,
+                    module=parent_class.__module__.split(".")[-2],
                     path_binary_codes=state.settings.resource_paths,
                 )
             else:

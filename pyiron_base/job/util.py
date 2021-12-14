@@ -11,6 +11,7 @@ from pyiron_base.generic.util import static_isinstance
 import tarfile
 import stat
 import shutil
+from typing import Union, Dict
 
 __author__ = "Jan Janssen"
 __copyright__ = (
@@ -122,7 +123,10 @@ _special_symbol_replacements = {
 }
 
 
-def _get_safe_job_name(name, ndigits=8):
+def _get_safe_job_name(name: str, ndigits: Union[int, None] = 8, special_symbols: Union[Dict, None] = None):
+    d_special_symbols = _special_symbol_replacements.copy()
+    if special_symbols is not None:
+        d_special_symbols.update(special_symbols)
     def round_(value, ndigits=ndigits):
         if isinstance(value, float) and ndigits is not None:
             return round(value, ndigits=ndigits)
@@ -132,7 +136,7 @@ def _get_safe_job_name(name, ndigits=8):
         job_name = '_'.join([str(nn) for nn in name_rounded])
     else:
         job_name = name
-    for k, v in _special_symbol_replacements.items():
+    for k, v in d_special_symbols.items():
         job_name = job_name.replace(k, v)
     _is_valid_job_name(job_name=job_name)
     return job_name

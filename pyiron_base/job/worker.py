@@ -9,6 +9,7 @@ import time
 from datetime import datetime
 from multiprocessing.pool import ThreadPool
 import numpy as np
+from pyiron_base.state import state
 from pyiron_base.job.template import PythonTemplateJob
 
 
@@ -40,13 +41,21 @@ def worker_function(args):
         debug (bool): enable debug mode [True/False] (optional)
     """
     import subprocess
-    working_directory, job_id, _, _, _ = args
-    executable = [
-        "python",
-        "-m", "pyiron_base.cli", "wrapper",
-        "-p", working_directory,
-        "-j", str(job_id)
-    ]
+    working_directory, job_link = args
+    if isinstance(job_link, int) or str(job_link).isdigit():
+        executable = [
+            "python",
+            "-m", "pyiron_base.cli", "wrapper",
+            "-p", working_directory,
+            "-j", str(job_link)
+        ]
+    else:
+        executable = [
+            "python",
+            "-m", "pyiron_base.cli", "wrapper",
+            "-p", working_directory,
+            "-f", job_link
+        ]
     try:
         _ = subprocess.run(
             executable,
@@ -150,6 +159,12 @@ class WorkerJob(PythonTemplateJob):
 
     # This function is executed
     def run_static(self):
+        if not state.database.database_is_disabled:
+            self.run_static_with_database()
+        else:
+            self.run_static_without_database()
+
+    def run_static_with_database(self):
         self.status.running = True
         master_id = self.job_id
         pr = self.project_to_watch
@@ -176,9 +191,9 @@ class WorkerJob(PythonTemplateJob):
                             df_sub["id"].values
                         ) if job_id not in active_job_ids]
                     job_lst = [
-                        [p, job_id, None, False, False]
+                        [p, job_id]
                         if pp is None else
-                        [os.path.join(pp, p), job_id, None, False, False]
+                        [os.path.join(pp, p), job_id]
                         for pp, p, job_id in path_lst
                     ]
                     active_job_ids += [j[1] for j in job_lst]
@@ -207,3 +222,84 @@ class WorkerJob(PythonTemplateJob):
 
         # The job is finished
         self.status.finished = True
+
+    @staticmethod
+    def _get_working_directory_and_h5path(path):
+        path_split = path.split("/")
+        job_name = path_split[-1].split(".h5")[0]
+        parent_dir = "/".join(path_split[:-1])
+        return parent_dir + "/" + job_name + "_hdf5/" + job_name, path + "/" + job_name
+
+    def run_static_without_database(self):
+        self.project_hdf5.create_working_directory()
+        working_directory = self.working_directory
+        log_file = os.path.join(working_directory, "worker.log")
+        file_memory_lst = []
+        with ThreadPool(
+                processes=int(self.server.cores / self.cores_per_job)
+        ) as pool:
+            while True:
+                file_lst = [
+                    os.path.join(working_directory, f)
+                    for f in os.listdir(working_directory)
+                    if f.endswith(".h5")
+                ]
+                file_vec = ~np.isin(file_lst, file_memory_lst)
+                file_lst = np.array(file_lst)[file_vec].tolist()
+                if len(file_lst) > 0:
+                    job_submit_lst = [self._get_working_directory_and_h5path(path=f) for f in file_lst]
+                    file_memory_lst += file_lst
+                    pool.map_async(worker_function, job_submit_lst)
+                elif self.project_hdf5["status"] in ["collect", "finished"]:
+                    break
+                time.sleep(self.input.sleep_interval)
+
+                with open(log_file, "a") as f:
+                    f.write(str(datetime.today()) + " " + str(len(file_memory_lst)) + " " + str(len(file_lst)) + "\n")
+
+        # The job is finished
+        self.status.finished = True
+
+    def wait_for_worker(self, interval_in_s=60, max_iterations=10):
+        """
+        Wait for the workerjob to finish the execution of all jobs. If no job is in status running or submitted the 
+        workerjob shuts down automatically after 10 minutes. 
+        
+        Args:
+            interval_in_s (int): interval when the job status is queried from the database - default 60 sec.
+            max_iterations (int): maximum number of iterations - default 10     
+        """
+        finished = False
+        j = 0
+        log_file = os.path.join(self.working_directory, "process.log")
+        if not state.database.database_is_disabled:
+            pr = self.project_to_watch
+            master_id = self.job_id
+        else:
+            pr = self.project.open(self.working_directory)
+            master_id = None
+        while not finished:
+            df = pr.job_table()
+            if master_id is not None:
+                df_sub = df[
+                    ((df["status"] == "submitted") | (df.status == "running")) &
+                    (df["masterid"] == master_id)
+                ]
+            else:
+                df_sub = df[
+                    ((df["status"] == "submitted") | (df.status == "running"))
+                ]
+            if len(df_sub) == 0:
+                j += 1
+                if j > max_iterations:
+                    finished = True
+            else:
+                j = 0
+            with open(log_file, 'a') as f:
+                log_str = str(datetime.today()) + " j: " + str(j)
+                for status in ["submitted", "running", "finished", "aborted"]:
+                    log_str += "   " + status + " : " + str(len(df[df.status == status]))
+                log_str += "\n"
+                f.write(log_str)
+            time.sleep(interval_in_s)
+        self.status.collect = True
