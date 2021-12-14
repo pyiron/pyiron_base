@@ -381,18 +381,6 @@ class JobCore(HasGroups):
         """
         return self.project_hdf5.get_from_table(path, name)
 
-    def get_pandas(self, name):
-        """
-        Load a dictionary from the HDF5 file and display the dictionary as pandas Dataframe
-
-        Args:
-            name (str): HDF5 node name
-
-        Returns:
-            pandas.Dataframe: The dictionary is returned as pandas.Dataframe object
-        """
-        return self.project_hdf5.get_pandas(name)
-
     def remove(self, _protect_childs=True):
         """
         Remove the job - this removes the HDF5 file, all data stored in the HDF5 file an the corresponding database entry.
