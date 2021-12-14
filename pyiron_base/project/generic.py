@@ -8,7 +8,7 @@ The project object is the central import point of pyiron - all other objects can
 import os
 import posixpath
 import shutil
-from tqdm import tqdm
+from tqdm.auto import tqdm
 import pandas
 import importlib
 import numpy as np
