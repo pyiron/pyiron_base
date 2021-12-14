@@ -11,7 +11,7 @@ import numpy as np
 import os
 import pandas
 from pandas.errors import EmptyDataError
-from tqdm import tqdm
+from tqdm.auto import tqdm
 import types
 
 from pyiron_base.job.generic import GenericJob
