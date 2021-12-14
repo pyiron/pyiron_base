@@ -43,7 +43,7 @@ class TestJobFactory(TestWithCleanProject):
     def test_call_standard(self):
         job = self.factory('ScriptJob', 'foo.bar')
         self.assertIsInstance(job, ScriptJob, msg=f"Got a {type(job)} instead of a ScriptJob")
-        self.assertEqual('foo_bar', job.name, msg=f"Job name failed to set, expected foo but got {job.name}")
+        self.assertEqual('foodbar', job.name, msg=f"Job name failed to set, expected foo but got {job.name}")
         self.assertEqual(
             state.settings.login_user, job.user,
             msg=f"Expected user from settings, {state.settings.login_user}, but got user {job.user}."
