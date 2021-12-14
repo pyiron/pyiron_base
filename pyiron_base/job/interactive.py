@@ -287,7 +287,7 @@ class InteractiveBase(GenericJob):
         Must be called before :meth:`.run()` is called.
         """
         self.server.run_mode.interactive = True
-        # return _WithInteractiveOpen(self)
+        return _WithInteractiveOpen(self)
 
     def interactive_close(self):
         """
