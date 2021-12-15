@@ -250,8 +250,8 @@ class ScriptJob(GenericJob):
     def validate_ready_to_run(self):
         if self.script_path is None:
             raise TypeError(
-                'ScriptJob.script_path expects a path but got None. Please provide a path before '
-                + 'running.'
+                "ScriptJob.script_path expects a path but got None. Please provide a path before "
+                + "running."
             )
 
     def set_input_to_read_only(self):
@@ -307,7 +307,6 @@ class ScriptJob(GenericJob):
         else:
             raise ValueError("Cannot handle hdf version: {}".format(version))
 
-
     def write_input(self):
         """
         Copy the script to the working directory - only python scripts and jupyter notebooks are supported
@@ -315,7 +314,8 @@ class ScriptJob(GenericJob):
         if self._script_path is not None:
             file_name = os.path.basename(self._script_path)
             shutil.copyfile(
-                src=self._script_path, dst=os.path.join(self.working_directory, file_name)
+                src=self._script_path,
+                dst=os.path.join(self.working_directory, file_name),
             )
 
     def collect_output(self):

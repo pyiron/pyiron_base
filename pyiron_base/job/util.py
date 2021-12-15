@@ -87,17 +87,14 @@ def _get_project_for_copy(job, project, new_job_name):
         Project, ProjectHDFio
     """
     if static_isinstance(
-        obj=project.__class__,
-        obj_type="pyiron_base.job.core.JobCore"
+        obj=project.__class__, obj_type="pyiron_base.job.core.JobCore"
     ):
         file_project = project.project
         hdf5_project = project.project_hdf5.open(new_job_name)
     elif isinstance(project, job.project.__class__):
         file_project = project
         hdf5_project = job.project_hdf5.__class__(
-            project=project,
-            file_name=new_job_name,
-            h5_path="/" + new_job_name
+            project=project, file_name=new_job_name, h5_path="/" + new_job_name
         )
     elif isinstance(project, job.project_hdf5.__class__):
         file_project = project.project
@@ -105,9 +102,7 @@ def _get_project_for_copy(job, project, new_job_name):
     elif project is None:
         file_project = job.project
         hdf5_project = job.project_hdf5.__class__(
-            project=file_project,
-            file_name=new_job_name,
-            h5_path="/" + new_job_name
+            project=file_project, file_name=new_job_name, h5_path="/" + new_job_name
         )
     else:
         raise ValueError("Project should be JobCore/ProjectHDFio/Project/None")
@@ -115,25 +110,29 @@ def _get_project_for_copy(job, project, new_job_name):
 
 
 _special_symbol_replacements = {
-    '.': 'd',
-    '-': 'm',
-    '+': 'p',
-    ',': 'c',
-    ' ': '_',
+    ".": "d",
+    "-": "m",
+    "+": "p",
+    ",": "c",
+    " ": "_",
 }
 
 
-def _get_safe_job_name(name: str, ndigits: Union[int, None] = 8, special_symbols: Union[Dict, None] = None):
+def _get_safe_job_name(
+    name: str, ndigits: Union[int, None] = 8, special_symbols: Union[Dict, None] = None
+):
     d_special_symbols = _special_symbol_replacements.copy()
     if special_symbols is not None:
         d_special_symbols.update(special_symbols)
+
     def round_(value, ndigits=ndigits):
         if isinstance(value, float) and ndigits is not None:
             return round(value, ndigits=ndigits)
         return value
+
     if not isinstance(name, str):
         name_rounded = [round_(nn) for nn in name]
-        job_name = '_'.join([str(nn) for nn in name_rounded])
+        job_name = "_".join([str(nn) for nn in name_rounded])
     else:
         job_name = name
     for k, v in d_special_symbols.items():
@@ -143,9 +142,7 @@ def _get_safe_job_name(name: str, ndigits: Union[int, None] = 8, special_symbols
 
 
 def _rename_job(job, new_job_name):
-    """
-
-    """
+    """ """
     new_job_name = _get_safe_job_name(new_job_name)
     child_ids = job.child_ids
     if child_ids:
@@ -164,10 +161,7 @@ def _rename_job(job, new_job_name):
             {"job": new_job_name, "subjob": new_location.h5_path}, job.job_id
         )
     job._name = new_job_name
-    job.project_hdf5.copy_to(
-        destination=new_location,
-        maintain_name=False
-    )
+    job.project_hdf5.copy_to(destination=new_location, maintain_name=False)
     job.project_hdf5.remove_file()
     job.project_hdf5 = new_location
     if os.path.exists(old_working_directory):
@@ -188,8 +182,8 @@ def _is_valid_job_name(job_name):
         )
     if len(job_name) > 50:
         raise ValueError(
-            'Invalid name for a PyIron object: must be less then or '
-            'equal to 50 characters'
+            "Invalid name for a PyIron object: must be less then or "
+            "equal to 50 characters"
         )
 
 
@@ -221,11 +215,12 @@ def _kill_child(job):
     Args:
         job (JobCore): job object to decompress
     """
-    if static_isinstance(
-        obj=job.__class__,
-        obj_type="pyiron_base.master.GenericMaster"
-    ) and not job.server.run_mode.queue and (
-        job.status.running or job.status.submitted
+    if (
+        static_isinstance(
+            obj=job.__class__, obj_type="pyiron_base.master.GenericMaster"
+        )
+        and not job.server.run_mode.queue
+        and (job.status.running or job.status.submitted)
     ):
         for proc in psutil.process_iter():
             try:
@@ -282,9 +277,7 @@ def _job_decompress(job):
         job (JobCore): job object to decompress
     """
     try:
-        tar_file_name = os.path.join(
-            job.working_directory, job.job_name + ".tar.bz2"
-        )
+        tar_file_name = os.path.join(job.working_directory, job.job_name + ".tar.bz2")
         with tarfile.open(tar_file_name, "r:bz2") as tar:
             tar.extractall(job.working_directory)
         os.remove(tar_file_name)

@@ -30,7 +30,7 @@ class HasStorage(HasHDF, ABC):
     """
 
     def __init__(self, *args, **kwargs):
-        self._storage = DataContainer(table_name='storage')
+        self._storage = DataContainer(table_name="storage")
 
     @property
     def storage(self) -> DataContainer:
@@ -39,7 +39,7 @@ class HasStorage(HasHDF, ABC):
     def _to_hdf(self, hdf: ProjectHDFio):
         self.storage.to_hdf(hdf=hdf)
 
-    def _from_hdf(self, hdf: ProjectHDFio, version: str=None):
+    def _from_hdf(self, hdf: ProjectHDFio, version: str = None):
         self.storage.from_hdf(hdf=hdf)
 
 
@@ -62,7 +62,9 @@ class HasDatabase(ABC):
         return self._database
 
     def save(self):
-        raise NotImplementedError("WIP. Saving should make sure you're registered with the database.")
+        raise NotImplementedError(
+            "WIP. Saving should make sure you're registered with the database."
+        )
 
 
 class PyironObject(HasStorage, HasDatabase, ABC):

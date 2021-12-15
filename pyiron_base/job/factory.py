@@ -48,10 +48,11 @@ class JobFactoryCore(PyironFactory, ABC):
 
     def __getattr__(self, name) -> Type[GenericJob]:
         if name in self._job_class_dict.keys():
+
             def wrapper(
-                    job_name: str,
-                    delete_existing_job: bool = False,
-                    delete_aborted_job: bool = False
+                job_name: str,
+                delete_existing_job: bool = False,
+                delete_aborted_job: bool = False,
             ) -> GenericJob:
                 """
                 Create a job.
@@ -65,23 +66,28 @@ class JobFactoryCore(PyironFactory, ABC):
                     GenericJob: job object depending on the job_type selected
                 """
                 return JobType(
-                    class_name=self._job_class_dict[name],  # Pass the class directly, JobType can handle that
-                    project=ProjectHDFio(project=self._project.copy(), file_name=job_name),
+                    class_name=self._job_class_dict[
+                        name
+                    ],  # Pass the class directly, JobType can handle that
+                    project=ProjectHDFio(
+                        project=self._project.copy(), file_name=job_name
+                    ),
                     job_name=job_name,
                     job_class_dict=self._job_class_dict,
                     delete_existing_job=delete_existing_job,
-                    delete_aborted_job=delete_aborted_job
+                    delete_aborted_job=delete_aborted_job,
                 )
+
             return wrapper
         else:
             raise AttributeError("no job class named '{}' defined".format(name))
 
     def __call__(
-            self,
-            job_type: Union[str, Type[GenericJob]],
-            job_name: str,
-            delete_existing_job: bool = False,
-            delete_aborted_job: bool = False
+        self,
+        job_type: Union[str, Type[GenericJob]],
+        job_name: str,
+        delete_existing_job: bool = False,
+        delete_aborted_job: bool = False,
     ) -> GenericJob:
         """
         Create a job.
@@ -102,7 +108,7 @@ class JobFactoryCore(PyironFactory, ABC):
             job_name=job_name,
             job_class_dict=self._job_class_dict,
             delete_existing_job=delete_existing_job,
-            delete_aborted_job=delete_aborted_job
+            delete_aborted_job=delete_aborted_job,
         )
         if state.settings.login_user is not None:
             job.user = state.settings.login_user
@@ -116,5 +122,5 @@ class JobFactory(JobFactoryCore):
             "FlexibleMaster": FlexibleMaster,
             "ScriptJob": ScriptJob,
             "SerialMasterBase": SerialMasterBase,
-            "TableJob": TableJob
+            "TableJob": TableJob,
         }

@@ -16,11 +16,12 @@ from pyiron_base.state import state
 from pyiron_base.job.executable import Executable
 from pyiron_base.job.jobstatus import JobStatus
 from pyiron_base.job.core import JobCore
-from pyiron_base.job.util import \
-    _copy_restart_files, \
-    _kill_child, \
-    _job_store_before_copy, \
-    _job_reload_after_copy
+from pyiron_base.job.util import (
+    _copy_restart_files,
+    _kill_child,
+    _job_store_before_copy,
+    _job_reload_after_copy,
+)
 from pyiron_base.generic.util import static_isinstance, deprecate
 from pyiron_base.server.generic import Server
 from pyiron_base.database.filetable import FileTable
@@ -450,9 +451,7 @@ class GenericJob(JobCore):
             GenericJob: New GenericJob object pointing to the same job
         """
         # Store all job arguments in the HDF5 file
-        delete_file_after_copy = _job_store_before_copy(
-            job=self
-        )
+        delete_file_after_copy = _job_store_before_copy(job=self)
 
         # Copy Python object - super().copy() causes recursion error for serial master
         copied_self = self.__class__(
@@ -462,44 +461,54 @@ class GenericJob(JobCore):
 
         # Reload object from HDF5 file
         _job_reload_after_copy(
-            job=copied_self,
-            delete_file_after_copy=delete_file_after_copy
+            job=copied_self, delete_file_after_copy=delete_file_after_copy
         )
         return copied_self
 
-    def _internal_copy_to(self, project=None, new_job_name=None, new_database_entry=True,
-                          copy_files=True, delete_existing_job=False):
+    def _internal_copy_to(
+        self,
+        project=None,
+        new_job_name=None,
+        new_database_entry=True,
+        copy_files=True,
+        delete_existing_job=False,
+    ):
         # Store all job arguments in the HDF5 file
-        delete_file_after_copy = _job_store_before_copy(
-            job=self
-        )
+        delete_file_after_copy = _job_store_before_copy(job=self)
 
         # Call the copy_to() function defined in the JobCore
-        new_job_core, file_project, hdf5_project, reloaded = super(GenericJob, self)._internal_copy_to(
+        new_job_core, file_project, hdf5_project, reloaded = super(
+            GenericJob, self
+        )._internal_copy_to(
             project=project,
             new_job_name=new_job_name,
             new_database_entry=new_database_entry,
             copy_files=copy_files,
-            delete_existing_job=delete_existing_job
+            delete_existing_job=delete_existing_job,
         )
         if reloaded:
             return new_job_core, file_project, hdf5_project, reloaded
 
         # Reload object from HDF5 file
         if not static_isinstance(
-            obj=project.__class__,
-            obj_type="pyiron_base.job.core.JobCore"
+            obj=project.__class__, obj_type="pyiron_base.job.core.JobCore"
         ):
             _job_reload_after_copy(
-                job=new_job_core,
-                delete_file_after_copy=delete_file_after_copy
+                job=new_job_core, delete_file_after_copy=delete_file_after_copy
             )
         if delete_file_after_copy:
             self.project_hdf5.remove_file()
         return new_job_core, file_project, hdf5_project, reloaded
 
-    def copy_to(self, project=None, new_job_name=None, input_only=False, new_database_entry=True,
-                delete_existing_job=False, copy_files=True):
+    def copy_to(
+        self,
+        project=None,
+        new_job_name=None,
+        input_only=False,
+        new_database_entry=True,
+        delete_existing_job=False,
+        copy_files=True,
+    ):
         """
         Copy the content of the job including the HDF5 file to a new location.
 
@@ -519,7 +528,9 @@ class GenericJob(JobCore):
         """
         # Update flags
         if input_only and new_database_entry:
-            warnings.warn("input_only conflicts new_database_entry; setting new_database_entry=False")
+            warnings.warn(
+                "input_only conflicts new_database_entry; setting new_database_entry=False"
+            )
             new_database_entry = False
 
         # Call the copy_to() function defined in the JobCore
@@ -528,16 +539,20 @@ class GenericJob(JobCore):
             new_job_name=new_job_name,
             new_database_entry=new_database_entry,
             copy_files=copy_files,
-            delete_existing_job=delete_existing_job
+            delete_existing_job=delete_existing_job,
         )
 
         # Remove output if it should not be copied
         if input_only:
             for group in new_job_core.project_hdf5.list_groups():
                 if "output" in group:
-                    del new_job_core.project_hdf5[posixpath.join(new_job_core.project_hdf5.h5_path, group)]
+                    del new_job_core.project_hdf5[
+                        posixpath.join(new_job_core.project_hdf5.h5_path, group)
+                    ]
             new_job_core.status.initialized = True
-        new_job_core._after_generic_copy_to(self, new_database_entry=new_database_entry, reloaded=reloaded)
+        new_job_core._after_generic_copy_to(
+            self, new_database_entry=new_database_entry, reloaded=reloaded
+        )
         return new_job_core
 
     def _after_generic_copy_to(self, original, new_database_entry, reloaded):
@@ -629,9 +644,18 @@ class GenericJob(JobCore):
         self._job_id = job_id
         self._status = JobStatus(db=self.project.db, job_id=self._job_id)
 
-    @deprecate(run_again="Either delete the job via job.remove() or use delete_existing_job=True.",
-               version="0.4.0")
-    def run(self, delete_existing_job=False, repair=False, debug=False, run_mode=None, run_again=False):
+    @deprecate(
+        run_again="Either delete the job via job.remove() or use delete_existing_job=True.",
+        version="0.4.0",
+    )
+    def run(
+        self,
+        delete_existing_job=False,
+        repair=False,
+        debug=False,
+        run_mode=None,
+        run_again=False,
+    ):
         """
         This is the main run function, depending on the job status ['initialized', 'created', 'submitted', 'running',
         'collect','finished', 'refresh', 'suspended'] the corresponding run mode is chosen.
@@ -728,7 +752,7 @@ class GenericJob(JobCore):
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
                 universal_newlines=True,
-                check=True
+                check=True,
             ).stdout
             with open(
                 posixpath.join(self.project_hdf5.working_directory, "error.out"),
@@ -766,56 +790,60 @@ class GenericJob(JobCore):
 
     def transfer_from_remote(self):
         state.queue_adapter.get_job_from_remote(
-            working_directory='/'.join(self.working_directory.split('/')[:-1]),
-            delete_remote=state.queue_adapter.ssh_delete_file_on_remote
+            working_directory="/".join(self.working_directory.split("/")[:-1]),
+            delete_remote=state.queue_adapter.ssh_delete_file_on_remote,
         )
         state.queue_adapter.transfer_file_to_remote(
             file=self.project_hdf5.file_name,
             transfer_back=True,
-            delete_remote=state.queue_adapter.ssh_delete_file_on_remote
+            delete_remote=state.queue_adapter.ssh_delete_file_on_remote,
         )
         if state.database.database_is_disabled:
             self.project.db.update()
         else:
             ft = FileTable(project=self.project_hdf5.path + "_hdf5/")
-            df = ft.job_table(sql_query=None, user=state.settings.login_user, project_path=None, all_columns=True)
+            df = ft.job_table(
+                sql_query=None,
+                user=state.settings.login_user,
+                project_path=None,
+                all_columns=True,
+            )
             db_dict_lst = []
             for j, st, sj, p, h, hv, c, ts, tp, tc in zip(
-                    df.job.values,
-                    df.status.values,
-                    df.subjob.values,
-                    df.project.values,
-                    df.hamilton.values,
-                    df.hamversion.values,
-                    df.computer.values,
-                    df.timestart.values,
-                    df.timestop.values,
-                    df.totalcputime.values
+                df.job.values,
+                df.status.values,
+                df.subjob.values,
+                df.project.values,
+                df.hamilton.values,
+                df.hamversion.values,
+                df.computer.values,
+                df.timestart.values,
+                df.timestop.values,
+                df.totalcputime.values,
             ):
                 gp = self.project._convert_str_to_generic_path(p)
-                db_dict_lst.append({
-                    "username": state.settings.login_user,
-                    "projectpath": gp.root_path,
-                    "project": gp.project_path,
-                    "job": j,
-                    "subjob": sj,
-                    "hamversion": hv,
-                    "hamilton": h,
-                    "status": st,
-                    "computer": c,
-                    "timestart": datetime.utcfromtimestamp(ts.tolist() / 1e9),
-                    "timestop": datetime.utcfromtimestamp(tp.tolist() / 1e9),
-                    "totalcputime": tc,
-                    "masterid": self.master_id,
-                    "parentid": None,
-                })
+                db_dict_lst.append(
+                    {
+                        "username": state.settings.login_user,
+                        "projectpath": gp.root_path,
+                        "project": gp.project_path,
+                        "job": j,
+                        "subjob": sj,
+                        "hamversion": hv,
+                        "hamilton": h,
+                        "status": st,
+                        "computer": c,
+                        "timestart": datetime.utcfromtimestamp(ts.tolist() / 1e9),
+                        "timestop": datetime.utcfromtimestamp(tp.tolist() / 1e9),
+                        "totalcputime": tc,
+                        "masterid": self.master_id,
+                        "parentid": None,
+                    }
+                )
             _ = [self.project.db.add_item_dict(d) for d in db_dict_lst]
         self.status.string = self.project_hdf5["status"]
         if self.master_id is not None:
-            self._reload_update_master(
-                project=self.project,
-                master_id=self.master_id
-            )
+            self._reload_update_master(project=self.project, master_id=self.master_id)
 
     def run_if_interactive(self):
         """
@@ -874,7 +902,12 @@ class GenericJob(JobCore):
             if not state.database.using_local_database:
                 args = (self.job_id, self.project_hdf5.working_directory, False, None)
             else:
-                args = (self.job_id, self.project_hdf5.working_directory, False, str(self.project.db.conn.engine.url))
+                args = (
+                    self.job_id,
+                    self.project_hdf5.working_directory,
+                    False,
+                    str(self.project.db.conn.engine.url),
+                )
 
             p = multiprocessing.Process(
                 target=multiprocess_wrapper,
@@ -891,9 +924,13 @@ class GenericJob(JobCore):
                     self._process = p
                     self._process.start()
         else:
-            command = "python -m pyiron_base.cli wrapper -p " \
-                      + self.working_directory \
-                      + " -f " + self.project_hdf5.file_name + self.project_hdf5.h5_path
+            command = (
+                "python -m pyiron_base.cli wrapper -p "
+                + self.working_directory
+                + " -f "
+                + self.project_hdf5.file_name
+                + self.project_hdf5.h5_path
+            )
             working_directory = self.project_hdf5.working_directory
             if not os.path.exists(working_directory):
                 os.makedirs(working_directory)
@@ -935,24 +972,38 @@ class GenericJob(JobCore):
         if state.queue_adapter is None:
             raise TypeError("No queue adapter defined.")
         if state.queue_adapter.remote_flag:
-            filename = state.queue_adapter.convert_path_to_remote(path=self.project_hdf5.file_name)
-            working_directory = state.queue_adapter.convert_path_to_remote(path=self.working_directory)
-            command = "python -m pyiron_base.cli wrapper -p " \
-                      + working_directory \
-                      + " -f " + filename + self.project_hdf5.h5_path \
-                      + " --submit"
+            filename = state.queue_adapter.convert_path_to_remote(
+                path=self.project_hdf5.file_name
+            )
+            working_directory = state.queue_adapter.convert_path_to_remote(
+                path=self.working_directory
+            )
+            command = (
+                "python -m pyiron_base.cli wrapper -p "
+                + working_directory
+                + " -f "
+                + filename
+                + self.project_hdf5.h5_path
+                + " --submit"
+            )
             state.queue_adapter.transfer_file_to_remote(
-                file=self.project_hdf5.file_name,
-                transfer_back=False
+                file=self.project_hdf5.file_name, transfer_back=False
             )
         elif state.database.database_is_disabled:
-            command = "python -m pyiron_base.cli wrapper -p " \
-                      + self.working_directory \
-                      + " -f " + self.project_hdf5.file_name + self.project_hdf5.h5_path
+            command = (
+                "python -m pyiron_base.cli wrapper -p "
+                + self.working_directory
+                + " -f "
+                + self.project_hdf5.file_name
+                + self.project_hdf5.h5_path
+            )
         else:
-            command = "python -m pyiron_base.cli wrapper -p " \
-                      + self.working_directory \
-                      + " -j " + str(self.job_id)
+            command = (
+                "python -m pyiron_base.cli wrapper -p "
+                + self.working_directory
+                + " -j "
+                + str(self.job_id)
+            )
         que_id = state.queue_adapter.submit_job(
             queue=self.server.queue,
             job_name="pi_" + str(self.job_id),
@@ -1049,7 +1100,9 @@ class GenericJob(JobCore):
             GenericJob: job object depending on the job_type selected
         """
         job = self.project.create_job(
-            job_type=job_type, job_name=job_name, delete_existing_job=delete_existing_job
+            job_type=job_type,
+            job_name=job_name,
+            delete_existing_job=delete_existing_job,
         )
         job._init_child_job(self)
         return job
@@ -1068,20 +1121,21 @@ class GenericJob(JobCore):
         """
         master_id = self.master_id
         project = self.project
-        self._logger.info("update master: {} {} {}".format(master_id, self.get_job_id(), self.server.run_mode))
+        self._logger.info(
+            "update master: {} {} {}".format(
+                master_id, self.get_job_id(), self.server.run_mode
+            )
+        )
         if master_id is not None and (
-            force_update or
-            not (
+            force_update
+            or not (
                 self.server.run_mode.thread
                 or self.server.run_mode.modal
                 or self.server.run_mode.interactive
                 or self.server.run_mode.worker
             )
         ):
-                self._reload_update_master(
-                    project=project,
-                    master_id=master_id
-                )
+            self._reload_update_master(project=project, master_id=master_id)
 
     def job_file_name(self, file_name, cwd=None):
         """
@@ -1135,8 +1189,7 @@ class GenericJob(JobCore):
         """
         job_name = posixpath.splitext(posixpath.basename(hdf.file_name))[0]
         project_hdf5 = type(hdf)(
-            project=hdf.create_project_from_hdf5(),
-            file_name=job_name
+            project=hdf.create_project_from_hdf5(), file_name=job_name
         )
         return {"job_name": job_name, "project": project_hdf5}
 
@@ -1255,7 +1308,7 @@ class GenericJob(JobCore):
                 new_job_name=job_name,
                 new_database_entry=False,
                 input_only=True,
-                copy_files=False
+                copy_files=False,
             )
         else:
             new_ham = self.create_job(job_type, job_name)
@@ -1356,7 +1409,11 @@ class GenericJob(JobCore):
             self.run_if_manually(_manually_print=False)
         elif self.server.run_mode.modal:
             self.run_static()
-        elif self.server.run_mode.non_modal or self.server.run_mode.thread or self.server.run_mode.worker:
+        elif (
+            self.server.run_mode.non_modal
+            or self.server.run_mode.thread
+            or self.server.run_mode.worker
+        ):
             self.run_if_non_modal()
         elif self.server.run_mode.queue:
             self.run_if_scheduler()
@@ -1460,8 +1517,10 @@ class GenericJob(JobCore):
         self.status.refresh = True
         self.run()
 
-    @deprecate(run_again="Either delete the job via job.remove() or use delete_existing_job=True.",
-               version="0.4.0")
+    @deprecate(
+        run_again="Either delete the job via job.remove() or use delete_existing_job=True.",
+        version="0.4.0",
+    )
     def _run_if_finished(self, delete_existing_job=False, run_again=False):
         """
         Internal helper function the run if finished function is called when the job status is 'finished'. It loads
@@ -1482,8 +1541,10 @@ class GenericJob(JobCore):
             self.parent_id = parent_id
             self.run()
         else:
-            self.logger.warning("The job {} is being loaded instead of running. To re-run use the argument "
-                                "'delete_existing_job=True in create_job'".format(self.job_name))
+            self.logger.warning(
+                "The job {} is being loaded instead of running. To re-run use the argument "
+                "'delete_existing_job=True in create_job'".format(self.job_name)
+            )
             self.from_hdf()
 
     def _executable_activate(self, enforce=False, codename=None):
@@ -1517,7 +1578,8 @@ class GenericJob(JobCore):
                 )
             else:
                 self._executable = Executable(
-                    codename=self.__name__, path_binary_codes=state.settings.resource_paths
+                    codename=self.__name__,
+                    path_binary_codes=state.settings.resource_paths,
                 )
 
     def _type_to_hdf(self):
@@ -1657,15 +1719,13 @@ class GenericJob(JobCore):
             del self
             master_inspect = project.inspect(master_id)
             if master_inspect["server"]["run_mode"] == "non_modal" or (
-                    master_inspect["server"]["run_mode"] == "modal" and queue_flag
+                master_inspect["server"]["run_mode"] == "modal" and queue_flag
             ):
                 master = project.load(master_id)
                 master.run_if_refresh()
         elif master_db_entry["status"] == "refresh":
             project.db.set_job_status(job_id=master_id, status="busy")
-            self._logger.info(
-                "busy master: {} {}".format(master_id, self.get_job_id())
-            )
+            self._logger.info("busy master: {} {}".format(master_id, self.get_job_id()))
             del self
 
 
@@ -1674,29 +1734,32 @@ class GenericError(object):
         self._job = job
 
     def __repr__(self):
-        all_messages = ''
+        all_messages = ""
         for message in [self.print_message(), self.print_queue()]:
             if message is True:
                 all_messages += message
         if len(all_messages) == 0:
-            all_messages = 'There is no error/warning'
+            all_messages = "There is no error/warning"
         return all_messages
 
-    def print_message(self, string=''):
-        return self._print_error(file_name='error.msg', string=string)
+    def print_message(self, string=""):
+        return self._print_error(file_name="error.msg", string=string)
 
-    def print_queue(self, string=''):
-        return self._print_error(file_name='error.out', string=string)
+    def print_queue(self, string=""):
+        return self._print_error(file_name="error.out", string=string)
 
-    def _print_error(self, file_name, string='', print_yes=True):
+    def _print_error(self, file_name, string="", print_yes=True):
         if self._job[file_name] is None:
-            return ''
+            return ""
         elif print_yes:
             return string.join(self._job[file_name])
 
 
 def multiprocess_wrapper(job_id, working_dir, debug=False, connection_string=None):
     job_wrap = JobWrapper(
-        working_directory=str(working_dir), job_id=int(job_id), debug=debug, connection_string=connection_string
+        working_directory=str(working_dir),
+        job_id=int(job_id),
+        debug=debug,
+        connection_string=connection_string,
     )
     job_wrap.job.run_static()

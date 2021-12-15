@@ -132,30 +132,34 @@ class Settings(metaclass=Singleton):
             if k in os.environ.keys():
                 res_path = os.path.join(os.environ[k], "share", "pyiron")
                 if os.path.exists(res_path):
-                    self._configuration["resource_paths"].append(self.convert_path_to_abs_posix(res_path))
+                    self._configuration["resource_paths"].append(
+                        self.convert_path_to_abs_posix(res_path)
+                    )
                     break  # If the first one is there, don't look for the second
 
     @property
     def default_configuration(self) -> Dict:
-        return deepcopy({
-            "user": "pyiron",
-            "resource_paths": [],
-            "project_paths": [],
-            "connection_timeout": 60,
-            "sql_connection_string": None,
-            "sql_table_name": "jobs_pyiron",
-            "sql_view_connection_string": None,
-            "sql_view_table_name": None,
-            "sql_view_user": None,
-            "sql_view_user_key": None,
-            "sql_file": self.convert_path_to_abs_posix("~/pyiron.db"),
-            "sql_host": None,
-            "sql_type": "SQLite",
-            "sql_user_key": None,
-            "sql_database": None,
-            "project_check_enabled": False,
-            "disable_database": False,
-        })
+        return deepcopy(
+            {
+                "user": "pyiron",
+                "resource_paths": [],
+                "project_paths": [],
+                "connection_timeout": 60,
+                "sql_connection_string": None,
+                "sql_table_name": "jobs_pyiron",
+                "sql_view_connection_string": None,
+                "sql_view_table_name": None,
+                "sql_view_user": None,
+                "sql_view_user_key": None,
+                "sql_file": self.convert_path_to_abs_posix("~/pyiron.db"),
+                "sql_host": None,
+                "sql_type": "SQLite",
+                "sql_user_key": None,
+                "sql_database": None,
+                "project_check_enabled": False,
+                "disable_database": False,
+            }
+        )
 
     @property
     def environment_configuration_map(self) -> Dict:
@@ -214,13 +218,14 @@ class Settings(metaclass=Singleton):
         Returns:
             str: absolute path in POSIX format
         """
-        return (Path(path.strip())
-                .expanduser()
-                .resolve()
-                .absolute()
-                .as_posix()
-                .replace("\\", "/")
-                )
+        return (
+            Path(path.strip())
+            .expanduser()
+            .resolve()
+            .absolute()
+            .as_posix()
+            .replace("\\", "/")
+        )
 
     @property
     def login_user(self) -> str:
@@ -244,7 +249,7 @@ class Settings(metaclass=Singleton):
 
     @property
     def _valid_sql_types(self) -> List[str]:
-        return ['SQLite', 'Postgres', 'MySQL', 'SQLalchemy']
+        return ["SQLite", "Postgres", "MySQL", "SQLalchemy"]
 
     def _validate_sql_configuration(self, config: Dict) -> None:
         try:
@@ -259,13 +264,24 @@ class Settings(metaclass=Singleton):
                 sql_file = config["sql_file"]
                 if sql_file is None:
                     # SQLite is raising ugly error messages when the database directory does not exist.
-                    raise ValueError("For sql_type SQLite, the sql_file must not be None")
-                elif os.path.dirname(sql_file) != "" and not os.path.exists(os.path.dirname(sql_file)):
+                    raise ValueError(
+                        "For sql_type SQLite, the sql_file must not be None"
+                    )
+                elif os.path.dirname(sql_file) != "" and not os.path.exists(
+                    os.path.dirname(sql_file)
+                ):
                     os.makedirs(os.path.dirname(sql_file))
-            elif sql_type == "SQLalchemy" and "sql_connection_string" not in config.keys():
-                raise ValueError("sql_type was SQLalchemy but did not find a sql_connection_string setting.")
+            elif (
+                sql_type == "SQLalchemy"
+                and "sql_connection_string" not in config.keys()
+            ):
+                raise ValueError(
+                    "sql_type was SQLalchemy but did not find a sql_connection_string setting."
+                )
             elif sql_type not in self._valid_sql_types:
-                raise ValueError(f"sql_type {sql_type} not recognized, please choose among {self._valid_sql_types}")
+                raise ValueError(
+                    f"sql_type {sql_type} not recognized, please choose among {self._valid_sql_types}"
+                )
         except KeyError:
             pass
 
@@ -275,7 +291,9 @@ class Settings(metaclass=Singleton):
         present = [k in config.keys() for k in key_group]
         if any(present):
             if not all(present):
-                raise ValueError(f"If any of {key_group} is included they all must be, but got {config.keys()}")
+                raise ValueError(
+                    f"If any of {key_group} is included they all must be, but got {config.keys()}"
+                )
             if "sql_type" not in config or config["sql_type"] != "Postgres":
                 # Note: This requirement is *implicit* when the sql_view_connection_string is constructed
                 #       I don't actually understand the constraint, I am just making it *explicit* as I refactor. -Liam
@@ -284,16 +302,19 @@ class Settings(metaclass=Singleton):
     @staticmethod
     def _validate_no_database_configuration(config: Dict) -> None:
         if "disable_database" in config.keys() and config["disable_database"]:
-            if "project_check_enabled" in config.keys() and config["project_check_enabled"]:
+            if (
+                "project_check_enabled" in config.keys()
+                and config["project_check_enabled"]
+            ):
                 raise ValueError(
-                    "When the database is disabled 'disable_database=True' the project " +
-                    "check cannot be enabled, so you have to set 'project_check_enabled=False'."
+                    "When the database is disabled 'disable_database=True' the project "
+                    + "check cannot be enabled, so you have to set 'project_check_enabled=False'."
                 )
             if "project_paths" in config.keys() and len(config["project_paths"]) > 0:
                 raise ValueError(
-                    "When the database is disabled 'disable_database=True' the project " +
-                    "paths list should be empty 'project_paths=[]'. Currently it is: " +
-                    str(config["project_paths"])
+                    "When the database is disabled 'disable_database=True' the project "
+                    + "paths list should be empty 'project_paths=[]'. Currently it is: "
+                    + str(config["project_paths"])
                 )
 
     def _get_config_from_environment(self) -> Union[Dict, None]:
@@ -341,15 +362,16 @@ class Settings(metaclass=Singleton):
 
             if key in ["resource_paths", "project_paths"]:
                 self._configuration[key] = self._convert_to_list_of_paths(
-                    value,
-                    ensure_ends_with="/" if key == "project_paths" else None
+                    value, ensure_ends_with="/" if key == "project_paths" else None
                 )
             elif key == "connection_timeout":
                 self._configuration[key] = int(value)
             elif key == "sql_file":
                 self._configuration[key] = self.convert_path_to_abs_posix(value)
             elif key in ["project_check_enabled", "disable_database"]:
-                self._configuration[key] = value if isinstance(value, bool) else strtobool(value)
+                self._configuration[key] = (
+                    value if isinstance(value, bool) else strtobool(value)
+                )
             elif key not in self._configuration.keys():
                 raise KeyError(
                     f"Got unexpected configuration key {key}, please choose from among {self._configuration.keys()}"
@@ -358,13 +380,14 @@ class Settings(metaclass=Singleton):
                 self._configuration[key] = value
 
     def _convert_to_list_of_paths(
-            self, paths: Union[str, List[str]], ensure_ends_with: Union[None, str] = None
+        self, paths: Union[str, List[str]], ensure_ends_with: Union[None, str] = None
     ) -> List[str]:
         if isinstance(paths, str):
-            paths = paths.replace(',', os.pathsep).split(os.pathsep)
+            paths = paths.replace(",", os.pathsep).split(os.pathsep)
         return [
             self.convert_path_to_abs_posix(p)
-            if ensure_ends_with is None or self.convert_path_to_abs_posix(p).endswith(ensure_ends_with)
+            if ensure_ends_with is None
+            or self.convert_path_to_abs_posix(p).endswith(ensure_ends_with)
             else self.convert_path_to_abs_posix(p) + ensure_ends_with
             for p in paths
         ]
@@ -378,6 +401,7 @@ class Settings(metaclass=Singleton):
     # @deprecate("Use pyiron_base.state.state.queue_adapter")
     def queue_adapter(self):
         from pyiron_base.state import state
+
         return state.queue_adapter
 
     @property

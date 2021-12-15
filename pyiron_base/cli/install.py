@@ -18,29 +18,38 @@ __email__ = "poul@mpie.de"
 __status__ = "development"
 __date__ = "Jun 26, 2020"
 
+
 def register(parser):
     parser.add_argument(
-            "-c", "--config", default = "~/.pyiron",
-            help = "path where config file should be written"
+        "-c",
+        "--config",
+        default="~/.pyiron",
+        help="path where config file should be written",
     )
     parser.add_argument(
-            "-r", "--resources", default = "~/pyiron/resources",
-            help = "path where resources should be installed"
+        "-r",
+        "--resources",
+        default="~/pyiron/resources",
+        help="path where resources should be installed",
     )
     parser.add_argument(
-            "-u", "--url",
-            default = "https://github.com/pyiron/pyiron-resources/releases/download/0.0.3/resources-0.0.3.tar.gz",
-            help = "url to download zipped resources"
+        "-u",
+        "--url",
+        default="https://github.com/pyiron/pyiron-resources/releases/download/0.0.3/resources-0.0.3.tar.gz",
+        help="url to download zipped resources",
     )
     parser.add_argument(
-            "-p", "--project", default = "~/pyiron/projects",
-            help = "path where pyiron should expect projects to run"
+        "-p",
+        "--project",
+        default="~/pyiron/projects",
+        help="path where pyiron should expect projects to run",
     )
+
 
 def main(args):
     install_pyiron(
         config_file_name=args.config,
         project_path=args.project,
         resource_directory=args.resources,
-        giturl_for_zip_file=args.url
+        giturl_for_zip_file=args.url,
     )

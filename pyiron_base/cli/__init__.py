@@ -26,36 +26,38 @@ __status__ = "development"
 __date__ = "26 Jun, 2020"
 
 cli_modules = {
-        "ls":           ls,
-        "rm":           rm,
-        "install":      install,
-        "reloadfile":   reloadfile,
-        "wrapper":      wrapper
+    "ls": ls,
+    "rm": rm,
+    "install": install,
+    "reloadfile": reloadfile,
+    "wrapper": wrapper,
 }
 
+
 def main():
-    parser = argparse.ArgumentParser(prog = "pyiron", description = __doc__)
+    parser = argparse.ArgumentParser(prog="pyiron", description=__doc__)
     parser.add_argument(
-            "-d", "--dirty", action = "store_true",
-            help = "do not remove pyiron log files"
+        "-d", "--dirty", action="store_true", help="do not remove pyiron log files"
     )
     subs = parser.add_subparsers()
 
-    parser.set_defaults(cli = lambda _: parser.error("no sub command given"))
+    parser.set_defaults(cli=lambda _: parser.error("no sub command given"))
 
     for name, mod in cli_modules.items():
         try:
-            sub_parser = subs.add_parser(name,
-                help = mod.__doc__, description = mod.__doc__,
-                epilog = getattr(mod, "epilog", None),
-                formatter_class = getattr(mod, "formatter",
-                    argparse.HelpFormatter)
+            sub_parser = subs.add_parser(
+                name,
+                help=mod.__doc__,
+                description=mod.__doc__,
+                epilog=getattr(mod, "epilog", None),
+                formatter_class=getattr(mod, "formatter", argparse.HelpFormatter),
             )
-            sub_parser.set_defaults(cli = mod.main)
+            sub_parser.set_defaults(cli=mod.main)
             mod.register(sub_parser)
         except AttributeError:
-            warnings.warn("module '{}' does not define main or register "
-                          "function, ignoring")
+            warnings.warn(
+                "module '{}' does not define main or register " "function, ignoring"
+            )
 
     args = parser.parse_args()
     args.cli(args)

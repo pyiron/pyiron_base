@@ -25,6 +25,7 @@ import numpy as np
 import h5py
 from pyiron_base.interfaces.has_hdf import HasHDF
 
+
 class FlattenedStorage(HasHDF):
     """
     Efficient storage of ragged arrays in flattened arrays.
@@ -204,7 +205,8 @@ class FlattenedStorage(HasHDF):
 
         self._init_arrays()
 
-        if len(kwargs) == 0: return
+        if len(kwargs) == 0:
+            return
 
         if len(set(len(chunks) for chunks in kwargs.values())) != 1:
             raise ValueError("Not all initializers provide the same number of chunks!")
@@ -213,7 +215,10 @@ class FlattenedStorage(HasHDF):
             chunk_length = len(chunk_list[0])
             # values in chunk_list may either be a sequence of chunk_length, scalars (see hasattr check) or a sequence of
             # length 1
-            if any(hasattr(c, '__len__') and len(c) != chunk_length and len(c) != 1 for c in chunk_list):
+            if any(
+                hasattr(c, "__len__") and len(c) != chunk_length and len(c) != 1
+                for c in chunk_list
+            ):
                 raise ValueError("Inconsistent chunk length in initializer!")
             self.add_chunk(chunk_length, **{k: c for k, c in zip(keys, chunk_list)})
 
@@ -221,9 +226,9 @@ class FlattenedStorage(HasHDF):
         self._per_element_arrays = {}
 
         self._per_chunk_arrays = {
-                "start_index": np.empty(self._num_chunks_alloc, dtype=np.int32),
-                "length": np.empty(self._num_chunks_alloc, dtype=np.int32),
-                "identifier": np.empty(self._num_chunks_alloc, dtype=np.dtype("U20"))
+            "start_index": np.empty(self._num_chunks_alloc, dtype=np.int32),
+            "length": np.empty(self._num_chunks_alloc, dtype=np.int32),
+            "identifier": np.empty(self._num_chunks_alloc, dtype=np.dtype("U20")),
         }
 
     def __len__(self):
@@ -319,24 +324,42 @@ class FlattenedStorage(HasHDF):
 
         if per == "structure":
             per = "chunk"
-            warnings.warn("per=\"structure\" is deprecated, use pr=\"chunk\"",
-                          category=DeprecationWarning, stacklevel=2)
+            warnings.warn(
+                'per="structure" is deprecated, use pr="chunk"',
+                category=DeprecationWarning,
+                stacklevel=2,
+            )
         if per == "atom":
             per = "element"
-            warnings.warn("per=\"atom\" is deprecated, use pr=\"element\"",
-                          category=DeprecationWarning, stacklevel=2)
+            warnings.warn(
+                'per="atom" is deprecated, use pr="element"',
+                category=DeprecationWarning,
+                stacklevel=2,
+            )
 
         if name in self._per_element_arrays:
             a = self._per_element_arrays[name]
-            if a.shape[1:] != shape or not np.can_cast(dtype, a.dtype) or per != "element":
-                raise ValueError(f"Array with name '{name}' exists with shape {a.shape[1:]} and dtype {a.dtype}.")
+            if (
+                a.shape[1:] != shape
+                or not np.can_cast(dtype, a.dtype)
+                or per != "element"
+            ):
+                raise ValueError(
+                    f"Array with name '{name}' exists with shape {a.shape[1:]} and dtype {a.dtype}."
+                )
             else:
                 return
 
         if name in self._per_chunk_arrays:
             a = self._per_chunk_arrays[name]
-            if a.shape[1:] != shape or not np.can_cast(dtype, a.dtype) or per != "chunk":
-                raise ValueError(f"Array with name '{name}' exists with shape {a.shape[1:]} and dtype {a.dtype}.")
+            if (
+                a.shape[1:] != shape
+                or not np.can_cast(dtype, a.dtype)
+                or per != "chunk"
+            ):
+                raise ValueError(
+                    f"Array with name '{name}' exists with shape {a.shape[1:]} and dtype {a.dtype}."
+                )
             else:
                 return
 
@@ -348,7 +371,7 @@ class FlattenedStorage(HasHDF):
             shape = (self._num_chunks_alloc,) + shape
             store = self._per_chunk_arrays
         else:
-            raise ValueError(f"per must \"element\" or \"chunk\", not {per}")
+            raise ValueError(f'per must "element" or "chunk", not {per}')
 
         if fill is None:
             store[name] = np.empty(shape=shape, dtype=dtype)
@@ -356,10 +379,10 @@ class FlattenedStorage(HasHDF):
             store[name] = np.full(shape=shape, fill_value=fill, dtype=dtype)
 
         _default_fill_values = {
-                np.dtype("int32"):   -1,
-                np.dtype("int64"):   -1,
-                np.dtype("float32"): np.nan,
-                np.dtype("float64"): np.nan,
+            np.dtype("int32"): -1,
+            np.dtype("int64"): -1,
+            np.dtype("float32"): np.nan,
+            np.dtype("float64"): np.nan,
         }
         if fill is None and store[name].dtype in _default_fill_values:
             fill = _default_fill_values[store[name].dtype]
@@ -388,14 +411,16 @@ class FlattenedStorage(HasHDF):
             frame = self.find_chunk(frame)
         if name in self._per_element_arrays:
             if frame is not None:
-                return self._per_element_arrays[name][self._get_per_element_slice(frame)]
+                return self._per_element_arrays[name][
+                    self._get_per_element_slice(frame)
+                ]
             else:
-                return self._per_element_arrays[name][:self.num_elements]
+                return self._per_element_arrays[name][: self.num_elements]
         elif name in self._per_chunk_arrays:
             if frame is not None:
                 return self._per_chunk_arrays[name][frame]
             else:
-                return self._per_chunk_arrays[name][:self.num_chunks]
+                return self._per_chunk_arrays[name][: self.num_chunks]
         else:
             raise KeyError(f"no array named {name}")
 
@@ -441,6 +466,7 @@ class FlattenedStorage(HasHDF):
             return self.get_array(name)
         values = self.get_array_ragged(name)
         max_len = self._per_chunk_arrays["length"].max()
+
         def resize_and_pad(v):
             l = len(v)
             per_shape = self._per_element_arrays[name].shape[1:]
@@ -452,7 +478,8 @@ class FlattenedStorage(HasHDF):
                 fill = np.zeros(1, dtype=self._per_element_arrays[name].dtype)[0]
             v[l:] = fill
             return v
-        return np.array([ resize_and_pad(v) for v in values ])
+
+        return np.array([resize_and_pad(v) for v in values])
 
     def set_array(self, name, frame, value):
         """
@@ -489,7 +516,6 @@ class FlattenedStorage(HasHDF):
         else:
             raise IndexError("Must specify chunk index.")
 
-
     def has_array(self, name):
         """
         Checks whether an array of the given name exists and returns meta data given to :method:`.add_array()`.
@@ -516,8 +542,9 @@ class FlattenedStorage(HasHDF):
             return None
         return {"shape": a.shape[1:], "dtype": a.dtype, "per": per}
 
-
-    def sample(self, selector: Callable[["FlattenedStorage", int], bool]) -> "FlattenedStorage":
+    def sample(
+        self, selector: Callable[["FlattenedStorage", int], bool]
+    ) -> "FlattenedStorage":
         """
         Create a new storage with chunks selected by given function.
 
@@ -538,7 +565,10 @@ class FlattenedStorage(HasHDF):
             new.add_array(k, shape=a.shape[1:], dtype=a.dtype, per="element")
         for i in range(len(self)):
             if selector(self, i):
-                new.add_chunk(self.get_array("length", i), identifier=self.get_array("identifier", i))
+                new.add_chunk(
+                    self.get_array("length", i),
+                    identifier=self.get_array("identifier", i),
+                )
                 for k in self._per_chunk_arrays:
                     if k not in ("start_index", "length", "identifier"):
                         new.set_array(k, len(new) - 1, self.get_array(k, i))
@@ -569,13 +599,19 @@ class FlattenedStorage(HasHDF):
             else:
                 split._per_element_arrays[k] = np.copy(split._per_element_arrays[k])
         for k in list(split._per_chunk_arrays):
-            if k not in array_names and k not in ("start_index", "length", "identifier"):
+            if k not in array_names and k not in (
+                "start_index",
+                "length",
+                "identifier",
+            ):
                 del split._per_chunk_arrays[k]
             else:
                 split._per_chunk_arrays[k] = np.copy(split._per_chunk_arrays[k])
         return split
 
-    def join(self, store: "FlattenedStorage", lsuffix: str="", rsuffix: str="") -> "FlattenedStorage":
+    def join(
+        self, store: "FlattenedStorage", lsuffix: str = "", rsuffix: str = ""
+    ) -> "FlattenedStorage":
         """
         Merge given storage into this one.
 
@@ -588,20 +624,30 @@ class FlattenedStorage(HasHDF):
             :class:`.FlattenedStorage`: self
         """
         if len(self) != len(store):
-            raise ValueError("FlattenedStorages to be joined have to be of the same length!")
+            raise ValueError(
+                "FlattenedStorages to be joined have to be of the same length!"
+            )
         if (self["length"] != store["length"]).any():
-            raise ValueError("FlattenedStorages to be joined have to have same length chunks everywhere!")
+            raise ValueError(
+                "FlattenedStorages to be joined have to have same length chunks everywhere!"
+            )
         if lsuffix == rsuffix != "":
             raise ValueError("lsuffix and rsuffix may not be equal!")
         rename = lsuffix != "" or rsuffix != ""
         if not rename:
-            shared_elements = set(self._per_element_arrays).intersection(store._per_element_arrays)
-            shared_chunks = set(self._per_chunk_arrays).intersection(store._per_chunk_arrays)
+            shared_elements = set(self._per_element_arrays).intersection(
+                store._per_element_arrays
+            )
+            shared_chunks = set(self._per_chunk_arrays).intersection(
+                store._per_chunk_arrays
+            )
             shared_chunks.remove("start_index")
             shared_chunks.remove("length")
             shared_chunks.remove("identifier")
             if len(shared_elements) > 0 or len(shared_chunks) > 0:
-                raise ValueError("FlattenedStorages to be joined may have common arrays only if lsuffix or rsuffix are given!")
+                raise ValueError(
+                    "FlattenedStorages to be joined may have common arrays only if lsuffix or rsuffix are given!"
+                )
 
         for k, a in store._per_element_arrays.items():
             if k in self._per_element_arrays and rename:
@@ -619,7 +665,6 @@ class FlattenedStorage(HasHDF):
         self._resize_elements(self._num_elements_alloc)
         self._resize_chunks(self._num_chunks_alloc)
         return self
-
 
     def add_chunk(self, chunk_length, identifier=None, **arrays):
         """
@@ -678,7 +723,9 @@ class FlattenedStorage(HasHDF):
         # len of chunk to index into the initialized arrays
         i = self.current_element_index + n
 
-        self._per_chunk_arrays["start_index"][self.current_chunk_index] = self.current_element_index
+        self._per_chunk_arrays["start_index"][
+            self.current_chunk_index
+        ] = self.current_element_index
         self._per_chunk_arrays["length"][self.current_chunk_index] = n
         self._per_chunk_arrays["identifier"][self.current_chunk_index] = identifier
 
@@ -705,25 +752,25 @@ class FlattenedStorage(HasHDF):
         # Set new current_element_index and increase current_chunk_index
         self.current_chunk_index += 1
         self.current_element_index = i
-        #return last_chunk_index, last_element_index
-
+        # return last_chunk_index, last_element_index
 
     def _get_hdf_group_name(self):
         return "flat_storage"
 
     def _to_hdf(self, hdf):
-
         def write_array(name, array, hdf):
             if array.dtype.char == "U":
                 # numpy stores unicode data in UTF-32/UCS-4, but h5py wants UTF-8, so we manually encode them here
                 # TODO: string arrays with shape != () not handled
-                hdf[name] = np.array([s.encode("utf8") for s in array],
-                                     # each character in a utf8 string might be encoded in up to 4 bytes, so to
-                                     # make sure we can store any string of length n we tell h5py that the
-                                     # string will be 4 * n bytes; numpy's dtype does this calculation already
-                                     # in itemsize, so we don't need to repeat it here
-                                     # see also https://docs.h5py.org/en/stable/strings.html
-                                     dtype=h5py.string_dtype('utf8', array.dtype.itemsize))
+                hdf[name] = np.array(
+                    [s.encode("utf8") for s in array],
+                    # each character in a utf8 string might be encoded in up to 4 bytes, so to
+                    # make sure we can store any string of length n we tell h5py that the
+                    # string will be 4 * n bytes; numpy's dtype does this calculation already
+                    # in itemsize, so we don't need to repeat it here
+                    # see also https://docs.h5py.org/en/stable/strings.html
+                    dtype=h5py.string_dtype("utf8", array.dtype.itemsize),
+                )
             else:
                 hdf[name] = array
 
@@ -731,7 +778,7 @@ class FlattenedStorage(HasHDF):
         self._resize_elements(self.num_elements)
         self._resize_chunks(self.num_chunks)
 
-        hdf["num_elements"] =  self._num_elements_alloc
+        hdf["num_elements"] = self._num_elements_alloc
         hdf["num_chunks"] = self._num_chunks_alloc
 
         hdf_arrays = hdf.open("element_arrays")
@@ -745,17 +792,18 @@ class FlattenedStorage(HasHDF):
         hdf["_fill_values"] = self._fill_values
 
     def _from_hdf(self, hdf, version=None):
-
         def read_array(name, hdf):
             a = np.array(hdf[name])
             if a.dtype.char == "S":
                 # if saved as bytes, we wrote this as an encoded unicode string, so manually decode here
                 # TODO: string arrays with shape != () not handled
-                a = np.array([s.decode("utf8") for s in a],
-                            # itemsize of original a is four bytes per character, so divide by four to get
-                            # length of the orignal stored unicode string; np.dtype('U1').itemsize is just a
-                            # platform agnostic way of knowing how wide a unicode charater is for numpy
-                            dtype=f"U{a.dtype.itemsize//np.dtype('U1').itemsize}")
+                a = np.array(
+                    [s.decode("utf8") for s in a],
+                    # itemsize of original a is four bytes per character, so divide by four to get
+                    # length of the orignal stored unicode string; np.dtype('U1').itemsize is just a
+                    # platform agnostic way of knowing how wide a unicode charater is for numpy
+                    dtype=f"U{a.dtype.itemsize//np.dtype('U1').itemsize}",
+                )
             return a
 
         try:
@@ -766,7 +814,9 @@ class FlattenedStorage(HasHDF):
             num_elements = hdf["num_atoms"]
 
         self._num_chunks_alloc = self.num_chunks = self.current_chunk_index = num_chunks
-        self._num_elements_alloc = self.num_elements = self.current_element_index = num_elements
+        self._num_elements_alloc = (
+            self.num_elements
+        ) = self.current_element_index = num_elements
 
         if version == "0.1.0":
             with hdf.open("arrays") as hdf_arrays:
@@ -784,16 +834,22 @@ class FlattenedStorage(HasHDF):
                 for k in hdf_arrays.list_nodes():
                     self._per_chunk_arrays[k] = read_array(k, hdf_arrays)
         else:
-            raise RuntimeError(f"Unsupported HDF version {version}; use an older version of pyiron to load this job!")
+            raise RuntimeError(
+                f"Unsupported HDF version {version}; use an older version of pyiron to load this job!"
+            )
 
         for k, a in self._per_chunk_arrays.items():
             if a.shape[0] != self._num_chunks_alloc:
-                raise RuntimeError(f"per-chunk array {k} read inconsistently from HDF: "
-                                    f"shape {a.shape[0]} does not match global allocation {self._num_chunks_alloc}!")
+                raise RuntimeError(
+                    f"per-chunk array {k} read inconsistently from HDF: "
+                    f"shape {a.shape[0]} does not match global allocation {self._num_chunks_alloc}!"
+                )
         for k, a in self._per_element_arrays.items():
             if a.shape[0] != self._num_elements_alloc:
-                raise RuntimeError(f"per-element array {k} read inconsistently from HDF: "
-                                    f"shape {a.shape[0]} does not match global allocation {self._num_elements_alloc}!")
+                raise RuntimeError(
+                    f"per-element array {k} read inconsistently from HDF: "
+                    f"shape {a.shape[0]} does not match global allocation {self._num_elements_alloc}!"
+                )
 
         if version >= "0.3.0":
             self._fill_values = hdf["_fill_values"]

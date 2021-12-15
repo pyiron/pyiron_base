@@ -155,7 +155,7 @@ class GenericMaster(GenericJob):
     @property
     def child_project(self):
         """
-            :class:`.Project`: project which holds the created child jobs
+        :class:`.Project`: project which holds the created child jobs
         """
         if not self.server.new_hdf:
             return self.project
@@ -210,7 +210,7 @@ class GenericMaster(GenericJob):
         if self.status.initialized and not job.status.initialized:
             raise ValueError(
                 "GenericMaster requires reference jobs to have status initialized, rather than ",
-                job.status.string
+                job.status.string,
             )
         if job.server.cores >= self.server.cores:
             self.server.cores = job.server.cores
@@ -265,7 +265,11 @@ class GenericMaster(GenericJob):
         if reloaded:
             return
 
-        if self.job_id is not None and new_database_entry and original._job_id is not None:
+        if (
+            self.job_id is not None
+            and new_database_entry
+            and original._job_id is not None
+        ):
             for child_id in original.child_ids:
                 child = original.project.load(child_id)
                 new_child = child.copy_to(
@@ -388,10 +392,11 @@ class GenericMaster(GenericJob):
         if item_from_get_item is not None:
             return item_from_get_item
         else:
-            raise AttributeError("{} tried to find child job {}, but getattr failed to find the item.".format(
-                self.job_name,
-                item
-            ))
+            raise AttributeError(
+                "{} tried to find child job {}, but getattr failed to find the item.".format(
+                    self.job_name, item
+                )
+            )
 
     def interactive_close(self):
         """Not implemented for MetaJobs."""
@@ -444,8 +449,8 @@ class GenericMaster(GenericJob):
             return self._job_object_dict[job_name]
         else:
             ham_obj = self.project_hdf5[job_name].to_object(
-                    project=self.project_hdf5,
-                    job_name=job_name,
+                project=self.project_hdf5,
+                job_name=job_name,
             )
             return ham_obj
 
