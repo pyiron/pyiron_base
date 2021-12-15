@@ -85,7 +85,7 @@ class TestWithCleanProject(TestWithProject, ABC):
     Tests that start and remove a project for their suite, and remove jobs from the project for each test.
     """
     def tearDown(self):
-        self.project.remove_jobs_silently(recursive=True, progress=False)
+        self.project.remove_jobs(recursive=True, progress=False, silently=True)
 
 
 class ToyJob(PythonTemplateJob):
