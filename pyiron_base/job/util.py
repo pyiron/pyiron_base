@@ -267,7 +267,7 @@ def _job_compress(job, files_to_compress=None):
                     if os.path.isfile(fullname):
                         os.remove(fullname)
                     elif os.path.isdir(fullname):
-                        os.removedirs(fullname)
+                        shutil.rmtree(fullname)
         finally:
             os.chdir(cwd)
     else:
