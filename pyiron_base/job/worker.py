@@ -236,7 +236,7 @@ class WorkerJob(PythonTemplateJob):
         log_file = os.path.join(working_directory, "worker.log")
         file_memory_lst = []
         with Pool(
-                processes=int(self.server.cores / self.cores_per_job)
+            processes=int(self.server.cores / self.cores_per_job)
         ) as pool:
             while True:
                 file_lst = [
