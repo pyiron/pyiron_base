@@ -16,7 +16,7 @@ class TestUnpacking(PyironTestCase):
         # this is used to create a folder/a compressed file, are not path
         cls.arch_dir_comp = cls.arch_dir+'_comp'
         cls.pr = Project('test')
-        cls.pr.remove_jobs_silently(recursive=True)
+        cls.pr.remove_jobs(recursive=True, silently=True)
         cls.job = cls.pr.create_job(job_type=ToyJob, job_name="toy")
         cls.job.run()
         cls.pr.pack(destination_path=cls.arch_dir_comp, compress=True)
@@ -26,11 +26,11 @@ class TestUnpacking(PyironTestCase):
 
     def setUp(self):
         self.imp_pr = Project('imported')
-        self.imp_pr.remove_jobs_silently(recursive=True)
+        self.imp_pr.remove_jobs(recursive=True, silently=True)
         self.imp_pr.unpack(origin_path=self.arch_dir_comp, compress=True)
 
     def tearDown(self):
-        self.imp_pr.remove_jobs_silently(recursive=True)
+        self.imp_pr.remove_jobs(recursive=True, silently=True)
 
     def test_import_csv(self):
         df_original = self.pr.job_table()
@@ -84,7 +84,7 @@ class TestUnpacking(PyironTestCase):
 
     def test_import_uncompress(self):
         self.pr.pack(destination_path=self.arch_dir, compress=False)
-        self.imp_pr.remove_jobs_silently(recursive=True)
+        self.imp_pr.remove_jobs(recursive=True, silently=True)
         self.imp_pr.unpack(origin_path=self.arch_dir, compress=False)
         path_original = self.pr.path
         path_import = self.imp_pr.path
@@ -95,7 +95,7 @@ class TestUnpacking(PyironTestCase):
 
     def test_import_from_proj(self):
         self.pr.pack(destination_path=self.arch_dir, compress=False)
-        self.imp_pr.remove_jobs_silently(recursive=True)
+        self.imp_pr.remove_jobs(recursive=True, silently=True)
         aux_proj = Project(self.arch_dir)  # an auxilary project
         aux_proj.open(os.curdir)
         self.imp_pr.unpack(aux_proj, compress=False)
@@ -108,7 +108,7 @@ class TestUnpacking(PyironTestCase):
 
     def test_load_job(self):
         """Jobs should be able to load from the imported project."""
-        self.imp_pr.remove_jobs_silently(recursive=True)
+        self.imp_pr.remove_jobs(recursive=True, silently=True)
         self.pr.pack(destination_path=self.arch_dir_comp, compress=True)
         self.imp_pr.unpack(origin_path=self.arch_dir_comp, compress=True)
         try:
@@ -118,7 +118,7 @@ class TestUnpacking(PyironTestCase):
 
     def test_check_job_parameters(self):
         """Imported jobs should be equal to their originals in all their parameters."""
-        self.imp_pr.remove_jobs_silently(recursive=True)
+        self.imp_pr.remove_jobs(recursive=True, silently=True)
         self.pr.pack(destination_path=self.arch_dir_comp, compress=True)
         self.imp_pr.unpack(origin_path=self.arch_dir_comp, compress=True)
         j = self.imp_pr.load(self.job.name)

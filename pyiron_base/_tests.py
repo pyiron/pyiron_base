@@ -86,7 +86,7 @@ class TestWithCleanProject(TestWithProject, ABC):
     """
 
     def tearDown(self):
-        self.project.remove_jobs_silently(recursive=True, progress=False)
+        self.project.remove_jobs(recursive=True, progress=False, silently=True)
 
 
 class ToyJob(PythonTemplateJob):

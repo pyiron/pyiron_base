@@ -980,21 +980,25 @@ class Project(ProjectPath, HasGroups):
             else:
                 raise EnvironmentError("copy_to: is not available in Viewermode !")
 
-    def remove_jobs(self, recursive=False, progress=True):
+    def remove_jobs(self, recursive=False, progress=True, silently=False):
         """
         Remove all jobs in the current project and in all subprojects if recursive=True is selected - see also
         remove_job().
 
         For safety, the user is asked via input() to confirm the removal. To bypass this
-        interactive interruption, use `remove_jobs_silently()`.
+        interactive interruption, use `remove_jobs(silently=True)`.
 
         Args:
             recursive (bool): [True/False] delete all jobs in all subprojects - default=False
             progress (bool): if True (default), add an interactive progress bar to the iteration
+            silently (bool): if True the safety check is disabled - default=False
         """
         if not isinstance(recursive, bool):
             raise ValueError("recursive must be a boolean")
-        confirmed = None
+        if silently:
+            confirmed = "y"
+        else:
+            confirmed = None
         while confirmed not in ["y", "n"]:
             if confirmed is None:
                 confirmed = input(
@@ -1006,38 +1010,15 @@ class Project(ProjectPath, HasGroups):
                     "Invalid response. Please enter 'y' (yes) or 'n' (no): "
                 ).lower()
         if confirmed == "y":
-            self.remove_jobs_silently(recursive=recursive, progress=progress)
+            self._remove_jobs_helper(recursive=recursive, progress=progress)
         else:
             print(f"No jobs removed from '{self.base_name}'.")
 
+    @deprecate(
+        message="Use pr.remove_jobs(silently=True) rather than pr.remove_jobs_silently()."
+    )
     def remove_jobs_silently(self, recursive=False, progress=True):
-        """
-        Remove all jobs in the current project and in all subprojects if recursive=True is selected - see also
-        remove_job()
-
-        Args:
-            recursive (bool): [True/False] delete all jobs in all subprojects - default=False
-            progress (bool): if True (default), add an interactive progress bar to the iteration
-        """
-        if not isinstance(recursive, bool):
-            raise ValueError("recursive must be a boolean")
-        if not self.db.view_mode:
-            job_id_lst = self.get_job_ids(recursive=recursive)
-            if progress and len(job_id_lst) > 0:
-                job_id_lst = tqdm(job_id_lst)
-            for job_id in job_id_lst:
-                if job_id not in self.get_job_ids(recursive=recursive):
-                    continue
-                else:
-                    try:
-                        self.remove_job(job_specifier=job_id)
-                        state.logger.debug("Remove job with ID {0} ".format(job_id))
-                    except (IndexError, Exception):
-                        state.logger.debug(
-                            "Could not remove job with ID {0} ".format(job_id)
-                        )
-        else:
-            raise EnvironmentError("copy_to: is not available in Viewermode !")
+        self.remove_jobs(recursive=recursive, progress=progress, silently=True)
 
     def compress_jobs(self, recursive=False):
         """
@@ -1086,7 +1067,7 @@ class Project(ProjectPath, HasGroups):
                 if "_hdf5" not in sub_project_name:
                     sub_project = self.open(sub_project_name)
                     sub_project.remove(enable=enable, enforce=enforce)
-            self.remove_jobs_silently(recursive=True)
+            self._remove_jobs_helper(recursive=True)
             for file in self.list_files():
                 os.remove(os.path.join(self.path, file))
             if enforce:
@@ -1435,6 +1416,35 @@ class Project(ProjectPath, HasGroups):
         ):
             return self.open(item)
         raise ValueError("Unknown item: {}".format(item))
+
+    def _remove_jobs_helper(self, recursive=False, progress=True):
+        """
+        Remove all jobs in the current project and in all subprojects if recursive=True is selected - see also
+        remove_job()
+
+        Args:
+            recursive (bool): [True/False] delete all jobs in all subprojects - default=False
+            progress (bool): if True (default), add an interactive progress bar to the iteration
+        """
+        if not isinstance(recursive, bool):
+            raise ValueError("recursive must be a boolean")
+        if not self.db.view_mode:
+            job_id_lst = self.get_job_ids(recursive=recursive)
+            if progress and len(job_id_lst) > 0:
+                job_id_lst = tqdm(job_id_lst)
+            for job_id in job_id_lst:
+                if job_id not in self.get_job_ids(recursive=recursive):
+                    continue
+                else:
+                    try:
+                        self.remove_job(job_specifier=job_id)
+                        state.logger.debug("Remove job with ID {0} ".format(job_id))
+                    except (IndexError, Exception):
+                        state.logger.debug(
+                            "Could not remove job with ID {0} ".format(job_id)
+                        )
+        else:
+            raise EnvironmentError("copy_to: is not available in Viewermode !")
 
     def _remove_files(self, pattern="*"):
         """

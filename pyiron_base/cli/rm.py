@@ -35,7 +35,7 @@ def main(args):
 
     pr = Project(args.project)
     if args.jobs_only:
-        pr.remove_jobs_silently(recursive=args.recursive)
+        pr.remove_jobs(recursive=args.recursive, silently=True)
     else:
         pr.remove(enable=True)
         if not os.listdir(args.project):
