@@ -7,7 +7,7 @@ Worker Class to execute calculation in an asynchronous way
 import os
 import time
 from datetime import datetime
-from multiprocessing.pool import ThreadPool
+from multiprocessing import Pool
 import numpy as np
 from pyiron_base.state import state
 from pyiron_base.job.template import PythonTemplateJob
@@ -178,7 +178,7 @@ class WorkerJob(PythonTemplateJob):
         self.project_hdf5.create_working_directory()
         log_file = os.path.join(self.working_directory, "worker.log")
         active_job_ids = []
-        with ThreadPool(processes=int(self.server.cores / self.cores_per_job)) as pool:
+        with Pool(processes=int(self.server.cores / self.cores_per_job)) as pool:
             while True:
                 # Check the database if there are more calculation to execute
                 df = pr.job_table()
@@ -253,7 +253,7 @@ class WorkerJob(PythonTemplateJob):
         working_directory = self.working_directory
         log_file = os.path.join(working_directory, "worker.log")
         file_memory_lst = []
-        with ThreadPool(processes=int(self.server.cores / self.cores_per_job)) as pool:
+        with Pool(processes=int(self.server.cores / self.cores_per_job)) as pool:
             while True:
                 file_lst = [
                     os.path.join(working_directory, f)
