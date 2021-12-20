@@ -1014,7 +1014,9 @@ class Project(ProjectPath, HasGroups):
         else:
             print(f"No jobs removed from '{self.base_name}'.")
 
-    @deprecate(message="Use pr.remove_jobs(silently=True) rather than pr.remove_jobs_silently().")
+    @deprecate(
+        message="Use pr.remove_jobs(silently=True) rather than pr.remove_jobs_silently()."
+    )
     def remove_jobs_silently(self, recursive=False, progress=True):
         self.remove_jobs(recursive=recursive, progress=progress, silently=True)
 
