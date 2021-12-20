@@ -18,6 +18,7 @@ __email__ = "poul@mpie.de"
 __status__ = "production"
 __date__ = "May 31, 2021"
 
+
 class HasGroups(ABC):
     """
     Abstract mixin to capture hierarchical structure of pyiron objects.

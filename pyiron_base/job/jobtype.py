@@ -31,7 +31,7 @@ JOB_CLASS_DICT = {
     "ScriptJob": "pyiron_base.job.script",
     "SerialMasterBase": "pyiron_base.master.serial",
     "TableJob": "pyiron_base.table.datamining",
-    "WorkerJob": "pyiron_base.job.worker"
+    "WorkerJob": "pyiron_base.job.worker",
 }
 
 
@@ -40,7 +40,15 @@ class JobType(object):
     The JobTypeBase class creates a new object of a given class type.
     """
 
-    def __new__(cls, class_name, project, job_name, job_class_dict, delete_existing_job=False, delete_aborted_job=False):
+    def __new__(
+        cls,
+        class_name,
+        project,
+        job_name,
+        job_class_dict,
+        delete_existing_job=False,
+        delete_aborted_job=False,
+    ):
         """
         The __new__() method allows to create objects from other classes - the class selected by class_name
 
@@ -68,7 +76,9 @@ class JobType(object):
         job = job_class(project, job_name)
         if job.job_id is not None and not os.path.exists(job.project_hdf5.file_name):
             job.logger.warning(
-                "No HDF5 file found - remove database entry and create new job! {}".format(job.job_name)
+                "No HDF5 file found - remove database entry and create new job! {}".format(
+                    job.job_name
+                )
             )
             delete_existing_job = True
         if delete_existing_job or (job.status.aborted and delete_aborted_job):
@@ -122,6 +132,7 @@ class JobFactory(PyironFactory):
     The job creator is used to create job objects using pr.create.job.Code() where Code can be any external code
     which is wrapped as pyiron job type.
     """
+
     def __init__(self, project):
         self._job_class_dict = JOB_CLASS_DICT
         self._project = project
@@ -134,6 +145,7 @@ class JobFactory(PyironFactory):
 
     def __getattr__(self, name):
         if name in self._job_class_dict.keys():
+
             def wrapper(job_name, delete_existing_job=False, delete_aborted_job=False):
                 """
                 Create one of the following jobs:
@@ -154,12 +166,15 @@ class JobFactory(PyironFactory):
                 job_name = _get_safe_job_name(job_name)
                 return JobType(
                     class_name=name,
-                    project=ProjectHDFio(project=self._project.copy(), file_name=job_name),
+                    project=ProjectHDFio(
+                        project=self._project.copy(), file_name=job_name
+                    ),
                     job_name=job_name,
                     job_class_dict=self._job_class_dict,
                     delete_existing_job=delete_existing_job,
-                    delete_aborted_job=delete_aborted_job
+                    delete_aborted_job=delete_aborted_job,
                 )
+
             return wrapper
         else:
             raise AttributeError("no job class named '{}' defined".format(name))
@@ -171,6 +186,7 @@ class JobTypeChoice(metaclass=Singleton):
     __dir__() function. This class is only required for pr.job_type.Code which is only used in pr.create_job().
     As a consequence this class can be removed once the pr.create_job() function is replaced by pr.create.job.Code().
     """
+
     def __init__(self):
         self._job_class_dict = None
         self.job_class_dict = JOB_CLASS_DICT

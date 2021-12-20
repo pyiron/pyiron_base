@@ -112,12 +112,12 @@ class InteractiveBase(GenericJob):
                                                                'ListMaster']
 
     Examples:
-        In the default 'modal' mode calculation jobs can only be executed ones: 
-        
+        In the default 'modal' mode calculation jobs can only be executed ones:
+
         >>> job.run()
-        
-        Still if you want to execute multiple similar calculations, you can execute them in interactive mode: 
-        
+
+        Still if you want to execute multiple similar calculations, you can execute them in interactive mode:
+
         >>> with job.interactive_open() as job_int:
         >>>     # Do something with job_int
         >>>     job_int.run()
@@ -371,7 +371,7 @@ class _WithInteractiveOpen:
         self._job = job
 
     def __repr__(self):
-        return 'Interactive ready'
+        return "Interactive ready"
 
     def __enter__(self):
         return self._job
@@ -381,11 +381,11 @@ class _WithInteractiveOpen:
 
     def __getattr__(self, attr):
         error_message = (
-                'Syntax:\n'
-                + '`your_job.interactive_open()`\n'
-                + '`your_job.run()`\n'
-                + 'Alternatively you can use the `with`-statement:\n'
-                + '`with your_job.interactive_open() as job_int:`\n'
-                + '`    job_int.run()`\n'
+            "Syntax:\n"
+            + "`your_job.interactive_open()`\n"
+            + "`your_job.run()`\n"
+            + "Alternatively you can use the `with`-statement:\n"
+            + "`with your_job.interactive_open() as job_int:`\n"
+            + "`    job_int.run()`\n"
         )
         raise ValueError(error_message)

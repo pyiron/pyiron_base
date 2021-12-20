@@ -164,9 +164,9 @@ class Deprecator:
 
     def _build_message(self):
         if self.category == PendingDeprecationWarning:
-            message_format =  "{} will be deprecated"
+            message_format = "{} will be deprecated"
         else:
-            message_format =  "{} is deprecated"
+            message_format = "{} is deprecated"
 
         if self.message is not None:
             message_format += ": {}.".format(self.message)
@@ -174,23 +174,24 @@ class Deprecator:
             message_format += "."
 
         if self.version is not None:
-            message_format += " It is not guaranteed to be in service in vers. {}".format(self.version)
+            message_format += (
+                " It is not guaranteed to be in service in vers. {}".format(
+                    self.version
+                )
+            )
 
         return message_format
 
     def __deprecate_function(self, function):
         message = self._build_message().format(
-                "{}.{}".format(function.__module__, function.__name__)
+            "{}.{}".format(function.__module__, function.__name__)
         )
 
         @functools.wraps(function)
         def decorated(*args, **kwargs):
-            warnings.warn(
-                message,
-                category=self.category,
-                stacklevel=2
-            )
+            warnings.warn(message, category=self.category, stacklevel=2)
             return function(*args, **kwargs)
+
         return decorated
 
     def __deprecate_argument(self, function):
@@ -203,15 +204,14 @@ class Deprecator:
                     warnings.warn(
                         message_format.format(
                             "{}.{}({}={})".format(
-                                function.__module__,
-                                function.__name__,
-                                kw,
-                                kwargs[kw])
+                                function.__module__, function.__name__, kw, kwargs[kw]
+                            )
                         ),
                         category=self.category,
-                        stacklevel=2
+                        stacklevel=2,
                     )
             return function(*args, **kwargs)
+
         return decorated
 
     def wrap(self, function):
@@ -268,6 +268,7 @@ class ImportAlarm:
 
     >>> import_alarm.warn_if_failed()
     """
+
     def __init__(self, message=None):
         """
         Initialize message value.
@@ -286,6 +287,7 @@ class ImportAlarm:
         def decorator(*args, **kwargs):
             self.warn_if_failed()
             return function(*args, **kwargs)
+
         return decorator
 
     def warn_if_failed(self):

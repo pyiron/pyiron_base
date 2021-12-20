@@ -41,11 +41,11 @@ def queue_table(job_ids=[], project_only=True, full_table=False):
         return []
     if state.queue_adapter is not None:
         if full_table:
-            pandas.set_option('display.max_rows', None)
-            pandas.set_option('display.max_columns', None)
+            pandas.set_option("display.max_rows", None)
+            pandas.set_option("display.max_columns", None)
         else:
-            pandas.reset_option('display.max_rows')
-            pandas.reset_option('display.max_columns')
+            pandas.reset_option("display.max_rows")
+            pandas.reset_option("display.max_columns")
         df = state.queue_adapter.get_status_of_my_jobs()
         if not project_only:
             return df[
@@ -146,7 +146,9 @@ def queue_enable_reservation(item):
     que_id = validate_que_request(item)
     if state.queue_adapter is not None:
         if isinstance(que_id, list):
-            return [state.queue_adapter.enable_reservation(process_id=q) for q in que_id]
+            return [
+                state.queue_adapter.enable_reservation(process_id=q) for q in que_id
+            ]
         else:
             return state.queue_adapter.enable_reservation(process_id=que_id)
     else:
@@ -166,14 +168,18 @@ def wait_for_job(job, interval_in_s=5, max_iterations=100):
         ValueError: max_iterations reached, job still running
     """
     if job.status.string not in job_status_finished_lst:
-        if state.queue_adapter is not None and state.queue_adapter.remote_flag and job.server.queue is not None:
+        if (
+            state.queue_adapter is not None
+            and state.queue_adapter.remote_flag
+            and job.server.queue is not None
+        ):
             finished = False
             for _ in range(max_iterations):
                 if not queue_check_job_is_waiting_or_running(item=job):
                     state.queue_adapter.transfer_file_to_remote(
                         file=job.project_hdf5.file_name,
                         transfer_back=True,
-                        delete_remote=False
+                        delete_remote=False,
                     )
                     status_hdf5 = job.project_hdf5["status"]
                     job.status.string = status_hdf5
@@ -185,7 +191,9 @@ def wait_for_job(job, interval_in_s=5, max_iterations=100):
                     break
                 time.sleep(interval_in_s)
             if not finished:
-                raise ValueError("Maximum iterations reached, but the job was not finished.")
+                raise ValueError(
+                    "Maximum iterations reached, but the job was not finished."
+                )
         else:
             finished = False
             for _ in range(max_iterations):
@@ -197,7 +205,9 @@ def wait_for_job(job, interval_in_s=5, max_iterations=100):
                     break
                 time.sleep(interval_in_s)
             if not finished:
-                raise ValueError("Maximum iterations reached, but the job was not finished.")
+                raise ValueError(
+                    "Maximum iterations reached, but the job was not finished."
+                )
 
 
 def wait_for_jobs(project, interval_in_s=5, max_iterations=100, recursive=True):
@@ -239,16 +249,21 @@ def update_from_remote(project, recursive=True):
         df_submitted = df_project[df_project.status == "submitted"]
         df_combined = df_project[df_project.status.isin(["running", "submitted"])]
         df_queue = state.queue_adapter.get_status_of_my_jobs()
-        if len(df_queue) > 0 and len(df_queue[df_queue.jobname.str.startswith("pi_")]) > 0:
+        if (
+            len(df_queue) > 0
+            and len(df_queue[df_queue.jobname.str.startswith("pi_")]) > 0
+        ):
             df_queue = df_queue[df_queue.jobname.str.startswith("pi_")]
             df_queue["pyiron_id"] = df_queue.apply(
-                lambda x: int(x["jobname"].split("pi_")[1]),
-                axis=1
+                lambda x: int(x["jobname"].split("pi_")[1]), axis=1
             )
-            jobs_now_running_lst = df_queue[df_queue.status == "running"].pyiron_id.values
+            jobs_now_running_lst = df_queue[
+                df_queue.status == "running"
+            ].pyiron_id.values
             _ = [
                 project.set_job_status(job_specifier=job_id, status="running")
-                for job_id in df_submitted.id.values if job_id in jobs_now_running_lst
+                for job_id in df_submitted.id.values
+                if job_id in jobs_now_running_lst
             ]
         else:
             jobs_now_running_lst = []
@@ -258,13 +273,10 @@ def update_from_remote(project, recursive=True):
                 state.queue_adapter.transfer_file_to_remote(
                     file=job.project_hdf5.file_name,
                     transfer_back=True,
-                    delete_remote=False
+                    delete_remote=False,
                 )
                 status_hdf5 = job.project_hdf5["status"]
-                project.set_job_status(
-                    job_specifier=job.job_id,
-                    status=status_hdf5
-                )
+                project.set_job_status(job_specifier=job.job_id, status=status_hdf5)
                 if status_hdf5 in job_status_finished_lst:
                     job_object = job.to_object()
                     job_object.transfer_from_remote()
@@ -287,7 +299,10 @@ def validate_que_request(item):
         if item.server.queue_id:
             que_id = item.server.queue_id
         else:
-            queue_id_lst = [item.project.load(child_id).server.queue_id for child_id in item.child_ids]
+            queue_id_lst = [
+                item.project.load(child_id).server.queue_id
+                for child_id in item.child_ids
+            ]
             que_id = [queue_id for queue_id in queue_id_lst if queue_id is not None]
             if len(que_id) == 0:
                 raise ValueError("This job does not have a queue ID.")

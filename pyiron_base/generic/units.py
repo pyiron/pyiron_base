@@ -39,6 +39,7 @@ class PyironUnitRegistry:
     For more information on working with `pint`, see: https://pint.readthedocs.io/en/0.10.1/tutorial.html
 
     """
+
     def __init__(self):
         """
         Attributes:
@@ -114,8 +115,12 @@ class PyironUnitRegistry:
             if quantity in self.unit_dict.keys():
                 self._quantity_dict[label] = quantity
             else:
-                raise KeyError("Quantity {} is not defined. "
-                               "Use `add_quantity` to register the unit of this label".format(quantity))
+                raise KeyError(
+                    "Quantity {} is not defined. "
+                    "Use `add_quantity` to register the unit of this label".format(
+                        quantity
+                    )
+                )
 
     def __getitem__(self, item):
         """
@@ -135,7 +140,9 @@ class PyironUnitRegistry:
         elif item in self._quantity_dict.keys():
             return self._unit_dict[self._quantity_dict[item]]
         else:
-            raise KeyError("Quantity/label '{}' not registered in this unit registry".format(item))
+            raise KeyError(
+                "Quantity/label '{}' not registered in this unit registry".format(item)
+            )
 
     def get_dtype(self, quantity):
         """
@@ -155,7 +162,11 @@ class PyironUnitRegistry:
         elif quantity in self._quantity_dict.keys():
             return self._dtype_dict[self._quantity_dict[quantity]]
         else:
-            raise KeyError("Quantity/label '{}' not registered in this unit registry".format(quantity))
+            raise KeyError(
+                "Quantity/label '{}' not registered in this unit registry".format(
+                    quantity
+                )
+            )
 
 
 class UnitConverter:
@@ -222,17 +233,27 @@ class UnitConverter:
         base_quant = list(self._base_registry.unit_dict.keys())
         for quant in self._code_registry.unit_dict.keys():
             if quant not in base_quant:
-                raise ValueError("quantity {} is not defined in the base registry".format(quant))
+                raise ValueError(
+                    "quantity {} is not defined in the base registry".format(quant)
+                )
 
     def _check_dimensionality(self):
         for quant in self._code_registry.unit_dict.keys():
-            if not self._base_registry[quant].dimensionality == self._code_registry[quant].dimensionality:
-                raise pint.DimensionalityError(self._base_registry[quant], self._code_registry[quant],
-                                               extra_msg="\n Dimensional inequality: Quantity {} has dimensionality {} "
-                                                         "in the base registry but {} in the code "
-                                                         "registry".format(quant,
-                                                                           self._base_registry[quant].dimensionality,
-                                                                           self._code_registry[quant].dimensionality))
+            if (
+                not self._base_registry[quant].dimensionality
+                == self._code_registry[quant].dimensionality
+            ):
+                raise pint.DimensionalityError(
+                    self._base_registry[quant],
+                    self._code_registry[quant],
+                    extra_msg="\n Dimensional inequality: Quantity {} has dimensionality {} "
+                    "in the base registry but {} in the code "
+                    "registry".format(
+                        quant,
+                        self._base_registry[quant].dimensionality,
+                        self._code_registry[quant].dimensionality,
+                    ),
+                )
 
     def code_to_base_pint(self, quantity):
         """
@@ -299,36 +320,62 @@ class UnitConverter:
             function: Decorated function
         """
         if conversion == "code_to_base":
+
             def _decorate_to_base(function):
                 @functools.wraps(function)
                 def dec(*args, **kwargs):
-                    return np.array(function(*args, **kwargs) * self.code_to_base_value(quantity),
-                                    dtype=self._base_registry.get_dtype(quantity))
+                    return np.array(
+                        function(*args, **kwargs) * self.code_to_base_value(quantity),
+                        dtype=self._base_registry.get_dtype(quantity),
+                    )
+
                 return dec
+
             return _decorate_to_base
         elif conversion == "base_to_code":
+
             def _decorate_to_code(function):
                 @functools.wraps(function)
                 def dec(*args, **kwargs):
-                    return np.array(function(*args, **kwargs) * self.base_to_code_value(quantity),
-                                    dtype=self._code_registry.get_dtype(quantity))
+                    return np.array(
+                        function(*args, **kwargs) * self.base_to_code_value(quantity),
+                        dtype=self._code_registry.get_dtype(quantity),
+                    )
+
                 return dec
+
             return _decorate_to_code
         elif conversion == "base_units":
+
             def _decorate_base_units(function):
                 @functools.wraps(function)
                 def dec(*args, **kwargs):
-                    return Q_(np.array(function(*args, **kwargs), dtype=self._base_registry.get_dtype(quantity)),
-                              self._base_registry[quantity])
+                    return Q_(
+                        np.array(
+                            function(*args, **kwargs),
+                            dtype=self._base_registry.get_dtype(quantity),
+                        ),
+                        self._base_registry[quantity],
+                    )
+
                 return dec
+
             return _decorate_base_units
         elif conversion == "code_units":
+
             def _decorate_code_units(function):
                 @functools.wraps(function)
                 def dec(*args, **kwargs):
-                    return Q_(np.array(function(*args, **kwargs), dtype=self._code_registry.get_dtype(quantity)),
-                              self._code_registry[quantity])
+                    return Q_(
+                        np.array(
+                            function(*args, **kwargs),
+                            dtype=self._code_registry.get_dtype(quantity),
+                        ),
+                        self._code_registry[quantity],
+                    )
+
                 return dec
+
             return _decorate_code_units
         else:
             raise ValueError("Conversion type {} not implemented!".format(conversion))

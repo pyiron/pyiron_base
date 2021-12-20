@@ -39,8 +39,7 @@ class Notebook(object):
         if Path(hdf_file).exists():
             obj = DataContainer()
             obj.from_hdf(
-                hdf=FileHDFio(hdf_file),
-                group_name=folder + '/input/custom_dict'
+                hdf=FileHDFio(hdf_file), group_name=folder + "/input/custom_dict"
             )
             obj["project_dir"] = str(project_folder)
             return obj

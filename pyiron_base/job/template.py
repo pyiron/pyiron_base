@@ -24,8 +24,8 @@ class TemplateJob(GenericJob, HasStorage):
     def __init__(self, project, job_name):
         GenericJob.__init__(self, project, job_name)
         HasStorage.__init__(self)
-        self.storage.create_group('input')
-        self.storage.create_group('output')
+        self.storage.create_group("input")
+        self.storage.create_group("output")
 
     @property
     def input(self):
@@ -37,11 +37,11 @@ class TemplateJob(GenericJob, HasStorage):
 
     def to_hdf(self, hdf=None, group_name=None):
         GenericJob.to_hdf(self, hdf=hdf, group_name=group_name)
-        HasStorage.to_hdf(self, hdf=self.project_hdf5, group_name='')
+        HasStorage.to_hdf(self, hdf=self.project_hdf5, group_name="")
 
     def from_hdf(self, hdf=None, group_name=None):
         GenericJob.from_hdf(self, hdf=hdf, group_name=group_name)
-        HasStorage.from_hdf(self, hdf=self.project_hdf5, group_name='')
+        HasStorage.from_hdf(self, hdf=self.project_hdf5, group_name="")
 
 
 class PythonTemplateJob(TemplateJob):

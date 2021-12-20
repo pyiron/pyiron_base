@@ -47,11 +47,13 @@ def _is_ragged_in_1st_dim_only(value: Union[np.ndarray, list]) -> bool:
     if isinstance(value, np.ndarray) and value.dtype != np.dtype("O"):
         return False
     else:
+
         def extract_dims(v):
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore")
                 s = np.shape(v)
             return s[0], s[1:]
+
         dim1, dim_other = zip(*map(extract_dims, value))
         return len(set(dim1)) > 1 and len(set(dim_other)) == 1
 
@@ -115,7 +117,7 @@ class FileHDFio(HasGroups, MutableMapping):
 
     def __len__(self):
         nodes_groups = self.list_all()
-        return len(nodes_groups['nodes']) + len(nodes_groups["groups"])
+        return len(nodes_groups["nodes"]) + len(nodes_groups["groups"])
 
     def __iter__(self):
         return iter(self.keys())
@@ -161,9 +163,13 @@ class FileHDFio(HasGroups, MutableMapping):
                         if self._is_convertable_dtype_object_array(obj):
                             obj = self._convert_dtype_obj_array(obj)
                         return obj
-                raise ValueError("Unknown item: {} {} {}".format(item, self.file_name, self.h5_path))
+                raise ValueError(
+                    "Unknown item: {} {} {}".format(item, self.file_name, self.h5_path)
+                )
             else:
-                if item_lst[0] == "":  # item starting with '/', thus we have an absoute HDF5 path
+                if (
+                    item_lst[0] == ""
+                ):  # item starting with '/', thus we have an absoute HDF5 path
                     item_abs_lst = os.path.normpath(item).replace("\\", "/").split("/")
                 else:  # relative HDF5 path
                     # The self.h5_path is an absolute path (/h5_path/in/h5/file), however, to
@@ -171,14 +177,12 @@ class FileHDFio(HasGroups, MutableMapping):
                     # relative path = ./h5_path/in/h5/file and add whatever we get as item.
                     # The normpath finally returns a path to the item which is relative to the hdf-root.
                     item_abs_lst = (
-                        os.path.normpath(os.path.join('.' + self.h5_path, item))
+                        os.path.normpath(os.path.join("." + self.h5_path, item))
                         .replace("\\", "/")
                         .split("/")
                     )
                 # print('h5_path=', self.h5_path, 'item=', item, 'item_abs_lst=', item_abs_lst)
-                if (
-                        item_abs_lst[0] == "." and len(item_abs_lst) == 1
-                ):
+                if item_abs_lst[0] == "." and len(item_abs_lst) == 1:
                     # Here, we are asked to return the root of the HDF5-file. The resulting self.path would be the
                     # same as the self.file_path and, thus, the path of the pyiron Project this HDF5-file belongs to:
                     return self.create_project_from_hdf5()
@@ -191,27 +195,32 @@ class FileHDFio(HasGroups, MutableMapping):
                     hdf_object.h5_path = "/".join(item_abs_lst[:-1])
                     return hdf_object[item_abs_lst[-1]]
 
-    #TODO: remove this function upon 1.0.0 release
+    # TODO: remove this function upon 1.0.0 release
     @staticmethod
     def _is_convertable_dtype_object_array(obj):
         if isinstance(obj, np.ndarray) and obj.dtype == np.dtype(object):
             first_element = obj[(0,) * obj.ndim]
             last_element = obj[(-1,) * obj.ndim]
-            if isinstance(first_element, numbers.Number) and isinstance(last_element, numbers.Number) \
-                    and not _is_ragged_in_1st_dim_only(obj):
+            if (
+                isinstance(first_element, numbers.Number)
+                and isinstance(last_element, numbers.Number)
+                and not _is_ragged_in_1st_dim_only(obj)
+            ):
                 return True
         return False
 
-    #TODO: remove this function upon 1.0.0 release
+    # TODO: remove this function upon 1.0.0 release
     @staticmethod
     def _convert_dtype_obj_array(obj: np.ndarray):
         result = np.array(obj.tolist())
         if result.dtype != np.dtype(object):
-            state.logger.warning(f"Deprecated data structure! "
-                                 f"Returned array was converted from dtype='O' to dtype={result.dtype} "
-                                 f"via `np.array(result.tolist())`.\n"
-                                 f"Please run rewrite_hdf5() to update this data! "
-                                 f"To update all your data run update_scripts/pyiron_base_0.3_to_0.4.py")
+            state.logger.warning(
+                f"Deprecated data structure! "
+                f"Returned array was converted from dtype='O' to dtype={result.dtype} "
+                f"via `np.array(result.tolist())`.\n"
+                f"Please run rewrite_hdf5() to update this data! "
+                f"To update all your data run update_scripts/pyiron_base_0.3_to_0.4.py"
+            )
             return result
         else:
             return obj
@@ -241,7 +250,7 @@ class FileHDFio(HasGroups, MutableMapping):
             # just writing a dataset for each element, by concatenating along the first axis and storing the indices
             # where to break the concatenated array again
             value = np.array([np.asarray(v) for v in value], dtype=object)
-            use_json=False
+            use_json = False
         elif isinstance(value, tuple):
             value = list(value)
         h5io.write_hdf5(
@@ -265,6 +274,7 @@ class FileHDFio(HasGroups, MutableMapping):
                     del store[key]
             except (AttributeError, KeyError):
                 pass
+
     @property
     def file_exists(self):
         """
@@ -431,25 +441,28 @@ class FileHDFio(HasGroups, MutableMapping):
             FileHDFio: FileHDFio object pointing to a file which now contains the same content as file of the current
                        FileHDFio object.
         """
+
         def _internal_copy(source, source_path, target, target_path, maintain_flag):
             """
-            Internal function to copy content of one HDF5 file to another or copy a group within the same HDF5 file. 
-            
+            Internal function to copy content of one HDF5 file to another or copy a group within the same HDF5 file.
+
             Args:
-                source (h5py.File): HDF5 File object 
-                source_path (str): Path inside the source HDF5 file 
+                source (h5py.File): HDF5 File object
+                source_path (str): Path inside the source HDF5 file
                 target (h5py.File): HDF5 File object
-                target_path (str): Path inside the target HDF5 file 
-                maintain_flag (bool): Maintain the same group name 
+                target_path (str): Path inside the target HDF5 file
+                maintain_flag (bool): Maintain the same group name
             """
             if maintain_flag:
                 try:
                     target.create_group(target_path)
                 except ValueError:
-                    pass  # In case the copy_to() function failed previously and the group already exists. 
+                    pass  # In case the copy_to() function failed previously and the group already exists.
 
             if target_path == "/":
-                source.copy(target_path, "/") if source == target else source.copy(target_path, target)
+                source.copy(target_path, "/") if source == target else source.copy(
+                    target_path, target
+                )
             else:
                 if maintain_flag:
                     if dest_path != "":
@@ -474,16 +487,30 @@ class FileHDFio(HasGroups, MutableMapping):
             file_name = destination.file_name
 
         if self.file_exists:
-            dest_path = destination.h5_path[1:] if destination.h5_path[0] == "/" else destination.h5_path
+            dest_path = (
+                destination.h5_path[1:]
+                if destination.h5_path[0] == "/"
+                else destination.h5_path
+            )
             if self.file_name != file_name:
                 with open_hdf5(self.file_name, mode="r") as f_source:
                     with open_hdf5(file_name, mode="a") as f_target:
-                        _internal_copy(source=f_source, source_path=self._h5_path, target=f_target,
-                                       target_path=dest_path, maintain_flag=maintain_name)
+                        _internal_copy(
+                            source=f_source,
+                            source_path=self._h5_path,
+                            target=f_target,
+                            target_path=dest_path,
+                            maintain_flag=maintain_name,
+                        )
             else:
                 with open_hdf5(file_name, mode="a") as f_target:
-                    _internal_copy(source=f_target, source_path=self._h5_path, target=f_target,
-                                   target_path=dest_path, maintain_flag=maintain_name)
+                    _internal_copy(
+                        source=f_target,
+                        source_path=self._h5_path,
+                        target=f_target,
+                        target_path=dest_path,
+                        maintain_flag=maintain_name,
+                    )
 
         return destination
 
@@ -603,7 +630,7 @@ class FileHDFio(HasGroups, MutableMapping):
             df = pandas.DataFrame(val)
             return df
 
-    def get(self, key, default = None):
+    def get(self, key, default=None):
         """
         Internal wrapper function for __getitem__() - self[name]
 
@@ -1283,7 +1310,7 @@ class ProjectHDFio(FileHDFio):
         else:
             class_path = class_name.split()[-1].split(".")[:-1]
             class_path[0] = class_path[0][1:]
-            module_path = '.'.join(class_path)
+            module_path = ".".join(class_path)
         return getattr(
             importlib.import_module(module_path),
             internal_class_name,
@@ -1329,9 +1356,7 @@ class ProjectHDFio(FileHDFio):
             pyiron object of the given class_name
         """
         if "TYPE" not in self.list_nodes() and class_name is None:
-            raise ValueError(
-                "Objects can be only recovered from hdf5 if TYPE is given"
-            )
+            raise ValueError("Objects can be only recovered from hdf5 if TYPE is given")
         elif class_name is not None and class_name != self.get("TYPE"):
             raise ValueError(
                 "Object type in hdf5-file must be identical to input parameter"
@@ -1344,10 +1369,7 @@ class ProjectHDFio(FileHDFio):
             self["TYPE"] = str(class_object)
 
         obj = self.create_instance(class_object, **qwargs)
-        obj.from_hdf(
-                hdf = self.open(".."),
-                group_name = self.h5_path.split('/')[-1]
-        )
+        obj.from_hdf(hdf=self.open(".."), group_name=self.h5_path.split("/")[-1])
         return obj
 
     def get_job_id(self, job_specifier):
