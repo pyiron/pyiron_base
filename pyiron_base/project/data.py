@@ -50,7 +50,9 @@ class ProjectData(DataContainer):
         """Read existing data from project-level storage."""
         hdf = ProjectHDFio(self._project, file_name="project_data")
         if self.table_name not in hdf.list_groups():
-            raise KeyError(f"Table name {self.table_name} was not found -- Project data is empty.")
+            raise KeyError(
+                f"Table name {self.table_name} was not found -- Project data is empty."
+            )
         self.from_hdf(hdf=hdf)
 
     def write(self):

@@ -30,14 +30,7 @@ __status__ = "production"
 __date__ = "Jun 17, 2020"
 
 
-_internal_hdf_nodes = [
-        "NAME",
-        "TYPE",
-        "OBJECT",
-        "VERSION",
-        "HDF_VERSION",
-        "READ_ONLY"
-]
+_internal_hdf_nodes = ["NAME", "TYPE", "OBJECT", "VERSION", "HDF_VERSION", "READ_ONLY"]
 
 
 def _normalize(key):
@@ -319,9 +312,7 @@ class DataContainer(MutableMapping, HasGroups, HasHDF):
                 raise KeyError(repr(key)) from None
 
         else:
-            raise ValueError(
-                    "{} is not a valid key, must be str or int".format(key)
-            )
+            raise ValueError("{} is not a valid key, must be str or int".format(key))
 
     def __setitem__(self, key, val):
 
@@ -352,9 +343,7 @@ class DataContainer(MutableMapping, HasGroups, HasHDF):
             else:
                 self._store[self._indices[key]] = val
         else:
-            raise ValueError(
-                    "{} is not a valid key, must be str or int".format(key)
-            )
+            raise ValueError("{} is not a valid key, must be str or int".format(key))
 
     def __delitem__(self, key):
 
@@ -382,9 +371,7 @@ class DataContainer(MutableMapping, HasGroups, HasHDF):
                 if i > idx:
                     self._indices[k] = i - 1
         else:
-            raise ValueError(
-                    "{} is not a valid key, must be str or int".format(key)
-            )
+            raise ValueError("{} is not a valid key, must be str or int".format(key))
 
     def __getattr__(self, name):
         # this is only called when python doesn't find name in the instance
@@ -429,8 +416,15 @@ class DataContainer(MutableMapping, HasGroups, HasHDF):
         if self.has_keys():
             # access _store and _indices directly to avoid forcing HDFStubs
             index2key = {v: k for k, v in self._indices.items()}
-            return name + "({" + ", ".join("{!r}: {!r}".format(index2key.get(i, i), self._store[i])
-                                                for i in range(len(self))) + "})"
+            return (
+                name
+                + "({"
+                + ", ".join(
+                    "{!r}: {!r}".format(index2key.get(i, i), self._store[i])
+                    for i in range(len(self))
+                )
+                + "})"
+            )
         else:
             return name + "([" + ", ".join("{!r}".format(v) for v in self._store) + "])"
 
@@ -479,13 +473,17 @@ class DataContainer(MutableMapping, HasGroups, HasHDF):
 
             return dd
         elif stringify:
-            return list(v.to_builtin(stringify=stringify)
-                        if isinstance(v, DataContainer) else repr(v)
-                        for v in self.values())
+            return list(
+                v.to_builtin(stringify=stringify)
+                if isinstance(v, DataContainer)
+                else repr(v)
+                for v in self.values()
+            )
         else:
-            return list(v.to_builtin(stringify=stringify)
-                        if isinstance(v, DataContainer) else v
-                        for v in self.values())
+            return list(
+                v.to_builtin(stringify=stringify) if isinstance(v, DataContainer) else v
+                for v in self.values()
+            )
 
     # allows "nice" displays in jupyter lab
     def _repr_json_(self):
@@ -628,7 +626,8 @@ class DataContainer(MutableMapping, HasGroups, HasHDF):
                             raise ValueError(
                                 "keys in initializer must not be int or str of "
                                 "decimal digits or in correct order, "
-                                "is {!r}".format(k))
+                                "is {!r}".format(k)
+                            )
                     else:
                         self[k] = v
             else:
@@ -791,7 +790,9 @@ class DataContainer(MutableMapping, HasGroups, HasHDF):
             k = "{}__index_{}".format(k if isinstance(k, str) else "", i)
 
             # pandas objects also have a to_hdf method that is entirely unrelated to ours
-            if hasattr(v, "to_hdf") and not isinstance(v, (pandas.DataFrame, pandas.Series)):
+            if hasattr(v, "to_hdf") and not isinstance(
+                v, (pandas.DataFrame, pandas.Series)
+            ):
                 v.to_hdf(hdf=hdf, group_name=k)
             else:
                 # if the value doesn't know how to serialize itself, assume
@@ -799,8 +800,10 @@ class DataContainer(MutableMapping, HasGroups, HasHDF):
                 try:
                     hdf[k] = v
                 except TypeError:
-                    raise TypeError("Error saving {} (key {}): DataContainer doesn't support saving elements "
-                                    "of type \"{}\" to HDF!".format(v, k, type(v))) from None
+                    raise TypeError(
+                        "Error saving {} (key {}): DataContainer doesn't support saving elements "
+                        'of type "{}" to HDF!'.format(v, k, type(v))
+                    ) from None
 
     def _from_hdf(self, hdf, version=None):
         self.clear()
@@ -809,6 +812,7 @@ class DataContainer(MutableMapping, HasGroups, HasHDF):
             self.update(hdf["data"], wrap=True)
             self.read_only = bool(hdf.get("read_only", False))
         else:
+
             def normalize_key(name):
                 # split a dataset/group name into the position in the list and
                 # the key
@@ -823,9 +827,16 @@ class DataContainer(MutableMapping, HasGroups, HasHDF):
             for n in hdf.list_nodes():
                 if n in _internal_hdf_nodes:
                     continue
-                items.append( (*normalize_key(n), hdf[n] if not self._lazy else HDFStub(hdf, n)) )
+                items.append(
+                    (*normalize_key(n), hdf[n] if not self._lazy else HDFStub(hdf, n))
+                )
             for g in hdf.list_groups():
-                items.append( (*normalize_key(g), hdf[g].to_object() if not self._lazy else HDFStub(hdf, g)) )
+                items.append(
+                    (
+                        *normalize_key(g),
+                        hdf[g].to_object() if not self._lazy else HDFStub(hdf, g),
+                    )
+                )
 
             for _, k, v in sorted(items, key=lambda x: x[0]):
                 self[k] = v

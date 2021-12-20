@@ -50,6 +50,7 @@ class FunctionContainer(object):
     Class which is able to append, store and retreive a set of functions.
 
     """
+
     def __init__(self, system_function_lst=None):
         if system_function_lst is None:
             system_function_lst = []
@@ -70,18 +71,14 @@ class FunctionContainer(object):
         ] + list(self._user_function_dict.values())
 
     def _to_hdf(self, hdf):
-        _to_pickle(
-            hdf=hdf, key="user_function_dict", value=self._user_function_dict
-        )
+        _to_pickle(hdf=hdf, key="user_function_dict", value=self._user_function_dict)
         _to_pickle(
             hdf=hdf, key="system_function_dict", value=self._system_function_dict
         )
 
     def _from_hdf(self, hdf):
         self._user_function_dict = _from_pickle(hdf=hdf, key="user_function_dict")
-        self._system_function_dict = _from_pickle(
-            hdf=hdf, key="system_function_dict"
-        )
+        self._system_function_dict = _from_pickle(hdf=hdf, key="system_function_dict")
 
     def __setitem__(self, key, item):
         if isinstance(item, str):
@@ -112,16 +109,19 @@ class JobFilters(object):
     Certain predefined job filters
 
     """
+
     @staticmethod
     def job_type(job_type):
         def filter_job_type(job):
             return job.__name__ == job_type
+
         return filter_job_type
 
     @staticmethod
     def job_name_contains(job_name_segment):
         def filter_job_name_segment(job):
             return job_name_segment in job.job_name
+
         return filter_job_name_segment
 
 
@@ -134,7 +134,10 @@ class PyironTable(HasGroups):
         name (str): Name of the pyiron table
         system_function_lst (list/ None): List of built-in functions
     """
-    def __init__(self, project, name=None, system_function_lst=None, csv_file_name=None):
+
+    def __init__(
+        self, project, name=None, system_function_lst=None, csv_file_name=None
+    ):
         self._project = project
         self._df = pandas.DataFrame({})
         self.convert_to_object = False
@@ -231,7 +234,9 @@ class PyironTable(HasGroups):
         self.from_hdf()
         self._load_csv()
 
-    def create_table(self, enforce_update=False, level=3, file=None, job_status_list=None):
+    def create_table(
+        self, enforce_update=False, level=3, file=None, job_status_list=None
+    ):
         skip_table_update = False
         filter_funct = self.filter_function
         if job_status_list is None:
@@ -241,13 +246,14 @@ class PyironTable(HasGroups):
                 file = FileHDFio(
                     file_name=self._project.path + self.name + ".h5", h5_path="/"
                 )
-            temp_user_function_dict, temp_system_function_dict = self._get_data_from_hdf5(
-                hdf=file
-            )
+            (
+                temp_user_function_dict,
+                temp_system_function_dict,
+            ) = self._get_data_from_hdf5(hdf=file)
             job_update_lst = self._collect_job_update_lst(
                 job_status_list=job_status_list,
                 filter_funct=filter_funct,
-                job_stored_ids=self._get_job_ids()
+                job_stored_ids=self._get_job_ids(),
             )
             keys_update_user_lst = [
                 key
@@ -270,7 +276,7 @@ class PyironTable(HasGroups):
             job_update_lst = self._collect_job_update_lst(
                 job_status_list=job_status_list,
                 filter_funct=filter_funct,
-                job_stored_ids=None
+                job_stored_ids=None,
             )
             keys_update_user_lst, keys_update_system_lst = [], []
         if not skip_table_update and len(job_update_lst) != 0:
@@ -285,7 +291,7 @@ class PyironTable(HasGroups):
             job_update_lst = self._collect_job_update_lst(
                 job_status_list=job_status_list,
                 filter_funct=filter_funct,
-                job_stored_ids=None
+                job_stored_ids=None,
             )
             function_lst = [
                 v
@@ -383,7 +389,7 @@ class PyironTable(HasGroups):
             new_table = PyironTable(
                 project=self._project[item],
                 system_function_lst=self._system_function_lst,
-                csv_file_name=os.path.join(self.working_directory, "pyirontable.csv")
+                csv_file_name=os.path.join(self.working_directory, "pyirontable.csv"),
             )
             new_table._df = self._df.drop("col_0", axis=1)
             new_table._df.rename(index=str, columns=rename_dict, inplace=True)
@@ -422,12 +428,8 @@ class PyironTable(HasGroups):
 
     @staticmethod
     def _get_data_from_hdf5(hdf):
-        temp_user_function_dict = _from_pickle(
-            hdf=hdf, key="user_function_dict"
-        )
-        temp_system_function_dict = _from_pickle(
-            hdf=hdf, key="system_function_dict"
-        )
+        temp_user_function_dict = _from_pickle(hdf=hdf, key="user_function_dict")
+        temp_system_function_dict = _from_pickle(hdf=hdf, key="system_function_dict")
         return temp_user_function_dict, temp_system_function_dict
 
     def _get_job_ids(self):
@@ -467,7 +469,9 @@ class PyironTable(HasGroups):
         self.refill_dict(diff_dict_lst)
         return pandas.DataFrame(diff_dict_lst)
 
-    def _collect_job_update_lst(self, job_status_list, filter_funct, job_stored_ids=None):
+    def _collect_job_update_lst(
+        self, job_status_list, filter_funct, job_stored_ids=None
+    ):
         """
         Collect jobs to update the pyiron table
 
@@ -519,7 +523,7 @@ class TableJob(GenericJob):
         self._pyiron_table = PyironTable(
             project=None,
             system_function_lst=self._system_function_lst,
-            csv_file_name=os.path.join(self.working_directory, "pyirontable.csv")
+            csv_file_name=os.path.join(self.working_directory, "pyirontable.csv"),
         )
         self._enforce_update = False
         self._project_level = 0
@@ -580,7 +584,7 @@ class TableJob(GenericJob):
         self._pyiron_table = PyironTable(
             project=self._analysis_project,
             system_function_lst=self._system_function_lst,
-            csv_file_name=os.path.join(self.working_directory, "pyirontable.csv")
+            csv_file_name=os.path.join(self.working_directory, "pyirontable.csv"),
         )
 
     @property
@@ -613,7 +617,9 @@ class TableJob(GenericJob):
 
     def _save_output(self):
         with self.project_hdf5.open("output") as hdf5_output:
-            self.pyiron_table._df.to_hdf(hdf5_output.file_name, hdf5_output.h5_path + "/table")
+            self.pyiron_table._df.to_hdf(
+                hdf5_output.file_name, hdf5_output.h5_path + "/table"
+            )
 
     def to_hdf(self, hdf=None, group_name=None):
         """
@@ -642,7 +648,9 @@ class TableJob(GenericJob):
             if self.pyiron_table._filter_function is not None:
                 _to_pickle(hdf5_input, "filter", self.pyiron_table._filter_function)
             if self.pyiron_table._db_filter_function is not None:
-                _to_pickle(hdf5_input, "db_filter", self.pyiron_table._db_filter_function)
+                _to_pickle(
+                    hdf5_input, "db_filter", self.pyiron_table._db_filter_function
+                )
         if len(self.pyiron_table._df) != 0:
             self._save_output()
 
@@ -674,7 +682,9 @@ class TableJob(GenericJob):
                         hdf5_input["filter"]
                     )
                 else:
-                    self.pyiron_table.filter_function = _from_pickle(hdf5_input, "filter")
+                    self.pyiron_table.filter_function = _from_pickle(
+                        hdf5_input, "filter"
+                    )
             if "db_filter" in hdf5_input.list_nodes():
                 if hdf_version == "0.1.0":
                     self.pyiron_table._db_filter_function_str = hdf5_input["db_filter"]
@@ -682,15 +692,19 @@ class TableJob(GenericJob):
                         hdf5_input["db_filter"]
                     )
                 else:
-                    self.pyiron_table.db_filter_function = _from_pickle(hdf5_input, "db_filter")
+                    self.pyiron_table.db_filter_function = _from_pickle(
+                        hdf5_input, "db_filter"
+                    )
             bool_dict = hdf5_input["bool_dict"]
             self._enforce_update = bool_dict["enforce_update"]
             self._pyiron_table.convert_to_object = bool_dict["convert_to_object"]
             self._pyiron_table.add._from_hdf(hdf5_input)
-        if hdf_version=="0.3.0":
+        if hdf_version == "0.3.0":
             with self.project_hdf5.open("output") as hdf5_output:
                 if "table" in hdf5_output.list_groups():
-                    self._pyiron_table._df = pandas.read_hdf(hdf5_output.file_name, hdf5_output.h5_path + "/table")
+                    self._pyiron_table._df = pandas.read_hdf(
+                        hdf5_output.file_name, hdf5_output.h5_path + "/table"
+                    )
         else:
             pyiron_table = os.path.join(self.working_directory, "pyirontable.csv")
             if os.path.exists(pyiron_table):
@@ -763,6 +777,7 @@ def always_true_pandas(job_table):
 
     """
     from pandas import Series
+
     return Series([True] * len(job_table), index=job_table.index)
 
 

@@ -10,10 +10,14 @@ from pyiron_base.state import state
 
 def register(parser):
     parser.add_argument(
-            "-i", "--input-path", type=os.path.abspath,
+        "-i",
+        "--input-path",
+        type=os.path.abspath,
     )
     parser.add_argument(
-            "-o", "--output-path", type=os.path.abspath,
+        "-o",
+        "--output-path",
+        type=os.path.abspath,
     )
 
 
@@ -28,7 +32,7 @@ def main(args):
 
     db_project_path = state.database.top_path(project_path)
     project = os.path.dirname(project_path)
-    db_project = (project + "/")
+    db_project = project + "/"
     if db_project_path is not None:
         db_project = db_project.replace(db_project_path, "")
     job_reload = Project(project).load_from_jobpath(

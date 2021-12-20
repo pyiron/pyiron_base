@@ -36,6 +36,7 @@ class QueueAdapters(metaclass=Singleton):
     The :attribute:`adapter` property then lets you access the *first of these that was found*, or None if there were no
     queue configuration files.
     """
+
     def __init__(self):
         self._adapters = None
         self.construct_adapters()
@@ -48,11 +49,14 @@ class QueueAdapters(metaclass=Singleton):
                 os.path.exists(resource_path)
                 and "queues" in os.listdir(resource_path)
                 and (
-                    "queue.yaml" in os.listdir(os.path.join(resource_path, "queues")) or
-                    "clusters.yaml" in os.listdir(os.path.join(resource_path, "queues"))
+                    "queue.yaml" in os.listdir(os.path.join(resource_path, "queues"))
+                    or "clusters.yaml"
+                    in os.listdir(os.path.join(resource_path, "queues"))
                 )
             ):
-                self._adapters.append(PySQAAdpter(directory=os.path.join(resource_path, "queues")))
+                self._adapters.append(
+                    PySQAAdpter(directory=os.path.join(resource_path, "queues"))
+                )
 
     @property
     def adapter(self) -> PySQAAdpter:
