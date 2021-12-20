@@ -8,6 +8,7 @@ from git import Repo, InvalidGitRepositoryError
 
 from pyiron_base import state
 from pyiron_base.database.performance import get_database_statistics
+from pyiron_base.project.update.pyiron_base_03x_to_04x import pyiron_base_03x_to_04x
 
 
 class Maintenance:
@@ -85,12 +86,13 @@ class UpdateMaintenance:
             projects = project
         elif project == 'all':
             projects = [self._project.__class__(path) for path in state.settings.configuration['project_paths']]
+        elif isinstance(project, str):
+            projects = [self._project.__class__(project)]
         else:
             projects = [project]
 
         for pr in projects:
-            for j in pr.iter_jobs(convert_to_object=False, recursive=True):
-                j.project_hdf5.rewrite_hdf5(j.name)
+            pyiron_base_03x_to_04x(pr)
 
 
 class GlobalMaintenance:
