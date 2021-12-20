@@ -19,11 +19,7 @@ __email__ = "janssen@mpie.de"
 __status__ = "production"
 __date__ = "Sep 1, 2017"
 
-job_status_successful_lst = [
-    "finished",
-    "not_converged",
-    "warning"
-]
+job_status_successful_lst = ["finished", "not_converged", "warning"]
 
 job_status_finished_lst = ["aborted"] + job_status_successful_lst
 
@@ -66,8 +62,9 @@ def format_docstring_with_statuses(n_tabs=1):
     """
 
     def decorator(obj):
-        obj.__doc__ = obj.__doc__.format(status_docs.format('\t' * n_tabs))
+        obj.__doc__ = obj.__doc__.format(status_docs.format("\t" * n_tabs))
         return obj
+
     return decorator
 
 
@@ -173,18 +170,26 @@ class JobStatus(object):
             self._status_dict[status] = True
             self._status_write()
         else:
-            raise ValueError(f"'{status}' is not a valid job status. Instead use [{', '.join(job_status_lst)}]")
+            raise ValueError(
+                f"'{status}' is not a valid job status. Instead use [{', '.join(job_status_lst)}]"
+            )
 
     def refresh_status(self):
         """
         Refresh the job status - check if the database and job_id are set and if this is the case load the job status
         from the database.
         """
-        if self.database and self.job_id and not any([self._status_dict[i] for i in job_status_finished_lst]):
+        if (
+            self.database
+            and self.job_id
+            and not any([self._status_dict[i] for i in job_status_finished_lst])
+        ):
             try:
                 status = self.database.get_job_status(job_id=self.job_id)
             except IndexError:
-                raise ValueError(f"The job with ID {self.job_id} is not listed in the database anymore.") from None
+                raise ValueError(
+                    f"The job with ID {self.job_id} is not listed in the database anymore."
+                ) from None
             self._reset()
             self._status_dict[status] = True
 
@@ -240,8 +245,9 @@ class JobStatus(object):
         if name in self._status_dict.keys():
             self.refresh_status()
             return self._status_dict[name]
-        raise AttributeError("'{}' object has no attribute '{}'".format(
-                                self.__class__.__name__, name))
+        raise AttributeError(
+            "'{}' object has no attribute '{}'".format(self.__class__.__name__, name)
+        )
 
     def __setattr__(self, name, value):
         if name in self._status_dict.keys():

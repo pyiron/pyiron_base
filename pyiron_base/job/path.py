@@ -472,7 +472,7 @@ class JobPath(JobPathBase):
         if db_entry["projectpath"] is not None:
             job_path = db_entry["projectpath"]
         else:
-            job_path = ''
+            job_path = ""
         job_path += db_entry["project"] + hdf5_file + db_entry["subjob"]
         super(JobPath, self).__init__(job_path=job_path)
 

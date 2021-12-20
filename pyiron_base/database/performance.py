@@ -38,7 +38,7 @@ def _checkpoints_interval(conn):
         ) AS sub;
     """
     check_points = conn.execute(stmt).fetchone()
-    return {'num. checkpoints': check_points[0], 'checkpoint interval': check_points[1]}
+    return {"num. checkpoints": check_points[0], "checkpoint interval": check_points[1]}
 
 
 def _duplicate_indices(conn):
@@ -58,11 +58,15 @@ def _duplicate_indices(conn):
             ORDER BY sum(pg_relation_size(idx)) DESC;
     """
     overlapping_indices = conn.execute(stmt).fetchall()
-    output_dict = {'duplicated indices': []}
+    output_dict = {"duplicated indices": []}
     if len(overlapping_indices) > 0:
         for pair in overlapping_indices:
-            output_dict['duplicated indices'].append(
-                str(pair[1]) + ', and ' + str(pair[2]) + ' with total size: ' + str(pair[0])
+            output_dict["duplicated indices"].append(
+                str(pair[1])
+                + ", and "
+                + str(pair[2])
+                + " with total size: "
+                + str(pair[0])
             )
     return output_dict
 
@@ -89,8 +93,10 @@ class DatabaseStatistics:
         self._engine = create_engine(connection_string)
         self._performance_dict = {}
         metadata = MetaData()
-        self._stat_view = Table('pg_stat_activity', metadata, autoload_with=self._engine)
-        self._locks_view = Table('pg_locks', metadata, autoload_with=self._engine)
+        self._stat_view = Table(
+            "pg_stat_activity", metadata, autoload_with=self._engine
+        )
+        self._locks_view = Table("pg_locks", metadata, autoload_with=self._engine)
 
     def _num_conn(self, conn):
         """
@@ -98,19 +104,22 @@ class DatabaseStatistics:
         """
         stmt = select(func.count()).select_from(self._stat_view)
         result = conn.execute(stmt)
-        return {'total num. connection': result.fetchone()[0]}
+        return {"total num. connection": result.fetchone()[0]}
 
     def _num_conn_by_state(self, conn):
         """
         return the number of connection, categorized by their state:
         active, idle, idle in transaction, idle in transaction (aborted)
         """
-        stmt = select(self._stat_view.c.state, func.count()).\
-            select_from(self._stat_view).group_by(self._stat_view.c.state)
+        stmt = (
+            select(self._stat_view.c.state, func.count())
+            .select_from(self._stat_view)
+            .group_by(self._stat_view.c.state)
+        )
         results = conn.execute(stmt).fetchall()
         output_dict = {}
         for result in results:
-            key = 'Number of ' + str(result[0]) + ' connection'
+            key = "Number of " + str(result[0]) + " connection"
             val = int(result[1])
             output_dict[key] = val
         return output_dict
@@ -119,16 +128,26 @@ class DatabaseStatistics:
         """
         returns the number of connection waiting for locks
         """
-        stmt = select(func.count(distinct(self._locks_view.c.pid))).where(self._locks_view.c.granted == false())
-        return {'num. of conn. waiting for locks': conn.execute(stmt).fetchone()[0]}
+        stmt = select(func.count(distinct(self._locks_view.c.pid))).where(
+            self._locks_view.c.granted == false()
+        )
+        return {"num. of conn. waiting for locks": conn.execute(stmt).fetchone()[0]}
 
     def _max_trans_age(self, conn):
         """
         returns the maximum age of a transaction
         """
-        stmt = select(func.max(func.now() - self._stat_view.c.xact_start)).select_from(self._stat_view).where(
-            or_(self._stat_view.c.state == 'idle in transaction', self._stat_view.c.state == 'active'))
-        return {'max. transaction age': str(conn.execute(stmt).fetchone()[0])}
+        stmt = (
+            select(func.max(func.now() - self._stat_view.c.xact_start))
+            .select_from(self._stat_view)
+            .where(
+                or_(
+                    self._stat_view.c.state == "idle in transaction",
+                    self._stat_view.c.state == "active",
+                )
+            )
+        )
+        return {"max. transaction age": str(conn.execute(stmt).fetchone()[0])}
 
     def _index_size(self, conn):
         """
@@ -159,9 +178,9 @@ class DatabaseStatistics:
         index_usage = 0
         for row in rows:
             if row[1] == self._job_table:
-                index_usage += int(str(row[5]).split(' ')[0])
+                index_usage += int(str(row[5]).split(" ")[0])
 
-        return {'index size/usage (MB)': index_usage}
+        return {"index size/usage (MB)": index_usage}
 
     def performance(self):
         """
@@ -176,7 +195,7 @@ class DatabaseStatistics:
             self._performance_dict.update(self._index_size(conn))
             self._performance_dict.update(_duplicate_indices(conn))
 
-        return pd.DataFrame(self._performance_dict, index=['performance'])
+        return pd.DataFrame(self._performance_dict, index=["performance"])
 
 
 def get_database_statistics():

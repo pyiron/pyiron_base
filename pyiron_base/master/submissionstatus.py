@@ -198,11 +198,7 @@ class SubmissionStatus(object):
         if self.job_id:
             computer = self.database.get_item_by_id(self.job_id)["computer"]
             if computer is not None:
-                submission_status_lst = (
-                    computer
-                    .split("#")[-1]
-                    .split("/")
-                )
+                submission_status_lst = computer.split("#")[-1].split("/")
             else:
                 submission_status_lst = []
             if len(submission_status_lst) == 2:
@@ -257,6 +253,10 @@ class SubmissionStatus(object):
                     )
                 else:
                     status = (
-                        computer[0] + "#" + computer[1] + "#" + str(self._submitted_jobs)
+                        computer[0]
+                        + "#"
+                        + computer[1]
+                        + "#"
+                        + str(self._submitted_jobs)
                     )
                 self.database.item_update({"computer": status}, self.job_id)
