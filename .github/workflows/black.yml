@@ -20,8 +20,7 @@ jobs:
         mamba-version: "*"
         channels: conda-forge
         channel-priority: strict
-        auto-update-conda: true  
-        environment-file: .ci_support/environment.yml
+        auto-update-conda: true
     - name: Setup
       shell: bash -l {0}
       run: |
