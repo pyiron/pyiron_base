@@ -17,6 +17,7 @@ class Maintenance:
     some measures of perfomance for pyiron, whether local to the project
     or global (describing the status of pyiron on the running machine)
     """
+
     def __init__(self, project):
         """
         initialize the local and global attributes
@@ -43,17 +44,21 @@ class Maintenance:
         Returns:
             pandas.DataFrame: The name of each module and the hash and version for its current git head.
         """
-        module_names = [name for _, name, _ in pkgutil.iter_modules() if name.startswith("pyiron")]
+        module_names = [
+            name for _, name, _ in pkgutil.iter_modules() if name.startswith("pyiron")
+        ]
 
-        report = pandas.DataFrame(columns=['Module', 'Git head', 'Version'], index=range(len(module_names)))
+        report = pandas.DataFrame(
+            columns=["Module", "Git head", "Version"], index=range(len(module_names))
+        )
         for i, name in enumerate(module_names):
             module = importlib.import_module(name)
             try:
                 repo = Repo(os.path.dirname(os.path.dirname(module.__file__)))
                 hash_ = repo.head.reference.commit.hexsha
             except InvalidGitRepositoryError:
-                hash_ = 'Not a repo'
-            if hasattr(module, '__version__'):
+                hash_ = "Not a repo"
+            if hasattr(module, "__version__"):
                 version = module.__version__
             else:
                 version = "not defined"
@@ -67,7 +72,7 @@ class UpdateMaintenance:
         self._project = project
 
     def base_v0_3_to_v0_4(self, project=None):
-        """ Update hdf files written with pyiron_base-0.3.x to pyiron_base-0.4.x
+        """Update hdf files written with pyiron_base-0.3.x to pyiron_base-0.4.x
 
         pyiron_base<=0.3.9 has a bug that writes all arrays with dtype=object even
         numeric ones.  As a fix pyiron_base=0.4.0 introduces a conversion when reading
@@ -84,8 +89,11 @@ class UpdateMaintenance:
             projects = [self._project]
         elif isinstance(project, list):
             projects = project
-        elif project == 'all':
-            projects = [self._project.__class__(path) for path in state.settings.configuration['project_paths']]
+        elif project == "all":
+            projects = [
+                self._project.__class__(path)
+                for path in state.settings.configuration["project_paths"]
+            ]
         elif isinstance(project, str):
             projects = [self._project.__class__(project)]
         else:
