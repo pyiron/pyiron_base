@@ -1,6 +1,6 @@
 #!/bin/bash
 
-versions=('0.1.48' '0.2.24' '0.3.0')
+versions=('0.1.48' '0.2.24' '0.3.0', '0.3.10', '0.4.0')
 
 for v in ${versions[@]}; do
     pip install --no-deps pyiron_base==$v
