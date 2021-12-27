@@ -41,7 +41,7 @@ setup(
         'psutil==5.8.0',
         'pyfileindex==0.0.6',
         'pysqa==0.0.15',
-        'sqlalchemy==1.4.28',
+        'sqlalchemy==1.4.29',
         'tables==3.6.1',
         'tqdm==4.62.3',
         'typing_extensions==4.0.1'
