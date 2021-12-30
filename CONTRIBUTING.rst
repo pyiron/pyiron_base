@@ -338,7 +338,7 @@ In order to use the pip distribution use::
 
 Just like each other commit to the master branch the tagged releases are pushed to pypi.org (https://pypi.org/project/pyiron-base/#history) and anaconda.org (https://anaconda.org/pyiron/pyiron_base)::
 
-The major difference for pypi (pip) is that tagged releases are the default for pip while installing prerelease versions using pip requires the `--pre` flag.
+The major difference for pypi (pip) is that tagged releases are the default for pip while installing prerelease versions using pip requires the `--pre` flag::
 
    pip install --pre pyiron
 
