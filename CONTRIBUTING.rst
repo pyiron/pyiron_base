@@ -47,7 +47,7 @@ Table of Contents
 `Additional Notes`_
   * `Issue and pull request labels`_
   * `Build status`_
-  * `pyiron release distribution`_
+  * `Pyiron release distribution`_
   * `Building process for a release`_
   * `GitHub Workflows`_
   
@@ -322,7 +322,7 @@ The build status for pyiron and all sub packages are given below
     :target: https://ci.appveyor.com/project/pyiron-runner/pyiron/branch/master
     :alt: Build status
 
-pyiron release distribution
+Pyiron release distribution
 ---------------
 
 .. image:: https://anaconda.org/conda-forge/pyiron/badges/downloads.svg
