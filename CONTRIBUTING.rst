@@ -327,7 +327,7 @@ pyiron release distribution
     :target: https://anaconda.org/conda-forge/pyiron/
     :alt: Downloads
 
-Pyiron is released through `conda-forge`_; and  `pip`_;. 
+Pyiron is released through `conda-forge`_ and  `pip`_. 
 Both packages are created automatically and maintained with every new release of pyiron_base. In order to use these distributions simply use the following command for conda::
 
    conda install -c conda-forge pyiron_base
@@ -360,38 +360,37 @@ Building process for a release
 
 1. Create a Git tag to mark the release
 
-This step is done manually and important to trigger all the following steps. Tag can be created under https://github.com/pyiron/pyiron_base/tags. 
-The following steps are automated and will be performed once a tag is created. 
-In order to keep the tags consistent please follow the `Git-Tag-Guide`_;.
-The tag format consists of a tag_prefix (<package name>-) and the release version, for example::
+  This step is done manually and important to trigger all the following steps. Tag can be created under https://github.com/pyiron/pyiron_base/tags. 
+  The following steps are automated and will be performed once a tag is created. 
+  In order to keep the tags consistent please follow the `Git-Tag-Guide`_.
+  The tag format consists of a tag_prefix (<package name>-) and the release version, for example::
 
-   pyiron-0.2.0
+     pyiron-0.2.0
 
 2. Automatically create PyPi package
 
-After the tag is created, a the `Deploy-Workflow`_; is triggered, which creates the PyPi Package.
+  After the tag is created, a the `Deploy-Workflow`_ is triggered, which creates the PyPi Package.
+  The configuration of the release is included in the setup.ctg file (https://github.com/pyiron/pyiron_base/blob/master/setup.cfg).
+  This Workflow first installs all dependencies, then converts these dependencies and builds the package. After that the package is published to `pip`_.
 
-The configuration of the release is included in the setup.ctg file (https://github.com/pyiron/pyiron_base/blob/master/setup.cfg).
+3. Automatically create conda-forge package
 
-This Workflow first installs all dependencies, then converts these dependencies and builds the package. After that the package is published to `pip`_;.
-
-3. This release than is recognized by a conda-forge bot (https://github.com/conda-forge/pyiron_base-feedstock/pull/91), which triggers a new pull request for the conda-forge package and merges automatically if all tests pass.
-
-These tests are defined as `GitHub-Action-Workflows`_; and are triggered for every new pull request. More information can be found in the next chapter.
+  This release than is recognized by a conda-forge bot (https://github.com/conda-forge/pyiron_base-feedstock/pull/91), which triggers a new pull request for the conda-forge package and merges automatically if all tests pass.
+  These tests are defined as `GitHub-Action-Workflows`_ and are triggered for every new pull request. More information can be found in the next chapter.
 
 4. Docker images
 
-The docker images are maintained manually and therefore not updated with every release. The docker images are build using hte conda packages and can be found in different variants under https://github.com/pyiron/docker-stacks
+  The docker images are maintained manually and therefore not updated with every release. The docker images are build using hte conda packages and can be found in different variants under https://github.com/pyiron/docker-stacks
 
 5. Graphical installer
 
-The graphical installer is also maintained manually and not updated as frequently and can be found at https://github.com/pyiron/pyiron-installer.
+  The graphical installer is also maintained manually and not updated as frequently and can be found at https://github.com/pyiron/pyiron-installer.
 
 
 GitHub Workflows
 -----------------------------
 
-The `GitHub-Action-Workflows`_; are triggered, whenever a pull request is created::
+The `GitHub-Action-Workflows`_ are triggered, whenever a pull request is created:
 
 * UpdateDependabotPR.yml: https://github.com/pyiron/pyiron_base/blob/master/.github/workflows/UpdateDependabotPR.yml
 * atomistics-compat.yml: https://github.com/pyiron/pyiron_base/blob/master/.github/workflows/atomistics-compat.yml
