@@ -327,13 +327,34 @@ pyiron releases
     :target: https://anaconda.org/conda-forge/pyiron/
     :alt: Downloads
 
-For the pyiron release management we use git tags::
+New structure
+- Where released?
+- How does tagging work?
+- How is the building process?
+- How are the tests run?
 
-   https://git-scm.com/book/en/v2/Git-Basics-Tagging
+**Distributions**
 
+Pyiron is released through [conda-forge]https://anaconda.org/conda-forge/pyiron_base) and [pip](https://pypi.org/project/pyiron-base/). 
+Both packages are created automatically and maintained with every new release of pyiron_base. In order to use these distributions simply use the following command for conda::
+
+   conda install -c conda-forge pyiron_base
+
+In order to use the pip distribution use::
+
+   pip install pyiron-base
+
+**Building process**
+
+1. Create a [Git tag](https://github.com/pyiron/pyiron_base/tags) to mark the release
+
+This step is done manually and important to trigger all the following steps. The following steps are automated and will be performed once a tag is created. 
+In order to keep the tags consistent please follow the [Git guide](https://git-scm.com/book/en/v2/Git-Basics-Tagging)
 The tag format consists of a tag_prefix (<package name>-) and the release version, for example::
 
    pyiron-0.2.0
+
+2. 
 
 For the automated versioning we use::
 
