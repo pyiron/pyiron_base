@@ -47,7 +47,9 @@ Table of Contents
 `Additional Notes`_
   * `Issue and pull request labels`_
   * `Build status`_
-  * `pyiron releases`_
+  * `pyiron release distribution`_
+  * `Building process for a release`_
+  * `GitHub Workflows`_
   
 `Debugging`_
   * `My job does not run on the queue`_
@@ -385,7 +387,6 @@ Building process for a release
 5. Graphical installer
 
   The graphical installer is also maintained manually and not updated as frequently and can be found at https://github.com/pyiron/pyiron-installer.
-
 
 GitHub Workflows
 -----------------------------
