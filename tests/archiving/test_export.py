@@ -18,7 +18,7 @@ class TestPack(PyironTestCase):
         # this is used to create a folder/a compressed file, are not path
         cls.arch_dir_comp = cls.arch_dir + '_comp'
         cls.pr = Project('test')
-        cls.pr.remove_jobs_silently(recursive=True)
+        cls.pr.remove_jobs(recursive=True, silently=True)
         cls.job = cls.pr.create_job(job_type=ToyJob, job_name='toy')
         cls.job.run()
         cls.pr.pack(destination_path=cls.arch_dir, compress=False)

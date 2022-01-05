@@ -23,6 +23,12 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
+    - name: pyiron_atomistic
+      run: |
+        pip install PyYAML
+        git clone https://github.com/pyiron/pyiron_atomistics ../pyiron_atomistics
+        grep -v "pyiron_base" ../pyiron_atomistics/.ci_support/environment.yml > ../pyiron_atomistics/environment.yml
+        python .ci_support/condamerge.py --base .ci_support/environment.yml --add ../pyiron_atomistics/environment.yml > environment.yml
     - uses: conda-incubator/setup-miniconda@v2
       with:
         python-version: "3.10"
@@ -30,17 +36,22 @@ jobs:
         channels: conda-forge
         channel-priority: strict
         auto-update-conda: true  
-        environment-file: .ci_support/environment.yml
-    - name: Setup
+        environment-file: environment.yml
+    - name: pyironconfig
       shell: bash -l {0}
       run: |
-        pip install --no-deps .
-        cd .. 
-        git clone https://github.com/pyiron/pyiron_atomistics
-        cd pyiron_atomistics
-        grep -v "pyiron_base" .ci_support/environment.yml > environment.yml
-        conda env update --name test --file environment.yml
+        cd ../pyiron_atomistics
         python .ci_support/pyironconfig.py
+        cd ../pyiron_base
+    - name: Install pyiron_atomistics
+      shell: bash -l {0}
+      run: |
+        cd ../pyiron_atomistics
+        pip install --no-deps .
+        cd ../pyiron_base
+    - name: Install pyiron_base
+      shell: bash -l {0}
+      run: |
         pip install --no-deps .
     - name: Test
       shell: bash -l {0}

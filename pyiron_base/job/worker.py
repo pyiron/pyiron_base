@@ -7,7 +7,7 @@ Worker Class to execute calculation in an asynchronous way
 import os
 import time
 from datetime import datetime
-from multiprocessing.pool import ThreadPool
+from multiprocessing import Pool
 import numpy as np
 from pyiron_base.state import state
 from pyiron_base.job.template import PythonTemplateJob
@@ -41,20 +41,29 @@ def worker_function(args):
         debug (bool): enable debug mode [True/False] (optional)
     """
     import subprocess
+
     working_directory, job_link = args
     if isinstance(job_link, int) or str(job_link).isdigit():
         executable = [
             "python",
-            "-m", "pyiron_base.cli", "wrapper",
-            "-p", working_directory,
-            "-j", str(job_link)
+            "-m",
+            "pyiron_base.cli",
+            "wrapper",
+            "-p",
+            working_directory,
+            "-j",
+            str(job_link),
         ]
     else:
         executable = [
             "python",
-            "-m", "pyiron_base.cli", "wrapper",
-            "-p", working_directory,
-            "-f", job_link
+            "-m",
+            "pyiron_base.cli",
+            "wrapper",
+            "-p",
+            working_directory,
+            "-f",
+            job_link,
         ]
     try:
         _ = subprocess.run(
@@ -114,6 +123,7 @@ class WorkerJob(PythonTemplateJob):
     >>> job_worker.status.collect = True
 
     """
+
     def __init__(self, project, job_name):
         super(WorkerJob, self).__init__(project, job_name)
         self.input.project = None
@@ -123,10 +133,7 @@ class WorkerJob(PythonTemplateJob):
 
     @property
     def project_to_watch(self):
-        rel_path = os.path.relpath(
-            self.input.project,
-            self.project.path
-        )
+        rel_path = os.path.relpath(self.input.project, self.project.path)
         return self.project.open(rel_path)
 
     @project_to_watch.setter
@@ -171,16 +178,14 @@ class WorkerJob(PythonTemplateJob):
         self.project_hdf5.create_working_directory()
         log_file = os.path.join(self.working_directory, "worker.log")
         active_job_ids = []
-        with ThreadPool(
-            processes=int(self.server.cores / self.cores_per_job)
-        ) as pool:
+        with Pool(processes=int(self.server.cores / self.cores_per_job)) as pool:
             while True:
                 # Check the database if there are more calculation to execute
                 df = pr.job_table()
                 df_sub = df[
-                    (df["status"] == "submitted") &
-                    (df["masterid"] == master_id) &
-                    (~df["id"].isin(active_job_ids))
+                    (df["status"] == "submitted")
+                    & (df["masterid"] == master_id)
+                    & (~df["id"].isin(active_job_ids))
                 ]
                 if len(df_sub) > 0:  # Check if there are jobs to execute
                     path_lst = [
@@ -188,12 +193,12 @@ class WorkerJob(PythonTemplateJob):
                         for pp, p, job_id in zip(
                             df_sub["projectpath"].values,
                             df_sub["project"].values,
-                            df_sub["id"].values
-                        ) if job_id not in active_job_ids]
+                            df_sub["id"].values,
+                        )
+                        if job_id not in active_job_ids
+                    ]
                     job_lst = [
-                        [p, job_id]
-                        if pp is None else
-                        [os.path.join(pp, p), job_id]
+                        [p, job_id] if pp is None else [os.path.join(pp, p), job_id]
                         for pp, p, job_id in path_lst
                     ]
                     active_job_ids += [j[1] for j in job_lst]
@@ -203,22 +208,35 @@ class WorkerJob(PythonTemplateJob):
                 else:  # The sleep interval can be set as part of the input
                     if self.input.child_runtime > 0:
                         df_run = df[
-                            (df["status"] == "running") &
-                            (df["masterid"] == master_id)
+                            (df["status"] == "running") & (df["masterid"] == master_id)
                         ]
                         if len(df_run) > 0:
                             for job_id in df_run[
                                 (
-                                    np.array(datetime.now(), dtype='datetime64[ns]') - df_run.timestart.values
-                                ).astype('timedelta64[s]') > np.array(self.input.child_runtime).astype('timedelta64[s]')
+                                    np.array(datetime.now(), dtype="datetime64[ns]")
+                                    - df_run.timestart.values
+                                ).astype("timedelta64[s]")
+                                > np.array(self.input.child_runtime).astype(
+                                    "timedelta64[s]"
+                                )
                             ].id.values:
-                                self.project.db.set_job_status(job_id=job_id, status="aborted")
+                                self.project.db.set_job_status(
+                                    job_id=job_id, status="aborted"
+                                )
                     time.sleep(self.input.sleep_interval)
 
                 # job submission
                 with open(log_file, "a") as f:
-                    f.write(str(datetime.today()) + " " + str(len(active_job_ids)) + " " + str(len(df)) + " " + str(
-                        len(df_sub)) + "\n")
+                    f.write(
+                        str(datetime.today())
+                        + " "
+                        + str(len(active_job_ids))
+                        + " "
+                        + str(len(df))
+                        + " "
+                        + str(len(df_sub))
+                        + "\n"
+                    )
 
         # The job is finished
         self.status.finished = True
@@ -235,9 +253,7 @@ class WorkerJob(PythonTemplateJob):
         working_directory = self.working_directory
         log_file = os.path.join(working_directory, "worker.log")
         file_memory_lst = []
-        with ThreadPool(
-                processes=int(self.server.cores / self.cores_per_job)
-        ) as pool:
+        with Pool(processes=int(self.server.cores / self.cores_per_job)) as pool:
             while True:
                 file_lst = [
                     os.path.join(working_directory, f)
@@ -247,7 +263,9 @@ class WorkerJob(PythonTemplateJob):
                 file_vec = ~np.isin(file_lst, file_memory_lst)
                 file_lst = np.array(file_lst)[file_vec].tolist()
                 if len(file_lst) > 0:
-                    job_submit_lst = [self._get_working_directory_and_h5path(path=f) for f in file_lst]
+                    job_submit_lst = [
+                        self._get_working_directory_and_h5path(path=f) for f in file_lst
+                    ]
                     file_memory_lst += file_lst
                     pool.map_async(worker_function, job_submit_lst)
                 elif self.project_hdf5["status"] in ["collect", "finished"]:
@@ -255,19 +273,26 @@ class WorkerJob(PythonTemplateJob):
                 time.sleep(self.input.sleep_interval)
 
                 with open(log_file, "a") as f:
-                    f.write(str(datetime.today()) + " " + str(len(file_memory_lst)) + " " + str(len(file_lst)) + "\n")
+                    f.write(
+                        str(datetime.today())
+                        + " "
+                        + str(len(file_memory_lst))
+                        + " "
+                        + str(len(file_lst))
+                        + "\n"
+                    )
 
         # The job is finished
         self.status.finished = True
 
     def wait_for_worker(self, interval_in_s=60, max_iterations=10):
         """
-        Wait for the workerjob to finish the execution of all jobs. If no job is in status running or submitted the 
-        workerjob shuts down automatically after 10 minutes. 
-        
+        Wait for the workerjob to finish the execution of all jobs. If no job is in status running or submitted the
+        workerjob shuts down automatically after 10 minutes.
+
         Args:
             interval_in_s (int): interval when the job status is queried from the database - default 60 sec.
-            max_iterations (int): maximum number of iterations - default 10     
+            max_iterations (int): maximum number of iterations - default 10
         """
         finished = False
         j = 0
@@ -282,23 +307,23 @@ class WorkerJob(PythonTemplateJob):
             df = pr.job_table()
             if master_id is not None:
                 df_sub = df[
-                    ((df["status"] == "submitted") | (df.status == "running")) &
-                    (df["masterid"] == master_id)
+                    ((df["status"] == "submitted") | (df.status == "running"))
+                    & (df["masterid"] == master_id)
                 ]
             else:
-                df_sub = df[
-                    ((df["status"] == "submitted") | (df.status == "running"))
-                ]
+                df_sub = df[((df["status"] == "submitted") | (df.status == "running"))]
             if len(df_sub) == 0:
                 j += 1
                 if j > max_iterations:
                     finished = True
             else:
                 j = 0
-            with open(log_file, 'a') as f:
+            with open(log_file, "a") as f:
                 log_str = str(datetime.today()) + " j: " + str(j)
                 for status in ["submitted", "running", "finished", "aborted"]:
-                    log_str += "   " + status + " : " + str(len(df[df.status == status]))
+                    log_str += (
+                        "   " + status + " : " + str(len(df[df.status == status]))
+                    )
                 log_str += "\n"
                 f.write(log_str)
             time.sleep(interval_in_s)

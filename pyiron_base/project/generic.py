@@ -8,7 +8,7 @@ The project object is the central import point of pyiron - all other objects can
 import os
 import posixpath
 import shutil
-from tqdm import tqdm
+from tqdm.auto import tqdm
 import pandas
 import importlib
 import numpy as np
@@ -26,7 +26,7 @@ from pyiron_base.database.jobtable import (
     set_job_status,
     get_child_ids,
     get_job_working_directory,
-    get_job_status
+    get_job_status,
 )
 from pyiron_base.generic.hdfio import ProjectHDFio
 from pyiron_base.generic.filedata import load_file
@@ -104,7 +104,9 @@ class Project(ProjectPath, HasGroups):
             {'foo': 42}
     """
 
-    def __init__(self, path="", user=None, sql_query=None, default_working_directory=False):
+    def __init__(
+        self, path="", user=None, sql_query=None, default_working_directory=False
+    ):
         if default_working_directory and path == "":
             inputdict = Notebook.get_custom_dict()
             if inputdict is not None and "project_dir" in inputdict.keys():
@@ -246,7 +248,9 @@ class Project(ProjectPath, HasGroups):
         """
         job_id = self.get_job_id(new_job_name)
         if job_id is not None:
-            state.logger.info(f"create_from_job: {new_job_name} has already job_id {job_id}!")
+            state.logger.info(
+                f"create_from_job: {new_job_name} has already job_id {job_id}!"
+            )
             return None
 
         print("job_old: ", job_old.status)
@@ -254,7 +258,7 @@ class Project(ProjectPath, HasGroups):
             project=self,
             new_job_name=new_job_name,
             input_only=False,
-            new_database_entry=True
+            new_database_entry=True,
         )
         state.logger.debug(
             "create_job:: {} {} from id {}".format(
@@ -319,7 +323,7 @@ class Project(ProjectPath, HasGroups):
         table = self.create_job(
             job_type=self.job_type.TableJob,
             job_name=job_name,
-            delete_existing_job=delete_existing_job
+            delete_existing_job=delete_existing_job,
         )
         table.analysis_project = self
         return table
@@ -448,7 +452,7 @@ class Project(ProjectPath, HasGroups):
             sql_query=self.sql_query,
             user=self.user,
             project_path=project,
-            job_specifier=job_specifier
+            job_specifier=job_specifier,
         )
 
     def get_job_working_directory(self, job_specifier, project=None):
@@ -469,7 +473,7 @@ class Project(ProjectPath, HasGroups):
             user=self.user,
             project_path=project,
             database=self.db,
-            job_specifier=job_specifier
+            job_specifier=job_specifier,
         )
 
     def get_project_size(self):
@@ -487,7 +491,7 @@ class Project(ProjectPath, HasGroups):
         )
         return folder_size / (1024 * 1024.0)
 
-    @deprecate('use maintenance.get_repository_status() instead.')
+    @deprecate("use maintenance.get_repository_status() instead.")
     def get_repository_status(self):
         return self.maintenance.get_repository_status()
 
@@ -514,8 +518,14 @@ class Project(ProjectPath, HasGroups):
         """
         return self.load(job_specifier=job_specifier, convert_to_object=False)
 
-    def iter_jobs(self, path: str = None, recursive: bool = True, convert_to_object: bool = True, progress: bool = True,
-                  **kwargs: dict) -> Generator:
+    def iter_jobs(
+        self,
+        path: str = None,
+        recursive: bool = True,
+        convert_to_object: bool = True,
+        progress: bool = True,
+        **kwargs: dict,
+    ) -> Generator:
         """
         Iterate over the jobs within the current project and it is sub projects
 
@@ -531,7 +541,7 @@ class Project(ProjectPath, HasGroups):
         Returns:
             yield: Yield of GenericJob or JobCore
         """
-        job_id_lst = self.job_table(recursive=recursive, **kwargs)['id']
+        job_id_lst = self.job_table(recursive=recursive, **kwargs)["id"]
         if progress:
             job_id_lst = tqdm(job_id_lst)
         for job_id in job_id_lst:
@@ -578,10 +588,7 @@ class Project(ProjectPath, HasGroups):
         Args:
             recursive (bool): search subprojects [True/False] - default=True
         """
-        update_from_remote(
-            project=self,
-            recursive=recursive
-        )
+        update_from_remote(project=self, recursive=recursive)
 
     def job_table(
         self,
@@ -591,7 +598,7 @@ class Project(ProjectPath, HasGroups):
         sort_by="id",
         full_table=False,
         element_lst=None,
-        job_name_contains='',
+        job_name_contains="",
         **kwargs: dict,
     ):
         return self.db.job_table(
@@ -606,10 +613,19 @@ class Project(ProjectPath, HasGroups):
             element_lst=element_lst,
             **kwargs,
         )
-    job_table.__doc__ = '\n'.join([
-        ll for ll in FileTable.job_table.__doc__.split('\n')
-        if not any([item in ll for item in ['sql_query (str)', 'user (str)', 'project_path (str)']])
-    ])
+
+    job_table.__doc__ = "\n".join(
+        [
+            ll
+            for ll in FileTable.job_table.__doc__.split("\n")
+            if not any(
+                [
+                    item in ll
+                    for item in ["sql_query (str)", "user (str)", "project_path (str)"]
+                ]
+            )
+        ]
+    )
 
     def get_jobs_status(self, recursive=True, element_lst=None):
         """
@@ -732,7 +748,9 @@ class Project(ProjectPath, HasGroups):
             )
         job_id = self.get_job_id(job_specifier=job_specifier)
         if job_id is None:
-            state.logger.warning("Job '%s' does not exist and cannot be loaded", job_specifier)
+            state.logger.warning(
+                "Job '%s' does not exist and cannot be loaded", job_specifier
+            )
             return None
         return self.load_from_jobpath(
             job_id=job_id, convert_to_object=convert_to_object
@@ -820,8 +838,9 @@ class Project(ProjectPath, HasGroups):
             pandas.DataFrame: Output from the queuing system - optimized for the Sun grid engine
         """
         return queue_table(
-            job_ids=self.get_job_ids(recursive=recursive), project_only=project_only,
-            full_table=full_table
+            job_ids=self.get_job_ids(recursive=recursive),
+            project_only=project_only,
+            full_table=full_table,
         )
 
     def queue_table_global(self, full_table=False):
@@ -858,7 +877,7 @@ class Project(ProjectPath, HasGroups):
             *jobs (str, int): name of the job or job ID, any number of them
         """
         if len(jobs) == 0:
-            jobs = self.job_table(status='running').id
+            jobs = self.job_table(status="running").id
         if self.db is not None:
             for job_specifier in jobs:
                 if isinstance(job_specifier, str):
@@ -938,9 +957,11 @@ class Project(ProjectPath, HasGroups):
             for job_id in job_specifier:
                 self.remove_job(job_specifier=job_id, _unprotect=_unprotect)
         else:
-            if not self.view_mode:
+            if not self.db.view_mode:
                 try:
-                    job = self.load(job_specifier=job_specifier, convert_to_object=False)
+                    job = self.load(
+                        job_specifier=job_specifier, convert_to_object=False
+                    )
                     if job is None:
                         state.logger.warning(
                             "Job '%s' does not exist and could not be removed",
@@ -959,64 +980,45 @@ class Project(ProjectPath, HasGroups):
             else:
                 raise EnvironmentError("copy_to: is not available in Viewermode !")
 
-    def remove_jobs(self, recursive=False, progress=True):
+    def remove_jobs(self, recursive=False, progress=True, silently=False):
         """
         Remove all jobs in the current project and in all subprojects if recursive=True is selected - see also
         remove_job().
 
         For safety, the user is asked via input() to confirm the removal. To bypass this
-        interactive interruption, use `remove_jobs_silently()`.
+        interactive interruption, use `remove_jobs(silently=True)`.
 
         Args:
             recursive (bool): [True/False] delete all jobs in all subprojects - default=False
             progress (bool): if True (default), add an interactive progress bar to the iteration
+            silently (bool): if True the safety check is disabled - default=False
         """
         if not isinstance(recursive, bool):
-            raise ValueError('recursive must be a boolean')
-        confirmed = None
+            raise ValueError("recursive must be a boolean")
+        if silently:
+            confirmed = "y"
+        else:
+            confirmed = None
         while confirmed not in ["y", "n"]:
             if confirmed is None:
                 confirmed = input(
                     "Are you sure you want to delete all jobs from "
                     + f"'{self.base_name}'? y/(n)"
-                    ).lower()
+                ).lower()
             else:
                 confirmed = input(
                     "Invalid response. Please enter 'y' (yes) or 'n' (no): "
-                    ).lower()
+                ).lower()
         if confirmed == "y":
-            self.remove_jobs_silently(recursive=recursive, progress=progress)
+            self._remove_jobs_helper(recursive=recursive, progress=progress)
         else:
             print(f"No jobs removed from '{self.base_name}'.")
 
+    @deprecate(
+        message="Use pr.remove_jobs(silently=True) rather than pr.remove_jobs_silently()."
+    )
     def remove_jobs_silently(self, recursive=False, progress=True):
-        """
-        Remove all jobs in the current project and in all subprojects if recursive=True is selected - see also
-        remove_job()
-
-        Args:
-            recursive (bool): [True/False] delete all jobs in all subprojects - default=False
-            progress (bool): if True (default), add an interactive progress bar to the iteration
-        """
-        if not isinstance(recursive, bool):
-            raise ValueError('recursive must be a boolean')
-        if not self.view_mode:
-            job_id_lst = self.get_job_ids(recursive=recursive)
-            if progress and len(job_id_lst) > 0:
-                job_id_lst = tqdm(job_id_lst)
-            for job_id in job_id_lst:
-                if job_id not in self.get_job_ids(recursive=recursive):
-                    continue
-                else:
-                    try:
-                        self.remove_job(job_specifier=job_id)
-                        state.logger.debug("Remove job with ID {0} ".format(job_id))
-                    except (IndexError, Exception):
-                        state.logger.debug(
-                            "Could not remove job with ID {0} ".format(job_id)
-                        )
-        else:
-            raise EnvironmentError("copy_to: is not available in Viewermode !")
+        self.remove_jobs(recursive=recursive, progress=progress, silently=True)
 
     def compress_jobs(self, recursive=False):
         """
@@ -1060,12 +1062,12 @@ class Project(ProjectPath, HasGroups):
             raise ValueError(
                 "To prevent users from accidentally deleting files - enable has to be set to True."
             )
-        if not self.view_mode:
+        if not self.db.view_mode:
             for sub_project_name in self.list_groups():
                 if "_hdf5" not in sub_project_name:
                     sub_project = self.open(sub_project_name)
                     sub_project.remove(enable=enable, enforce=enforce)
-            self.remove_jobs_silently(recursive=True)
+            self._remove_jobs_helper(recursive=True)
             for file in self.list_files():
                 os.remove(os.path.join(self.path, file))
             if enforce:
@@ -1201,9 +1203,11 @@ class Project(ProjectPath, HasGroups):
         """
         inputdict = Notebook.get_custom_dict()
         if inputdict is None:
-            raise ValueError("No input found, either there is an issue with your ScriptJob, " +
-                             "or your input.json file is not located in the same directory " +
-                             "as your Jupyter Notebook.")
+            raise ValueError(
+                "No input found, either there is an issue with your ScriptJob, "
+                + "or your input.json file is not located in the same directory "
+                + "as your Jupyter Notebook."
+            )
         return inputdict
 
     @staticmethod
@@ -1288,7 +1292,7 @@ class Project(ProjectPath, HasGroups):
             project=self,
             interval_in_s=interval_in_s,
             max_iterations=max_iterations,
-            recursive=recursive
+            recursive=recursive,
         )
 
     @staticmethod
@@ -1407,9 +1411,40 @@ class Project(ProjectPath, HasGroups):
         if item in self.list_dirs():
             with self.open(item) as new_item:
                 return new_item.copy()
-        if item in os.listdir(self.path) and os.path.isdir(os.path.join(self.path, item)):
+        if item in os.listdir(self.path) and os.path.isdir(
+            os.path.join(self.path, item)
+        ):
             return self.open(item)
         raise ValueError("Unknown item: {}".format(item))
+
+    def _remove_jobs_helper(self, recursive=False, progress=True):
+        """
+        Remove all jobs in the current project and in all subprojects if recursive=True is selected - see also
+        remove_job()
+
+        Args:
+            recursive (bool): [True/False] delete all jobs in all subprojects - default=False
+            progress (bool): if True (default), add an interactive progress bar to the iteration
+        """
+        if not isinstance(recursive, bool):
+            raise ValueError("recursive must be a boolean")
+        if not self.db.view_mode:
+            job_id_lst = self.get_job_ids(recursive=recursive)
+            if progress and len(job_id_lst) > 0:
+                job_id_lst = tqdm(job_id_lst)
+            for job_id in job_id_lst:
+                if job_id not in self.get_job_ids(recursive=recursive):
+                    continue
+                else:
+                    try:
+                        self.remove_job(job_specifier=job_id)
+                        state.logger.debug("Remove job with ID {0} ".format(job_id))
+                    except (IndexError, Exception):
+                        state.logger.debug(
+                            "Could not remove job with ID {0} ".format(job_id)
+                        )
+        else:
+            raise EnvironmentError("copy_to: is not available in Viewermode !")
 
     def _remove_files(self, pattern="*"):
         """
@@ -1446,7 +1481,7 @@ class Project(ProjectPath, HasGroups):
                 for entry in db_entry_in_old_format:
                     self.db.item_update({"project": self.project_path}, entry["id"])
 
-    def pack(self, destination_path, csv_file_name='export.csv', compress=True):
+    def pack(self, destination_path, csv_file_name="export.csv", compress=True):
         """
         by this funtion, the job table is exported to a csv file
         and the project directory is copied and compressed (by default) to a file.
@@ -1460,10 +1495,12 @@ class Project(ProjectPath, HasGroups):
         export_archive.copy_files_to_archive(
             directory_to_transfer, destination_path, compressed=compress
         )
-        df = export_archive.export_database(self, directory_to_transfer, destination_path)
+        df = export_archive.export_database(
+            self, directory_to_transfer, destination_path
+        )
         df.to_csv(csv_file_name)
 
-    def unpack(self, origin_path, csv_file_name='export.csv', compress=True):
+    def unpack(self, origin_path, csv_file_name="export.csv", compress=True):
         """
         by this function, job table is imported from a given csv file,
         and also the content of project directory is copied from a given path
@@ -1508,7 +1545,7 @@ class Project(ProjectPath, HasGroups):
         """
         if hasattr(cls, name):
             raise AttributeError(
-                f'{cls.__name__} already has an attribute {name}. Please use a new name for registration.'
+                f"{cls.__name__} already has an attribute {name}. Please use a new name for registration."
             )
         setattr(cls, name, property(lambda self: tools(self)))
 
@@ -1519,6 +1556,7 @@ class Maintenance:
     some measures of perfomance for pyiron, whether local to the project
     or global (describing the status of pyiron on the running machine)
     """
+
     def __init__(self):
         """
         initialize the local and global attributes
@@ -1539,17 +1577,21 @@ class Maintenance:
         Returns:
             pandas.DataFrame: The name of each module and the hash and version for its current git head.
         """
-        module_names = [name for _, name, _ in pkgutil.iter_modules() if name.startswith("pyiron")]
+        module_names = [
+            name for _, name, _ in pkgutil.iter_modules() if name.startswith("pyiron")
+        ]
 
-        report = pandas.DataFrame(columns=['Module', 'Git head', 'Version'], index=range(len(module_names)))
+        report = pandas.DataFrame(
+            columns=["Module", "Git head", "Version"], index=range(len(module_names))
+        )
         for i, name in enumerate(module_names):
             module = importlib.import_module(name)
             try:
                 repo = Repo(os.path.dirname(os.path.dirname(module.__file__)))
                 hash_ = repo.head.reference.commit.hexsha
             except InvalidGitRepositoryError:
-                hash_ = 'Not a repo'
-            if hasattr(module, '__version__'):
+                hash_ = "Not a repo"
+            if hasattr(module, "__version__"):
                 version = module.__version__
             else:
                 version = "not defined"
@@ -1597,7 +1639,9 @@ class Creator:
 
     @staticmethod
     def job_name(
-        job_name: str, ndigits: Union[int, None] = 8, special_symbols: Union[Dict, None] = None
+        job_name: str,
+        ndigits: Union[int, None] = 8,
+        special_symbols: Union[Dict, None] = None,
     ):
         """
         Creation of job names with special symbol replacement and rounding of floating numbers
@@ -1618,8 +1662,7 @@ class Creator:
         )
 
     job_name.__doc__ = job_name.__doc__.replace(
-        'default_special_symbols_to_be_replaced',
-        str(_special_symbol_replacements)
+        "default_special_symbols_to_be_replaced", str(_special_symbol_replacements)
     )
 
     def table(self, job_name="table", delete_existing_job=False):
@@ -1634,8 +1677,7 @@ class Creator:
             pyiron_base.table.datamining.TableJob
         """
         table = self.job.TableJob(
-            job_name=job_name,
-            delete_existing_job=delete_existing_job
+            job_name=job_name, delete_existing_job=delete_existing_job
         )
         table.analysis_project = self._project
         return table

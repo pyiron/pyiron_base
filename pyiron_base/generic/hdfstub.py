@@ -91,12 +91,14 @@ class HDFStub:
         node matches any of the types registered with :method:`.register`, it will be loaded with the provided callback.
         Otherwise it will be loaded with :method:`.ProjectHDFio.to_object()`.
         """
-        if self._group_name in self._hdf.list_nodes() or 'TYPE' not in self._hdf[self._group_name].list_nodes():
+        if (
+            self._group_name in self._hdf.list_nodes()
+            or "TYPE" not in self._hdf[self._group_name].list_nodes()
+        ):
             return self._hdf[self._group_name]
 
         load = self._load_functions.get(
-                self._hdf[self._group_name]['TYPE'],
-                lambda h, g: h[g].to_object()
+            self._hdf[self._group_name]["TYPE"], lambda h, g: h[g].to_object()
         )
         return load(self._hdf, self._group_name)
 

@@ -24,7 +24,7 @@ __status__ = "production"
 __date__ = "23 Jun, 2020"
 
 formatter = argparse.RawDescriptionHelpFormatter
-epilog =  """
+epilog = """
 examples:
     Print the run time of all finished jobs:
         pyiron ls -c job totalcputime -s finished
@@ -40,64 +40,87 @@ examples:
         pyiron ls -n "spx.*restart" -i 5h -s aborted
 """
 
+
 def register(parser):
 
     parser.add_argument(
-            "project", default = ".", nargs = "?",
-            help = "path to pyiron project"
+        "project", default=".", nargs="?", help="path to pyiron project"
     )
 
     filter = parser.add_argument_group(
-            title = "filter",
-            description = "select which jobs to show, all filters must be true "
-                        "for a job to be listed"
+        title="filter",
+        description="select which jobs to show, all filters must be true "
+        "for a job to be listed",
     )
     filter.add_argument(
-            "-r", "--recursive", action = "store_true",
-            help = "recurse into sub projects"
+        "-r", "--recursive", action="store_true", help="recurse into sub projects"
     )
     filter.add_argument(
-            "-n", "--name", default = "", type = re.compile,
-            help = "job name must contain this, regex allowed"
+        "-n",
+        "--name",
+        default="",
+        type=re.compile,
+        help="job name must contain this, regex allowed",
     )
     filter.add_argument(
-            "-e", "--elements", nargs = "+",
-            help = "chemical elements that must be present in unit cell"
+        "-e",
+        "--elements",
+        nargs="+",
+        help="chemical elements that must be present in unit cell",
     )
     filter.add_argument(
-            "-s", "--status", nargs = "+",
-            choices = pyiron_base.job.jobstatus.job_status_lst,
-            metavar = "status",
-            help = "job status must be one of the given, one of {}".format(
-                    ", ".join(pyiron_base.job.jobstatus.job_status_lst))
+        "-s",
+        "--status",
+        nargs="+",
+        choices=pyiron_base.job.jobstatus.job_status_lst,
+        metavar="status",
+        help="job status must be one of the given, one of {}".format(
+            ", ".join(pyiron_base.job.jobstatus.job_status_lst)
+        ),
     )
     filter.add_argument(
-            "-i", "--since",
-            help = "timestop must be less then the given duration before now, "
-                "must be an integer and a time unit, i.e. one of d (days), "
-                "h (hours), m (minutes) and s (seconds).  Combinations are "
-                "possible, see examples."
+        "-i",
+        "--since",
+        help="timestop must be less then the given duration before now, "
+        "must be an integer and a time unit, i.e. one of d (days), "
+        "h (hours), m (minutes) and s (seconds).  Combinations are "
+        "possible, see examples.",
     )
 
     output = parser.add_argument_group(
-            title = "output", description = "control output style"
+        title="output", description="control output style"
     )
-    columns_choices = ('id', 'status', 'chemicalformula', 'job', 'subjob',
-                'project', 'projectpath', 'timestart', 'timestop',
-                'totalcputime', 'computer', 'hamilton', 'hamversion',
-                'parentid', 'masterid')
+    columns_choices = (
+        "id",
+        "status",
+        "chemicalformula",
+        "job",
+        "subjob",
+        "project",
+        "projectpath",
+        "timestart",
+        "timestop",
+        "totalcputime",
+        "computer",
+        "hamilton",
+        "hamversion",
+        "parentid",
+        "masterid",
+    )
     output.add_argument(
-            "-c", "--columns", nargs = "+",
-            choices = columns_choices, metavar = "column",
-            default = ["id", "status", "job", "timestart", "timestop",
-                        "totalcputime"],
-            help = "table columns to print, pass 'all' to print whole table, "
-                "one of {}".format(", ".join(columns_choices))
+        "-c",
+        "--columns",
+        nargs="+",
+        choices=columns_choices,
+        metavar="column",
+        default=["id", "status", "job", "timestart", "timestop", "totalcputime"],
+        help="table columns to print, pass 'all' to print whole table, "
+        "one of {}".format(", ".join(columns_choices)),
     )
     output.add_argument(
-            "-a", "--all", action = "store_true",
-            help = "show all job attributes"
+        "-a", "--all", action="store_true", help="show all job attributes"
     )
+
 
 def main(args):
 
@@ -109,24 +132,29 @@ def main(args):
         if "timestop" not in args.columns:
             args.columns = args.columns + ["timestop"]
         try:
-            matches = re.fullmatch("(\d+d)?\w*(\d+h)?\w*(\d+m)?\w*(\d+s)?",
-                                args.since).groups(default = '0x')
+            matches = re.fullmatch(
+                "(\d+d)?\w*(\d+h)?\w*(\d+m)?\w*(\d+s)?", args.since
+            ).groups(default="0x")
             since = datetime.datetime.now() - datetime.timedelta(
-                    days    = int(matches[0][:-1]),
-                    hours   = int(matches[1][:-1]),
-                    minutes = int(matches[2][:-1]),
-                    seconds = int(matches[3][:-1])
+                days=int(matches[0][:-1]),
+                hours=int(matches[1][:-1]),
+                minutes=int(matches[2][:-1]),
+                seconds=int(matches[3][:-1]),
             )
         except AttributeError:
-            print("ERROR: {} is not a proper time delta".format(args.since),
-                file = sys.stderr)
+            print(
+                "ERROR: {} is not a proper time delta".format(args.since),
+                file=sys.stderr,
+            )
             sys.exit(1)
 
     table = Project(args.project).job_table(
-        full_table = True, recursive = args.recursive,
-        columns = args.columns, all_columns = args.all,
-        element_lst = args.elements,
-        job_name_contains = args.name
+        full_table=True,
+        recursive=args.recursive,
+        columns=args.columns,
+        all_columns=args.all,
+        element_lst=args.elements,
+        job_name_contains=args.name,
     )
 
     if len(table) == 0:

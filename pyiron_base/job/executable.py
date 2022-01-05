@@ -84,7 +84,9 @@ class Executable(object):
 
     @accepted_return_codes.setter
     def accepted_return_codes(self, value):
-        if not isinstance(value, list) or any(not isinstance(c, int) or c > 255 for c in value):
+        if not isinstance(value, list) or any(
+            not isinstance(c, int) or c > 255 for c in value
+        ):
             raise ValueError("accepted_return_codes must be a list of integers <= 255!")
         self._accepted_return_codes = value
 

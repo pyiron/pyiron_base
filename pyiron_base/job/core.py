@@ -13,21 +13,22 @@ import shutil
 import warnings
 
 from pyiron_base.interfaces.has_groups import HasGroups
-from pyiron_base.job.util import \
-    _get_project_for_copy, \
-    _copy_database_entry, \
-    _copy_to_delete_existing, \
-    _rename_job, \
-    _get_safe_job_name, \
-    _job_is_archived, \
-    _job_archive, \
-    _job_unarchive, \
-    _job_is_compressed, \
-    _job_compress, \
-    _job_decompress, \
-    _job_delete_files, \
-    _job_delete_hdf, \
-    _job_remove_folder
+from pyiron_base.job.util import (
+    _get_project_for_copy,
+    _copy_database_entry,
+    _copy_to_delete_existing,
+    _rename_job,
+    _get_safe_job_name,
+    _job_is_archived,
+    _job_archive,
+    _job_unarchive,
+    _job_is_compressed,
+    _job_compress,
+    _job_decompress,
+    _job_delete_files,
+    _job_delete_hdf,
+    _job_remove_folder,
+)
 from pyiron_base.state import state
 
 __author__ = "Jan Janssen"
@@ -381,18 +382,6 @@ class JobCore(HasGroups):
         """
         return self.project_hdf5.get_from_table(path, name)
 
-    def get_pandas(self, name):
-        """
-        Load a dictionary from the HDF5 file and display the dictionary as pandas Dataframe
-
-        Args:
-            name (str): HDF5 node name
-
-        Returns:
-            pandas.Dataframe: The dictionary is returned as pandas.Dataframe object
-        """
-        return self.project_hdf5.get_pandas(name)
-
     def remove(self, _protect_childs=True):
         """
         Remove the job - this removes the HDF5 file, all data stored in the HDF5 file an the corresponding database entry.
@@ -428,7 +417,7 @@ class JobCore(HasGroups):
         """
         # Check if the job requires to be removed from the full object (This is the case for external Storage)
         # TODO: remove this workaround once the database lookup is aware of external storage types.
-        requires_full_object = self._hdf5.get('REQUIRE_FULL_OBJ_FOR_RM', default=False)
+        requires_full_object = self._hdf5.get("REQUIRE_FULL_OBJ_FOR_RM", default=False)
 
         if requires_full_object:
             job = self.to_object()
@@ -441,10 +430,7 @@ class JobCore(HasGroups):
             and "server" in self.project_hdf5.list_nodes()
         ):
             server_hdf_dict = self.project_hdf5["server"]
-            if (
-                "qid" in server_hdf_dict.keys()
-                and server_hdf_dict["qid"] is not None
-            ):
+            if "qid" in server_hdf_dict.keys() and server_hdf_dict["qid"] is not None:
                 self.project.queue_delete_job(server_hdf_dict["qid"])
 
         # Delete working directory:
@@ -486,9 +472,9 @@ class JobCore(HasGroups):
         """
         if self.project_hdf5.is_empty:
             raise ValueError(
-                "The HDF5 file of this job with the job_name: \""
+                'The HDF5 file of this job with the job_name: "'
                 + self.job_name
-                + "\" is empty, so it can not be loaded."
+                + '" is empty, so it can not be loaded.'
             )
         return self.project_hdf5.to_object(object_type, **qwargs)
 
@@ -527,8 +513,7 @@ class JobCore(HasGroups):
             GenericJob, JobCore: Either the full GenericJob object or just a reduced JobCore object
         """
         return self.project.load(
-            job_specifier=job_specifier,
-            convert_to_object=convert_to_object
+            job_specifier=job_specifier, convert_to_object=convert_to_object
         )
 
     def inspect(self, job_specifier):
@@ -541,10 +526,7 @@ class JobCore(HasGroups):
         Returns:
             JobCore: Access to the HDF5 object - not a GenericJob object - use load() instead.
         """
-        return self.project.load(
-            job_specifier=job_specifier,
-            convert_to_object=False
-        )
+        return self.project.load(job_specifier=job_specifier, convert_to_object=False)
 
     def is_master_id(self, job_id):
         """
@@ -650,8 +632,14 @@ class JobCore(HasGroups):
         copied_self.reset_job_id()
         return copied_self
 
-    def _internal_copy_to(self, project=None, new_job_name=None, new_database_entry=True,
-                          copy_files=True, delete_existing_job=False):
+    def _internal_copy_to(
+        self,
+        project=None,
+        new_job_name=None,
+        new_database_entry=True,
+        copy_files=True,
+        delete_existing_job=False,
+    ):
         """
         Internal helper function for copy_to() which returns more
 
@@ -675,16 +663,14 @@ class JobCore(HasGroups):
         # The project variable can be JobCore/ProjectHDFio/Project,
         # get a Project and a ProjectHDFio object.
         file_project, hdf5_project = _get_project_for_copy(
-            job=self,
-            project=project,
-            new_job_name=new_job_name
+            job=self, project=project, new_job_name=new_job_name
         )
 
         # Check if the job exists already and either delete it or return it
         job_return = _copy_to_delete_existing(
             project_class=file_project,
             job_name=new_job_name,
-            delete_job=delete_existing_job
+            delete_job=delete_existing_job,
         )
         if job_return is not None:
             return job_return, file_project, hdf5_project, True
@@ -709,7 +695,7 @@ class JobCore(HasGroups):
             _copy_database_entry(
                 new_job_core=new_job_core,
                 job_copied_id=self.job_id,
-                new_database_entry=new_database_entry
+                new_database_entry=new_database_entry,
             )
 
         # Copy files outside the HDF5 file
@@ -718,13 +704,17 @@ class JobCore(HasGroups):
                 os.rmdir(new_job_core.working_directory)
             else:
                 raise RuntimeError("Target directory for copy not empty!")
-            shutil.copytree(
-                self.working_directory,
-                new_job_core.working_directory
-            )
+            shutil.copytree(self.working_directory, new_job_core.working_directory)
         return new_job_core, file_project, hdf5_project, False
 
-    def copy_to(self, project, new_job_name=None, input_only=False, new_database_entry=True, copy_files=True):
+    def copy_to(
+        self,
+        project,
+        new_job_name=None,
+        input_only=False,
+        new_database_entry=True,
+        copy_files=True,
+    ):
         """
         Copy the content of the job including the HDF5 file to a new location
 
@@ -742,14 +732,16 @@ class JobCore(HasGroups):
         """
         # Update flags
         if input_only and new_database_entry:
-            warnings.warn("input_only conflicts new_database_entry; setting new_database_entry=False")
+            warnings.warn(
+                "input_only conflicts new_database_entry; setting new_database_entry=False"
+            )
             new_database_entry = False
 
         new_job_core, _, _, reloaded = self._internal_copy_to(
             project=project,
             new_job_name=new_job_name,
             new_database_entry=new_database_entry,
-            copy_files=copy_files
+            copy_files=copy_files,
         )
         if reloaded:
             return new_job_core
@@ -758,7 +750,9 @@ class JobCore(HasGroups):
         if input_only:
             for group in new_job_core.project_hdf5.list_groups():
                 if "output" in group:
-                    del new_job_core.project_hdf5[posixpath.join(new_job_core.project_hdf5.h5_path, group)]
+                    del new_job_core.project_hdf5[
+                        posixpath.join(new_job_core.project_hdf5.h5_path, group)
+                    ]
             new_job_core._status = "initialized"
         return new_job_core
 
@@ -776,10 +770,7 @@ class JobCore(HasGroups):
         old_working_directory = self.working_directory
         if not self.project_hdf5.file_exists:
             delete_hdf5_after_copy = True
-        new_job = self.copy_to(
-            project=project,
-            new_database_entry=False
-        )
+        new_job = self.copy_to(project=project, new_database_entry=False)
         if self.project_hdf5.file_exists:
             if len(self.project_hdf5.h5_path.split("/")) == 2:
                 self.project_hdf5.remove_file()
@@ -911,8 +902,10 @@ class JobCore(HasGroups):
             key (str): key to store in hdf (full path)
             value (anything): value to store
         """
-        if not key.startswith('user/'):
-            raise ValueError("user defined paths+values must begin with user/, e.g. job['user/key'] = value")
+        if not key.startswith("user/"):
+            raise ValueError(
+                "user defined paths+values must begin with user/, e.g. job['user/key'] = value"
+            )
         self._hdf5[key] = value
 
     def __delitem__(self, key):

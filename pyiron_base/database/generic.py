@@ -41,6 +41,7 @@ __email__ = "janssen@mpie.de"
 __status__ = "production"
 __date__ = "Sep 1, 2017"
 
+
 class IsDatabase(ABC):
     """
     Captures common interface for all database types in pyiron, e.g. SQL/SQLite/FileTable.
@@ -66,22 +67,25 @@ class IsDatabase(ABC):
     @deprecate("use view_mode")
     def viewer_mode(self):
         return self.view_mode
+
     viewer_mode.__doc__ = view_mode.__doc__
 
     @abstractmethod
     def _get_job_table(
-            self,
-            sql_query,
-            user,
-            project_path,
-            recursive=True,
-            columns=None,
-            element_lst=None,
+        self,
+        sql_query,
+        user,
+        project_path,
+        recursive=True,
+        columns=None,
+        element_lst=None,
     ):
         pass
 
     @staticmethod
-    def _get_filtered_job_table(df: pandas.DataFrame, **kwargs: dict) -> pandas.DataFrame:
+    def _get_filtered_job_table(
+        df: pandas.DataFrame, **kwargs: dict
+    ) -> pandas.DataFrame:
         """
         Get a job table in a project based on matching values from any column in the project database
 
@@ -98,34 +102,36 @@ class IsDatabase(ABC):
         mask = np.ones_like(df.index, dtype=bool)
         for key in kwargs.keys():
             if key not in list(df.columns):
-                raise ValueError("Column name {} does not exist in the project database!")
+                raise ValueError(
+                    "Column name {} does not exist in the project database!"
+                )
         for key, val in kwargs.items():
             if val is None:
                 mask &= df[key].isnull()
-            elif str(val).startswith('*') and str(val).endswith('*'):
-                mask &= df[key].str.contains(str(val).replace('*', ''))
-            elif str(val).endswith('*'):
-                mask &= df[key].str.startswith(str(val).replace('*', ''))
-            elif str(val).startswith('*'):
-                mask &= df[key].str.endswith(str(val).replace('*', ''))
+            elif str(val).startswith("*") and str(val).endswith("*"):
+                mask &= df[key].str.contains(str(val).replace("*", ""))
+            elif str(val).endswith("*"):
+                mask &= df[key].str.startswith(str(val).replace("*", ""))
+            elif str(val).startswith("*"):
+                mask &= df[key].str.endswith(str(val).replace("*", ""))
             else:
                 mask &= df[key] == val
         return df[mask]
 
     def job_table(
-            self,
-            sql_query,
-            user,
-            project_path,
-            recursive=True,
-            columns=None,
-            all_columns=False,
-            sort_by="id",
-            max_colwidth=200,
-            full_table=False,
-            element_lst=None,
-            job_name_contains='',
-            **kwargs,
+        self,
+        sql_query,
+        user,
+        project_path,
+        recursive=True,
+        columns=None,
+        all_columns=False,
+        sort_by="id",
+        max_colwidth=200,
+        full_table=False,
+        element_lst=None,
+        job_name_contains="",
+        **kwargs,
     ):
         """
         Access the job_table.
@@ -175,22 +181,24 @@ class IsDatabase(ABC):
         if sort_by not in columns:
             columns = list(columns) + [sort_by]
         if full_table:
-            pandas.set_option('display.max_rows', None)
-            pandas.set_option('display.max_columns', None)
+            pandas.set_option("display.max_rows", None)
+            pandas.set_option("display.max_columns", None)
         else:
-            pandas.reset_option('display.max_rows')
-            pandas.reset_option('display.max_columns')
+            pandas.reset_option("display.max_rows")
+            pandas.reset_option("display.max_columns")
         pandas.set_option("display.max_colwidth", max_colwidth)
         df = self._get_job_table(
-                user=user,
-                sql_query=sql_query,
-                project_path=project_path,
-                recursive=recursive,
-                columns=columns,
+            user=user,
+            sql_query=sql_query,
+            project_path=project_path,
+            recursive=recursive,
+            columns=columns,
         )
-        if job_name_contains != '':
-            warnings.warn("`job_name_contains` is deprecated - use `job='*term*'` instead")
-            kwargs['job'] = '*{}*'.format(job_name_contains)
+        if job_name_contains != "":
+            warnings.warn(
+                "`job_name_contains` is deprecated - use `job='*term*'` instead"
+            )
+            kwargs["job"] = "*{}*".format(job_name_contains)
         df = self._get_filtered_job_table(df, **kwargs)
         if sort_by is not None:
             return df.sort_values(by=sort_by)
@@ -326,6 +334,7 @@ class ConnectionWatchDog(Thread):
         self._queue.put(False)
         self.join()
 
+
 class AutorestoredConnection:
     def __init__(self, engine, timeout=60):
         self.engine = engine
@@ -344,14 +353,18 @@ class AutorestoredConnection:
                         # only log reconnections when we keep the connection alive between requests otherwise we'll spam
                         # the log
                         if self._conn is None:
-                            self._logger.info("Reconnecting to DB; connection not existing.")
+                            self._logger.info(
+                                "Reconnecting to DB; connection not existing."
+                            )
                         else:
                             self._logger.info("Reconnecting to DB; connection closed.")
                         if self._watchdog is not None:
                             # in case connection is dead, but watchdog is still up, something else killed the connection,
                             # make the watchdog quit, then making a new one
                             self._watchdog.kill()
-                        self._watchdog = ConnectionWatchDog(self._conn, self._lock, timeout=self._timeout)
+                        self._watchdog = ConnectionWatchDog(
+                            self._conn, self._lock, timeout=self._timeout
+                        )
                         self._watchdog.start()
                 if self._timeout > 0:
                     self._watchdog.kick()
@@ -359,7 +372,9 @@ class AutorestoredConnection:
                     result = self._conn.execute(*args, **kwargs)
                     break
             except OperationalError as e:
-                print(f"Database connection failed with operational error {e}, waiting 5s, then re-trying.")
+                print(
+                    f"Database connection failed with operational error {e}, waiting 5s, then re-trying."
+                )
                 time.sleep(5)
         return result
 
@@ -531,13 +546,13 @@ class DatabaseAccess(IsDatabase):
         return self.get_items_dict(dict_clause)
 
     def _get_job_table(
-            self,
-            sql_query,
-            user,
-            project_path,
-            recursive=True,
-            columns=None,
-            element_lst=None,
+        self,
+        sql_query,
+        user,
+        project_path,
+        recursive=True,
+        columns=None,
+        element_lst=None,
     ):
         job_dict = self._job_dict(
             sql_query=sql_query,
@@ -629,8 +644,6 @@ class DatabaseAccess(IsDatabase):
         except Exception:
             raise ValueError(str(table_name) + " does not exist")
         return [column.name for column in iter(simulation_list.columns)]
-
-
 
     def add_column(self, col_name, col_type):
         """
@@ -779,10 +792,12 @@ class DatabaseAccess(IsDatabase):
         par_dict(dict): dictionary of the parameter
         limit(int): the limit for the length of checmical formular
         """
-        key_limited = 'ChemicalFormula'
-        if key_limited in par_dict.keys() and \
-                par_dict[key_limited] is not None and \
-                len(par_dict[key_limited]) > self._chem_formula_lim_length:
+        key_limited = "ChemicalFormula"
+        if (
+            key_limited in par_dict.keys()
+            and par_dict[key_limited] is not None
+            and len(par_dict[key_limited]) > self._chem_formula_lim_length
+        ):
             par_dict[key_limited] = "OVERFLOW_ERROR"
         return par_dict
 

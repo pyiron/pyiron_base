@@ -27,31 +27,37 @@ __date__ = "Feb 02, 2021"
 _has_imported = {}
 try:
     from PIL import Image
-    _has_imported['PIL'] = True
+
+    _has_imported["PIL"] = True
     # For some reason I do not know this forces PIL to always be aware of all possible Image extensions.
     Image.registered_extensions()
 except ImportError:
-    _has_imported['PIL'] = False
+    _has_imported["PIL"] = False
 try:
     import nbformat, nbconvert
-    _has_imported['nbformat'] = True
+
+    _has_imported["nbformat"] = True
 except ImportError:
-    _has_imported['nbformat'] = False
+    _has_imported["nbformat"] = False
 
 if all(_has_imported.values()):
     import_alarm = ImportAlarm()
 else:
     import_alarm = ImportAlarm(
-        "Reduced functionality, since " +
-        str([package for package in _has_imported.keys() if not _has_imported[package]]) +
-        " could not be imported."
+        "Reduced functionality, since "
+        + str(
+            [package for package in _has_imported.keys() if not _has_imported[package]]
+        )
+        + " could not be imported."
     )
 
 
-if _has_imported['nbformat']:
+if _has_imported["nbformat"]:
+
     class OwnNotebookNode(nbformat.NotebookNode):
 
         """Wrapper for nbformat.NotebookNode with some additional representation based on nbconvert."""
+
         def _repr_html_(self):
             html_exporter = nbconvert.HTMLExporter()
             html_exporter.template_name = "classic"
@@ -62,31 +68,32 @@ if _has_imported['nbformat']:
 @import_alarm
 def load_file(fp, filetype=None, project=None):
     """
-        Load the file and return an appropriate object containing the data.
+    Load the file and return an appropriate object containing the data.
 
-        Args:
-            fp (str / file): path to the file or file object to be displayed.
-            filetype (str/None): File extension, if given this overwrites the assumption based on the filename.
-            project (pyiron-Project/None): Project calling this function, provided to all objects referring to such.
+    Args:
+        fp (str / file): path to the file or file object to be displayed.
+        filetype (str/None): File extension, if given this overwrites the assumption based on the filename.
+        project (pyiron-Project/None): Project calling this function, provided to all objects referring to such.
 
-            Supported file types are:
-            '.h5', '.hdf'
-            '.json'
-            '.txt'
-            '.csv'
-            '.ipynb'
-            Image extensions supported by PIL
+        Supported file types are:
+        '.h5', '.hdf'
+        '.json'
+        '.txt'
+        '.csv'
+        '.ipynb'
+        Image extensions supported by PIL
 
-        Returns:
-            :class:`FileHDFio`: pointing to the file of filetype = '.h5'
-            dict: containing data from file of filetype = '.json'
-            list: of all lines from file for filetype = '.txt'
-            :class:`pandas.DataFrame`: containing data from file of filetype = '.csv'
+    Returns:
+        :class:`FileHDFio`: pointing to the file of filetype = '.h5'
+        dict: containing data from file of filetype = '.json'
+        list: of all lines from file for filetype = '.txt'
+        :class:`pandas.DataFrame`: containing data from file of filetype = '.csv'
 
     """
+
     def _load_txt(file):
         if isinstance(file, str):
-            with open(file, encoding='utf8') as f:
+            with open(file, encoding="utf8") as f:
                 return f.readlines()
         else:
             return file.readlines()
@@ -106,7 +113,7 @@ def load_file(fp, filetype=None, project=None):
 
     def _load_img(file):
         return Image.open(file)
- 
+
     def _load_default(file):
         try:
             return _load_txt(file)
@@ -116,30 +123,30 @@ def load_file(fp, filetype=None, project=None):
     def _resolve_filetype(file, _filetype):
         if _filetype is None and isinstance(file, str):
             _, _filetype = os.path.splitext(file)
-        elif _filetype is None and hasattr(file, 'name'):
+        elif _filetype is None and hasattr(file, "name"):
             _, _filetype = os.path.splitext(file.name)
         elif _filetype is None:
             return None
-        elif _filetype[0] != '.':
-            _filetype = '.' + _filetype
+        elif _filetype[0] != ".":
+            _filetype = "." + _filetype
         return _filetype.lower()
 
     filetype = _resolve_filetype(fp, filetype)
 
-    if filetype in ['.h5', '.hdf'] and isinstance(fp, str):
+    if filetype in [".h5", ".hdf"] and isinstance(fp, str):
         if project is None:
             return FileHDFio(file_name=fp)
         else:
             return ProjectHDFio(file_name=fp, project=project)
-    elif filetype in ['.json']:
+    elif filetype in [".json"]:
         return _load_json(fp)
-    elif filetype in ['.txt']:
+    elif filetype in [".txt"]:
         return _load_txt(fp)
-    elif filetype in ['.csv']:
+    elif filetype in [".csv"]:
         return _load_csv(fp)
-    elif _has_imported['nbformat'] and filetype in ['.ipynb']:
+    elif _has_imported["nbformat"] and filetype in [".ipynb"]:
         return _load_ipynb(fp)
-    elif _has_imported['PIL'] and filetype in Image.registered_extensions():
+    elif _has_imported["PIL"] and filetype in Image.registered_extensions():
         return _load_img(fp)
     else:
         return _load_default(fp)
@@ -155,15 +162,16 @@ class FileDataTemplate(ABC):
 
 class FileData(FileDataTemplate):
     """FileData stores an instance of a data file, e.g. a single Image from a measurement."""
+
     def __init__(self, file, data=None, metadata=None, filetype=None):
         """FileData class to store data and associated metadata.
 
-            Args:
-                file (str): path to the data file (if data is None) or filename associated with the data.
-                data (object/None): object containing data
-                metadata (dict/DataContainer): Dictionary of metadata associated with the data
-                filetype (str): File extension associated with the type data,
-                                If provided this overwrites the assumption based on the extension of the filename.
+        Args:
+            file (str): path to the data file (if data is None) or filename associated with the data.
+            data (object/None): object containing data
+            metadata (dict/DataContainer): Dictionary of metadata associated with the data
+            filetype (str): File extension associated with the type data,
+                            If provided this overwrites the assumption based on the extension of the filename.
         """
         if data is None:
             self.filename = os.path.split(file)[1]
@@ -175,7 +183,7 @@ class FileData(FileDataTemplate):
             self._data = data
         if filetype is None:
             filetype = os.path.splitext(self.filename)[1]
-            if filetype == '' or filetype == '.':
+            if filetype == "" or filetype == ".":
                 self.filetype = None
             else:
                 self.filetype = filetype[1:]

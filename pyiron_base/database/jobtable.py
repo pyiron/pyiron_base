@@ -45,16 +45,14 @@ def get_jobs(database, sql_query, user, project_path, recursive=True, columns=No
             user=user,
             project_path=project_path,
             recursive=recursive,
-            columns=columns
+            columns=columns,
         )
         if len(df) == 0:
             return {key: list() for key in columns}
-        return df.to_dict(orient='list')
+        return df.to_dict(orient="list")
     else:
         return database.get_jobs(
-            project=project_path,
-            recursive=recursive,
-            columns=columns
+            project=project_path, recursive=recursive, columns=columns
         )
 
 
@@ -78,13 +76,10 @@ def get_job_ids(database, sql_query, user, project_path, recursive=True):
             sql_query=sql_query,
             user=user,
             project_path=project_path,
-            recursive=recursive
+            recursive=recursive,
         )["id"]
     else:
-        return database.get_job_ids(
-            project=project_path,
-            recursive=recursive
-        )
+        return database.get_job_ids(project=project_path, recursive=recursive)
 
 
 def get_child_ids(database, sql_query, user, project_path, job_specifier, status=None):
@@ -119,10 +114,7 @@ def get_child_ids(database, sql_query, user, project_path, job_specifier, status
                 ]
             )
     else:
-        return database.get_child_ids(
-            job_specifier=job_specifier,
-            project=project_path
-        )
+        return database.get_child_ids(job_specifier=job_specifier, project=project_path)
 
 
 def get_job_id(database, sql_query, user, project_path, job_specifier):
@@ -149,7 +141,7 @@ def get_job_id(database, sql_query, user, project_path, job_specifier):
             user=user,
             project_path=project_path,
             recursive=False,
-            job=job_specifier
+            job=job_specifier,
         )
         if len(job_dict) == 0:
             job_dict = database._job_dict(
@@ -157,7 +149,7 @@ def get_job_id(database, sql_query, user, project_path, job_specifier):
                 user=user,
                 project_path=project_path,
                 recursive=True,
-                job=job_specifier
+                job=job_specifier,
             )
         if len(job_dict) == 0:
             return None
@@ -165,13 +157,12 @@ def get_job_id(database, sql_query, user, project_path, job_specifier):
             return job_dict[0]["id"]
         else:
             raise ValueError(
-                "job name '{0}' in this project '{1}' is not unique '{2}".format(job_specifier, project_path, job_dict)
+                "job name '{0}' in this project '{1}' is not unique '{2}".format(
+                    job_specifier, project_path, job_dict
+                )
             )
     else:
-        return database.get_job_id(
-            job_specifier=job_specifier,
-            project=project_path
-        )
+        return database.get_job_id(job_specifier=job_specifier, project=project_path)
 
 
 def set_job_status(database, sql_query, user, project_path, job_specifier, status):
@@ -194,9 +185,9 @@ def set_job_status(database, sql_query, user, project_path, job_specifier, statu
             sql_query=sql_query,
             user=user,
             project_path=project_path,
-            job_specifier=job_specifier
+            job_specifier=job_specifier,
         ),
-        status=status
+        status=status,
     )
 
 
@@ -222,7 +213,7 @@ def get_job_status(database, sql_query, user, project_path, job_specifier):
             sql_query=sql_query,
             user=user,
             project_path=project_path,
-            job_specifier=job_specifier
+            job_specifier=job_specifier,
         )
     )
 
@@ -247,6 +238,6 @@ def get_job_working_directory(database, sql_query, user, project_path, job_speci
             sql_query=sql_query,
             user=user,
             project_path=project_path,
-            job_specifier=job_specifier
+            job_specifier=job_specifier,
         )
     )

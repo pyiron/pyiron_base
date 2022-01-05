@@ -14,7 +14,7 @@ import subprocess
 
 from pyiron_base import Project
 
-from tqdm import tqdm
+from tqdm.auto import tqdm
 
 def detect_bug(file_name):
     """

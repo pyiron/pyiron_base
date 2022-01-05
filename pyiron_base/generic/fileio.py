@@ -65,8 +65,11 @@ def _lookup_adapter(file_name):
     try:
         return _FILETYPE_DICT[ext]
     except KeyError:
-        raise ValueError("The file type is not supported; expected *.yml, *.yaml,  not \"{}\"".format(ext)) \
-                from None
+        raise ValueError(
+            'The file type is not supported; expected *.yml, *.yaml,  not "{}"'.format(
+                ext
+            )
+        ) from None
 
 
 def _parse_yml(file_name):
@@ -80,7 +83,7 @@ def _parse_yml(file_name):
     Returns:
         dict: parsed file contents
     """
-    with open(file_name, 'r') as input_src:
+    with open(file_name, "r") as input_src:
         try:
             return yaml.safe_load(input_src)
         except yaml.YAMLError as exc:
@@ -96,14 +99,11 @@ def _to_yml(data, file_name):
         data (nested dict/list): data to save to file, dictionary keys must be str!
         file_name (str): the name of the file to be writen to.
     """
-    with open(file_name, 'w') as output:
+    with open(file_name, "w") as output:
         yaml.dump(data, output, default_flow_style=False)
 
 
-FileAdapter = namedtuple('FileAdapter', ('parse', 'write'))
+FileAdapter = namedtuple("FileAdapter", ("parse", "write"))
 YMLAdapter = FileAdapter(_parse_yml, _to_yml)
 
-_FILETYPE_DICT = {
-        'yaml': YMLAdapter,
-        'yml': YMLAdapter
-}
+_FILETYPE_DICT = {"yaml": YMLAdapter, "yml": YMLAdapter}

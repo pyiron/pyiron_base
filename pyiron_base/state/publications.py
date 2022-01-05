@@ -46,7 +46,7 @@ class Publications(metaclass=Singleton):
                         "Jörg Neugebauer",
                     ],
                     "title": "pyiron: An integrated development environment for computational "
-                             "materials science",
+                    "materials science",
                     "journal": "Computational Materials Science",
                     "volume": "161",
                     "pages": "24 - 36",
@@ -84,8 +84,9 @@ class Publications(metaclass=Singleton):
             if key not in self._publications.keys():
                 self._publications[key] = value
 
-    def show(self, bib_format: Literal['pandas', 'dict', 'bibtex', 'apa'] = "pandas") \
-            -> Union[Dict, pandas.DataFrame, str]:
+    def show(
+        self, bib_format: Literal["pandas", "dict", "bibtex", "apa"] = "pandas"
+    ) -> Union[Dict, pandas.DataFrame, str]:
         """
         List the publications used in this project.
 
@@ -114,12 +115,12 @@ class Publications(metaclass=Singleton):
                 "issn",
             ]
             bibtex_str = (
-                    "@article{"
-                    + k
-                    + ",\n"
-                    + "    author={"
-                    + " and ".join(v["author"])
-                    + "},\n"
+                "@article{"
+                + k
+                + ",\n"
+                + "    author={"
+                + " and ".join(v["author"])
+                + "},\n"
             )
             for kt in total_keys:
                 if kt in value.keys():

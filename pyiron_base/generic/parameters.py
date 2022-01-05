@@ -969,11 +969,17 @@ class GenericParameters:
             return i_line_lst[0]
         else:
             error_msg = list()
-            error_msg.append("Multiple occurrences of key_name: " + key_name + ". They are as follows")
+            error_msg.append(
+                "Multiple occurrences of key_name: "
+                + key_name
+                + ". They are as follows"
+            )
             for i in i_line_lst:
-                error_msg.append("dataset: {}, {}, {}".format(i,
-                                                              self._dataset["Parameter"][i],
-                                                              self._dataset["Value"][i]))
+                error_msg.append(
+                    "dataset: {}, {}, {}".format(
+                        i, self._dataset["Parameter"][i], self._dataset["Value"][i]
+                    )
+                )
             error_msg = "\n".join(error_msg)
             raise ValueError(error_msg)
 

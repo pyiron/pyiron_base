@@ -9,8 +9,11 @@ import os
 import logging
 from pyiron_base.project.generic import Project
 from pyiron_base.state import state
-from pyiron_base.database.filetable import get_hamilton_from_file, get_hamilton_version_from_file, \
-    get_job_status_from_file
+from pyiron_base.database.filetable import (
+    get_hamilton_from_file,
+    get_hamilton_version_from_file,
+    get_job_status_from_file,
+)
 
 __author__ = "Joerg Neugebauer"
 __copyright__ = (
@@ -37,13 +40,23 @@ class JobWrapper(object):
         debug (bool): enable debug mode [True/False] (optional)
     """
 
-    def __init__(self, working_directory, job_id=None, hdf5_file=None, h5_path=None, submit_on_remote=False,
-                 debug=False, connection_string=None):
+    def __init__(
+        self,
+        working_directory,
+        job_id=None,
+        hdf5_file=None,
+        h5_path=None,
+        submit_on_remote=False,
+        debug=False,
+        connection_string=None,
+    ):
         self.working_directory = working_directory
         self._remote_flag = submit_on_remote
         if connection_string is not None:
-            state.database.open_local_sqlite_connection(connection_string=connection_string)
-        pr = Project(path=os.path.join(working_directory, '..', '..'))
+            state.database.open_local_sqlite_connection(
+                connection_string=connection_string
+            )
+        pr = Project(path=os.path.join(working_directory, "..", ".."))
         if job_id is not None:
             self.job = pr.load(int(job_id))
         else:
@@ -59,21 +72,19 @@ class JobWrapper(object):
                     "job": job_name,
                     "subjob": h5_path,
                     "projectpath": projectpath,
-                    "project": project + '/',
+                    "project": project + "/",
                     "status": get_job_status_from_file(
-                        hdf5_file=hdf5_file,
-                        job_name=job_name
+                        hdf5_file=hdf5_file, job_name=job_name
                     ),
                     "hamilton": get_hamilton_from_file(
-                        hdf5_file=hdf5_file,
-                        job_name=job_name
+                        hdf5_file=hdf5_file, job_name=job_name
                     ),
                     "hamversion": get_hamilton_version_from_file(
-                        hdf5_file=hdf5_file,
-                        job_name=job_name
-                    )
+                        hdf5_file=hdf5_file, job_name=job_name
+                    ),
                 },
-                convert_to_object=True)
+                convert_to_object=True,
+            )
 
         # setup logger
         self._logger = self.setup_logger(debug=debug)
@@ -113,7 +124,9 @@ class JobWrapper(object):
             self.job.run_static()
 
 
-def job_wrapper_function(working_directory, job_id=None, file_path=None, submit_on_remote=False, debug=False):
+def job_wrapper_function(
+    working_directory, job_id=None, file_path=None, submit_on_remote=False, debug=False
+):
     """
     Job Wrapper function - creates a JobWrapper object and calls run() on that object
 
@@ -136,18 +149,22 @@ def job_wrapper_function(working_directory, job_id=None, file_path=None, submit_
             working_directory=working_directory,
             job_id=job_id,
             submit_on_remote=submit_on_remote,
-            debug=debug
+            debug=debug,
         )
     elif file_path is not None:
-        hdf5_file = '.'.join(file_path.split('.')[:-1]) + '.' + file_path.split('.')[-1].split('/')[0]
-        h5_path = '/'.join(file_path.split('.')[-1].split('/')[1:])
+        hdf5_file = (
+            ".".join(file_path.split(".")[:-1])
+            + "."
+            + file_path.split(".")[-1].split("/")[0]
+        )
+        h5_path = "/".join(file_path.split(".")[-1].split("/")[1:])
         job = JobWrapper(
             working_directory,
             job_id=None,
             hdf5_file=hdf5_file,
-            h5_path='/' + h5_path,
+            h5_path="/" + h5_path,
             submit_on_remote=submit_on_remote,
-            debug=debug
+            debug=debug,
         )
     else:
         raise ValueError("Either job_id or file_path have to be not None.")

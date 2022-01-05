@@ -45,6 +45,7 @@ class State(metaclass=Singleton):
         database: Database (or file base) connection.
         queue_adapter: Configuration for using remote resources.
     """
+
     @property
     def logger(self):
         return _logger

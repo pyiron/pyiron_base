@@ -178,7 +178,9 @@ class FlexibleMaster(GenericMaster):
                         mod_funct(prev_job, job)
                     job._parent_id = prev_job.job_id
                 job.run()
-                if job.server.run_mode.interactive and not isinstance(job, GenericMaster):
+                if job.server.run_mode.interactive and not isinstance(
+                    job, GenericMaster
+                ):
                     job.interactive_close()
                 if self.server.run_mode.non_modal and job.server.run_mode.non_modal:
                     break
@@ -198,7 +200,11 @@ class FlexibleMaster(GenericMaster):
         if self.is_finished():
             self.status.collect = True
             self.run()  # self.run_if_collect()
-        elif self.server.run_mode.non_modal or self.server.run_mode.queue or self.server.run_mode.modal:
+        elif (
+            self.server.run_mode.non_modal
+            or self.server.run_mode.queue
+            or self.server.run_mode.modal
+        ):
             self.run_static()
         else:
             self.refresh_job_status()

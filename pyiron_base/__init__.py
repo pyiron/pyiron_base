@@ -3,6 +3,7 @@
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
 from pyiron_base.state import state
+
 # API of the pyiron_base module - in alphabetical order
 from pyiron_base.generic.factory import PyironFactory
 from pyiron_base.generic.flattenedstorage import FlattenedStorage
@@ -16,7 +17,12 @@ from pyiron_base.job.external import Notebook
 from pyiron_base.job.generic import GenericJob
 from pyiron_base.job.interactive import InteractiveBase
 from pyiron_base.job.interactivewrapper import InteractiveWrapper
-from pyiron_base.job.jobstatus import JobStatus, job_status_successful_lst, job_status_finished_lst, job_status_lst
+from pyiron_base.job.jobstatus import (
+    JobStatus,
+    job_status_successful_lst,
+    job_status_finished_lst,
+    job_status_lst,
+)
 from pyiron_base.job.jobtype import JOB_CLASS_DICT, JobType, JobTypeChoice
 from pyiron_base.job.template import TemplateJob, PythonTemplateJob
 from pyiron_base.job.factory import JobFactoryCore
@@ -35,7 +41,8 @@ from pyiron_base.generic.object import HasDatabase, HasStorage, PyironObject
 from pyiron_base.database.performance import get_database_statistics
 
 from pyiron_base.toolkit import Toolkit, BaseTools
-Project.register_tools('base', BaseTools)
+
+Project.register_tools("base", BaseTools)
 
 # optional API of the pyiron_base module
 try:
