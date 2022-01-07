@@ -26,13 +26,17 @@ def detect_bug(file_name):
     case just rewrite anyway.
     """
     out = subprocess.getoutput(f"h5ls -r {file_name}")
-    lines = out.split('\n')
+    lines = out.split("\n")
     for i, l in enumerate(lines[:-2]):
         if not l.endswith("Group"):
             continue
         group_name = l.split()[0]
-        data_match = re.match(f"^{group_name}/data[ \t]*Dataset {'{.*}'}$", lines[i+1])
-        index_match = re.match(f"^{group_name}/index[ \t]*Dataset {'{.*}'}$", lines[i+2])
+        data_match = re.match(
+            f"^{group_name}/data[ \t]*Dataset {'{.*}'}$", lines[i + 1]
+        )
+        index_match = re.match(
+            f"^{group_name}/index[ \t]*Dataset {'{.*}'}$", lines[i + 2]
+        )
         if data_match and index_match:
             return True
     return False
@@ -47,23 +51,29 @@ def pyiron_base_03x_to_04x(project):
     the correct dtype, this then writes this correct dtype.
     """
     total_size = 0
-    for l in subprocess.getoutput(f"find {project.path} -regex \".*\.h5\" -exec wc -c '{{}}' \;").split("\n"):
+    for l in subprocess.getoutput(
+        f"find {project.path} -regex \".*\.h5\" -exec wc -c '{{}}' \;"
+    ).split("\n"):
         if l == "":
             raise ValueError(f"no HDF5 files found in {project.path}!")
         total_size += int(l.split()[0])
 
     n_proc = 0
     n_skip = 0
-    n_err  = 0
+    n_err = 0
     with tqdm(total=total_size, unit="B", unit_scale=1) as t:
-        for j in project.iter_jobs(convert_to_object=False, recursive=True, progress=False):
+        for j in project.iter_jobs(
+            convert_to_object=False, recursive=True, progress=False
+        ):
             n_proc += 1
             try:
                 file_size = os.stat(j.project_hdf5.file_name)[stat.ST_SIZE]
             except FileNotFoundError:
                 n_err += 1
-                print(f"Job {j.name}/{j.id} is in the database, but points to non-existing HDF5 "
-                      f"file {j.project_hdf5.file_name}!")
+                print(
+                    f"Job {j.name}/{j.id} is in the database, but points to non-existing HDF5 "
+                    f"file {j.project_hdf5.file_name}!"
+                )
                 t.update(0)
                 continue
 
@@ -77,4 +87,3 @@ def pyiron_base_03x_to_04x(project):
                 n_skip += 1
             t.update(file_size)
     print(f"Total Jobs: {n_proc}\tErrors: {n_err}\tSkipped: {n_skip}")
-
