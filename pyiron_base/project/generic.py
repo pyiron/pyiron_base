@@ -744,6 +744,8 @@ class Project(ProjectPath, HasGroups):
             state.logger.warning(
                 "SQL filter '%s' is active (may exclude job) ", self.sql_query
             )
+        if not isinstance(job_specifier, (int, np.integer)):
+            job_specifier = _get_safe_job_name(name=job_specifier)
         job_id = self.get_job_id(job_specifier=job_specifier)
         if job_id is None:
             state.logger.warning(
@@ -769,14 +771,14 @@ class Project(ProjectPath, HasGroups):
             GenericJob, JobCore: Either the full GenericJob object or just a reduced JobCore object
         """
         jobpath = getattr(importlib.import_module("pyiron_base.job.path"), "JobPath")
-        if job_id:
+        if job_id is not None:
             job = jobpath(db=self.db, job_id=job_id, user=self.user)
             if convert_to_object:
                 job = job.to_object()
                 job.reset_job_id(job_id=job_id)
                 job.set_input_to_read_only()
             return job
-        elif db_entry:
+        elif db_entry is not None:
             job = jobpath(db=self.db, db_entry=db_entry)
             if convert_to_object:
                 job = job.to_object()
