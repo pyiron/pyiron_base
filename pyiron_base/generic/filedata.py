@@ -91,10 +91,12 @@ def load_file(fp, filetype=None, project=None):
 
     """
 
-    def _load_txt(file):
-        if isinstance(file, str):
+    def _load_txt(file) :
+        if isinstance(file,    str):
             with open(file, encoding="utf8") as f:
                 return f.readlines()
+            
+            
         else:
             return file.readlines()
 
