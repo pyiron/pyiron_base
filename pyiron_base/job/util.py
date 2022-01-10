@@ -130,7 +130,7 @@ def _get_safe_job_name(
             return round(value, ndigits=ndigits)
         return value
 
-    if not isinstance(name, str) and not isinstance(name, (int, np.integer)):
+    if not isinstance(name, str):
         name_rounded = [round_(nn) for nn in name]
         job_name = "_".join([str(nn) for nn in name_rounded])
     else:

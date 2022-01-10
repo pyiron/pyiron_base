@@ -744,7 +744,9 @@ class Project(ProjectPath, HasGroups):
             state.logger.warning(
                 "SQL filter '%s' is active (may exclude job) ", self.sql_query
             )
-        job_id = self.get_job_id(job_specifier=_get_safe_job_name(name=job_specifier))
+        if not isinstance(job_specifier, (int, np.integer)):
+            job_specifier = _get_safe_job_name(name=job_specifier)
+        job_id = self.get_job_id(job_specifier=job_specifier)
         if job_id is None:
             state.logger.warning(
                 "Job '%s' does not exist and cannot be loaded", job_specifier
