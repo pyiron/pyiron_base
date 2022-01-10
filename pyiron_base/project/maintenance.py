@@ -71,6 +71,24 @@ class UpdateMaintenance:
     def __init__(self, project):
         self._project = project
 
+    def base_to_current(self, start_version: str, project=None):
+        """Runs all updates for pyiron_base to reach the current version.
+
+        Args:
+            start_version(str): Version of pyiron_base in the mayor.minor[.patch] format from which to start applying
+                the updates.
+            project(None/project/list/str): The project(s) to be converted from 0.3 to 0.4 ; default: current project
+                One may provide a pyiron Project, a list of pyiron Projects, or a string containing "all" or a valid
+                path.
+                If "all" is provided, pyiron tries to find all projects using the PROJECT_PATHS defined in the
+                configuration.
+        """
+        mayor, minor = start_version.split(".")[0:2]
+        if mayor != 0:
+            raise ValueError("Updates to version >0.x.y is not possible.")
+        if minor < 4:
+            self.base_v0_3_to_v0_4(project)
+
     def base_v0_3_to_v0_4(self, project=None):
         """Update hdf files written with pyiron_base-0.3.x to pyiron_base-0.4.x
 
@@ -112,7 +130,10 @@ class UpdateMaintenance:
             )
 
         for pr in projects:
-            pyiron_base_03x_to_04x(pr)
+            try:
+                pyiron_base_03x_to_04x(pr)
+            except ValueError as e:
+                print(f"WARNING: Updating project {project} failed with {e}!")
 
 
 class GlobalMaintenance:
