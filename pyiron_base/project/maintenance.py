@@ -81,8 +81,10 @@ class UpdateMaintenance:
         the correct dtype, this then writes this correct dtype.
 
         Args:
-            project(None/pyiron_project/"all"): The project to be converted from 0.3 to 0.4 ; default: current project
-                if "all" is provided, pyiron tries to find all projects using the PROJECT_PATHS defined in the
+            project(None/project/list/str): The project(s) to be converted from 0.3 to 0.4 ; default: current project
+                One may provide a pyiron Project, a list of pyiron Projects, or a string containing "all" or a valid
+                path.
+                If "all" is provided, pyiron tries to find all projects using the PROJECT_PATHS defined in the
                 configuration.
         """
         if project is None:
@@ -95,9 +97,19 @@ class UpdateMaintenance:
                 for path in state.settings.configuration["project_paths"]
             ]
         elif isinstance(project, str):
-            projects = [self._project.__class__(project)]
+            if os.path.isdir(project):
+                projects = [self._project.__class__(project)]
+            else:
+                raise ValueError(
+                    f"{project} is a str but neither 'all' nor a directory."
+                )
         else:
             projects = [project]
+
+        if len(projects) == 0:
+            raise ValueError(
+                f"Provided project {project} lead to 0 projects to be converted."
+            )
 
         for pr in projects:
             pyiron_base_03x_to_04x(pr)
