@@ -5,13 +5,32 @@ such arrays, but does not automatically save them.  This conversion script
 simply goes over all jobs and rewrites their HDF5 files, since it's read with
 the correct dtype, this then writes this correct dtype.
 """
-
+import glob
 import os
-import re
 import stat
-import subprocess
+import h5py
 
 from tqdm.auto import tqdm
+
+
+def _h5io_bug_check(_, h5obj):
+    """
+    Checks if the h5obj is a group which has 'data' and 'index' datasets. Signature matches the requirements of
+    h5io.File.visititems(callable).
+
+    Args:
+        _: not used name of the visititems method on h5io.File
+        h5obj: h5io object
+    Returns:
+        True if an error has been detected - this breaks the visititems loop
+        None if no error is detected - proceeding the visititems loop
+    """
+    if isinstance(h5obj, h5py.Group):
+        if "data" in h5obj.keys() and "index" in h5obj.keys():
+            if isinstance(h5obj["data"], h5py.Dataset) and isinstance(
+                h5obj["index"], h5py.Dataset
+            ):
+                return True
 
 
 def detect_bug(file_name):
@@ -25,21 +44,14 @@ def detect_bug(file_name):
     corrupted record from our bug or a legitimate dtype=object array.  In that
     case just rewrite anyway.
     """
-    out = subprocess.getoutput(f"h5ls -r {file_name}")
-    lines = out.split("\n")
-    for i, l in enumerate(lines[:-2]):
-        if not l.endswith("Group"):
-            continue
-        group_name = l.split()[0]
-        data_match = re.match(
-            f"^{group_name}/data[ \t]*Dataset {'{.*}'}$", lines[i + 1]
-        )
-        index_match = re.match(
-            f"^{group_name}/index[ \t]*Dataset {'{.*}'}$", lines[i + 2]
-        )
-        if data_match and index_match:
-            return True
-    return False
+
+    h5_file = h5py.File(file_name, "r")
+    try:
+        bug_found = h5_file.visititems(_h5io_bug_check)
+    finally:
+        h5_file.close()
+
+    return bug_found
 
 
 def pyiron_base_03x_to_04x(project):
@@ -51,12 +63,13 @@ def pyiron_base_03x_to_04x(project):
     the correct dtype, this then writes this correct dtype.
     """
     total_size = 0
-    for l in subprocess.getoutput(
-        f"find {project.path} -regex \".*\.h5\" -exec wc -c '{{}}' \;"
-    ).split("\n"):
-        if l == "":
-            raise ValueError(f"no HDF5 files found in {project.path}!")
-        total_size += int(l.split()[0])
+    n_files = 0
+    for l in glob.iglob(project.path + "**/*.h5"):
+        n_files += 1
+        total_size += os.stat(l)[stat.ST_SIZE]
+
+    if n_files == 0:
+        raise ValueError(f"no HDF5 files found in {project.path}!")
 
     n_proc = 0
     n_skip = 0
@@ -86,4 +99,4 @@ def pyiron_base_03x_to_04x(project):
             else:
                 n_skip += 1
             t.update(file_size)
-    print(f"Total Jobs: {n_proc}\tErrors: {n_err}\tSkipped: {n_skip}")
+    print(f"Total Jobs: {n_proc}\tErrors: {n_err}\tSkipped (no bug detected): {n_skip}")
