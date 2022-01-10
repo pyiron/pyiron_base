@@ -20,7 +20,8 @@ class Maintenance:
 
     def __init__(self, project):
         """
-        initialize the local and global attributes
+        Args:
+            (project): pyiron project to do maintenance on
         """
         self._project = project
         self._global = GlobalMaintenance()
