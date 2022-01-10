@@ -135,7 +135,6 @@ def get_job_id(database, sql_query, user, project_path, job_specifier):
         if isinstance(job_specifier, (int, np.integer)):
             return job_specifier  # is id
 
-        job_specifier.replace(".", "_")
         job_dict = database._job_dict(
             sql_query=sql_query,
             user=user,
