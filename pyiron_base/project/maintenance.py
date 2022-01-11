@@ -1,6 +1,7 @@
 import importlib
 import os
 import pkgutil
+import warnings
 from _warnings import warn
 
 import pandas
@@ -126,7 +127,7 @@ class UpdateMaintenance:
             projects = [project]
 
         if len(projects) == 0:
-            raise ValueError(
+            warnings.warn(
                 f"Provided project {project} lead to 0 projects to be converted."
             )
 
