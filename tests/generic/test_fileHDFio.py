@@ -6,7 +6,7 @@ import os
 import sys
 from io import StringIO
 import numpy as np
-from pyiron_base.generic.hdfio import FileHDFio, _is_ragged_in_1st_dim_only
+from pyiron_base.generic.hdfio import FileHDFio, _is_ragged_in_1st_dim_only, state
 from pyiron_base._tests import PyironTestCase
 import unittest
 
@@ -131,11 +131,13 @@ class TestFileHDFio(PyironTestCase):
         self.assertIs(self.i_o_hdf5._convert_dtype_obj_array(object_array_with_lists), object_array_with_lists)
         self.assertIs(self.i_o_hdf5._convert_dtype_obj_array(object_array_with_none), object_array_with_none)
 
-        array = self.i_o_hdf5._convert_dtype_obj_array(int_array_as_objects_array)
+        with self.assertLogs(state.logger):
+            array = self.i_o_hdf5._convert_dtype_obj_array(int_array_as_objects_array)
         self.assertTrue(np.array_equal(array, int_array_as_objects_array))
         self.assertEqual(array.dtype, np.dtype(int))
 
-        array = self.i_o_hdf5._convert_dtype_obj_array(float_array_as_objects_array)
+        with self.assertLogs(state.logger):
+            array = self.i_o_hdf5._convert_dtype_obj_array(float_array_as_objects_array)
         self.assertTrue(np.array_equal(array, float_array_as_objects_array))
         self.assertEqual(array.dtype, np.dtype(float))
 
