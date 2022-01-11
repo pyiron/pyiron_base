@@ -218,8 +218,8 @@ class FileHDFio(HasGroups, MutableMapping):
                 f"Deprecated data structure! "
                 f"Returned array was converted from dtype='O' to dtype={result.dtype} "
                 f"via `np.array(result.tolist())`.\n"
-                f"Please run rewrite_hdf5() to update this data! "
-                f"To update all your data run update_scripts/pyiron_base_0.3_to_0.4.py"
+                f"Please run rewrite_hdf5() (from a job: job.project_hdf5.rewrite_hdf5() ) to update this data! "
+                f"To update all your data run Project.maintenance.update.base_v0_3_to_v0_4('all')."
             )
             return result
         else:

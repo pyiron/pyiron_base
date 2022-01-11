@@ -1,6 +1,7 @@
 import importlib
 import os
 import pkgutil
+import warnings
 from _warnings import warn
 
 import pandas
@@ -8,6 +9,7 @@ from git import Repo, InvalidGitRepositoryError
 
 from pyiron_base import state
 from pyiron_base.database.performance import get_database_statistics
+from pyiron_base.project.update.pyiron_base_03x_to_04x import pyiron_base_03x_to_04x
 
 
 class Maintenance:
@@ -17,16 +19,23 @@ class Maintenance:
     or global (describing the status of pyiron on the running machine)
     """
 
-    def __init__(self):
+    def __init__(self, project):
         """
-        initialize the local and global attributes
+        Args:
+            (project): pyiron project to do maintenance on
         """
+        self._project = project
         self._global = GlobalMaintenance()
+        self._update = UpdateMaintenance(self._project)
         self._local = None
 
     @property
     def global_status(self):
         return self._global
+
+    @property
+    def update(self):
+        return self._update
 
     @staticmethod
     def get_repository_status():
@@ -58,6 +67,75 @@ class Maintenance:
             report.loc[i] = [name, hash_, version]
 
         return report
+
+
+class UpdateMaintenance:
+    def __init__(self, project):
+        self._project = project
+
+    def base_to_current(self, start_version: str, project=None):
+        """Runs all updates for pyiron_base to reach the current version.
+
+        Args:
+            start_version(str): Version of pyiron_base in the mayor.minor[.patch] format from which to start applying
+                the updates.
+            project(None/project/list/str): The project(s) to be converted from 0.3 to 0.4 ; default: current project
+                One may provide a pyiron Project, a list of pyiron Projects, or a string containing "all" or a valid
+                path.
+                If "all" is provided, pyiron tries to find all projects using the PROJECT_PATHS defined in the
+                configuration.
+        """
+        mayor, minor = start_version.split(".")[0:2]
+        if mayor != 0:
+            raise ValueError("Updates to version >0.x.y is not possible.")
+        if minor < 4:
+            self.base_v0_3_to_v0_4(project)
+
+    def base_v0_3_to_v0_4(self, project=None):
+        """Update hdf files written with pyiron_base-0.3.x to pyiron_base-0.4.x
+
+        pyiron_base<=0.3.9 has a bug that writes all arrays with dtype=object even
+        numeric ones.  As a fix pyiron_base=0.4.0 introduces a conversion when reading
+        such arrays, but does not automatically save them.  This conversion script
+        simply goes over all jobs and rewrites their HDF5 files, since it's read with
+        the correct dtype, this then writes this correct dtype.
+
+        Args:
+            project(None/project/list/str): The project(s) to be converted from 0.3 to 0.4 ; default: current project
+                One may provide a pyiron Project, a list of pyiron Projects, or a string containing "all" or a valid
+                path.
+                If "all" is provided, pyiron tries to find all projects using the PROJECT_PATHS defined in the
+                configuration.
+        """
+        if project is None:
+            projects = [self._project]
+        elif isinstance(project, list):
+            projects = project
+        elif project == "all":
+            projects = [
+                self._project.__class__(path)
+                for path in state.settings.configuration["project_paths"]
+            ]
+        elif isinstance(project, str):
+            if os.path.isdir(project):
+                projects = [self._project.__class__(project)]
+            else:
+                raise ValueError(
+                    f"{project} is a str but neither 'all' nor a directory."
+                )
+        else:
+            projects = [project]
+
+        if len(projects) == 0:
+            warnings.warn(
+                f"Provided project {project} lead to 0 projects to be converted."
+            )
+
+        for pr in projects:
+            try:
+                pyiron_base_03x_to_04x(pr)
+            except ValueError as e:
+                print(f"WARNING: Updating project {project} failed with {e}!")
 
 
 class GlobalMaintenance:
