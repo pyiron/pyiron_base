@@ -238,7 +238,8 @@ class WorkerJob(PythonTemplateJob):
                         + " "
                         + str(len(df_sub))
                         + " "
-                        + str(process.memory_info().rss / 1024 / 1024 / 1024) + "GB"
+                        + str(process.memory_info().rss / 1024 / 1024 / 1024)
+                        + "GB"
                         + "\n"
                     )
 
@@ -285,7 +286,8 @@ class WorkerJob(PythonTemplateJob):
                         + " "
                         + str(len(file_lst))
                         + " "
-                        + str(process.memory_info().rss / 1024 / 1024 / 1024) + "GB"
+                        + str(process.memory_info().rss / 1024 / 1024 / 1024)
+                        + "GB"
                         + "\n"
                     )
 
