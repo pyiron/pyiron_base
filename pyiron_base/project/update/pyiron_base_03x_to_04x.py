@@ -64,7 +64,7 @@ def pyiron_base_03x_to_04x(project):
     """
     total_size = 0
     n_files = 0
-    for l in glob.iglob(project.path + "**/*.h5"):
+    for l in glob.iglob(project.path + "**/*.h5", recursive=True):
         n_files += 1
         total_size += os.stat(l)[stat.ST_SIZE]
 
