@@ -5,6 +5,7 @@
 Worker Class to execute calculation in an asynchronous way
 """
 import os
+import psutil
 import time
 from datetime import datetime
 from multiprocessing import Pool
@@ -178,6 +179,7 @@ class WorkerJob(PythonTemplateJob):
         self.project_hdf5.create_working_directory()
         log_file = os.path.join(self.working_directory, "worker.log")
         active_job_ids = []
+        process = psutil.Process(os.getpid())
         with Pool(processes=int(self.server.cores / self.cores_per_job)) as pool:
             while True:
                 # Check the database if there are more calculation to execute
@@ -235,6 +237,8 @@ class WorkerJob(PythonTemplateJob):
                         + str(len(df))
                         + " "
                         + str(len(df_sub))
+                        + " "
+                        + str(process.memory_info().rss / 1024 / 1024 / 1024) + "GB"
                         + "\n"
                     )
 
@@ -253,6 +257,7 @@ class WorkerJob(PythonTemplateJob):
         working_directory = self.working_directory
         log_file = os.path.join(working_directory, "worker.log")
         file_memory_lst = []
+        process = psutil.Process(os.getpid())
         with Pool(processes=int(self.server.cores / self.cores_per_job)) as pool:
             while True:
                 file_lst = [
@@ -279,6 +284,8 @@ class WorkerJob(PythonTemplateJob):
                         + str(len(file_memory_lst))
                         + " "
                         + str(len(file_lst))
+                        + " "
+                        + str(process.memory_info().rss / 1024 / 1024 / 1024) + "GB"
                         + "\n"
                     )
 
