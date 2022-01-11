@@ -404,7 +404,79 @@ The `GitHub-Action-Workflows`_ are triggered, whenever a pull request is created
 * pypicheck.yml: https://github.com/pyiron/pyiron_base/blob/master/.github/workflows/pypicheck.yml
 * unittests.yml: https://github.com/pyiron/pyiron_base/blob/master/.github/workflows/unittests.yml
 
-TODO: Explain tests and actions
+**UpdateDependabotPR**
+
+This workflow is used to update the dependencies of the repository. Therefore it checksout the head of the branch and runs the update_environment.py Script located at ./.ci_support/update_environment.py. 
+The Script basically checks the title of the PR and bumps the version number from a package to a new version number.
+After that, the version is written into the environment.yml file located at ./.ci_support/environment.yml.
+If this is done successfull, the workflow safes the changes and pushes back to the branch of the PR.
+
+**atomistic-compat.yml**
+
+This workflow is used to check the compatibility with the pyiron_atomistics. 
+First, the workflow installs PyYAML and clones pyironn_atomistics. 
+After that, the dependencies from pyiron_atomistics/.ci_support/environment.yml are copied into the pyiron_atomistics/environment.yml. 
+Then, the script condamerge.py (./ci_support/condamerge.py) is triggered which merges the dependencies from pyiron_base/.ci_support/environment.yml into the pyiron_atomistics/enviornmnet.yml.
+After that,  setup ist done the script pyironconfig.py is run in the pyiron_atomistics folder. This script creates the pyiron configuration.
+Following, both for pyiron_atomisstics and pyiron_base a dependency installation is run.
+The last step is running the unittests inside pyiron_atomistics.
+
+**backwards.yml**
+
+This workflow is used to check backwards compatibility. Therefore, the current branch is retrieved, the environment is setup and configured. After that, the script ./ci_support/test_backwards.sh is triggered. This script runs different tests vor different versions of pyiron_base.
+
+**benchmarks.yml**
+
+This workflow is used to run unittests on the current branch. 
+First, the head of the branch is cloned and a conda environment is created. 
+After that, the pyiron configuration is setup and dependencies are installed. 
+Following, the unittests are triggered and run.
+
+**black.yml**
+
+This workflow is used to check the differences and find conflict markers or whitespace errors.
+
+**codeql-analysis.yml**
+
+This workflow is used to find vulnerablities inside the codebase with CodeQL.
+First, the head of the branch is retvieved and CodeQL is initialized.
+After that, the CodeQL Analysis is performed and the results are returned.
+
+**contrib-compat.yml**
+
+This workflow is used to check the compatibility with the pyiron_contrib. 
+First, the workflow installs PyYAML and clones pyiron_contrib. 
+After that, the dependencies from pyiron_contrib/.ci_support/environment.yml are copied into the pyiron_contrib/environment.yml. 
+Then, the script condamerge.py (./ci_support/condamerge.py) is triggered which merges the dependencies from pyiron_base/.ci_support/environment.yml into the pyiron_contrib/enviornmnet.yml.
+After that, setup ist done the script pyironconfig.py is run in the pyiron_contrib folder. This script creates the pyiron configuration.
+Following, both for pyiron_contrib and pyiron_base a dependency installation is run.
+The last step is running the unittests inside pyiron_contrib.
+
+**coverage.yml**
+
+This workflow is used to get the Codacy coverage. 
+First, the workflow sets up the conda environment and runs the coverage tests.
+After that, the results are written into the coverage.xml.
+
+**deploy.yml**
+
+This workflow is used to upload and deploy a new release to PyPi. 
+First, the install dependencies in order to create the PyPi distribution.
+After that, The dependencies are converted and the PyPi package is build according to the setup.py
+This release is then uploaded to PyPi, but only if it is tagged correctly.
+
+**docs.yml*
+
+
+**notebooks.yml**
+
+
+**pypicheck.yml**
+
+
+**unittests.yml**
+
+
 
 Debugging
 ================
