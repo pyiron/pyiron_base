@@ -43,8 +43,7 @@ setup(
         'pysqa==0.0.15',
         'sqlalchemy==1.4.29',
         'tables==3.6.1',
-        'tqdm==4.62.3',
-        'typing_extensions==4.0.1'
+        'tqdm==4.62.3'
     ],
     cmdclass=versioneer.get_cmdclass(),
 
