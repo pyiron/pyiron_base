@@ -1,6 +1,11 @@
 # Unreleased
+
+# pyiron_base-0.5.0
+- Create CHANGELOG.md (#623)
+- Add update functionality to maintenance (#607)
+- Silence expected warnings in tests. (#622)
 - Drop python 3.7 support (#621)
-- job name conversion in pr.load same as pr.create  (#617)
+- job name conversion in pr.load same as pr.create (#617)
 - Refactor maintenance into own module (#606)
 - Dependency updates: #611, #615, #610, #608
 - GitHub infrastructure: #614, #604 
