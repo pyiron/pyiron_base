@@ -348,10 +348,6 @@ Those pre-release versions are named `<version_number>.post0.dev<release number>
 
    0.2.0.post0.dev1
 
-On the other hand the tagged releases are available through conda-forge (https://github.com/conda-forge/pyiron-feedstock), as soon as the corresponding packages are merged::
-
-   conda install -c conda-forge pyiron
-
 For pip both the pre-releases as well as the official releases are available. For conda only the official releases are available.
 
 Building process for a release
@@ -406,7 +402,7 @@ The `GitHub-Action-Workflows`_ are triggered at different occasions (eg. creatin
 
 **UpdateDependabotPR**
 
-This workflow is used to update the dependencies of the repository. 
+This workflow is used to update the dependencies of the setup.py.
 Therefore, it retrieves the head of the branch and runs the ./.ci_support/update_environment.py script. 
 The script basically checks the title of the PR and bumps the version number from a package to a new version number.
 After that, the version is written into the environment.yml file located at ./.ci_support/environment.yml.
