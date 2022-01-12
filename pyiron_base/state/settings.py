@@ -33,7 +33,7 @@ cleaning and consistency checks.
 """
 
 import os
-from configparser import ConfigParser
+from configparser import RawConfigParser
 from pyiron_base.state.logger import logger
 from pyiron_base.state.publications import publications
 from pathlib import Path
@@ -333,7 +333,7 @@ class Settings(metaclass=Singleton):
             config_file = os.path.expanduser(os.path.join("~", ".pyiron"))
 
         if os.path.isfile(config_file):
-            parser = ConfigParser(inline_comment_prefixes=(";",))
+            parser = RawConfigParser(inline_comment_prefixes=(";",))
             parser.read(config_file)
             config = {}
             for sec_name, section in parser.items():
