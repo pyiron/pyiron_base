@@ -323,7 +323,7 @@ The build status for pyiron and all sub packages are given below
     :alt: Build status
 
 Pyiron release distribution
----------------
+-----------------------------
 
 .. image:: https://anaconda.org/conda-forge/pyiron/badges/downloads.svg
     :target: https://anaconda.org/conda-forge/pyiron/
@@ -355,14 +355,14 @@ On the other hand the tagged releases are available through conda-forge (https:/
 For pip both the pre-releases as well as the official releases are available. For conda only the official releases are available.
 
 Building process for a release
----------------
+---------------------------------
 
 1. Create a Git tag to mark the release
 
-  This step is done manually and important to trigger all the following steps. Tag can be created under https://github.com/pyiron/pyiron_base/tags. 
-  The following steps are automated and will be performed once a tag is created. 
-  In order to keep the tags consistent please follow the `Git-Tag-Guide`_.
-  The tag format consists of a tag_prefix (<package name>-) and the release version, for example::
+This step is done manually and important to trigger all the following steps. Tag can be created under https://github.com/pyiron/pyiron_base/tags. 
+The following steps are automated and will be performed once a tag is created. 
+In order to keep the tags consistent please follow the `Git-Tag-Guide`_.
+The tag format consists of a tag_prefix (<package name>-) and the release version, for example::
 
      pyiron-0.2.0
 
