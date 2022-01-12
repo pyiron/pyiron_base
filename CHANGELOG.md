@@ -207,3 +207,33 @@ Bugfix:
 - Remove obsolete ProjectStore
 - Always add HDF5 file extension to path
 - Project data hotfix
+
+# pyiron_base-0.2.12
+- allow recursive projection creation based on absolute path
+- ipynb file support
+- force PIL to look up registered extensions upon import
+
+# pyiron_base-0.2.11
+The new release avoids the h5py warnings and also fixed the issue in PR [#299](https://github.com/pyiron/pyiron_base/pull/299).
+
+# pyiron_base-0.2.10
+
+
+# pyiron_base-0.2.9
+
+
+# pyiron_base-0.2.2
+Reverts to pre-pyiron_base-0.2.0 until the issues discussed [here](https://github.com/pyiron/pyiron_contrib/pull/65), [here](https://github.com/pyiron/pyiron_base/pull/214) and [here](https://github.com/pyiron/pyiron_atomistics/pull/92) are fixed.
+
+# pyiron_base-0.2.0
+Major features:
+- InputList renamed to DataContainer
+- DataContainer can read/write itself from/to generic yaml/xml files
+- DataContainer can store complex pyiron objects (like Atoms) in HDF5.
+
+# pyiron_base-0.1.44
+
+
+# pyiron_base-0.1.43
+
+
