@@ -338,7 +338,7 @@ In order to use the pip distribution use::
 
    pip install pyiron-base
 
-Just like each other commit to the master branch the tagged releases are pushed to pypi.org (https://pypi.org/project/pyiron-base/#history) and anaconda.org (https://anaconda.org/pyiron/pyiron_base)::
+Just like each other commit to the master branch the tagged releases are pushed to pypi.org (https://pypi.org/project/pyiron-base/#history)::
 
 The major difference for pypi (pip) is that installing pre-release versions is possible using the `--pre` flag::
 
@@ -388,7 +388,7 @@ The tag format consists of a tag_prefix (<package name>-) and the release versio
 GitHub Workflows
 -----------------------------
 
-The `GitHub-Action-Workflows`_ are triggered, whenever a pull request is created:
+The `GitHub-Action-Workflows`_ are triggered at different occasions (eg. creating commit, push to master):
 
 * UpdateDependabotPR.yml: https://github.com/pyiron/pyiron_base/blob/master/.github/workflows/UpdateDependabotPR.yml
 * atomistics-compat.yml: https://github.com/pyiron/pyiron_base/blob/master/.github/workflows/atomistics-compat.yml
@@ -415,6 +415,7 @@ If this is done successfully, the workflow saves the changes and pushes back to 
 **atomistic-compat.yml**
 
 This workflow is used to check the compatibility with the pyiron_atomistics. 
+It is only triggered if the integration label is set (eg. merge with master).
 First, the workflow installs PyYAML and clones pyiron_atomistics. 
 After that, the dependencies from pyiron_atomistics/.ci_support/environment.yml are copied into the pyiron_atomistics/environment.yml. 
 Then, the script condamerge.py (./ci_support/condamerge.py) is triggered, which merges the dependencies from pyiron_base/.ci_support/environment.yml into the pyiron_atomistics/environmnet.yml.
@@ -431,14 +432,15 @@ This script runs different tests vor different versions of pyiron_base.
 
 **benchmarks.yml**
 
-This workflow is used to run unittests on the current branch. 
+This workflow is used to run benchmarktests based on the unittest framework. 
 First, the head of the branch is cloned and a conda environment is created. 
 After that, the pyiron configuration is setup and dependencies are installed. 
-Following, the unittests are triggered and run.
+Following, the benchmarktests are triggered and run.
 
 **black.yml**
 
 This workflow is used to check the differences and find conflict markers or whitespace errors.
+It checks if the code is using the `Black style`_ standards.
 
 **codeql-analysis.yml**
 
@@ -590,3 +592,4 @@ If the job loads and runs properly, the job should also run properly on the queu
 .. _Git-Tag-Guide: https://git-scm.com/book/en/v2/Git-Basics-Tagging
 .. _Deploy-Workflow: https://github.com/pyiron/pyiron_base/blob/master/.github/workflows/deploy.yml
 .. _GitHub-Action-Workflows: https://github.com/pyiron/pyiron_base/tree/master/.github/workflows
+.. _Black style: https://black.readthedocs.io/en/stable/
