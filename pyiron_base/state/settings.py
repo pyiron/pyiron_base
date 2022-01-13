@@ -33,7 +33,7 @@ cleaning and consistency checks.
 """
 
 import os
-from configparser import RawConfigParser
+from configparser import ConfigParser
 from pyiron_base.state.logger import logger
 from pyiron_base.state.publications import publications
 from pathlib import Path
