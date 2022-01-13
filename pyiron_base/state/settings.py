@@ -333,7 +333,7 @@ class Settings(metaclass=Singleton):
             config_file = os.path.expanduser(os.path.join("~", ".pyiron"))
 
         if os.path.isfile(config_file):
-           parser = ConfigParser(inline_comment_prefixes=(";",), interpolation=None)
+            parser = ConfigParser(inline_comment_prefixes=(";",), interpolation=None)
             parser.read(config_file)
             config = {}
             for sec_name, section in parser.items():
