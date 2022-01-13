@@ -1,3 +1,5 @@
+# This workflow is used to update the dependencies of the setup.py
+
 name: UpdateDependabotPR
 
 on:

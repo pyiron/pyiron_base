@@ -1,3 +1,5 @@
+# This workflow is used to test, if the installation of the pypi package works
+
 name: Pip check
 
 on:
