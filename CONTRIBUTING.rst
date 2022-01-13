@@ -469,16 +469,29 @@ This release is then uploaded to PyPi, but only if it is tagged correctly.
 
 **docs.yml*
 
+This workflow is used to test, if the documentation can build.
+First, the environment is setup and a conda environment is created based on ./.ci_support/environment-docs.yml.
+After that, the documentation folder is created and the documentation is build with sphinx.
 
 **notebooks.yml**
 
+This workflow is used to test, if the code is compatible with jupiter notebooks.
+First, the environment is setup and a conda environment is created based on ./.ci_support/environment-notebooks.yml.
+After that, the script ./.ci_support/build_notebooks.sh is executed, which tests if the notebooks can be executed.
 
 **pypicheck.yml**
+
+This workflow is used to test, if the installation of the pypi package works.
+First, the environment is setup and the installation is run.
+After that, pip check is run, to verify if the installed packages have compatible dependencies.
 
 
 **unittests.yml**
 
-
+This workflow is used to run the unittest of pyiron.
+First, the environment is setup for python 3.8, 3.9 and 3.10.
+After that, the dependencies are installed and the tests are run.
+These tests, are found in ./tests
 
 Debugging
 ================
