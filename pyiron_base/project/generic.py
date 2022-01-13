@@ -295,7 +295,7 @@ class Project(ProjectPath, HasGroups):
         Returns:
             GenericJob: job object depending on the job_type selected
         """
-        job_name = job_name.replace(".", "_")
+        job_name = _get_safe_job_name(name=job_name)
         job = JobType(
             job_type,
             project=ProjectHDFio(project=self.copy(), file_name=job_name),
