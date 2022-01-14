@@ -326,5 +326,10 @@ class WorkerJob(PythonTemplateJob):
                     )
                 log_str += "\n"
                 f.write(log_str)
+            if (
+                not state.database.database_is_disabled
+                and state.database.get_job_status(job_id=self.job_id) == "aborted"
+            ):
+                raise ValueError("The worker job was aborted.")
             time.sleep(interval_in_s)
         self.status.collect = True
