@@ -325,9 +325,7 @@ class Settings(metaclass=Singleton):
                 config[self.environment_configuration_map[k]] = v
             except KeyError:
                 pass
-        for k, v in config.items():
-            if k in ["project_check_enabled", "disable_database"]:
-                config[k] = ast.literal_eval(v)
+        config = self._fix_boolean_var_in_config(config=config)
         return config if len(config) > 0 else None
 
     def _get_config_from_file(self) -> Union[Dict, None]:
@@ -346,9 +344,7 @@ class Settings(metaclass=Singleton):
                         config[self.file_configuration_map[k.upper()]] = v
                     except KeyError:
                         pass
-            for k, v in config.items():
-                if k in ["project_check_enabled", "disable_database"]:
-                    config[k] = ast.literal_eval(v)
+            config = self._fix_boolean_var_in_config(config=config)
         else:
             config = None
         return config
@@ -435,6 +431,13 @@ class Settings(metaclass=Singleton):
     # @deprecate("Use pyiron_base.state.state.publications.pyiron_publication")
     def publication(self):
         return publications.pyiron_publication
+
+    @staticmethod
+    def _fix_boolean_var_in_config(config):
+        for k, v in config.items():
+            if k in ["project_check_enabled", "disable_database"]:
+                config[k] = ast.literal_eval(v)
+        return config
 
 
 settings = Settings()
