@@ -346,11 +346,11 @@ class Settings(metaclass=Singleton):
                         config[self.file_configuration_map[k.upper()]] = v
                     except KeyError:
                         pass
+            for k, v in config.items():
+                if k in ["project_check_enabled", "disable_database"]:
+                    config[k] = ast.literal_eval(v)
         else:
             config = None
-        for k, v in config.items():
-            if k in ["project_check_enabled", "disable_database"]:
-                config[k] = ast.literal_eval(v)
         return config
 
     def _update_from_dict(self, config: Dict, map_: Union[None, Dict] = None) -> None:
