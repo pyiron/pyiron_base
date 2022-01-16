@@ -643,6 +643,32 @@ class Project(ProjectPath, HasGroups):
         )
         return df["status"].value_counts()
 
+    def get_size_of_project(self, kilobytes=False, megabytes=False, gigabytes=False):
+        """
+        Gives the size of the project in bytes(B), kilobytes(KB), megabytes(MB) or gigabytes(GB).
+
+        Args:
+            kilobytes (bool): [True/False] - default=False
+            megabytes (bool): [True/False] - default=False
+            gigabytes (bool): [True/False] - default=False
+        """
+        if kilobytes:
+            factor = 1024
+        elif megabytes:
+            factor = 1024 * 1024
+        elif gigabytes:
+            factor = 1024 * 1024 * 1024
+        else:
+            factor = 1
+        size = sum([
+            sum([
+                os.path.getsize(os.path.join(path, f))
+                for f in files
+            ])
+            for path, dirs, files in os.walk(self.path)
+        ])
+        return size * factor
+
     def keys(self):
         """
         List of file-, folder- and objectnames
