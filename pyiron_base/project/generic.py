@@ -666,7 +666,7 @@ class Project(ProjectPath, HasGroups):
                 for path, dirs, files in os.walk(self.path)
             ]
         )
-        return size * factor
+        return size / factor
 
     def keys(self):
         """
