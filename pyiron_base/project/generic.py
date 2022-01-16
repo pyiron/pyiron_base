@@ -660,13 +660,12 @@ class Project(ProjectPath, HasGroups):
             factor = 1024 * 1024 * 1024
         else:
             factor = 1
-        size = sum([
-            sum([
-                os.path.getsize(os.path.join(path, f))
-                for f in files
-            ])
-            for path, dirs, files in os.walk(self.path)
-        ])
+        size = sum(
+            [
+                sum([os.path.getsize(os.path.join(path, f)) for f in files])
+                for path, dirs, files in os.walk(self.path)
+            ]
+        )
         return size * factor
 
     def keys(self):
