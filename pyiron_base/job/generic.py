@@ -751,7 +751,6 @@ class GenericJob(JobCore):
             ]
             shell = False
         try:
-            print(executable, shell)
             out = subprocess.run(
                 executable,
                 cwd=self.project_hdf5.working_directory,
