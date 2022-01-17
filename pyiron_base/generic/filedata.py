@@ -66,8 +66,10 @@ if _has_imported["nbformat"]:
 
 
 @import_alarm
-def load_file(fp, filetype=None, project=None):
+def load_file(fp, filetype = None, project=None):
+    
     """
+    
     Load the file and return an appropriate object containing the data.
 
     Args:
@@ -93,7 +95,9 @@ def load_file(fp, filetype=None, project=None):
 
     def _load_txt(file):
         if isinstance(file, str):
-            with open(file, encoding="utf8") as f:
+            
+            
+            with open(file , encoding="utf8"  ) as f:
                 return f.readlines()
 
         else:
