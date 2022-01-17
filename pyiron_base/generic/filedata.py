@@ -52,9 +52,9 @@ else:
     )
 
 
-if _has_imported["nbformat"]:
+if _has_imported[ "nbformat" ]:
 
-    class OwnNotebookNode(nbformat.NotebookNode):
+    class OwnNotebookNode( nbformat.NotebookNode) :
 
         """Wrapper for nbformat.NotebookNode with some additional representation based on nbconvert."""
 
