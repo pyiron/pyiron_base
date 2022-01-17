@@ -15,6 +15,7 @@ jobs:
     steps:
     - uses: actions/checkout@v2
       with:
+        token: ${{ secrets.DEPENDABOT_WORKFLOW_TOKEN }}
         ref: ${{ github.event.pull_request.head.ref }} # Check out the head of the actual branch, not the PR
         fetch-depth: 0 # otherwise, you will fail to push refs to dest repo
     - name: format black
