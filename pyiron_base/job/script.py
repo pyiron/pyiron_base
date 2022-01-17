@@ -241,8 +241,10 @@ class ScriptJob(GenericJob):
         if isinstance(path, str):
             self._script_path = self._get_abs_path(path)
             self.executable = self._executable_command(
-                working_directory=self.working_directory, script_path=self._script_path,
-                enable_mpi4py=self._enable_mpi4py, cores=self.server.cores
+                working_directory=self.working_directory,
+                script_path=self._script_path,
+                enable_mpi4py=self._enable_mpi4py,
+                cores=self.server.cores,
             )
             if self._enable_mpi4py:
                 self.executable._mpi = True
@@ -254,8 +256,10 @@ class ScriptJob(GenericJob):
     def enable_mpi4py(self):
         if not self._enable_mpi4py:
             self.executable = self._executable_command(
-                working_directory=self.working_directory, script_path=self._script_path,
-                enable_mpi4py=True, cores=self.server.cores
+                working_directory=self.working_directory,
+                script_path=self._script_path,
+                enable_mpi4py=True,
+                cores=self.server.cores,
             )
             self.executable._mpi = True
         self._enable_mpi4py = True
@@ -263,8 +267,10 @@ class ScriptJob(GenericJob):
     def disable_mpi4py(self):
         if self._enable_mpi4py:
             self.executable = self._executable_command(
-                working_directory=self.working_directory, script_path=self._script_path,
-                enable_mpi4py=False, cores=self.server.cores
+                working_directory=self.working_directory,
+                script_path=self._script_path,
+                enable_mpi4py=False,
+                cores=self.server.cores,
             )
             self.executable._mpi = False
         self._enable_mpi4py = False
@@ -368,7 +374,9 @@ class ScriptJob(GenericJob):
         pass
 
     @staticmethod
-    def _executable_command(working_directory, script_path, enable_mpi4py=False, cores=1):
+    def _executable_command(
+        working_directory, script_path, enable_mpi4py=False, cores=1
+    ):
         """
         internal function to generate the executable command to either use jupyter or python
 
