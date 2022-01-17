@@ -66,7 +66,7 @@ if _has_imported["nbformat"]:
 
 
 @import_alarm
-def load_file(fp, filetype = None, project=None):
+def load_file(fp, filetype=None, project=None):
 
     """
 
