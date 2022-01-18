@@ -358,7 +358,9 @@ class AutorestoredConnection:
                                     "Reconnecting to DB; connection not existing."
                                 )
                             else:
-                                self._logger.info("Reconnecting to DB; connection closed.")
+                                self._logger.info(
+                                    "Reconnecting to DB; connection closed."
+                                )
                             if self._watchdog is not None:
                                 # in case connection is dead, but watchdog is still up, something else killed the connection,
                                 # make the watchdog quit, then making a new one
