@@ -1,6 +1,7 @@
 # Unreleased
 
 # pyiron_base-0.5.1
+- Update CHANGELOG.md ([#639](https://github.com/pyiron/pyiron_base/pull/639))
 - Convert boolean config keys ([#629](https://github.com/pyiron/pyiron_base/pull/629))
 - Add links to the CHANGELOG ([#624](https://github.com/pyiron/pyiron_base/pull/624))
 - Support secure sql passwords ([#626](https://github.com/pyiron/pyiron_base/pull/626))
