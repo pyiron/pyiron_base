@@ -1,5 +1,13 @@
 # Unreleased
 
+# pyiron_base-0.5.1
+- Convert boolean config keys ([#629](https://github.com/pyiron/pyiron_base/pull/629))
+- Add links to the CHANGELOG ([#624](https://github.com/pyiron/pyiron_base/pull/624))
+- Support secure sql passwords ([#626](https://github.com/pyiron/pyiron_base/pull/626))
+- use safe job name in create_job ([#625](https://github.com/pyiron/pyiron_base/pull/625))
+- Dependency updates: [#634](https://github.com/pyiron/pyiron_base/pull/634), [#633](https://github.com/pyiron/pyiron_base/pull/633)
+- GitHub infrastructure: [#618](https://github.com/pyiron/pyiron_base/pull/618)
+
 # pyiron_base-0.5.0
 - Create CHANGELOG.md ([#623](https://github.com/pyiron/pyiron_base/pull/623))
 - Add update functionality to maintenance ([#607](https://github.com/pyiron/pyiron_base/pull/607))
