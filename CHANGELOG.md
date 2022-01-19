@@ -1,4 +1,6 @@
 # Unreleased
+- Fix race condition when talking to the database, this could result in cryptic error messages "connection closed" when
+  performing a lot of database queries in a row ([#636](https://github.com/pyiron/pyiron_base/pull/636))
 
 # pyiron_base-0.5.1
 - Update CHANGELOG.md ([#639](https://github.com/pyiron/pyiron_base/pull/639))
