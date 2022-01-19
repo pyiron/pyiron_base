@@ -170,8 +170,8 @@ def _rename_job(job, new_job_name):
         os.rmdir("/".join(old_working_directory.split("/")[:-1]))
     if os.path.exists(os.path.join(job.working_directory, old_job_name + ".tar.bz2")):
         os.rename(
-            os.path.join(job.working_directory, old_job_name + ".tar.bz2"), 
-            os.path.join(job.working_directory, job.job_name + ".tar.bz2")
+            os.path.join(job.working_directory, old_job_name + ".tar.bz2"),
+            os.path.join(job.working_directory, job.job_name + ".tar.bz2"),
         )
 
 
