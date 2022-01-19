@@ -160,6 +160,7 @@ def _rename_job(job, new_job_name):
         job.project.db.item_update(
             {"job": new_job_name, "subjob": new_location.h5_path}, job.job_id
         )
+    old_job_name = job.name
     job._name = new_job_name
     job.project_hdf5.copy_to(destination=new_location, maintain_name=False)
     job.project_hdf5.remove_file()
@@ -167,6 +168,11 @@ def _rename_job(job, new_job_name):
     if os.path.exists(old_working_directory):
         shutil.move(old_working_directory, job.working_directory)
         os.rmdir("/".join(old_working_directory.split("/")[:-1]))
+    if os.path.exists(os.path.join(job.working_directory, old_job_name + ".tar.bz2")):
+        os.rename(
+            os.path.join(job.working_directory, old_job_name + ".tar.bz2"), 
+            os.path.join(job.working_directory, job.job_name + ".tar.bz2")
+        )
 
 
 def _is_valid_job_name(job_name):
