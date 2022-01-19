@@ -49,7 +49,7 @@ class Server:  # add the option to return the job id and the hold id to the serv
 
         .. attribute:: queue
 
-            the que selected for a current simulation.
+            the queue selected for a current simulation.
 
         .. attribute:: cores
 
@@ -62,6 +62,10 @@ class Server:  # add the option to return the job id and the hold id to the serv
         .. attribute:: run_mode
 
             the run mode of the job ['modal', 'non_modal', 'queue', 'manual']
+
+        .. attribute:: memory_limit
+
+            the maximum amount of RAM allocated for the calculation in GB
 
         .. attribute:: new_hdf
 
