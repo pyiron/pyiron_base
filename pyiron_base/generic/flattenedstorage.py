@@ -666,7 +666,7 @@ class FlattenedStorage(HasHDF):
         self._resize_chunks(self._num_chunks_alloc)
         return self
 
-    def apply(self, name, function, result: Optional[str]=None, per="element"):
+    def apply(self, name, function, result: Optional[str] = None, per="element"):
         """
         Apply a function on the given array and return result.
 
@@ -722,31 +722,39 @@ class FlattenedStorage(HasHDF):
                                  in the first axis
         """
         if per == "element":
-            source = self._per_element_arrays[name][:self.num_elements]
+            source = self._per_element_arrays[name][: self.num_elements]
             value = function(source)
             if value.shape[0] != source.shape[0]:
-                raise ValueError(f"Shape of result ({value.shape[0]}) doesn't match shape of source ({source.shape[0]})!")
+                raise ValueError(
+                    f"Shape of result ({value.shape[0]}) doesn't match shape of source ({source.shape[0]})!"
+                )
             value.resize((self._num_elements_alloc,) + value.shape[1:])
             store = self._per_element_arrays
         elif per == "chunk":
             if name in self._per_element_arrays:
-                source = self._per_element_arrays[name][:self.num_elements]
-                value = np.array([ function(source[self._get_per_element_slice(i)]) for i in range(len(self)) ])
+                source = self._per_element_arrays[name][: self.num_elements]
+                value = np.array(
+                    [
+                        function(source[self._get_per_element_slice(i)])
+                        for i in range(len(self))
+                    ]
+                )
             else:
-                source = self._per_chunk_arrays[name][:self.num_chunks]
-                value = np.array([ function(source[i]) for i in range(len(self)) ]) # dtype=object?
+                source = self._per_chunk_arrays[name][: self.num_chunks]
+                value = np.array(
+                    [function(source[i]) for i in range(len(self))]
+                )  # dtype=object?
             value.resize((self._num_chunks_alloc,) + value.shape[1:])
             store = self._per_chunk_arrays
         else:
-            raise ValueError(f"per must \"element\" or \"chunk\", not {per}")
+            raise ValueError(f'per must "element" or "chunk", not {per}')
 
         if result is not None:
             store[result] = value
         if per == "element":
-            return value[:self.num_elements]
+            return value[: self.num_elements]
         elif per == "chunk":
-            return value[:self.num_chunks]
-
+            return value[: self.num_chunks]
 
     def add_chunk(self, chunk_length, identifier=None, **arrays):
         """
