@@ -126,7 +126,7 @@ class WorkerJob(PythonTemplateJob):
 
     def __init__(self, project, job_name):
         super(WorkerJob, self).__init__(project, job_name)
-        self.input.project = None
+        self.input.project = project.path
         self.input.cores_per_job = 1
         self.input.sleep_interval = 10
         self.input.child_runtime = 0
