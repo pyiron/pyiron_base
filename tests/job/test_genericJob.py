@@ -70,30 +70,78 @@ class TestGenericJob(TestWithFilledProject):
 
     def test_job_name(self):
         cwd = self.file_location
-        ham = self.project.create.job.ScriptJob("job_single_debug")
-        self.assertEqual("job_single_debug", ham.job_name)
-        self.assertEqual("/job_single_debug", ham.project_hdf5.h5_path)
-        self.assertEqual("/".join([cwd, self.project_name, "job_single_debug.h5"]), ham.project_hdf5.file_name)
-        ham.job_name = "job_single_move"
-        ham.to_hdf()
-        self.assertEqual("/job_single_move", ham.project_hdf5.h5_path)
-        self.assertEqual("/".join([cwd, self.project_name, "job_single_move.h5"]), ham.project_hdf5.file_name)
-        self.assertTrue(os.path.isfile(ham.project_hdf5.file_name))
-        ham.project_hdf5.remove_file()
-        self.assertFalse(os.path.isfile(ham.project_hdf5.file_name))
-        ham = self.project.create.job.ScriptJob("job_single_debug_2")
-        ham.to_hdf()
-        self.assertEqual("job_single_debug_2", ham.job_name)
-        self.assertEqual("/job_single_debug_2", ham.project_hdf5.h5_path)
-        self.assertEqual("/".join([cwd, self.project_name, "job_single_debug_2.h5"]), ham.project_hdf5.file_name)
-        self.assertTrue(os.path.isfile(ham.project_hdf5.file_name))
-        ham.job_name = "job_single_move_2"
-        self.assertEqual("/job_single_move_2", ham.project_hdf5.h5_path)
-        self.assertEqual("/".join([cwd, self.project_name, "job_single_move_2.h5"]), ham.project_hdf5.file_name)
-        self.assertTrue(os.path.isfile(ham.project_hdf5.file_name))
-        ham.project_hdf5.remove_file()
-        self.assertFalse(os.path.isfile("/".join([cwd, self.project_name, "job_single_debug_2.h5"])))
-        self.assertFalse(os.path.isfile(ham.project_hdf5.file_name))
+        with self.subTest("ensure create is working"):
+            ham = self.project.create.job.ScriptJob("job_single_debug")
+            self.assertEqual("job_single_debug", ham.job_name)
+            self.assertEqual("/job_single_debug", ham.project_hdf5.h5_path)
+            self.assertEqual("/".join([cwd, self.project_name, "job_single_debug.h5"]), ham.project_hdf5.file_name)
+            self.assertEqual(
+                "/".join([cwd, self.project_name, "job_single_debug_hdf5/job_single_debug"]),
+                ham.working_directory
+            )
+        with self.subTest("test move"):
+            ham.job_name = "job_single_move"
+            ham.to_hdf()
+            self.assertEqual("/job_single_move", ham.project_hdf5.h5_path)
+            self.assertEqual("/".join([cwd, self.project_name, "job_single_move.h5"]), ham.project_hdf5.file_name)
+            self.assertEqual(
+                "/".join([cwd, self.project_name, "job_single_move_hdf5/job_single_move"]),
+                ham.working_directory
+            )
+            self.assertTrue(os.path.isfile(ham.project_hdf5.file_name))
+            ham.project_hdf5.create_working_directory()
+            self.assertTrue(os.path.exists(ham.working_directory))
+        with self.subTest("test remove"):
+            ham.project_hdf5.remove_file()
+            self.assertFalse(os.path.isfile(ham.project_hdf5.file_name))
+
+        with self.subTest('ensure create is working'):
+            ham = self.project.create.job.ScriptJob("job_single_debug_2")
+            ham.to_hdf()
+            self.assertEqual("job_single_debug_2", ham.job_name)
+            self.assertEqual("/job_single_debug_2", ham.project_hdf5.h5_path)
+            self.assertEqual("/".join([cwd, self.project_name, "job_single_debug_2.h5"]), ham.project_hdf5.file_name)
+            self.assertTrue(os.path.isfile(ham.project_hdf5.file_name))
+        with self.subTest('Add files to working directory'):
+            ham.project_hdf5.create_working_directory()
+            self.assertEqual(
+                "/".join([cwd, self.project_name, "job_single_debug_2_hdf5/job_single_debug_2"]),
+                ham.working_directory
+            )
+            self.assertTrue(os.path.exists(ham.working_directory))
+            with open(os.path.join(ham.working_directory, 'test_file'), 'w') as f:
+                f.write("Content")
+            self.assertEqual(ham.list_files(), ['test_file'])
+        with self.subTest("Compress"):
+            ham.compress()
+            self.assertFalse(os.path.exists(os.path.join(ham.working_directory, 'test_file')))
+            self.assertTrue(os.path.exists(os.path.join(ham.working_directory, ham.job_name + '.tar.bz2')))
+        with self.subTest("Decompress"):
+            ham.decompress()
+            self.assertTrue(os.path.exists(os.path.join(ham.working_directory, 'test_file')))
+            ham.compress()
+        with self.subTest("test move"):
+            ham.job_name = "job_single_move_2"
+            self.assertEqual(
+                "/".join([cwd, self.project_name, "job_single_move_2_hdf5/job_single_move_2"]),
+                ham.working_directory
+            )
+            self.assertFalse(os.path.exists(
+                "/".join([cwd, self.project_name, "job_single_debug_2_hdf5/job_single_debug_2"])
+            ))
+            self.assertTrue(os.path.exists(os.path.join(ham.working_directory, ham.job_name + '.tar.bz2')),
+                            msg="Job compressed archive not renamed.")
+            self.assertTrue(os.path.exists(ham.working_directory))
+            self.assertEqual("/job_single_move_2", ham.project_hdf5.h5_path)
+            self.assertEqual("/".join([cwd, self.project_name, "job_single_move_2.h5"]), ham.project_hdf5.file_name)
+            self.assertTrue(os.path.isfile(ham.project_hdf5.file_name))
+        with self.subTest("Decompress 2"):
+            ham.decompress()
+            self.assertTrue(os.path.exists(os.path.join(ham.working_directory, 'test_file')))
+        with self.subTest("test remove"):
+            ham.project_hdf5.remove_file()
+            self.assertFalse(os.path.isfile("/".join([cwd, self.project_name, "job_single_debug_2.h5"])))
+            self.assertFalse(os.path.isfile(ham.project_hdf5.file_name))
 
     def test_move(self):
         pr_a = self.project.open("project_a")
