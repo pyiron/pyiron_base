@@ -19,3 +19,4 @@ dependencies:
 - pytables =3.6.1
 - sqlalchemy =1.4.29
 - tqdm =4.62.3
+- openssl <2
