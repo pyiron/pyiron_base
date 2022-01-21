@@ -126,7 +126,10 @@ class WorkerJob(PythonTemplateJob):
 
     def __init__(self, project, job_name):
         super(WorkerJob, self).__init__(project, job_name)
-        self.input.project = project.path
+        if not state.database.database_is_disabled:
+            self.input.project = project.path
+        else: 
+            self.input.project = self.working_directory
         self.input.cores_per_job = 1
         self.input.sleep_interval = 10
         self.input.child_runtime = 0
