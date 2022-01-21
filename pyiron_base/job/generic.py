@@ -775,7 +775,9 @@ class GenericJob(JobCore):
             else:
                 job_crashed = True
 
-        with open(posixpath.join(self.project_hdf5.working_directory, "error.out"), mode="w") as f_err:
+        with open(
+            posixpath.join(self.project_hdf5.working_directory, "error.out"), mode="w"
+        ) as f_err:
             f_err.write(out)
 
         self.set_input_to_read_only()
