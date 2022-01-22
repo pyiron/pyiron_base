@@ -188,21 +188,13 @@ class WorkerJob(PythonTemplateJob):
                     & (~df["id"].isin(active_job_ids))
                 ]
                 if len(df_sub) > 0:  # Check if there are jobs to execute
-                    path_lst = [
-                        [pp, p, job_id]
-                        for pp, p, job_id in zip(
-                            df_sub["projectpath"].values,
-                            df_sub["project"].values,
-                            df_sub["id"].values,
-                        )
-                        if job_id not in active_job_ids
-                    ]
-                    job_lst = [
-                        [p, job_id] if pp is None else [os.path.join(pp, p), job_id]
-                        for pp, p, job_id in path_lst
-                    ]
-                    active_job_ids += [j[1] for j in job_lst]
-                    pool.map_async(worker_function, job_lst)
+                    for df_row in df_sub[["projectpath", "project", "id"]].itertuples():
+                        if df_row.id in active_job_ids: continue
+                        if df_row.projectpath is not None:
+                            working_directory = os.path.join(df_row.projectpath, df_row.project)
+                        else:
+                            working_directory = df_row.project
+                        pool.apply_async(worker_function, ((working_directory, df_row.id),))
                 elif self.status.collect or self.status.aborted or self.status.finished:
                     break  # The infinite loop can be stopped by setting the job status to collect.
                 else:  # The sleep interval can be set as part of the input
