@@ -103,7 +103,7 @@ class IsDatabase(ABC):
         for key in kwargs.keys():
             if key not in list(df.columns):
                 raise ValueError(
-                    "Column name {} does not exist in the project database!"
+                    f"Column name {key} does not exist in the project database!"
                 )
         for key, val in kwargs.items():
             if val is None:
