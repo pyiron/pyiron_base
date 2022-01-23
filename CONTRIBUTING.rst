@@ -446,12 +446,12 @@ After that, the CodeQL analysis is performed and the results are returned.
 
 **contrib-compat.yml**
 
-This workflow is used to check the compatibility with the pyiron_contrib. 
+This workflow is used to check the compatibility with the pyiron_contrib.
 First, the workflow installs PyYAML and clones pyiron_contrib. 
 After that, the dependencies from pyiron_contrib/.ci_support/environment.yml are copied into the pyiron_contrib/environment.yml. 
 Then, the script condamerge.py (./ci_support/condamerge.py) is triggered, which merges the dependencies from pyiron_base/.ci_support/environment.yml into the pyiron_contrib/environmnet.yml.
-After the setup is done, the script pyironconfig.py runs iand creates the pyiron configuration.
-Following, both for pyiron_atomisstics and pyiron_base a dependency installation is run.
+After the setup is done, the script pyironconfig.py runs and creates the pyiron configuration.
+Following, pyiron_atomisstics and pyiron_base are both installed without changing the environment (no dependency updates).
 The last step is running the unittests inside pyiron_contrib.
 
 **coverage.yml**
