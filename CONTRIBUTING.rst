@@ -364,9 +364,9 @@ The tag format consists of a tag_prefix (<package name>-) and the release versio
 
 2. Automatically create PyPi package
 
-  After the tag is created, a the `Deploy-Workflow`_ is triggered, which creates the PyPi Package.
+  After the tag is created, the `Deploy-Workflow`_ is triggered, which creates the PyPi Package.
   The configuration of the release is included in the setup.ctg file (https://github.com/pyiron/pyiron_base/blob/master/setup.cfg).
-  This Workflow first installs all dependencies, then converts these dependencies and builds the package. After that the package is published to `pip`_.
+  This Workflow first installs all dependencies, then allows for future versions of the dependencies and builds the package. After that the package is published to `pip`_.
 
 3. Automatically create conda-forge package
 
@@ -402,8 +402,8 @@ The `GitHub-Action-Workflows`_ are triggered at different occasions (eg. creatin
 
 **UpdateDependabotPR**
 
-This workflow is used to update the dependencies of the setup.py.
-Therefore, it retrieves the head of the branch and runs the ./.ci_support/update_environment.py script. 
+This workflow is used to keep the dependencies of the setup.py and of the environment.yml synchronized.
+Therefore, it retrieves the head of the branch and runs the ./.ci_support/update_environment.py script to apply the automated changes to the setup.py (by [dependabot](https://github.com/dependabot)) also to the environment.yml.
 The script basically checks the title of the PR and bumps the version number from a package to a new version number.
 After that, the version is written into the environment.yml file located at ./.ci_support/environment.yml.
 If this is done successfully, the workflow saves the changes and pushes back to the branch of the PR.
@@ -411,12 +411,12 @@ If this is done successfully, the workflow saves the changes and pushes back to 
 **atomistic-compat.yml**
 
 This workflow is used to check the compatibility with the pyiron_atomistics. 
-It is only triggered if the integration label is set (eg. merge with master).
+It is only triggered if the integration label is set (and on merge with master).
 First, the workflow installs PyYAML and clones pyiron_atomistics. 
 After that, the dependencies from pyiron_atomistics/.ci_support/environment.yml are copied into the pyiron_atomistics/environment.yml. 
 Then, the script condamerge.py (./ci_support/condamerge.py) is triggered, which merges the dependencies from pyiron_base/.ci_support/environment.yml into the pyiron_atomistics/environmnet.yml.
-After the setup is done, the script pyironconfig.py runs iand creates the pyiron configuration.
-Following, both for pyiron_atomisstics and pyiron_base a dependency installation is run.
+After the setup is done, the script pyironconfig.py runs and creates the pyiron configuration.
+Following, pyiron_atomisstics and pyiron_base are both installed without changing the environment (no dependency updates).
 The last step is running the unittests inside pyiron_atomistics.
 
 **backwards.yml**
@@ -464,7 +464,7 @@ After that, the results are written into the coverage.xml.
 
 This workflow is used to upload and deploy a new release to PyPi. 
 First, the install dependencies in order to create the PyPi distribution.
-After that, the dependencies are converted and the PyPi package is build according to the setup.py
+After that, the version restriction of the dependencies are lifted to allow for future versions and the PyPi package is build according to the setup.py
 This release is then uploaded to PyPi, but only if it is tagged correctly.
 
 **docs.yml*
@@ -475,7 +475,7 @@ After that, the documentation folder is created and the documentation is build w
 
 **notebooks.yml**
 
-This workflow is used to test, if the code is compatible with jupiter notebooks.
+This workflow is used to test, if the code is compatible with jupyter notebooks found in in the [notebooks folder](https://github.com/pyiron/pyiron_base/tree/master/notebooks).
 First, the environment is setup and a conda environment is created based on ./.ci_support/environment-notebooks.yml.
 After that, the script ./.ci_support/build_notebooks.sh is executed, which tests if the notebooks can be executed.
 
@@ -483,7 +483,7 @@ After that, the script ./.ci_support/build_notebooks.sh is executed, which tests
 
 This workflow is used to test, if the installation of the pypi package works.
 First, the environment is setup and the installation is run.
-After that, pip check is run, to verify if the installed packages have compatible dependencies.
+After that, pip check is run, to verify if the packages installed based on the environment.yml have compatible dependencies.
 
 
 **unittests.yml**

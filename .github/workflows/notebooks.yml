@@ -1,4 +1,4 @@
-# This workflow is used to test, if the code is compatible with jupiter notebooks
+# This workflow is used to test, if the code is compatible with jupyter notebooks providing usage examples
 
 name: Notebooks
 
