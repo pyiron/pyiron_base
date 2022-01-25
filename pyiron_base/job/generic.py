@@ -737,6 +737,12 @@ class GenericJob(JobCore):
         if self.server.cores == 1 or not self.executable.mpi:
             executable = str(self.executable)
             shell = True
+        elif isinstance(self.executable.executable_path, list):
+            executable = self.executable.executable_path[:] + [
+                str(self.server.cores),
+                str(self.server.threads),
+            ]
+            shell = False
         else:
             executable = [
                 self.executable.executable_path,
