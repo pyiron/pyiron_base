@@ -195,25 +195,28 @@ class Project(ProjectPath, HasGroups):
     @property
     def size(self):
         """
-        Get the size of the project 
+        Get the size of the project
         """
-        size = sum(
-            [
-                sum([os.path.getsize(os.path.join(path, f)) for f in files])
-                for path, dirs, files in os.walk(self.path)
-            ]
-        ) * pint.UnitRegistry().byte
-    
-        prefix_index= math.floor(math.log2(size) / 10) - 1
-        prefix= ['Ki', 'Mi', 'Gi', 'Ti', 'Pi']
+        size = (
+            sum(
+                [
+                    sum([os.path.getsize(os.path.join(path, f)) for f in files])
+                    for path, dirs, files in os.walk(self.path)
+                ]
+            )
+            * pint.UnitRegistry().byte
+        )
 
-        if prefix_index< 0:
+        prefix_index = math.floor(math.log2(size) / 10) - 1
+        prefix = ["Ki", "Mi", "Gi", "Ti", "Pi"]
+
+        if prefix_index < 0:
             return size
-        elif prefix_index< 5:
-            return size.to(f'{prefix[prefix_index]}byte')
+        elif prefix_index < 5:
+            return size.to(f"{prefix[prefix_index]}byte")
         else:
-            return size.to(f'{prefix[-1]}byte')
-    
+            return size.to(f"{prefix[-1]}byte")
+
     def copy(self):
         """
         Copy the project object - copying just the Python object but maintaining the same pyiron path
