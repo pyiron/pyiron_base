@@ -1,6 +1,17 @@
 # Unreleased
+
+# pyiron_base-0.5.2
 - Fix race condition when talking to the database, this could result in cryptic error messages "connection closed" when
   performing a lot of database queries in a row ([#636](https://github.com/pyiron/pyiron_base/pull/636))
+- Rename compressed files on job rename ([#641](https://github.com/pyiron/pyiron_base/pull/641))
+- Raise ValueError when worker was aborted ([#628](https://github.com/pyiron/pyiron_base/pull/628))
+- Worker - check memory during multiprocessing run ([#620](https://github.com/pyiron/pyiron_base/pull/620))
+- Script job support MPI run ([#637](https://github.com/pyiron/pyiron_base/pull/637))
+- Set default project for WorkerJob ([#645](https://github.com/pyiron/pyiron_base/pull/645))
+- Mention wrong column name in error message ([#647](https://github.com/pyiron/pyiron_base/pull/647))
+- Specify units for memory limit ([#635](https://github.com/pyiron/pyiron_base/pull/635)) 
+- Dependency updates: [#653](https://github.com/pyiron/pyiron_base/pull/653), [#632](https://github.com/pyiron/pyiron_base/pull/632), [#648](https://github.com/pyiron/pyiron_base/pull/648), [#649](https://github.com/pyiron/pyiron_base/pull/649), [#650](https://github.com/pyiron/pyiron_base/pull/650), [#646](https://github.com/pyiron/pyiron_base/pull/646)
+
 
 # pyiron_base-0.5.1
 - Update CHANGELOG.md ([#639](https://github.com/pyiron/pyiron_base/pull/639))
