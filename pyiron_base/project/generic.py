@@ -560,14 +560,22 @@ class Project(ProjectPath, HasGroups):
         """
         return self.iter_jobs(path="output", recursive=recursive)
 
-    def iter_groups(self):
+    def iter_groups(self, progress: bool = True) -> Generator:
         """
         Iterate over the groups within the current project
 
-        Returns:
-            yield: Yield of sub projects/ groups/ folders
+        Args:
+            progress (bool): Display a progress bar during the iteration
+
+        Yields:
+            :class:`.Project`: sub projects/ groups/ folders
         """
-        for group in self.list_groups():
+        groups = self.list_groups()
+        if progress:
+            groups = tqdm(groups)
+        for group in groups:
+            if progress:
+                groups.set_postfix(group=group)
             yield self[group]
 
     def items(self):
