@@ -451,7 +451,7 @@ First, the workflow installs PyYAML and clones pyiron_contrib.
 After that, the dependencies from pyiron_contrib/.ci_support/environment.yml are copied into the pyiron_contrib/environment.yml. 
 Then, the script condamerge.py (./ci_support/condamerge.py) is triggered, which merges the dependencies from pyiron_base/.ci_support/environment.yml into the pyiron_contrib/environmnet.yml.
 After the setup is done, the script pyironconfig.py runs and creates the pyiron configuration.
-Following, pyiron_atomisstics and pyiron_base are both installed without changing the environment (no dependency updates).
+Following, pyiron_contrib and pyiron_base are both installed without changing the environment (no dependency updates).
 The last step is running the unittests inside pyiron_contrib.
 
 **coverage.yml**
