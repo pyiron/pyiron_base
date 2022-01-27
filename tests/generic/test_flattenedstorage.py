@@ -255,7 +255,7 @@ class TestFlattenedStorage(TestWithProject):
                                  "Nested array returned from get_array_ragged has wrong dtype!")
 
     def test_has_array(self):
-        """hasarray should return correct information for added array; None otherwise."""
+        """has_array should return correct information for added array; None otherwise."""
 
         store = FlattenedStorage()
         store.add_array("energy", per="chunk")
@@ -273,6 +273,15 @@ class TestFlattenedStorage(TestWithProject):
 
         self.assertEqual(store.has_array("missing"), None, "has_array does not return None for nonexisting array.")
 
+    def test_list_arrays(self):
+        """list_arrays should return the string names of all arrays."""
+        store = FlattenedStorage()
+        self.assertEqual(sorted(store.list_arrays()), sorted(["identifier", "length", "start_index"]),
+                         "Array names of empty storage don't match default arrays!")
+        store.add_array("energy", per="chunk")
+        store.add_array("forces", shape=(3,), per="element")
+        self.assertEqual(sorted(store.list_arrays()), sorted(["identifier", "length", "start_index", "energy", "forces"]),
+                         "Array names don't match added ones!")
 
     def test_hdf_empty(self):
         """Writing an empty storage should result in an empty storage when reading."""

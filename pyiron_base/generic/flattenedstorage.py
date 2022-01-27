@@ -19,7 +19,7 @@ __date__ = "Jul 16, 2020"
 
 
 import copy
-from typing import Callable, Iterable
+from typing import Callable, Iterable, List
 
 import numpy as np
 import h5py
@@ -541,6 +541,15 @@ class FlattenedStorage(HasHDF):
         else:
             return None
         return {"shape": a.shape[1:], "dtype": a.dtype, "per": per}
+
+    def list_arrays(self) -> List[str]:
+        """
+        Return a list of names of arrays inside the storage.
+
+        Returns:
+            list of str: array names
+        """
+        return list(self._per_chunk_arrays) + list(self._per_element_arrays)
 
     def sample(
         self, selector: Callable[["FlattenedStorage", int], bool]
