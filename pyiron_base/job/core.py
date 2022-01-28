@@ -459,6 +459,19 @@ class JobCore(HasGroups):
         if self.job_id:
             self.project.db.delete_item(self.job_id)
 
+    def rewrite_hdf5(self, info: bool = False, exclude_groups: list = None, exclude_nodes: list = None) -> None:
+        """
+        Rewrite the hdf5 file of the job
+
+        Args:
+            info (True/False): whether to give the information on how much space has been saved
+            exclude_groups (list/None): list of groups to delete from hdf
+            exclude_nodes (list/None): list of nodes to delete from hdf
+        """
+        self.project_hdf5.rewrite_hdf5(self.job_name, info=info,
+                                       exclude_groups=exclude_groups,
+                                       exclude_nodes=exclude_nodes)
+
     def to_object(self, object_type=None, **qwargs):
         """
         Load the full pyiron object from an HDF5 file
