@@ -8,6 +8,7 @@ from pyiron_base.generic.parameters import GenericParameters
 from pyiron_base.job.generic import GenericJob
 from pyiron_base._tests import TestWithFilledProject
 
+
 class ReturnCodeJob(GenericJob):
     def __init__(self, project, job_name):
         super().__init__(project, job_name)
@@ -22,6 +23,7 @@ class ReturnCodeJob(GenericJob):
 
     def collect_output(self):
         pass
+
 
 class TestGenericJob(TestWithFilledProject):
     def test_db_entry(self):
@@ -192,8 +194,16 @@ class TestGenericJob(TestWithFilledProject):
         self.assertEqual(job_copy.project_hdf5.path.split('/')[-2], parent_job.job_name)
         self.assertEqual(job_copy.job_name, new_job_name)
 
-    # def test_sub_job_name(self):
-    #     pass
+    def test_rewrite_hdf5(self):
+        job = self.project.load("toy_1")
+        init_nodes = job.project_hdf5.list_nodes()
+        init_groups = job.project_hdf5.list_groups()
+        job.rewrite_hdf5(info=True)
+        self.assertEqual(job.project_hdf5.list_nodes(), init_nodes, "Some nodes missing after rewrite")
+        self.assertEqual(job.project_hdf5.list_groups(), init_groups, "Some groups missing after rewrite")
+        job.rewrite_hdf5(exclude_groups=[init_groups[0]], exclude_nodes=[init_nodes[0]])
+        self.assertEqual(job.project_hdf5.list_nodes(), init_nodes[1:], "Nodes not removed after rewrite")
+        self.assertEqual(job.project_hdf5.list_groups(), init_groups[1:], "Groups not removed after rewrite")
 
     def test_version(self):
         pass
