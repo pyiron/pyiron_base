@@ -1,5 +1,10 @@
 # Unreleased
 
+- Get filesize of Project ([#631](https://github.com/pyiron/pyiron_base/pull/631))
+- Always write error.out ([#644](https://github.com/pyiron/pyiron_base/pull/644))
+- Add descriptions to PyironTable progress bars ([#656](https://github.com/pyiron/pyiron_base/pull/656))
+- Update Documentation - Pyiron release chapter ([#609](https://github.com/pyiron/pyiron_base/pull/609))
+
 # pyiron_base-0.5.2
 - Fix race condition when talking to the database, this could result in cryptic error messages "connection closed" when
   performing a lot of database queries in a row ([#636](https://github.com/pyiron/pyiron_base/pull/636))
