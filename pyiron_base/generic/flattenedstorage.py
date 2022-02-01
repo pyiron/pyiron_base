@@ -713,7 +713,7 @@ class FlattenedStorage(HasHDF):
         if new_elements > self._num_elements_alloc:
             self._resize_elements(max(new_elements, self._num_elements_alloc * 2))
         if self.current_chunk_index + 1 > self._num_chunks_alloc:
-            self._resize_chunks(self._num_chunks_alloc * 2)
+            self._resize_chunks(max(1, self._num_chunks_alloc * 2))
 
         if new_elements > self.num_elements:
             self.num_elements = new_elements
