@@ -637,11 +637,7 @@ class Project(ProjectPath, HasGroups):
         Returns:
             pandas.Series: prints an overview of the job status.
         """
-        df = self.job_table(
-            recursive=recursive,
-            all_columns=True,
-            **kwargs
-        )
+        df = self.job_table(recursive=recursive, all_columns=True, **kwargs)
         return df["status"].value_counts()
 
     def keys(self):
