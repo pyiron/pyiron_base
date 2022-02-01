@@ -822,10 +822,10 @@ class FileHDFio(HasGroups, MutableMapping):
         if exclude_groups is None:
             exclude_groups = ["interactive"]
         file_name = self.file_name
-        _path = file_name.split("/")[-1]
-        _path = ".".join(_path.split(".")[:-1])
+        #_path = file_name.split("/")[-1]
+        #_path = ".".join(_path.split(".")[:-1])
         # path = '/'.join(p_lst[:-1])
-        new_file = _path + "_rewrite"
+        new_file = file_name + "_rewrite"
 
         hdf_new = FileHDFio(file_name=new_file, h5_path="/" + job_name)
         hdf_new = self.hd_copy(
