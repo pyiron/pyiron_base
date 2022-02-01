@@ -6,7 +6,6 @@ Set of functions to interact with the queuing system directly from within pyiron
 """
 
 import warnings
-from logging import warning
 import pandas
 import time
 from pyiron_base.state import state
