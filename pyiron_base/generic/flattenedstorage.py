@@ -517,7 +517,7 @@ class FlattenedStorage(HasHDF):
         if name in self._per_element_arrays:
             if self._per_element_arrays[name].dtype.char == "U":
                 self._per_element_arrays[name] = ensure_str_array_size(
-                        self._per_element_arrays[name], max(map(len, value))
+                    self._per_element_arrays[name], max(map(len, value))
                 )
             self._per_element_arrays[name][self._get_per_element_slice(frame)] = value
         elif name in self._per_chunk_arrays:
@@ -527,7 +527,7 @@ class FlattenedStorage(HasHDF):
                 else:
                     strlen = len(value)
                 self._per_chunk_arrays[name] = ensure_str_array_size(
-                        self._per_chunk_arrays[name], strlen
+                    self._per_chunk_arrays[name], strlen
                 )
             self._per_chunk_arrays[name][frame] = value
         else:
