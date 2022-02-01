@@ -96,6 +96,17 @@ class TestFlattenedStorage(TestWithProject):
                                    store_static._per_chunk_arrays["bar"][:store_dynamic.current_element_index]).all(),
                         "Array of per chunk quantity not equal after adding chunks.")
 
+        # Regression test, where adding chunks to a storage with no pre-allocation raised an error
+        store_empty = FlattenedStorage(num_chunks=0, num_elements=0)
+        store_empty.add_array("foo", per="element")
+        store_empty.add_array("bar", per="chunk")
+
+        try:
+            for f, b in zip(foo, bar):
+                store_empty.add_chunk(len(f), foo=f, bar=b)
+        except:
+            self.fail("Empty storage should be correctly resized when adding chunks!")
+
     def test_init(self):
         """Adding arrays via __init__ should be equivalent to adding them via add_chunks manually."""
 
