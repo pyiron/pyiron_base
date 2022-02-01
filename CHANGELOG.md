@@ -1,4 +1,5 @@
 # Unreleased
+- Add method FlattenedStorage.list_arrays() to get list of all stored array names ([#660](https://github.com/pyiron/pyiron_base/pull/660))
 
 - Get filesize of Project ([#631](https://github.com/pyiron/pyiron_base/pull/631))
 - Always write error.out ([#644](https://github.com/pyiron/pyiron_base/pull/644))
