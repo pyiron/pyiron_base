@@ -827,9 +827,7 @@ class FileHDFio(HasGroups, MutableMapping):
         # path = '/'.join(p_lst[:-1])
         new_file = _path + "_rewrite"
 
-        hdf_new = ProjectHDFio(
-            project=self.project, file_name=new_file, h5_path="/" + job_name
-        )
+        hdf_new = FileHDFio(file_name=new_file, h5_path="/" + job_name)
         hdf_new = self.hd_copy(
             self, hdf_new, exclude_groups=exclude_groups, exclude_nodes=exclude_nodes
         )
