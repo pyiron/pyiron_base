@@ -1,4 +1,5 @@
 # Unreleased
+- Add method FlattenedStorage.list_arrays() to get list of all stored array names ([#660](https://github.com/pyiron/pyiron_base/pull/660))
 
 # pyiron_base-0.5.2
 - Fix race condition when talking to the database, this could result in cryptic error messages "connection closed" when
