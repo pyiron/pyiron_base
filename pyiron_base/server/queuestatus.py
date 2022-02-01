@@ -5,6 +5,8 @@
 Set of functions to interact with the queuing system directly from within pyiron - optimized for the Sun grid engine.
 """
 
+import warnings
+from logging import warning
 import pandas
 import time
 from pyiron_base.state import state
@@ -210,7 +212,7 @@ def wait_for_job(job, interval_in_s=5, max_iterations=100):
                 )
 
 
-def wait_for_jobs(project, interval_in_s=5, max_iterations=100, recursive=True):
+def wait_for_jobs(project, interval_in_s=0, max_iterations=1, recursive=True):
     """
     Wait for the calculation in the project to be finished
 
@@ -269,17 +271,23 @@ def update_from_remote(project, recursive=True):
             jobs_now_running_lst = []
         for job_id in df_combined.id.values:
             if job_id not in jobs_now_running_lst:
-                job = project.inspect(job_id)
-                state.queue_adapter.transfer_file_to_remote(
-                    file=job.project_hdf5.file_name,
-                    transfer_back=True,
-                    delete_remote=False,
-                )
-                status_hdf5 = job.project_hdf5["status"]
-                project.set_job_status(job_specifier=job.job_id, status=status_hdf5)
-                if status_hdf5 in job_status_finished_lst:
-                    job_object = job.to_object()
-                    job_object.transfer_from_remote()
+                try:
+                    job = project.inspect(job_id)
+                    state.queue_adapter.transfer_file_to_remote(
+                        file=job.project_hdf5.file_name,
+                        transfer_back=True,
+                        delete_remote=False,
+                    )
+                    status_hdf5 = job.project_hdf5["status"]
+                    project.set_job_status(job_specifier=job.job_id, status=status_hdf5)
+                    if status_hdf5 in job_status_finished_lst:
+                        job_object = job.to_object()
+                        job_object.transfer_from_remote()
+                except Exception as e:
+                    warnings.warn(
+                        f"An error occured while trying to retrieve job {job_id}\n"
+                        "Error message: \n{e}"
+                        )
 
 
 def validate_que_request(item):
