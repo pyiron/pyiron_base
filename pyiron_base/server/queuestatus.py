@@ -286,7 +286,7 @@ def update_from_remote(project, recursive=True):
                     warnings.warn(
                         f"An error occured while trying to retrieve job {job_id}\n"
                         "Error message: \n{e}"
-                        )
+                    )
 
 
 def validate_que_request(item):
