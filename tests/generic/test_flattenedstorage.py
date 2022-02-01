@@ -500,9 +500,13 @@ class TestFlattenedStorage(TestWithProject):
         """string arrays should be automatically resized, when longer strings are added"""
 
         store = FlattenedStorage()
-        store.add_array("string", dtype="<3U", per="chunk")
-        for i in range(14):
-            store.add_chunk(1, string="a" * i)
-        for i in range(14):
-            self.assertEqual(store["string", i], "a" * i,
-                             "String array not correctly resized!")
+        store.add_array("chunkstr", dtype="<3U", per="chunk")
+        store.add_array("elemstr", shape=(2,), dtype="<3U", per="element")
+        for i in range(1, 14):
+            store.add_chunk(1, chunkstr="a" * i, elemstr=["a" * i] * 2)
+        for i in range(1, 14):
+            self.assertEqual(store["chunkstr", i - 1], "a" * i,
+                             "Per chunk string array not correctly resized!")
+            self.assertEqual(store["elemstr", i - 1].tolist(),
+                             [["a" * i] * 2],
+                             "Per element string array not correctly resized!")
