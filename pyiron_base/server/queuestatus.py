@@ -210,7 +210,13 @@ def wait_for_job(job, interval_in_s=5, max_iterations=100):
                 )
 
 
-def wait_for_jobs(project, interval_in_s=5, max_iterations=100, recursive=True):
+def wait_for_jobs(
+    project,
+    interval_in_s=5,
+    max_iterations=100,
+    recursive=True,
+    ignore_exceptions=False,
+):
     """
     Wait for the calculation in the project to be finished
 
@@ -219,13 +225,14 @@ def wait_for_jobs(project, interval_in_s=5, max_iterations=100, recursive=True):
         interval_in_s (int): interval when the job status is queried from the database - default 5 sec.
         max_iterations (int): maximum number of iterations - default 100
         recursive (bool): search subprojects [True/False] - default=True
+        ignore_exceptions (bool): ignore eventual exceptions when retrieving jobs - default=False
 
     Raises:
         ValueError: max_iterations reached, but jobs still running
     """
     finished = False
     for _ in range(max_iterations):
-        project.update_from_remote(recursive=True)
+        project.update_from_remote(recursive=True, ignore_exceptions=ignore_exceptions)
         project.refresh_job_status()
         df = project.job_table(recursive=recursive)
         if all(df.status.isin(job_status_finished_lst)):
@@ -236,13 +243,18 @@ def wait_for_jobs(project, interval_in_s=5, max_iterations=100, recursive=True):
         raise ValueError("Maximum iterations reached, but the job was not finished.")
 
 
-def update_from_remote(project, recursive=True):
+def update_from_remote(project, recursive=True, ignore_exceptions=False):
     """
     Update jobs from the remote server
 
     Args:
         project: Project instance the jobs is located in
         recursive (bool): search subprojects [True/False] - default=True
+        ignore_exceptions (bool): ignore eventual exceptions when retrieving jobs - default=False
+
+    Returns:
+        returns None if ignore_exceptions is False or when no error occured.
+        returns a list with job ids when errors occured, but were ignored
     """
     if state.queue_adapter is not None and state.queue_adapter.remote_flag:
         df_project = project.job_table(recursive=recursive)
@@ -267,19 +279,32 @@ def update_from_remote(project, recursive=True):
             ]
         else:
             jobs_now_running_lst = []
+        failed_jobs = []
         for job_id in df_combined.id.values:
             if job_id not in jobs_now_running_lst:
-                job = project.inspect(job_id)
-                state.queue_adapter.transfer_file_to_remote(
-                    file=job.project_hdf5.file_name,
-                    transfer_back=True,
-                    delete_remote=False,
-                )
-                status_hdf5 = job.project_hdf5["status"]
-                project.set_job_status(job_specifier=job.job_id, status=status_hdf5)
-                if status_hdf5 in job_status_finished_lst:
-                    job_object = job.to_object()
-                    job_object.transfer_from_remote()
+                try:
+                    job = project.inspect(job_id)
+                    state.queue_adapter.transfer_file_to_remote(
+                        file=job.project_hdf5.file_name,
+                        transfer_back=True,
+                        delete_remote=False,
+                    )
+                    status_hdf5 = job.project_hdf5["status"]
+                    project.set_job_status(job_specifier=job.job_id, status=status_hdf5)
+                    if status_hdf5 in job_status_finished_lst:
+                        job_object = job.to_object()
+                        job_object.transfer_from_remote()
+                except Exception as e:
+                    if ignore_exceptions:
+                        state.logger.warning(
+                            f"An error occured while trying to retrieve job {job_id}\n"
+                            f"Error message: \n{e}"
+                        )
+                        failed_jobs.append(job_id)
+                    else:
+                        raise e
+        if len(failed_jobs) > 0:
+            return failed_jobs
 
 
 def validate_que_request(item):
