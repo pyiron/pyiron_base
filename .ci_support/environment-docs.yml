@@ -9,7 +9,7 @@ dependencies:
 - Graphviz
 - sphinxcontrib-applehelp
 - seaborn
-- jinja2 <3
+- jinja2
 - dill
 - future
 - gitpython
