@@ -5,7 +5,6 @@
 Set of functions to interact with the queuing system directly from within pyiron - optimized for the Sun grid engine.
 """
 
-import warnings
 import pandas
 import time
 from pyiron_base.state import state
@@ -211,7 +210,7 @@ def wait_for_job(job, interval_in_s=5, max_iterations=100):
                 )
 
 
-def wait_for_jobs(project, interval_in_s=0, max_iterations=1, recursive=True):
+def wait_for_jobs(project, interval_in_s=0, max_iterations=1, recursive=True, ignore_exceptions=False):
     """
     Wait for the calculation in the project to be finished
 
@@ -226,7 +225,7 @@ def wait_for_jobs(project, interval_in_s=0, max_iterations=1, recursive=True):
     """
     finished = False
     for _ in range(max_iterations):
-        project.update_from_remote(recursive=True)
+        project.update_from_remote(recursive=True, ignore_exceptions=ignore_exceptions)
         project.refresh_job_status()
         df = project.job_table(recursive=recursive)
         if all(df.status.isin(job_status_finished_lst)):
@@ -237,7 +236,7 @@ def wait_for_jobs(project, interval_in_s=0, max_iterations=1, recursive=True):
         raise ValueError("Maximum iterations reached, but the job was not finished.")
 
 
-def update_from_remote(project, recursive=True):
+def update_from_remote(project, recursive=True, ignore_exceptions=False):
     """
     Update jobs from the remote server
 
@@ -268,6 +267,7 @@ def update_from_remote(project, recursive=True):
             ]
         else:
             jobs_now_running_lst = []
+        failed_jobs = []
         for job_id in df_combined.id.values:
             if job_id not in jobs_now_running_lst:
                 try:
@@ -283,11 +283,16 @@ def update_from_remote(project, recursive=True):
                         job_object = job.to_object()
                         job_object.transfer_from_remote()
                 except Exception as e:
-                    warnings.warn(
-                        f"An error occured while trying to retrieve job {job_id}\n"
-                        "Error message: \n{e}"
-                    )
-
+                    if ignore_exceptions:
+                        state.logger.warning(
+                            f"An error occured while trying to retrieve job {job_id}\n"
+                            "Error message: \n{e}"
+                        )
+                        failed_jobs.append(job_id)
+                    else:
+                        raise e
+        if len(failed_jobs) > 0:
+            return failed_jobs
 
 def validate_que_request(item):
     """

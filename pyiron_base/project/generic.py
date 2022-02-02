@@ -599,14 +599,14 @@ class Project(ProjectPath, HasGroups):
         """
         return [(key, self[key]) for key in self.keys()]
 
-    def update_from_remote(self, recursive=True):
+    def update_from_remote(self, recursive=True, ignore_exceptions=False):
         """
         Update jobs from the remote server
 
         Args:
             recursive (bool): search subprojects [True/False] - default=True
         """
-        update_from_remote(project=self, recursive=recursive)
+        return update_from_remote(project=self, recursive=recursive, ignore_exceptions=ignore_exceptions)
 
     def job_table(
         self,
@@ -1296,7 +1296,7 @@ class Project(ProjectPath, HasGroups):
             job=job, interval_in_s=interval_in_s, max_iterations=max_iterations
         )
 
-    def wait_for_jobs(self, interval_in_s=5, max_iterations=100, recursive=True):
+    def wait_for_jobs(self, interval_in_s=5, max_iterations=100, recursive=True, ignore_exceptions=False):
         """
         Wait for the calculation in the project to be finished
 
@@ -1313,6 +1313,7 @@ class Project(ProjectPath, HasGroups):
             interval_in_s=interval_in_s,
             max_iterations=max_iterations,
             recursive=recursive,
+            ignore_exceptions=ignore_exceptions,
         )
 
     @staticmethod
