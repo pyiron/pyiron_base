@@ -288,7 +288,7 @@ def update_from_remote(project, recursive=True, ignore_exceptions=False):
                     if ignore_exceptions:
                         state.logger.warning(
                             f"An error occured while trying to retrieve job {job_id}\n"
-                            "Error message: \n{e}"
+                            f"Error message: \n{e}"
                         )
                         failed_jobs.append(job_id)
                     else:
