@@ -1306,8 +1306,8 @@ class Project(ProjectPath, HasGroups):
 
     def wait_for_jobs(
         self,
-        interval_in_s=0,
-        max_iterations=1,
+        interval_in_s=5,
+        max_iterations=100,
         recursive=True,
         ignore_exceptions=False,
     ):
