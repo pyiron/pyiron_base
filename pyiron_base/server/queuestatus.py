@@ -221,6 +221,7 @@ def wait_for_jobs(
         interval_in_s (int): interval when the job status is queried from the database - default 5 sec.
         max_iterations (int): maximum number of iterations - default 100
         recursive (bool): search subprojects [True/False] - default=True
+        ignore_exceptions (bool): ignore eventual exceptions when retrieving jobs - default=False
 
     Raises:
         ValueError: max_iterations reached, but jobs still running
@@ -245,6 +246,11 @@ def update_from_remote(project, recursive=True, ignore_exceptions=False):
     Args:
         project: Project instance the jobs is located in
         recursive (bool): search subprojects [True/False] - default=True
+        ignore_exceptions (bool): ignore eventual exceptions when retrieving jobs - default=False
+
+    Returns:
+        returns None if ignore_exceptions is False or when no error occured.
+        returns a list with job ids when errors occured, but were ignored
     """
     if state.queue_adapter is not None and state.queue_adapter.remote_flag:
         df_project = project.job_table(recursive=recursive)

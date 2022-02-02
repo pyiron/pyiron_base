@@ -605,6 +605,12 @@ class Project(ProjectPath, HasGroups):
 
         Args:
             recursive (bool): search subprojects [True/False] - default=True
+            ignore_exceptions (bool): ignore eventual exceptions when retrieving jobs - default=False
+
+        Returns:
+            returns None if ignore_exceptions is False or when no error occured.
+            returns a list with job ids when errors occured, but were ignored
+
         """
         return update_from_remote(
             project=self, recursive=recursive, ignore_exceptions=ignore_exceptions
@@ -1300,8 +1306,8 @@ class Project(ProjectPath, HasGroups):
 
     def wait_for_jobs(
         self,
-        interval_in_s=5,
-        max_iterations=100,
+        interval_in_s=0,
+        max_iterations=1,
         recursive=True,
         ignore_exceptions=False,
     ):
@@ -1312,6 +1318,7 @@ class Project(ProjectPath, HasGroups):
             interval_in_s (int): interval when the job status is queried from the database - default 5 sec.
             max_iterations (int): maximum number of iterations - default 100
             recursive (bool): search subprojects [True/False] - default=True
+            ignore_exceptions (bool): ignore eventual exceptions when retrieving jobs - default=False
 
         Raises:
             ValueError: max_iterations reached, but jobs still running
