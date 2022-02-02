@@ -76,9 +76,6 @@ class LocalMaintenance:
     def __init__(self, project):
         self._project = project
 
-        from pyiron_base import Project
-
-        self._project = Project()
 
     def defragment_storage(
         self,
