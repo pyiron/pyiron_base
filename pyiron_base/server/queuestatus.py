@@ -210,7 +210,9 @@ def wait_for_job(job, interval_in_s=5, max_iterations=100):
                 )
 
 
-def wait_for_jobs(project, interval_in_s=0, max_iterations=1, recursive=True, ignore_exceptions=False):
+def wait_for_jobs(
+    project, interval_in_s=0, max_iterations=1, recursive=True, ignore_exceptions=False
+):
     """
     Wait for the calculation in the project to be finished
 
@@ -293,6 +295,7 @@ def update_from_remote(project, recursive=True, ignore_exceptions=False):
                         raise e
         if len(failed_jobs) > 0:
             return failed_jobs
+
 
 def validate_que_request(item):
     """

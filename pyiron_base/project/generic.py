@@ -606,7 +606,9 @@ class Project(ProjectPath, HasGroups):
         Args:
             recursive (bool): search subprojects [True/False] - default=True
         """
-        return update_from_remote(project=self, recursive=recursive, ignore_exceptions=ignore_exceptions)
+        return update_from_remote(
+            project=self, recursive=recursive, ignore_exceptions=ignore_exceptions
+        )
 
     def job_table(
         self,
@@ -1296,7 +1298,13 @@ class Project(ProjectPath, HasGroups):
             job=job, interval_in_s=interval_in_s, max_iterations=max_iterations
         )
 
-    def wait_for_jobs(self, interval_in_s=5, max_iterations=100, recursive=True, ignore_exceptions=False):
+    def wait_for_jobs(
+        self,
+        interval_in_s=5,
+        max_iterations=100,
+        recursive=True,
+        ignore_exceptions=False,
+    ):
         """
         Wait for the calculation in the project to be finished
 
