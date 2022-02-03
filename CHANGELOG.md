@@ -1,4 +1,5 @@
 # Unreleased
+- `Project.get_jobs_status()` now accepts `**kwargs` to select which jobs to check ([#662](https://github.com/pyiron/pyiron_base/pull/662))
 
 # pyiron_base-0.5.2
 - Fix race condition when talking to the database, this could result in cryptic error messages "connection closed" when
