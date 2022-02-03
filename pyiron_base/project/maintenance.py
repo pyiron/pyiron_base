@@ -76,7 +76,6 @@ class LocalMaintenance:
     def __init__(self, project):
         self._project = project
 
-
     def defragment_storage(
         self,
         recursive: bool = True,
