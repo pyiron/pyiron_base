@@ -1,5 +1,8 @@
 
 # Unreleased
+- Add functionality to 'defragment' the hdf storage within a project (local maintenance). If datasets in the hdf are overwritten, the old memory allocation is never used again and the hdf file increses in size. Rewriting it reduces the size again, which is now available at `Project('path').maintenance.local.defragment_storage()` ([#673](https://github.com/pyiron/pyiron_base/pull/673))
+- Fix black formatting issue ([#678](https://github.com/pyiron/pyiron_base/pull/678))
+- Dependency updates: [#679](https://github.com/pyiron/pyiron_base/pull/679)
 
 # pyiron_base-0.5.3
 - Add method FlattenedStorage.list_arrays() to get list of all stored array names ([#660](https://github.com/pyiron/pyiron_base/pull/660))
