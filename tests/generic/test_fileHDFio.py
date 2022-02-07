@@ -7,8 +7,19 @@ import sys
 from io import StringIO
 import numpy as np
 from pyiron_base.generic.hdfio import FileHDFio, _is_ragged_in_1st_dim_only, state
-from pyiron_base._tests import PyironTestCase
+from pyiron_base._tests import PyironTestCase, TestWithProject
 import unittest
+
+
+def _write_full_hdf_content(hdf):
+    hdf["array"] = np.array([1, 2, 3, 4, 5, 6])
+    hdf["array_3d"] = np.array([[1, 2, 3], [4, 5, 6]])
+    hdf["traj"] = np.array([[[1, 2, 3], [4, 5, 6]], [[7, 8, 9]]], dtype=object)
+    hdf["dict"] = {"key_1": 1, "key_2": "hallo"}
+    hdf["dict_numpy"] = {"key_1": 1, "key_2": np.array([1, 2, 3, 4, 5, 6])}
+    hdf['indices'] = np.array([1, 1, 1, 1, 6], dtype=int)
+    with hdf.open('group') as grp:
+        grp['some_entry'] = 'present'
 
 
 class TestFileHDFio(PyironTestCase):
@@ -22,14 +33,7 @@ class TestFileHDFio(PyironTestCase):
             file_name=cls.current_dir + "/../static/dft/es_hdf.h5"
         )
         with cls.full_hdf5.open("content") as hdf:
-            hdf["array"] = np.array([1, 2, 3, 4, 5, 6])
-            hdf["array_3d"] = np.array([[1, 2, 3], [4, 5, 6]])
-            hdf["traj"] = np.array([[[1, 2, 3], [4, 5, 6]], [[7, 8, 9]]], dtype=object)
-            hdf["dict"] = {"key_1": 1, "key_2": "hallo"}
-            hdf["dict_numpy"] = {"key_1": 1, "key_2": np.array([1, 2, 3, 4, 5, 6])}
-            hdf['indices'] = np.array([1, 1, 1, 1, 6], dtype=int)
-            with hdf.open('group') as grp:
-                grp['some_entry'] = 'present'
+            _write_full_hdf_content(hdf=hdf)
         with cls.i_o_hdf5.open("content") as hdf:
             hdf["exists"] = True
         # Open and store value in a hdf file to use test_remove_file on it, do not use otherwise
@@ -271,7 +275,8 @@ class TestFileHDFio(PyironTestCase):
         self.assertIsInstance(groups, FileHDFio)
 
     def test_rewrite_hdf5(self):
-        pass
+        self.full_hdf5.rewrite_hdf5('content')
+        self._check_full_hdf_values(self.full_hdf5)
 
     def test_to_object(self):
         pass
@@ -392,6 +397,106 @@ class TestFileHDFio(PyironTestCase):
         self.assertFalse(_is_ragged_in_1st_dim_only([ [[1, 2, 3]], [[2]], [[3]] ]),
                          "Ragged nested list detected incorrectly even though shape[1:] don't match!")
 
+
+class TestProjectHDFio(TestWithProject):
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls.empty_hdf5 = cls.project.create_hdf(cls.project.path, 'projhdfio_empty')
+        cls.full_hdf5 = cls.project.create_hdf(cls.project.path, 'projhdfio_full')
+        cls.i_o_hdf5 = cls.project.create_hdf(cls.project.path, 'projhdfio_io')
+        with cls.full_hdf5.open("content") as hdf:
+            _write_full_hdf_content(hdf=hdf)
+        with cls.i_o_hdf5.open("content") as hdf:
+            hdf["exists"] = True
+        # Open and store value in a hdf file to use test_remove_file on it, do not use otherwise
+        cls.to_be_removed_hdf = cls.project.create_hdf(cls.project.path, 'projhdfio_tbr')
+        with cls.to_be_removed_hdf.open('content') as hdf:
+            hdf['value'] = 1
+        # Remains open to be closed by test_close, do not use otherwise
+        cls.opened_hdf = cls.full_hdf5.open("content")
+
+    def test_close(self):
+        self.assertEqual(self.opened_hdf.h5_path, '/projhdfio_full/content')
+        self.opened_hdf.close()
+        self.assertEqual(self.opened_hdf.h5_path, '/projhdfio_full')
+
+    def test_remove_file(self):
+        path = self.to_be_removed_hdf.file_name
+        self.to_be_removed_hdf.remove_file()
+        self.assertFalse(os.path.isfile(path))
+
+    def test_content(self):
+        self._check_full_hdf_values(self.full_hdf5)
+
+    def test_rewrite_hdf5(self):
+        self.full_hdf5.rewrite_hdf5('projhdfio_full')
+        self._check_full_hdf_values(self.full_hdf5)
+
+    def _check_full_hdf_values(self, hdf):
+        with self.subTest('content/array'):
+            array = hdf["content/array"]
+            self.assertTrue(
+                np.array_equal(array, np.array([1, 2, 3, 4, 5, 6]))
+            )
+            self.assertIsInstance(array, np.ndarray)
+            self.assertEqual(array.dtype, np.dtype(int))
+
+        with self.subTest('content/array_3d'):
+            array = hdf["content"]["array_3d"]
+            self.assertTrue(
+                np.array_equal(
+                    array,
+                    np.array([[1, 2, 3], [4, 5, 6]]),
+                )
+            )
+            self.assertIsInstance(array, np.ndarray)
+            self.assertEqual(array.dtype, np.dtype(int))
+
+        with self.subTest('content/indices'):
+            array = hdf['content/indices']
+            self.assertTrue(
+                np.array_equal(
+                    array,
+                    np.array([1, 1, 1, 1, 6])
+                )
+            )
+            self.assertIsInstance(array, np.ndarray)
+            self.assertEqual(array.dtype, np.dtype(int))
+
+        with self.subTest('content/traj'):
+            array = hdf["content/traj"]
+            self.assertTrue(
+                np.array_equal(
+                    array[0], np.array([[1, 2, 3], [4, 5, 6]])
+                )
+            )
+            self.assertTrue(
+                np.array_equal(
+                    array[1], np.array([[7, 8, 9]])
+                )
+            )
+            self.assertIsInstance(array, np.ndarray)
+            self.assertEqual(array.dtype, np.dtype(object))
+
+        with self.subTest('content/dict'):
+            content_dict = hdf["content/dict"]
+            self.assertEqual(content_dict["key_1"], 1)
+            self.assertEqual(content_dict["key_2"], "hallo")
+            self.assertIsInstance(content_dict, dict)
+
+        with self.subTest('content/dict_numpy'):
+            content_dict = hdf["content/dict_numpy"]
+            self.assertEqual(content_dict["key_1"], 1)
+            self.assertTrue(
+                np.array_equal(
+                    content_dict["key_2"],
+                    np.array([1, 2, 3, 4, 5, 6]),
+                )
+            )
+
+        with self.subTest('content/group/some_entry'):
+            self.assertEqual(hdf['content/group/some_entry'], 'present')
 
 if __name__ == "__main__":
     unittest.main()

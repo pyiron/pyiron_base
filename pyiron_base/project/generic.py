@@ -599,14 +599,22 @@ class Project(ProjectPath, HasGroups):
         """
         return [(key, self[key]) for key in self.keys()]
 
-    def update_from_remote(self, recursive=True):
+    def update_from_remote(self, recursive=True, ignore_exceptions=False):
         """
         Update jobs from the remote server
 
         Args:
             recursive (bool): search subprojects [True/False] - default=True
+            ignore_exceptions (bool): ignore eventual exceptions when retrieving jobs - default=False
+
+        Returns:
+            returns None if ignore_exceptions is False or when no error occured.
+            returns a list with job ids when errors occured, but were ignored
+
         """
-        update_from_remote(project=self, recursive=recursive)
+        return update_from_remote(
+            project=self, recursive=recursive, ignore_exceptions=ignore_exceptions
+        )
 
     def job_table(
         self,
@@ -1296,7 +1304,13 @@ class Project(ProjectPath, HasGroups):
             job=job, interval_in_s=interval_in_s, max_iterations=max_iterations
         )
 
-    def wait_for_jobs(self, interval_in_s=5, max_iterations=100, recursive=True):
+    def wait_for_jobs(
+        self,
+        interval_in_s=5,
+        max_iterations=100,
+        recursive=True,
+        ignore_exceptions=False,
+    ):
         """
         Wait for the calculation in the project to be finished
 
@@ -1304,6 +1318,7 @@ class Project(ProjectPath, HasGroups):
             interval_in_s (int): interval when the job status is queried from the database - default 5 sec.
             max_iterations (int): maximum number of iterations - default 100
             recursive (bool): search subprojects [True/False] - default=True
+            ignore_exceptions (bool): ignore eventual exceptions when retrieving jobs - default=False
 
         Raises:
             ValueError: max_iterations reached, but jobs still running
@@ -1313,6 +1328,7 @@ class Project(ProjectPath, HasGroups):
             interval_in_s=interval_in_s,
             max_iterations=max_iterations,
             recursive=recursive,
+            ignore_exceptions=ignore_exceptions,
         )
 
     @staticmethod

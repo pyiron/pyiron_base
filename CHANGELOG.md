@@ -1,10 +1,17 @@
-# Unreleased
-- Add method FlattenedStorage.list_arrays() to get list of all stored array names ([#660](https://github.com/pyiron/pyiron_base/pull/660))
 
+# Unreleased
+
+# pyiron_base-0.5.3
+- Add method FlattenedStorage.list_arrays() to get list of all stored array names ([#660](https://github.com/pyiron/pyiron_base/pull/660))
+- Remote job error handling ([#671](https://github.com/pyiron/pyiron_base/pull/671))
+- Fix off-by-one in FlattenedStorage ([#668](https://github.com/pyiron/pyiron_base/pull/668)) 
 - Get filesize of Project ([#631](https://github.com/pyiron/pyiron_base/pull/631))
 - Always write error.out ([#644](https://github.com/pyiron/pyiron_base/pull/644))
 - Add descriptions to PyironTable progress bars ([#656](https://github.com/pyiron/pyiron_base/pull/656))
 - Update Documentation - Pyiron release chapter ([#609](https://github.com/pyiron/pyiron_base/pull/609))
+- Fix readthedocs ([#675](https://github.com/pyiron/pyiron_base/pull/675))
+- Dependency updates: [#612](https://github.com/pyiron/pyiron_base/pull/612)
+- GitHub infrastructure: [#669](https://github.com/pyiron/pyiron_base/pull/669)
 
 # pyiron_base-0.5.2
 - Fix race condition when talking to the database, this could result in cryptic error messages "connection closed" when

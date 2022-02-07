@@ -2,7 +2,6 @@ import importlib
 import os
 import pkgutil
 import warnings
-from _warnings import warn
 
 import pandas
 from git import Repo, InvalidGitRepositoryError
@@ -27,7 +26,7 @@ class Maintenance:
         self._project = project
         self._global = GlobalMaintenance()
         self._update = UpdateMaintenance(self._project)
-        self._local = None
+        self._local = LocalMaintenance(self._project)
 
     @property
     def global_status(self):
@@ -36,6 +35,10 @@ class Maintenance:
     @property
     def update(self):
         return self._update
+
+    @property
+    def local(self):
+        return self._local
 
     @staticmethod
     def get_repository_status():
@@ -67,6 +70,33 @@ class Maintenance:
             report.loc[i] = [name, hash_, version]
 
         return report
+
+
+class LocalMaintenance:
+    def __init__(self, project):
+        self._project = project
+
+    def defragment_storage(
+        self,
+        recursive: bool = True,
+        progress: bool = True,
+        **kwargs: dict,
+    ):
+        """
+        Iterate over the jobs within the current project and it is sub projects and rewrite the hdf file
+
+        Args:
+            recursive (bool): search subprojects [True/False] - True by default
+            progress (bool): if True (default), add an interactive progress bar to the iteration
+            **kwargs (dict): Optional arguments for filtering with keys matching the project database column name
+                            (eg. status="finished"). Asterisk can be used to denote a wildcard, for zero or more
+                            instances of any character
+        """
+        for job in self._project.iter_jobs(
+            recursive=recursive, progress=progress, convert_to_object=False, **kwargs
+        ):
+            hdf = job.project_hdf5
+            hdf.rewrite_hdf(job.name)
 
 
 class UpdateMaintenance:
@@ -146,7 +176,7 @@ class GlobalMaintenance:
         """
         connection_string = state.database.sql_connection_string
         if "postgresql" not in connection_string:
-            warn(
+            warnings.warn(
                 """
                 The database statistics is only available for a Postgresql database
                 """
