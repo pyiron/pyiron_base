@@ -362,7 +362,9 @@ class JobCore(HasGroups):
             where_dict, return_all_columns=False
         ):
             return True
-        elif state.database.database_is_disabled and os.path.exists(self.project_hdf5.file_name):
+        elif state.database.database_is_disabled and os.path.exists(
+            self.project_hdf5.file_name
+        ):
             return True
         else:
             return False
