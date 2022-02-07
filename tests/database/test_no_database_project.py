@@ -28,10 +28,13 @@ class TestNoDatabaseProject(TestWithProject):
         job.script_path = __file__
         job.server.run_mode.manual = True
         job.run()
-        os.remove(job.project_hdf5.file_name)
         df = self.project.job_table()
         self.assertEqual(len(df), 1)
-        self.assertEqual(df.status.values[0], None)
+        self.assertEqual(df.status.values[0], "initialized")
+        os.remove(job.project_hdf5.file_name)
+        self.project.db.force_reset()
+        df = self.project.job_table()
+        self.assertEqual(len(df), 0)
 
 
 if __name__ == "__main__":
