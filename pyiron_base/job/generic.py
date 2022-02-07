@@ -438,7 +438,9 @@ class GenericJob(JobCore):
             )
         elif state.database.database_is_disabled:
             self._status = JobStatus(
-                initial_status=h5io.read_hdf5(self.project_hdf5.file_name, self.job_name + "/status")
+                initial_status=h5io.read_hdf5(
+                    self.project_hdf5.file_name, self.job_name + "/status"
+                )
             )
 
     def clear_job(self):
