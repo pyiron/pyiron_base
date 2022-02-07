@@ -11,6 +11,7 @@ import os
 
 import posixpath
 import multiprocessing
+import h5io
 from pyiron_base.job.wrapper import JobWrapper
 from pyiron_base.state import state
 from pyiron_base.job.executable import Executable
@@ -159,8 +160,16 @@ class GenericJob(JobCore):
         self._server = Server()
         self._logger = state.logger
         self._executable = None
-        self._status = JobStatus(db=project.db, job_id=self.job_id)
-        self.refresh_job_status()
+        if not state.database.database_is_disabled:
+            self._status = JobStatus(db=project.db, job_id=self.job_id)
+            self.refresh_job_status()
+        elif os.path.exists(self.project_hdf5.file_name):
+            initial_status = h5io.read_hdf5(
+                self.project_hdf5.file_name, job_name + "/status"
+            )
+            self._status = JobStatus(initial_status=initial_status)
+        else:
+            self._status = JobStatus()
         self._restart_file_list = list()
         self._restart_file_dict = dict()
         self._exclude_nodes_hdf = list()
@@ -1241,9 +1250,12 @@ class GenericJob(JobCore):
             (int): Job ID stored in the database
         """
         self.to_hdf()
-        job_id = self.project.db.add_item_dict(self.db_entry())
-        self._job_id = job_id
-        self.refresh_job_status()
+        if not state.database.database_is_disabled:
+            job_id = self.project.db.add_item_dict(self.db_entry())
+            self._job_id = job_id
+            self.refresh_job_status()
+        else:
+            job_id = self.job_name
         if self._check_if_input_should_be_written():
             self.project_hdf5.create_working_directory()
             self.write_input()
