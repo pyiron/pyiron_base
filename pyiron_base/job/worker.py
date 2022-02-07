@@ -181,6 +181,7 @@ class WorkerJob(PythonTemplateJob):
         pr = self.project_to_watch
         self.project_hdf5.create_working_directory()
         log_file = os.path.join(self.working_directory, "worker.log")
+        os.makedirs(self.working_directory, exist_ok=True)
         active_job_ids = []
         process = psutil.Process(os.getpid())
         with Pool(processes=int(self.server.cores / self.cores_per_job)) as pool:
@@ -260,6 +261,7 @@ class WorkerJob(PythonTemplateJob):
         self.project_hdf5.create_working_directory()
         working_directory = self.working_directory
         log_file = os.path.join(working_directory, "worker.log")
+        os.makedirs(self.working_directory, exist_ok=True)
         file_memory_lst = []
         process = psutil.Process(os.getpid())
         with Pool(processes=int(self.server.cores / self.cores_per_job)) as pool:
