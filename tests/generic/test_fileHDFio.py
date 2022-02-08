@@ -275,8 +275,28 @@ class TestFileHDFio(PyironTestCase):
         self.assertIsInstance(groups, FileHDFio)
 
     def test_rewrite_hdf5(self):
-        self.full_hdf5.rewrite_hdf5('')
-        self._check_full_hdf_values(self.full_hdf5)
+        with self.subTest('directly rewrite'):
+            initial_file_size = self.full_hdf5.file_size(self.full_hdf5)
+            self.full_hdf5.rewrite_hdf5('')
+            self._check_full_hdf_values(self.full_hdf5)
+            initial_rewrite_file_size = self.full_hdf5.file_size(self.full_hdf5)
+            self.assertLess(initial_rewrite_file_size, initial_file_size)
+
+        with self.subTest('increase file size'):
+            with self.full_hdf5.open('content') as hdf:
+                _write_full_hdf_content(hdf)
+            increased_file_size = self.full_hdf5.file_size(self.full_hdf5)
+            self._check_full_hdf_values(self.full_hdf5)
+            self.assertGreater(increased_file_size, 1.5 * initial_rewrite_file_size,
+                               msg="Expected the re-filled hdf file to be substantially larger")
+
+        with self.subTest('rewrite again'):
+            self.full_hdf5.rewrite_hdf5('')
+            final_file_size = self.full_hdf5.file_size(self.full_hdf5)
+            self._check_full_hdf_values(self.full_hdf5)
+            self.assertLess(final_file_size, increased_file_size, msg="rewriting the hdf did not reduce file size.")
+            self.assertLess(abs(final_file_size - initial_rewrite_file_size), 0.01 * initial_file_size,
+                            msg="Final file size not within 5% of the initial file size.")
 
     def test_to_object(self):
         pass
