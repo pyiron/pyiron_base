@@ -12,6 +12,7 @@ from tqdm.auto import tqdm
 import pandas
 import pint
 import importlib
+import math
 import numpy as np
 
 from pyiron_base.project.maintenance import Maintenance
