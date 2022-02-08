@@ -6,7 +6,7 @@ import os
 import sys
 from io import StringIO
 import numpy as np
-from pyiron_base.generic.hdfio import FileHDFio, _is_ragged_in_1st_dim_only, state
+from pyiron_base.generic.hdfio import FileHDFio, ProjectHDFio, _is_ragged_in_1st_dim_only, state
 from pyiron_base._tests import PyironTestCase, TestWithProject
 import unittest
 
@@ -20,6 +20,73 @@ def _write_full_hdf_content(hdf):
     hdf['indices'] = np.array([1, 1, 1, 1, 6], dtype=int)
     with hdf.open('group') as grp:
         grp['some_entry'] = 'present'
+
+
+def _check_full_hdf_values(self, hdf, group='content'):
+    with self.subTest(group + '/array'):
+        array = hdf[group + "/array"]
+        self.assertTrue(
+            np.array_equal(array, np.array([1, 2, 3, 4, 5, 6]))
+        )
+        self.assertIsInstance(array, np.ndarray)
+        self.assertEqual(array.dtype, np.dtype(int))
+
+    with self.subTest(group + '/array_3d'):
+        array = hdf[group]["array_3d"]
+        self.assertTrue(
+            np.array_equal(
+                array,
+                np.array([[1, 2, 3], [4, 5, 6]]),
+            )
+        )
+        self.assertIsInstance(array, np.ndarray)
+        self.assertEqual(array.dtype, np.dtype(int))
+
+    with self.subTest(group + '/indices'):
+        array = hdf[group + '/indices']
+        self.assertTrue(
+            np.array_equal(
+                array,
+                np.array([1, 1, 1, 1, 6])
+            )
+        )
+        self.assertIsInstance(array, np.ndarray)
+        self.assertEqual(array.dtype, np.dtype(int))
+
+    with self.subTest(group + '/traj'):
+        array = hdf[group + "/traj"]
+        self.assertTrue(
+            np.array_equal(
+                array[0], np.array([[1, 2, 3], [4, 5, 6]])
+            )
+        )
+        self.assertTrue(
+            np.array_equal(
+                array[1], np.array([[7, 8, 9]])
+            )
+        )
+        self.assertIsInstance(array, np.ndarray)
+        self.assertEqual(array.dtype, np.dtype(object))
+
+    with self.subTest(group + '/dict'):
+        content_dict = hdf[group + "/dict"]
+        self.assertEqual(content_dict["key_1"], 1)
+        self.assertEqual(content_dict["key_2"], "hallo")
+        self.assertIsInstance(content_dict, dict)
+
+    with self.subTest(group + '/dict_numpy'):
+        content_dict = hdf[group + "/dict_numpy"]
+        self.assertEqual(content_dict["key_1"], 1)
+        self.assertTrue(
+            np.array_equal(
+                content_dict["key_2"],
+                np.array([1, 2, 3, 4, 5, 6]),
+            )
+        )
+
+    with self.subTest(group + '/group/some_entry'):
+        self.assertEqual(hdf[group + '/group/some_entry'], 'present')
+
 
 
 class TestFileHDFio(PyironTestCase):
@@ -48,71 +115,6 @@ class TestFileHDFio(PyironTestCase):
         cls.current_dir = os.path.dirname(os.path.abspath(__file__)).replace("\\", "/")
         os.remove(cls.current_dir + "/filehdfio_full.h5")
         os.remove(cls.current_dir + "/filehdfio_io.h5")
-
-    def _check_full_hdf_values(self, hdf):
-        with self.subTest('content/array'):
-            array = hdf["content/array"]
-            self.assertTrue(
-                np.array_equal(array, np.array([1, 2, 3, 4, 5, 6]))
-            )
-            self.assertIsInstance(array, np.ndarray)
-            self.assertEqual(array.dtype, np.dtype(int))
-
-        with self.subTest('content/array_3d'):
-            array = hdf["content"]["array_3d"]
-            self.assertTrue(
-                np.array_equal(
-                    array,
-                    np.array([[1, 2, 3], [4, 5, 6]]),
-                )
-            )
-            self.assertIsInstance(array, np.ndarray)
-            self.assertEqual(array.dtype, np.dtype(int))
-
-        with self.subTest('content/indices'):
-            array = hdf['content/indices']
-            self.assertTrue(
-                np.array_equal(
-                    array,
-                    np.array([1, 1, 1, 1, 6])
-                )
-            )
-            self.assertIsInstance(array, np.ndarray)
-            self.assertEqual(array.dtype, np.dtype(int))
-
-        with self.subTest('content/traj'):
-            array = hdf["content/traj"]
-            self.assertTrue(
-                np.array_equal(
-                    array[0], np.array([[1, 2, 3], [4, 5, 6]])
-                )
-            )
-            self.assertTrue(
-                np.array_equal(
-                    array[1], np.array([[7, 8, 9]])
-                )
-            )
-            self.assertIsInstance(array, np.ndarray)
-            self.assertEqual(array.dtype, np.dtype(object))
-
-        with self.subTest('content/dict'):
-            content_dict = hdf["content/dict"]
-            self.assertEqual(content_dict["key_1"], 1)
-            self.assertEqual(content_dict["key_2"], "hallo")
-            self.assertIsInstance(content_dict, dict)
-
-        with self.subTest('content/dict_numpy'):
-            content_dict = hdf["content/dict_numpy"]
-            self.assertEqual(content_dict["key_1"], 1)
-            self.assertTrue(
-                np.array_equal(
-                    content_dict["key_2"],
-                    np.array([1, 2, 3, 4, 5, 6]),
-                )
-            )
-
-        with self.subTest('content/group/some_entry'):
-            self.assertEqual(hdf['content/group/some_entry'], 'present')
 
     def test__is_convertable_dtype_object_array(self):
         object_array_with_lists = np.array([[[1, 2, 3], [2, 3, 4]], [[4, 5, 6]]], dtype=object)
@@ -189,7 +191,7 @@ class TestFileHDFio(PyironTestCase):
         hdf.remove_group()
 
     def test_get_item(self):
-        self._check_full_hdf_values(self.full_hdf5)
+        _check_full_hdf_values(self, self.full_hdf5)
         # Test leaving to pyiron Project at hdf file location:
         pr = self.full_hdf5['content/..']
         from pyiron_base import Project
@@ -266,7 +268,7 @@ class TestFileHDFio(PyironTestCase):
         new_hdf_file = os.path.join(self.current_dir, 'copy_full.h5')
         new_hdf = FileHDFio(file_name=new_hdf_file)
         new_hdf = self.full_hdf5.hd_copy(self.full_hdf5, new_hdf)
-        self._check_full_hdf_values(new_hdf)
+        _check_full_hdf_values(self, new_hdf)
         os.remove(new_hdf_file)
 
     def test_groups(self):
@@ -278,7 +280,7 @@ class TestFileHDFio(PyironTestCase):
         with self.subTest('directly rewrite'):
             initial_file_size = self.full_hdf5.file_size(self.full_hdf5)
             self.full_hdf5.rewrite_hdf5('')
-            self._check_full_hdf_values(self.full_hdf5)
+            _check_full_hdf_values(self, self.full_hdf5)
             initial_rewrite_file_size = self.full_hdf5.file_size(self.full_hdf5)
             self.assertLess(initial_rewrite_file_size, initial_file_size)
 
@@ -286,17 +288,34 @@ class TestFileHDFio(PyironTestCase):
             with self.full_hdf5.open('content') as hdf:
                 _write_full_hdf_content(hdf)
             increased_file_size = self.full_hdf5.file_size(self.full_hdf5)
-            self._check_full_hdf_values(self.full_hdf5)
+            _check_full_hdf_values(self, self.full_hdf5)
             self.assertGreater(increased_file_size, 1.5 * initial_rewrite_file_size,
                                msg="Expected the re-filled hdf file to be substantially larger")
 
         with self.subTest('rewrite again'):
             self.full_hdf5.rewrite_hdf5('')
             final_file_size = self.full_hdf5.file_size(self.full_hdf5)
-            self._check_full_hdf_values(self.full_hdf5)
+            _check_full_hdf_values(self, self.full_hdf5)
             self.assertLess(final_file_size, increased_file_size, msg="rewriting the hdf did not reduce file size.")
             self.assertLess(abs(final_file_size - initial_rewrite_file_size), 0.01 * initial_file_size,
                             msg="Final file size not within 5% of the initial file size.")
+
+        with self.subTest('hdf with two groups'):
+            new_hdf_file = os.path.join(self.current_dir, 'twice_full.h5')
+            new_hdf = FileHDFio(file_name=new_hdf_file)
+            new_hdf = self.full_hdf5.hd_copy(self.full_hdf5, new_hdf)
+
+            with new_hdf.open('content_job2') as hdf:
+                _write_full_hdf_content(hdf)
+            _check_full_hdf_values(self, new_hdf)
+            _check_full_hdf_values(self, new_hdf, group='content_job2')
+
+            new_hdf.rewrite_hdf5("")
+            _check_full_hdf_values(self, new_hdf)
+            _check_full_hdf_values(self, new_hdf, group='content_job2')
+
+            os.remove(new_hdf_file)
+
 
     def test_to_object(self):
         pass
@@ -447,76 +466,39 @@ class TestProjectHDFio(TestWithProject):
         self.assertFalse(os.path.isfile(path))
 
     def test_content(self):
-        self._check_full_hdf_values(self.full_hdf5)
+        _check_full_hdf_values(self, self.full_hdf5)
 
     def test_rewrite_hdf5(self):
         self.full_hdf5.rewrite_hdf5('projhdfio_full')
-        self._check_full_hdf_values(self.full_hdf5)
+        _check_full_hdf_values(self, self.full_hdf5)
 
-    def _check_full_hdf_values(self, hdf):
-        with self.subTest('content/array'):
-            array = hdf["content/array"]
-            self.assertTrue(
-                np.array_equal(array, np.array([1, 2, 3, 4, 5, 6]))
-            )
-            self.assertIsInstance(array, np.ndarray)
-            self.assertEqual(array.dtype, np.dtype(int))
+        full_hdf5 = self.project.create_hdf(self.project.path, 'projhdfio_full_2')
+        hdf = full_hdf5.open("content")
+        _write_full_hdf_content(hdf=hdf)
+        _check_full_hdf_values(self, full_hdf5)
 
-        with self.subTest('content/array_3d'):
-            array = hdf["content"]["array_3d"]
-            self.assertTrue(
-                np.array_equal(
-                    array,
-                    np.array([[1, 2, 3], [4, 5, 6]]),
-                )
-            )
-            self.assertIsInstance(array, np.ndarray)
-            self.assertEqual(array.dtype, np.dtype(int))
+        with hdf.open('content') as inner_hdf:
+            _write_full_hdf_content(inner_hdf)
+        _check_full_hdf_values(self, hdf)
 
-        with self.subTest('content/indices'):
-            array = hdf['content/indices']
-            self.assertTrue(
-                np.array_equal(
-                    array,
-                    np.array([1, 1, 1, 1, 6])
-                )
-            )
-            self.assertIsInstance(array, np.ndarray)
-            self.assertEqual(array.dtype, np.dtype(int))
+        hdf.rewrite_hdf5('content')
+        _check_full_hdf_values(self, full_hdf5)
 
-        with self.subTest('content/traj'):
-            array = hdf["content/traj"]
-            self.assertTrue(
-                np.array_equal(
-                    array[0], np.array([[1, 2, 3], [4, 5, 6]])
-                )
-            )
-            self.assertTrue(
-                np.array_equal(
-                    array[1], np.array([[7, 8, 9]])
-                )
-            )
-            self.assertIsInstance(array, np.ndarray)
-            self.assertEqual(array.dtype, np.dtype(object))
+        #with self.subTest("Adding job-sibling"):
+        #    new_hdf = ProjectHDFio(self.project, 'twice_full')
+        #    self.full_hdf5.hd_copy(self.full_hdf5, new_hdf)
+        #    _check_full_hdf_values(self, new_hdf)
+        #    old_path = new_hdf.h5_path
+        #    new_hdf.h5_path = '/'
+        #    with new_hdf.open('job_sibling') as hdf:
+        #        _write_full_hdf_content(hdf)
+        #    _check_full_hdf_values(self, new_hdf, group='job_sibling')
+        #    new_hdf.h5_path = old_path
+        #    new_hdf.rewrite_hdf5('projhdfio_full')
 
-        with self.subTest('content/dict'):
-            content_dict = hdf["content/dict"]
-            self.assertEqual(content_dict["key_1"], 1)
-            self.assertEqual(content_dict["key_2"], "hallo")
-            self.assertIsInstance(content_dict, dict)
+        #    new_hdf.h5_path = '/'
+        #    _check_full_hdf_values(self, new_hdf, group='job_sibling')
 
-        with self.subTest('content/dict_numpy'):
-            content_dict = hdf["content/dict_numpy"]
-            self.assertEqual(content_dict["key_1"], 1)
-            self.assertTrue(
-                np.array_equal(
-                    content_dict["key_2"],
-                    np.array([1, 2, 3, 4, 5, 6]),
-                )
-            )
-
-        with self.subTest('content/group/some_entry'):
-            self.assertEqual(hdf['content/group/some_entry'], 'present')
 
 if __name__ == "__main__":
     unittest.main()
