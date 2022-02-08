@@ -65,6 +65,9 @@ class TestProjectData(PyironTestCase):
 
 class TestProjectOperations(TestWithFilledProject):
 
+    def test_size(self):
+        self.assertTrue(self.project.size > 0)
+    
     def test_job_table(self):
         df = self.project.job_table()
         self.assertEqual(len(df), 4)
