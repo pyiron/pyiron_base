@@ -275,7 +275,7 @@ class TestFileHDFio(PyironTestCase):
         self.assertIsInstance(groups, FileHDFio)
 
     def test_rewrite_hdf5(self):
-        self.full_hdf5.rewrite_hdf5('content')
+        self.full_hdf5.rewrite_hdf5('')
         self._check_full_hdf_values(self.full_hdf5)
 
     def test_to_object(self):
