@@ -208,10 +208,21 @@ class Project(ProjectPath, HasGroups):
             )
             * pint.UnitRegistry().byte
         )
+        return self._size_conversion(size)
+
+    @staticmethod
+    def _size_conversion(size: pint.Quantity):
+        sign_prefactor = 1
+        if size < 0:
+            sign_prefactor = -1
+            size *= -1
+        elif size == 0:
+            return size
 
         prefix_index = math.floor(math.log2(size) / 10) - 1
         prefix = ["Ki", "Mi", "Gi", "Ti", "Pi"]
 
+        size *= sign_prefactor
         if prefix_index < 0:
             return size
         elif prefix_index < 5:
