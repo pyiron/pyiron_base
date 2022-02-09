@@ -16,6 +16,9 @@ import h5io
 import numpy as np
 import sys
 from typing import Union
+
+from pyiron_base.generic.util import deprecate
+
 from pyiron_base.interfaces.has_groups import HasGroups
 from pyiron_base.state import state
 import warnings
@@ -809,31 +812,30 @@ class FileHDFio(HasGroups, MutableMapping):
         #         self.hd_copy(hdf_old[p], h_new, exclude_groups=exclude_groups, exclude_nodes=exclude_nodes)
         return hdf_new
 
+    @deprecate(job_name="ignored!", exclude_groups="ignored!", exclude_nodes="ignored!")
     def rewrite_hdf5(
-        self, job_name, info=False, exclude_groups=None, exclude_nodes=None
+        self, job_name=None, info=False, exclude_groups=None, exclude_nodes=None
     ):
-        """
-        args:
+        """Rewrite the entire hdf file.
+
+        Args:
             info (True/False): whether to give the information on how much space has been saved
-            exclude_groups (list/None): list of groups to delete from hdf
-            exclude_nodes (list/None): list of nodes to delete from hdf
         """
-        # hdf = self._hdf5
-        if exclude_groups is None:
-            exclude_groups = ["interactive"]
+        if job_name is not None:
+            state.logger.warning(
+                "Specifying job_name is deprecated and ignored! Future versions will change signature."
+            )
         file_name = self.file_name
         new_file = file_name + "_rewrite"
 
-        hdf_new = FileHDFio(file_name=new_file, h5_path="/" + job_name)
-        hdf_new = self.hd_copy(
-            self, hdf_new, exclude_groups=exclude_groups, exclude_nodes=exclude_nodes
-        )
+        self_hdf = FileHDFio(file_name=file_name)
+        hdf_new = FileHDFio(file_name=new_file, h5_path="/")
+        hdf_new = self.hd_copy(self_hdf, hdf_new)
 
         if info:
-            print("job: {}".format(job_name))
             print(
                 "compression rate from old to new: {}".format(
-                    self.file_size(self) / self.file_size(hdf_new)
+                    self.file_size(self_hdf) / self.file_size(hdf_new)
                 )
             )
             print(
