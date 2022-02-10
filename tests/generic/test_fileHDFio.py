@@ -6,7 +6,7 @@ import os
 import sys
 from io import StringIO
 import numpy as np
-from pyiron_base.generic.hdfio import FileHDFio, ProjectHDFio, _is_ragged_in_1st_dim_only, state
+from pyiron_base.generic.hdfio import FileHDFio, _is_ragged_in_1st_dim_only, state
 from pyiron_base._tests import PyironTestCase, TestWithProject
 import unittest
 

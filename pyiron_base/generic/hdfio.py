@@ -816,7 +816,8 @@ class FileHDFio(HasGroups, MutableMapping):
     def rewrite_hdf5(
         self, job_name=None, info=False, exclude_groups=None, exclude_nodes=None
     ):
-        """Rewrite the entire hdf file.
+        """
+        Rewrite the entire hdf file.
 
         Args:
             info (True/False): whether to give the information on how much space has been saved
