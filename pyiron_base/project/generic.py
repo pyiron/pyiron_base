@@ -655,22 +655,19 @@ class Project(ProjectPath, HasGroups):
         ]
     )
 
-    def get_jobs_status(self, recursive=True, element_lst=None):
+    def get_jobs_status(self, recursive=True, **kwargs):
         """
         Gives a overview of all jobs status.
 
         Args:
             recursive (bool): search subprojects [True/False] - default=True
-            element_lst (list): list of elements required in the chemical formular - by default None
+            kwargs: passed directly to :method:`.job_table` and can be used to filter jobs you want to have the status
+            for
 
         Returns:
             pandas.Series: prints an overview of the job status.
         """
-        df = self.job_table(
-            recursive=recursive,
-            all_columns=True,
-            element_lst=element_lst,
-        )
+        df = self.job_table(recursive=recursive, all_columns=True, **kwargs)
         return df["status"].value_counts()
 
     def keys(self):
