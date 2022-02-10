@@ -1093,10 +1093,6 @@ class Project(ProjectPath, HasGroups):
                 "To prevent users from accidentally deleting files - enable has to be set to True."
             )
         if not self.db.view_mode:
-            for sub_project_name in self.list_groups():
-                if "_hdf5" not in sub_project_name:
-                    sub_project = self.open(sub_project_name)
-                    sub_project.remove(enable=enable, enforce=enforce)
             self._remove_jobs_helper(recursive=True)
             for file in self.list_files():
                 os.remove(os.path.join(self.path, file))
@@ -1104,9 +1100,13 @@ class Project(ProjectPath, HasGroups):
                 print("remove directory: {}".format(self.path))
                 shutil.rmtree(self.path, ignore_errors=True)
             else:
-                self.parent_group.removedirs(self.base_name)
+                for root, *_ in os.walk(self.path, topdown=False):
+                    # dirs and files return values of the iterator are not updated when removing files, so we need to
+                    # manually call listdir
+                    if len(os.listdir(root)) == 0:
+                        os.rmdir(root)
         else:
-            raise EnvironmentError("copy_to: is not available in Viewermode !")
+            raise EnvironmentError("remove() is not available in view_mode!")
 
     def set_job_status(self, job_specifier, status, project=None):
         """
