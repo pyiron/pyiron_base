@@ -504,3 +504,18 @@ class TestFlattenedStorage(TestWithProject):
                         "Per element array changed in copy when original is!")
         self.assertTrue((even_sum_before == copy["even_sum"]).all(),
                         "Per chunk array changed in copy when original is!")
+
+    def test_string_resize(self):
+        """string arrays should be automatically resized, when longer strings are added"""
+
+        store = FlattenedStorage()
+        store.add_array("chunkstr", dtype="<3U", per="chunk")
+        store.add_array("elemstr", shape=(2,), dtype="<3U", per="element")
+        for i in range(1, 14):
+            store.add_chunk(1, chunkstr="a" * i, elemstr=["a" * i] * 2)
+        for i in range(1, 14):
+            self.assertEqual(store["chunkstr", i - 1], "a" * i,
+                             "Per chunk string array not correctly resized!")
+            self.assertEqual(store["elemstr", i - 1].tolist(),
+                             [["a" * i] * 2],
+                             "Per element string array not correctly resized!")
