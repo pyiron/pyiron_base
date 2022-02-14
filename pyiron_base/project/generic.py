@@ -10,7 +10,9 @@ import posixpath
 import shutil
 from tqdm.auto import tqdm
 import pandas
+import pint
 import importlib
+import math
 import numpy as np
 
 from pyiron_base.project.maintenance import Maintenance
@@ -206,10 +208,21 @@ class Project(ProjectPath, HasGroups):
             )
             * pint.UnitRegistry().byte
         )
+        return self._size_conversion(size)
+
+    @staticmethod
+    def _size_conversion(size: pint.Quantity):
+        sign_prefactor = 1
+        if size < 0:
+            sign_prefactor = -1
+            size *= -1
+        elif size == 0:
+            return size
 
         prefix_index = math.floor(math.log2(size) / 10) - 1
         prefix = ["Ki", "Mi", "Gi", "Ti", "Pi"]
 
+        size *= sign_prefactor
         if prefix_index < 0:
             return size
         elif prefix_index < 5:
@@ -580,14 +593,22 @@ class Project(ProjectPath, HasGroups):
         """
         return self.iter_jobs(path="output", recursive=recursive)
 
-    def iter_groups(self):
+    def iter_groups(self, progress: bool = True) -> Generator:
         """
         Iterate over the groups within the current project
 
-        Returns:
-            yield: Yield of sub projects/ groups/ folders
+        Args:
+            progress (bool): Display a progress bar during the iteration
+
+        Yields:
+            :class:`.Project`: sub projects/ groups/ folders
         """
-        for group in self.list_groups():
+        groups = self.list_groups()
+        if progress:
+            groups = tqdm(groups)
+        for group in groups:
+            if progress:
+                groups.set_postfix(group=group)
             yield self[group]
 
     def items(self):
@@ -653,22 +674,19 @@ class Project(ProjectPath, HasGroups):
         ]
     )
 
-    def get_jobs_status(self, recursive=True, element_lst=None):
+    def get_jobs_status(self, recursive=True, **kwargs):
         """
         Gives a overview of all jobs status.
 
         Args:
             recursive (bool): search subprojects [True/False] - default=True
-            element_lst (list): list of elements required in the chemical formular - by default None
+            kwargs: passed directly to :method:`.job_table` and can be used to filter jobs you want to have the status
+            for
 
         Returns:
             pandas.Series: prints an overview of the job status.
         """
-        df = self.job_table(
-            recursive=recursive,
-            all_columns=True,
-            element_lst=element_lst,
-        )
+        df = self.job_table(recursive=recursive, all_columns=True, **kwargs)
         return df["status"].value_counts()
 
     def keys(self):
@@ -1091,10 +1109,6 @@ class Project(ProjectPath, HasGroups):
                 "To prevent users from accidentally deleting files - enable has to be set to True."
             )
         if not self.db.view_mode:
-            for sub_project_name in self.list_groups():
-                if "_hdf5" not in sub_project_name:
-                    sub_project = self.open(sub_project_name)
-                    sub_project.remove(enable=enable, enforce=enforce)
             self._remove_jobs_helper(recursive=True)
             for file in self.list_files():
                 os.remove(os.path.join(self.path, file))
@@ -1102,9 +1116,13 @@ class Project(ProjectPath, HasGroups):
                 print("remove directory: {}".format(self.path))
                 shutil.rmtree(self.path, ignore_errors=True)
             else:
-                self.parent_group.removedirs(self.base_name)
+                for root, *_ in os.walk(self.path, topdown=False):
+                    # dirs and files return values of the iterator are not updated when removing files, so we need to
+                    # manually call listdir
+                    if len(os.listdir(root)) == 0:
+                        os.rmdir(root)
         else:
-            raise EnvironmentError("copy_to: is not available in Viewermode !")
+            raise EnvironmentError("remove() is not available in view_mode!")
 
     def set_job_status(self, job_specifier, status, project=None):
         """
