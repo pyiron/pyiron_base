@@ -831,7 +831,11 @@ class FileHDFio(HasGroups, MutableMapping):
 
         self_hdf = FileHDFio(file_name=file_name)
         hdf_new = FileHDFio(file_name=new_file, h5_path="/")
+
+        old_logger_level = state.logger.level
+        state.logger.level = 50
         hdf_new = self.hd_copy(self_hdf, hdf_new)
+        state.logger.level = old_logger_level
 
         if info:
             print(
