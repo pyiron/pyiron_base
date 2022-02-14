@@ -221,7 +221,8 @@ class WorkerJob(PythonTemplateJob):
                         for pp, p, job_id in path_lst
                     ]
                     active_job_ids += [j[1] for j in job_lst]
-                    pool.map_async(worker_function, job_lst)
+                    result = pool.map_async(worker_function, job_lst)
+                    res_lst.append([result, len(job_lst)])
                 elif self.status.collect or self.status.aborted or self.status.finished:
                     break  # The infinite loop can be stopped by setting the job status to collect.
                 else:  # The sleep interval can be set as part of the input
@@ -295,7 +296,8 @@ class WorkerJob(PythonTemplateJob):
                         self._get_working_directory_and_h5path(path=f) for f in file_lst
                     ]
                     file_memory_lst += file_lst
-                    pool.map_async(worker_function, job_submit_lst)
+                    result = pool.map_async(worker_function, job_submit_lst)
+                    res_lst.append([result, len(job_submit_lst)])
                 elif self.project_hdf5["status"] in ["collect", "finished"]:
                     break
                 time.sleep(self.input.sleep_interval)
