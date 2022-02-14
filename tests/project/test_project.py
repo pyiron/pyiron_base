@@ -5,6 +5,7 @@
 import unittest
 from os.path import dirname, join, abspath
 from os import remove
+import pint
 from pyiron_base.project.generic import Project
 from pyiron_base._tests import PyironTestCase, TestWithProject, TestWithFilledProject, ToyJob
 from pyiron_base.toolkit import BaseTools
@@ -67,7 +68,27 @@ class TestProjectOperations(TestWithFilledProject):
 
     def test_size(self):
         self.assertTrue(self.project.size > 0)
-    
+
+    def test__size_conversion(self):
+        conv_check = {
+            -2000: (-1.953125, "kibibyte"),
+            0: (0, "byte"),
+            50: (50, "byte"),
+            2000: (1.953125, "kibibyte"),
+            2**20: (1.0, "mebibyte"),
+            2**30: (1.0, "gibibyte"),
+            2**40: (1.0, "tebibyte"),
+            2**50: (1.0, "pebibyte"),
+            2**60: (1024.0, "pebibyte"),
+        }
+
+        byte = pint.UnitRegistry().byte
+        for value in conv_check.keys():
+            with self.subTest(value):
+                converted_size = self.project._size_conversion(value * byte)
+                self.assertEqual(converted_size.m, conv_check[value][0])
+                self.assertEqual(str(converted_size.u), conv_check[value][1])
+
     def test_job_table(self):
         df = self.project.job_table()
         self.assertEqual(len(df), 4)
