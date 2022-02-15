@@ -22,6 +22,7 @@ class TestNoDatabaseProject(TestWithProject):
     def test_validate_database_is_disables(self):
         self.assertTrue(state.settings.configuration["disable_database"])
 
+    @unitest.skipif(os.name != "nt")
     def test_deleted_jobs_jobstatus(self):
         if os.name != "nt":  # no database does not work on windows
             state.update(config_dict={"disable_database": True})
