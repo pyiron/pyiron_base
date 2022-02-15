@@ -78,7 +78,7 @@ def worker_function(args):
     except subprocess.CalledProcessError:
         pass
 
-    
+
 def srun_worker_function(args):
     """
     The worker function is executed inside an aproc processing pool.
@@ -106,9 +106,9 @@ def srun_worker_function(args):
         )
     else:
         hdf5_file = (
-                ".".join(job_link.split(".")[:-1])
-                + "."
-                + job_link.split(".")[-1].split("/")[0]
+            ".".join(job_link.split(".")[:-1])
+            + "."
+            + job_link.split(".")[-1].split("/")[0]
         )
         h5_path = "/".join(job_link.split(".")[-1].split("/")[1:])
         job = JobWrapper(
