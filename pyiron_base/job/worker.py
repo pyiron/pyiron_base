@@ -78,6 +78,49 @@ def worker_function(args):
     except subprocess.CalledProcessError:
         pass
 
+    
+def srun_worker_function(args):
+    """
+    The worker function is executed inside an aproc processing pool.
+
+    Args:
+        args (list): A list of arguments
+
+    Arguments inside the argument list:
+        working_directory (str): working directory of the job
+        job_id (int/ None): job ID
+        hdf5_file (str): path to the HDF5 file of the job
+        h5_path (str): path inside the HDF5 file to load the job
+        submit_on_remote (bool): submit to queuing system on remote host
+        debug (bool): enable debug mode [True/False] (optional)
+    """
+    from pyiron_base.job.wrapper import JobWrapper
+
+    working_directory, job_link = args
+    if isinstance(job_link, int) or str(job_link).isdigit():
+        job = JobWrapper(
+            working_directory=working_directory,
+            job_id=job_link,
+            submit_on_remote=False,
+            debug=False,
+        )
+    else:
+        hdf5_file = (
+                ".".join(job_link.split(".")[:-1])
+                + "."
+                + job_link.split(".")[-1].split("/")[0]
+        )
+        h5_path = "/".join(job_link.split(".")[-1].split("/")[1:])
+        job = JobWrapper(
+            working_directory,
+            job_id=None,
+            hdf5_file=hdf5_file,
+            h5_path="/" + h5_path,
+            submit_on_remote=False,
+            debug=False,
+        )
+    job.run()
+
 
 class WorkerJob(PythonTemplateJob):
     """
@@ -221,7 +264,7 @@ class WorkerJob(PythonTemplateJob):
                         for pp, p, job_id in path_lst
                     ]
                     active_job_ids += [j[1] for j in job_lst]
-                    result = pool.map_async(worker_function, job_lst)
+                    result = pool.map_async(srun_worker_function, job_lst)
                     res_lst.append([result, len(job_lst)])
                 elif self.status.collect or self.status.aborted or self.status.finished:
                     break  # The infinite loop can be stopped by setting the job status to collect.
@@ -296,7 +339,7 @@ class WorkerJob(PythonTemplateJob):
                         self._get_working_directory_and_h5path(path=f) for f in file_lst
                     ]
                     file_memory_lst += file_lst
-                    result = pool.map_async(worker_function, job_submit_lst)
+                    result = pool.map_async(srun_worker_function, job_submit_lst)
                     res_lst.append([result, len(job_submit_lst)])
                 elif self.project_hdf5["status"] in ["collect", "finished"]:
                     break
