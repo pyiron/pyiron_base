@@ -286,6 +286,11 @@ class WorkerJob(PythonTemplateJob):
                     result = pool.map_async(srun_worker_function, job_lst)
                     res_lst.append([result, len(job_lst)])
                 elif self.status.collect or self.status.aborted or self.status.finished:
+                    if self.status.collect:
+                        while sum([i for r, i in res_lst if not r.ready()]) > 0:
+                            time.sleep(self.input.sleep_interval)
+                            if self.status.aborted or self.status.finished:
+                                break
                     break  # The infinite loop can be stopped by setting the job status to collect.
                 else:  # The sleep interval can be set as part of the input
                     if self.input.child_runtime > 0:
@@ -360,7 +365,12 @@ class WorkerJob(PythonTemplateJob):
                     file_memory_lst += file_lst
                     result = pool.map_async(srun_worker_function, job_submit_lst)
                     res_lst.append([result, len(job_submit_lst)])
-                elif self.project_hdf5["status"] in ["collect", "finished"]:
+                elif self.project_hdf5["status"] in ["collect", "aborted", "finished"]:
+                    if self.project_hdf5["status"] == "collect":
+                        while sum([i for r, i in res_lst if not r.ready()]) > 0:
+                            time.sleep(self.input.sleep_interval)
+                            if self.project_hdf5["status"] in ["aborted", "finished"]:
+                                break
                     break
                 time.sleep(self.input.sleep_interval)
 
