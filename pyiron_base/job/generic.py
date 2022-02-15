@@ -11,6 +11,7 @@ import os
 
 import posixpath
 import multiprocessing
+import h5io
 from pyiron_base.job.wrapper import JobWrapper
 from pyiron_base.state import state
 from pyiron_base.job.executable import Executable
@@ -159,8 +160,16 @@ class GenericJob(JobCore):
         self._server = Server()
         self._logger = state.logger
         self._executable = None
-        self._status = JobStatus(db=project.db, job_id=self.job_id)
-        self.refresh_job_status()
+        if not state.database.database_is_disabled:
+            self._status = JobStatus(db=project.db, job_id=self.job_id)
+            self.refresh_job_status()
+        elif os.path.exists(self.project_hdf5.file_name):
+            initial_status = h5io.read_hdf5(
+                self.project_hdf5.file_name, job_name + "/status"
+            )
+            self._status = JobStatus(initial_status=initial_status)
+        else:
+            self._status = JobStatus()
         self._restart_file_list = list()
         self._restart_file_dict = dict()
         self._exclude_nodes_hdf = list()
@@ -426,6 +435,12 @@ class GenericJob(JobCore):
                 initial_status=self.project.db.get_job_status(self.job_id),
                 db=self.project.db,
                 job_id=self.job_id,
+            )
+        elif state.database.database_is_disabled:
+            self._status = JobStatus(
+                initial_status=h5io.read_hdf5(
+                    self.project_hdf5.file_name, self.job_name + "/status"
+                )
             )
 
     def clear_job(self):
@@ -1126,23 +1141,24 @@ class GenericJob(JobCore):
         Args:
             force_update (bool): Whether to check run mode for updating master
         """
-        master_id = self.master_id
-        project = self.project
-        self._logger.info(
-            "update master: {} {} {}".format(
-                master_id, self.get_job_id(), self.server.run_mode
+        if not state.database.database_is_disabled:
+            master_id = self.master_id
+            project = self.project
+            self._logger.info(
+                "update master: {} {} {}".format(
+                    master_id, self.get_job_id(), self.server.run_mode
+                )
             )
-        )
-        if master_id is not None and (
-            force_update
-            or not (
-                self.server.run_mode.thread
-                or self.server.run_mode.modal
-                or self.server.run_mode.interactive
-                or self.server.run_mode.worker
-            )
-        ):
-            self._reload_update_master(project=project, master_id=master_id)
+            if master_id is not None and (
+                force_update
+                or not (
+                    self.server.run_mode.thread
+                    or self.server.run_mode.modal
+                    or self.server.run_mode.interactive
+                    or self.server.run_mode.worker
+                )
+            ):
+                self._reload_update_master(project=project, master_id=master_id)
 
     def job_file_name(self, file_name, cwd=None):
         """
@@ -1241,9 +1257,12 @@ class GenericJob(JobCore):
             (int): Job ID stored in the database
         """
         self.to_hdf()
-        job_id = self.project.db.add_item_dict(self.db_entry())
-        self._job_id = job_id
-        self.refresh_job_status()
+        if not state.database.database_is_disabled:
+            job_id = self.project.db.add_item_dict(self.db_entry())
+            self._job_id = job_id
+            self.refresh_job_status()
+        else:
+            job_id = self.job_name
         if self._check_if_input_should_be_written():
             self.project_hdf5.create_working_directory()
             self.write_input()

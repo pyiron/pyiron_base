@@ -181,7 +181,7 @@ class JobCore(HasGroups):
         Returns:
             int: job id
         """
-        if self._job_id is None:
+        if self._job_id is None and not state.database.database_is_disabled:
             self._job_id = self.get_job_id()
         return self._job_id
 
@@ -358,7 +358,13 @@ class JobCore(HasGroups):
             "project": str(project.project_path),
             "subjob": str(project.h5_path),
         }
-        if self.project.db.get_items_dict(where_dict, return_all_columns=False):
+        if not state.database.database_is_disabled and self.project.db.get_items_dict(
+            where_dict, return_all_columns=False
+        ):
+            return True
+        elif state.database.database_is_disabled and os.path.exists(
+            self.project_hdf5.file_name
+        ):
             return True
         else:
             return False
