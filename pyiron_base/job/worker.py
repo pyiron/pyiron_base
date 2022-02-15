@@ -119,7 +119,10 @@ def srun_worker_function(args):
             submit_on_remote=False,
             debug=False,
         )
-    job.run()
+    try:
+        job.run()
+    except RuntimeError: 
+        pass
 
 
 class WorkerJob(PythonTemplateJob):
