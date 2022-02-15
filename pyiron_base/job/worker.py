@@ -94,11 +94,12 @@ def srun_worker_function(args):
         submit_on_remote (bool): submit to queuing system on remote host
         debug (bool): enable debug mode [True/False] (optional)
     """
+    import subprocess
     from pyiron_base.job.wrapper import JobWrapper
 
     working_directory, job_link = args
     if isinstance(job_link, int) or str(job_link).isdigit():
-        job = JobWrapper(
+        job_wrap = JobWrapper(
             working_directory=working_directory,
             job_id=job_link,
             submit_on_remote=False,
@@ -111,7 +112,7 @@ def srun_worker_function(args):
             + job_link.split(".")[-1].split("/")[0]
         )
         h5_path = "/".join(job_link.split(".")[-1].split("/")[1:])
-        job = JobWrapper(
+        job_wrap = JobWrapper(
             working_directory=working_directory,
             job_id=None,
             hdf5_file=hdf5_file,
@@ -119,10 +120,25 @@ def srun_worker_function(args):
             submit_on_remote=False,
             debug=False,
         )
+    executable = [
+        job_wrap.job.executable.executable_path,
+        str(job_wrap.job.server.cores),
+        str(job_wrap.job.server.threads),
+    ]
     try:
-        job.run()
-    except RuntimeError: 
+        _ = subprocess.run(
+            executable,
+            cwd=job_wrap.job.project_hdf5.working_directory,
+            shell=False,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            universal_newlines=True,
+        )
+    except subprocess.CalledProcessError:
         pass
+    job_wrap.job.status.collect = True
+    job_wrap.job.run()
+    return None 
 
 
 class WorkerJob(PythonTemplateJob):
