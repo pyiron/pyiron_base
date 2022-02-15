@@ -112,7 +112,7 @@ def srun_worker_function(args):
         )
         h5_path = "/".join(job_link.split(".")[-1].split("/")[1:])
         job = JobWrapper(
-            working_directory,
+            working_directory=working_directory,
             job_id=None,
             hdf5_file=hdf5_file,
             h5_path="/" + h5_path,
