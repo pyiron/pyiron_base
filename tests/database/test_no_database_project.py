@@ -22,7 +22,7 @@ class TestNoDatabaseProject(TestWithProject):
     def test_validate_database_is_disables(self):
         self.assertTrue(state.settings.configuration["disable_database"])
 
-    @unittest.skipif(os.name != "nt")
+    @unittest.skipIf(os.name != "nt")
     def test_deleted_jobs_jobstatus(self):
         state.update(config_dict={"disable_database": True})
         job = self.project.create.job.ScriptJob("test")
