@@ -138,7 +138,7 @@ def srun_worker_function(args):
         pass
     job_wrap.job.status.collect = True
     job_wrap.job.run()
-    return None 
+    return None
 
 
 class WorkerJob(PythonTemplateJob):
