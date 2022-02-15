@@ -1,6 +1,16 @@
 
 # Unreleased
+
+# pyiron_base-0.5.5
 - `Project.get_jobs_status()` now accepts `**kwargs` to select which jobs to check ([#662](https://github.com/pyiron/pyiron_base/pull/662))
+- Remove project reference in FileHDFio ([#674](https://github.com/pyiron/pyiron_base/pull/674)) 
+- Fix project.size for size<=0 ([#689](https://github.com/pyiron/pyiron_base/pull/689)) 
+- Do not recursively remove project ([#690](https://github.com/pyiron/pyiron_base/pull/690)) 
+- Correctly resize string arrays in FlattenedStorage ([#670](https://github.com/pyiron/pyiron_base/pull/670)) 
+- Add progress bar to Project.iter_groups ([#655](https://github.com/pyiron/pyiron_base/pull/655)) 
+- Test project size ([#688](https://github.com/pyiron/pyiron_base/pull/688))
+- Import math ([#687](https://github.com/pyiron/pyiron_base/pull/687))
+- Dependency updates: [#691](https://github.com/pyiron/pyiron_base/pull/691), [#692 ](https://github.com/pyiron/pyiron_base/pull/692)
 
 # pyiron_base-0.5.4
 - Add functionality to 'defragment' the hdf storage within a project (local maintenance). If datasets in the hdf are overwritten, the old memory allocation is never used again and the hdf file increses in size. Rewriting it reduces the size again, which is now available at `Project('path').maintenance.local.defragment_storage()` ([#673](https://github.com/pyiron/pyiron_base/pull/673))
