@@ -462,6 +462,9 @@ class GenericJob(JobCore):
         del self.__name__ 
         del self.__version__ 
         del self.__hdf_version__ 
+        del self._job_id
+        del self._master_id
+        del self._parent_id
         del self._server 
         del self._logger 
         del self._executable 
@@ -475,7 +478,6 @@ class GenericJob(JobCore):
         del self._python_only_job
         del self.interactive_cache
         del self.error
-        super().__del__()
         
     def copy(self):
         """
