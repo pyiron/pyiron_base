@@ -459,16 +459,10 @@ class GenericJob(JobCore):
         del self._restart_file_dict
 
     def __del__(self):
-        del self.__name__ 
-        del self.__version__ 
         del self.__hdf_version__ 
-        del self._job_id
-        del self._master_id
-        del self._parent_id
         del self._server 
         del self._logger 
         del self._executable 
-        del self._status 
         del self._restart_file_list
         del self._restart_file_dict
         del self._exclude_nodes_hdf
@@ -478,6 +472,7 @@ class GenericJob(JobCore):
         del self._python_only_job
         del self.interactive_cache
         del self.error
+        super().__del__()
         
     def copy(self):
         """
