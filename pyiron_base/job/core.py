@@ -860,6 +860,9 @@ class JobCore(HasGroups):
         del self._parent_id
         del self._master_id
         del self._status
+        del self._import_directory
+        del self._database_property
+        del self._hdf5_content
 
     def __getitem__(self, item):
         """
@@ -1017,6 +1020,9 @@ class DatabaseProperties(object):
             return self._job_dict[name]
         else:
             raise AttributeError
+    
+    def __del__(self):
+        del self._job_dict
 
 
 class HDF5Content(object):
@@ -1040,3 +1046,6 @@ class HDF5Content(object):
 
     def __repr__(self):
         return self._project_hdf5.__repr__()
+    
+    def __del__(self):
+        del self._project_hdf5
