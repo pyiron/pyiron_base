@@ -359,6 +359,7 @@ class JobPathBase(JobCore):
             self.project_hdf5._store.close()
         except AttributeError:
             pass
+        super().__del__()
 
     def __getitem__(self, item):
         """
@@ -489,3 +490,8 @@ class JobPath(JobPathBase):
             self._master_id = db_entry["masterid"]
         if "parentid" in db_entry.keys():
             self._parent_id = db_entry["parentid"]
+
+    def __del__(self):
+        del self.__name__
+        del self.__version__
+        super().__del__()
