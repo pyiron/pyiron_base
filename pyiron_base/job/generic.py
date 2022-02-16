@@ -965,6 +965,38 @@ class GenericJob(JobCore):
                 stderr=subprocess.STDOUT,
                 universal_newlines=True,
             )
+           
+    def run_if_srun(self):
+        working_directory = self.project_hdf5.working_directory
+        if not state.database.database_is_disabled:
+            if not state.database.using_local_database:
+                command = (
+                    "srun python -m pyiron_base.cli wrapper -p "
+                    + working_directory
+                    + "- j "
+                    + self.job_id
+                )
+            else:
+                raise ValueError("run_if_srun() does not support local databases.")
+        else:
+            command = (
+                    "srun python -m pyiron_base.cli wrapper -p "
+                    + working_directory
+                    + " -f "
+                    + self.project_hdf5.file_name
+                    + self.project_hdf5.h5_path
+            )
+        if not os.path.exists(working_directory):
+            os.makedirs(working_directory)
+        del self
+        subprocess.Popen(
+            command,
+            cwd=working_directory,
+            shell=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            universal_newlines=True,
+        )
 
     def run_if_manually(self, _manually_print=True):
         """
@@ -1435,6 +1467,8 @@ class GenericJob(JobCore):
             self.run_if_manually(_manually_print=False)
         elif self.server.run_mode.modal:
             self.run_static()
+        elif self.server.run_mode.srun:
+            self.run_if_srun()
         elif (
             self.server.run_mode.non_modal
             or self.server.run_mode.thread
