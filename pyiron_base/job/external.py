@@ -46,9 +46,7 @@ def load():
     hdf_file = str(hdf_file).replace("\\", "/") + ".h5"
     if Path(hdf_file).exists():
         obj = DataContainer()
-        obj.from_hdf(
-            hdf=FileHDFio(hdf_file), group_name=folder + "/input/custom_dict"
-        )
+        obj.from_hdf(hdf=FileHDFio(hdf_file), group_name=folder + "/input/custom_dict")
         obj["project_dir"] = str(project_folder)
         return obj
     elif Path("input.json").exists():
