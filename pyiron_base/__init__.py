@@ -13,7 +13,7 @@ from pyiron_base.generic.inputlist import InputList
 from pyiron_base.generic.parameters import GenericParameters
 from pyiron_base.generic.util import deprecate, deprecate_soon, ImportAlarm
 from pyiron_base.job.executable import Executable
-from pyiron_base.job.external import Notebook
+from pyiron_base.job.external import Notebook, load, dump
 from pyiron_base.job.generic import GenericJob
 from pyiron_base.job.interactive import InteractiveBase
 from pyiron_base.job.interactivewrapper import InteractiveWrapper
