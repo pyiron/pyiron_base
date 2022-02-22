@@ -1,6 +1,12 @@
 
 # Unreleased
 
+# pyiron_base-0.5.6
+- pyiron without database: Reduce need to build file table ([#681](https://github.com/pyiron/pyiron_base/pull/681))
+- Clean up job_type class loading ([#706](https://github.com/pyiron/pyiron_base/pull/706))
+- Updates for Scriptjob ([#701](https://github.com/pyiron/pyiron_base/pull/701))
+- Dependency updates: [#699](https://github.com/pyiron/pyiron_base/pull/699)
+
 # pyiron_base-0.5.5
 - `Project.get_jobs_status()` now accepts `**kwargs` to select which jobs to check ([#662](https://github.com/pyiron/pyiron_base/pull/662))
 - Remove project reference in FileHDFio ([#674](https://github.com/pyiron/pyiron_base/pull/674)) 
