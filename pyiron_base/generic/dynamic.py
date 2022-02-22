@@ -12,8 +12,11 @@ def _get_class_path_lst():
     class_path_lst = []
     for path in path_lst:
         class_path_lst += [
-            cp for cp, files in
-            [[cp, os.listdir(cp)] for cp in [os.path.join(path, c) for c in os.listdir(path)]]
+            cp
+            for cp, files in [
+                [cp, os.listdir(cp)]
+                for cp in [os.path.join(path, c) for c in os.listdir(path)]
+            ]
             if "script.py" in files and "input.json" in files
         ]
     return class_path_lst
@@ -36,13 +39,22 @@ def _init_constructor(class_name, script_path, input_dict):
 
 def _class_constructor(cp):
     from pyiron_base.job.script import ScriptJob
+
     class_name = os.path.basename(cp)
     script_path = os.path.join(cp, "script.py")
     input_dict = _load_input(path=cp)
-    return type(class_name, (ScriptJob,), {
-        "__init__": _init_constructor(class_name=class_name, script_path=script_path, input_dict=input_dict)
-    })
+    return type(
+        class_name,
+        (ScriptJob,),
+        {
+            "__init__": _init_constructor(
+                class_name=class_name, script_path=script_path, input_dict=input_dict
+            )
+        },
+    )
 
 
 def get_template_classes():
-    return {os.path.basename(cp): _class_constructor(cp=cp) for cp in _get_class_path_lst()}
+    return {
+        os.path.basename(cp): _class_constructor(cp=cp) for cp in _get_class_path_lst()
+    }
