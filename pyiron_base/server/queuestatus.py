@@ -263,11 +263,11 @@ def update_from_remote(project, recursive=True, ignore_exceptions=False):
         df_queue = state.queue_adapter.get_status_of_my_jobs()
         if (
             len(df_queue) > 0
-            and len(df_queue[df_queue.jobname.str.startswith("pi_")]) > 0
+            and len(df_queue[df_queue.jobname.str.contains(QUEUE_SCRIPT_PREFIX)]) > 0
         ):
-            df_queue = df_queue[df_queue.jobname.str.startswith("pi_")]
+            df_queue = df_queue[df_queue.jobname.str.contains(QUEUE_SCRIPT_PREFIX)]
             df_queue["pyiron_id"] = df_queue.apply(
-                lambda x: int(x["jobname"].split("pi_")[1]), axis=1
+                lambda x: int(x["jobname"].split(QUEUE_SCRIPT_PREFIX)[-1]), axis=1
             )
             jobs_now_running_lst = df_queue[
                 df_queue.status == "running"
