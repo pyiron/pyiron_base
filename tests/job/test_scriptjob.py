@@ -21,7 +21,7 @@ class TestScriptJob(TestWithCleanProject):
         hdf["input/custom_group"] as this is needed when running external
         Notebook jobs c.f. `Notebook.get_custom_dict()`.
         """
-        job = cls.project.create.job.ScriptJob("test_notebook")
+        job = self.project.create.job.ScriptJob("test_notebook")
         job.input['value'] = 300
         job.save()
         self.assertTrue(
@@ -31,15 +31,13 @@ class TestScriptJob(TestWithCleanProject):
         self.project.remove_job("test_notebook")
 
     def test_python_input(self):
-        job = cls.project.create.job.ScriptJob("test_input")
-   
         file_name = "test.py"
         with open(file_name, "w") as f:
             f.writelines(script_py)
 
         input_dict = {"a": 1, "b": [1,2,3]}
-            
-        job = pr.create.job.ScriptJob("script")
+
+        job = self.project.create.job.ScriptJob("test_input")
         job.script_path = os.path.abspath(file_name)
         job.input.update(input_dict)
         job.run()
@@ -48,3 +46,4 @@ class TestScriptJob(TestWithCleanProject):
         for k, v in input_dict.items():
             self.assertTrue(data_dict[k], v)
         self.project.remove_job("test_input")
+        os.remove(file_name)
