@@ -21,6 +21,7 @@ from pyiron_base.generic.util import deprecate
 
 from pyiron_base.interfaces.has_groups import HasGroups
 from pyiron_base.state import state
+from pyiron_base.generic.dynamic import get_template_classes
 import warnings
 
 __author__ = "Joerg Neugebauer, Jan Janssen"
@@ -1364,7 +1365,12 @@ class ProjectHDFio(FileHDFio):
                 "Object type in hdf5-file must be identical to input parameter"
             )
         class_name = class_name or self.get("TYPE")
-        class_object = self.import_class(class_name)
+        class_path = class_name.split("<class '")[-1].split("'>")[0]
+        if not class_path.startswith("abc."):
+            class_object = self.import_class(class_name)
+        else:
+            dyn_class_dict = get_template_classes()
+            class_object = dyn_class_dict[class_path.split(".")[-1]]
 
         # Backwards compatibility since the format of TYPE changed
         if class_name != str(class_object):
