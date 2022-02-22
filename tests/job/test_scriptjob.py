@@ -31,7 +31,7 @@ class TestScriptJob(TestWithCleanProject):
         )
         cls.project.remove_job("test_notebook")
 
-    def test_python_input(self)
+    def test_python_input(self):
         job = cls.project.create.job.ScriptJob("test_input")
    
         file_name = "test.py"
