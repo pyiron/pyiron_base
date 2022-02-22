@@ -14,7 +14,6 @@ class TestScriptJob(TestWithCleanProject):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        
 
     def test_notebook_input(self):
         """
@@ -29,7 +28,7 @@ class TestScriptJob(TestWithCleanProject):
             "custom_dict" in job["input"].list_groups(),
             msg="Input not saved in the 'custom_dict' group in HDF"
         )
-        cls.project.remove_job("test_notebook")
+        self.project.remove_job("test_notebook")
 
     def test_python_input(self):
         job = cls.project.create.job.ScriptJob("test_input")
@@ -48,4 +47,4 @@ class TestScriptJob(TestWithCleanProject):
         data_dict = job["output"].to_object().to_builtin()
         for k, v in input_dict.items():
             self.assertTrue(data_dict[k], v)
-        cls.project.remove_job("test_input")
+        self.project.remove_job("test_input")
