@@ -980,7 +980,7 @@ class GenericJob(JobCore):
                 raise ValueError("run_if_srun() does not support local databases.")
         else:
             command = (
-                "srun python -m pyiron_base.cli wrapper -p "
+                "srun --kill-on-bad-exit=0 --wait=0 python -m pyiron_base.cli wrapper -p "
                 + working_directory
                 + " -f "
                 + self.project_hdf5.file_name
