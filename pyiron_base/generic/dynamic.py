@@ -55,9 +55,7 @@ def class_constructor(cp):
 
 
 def _get_template_classes():
-    return {
-        os.path.basename(cp): cp for cp in _get_class_path_lst()
-    }
+    return {os.path.basename(cp): cp for cp in _get_class_path_lst()}
 
 
 JOB_DYN_DICT = _get_template_classes()
