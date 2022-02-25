@@ -21,7 +21,7 @@ from pyiron_base.generic.util import deprecate
 
 from pyiron_base.interfaces.has_groups import HasGroups
 from pyiron_base.state import state
-from pyiron_base.generic.dynamic import get_template_classes
+from pyiron_base.generic.dynamic import JOB_DYN_DICT, class_constructor
 import warnings
 
 __author__ = "Joerg Neugebauer, Jan Janssen"
@@ -1369,8 +1369,7 @@ class ProjectHDFio(FileHDFio):
         if not class_path.startswith("abc."):
             class_object = self.import_class(class_name)
         else:
-            dyn_class_dict = get_template_classes()
-            class_object = dyn_class_dict[class_path.split(".")[-1]]
+            class_object = class_constructor(cp=JOB_DYN_DICT[class_path.split(".")[-1]])
 
         # Backwards compatibility since the format of TYPE changed
         if class_name != str(class_object):

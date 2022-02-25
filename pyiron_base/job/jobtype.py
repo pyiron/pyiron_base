@@ -13,7 +13,7 @@ from pyiron_base.generic.hdfio import ProjectHDFio
 from pyiron_base.generic.util import Singleton
 from pyiron_base.generic.factory import PyironFactory
 from pyiron_base.job.jobstatus import job_status_finished_lst
-from pyiron_base.generic.dynamic import get_template_classes
+from pyiron_base.generic.dynamic import JOB_DYN_DICT, class_constructor
 
 __author__ = "Joerg Neugebauer, Jan Janssen"
 __copyright__ = (
@@ -135,7 +135,7 @@ class JobFactory(PyironFactory):
 
     def __init__(self, project):
         self._job_class_dict = JOB_CLASS_DICT
-        self._job_dyn_dict = get_template_classes()
+        self._job_dyn_dict = JOB_DYN_DICT
         self._project = project
 
     def __dir__(self):
@@ -206,7 +206,10 @@ class JobFactory(PyironFactory):
                             project=self._project.copy(), file_name=job_name
                         ),
                         job_name=job_name,
-                        job_class_dict=self._job_dyn_dict.keys(),
+                        job_class_dict={
+                            name: class_constructor(cp=cp)
+                            for name, cp in self._job_dyn_dict.items()
+                        },
                         delete_existing_job=delete_existing_job,
                         delete_aborted_job=delete_aborted_job,
                     )

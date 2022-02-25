@@ -37,7 +37,7 @@ def _init_constructor(class_name, script_path, input_dict):
     return __init__
 
 
-def _class_constructor(cp):
+def class_constructor(cp):
     from pyiron_base.job.script import ScriptJob
 
     class_name = os.path.basename(cp)
@@ -54,7 +54,10 @@ def _class_constructor(cp):
     )
 
 
-def get_template_classes():
+def _get_template_classes():
     return {
-        os.path.basename(cp): _class_constructor(cp=cp) for cp in _get_class_path_lst()
+        os.path.basename(cp): cp for cp in _get_class_path_lst()
     }
+
+
+JOB_DYN_DICT = _get_template_classes()
