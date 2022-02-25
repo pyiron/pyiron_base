@@ -135,13 +135,14 @@ class JobFactory(PyironFactory):
 
     def __init__(self, project):
         self._job_class_dict = JOB_CLASS_DICT
+        self._job_dyn_dict = get_template_classes()
         self._project = project
 
     def __dir__(self):
         """
         Enable autocompletion by overwriting the __dir__() function.
         """
-        return list(self._job_class_dict.keys())
+        return list(self._job_class_dict.keys()) + list(self._job_dyn_dict.keys())
 
     def __getattr__(self, name):
         if name in self._job_class_dict.keys():
@@ -177,8 +178,7 @@ class JobFactory(PyironFactory):
 
             return wrapper
         else:
-            job_dyn_dict = get_template_classes()
-            if name in job_dyn_dict.keys():
+            if name in self._job_dyn_dict.keys():
 
                 def wrapper(
                     job_name, delete_existing_job=False, delete_aborted_job=False
@@ -206,7 +206,7 @@ class JobFactory(PyironFactory):
                             project=self._project.copy(), file_name=job_name
                         ),
                         job_name=job_name,
-                        job_class_dict=job_dyn_dict,
+                        job_class_dict=self._job_dyn_dict.keys(),
                         delete_existing_job=delete_existing_job,
                         delete_aborted_job=delete_aborted_job,
                     )
