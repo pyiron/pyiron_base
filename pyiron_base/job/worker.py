@@ -5,6 +5,8 @@
 Worker Class to execute calculation in an asynchronous way
 """
 import os
+
+import pandas
 import psutil
 import time
 from datetime import datetime
@@ -12,6 +14,7 @@ from multiprocessing import Pool
 import numpy as np
 from pyiron_base.state import state
 from pyiron_base.job.template import PythonTemplateJob
+from pyiron_base.job.wrapper import JobWrapper
 
 
 __author__ = "Jan Janssen"
@@ -77,6 +80,23 @@ def worker_function(args):
         )
     except subprocess.CalledProcessError:
         pass
+
+
+def execute_worker_function(args):
+    import subprocess
+    working_directory, executable = args
+    try:
+        _ = subprocess.run(
+            executable,
+            cwd=working_directory,
+            shell=False,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            universal_newlines=True,
+        )
+    except subprocess.CalledProcessError:
+        pass
+    return None
 
 
 class WorkerJob(PythonTemplateJob):
@@ -191,21 +211,23 @@ class WorkerJob(PythonTemplateJob):
         self.project_hdf5.create_working_directory()
         log_file = os.path.join(self.working_directory, "worker.log")
         active_job_ids, res_lst = [], []
+        df_sub = pandas.DataFrame({"projectpath": [], "project": [], "id":[]})
         process = psutil.Process(os.getpid())
         number_tasks = int(self.server.cores / self.cores_per_job)
         with Pool(processes=number_tasks) as pool:
             while True:
                 # Check the database if there are more calculation to execute
-                df = pr.job_table()
-                df_sub = df[
-                    (df["status"] == "submitted")
-                    & (df["masterid"] == master_id)
-                    & (~df["id"].isin(active_job_ids))
-                ]
+                if len(df_sub) < number_tasks * self.input.queue_limit_factor:
+                    df = pr.job_table()
+                    df_sub = df[
+                        (df["status"] == "submitted")
+                        & (df["masterid"] == master_id)
+                        & (~df["id"].isin(active_job_ids))
+                    ]
+
                 if (
                     len(df_sub) > 0
-                    and sum([i for r, i in res_lst if not r.ready()])
-                    < number_tasks * self.input.queue_limit_factor
+                    and len(res_lst) < number_tasks * self.input.queue_limit_factor
                 ):  # Check if there are jobs to execute
                     path_lst = [
                         [pp, p, job_id]
@@ -221,8 +243,20 @@ class WorkerJob(PythonTemplateJob):
                         for pp, p, job_id in path_lst
                     ]
                     active_job_ids += [j[1] for j in job_lst]
-                    result = pool.map_async(worker_function, job_lst)
-                    res_lst.append([result, len(job_lst)])
+
+                    job_executable_lst = [
+                        [
+                            job_wd,
+                            self._get_executable(
+                                job_wrap=self._get_job_path(working_directory=job_wd, job_link=job_link)
+                            )
+                        ]
+                        for job_wd, job_link in job_lst
+                    ]
+                    res_lst += [
+                        [pool.map_async(execute_worker_function, [job_input]), job_wd, job_id]
+                        for job_input, [job_wd, job_id] in zip(job_executable_lst, job_lst)
+                    ]
                 elif self.status.collect or self.status.aborted or self.status.finished:
                     if self.status.collect:
                         while sum([i for r, i in res_lst if not r.ready()]) > 0:
@@ -266,6 +300,18 @@ class WorkerJob(PythonTemplateJob):
                         + "\n"
                     )
 
+                # Collect calculation results
+                if len(res_lst) > 0:
+                    res_lst = [
+                        i for i in [
+                            [r, f]
+                            if not r.ready() else self._collect_child_job(
+                                working_directory=job_wd, 
+                                job_link=job_id
+                            )
+                            for r, job_wd, job_id in res_lst
+                        ] if i is not None
+                    ]
         # The job is finished
         self.status.finished = True
 
@@ -276,33 +322,93 @@ class WorkerJob(PythonTemplateJob):
         parent_dir = "/".join(path_split[:-1])
         return parent_dir + "/" + job_name + "_hdf5/" + job_name, path + "/" + job_name
 
+    @staticmethod
+    def _get_job_path(working_directory, job_link):
+        if isinstance(job_link, int) or str(job_link).isdigit():
+            return JobWrapper(
+                working_directory=working_directory,
+                job_id=job_link,
+                submit_on_remote=False,
+                debug=False,
+            )
+        else:
+            hdf5_file = (
+                    ".".join(job_link.split(".")[:-1])
+                    + "."
+                    + job_link.split(".")[-1].split("/")[0]
+            )
+            h5_path = "/".join(job_link.split(".")[-1].split("/")[1:])
+            return JobWrapper(
+                working_directory=working_directory,
+                job_id=None,
+                hdf5_file=hdf5_file,
+                h5_path="/" + h5_path,
+                submit_on_remote=False,
+                debug=False,
+            )
+
+    def _collect_job_from_path(self, path):
+        working_directory, job_link = self._get_working_directory_and_h5path(path=path)
+        return self._collect_child_job(working_directory=working_directory, job_link=job_link)
+
+    def _collect_child_job(self, working_directory, job_link):
+        job_wrap = self._get_job_path(working_directory=working_directory, job_link=job_link)
+        job_wrap.job.status.collect = True
+        job_wrap.job.run()
+        return None
+
+    @staticmethod
+    def _get_executable(job_wrap):
+        return [
+            job_wrap.job.executable.executable_path,
+            str(job_wrap.job.server.cores),
+            str(job_wrap.job.server.threads),
+        ]
+
+    @staticmethod
+    def _get_hdf5_files_to_calculate(working_directory, file_memory_lst):
+        file_lst = [
+            os.path.join(working_directory, f)
+            for f in os.listdir(working_directory)
+            if f.endswith(".h5")
+        ]
+        file_vec = ~np.isin(file_lst, file_memory_lst)
+        return np.array(file_lst)[file_vec].tolist()
+
     def run_static_without_database(self):
         self.project_hdf5.create_working_directory()
         working_directory = self.working_directory
         log_file = os.path.join(working_directory, "worker.log")
-        file_memory_lst, res_lst = [], []
+        file_memory_lst, res_lst, file_lst = [], [], []
         process = psutil.Process(os.getpid())
         number_tasks = int(self.server.cores / self.cores_per_job)
         with Pool(number_tasks) as pool:
             while True:
-                file_lst = [
-                    os.path.join(working_directory, f)
-                    for f in os.listdir(working_directory)
-                    if f.endswith(".h5")
-                ]
-                file_vec = ~np.isin(file_lst, file_memory_lst)
-                file_lst = np.array(file_lst)[file_vec].tolist()
+                # Build list of HDF5 files to calculate
+                if len(file_lst) < number_tasks * self.input.queue_limit_factor:
+                    file_lst = self._get_hdf5_files_to_calculate(
+                        working_directory=working_directory,
+                        file_memory_lst=file_memory_lst
+                    )
+
                 if (
                     len(file_lst) > 0
-                    and sum([i for r, i in res_lst if not r.ready()])
-                    < number_tasks * self.input.queue_limit_factor
+                    and len(res_lst) < number_tasks * self.input.queue_limit_factor
                 ):
-                    job_submit_lst = [
-                        self._get_working_directory_and_h5path(path=f) for f in file_lst
-                    ]
                     file_memory_lst += file_lst
-                    result = pool.map_async(worker_function, job_submit_lst)
-                    res_lst.append([result, len(job_submit_lst)])
+                    job_executable_lst = [
+                        [
+                            job_wd,
+                            self._get_executable(
+                                job_wrap=self._get_job_path(working_directory=job_wd, job_link=job_link)
+                            )
+                        ]
+                        for job_wd, job_link in [self._get_working_directory_and_h5path(path=f) for f in file_lst]
+                    ]
+                    res_lst += [
+                        [pool.map_async(execute_worker_function, [job_input]), f]
+                        for job_input, f in zip(job_executable_lst, file_lst)
+                    ]
                 elif self.project_hdf5["status"] in ["collect", "aborted", "finished"]:
                     if self.project_hdf5["status"] == "collect":
                         while sum([i for r, i in res_lst if not r.ready()]) > 0:
@@ -310,7 +416,8 @@ class WorkerJob(PythonTemplateJob):
                             if self.project_hdf5["status"] in ["aborted", "finished"]:
                                 break
                     break
-                time.sleep(self.input.sleep_interval)
+                else:
+                    time.sleep(self.input.sleep_interval)
 
                 with open(log_file, "a") as f:
                     f.write(
@@ -324,6 +431,16 @@ class WorkerJob(PythonTemplateJob):
                         + "GB"
                         + "\n"
                     )
+
+                # Collect calculation results
+                if len(res_lst) > 0:
+                    res_lst = [
+                        i for i in [
+                            [r, f]
+                            if not r.ready() else self._collect_job_from_path(path=f)
+                            for r, f in res_lst
+                        ] if i is not None
+                    ]
 
         # The job is finished
         self.status.finished = True
