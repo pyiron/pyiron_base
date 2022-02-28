@@ -5,7 +5,6 @@
 Worker Class to execute calculation in an asynchronous way
 """
 import os
-
 import pandas
 import psutil
 import time
