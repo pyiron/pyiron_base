@@ -214,7 +214,7 @@ class WorkerJob(PythonTemplateJob):
         df_sub = pandas.DataFrame({"projectpath": [], "project": [], "id": []})
         process = psutil.Process(os.getpid())
         number_tasks = int(self.server.cores / self.cores_per_job)
-        with Pool(processes=number_tasks) as pool:
+        with Pool(processes=number_tasks, maxtasksperchild=1) as pool:
             while True:
                 # Check the database if there are more calculation to execute
                 if len(df_sub) < number_tasks * self.input.queue_limit_factor:
@@ -396,7 +396,7 @@ class WorkerJob(PythonTemplateJob):
         file_memory_lst, res_lst, file_lst = [], [], []
         process = psutil.Process(os.getpid())
         number_tasks = int(self.server.cores / self.cores_per_job)
-        with Pool(number_tasks) as pool:
+        with Pool(number_tasks, maxtasksperchild=1) as pool:
             while True:
                 # Build list of HDF5 files to calculate
                 if len(file_lst) < number_tasks * self.input.queue_limit_factor:
