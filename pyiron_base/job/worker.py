@@ -9,7 +9,7 @@ import pandas
 import psutil
 import time
 from datetime import datetime
-from multiprocessing as mp
+import multiprocessing as mp
 import numpy as np
 from pyiron_base.state import state
 from pyiron_base.job.template import PythonTemplateJob
