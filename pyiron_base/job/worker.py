@@ -9,7 +9,7 @@ import pandas
 import psutil
 import time
 from datetime import datetime
-from multiprocessing import Pool
+from multiprocessing as mp
 import numpy as np
 from pyiron_base.state import state
 from pyiron_base.job.template import PythonTemplateJob
@@ -214,7 +214,9 @@ class WorkerJob(PythonTemplateJob):
         df_sub = pandas.DataFrame({"projectpath": [], "project": [], "id": []})
         process = psutil.Process(os.getpid())
         number_tasks = int(self.server.cores / self.cores_per_job)
-        with Pool(processes=number_tasks, maxtasksperchild=1) as pool:
+        ctx = mp.get_context('forkserver')
+        ctx.set_forkserver_preload(["subprocess"])
+        with ctx.Pool(number_tasks, maxtasksperchild=1) as pool:
             while True:
                 # Check the database if there are more calculation to execute
                 if len(df_sub) < number_tasks * self.input.queue_limit_factor:
@@ -396,7 +398,9 @@ class WorkerJob(PythonTemplateJob):
         file_memory_lst, res_lst, file_lst = [], [], []
         process = psutil.Process(os.getpid())
         number_tasks = int(self.server.cores / self.cores_per_job)
-        with Pool(number_tasks, maxtasksperchild=1) as pool:
+        ctx = mp.get_context('forkserver')
+        ctx.set_forkserver_preload(["subprocess"])
+        with ctx.Pool(number_tasks, maxtasksperchild=1) as pool:
             while True:
                 # Build list of HDF5 files to calculate
                 if len(file_lst) < number_tasks * self.input.queue_limit_factor:
