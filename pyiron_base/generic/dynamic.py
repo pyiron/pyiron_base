@@ -5,9 +5,9 @@ from pyiron_base.state import state
 
 def _get_class_path_lst():
     path_lst = [
-        os.path.abspath(os.path.expanduser(os.path.join(p, "template")))
+        os.path.abspath(os.path.expanduser(os.path.join(p, "templates")))
         for p in state.settings.resource_paths
-        if os.path.exists(p) and "template" in os.listdir(p)
+        if os.path.exists(p) and "templates" in os.listdir(p)
     ]
     class_path_lst = []
     for path in path_lst:
