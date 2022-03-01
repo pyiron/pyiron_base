@@ -257,7 +257,7 @@ class WorkerJob(PythonTemplateJob):
                     ]
                     res_lst += [
                         [
-                            pool.map_async(execute_worker_function, [job_input]),
+                            pool.apply_async(execute_worker_function, (job_input, )),
                             job_wd,
                             job_id,
                         ]
@@ -425,7 +425,7 @@ class WorkerJob(PythonTemplateJob):
                         ]
                     ]
                     res_lst += [
-                        [pool.map_async(execute_worker_function, [job_input]), f]
+                        [pool.apply_async(execute_worker_function, (job_input, )), f]
                         for job_input, f in zip(job_executable_lst, file_lst)
                     ]
                 elif self.project_hdf5["status"] in ["collect", "aborted", "finished"]:
