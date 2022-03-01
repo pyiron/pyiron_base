@@ -211,9 +211,7 @@ class WorkerJob(PythonTemplateJob):
                     for pp, p, job_id in path_lst
                 ]
                 process_lst = self._execute_calculation(
-                    job_lst=job_lst,
-                    process_lst=process_lst,
-                    number_tasks=number_tasks
+                    job_lst=job_lst, process_lst=process_lst, number_tasks=number_tasks
                 )
                 active_job_ids += [j[1] for j in job_lst]
             elif self.status.collect or self.status.aborted or self.status.finished:
@@ -280,18 +278,12 @@ class WorkerJob(PythonTemplateJob):
             ]
             file_vec = ~np.isin(file_lst, file_memory_lst)
             file_lst = np.array(file_lst)[file_vec].tolist()
-            if (
-                len(file_lst) > 0
-                and len(process_lst) < number_tasks
-            ):
+            if len(file_lst) > 0 and len(process_lst) < number_tasks:
                 job_lst = [
-                    self._get_working_directory_and_h5path(path=f)
-                    for f in file_lst
+                    self._get_working_directory_and_h5path(path=f) for f in file_lst
                 ]
                 process_lst = self._execute_calculation(
-                    job_lst=job_lst,
-                    process_lst=process_lst,
-                    number_tasks=number_tasks
+                    job_lst=job_lst, process_lst=process_lst, number_tasks=number_tasks
                 )
                 file_memory_lst += file_lst
             elif self.project_hdf5["status"] in ["collect", "aborted", "finished"]:
