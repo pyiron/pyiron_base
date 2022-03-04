@@ -180,14 +180,14 @@ class WorkerJob(PythonTemplateJob):
     def get_generator(self):
         if not state.database.database_is_disabled:
             return database_generator(
-                pr=self.project_to_watch, 
-                master_id=self.job_id, 
-                interval_in_s=self.input.sleep_interval
+                pr=self.project_to_watch,
+                master_id=self.job_id,
+                interval_in_s=self.input.sleep_interval,
             )
         else:
             return file_generator(
-                working_directory=self.working_directory, 
-                interval_in_s=self.input.sleep_interval
+                working_directory=self.working_directory,
+                interval_in_s=self.input.sleep_interval,
             )
 
     def run_static(self):
@@ -202,22 +202,29 @@ class WorkerJob(PythonTemplateJob):
             while True:
                 while len(res_lst) < number_tasks * self.input.queue_limit_factor:
                     try:
-                        res_lst.append(pool.apply_async(worker_function, (next(job_yield), )))
+                        res_lst.append(
+                            pool.apply_async(worker_function, (next(job_yield),))
+                        )
                     except StopIteration:
                         job_yield = self.get_generator()
                         break
-                if not state.database.database_is_disabled and (self.status.collect or self.status.aborted or self.status.finished):
+                if not state.database.database_is_disabled and (
+                    self.status.collect or self.status.aborted or self.status.finished
+                ):
                     if self.status.collect:
                         while sum([i for r, i in res_lst if not r.ready()]) > 0:
                             time.sleep(self.input.sleep_interval)
                             if self.status.aborted or self.status.finished:
                                 break
-                    break 
-                elif not state.database.database_is_disabled:  # The sleep interval can be set as part of the input
+                    break
+                elif (
+                    not state.database.database_is_disabled
+                ):  # The sleep interval can be set as part of the input
                     if self.input.child_runtime > 0:
                         df = self.project_to_watch.job_table()
                         df_run = df[
-                            (df["status"] == "running") & (df["masterid"] == self.job_id)
+                            (df["status"] == "running")
+                            & (df["masterid"] == self.job_id)
                         ]
                         if len(df_run) > 0:
                             for job_id in df_run[
@@ -232,7 +239,9 @@ class WorkerJob(PythonTemplateJob):
                                 self.project.db.set_job_status(
                                     job_id=job_id, status="aborted"
                                 )
-                elif state.database.database_is_disabled and self.project_hdf5["status"] in ["collect", "aborted", "finished"]:
+                elif state.database.database_is_disabled and self.project_hdf5[
+                    "status"
+                ] in ["collect", "aborted", "finished"]:
                     if self.project_hdf5["status"] == "collect":
                         while sum([i for r, i in res_lst if not r.ready()]) > 0:
                             time.sleep(self.input.sleep_interval)
