@@ -369,8 +369,8 @@ class WorkerJob(PythonTemplateJob):
 
     def _execute_calculation(self, job_lst, process_lst, number_tasks):
         i = 0
-        while i < len(job_lst)-1:
-            while len(process_lst) < number_tasks and i < len(job_lst)-1:
+        while i < len(job_lst) - 1:
+            while len(process_lst) < number_tasks and i < len(job_lst) - 1:
                 process_lst.append(worker_function(args=job_lst[i]))
                 i += 1
             while len(process_lst) == number_tasks:
