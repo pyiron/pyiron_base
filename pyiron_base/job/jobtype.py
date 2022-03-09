@@ -41,12 +41,14 @@ class JobType(object):
     The JobTypeBase class creates a new object of a given class type.
     """
 
+    _job_class_dict = JOB_CLASS_DICT
+
     def __new__(
         cls,
         class_name,
         project,
         job_name,
-        job_class_dict,
+        job_class_dict=None,
         delete_existing_job=False,
         delete_aborted_job=False,
     ):
@@ -65,7 +67,7 @@ class JobType(object):
             GenericJob: object of type class_name
         """
         job_name = _get_safe_job_name(job_name)
-        cls.job_class_dict = job_class_dict
+        cls.job_class_dict = job_class_dict or cls._job_class_dict
         if isinstance(class_name, str):
             job_class = cls.convert_str_to_class(
                 job_class_dict=cls.job_class_dict, class_name=class_name
@@ -94,6 +96,15 @@ class JobType(object):
         if job.status.string in job_status_finished_lst:
             job.set_input_to_read_only()
         return job
+
+    @classmethod
+    def register_job_type(cls, cls_name, _cls):
+        if cls_name is None:
+            return
+        elif cls_name not in cls._job_class_dict:
+            cls._job_class_dict[cls_name] = _cls
+        else:
+            raise ValueError(f"A JobType with name {cls_name} is already defined!")
 
     @staticmethod
     def convert_str_to_class(job_class_dict, class_name):
