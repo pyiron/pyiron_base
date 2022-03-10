@@ -355,20 +355,19 @@ class WorkerJob(PythonTemplateJob):
                 process[0].kill()
             if len(process) == 2:
                 self._collect_child_job(
-                    working_directory=process[1],
-                    job_link=process[2]
+                    working_directory=process[1], job_link=process[2]
                 )
 
         return [
-            p[0] if p[0] is not None and p[0].poll() is None else kill_if_not_none(process=p)
+            p[0]
+            if p[0] is not None and p[0].poll() is None
+            else kill_if_not_none(process=p)
             for p in process_lst
         ]
 
     @staticmethod
     def _collect_child_job(working_directory, job_link):
-        job_wrap = _get_job_path(
-            working_directory=working_directory, job_link=job_link
-        )
+        job_wrap = _get_job_path(working_directory=working_directory, job_link=job_link)
         job_wrap.job.status.collect = True
         job_wrap.job.run()
         return None
@@ -389,11 +388,15 @@ class WorkerJob(PythonTemplateJob):
             job_para = _get_working_directory_and_h5path(path=task_path)
             executable = _get_executable(
                 job_wrap=_get_job_path(
-                    working_directory=job_para[0],
-                    job_link=job_para[1]
+                    working_directory=job_para[0], job_link=job_para[1]
                 )
             )
-            process_lst.append([worker_function(args=[job_para[0], executable]), job_para[0]. job_para[1]])
+            process_lst.append(
+                [
+                    worker_function(args=[job_para[0], executable]),
+                    job_para[0].job_para[1],
+                ]
+            )
             file_memory_lst.append(task_path)
             if i == tasks_to_submit - 1:
                 break
@@ -405,10 +408,7 @@ class WorkerJob(PythonTemplateJob):
         active_id_lst = []
         for i, [p, job_id] in enumerate(task_generator):
             executable = _get_executable(
-                job_wrap=_get_job_path(
-                    working_directory=p,
-                    job_link=job_id
-                )
+                job_wrap=_get_job_path(working_directory=p, job_link=job_id)
             )
             process_lst.append([worker_function(args=[p, executable]), p, job_id])
             active_id_lst.append(job_id)
