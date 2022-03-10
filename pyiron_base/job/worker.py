@@ -177,6 +177,14 @@ class WorkerJob(PythonTemplateJob):
 
     # This function is executed
     def run_static(self):
+        self.status.running = True
+        master_id = self.job_id
+        pr = self.project_to_watch
+        self.project_hdf5.create_working_directory()
+        log_file = os.path.join(self.working_directory, "worker.log")
+        active_job_ids, process_lst = [], []
+        process = psutil.Process(os.getpid())
+        number_tasks = int(self.server.cores / self.cores_per_job)
         if not state.database.database_is_disabled:
             self.run_static_with_database()
         else:
@@ -197,11 +205,13 @@ class WorkerJob(PythonTemplateJob):
                 task_generator = self._generate_database_jobs(
                     df=df, master_id=master_id, active_job_ids=active_job_ids
                 )
-                process_lst = self._database_based_execute(
+                active_job_ids_tmp, process_tmp_lst = self._database_based_execute(
                     process_lst=process_lst,
                     task_generator=task_generator,
                     number_tasks=number_tasks,
                 )
+                active_job_ids += active_job_ids_tmp
+                process_lst += process_tmp_lst
             if self._database_based_wait(
                 df=df, process_lst=process_lst, master_id=master_id
             ):
@@ -237,11 +247,13 @@ class WorkerJob(PythonTemplateJob):
                 task_generator = self._generate_static_jobs(
                     working_directory=working_directory, file_memory_lst=file_memory_lst
                 )
-                file_memory_lst += self._file_based_execute(
+                file_memory_tmp_lst, process_tmp_lst = self._file_based_execute(
                     process_lst=process_lst,
                     task_generator=task_generator,
                     number_tasks=number_tasks,
                 )
+                file_memory_lst += file_memory_tmp_lst
+                process_lst += process_tmp_lst
             if self._file_based_wait(process_lst=process_lst):
                 break
 
@@ -389,7 +401,7 @@ class WorkerJob(PythonTemplateJob):
             file_memory_lst.append(task_path)
             if i == tasks_to_submit - 1:
                 break
-        return file_memory_lst
+        return file_memory_lst, process_lst
 
     @staticmethod
     def _database_based_execute(process_lst, task_generator, number_tasks):
@@ -400,7 +412,7 @@ class WorkerJob(PythonTemplateJob):
             active_id_lst.append(job_id)
             if i == tasks_to_submit - 1:
                 break
-        return active_id_lst
+        return active_id_lst, process_lst
 
     @staticmethod
     def _generate_static_jobs(working_directory, file_memory_lst):
