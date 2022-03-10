@@ -322,7 +322,14 @@ class WorkerJob(PythonTemplateJob):
 
     @staticmethod
     def red_process_lst(process_lst):
-        return [p for p in process_lst if p is not None and p.poll() is None]
+        def kill_if_not_none(process):
+            if process is not None:
+                process.kill()
+
+        return [
+            p if p is not None and p.poll() is None else kill_if_not_none(process=p)
+            for p in process_lst
+        ]
 
     def _file_based_wait(self, process_lst):
         if self.project_hdf5["status"] in ["collect", "aborted", "finished"]:
