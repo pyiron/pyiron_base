@@ -177,14 +177,6 @@ class WorkerJob(PythonTemplateJob):
 
     # This function is executed
     def run_static(self):
-        self.status.running = True
-        master_id = self.job_id
-        pr = self.project_to_watch
-        self.project_hdf5.create_working_directory()
-        log_file = os.path.join(self.working_directory, "worker.log")
-        active_job_ids, process_lst = [], []
-        process = psutil.Process(os.getpid())
-        number_tasks = int(self.server.cores / self.cores_per_job)
         if not state.database.database_is_disabled:
             self.run_static_with_database()
         else:
