@@ -8,7 +8,7 @@ import os
 import psutil
 import time
 from datetime import datetime
-from multiprocessing import Pool
+import subprocess
 import numpy as np
 from pyiron_base.state import state
 from pyiron_base.job.template import PythonTemplateJob
@@ -41,8 +41,6 @@ def worker_function(args):
         submit_on_remote (bool): submit to queuing system on remote host
         debug (bool): enable debug mode [True/False] (optional)
     """
-    import subprocess
-
     working_directory, job_link = args
     if isinstance(job_link, int) or str(job_link).isdigit():
         executable = [
@@ -67,7 +65,7 @@ def worker_function(args):
             job_link,
         ]
     try:
-        _ = subprocess.run(
+        return subprocess.Popen(
             executable,
             cwd=working_directory,
             shell=False,
@@ -75,8 +73,8 @@ def worker_function(args):
             stderr=subprocess.DEVNULL,
             universal_newlines=True,
         )
-    except subprocess.CalledProcessError:
-        pass
+    except FileNotFoundError:
+        return None
 
 
 class WorkerJob(PythonTemplateJob):
@@ -190,140 +188,74 @@ class WorkerJob(PythonTemplateJob):
         pr = self.project_to_watch
         self.project_hdf5.create_working_directory()
         log_file = os.path.join(self.working_directory, "worker.log")
-        active_job_ids, res_lst = [], []
+        active_job_ids, process_lst = [], []
         process = psutil.Process(os.getpid())
         number_tasks = int(self.server.cores / self.cores_per_job)
-        with Pool(processes=number_tasks) as pool:
-            while True:
-                # Check the database if there are more calculation to execute
-                df = pr.job_table()
-                df_sub = df[
-                    (df["status"] == "submitted")
-                    & (df["masterid"] == master_id)
-                    & (~df["id"].isin(active_job_ids))
-                ]
-                if (
-                    len(df_sub) > 0
-                    and sum([i for r, i in res_lst if not r.ready()])
-                    < number_tasks * self.input.queue_limit_factor
-                ):  # Check if there are jobs to execute
-                    path_lst = [
-                        [pp, p, job_id]
-                        for pp, p, job_id in zip(
-                            df_sub["projectpath"].values,
-                            df_sub["project"].values,
-                            df_sub["id"].values,
-                        )
-                        if job_id not in active_job_ids
-                    ]
-                    job_lst = [
-                        [p, job_id] if pp is None else [os.path.join(pp, p), job_id]
-                        for pp, p, job_id in path_lst
-                    ]
-                    active_job_ids += [j[1] for j in job_lst]
-                    result = pool.map_async(worker_function, job_lst)
-                    res_lst.append([result, len(job_lst)])
-                elif self.status.collect or self.status.aborted or self.status.finished:
-                    if self.status.collect:
-                        while sum([i for r, i in res_lst if not r.ready()]) > 0:
-                            time.sleep(self.input.sleep_interval)
-                            if self.status.aborted or self.status.finished:
-                                break
-                    break  # The infinite loop can be stopped by setting the job status to collect.
-                else:  # The sleep interval can be set as part of the input
-                    if self.input.child_runtime > 0:
-                        df_run = df[
-                            (df["status"] == "running") & (df["masterid"] == master_id)
-                        ]
-                        if len(df_run) > 0:
-                            for job_id in df_run[
-                                (
-                                    np.array(datetime.now(), dtype="datetime64[ns]")
-                                    - df_run.timestart.values
-                                ).astype("timedelta64[s]")
-                                > np.array(self.input.child_runtime).astype(
-                                    "timedelta64[s]"
-                                )
-                            ].id.values:
-                                self.project.db.set_job_status(
-                                    job_id=job_id, status="aborted"
-                                )
-                    time.sleep(self.input.sleep_interval)
+        while True:
+            df = pr.job_table()
+            if len(process_lst) < number_tasks:
+                task_generator = self._generate_database_jobs(
+                    df=df, master_id=master_id, active_job_ids=active_job_ids
+                )
+                process_lst = self._database_based_execute(
+                    process_lst=process_lst,
+                    task_generator=task_generator,
+                    number_tasks=number_tasks,
+                )
+            if self._database_based_wait(
+                df=df, process_lst=process_lst, master_id=master_id
+            ):
+                break
 
-                # job submission
-                with open(log_file, "a") as f:
-                    f.write(
-                        str(datetime.today())
-                        + " "
-                        + str(len(active_job_ids))
-                        + " "
-                        + str(len(df))
-                        + " "
-                        + str(len(df_sub))
-                        + " "
-                        + str(process.memory_info().rss / 1024 / 1024 / 1024)
-                        + "GB"
-                        + "\n"
-                    )
+            # job submission
+            with open(log_file, "a") as f:
+                f.write(
+                    str(datetime.today())
+                    + " "
+                    + str(len(active_job_ids))
+                    + " "
+                    + str(len(df))
+                    + " "
+                    + str(process.memory_info().rss / 1024 / 1024 / 1024)
+                    + "GB"
+                    + "\n"
+                )
+            process_lst = self.red_process_lst(process_lst=process_lst)
 
         # The job is finished
         self.status.finished = True
-
-    @staticmethod
-    def _get_working_directory_and_h5path(path):
-        path_split = path.split("/")
-        job_name = path_split[-1].split(".h5")[0]
-        parent_dir = "/".join(path_split[:-1])
-        return parent_dir + "/" + job_name + "_hdf5/" + job_name, path + "/" + job_name
 
     def run_static_without_database(self):
         self.project_hdf5.create_working_directory()
         working_directory = self.working_directory
         log_file = os.path.join(working_directory, "worker.log")
-        file_memory_lst, res_lst = [], []
+        process_lst, file_memory_lst = [], []
         process = psutil.Process(os.getpid())
         number_tasks = int(self.server.cores / self.cores_per_job)
-        with Pool(number_tasks) as pool:
-            while True:
-                file_lst = [
-                    os.path.join(working_directory, f)
-                    for f in os.listdir(working_directory)
-                    if f.endswith(".h5")
-                ]
-                file_vec = ~np.isin(file_lst, file_memory_lst)
-                file_lst = np.array(file_lst)[file_vec].tolist()
-                if (
-                    len(file_lst) > 0
-                    and sum([i for r, i in res_lst if not r.ready()])
-                    < number_tasks * self.input.queue_limit_factor
-                ):
-                    job_submit_lst = [
-                        self._get_working_directory_and_h5path(path=f) for f in file_lst
-                    ]
-                    file_memory_lst += file_lst
-                    result = pool.map_async(worker_function, job_submit_lst)
-                    res_lst.append([result, len(job_submit_lst)])
-                elif self.project_hdf5["status"] in ["collect", "aborted", "finished"]:
-                    if self.project_hdf5["status"] == "collect":
-                        while sum([i for r, i in res_lst if not r.ready()]) > 0:
-                            time.sleep(self.input.sleep_interval)
-                            if self.project_hdf5["status"] in ["aborted", "finished"]:
-                                break
-                    break
-                time.sleep(self.input.sleep_interval)
+        while True:
+            if len(process_lst) < number_tasks:
+                task_generator = self._generate_static_jobs(
+                    working_directory=working_directory, file_memory_lst=file_memory_lst
+                )
+                file_memory_lst += self._file_based_execute(
+                    process_lst=process_lst,
+                    task_generator=task_generator,
+                    number_tasks=number_tasks,
+                )
+            if self._file_based_wait(process_lst=process_lst):
+                break
 
-                with open(log_file, "a") as f:
-                    f.write(
-                        str(datetime.today())
-                        + " "
-                        + str(len(file_memory_lst))
-                        + " "
-                        + str(len(file_lst))
-                        + " "
-                        + str(process.memory_info().rss / 1024 / 1024 / 1024)
-                        + "GB"
-                        + "\n"
-                    )
+            with open(log_file, "a") as f:
+                f.write(
+                    str(datetime.today())
+                    + " "
+                    + str(len(file_memory_lst))
+                    + " "
+                    + str(process.memory_info().rss / 1024 / 1024 / 1024)
+                    + "GB"
+                    + "\n"
+                )
+            process_lst = self.red_process_lst(process_lst=process_lst)
 
         # The job is finished
         self.status.finished = True
@@ -376,3 +308,111 @@ class WorkerJob(PythonTemplateJob):
                 raise ValueError("The worker job was aborted.")
             time.sleep(interval_in_s)
         self.status.collect = True
+
+    def _execute_calculation(self, job_lst, process_lst, number_tasks):
+        i = 0
+        while i < len(job_lst) - 1:
+            while len(process_lst) < number_tasks and i < len(job_lst) - 1:
+                process_lst.append(worker_function(args=job_lst[i]))
+                i += 1
+            while len(process_lst) == number_tasks:
+                time.sleep(self.input.sleep_interval)
+                process_lst = self.red_process_lst(process_lst=process_lst)
+        return process_lst
+
+    @staticmethod
+    def red_process_lst(process_lst):
+        return [p for p in process_lst if p is not None and p.poll() is None]
+
+    def _file_based_wait(self, process_lst):
+        if self.project_hdf5["status"] in ["collect", "aborted", "finished"]:
+            if self.project_hdf5["status"] == "collect":
+                while len(process_lst) > 0:
+                    time.sleep(self.input.sleep_interval)
+                    process_lst = self.red_process_lst(process_lst=process_lst)
+                    if self.project_hdf5["status"] in ["aborted", "finished"]:
+                        return True
+            else:
+                return True
+        else:
+            time.sleep(self.input.sleep_interval)
+        return False
+
+    def _database_based_wait(self, df, process_lst, master_id):
+        if self.status.collect or self.status.aborted or self.status.finished:
+            if self.status.collect:
+                while len(process_lst) > 0:
+                    time.sleep(self.input.sleep_interval)
+                    process_lst = self.red_process_lst(process_lst=process_lst)
+                    if self.status.aborted or self.status.finished:
+                        return True
+            else:  # The infinite loop can be stopped by setting the job status to collect.
+                return True
+        else:  # The sleep interval can be set as part of the input
+            if self.input.child_runtime > 0:
+                df_run = df[(df["status"] == "running") & (df["masterid"] == master_id)]
+                if len(df_run) > 0:
+                    for job_id in df_run[
+                        (
+                            np.array(datetime.now(), dtype="datetime64[ns]")
+                            - df_run.timestart.values
+                        ).astype("timedelta64[s]")
+                        > np.array(self.input.child_runtime).astype("timedelta64[s]")
+                    ].id.values:
+                        self.project.db.set_job_status(job_id=job_id, status="aborted")
+            time.sleep(self.input.sleep_interval)
+        return False
+
+    @staticmethod
+    def _file_based_execute(process_lst, task_generator, number_tasks):
+        def get_working_directory_and_h5path(path):
+            path_split = path.split("/")
+            job_name = path_split[-1].split(".h5")[0]
+            parent_dir = "/".join(path_split[:-1])
+            return [
+                parent_dir + "/" + job_name + "_hdf5/" + job_name,
+                path + "/" + job_name,
+            ]
+
+        file_memory_lst = []
+        tasks_to_submit = number_tasks - len(process_lst)
+        for i, task_path in enumerate(task_generator):
+            job_para = get_working_directory_and_h5path(path=task_path)
+            process_lst.append(worker_function(args=job_para))
+            file_memory_lst.append(task_path)
+            if i == tasks_to_submit - 1:
+                break
+        return file_memory_lst
+
+    @staticmethod
+    def _database_based_execute(process_lst, task_generator, number_tasks):
+        tasks_to_submit = number_tasks - len(process_lst)
+        active_id_lst = []
+        for i, [p, job_id] in enumerate(task_generator):
+            process_lst.append(worker_function(args=[p, job_id]))
+            active_id_lst.append(job_id)
+            if i == tasks_to_submit - 1:
+                break
+        return active_id_lst
+
+    @staticmethod
+    def _generate_static_jobs(working_directory, file_memory_lst):
+        for f in os.listdir(working_directory):
+            if f.endswith(".h5") and f not in file_memory_lst:
+                yield os.path.join(working_directory, f)
+
+    @staticmethod
+    def _generate_database_jobs(df, master_id, active_job_ids):
+        df_sub = df[
+            (df["status"] == "submitted")
+            & (df["masterid"] == master_id)
+            & (~df["id"].isin(active_job_ids))
+        ]
+        for pp, p, job_id in zip(
+            df_sub["projectpath"].values, df_sub["project"].values, df_sub["id"].values
+        ):
+            if job_id not in active_job_ids:
+                if pp is None:
+                    yield [p, job_id]
+                else:
+                    yield [os.path.join(pp, p), job_id]
