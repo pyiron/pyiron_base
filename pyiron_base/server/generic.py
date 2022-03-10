@@ -186,7 +186,9 @@ class Server:  # add the option to return the job id and the hold id to the serv
                     state.logger.debug("Updated the number of cores to: %i", cores)
                 if run_time_max != self.run_time:
                     self._run_time = run_time_max
-                    state.logger.debug("Updated the run time limit to: %i", run_time_max)
+                    state.logger.debug(
+                        "Updated the run time limit to: %i", run_time_max
+                    )
                 if memory_max != self.memory_limit:
                     self._memory_limit = memory_max
                     state.logger.debug("Updated the memory limit to: %i", memory_max)
