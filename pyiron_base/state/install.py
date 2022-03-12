@@ -94,8 +94,11 @@ def _write_config_file(
             os.makedirs(project_path)
 
 
-def install_dialog():
-    user_input = None
+def install_dialog(input_by_user=True):
+    if input_by_user:
+        user_input = None
+    else:
+        user_input = 'yes'
     if "PYIRONCONFIG" in os.environ.keys():
         config_file = os.environ["PYIRONCONFIG"]
     else:
