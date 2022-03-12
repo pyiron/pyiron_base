@@ -98,7 +98,8 @@ def install_dialog(input_by_user=True):
     if input_by_user:
         user_input = None
     else:
-        user_input = 'yes'
+        user_input = "yes"
+    
     if "PYIRONCONFIG" in os.environ.keys():
         config_file = os.environ["PYIRONCONFIG"]
     else:
