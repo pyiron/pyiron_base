@@ -45,7 +45,7 @@ def worker_function(args):
     """
     working_directory, executable = args
     try:
-        _ = subprocess.run(
+        return subprocess.Popen(
             executable,
             cwd=working_directory,
             shell=False,
@@ -53,9 +53,8 @@ def worker_function(args):
             stderr=subprocess.DEVNULL,
             universal_newlines=True,
         )
-    except subprocess.CalledProcessError:
-        pass
-    return None
+    except FileNotFoundError:
+        return None
 
 
 class WorkerJob(PythonTemplateJob):
