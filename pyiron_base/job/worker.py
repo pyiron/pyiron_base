@@ -9,6 +9,7 @@ import psutil
 import time
 from datetime import datetime
 import subprocess
+import resource
 import numpy as np
 from pyiron_base.state import state
 from pyiron_base.job.template import PythonTemplateJob
@@ -199,6 +200,10 @@ class WorkerJob(PythonTemplateJob):
                     + str(len(df))
                     + " "
                     + str(process.memory_info().rss / 1024 / 1024 / 1024)
+                    + "GB "
+                    + str(resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1024 / 1024)
+                    + "GB "
+                    + str(resource.getrusage(resource.RUSAGE_CHILDREN).ru_maxrss / 1024 / 1024)
                     + "GB"
                     + "\n"
                 )
@@ -235,6 +240,10 @@ class WorkerJob(PythonTemplateJob):
                     + str(len(file_memory_lst))
                     + " "
                     + str(process.memory_info().rss / 1024 / 1024 / 1024)
+                    + "GB "
+                    + str(resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1024 / 1024)
+                    + "GB "
+                    + str(resource.getrusage(resource.RUSAGE_CHILDREN).ru_maxrss / 1024 / 1024)
                     + "GB"
                     + "\n"
                 )
@@ -359,20 +368,17 @@ class WorkerJob(PythonTemplateJob):
             return None
 
         return [
-            p
-            for p in [
+            p for p in [
                 p
                 if p[0] is not None and p[0].poll() is None
                 else kill_if_not_none(process=p)
                 for p in process_lst
-            ]
-            if p is not None
+            ] if p is not None
         ]
 
     @staticmethod
     def _collect_child_job(working_directory, job_link):
         job_wrap = _get_job_path(working_directory=working_directory, job_link=job_link)
-        print("collect: ", job_wrap.job.job_name)
         job_wrap.job.status.collect = True
         job_wrap.job.run()
         return None
@@ -399,8 +405,7 @@ class WorkerJob(PythonTemplateJob):
             process_tmp_lst.append(
                 [
                     worker_function(args=[job_para[0], executable]),
-                    job_para[0],
-                    job_para[1],
+                    job_para[0], job_para[1],
                 ]
             )
             file_memory_lst.append(task_path)
