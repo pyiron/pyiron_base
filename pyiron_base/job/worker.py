@@ -228,7 +228,6 @@ class WorkerJob(PythonTemplateJob):
                 process_lst += process_tmp_lst
             if self._file_based_wait(process_lst=process_lst):
                 break
-
             with open(log_file, "a") as f:
                 f.write(
                     str(datetime.today())
@@ -353,21 +352,25 @@ class WorkerJob(PythonTemplateJob):
         def kill_if_not_none(process):
             if process[0] is not None:
                 process[0].kill()
-            if len(process) == 2:
+            if len(process) == 3:
                 self._collect_child_job(
                     working_directory=process[1], job_link=process[2]
                 )
+            return None
 
         return [
-            p[0]
-            if p[0] is not None and p[0].poll() is None
-            else kill_if_not_none(process=p)
-            for p in process_lst
+            p for p in [
+                p
+                if p[0] is not None and p[0].poll() is None
+                else kill_if_not_none(process=p)
+                for p in process_lst
+            ] if p is not None
         ]
 
     @staticmethod
     def _collect_child_job(working_directory, job_link):
         job_wrap = _get_job_path(working_directory=working_directory, job_link=job_link)
+        print("collect: ", job_wrap.job.job_name)
         job_wrap.job.status.collect = True
         job_wrap.job.run()
         return None
@@ -382,7 +385,7 @@ class WorkerJob(PythonTemplateJob):
 
     @staticmethod
     def _file_based_execute(process_lst, task_generator, number_tasks):
-        file_memory_lst = []
+        file_memory_lst, process_tmp_lst = [], []
         tasks_to_submit = number_tasks - len(process_lst)
         for i, task_path in enumerate(task_generator):
             job_para = _get_working_directory_and_h5path(path=task_path)
@@ -391,36 +394,37 @@ class WorkerJob(PythonTemplateJob):
                     working_directory=job_para[0], job_link=job_para[1]
                 )
             )
-            process_lst.append(
+            process_tmp_lst.append(
                 [
                     worker_function(args=[job_para[0], executable]),
-                    job_para[0].job_para[1],
+                    job_para[0], job_para[1],
                 ]
             )
             file_memory_lst.append(task_path)
             if i == tasks_to_submit - 1:
                 break
-        return file_memory_lst, process_lst
+        return file_memory_lst, process_tmp_lst
 
     @staticmethod
     def _database_based_execute(process_lst, task_generator, number_tasks):
         tasks_to_submit = number_tasks - len(process_lst)
-        active_id_lst = []
+        active_id_lst, process_tmp_lst = [], []
         for i, [p, job_id] in enumerate(task_generator):
             executable = _get_executable(
                 job_wrap=_get_job_path(working_directory=p, job_link=job_id)
             )
-            process_lst.append([worker_function(args=[p, executable]), p, job_id])
+            process_tmp_lst.append([worker_function(args=[p, executable]), p, job_id])
             active_id_lst.append(job_id)
             if i == tasks_to_submit - 1:
                 break
-        return active_id_lst, process_lst
+        return active_id_lst, process_tmp_lst
 
     @staticmethod
     def _generate_static_jobs(working_directory, file_memory_lst):
         for f in os.listdir(working_directory):
-            if f.endswith(".h5") and f not in file_memory_lst:
-                yield os.path.join(working_directory, f)
+            file = os.path.join(working_directory, f)
+            if file.endswith(".h5") and file not in file_memory_lst:
+                yield file
 
     @staticmethod
     def _generate_database_jobs(df, master_id, active_job_ids):
