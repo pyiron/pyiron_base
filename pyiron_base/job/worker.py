@@ -359,12 +359,14 @@ class WorkerJob(PythonTemplateJob):
             return None
 
         return [
-            p for p in [
+            p
+            for p in [
                 p
                 if p[0] is not None and p[0].poll() is None
                 else kill_if_not_none(process=p)
                 for p in process_lst
-            ] if p is not None
+            ]
+            if p is not None
         ]
 
     @staticmethod
@@ -397,7 +399,8 @@ class WorkerJob(PythonTemplateJob):
             process_tmp_lst.append(
                 [
                     worker_function(args=[job_para[0], executable]),
-                    job_para[0], job_para[1],
+                    job_para[0],
+                    job_para[1],
                 ]
             )
             file_memory_lst.append(task_path)
