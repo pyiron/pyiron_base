@@ -9,10 +9,12 @@ import psutil
 import time
 from datetime import datetime
 import subprocess
-import resource
 import numpy as np
 from pyiron_base.state import state
 from pyiron_base.job.template import PythonTemplateJob
+
+if os.name != "nt":  # unix specific
+    import resource
 
 
 __author__ = "Jan Janssen"
@@ -212,27 +214,10 @@ class WorkerJob(PythonTemplateJob):
 
             # job submission
             with open(log_file, "a") as f:
-                f.write(
-                    str(datetime.today())
-                    + " "
-                    + str(len(active_job_ids))
-                    + " "
-                    + str(len(df))
-                    + " "
-                    + str(process.memory_info().rss / 1024 / 1024 / 1024)
-                    + "GB "
-                    + str(
-                        resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1024 / 1024
-                    )
-                    + "GB "
-                    + str(
-                        resource.getrusage(resource.RUSAGE_CHILDREN).ru_maxrss
-                        / 1024
-                        / 1024
-                    )
-                    + "GB"
-                    + "\n"
-                )
+                f.write(self._get_log_line(
+                    active_jobs=len(active_job_ids), 
+                    total_jobs=len(df)
+                ))
             process_lst = self.red_process_lst(process_lst=process_lst)
 
         # The job is finished
@@ -260,25 +245,10 @@ class WorkerJob(PythonTemplateJob):
             if self._file_based_wait(process_lst=process_lst):
                 break
             with open(log_file, "a") as f:
-                f.write(
-                    str(datetime.today())
-                    + " "
-                    + str(len(file_memory_lst))
-                    + " "
-                    + str(process.memory_info().rss / 1024 / 1024 / 1024)
-                    + "GB "
-                    + str(
-                        resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1024 / 1024
-                    )
-                    + "GB "
-                    + str(
-                        resource.getrusage(resource.RUSAGE_CHILDREN).ru_maxrss
-                        / 1024
-                        / 1024
-                    )
-                    + "GB"
-                    + "\n"
-                )
+                f.write(self._get_log_line(
+                    active_jobs=len(file_memory_lst), 
+                    total_jobs=0  # The total number is not determined
+                ))
             process_lst = self.red_process_lst(process_lst=process_lst)
 
         # The job is finished
@@ -343,22 +313,6 @@ class WorkerJob(PythonTemplateJob):
                 time.sleep(self.input.sleep_interval)
                 process_lst = self.red_process_lst(process_lst=process_lst)
         return process_lst
-
-    @staticmethod
-    def red_process_lst(process_lst):
-        def kill_if_not_none(process):
-            if process is not None:
-                process.kill()
-            return None
-
-        return [
-            p
-            for p in [
-                p if p is not None and p.poll() is None else kill_if_not_none(process=p)
-                for p in process_lst
-            ]
-            if p is not None
-        ]
 
     def _file_based_wait(self, process_lst):
         if self.project_hdf5["status"] in ["collect", "aborted", "finished"]:
@@ -453,3 +407,44 @@ class WorkerJob(PythonTemplateJob):
                     yield [p, job_id]
                 else:
                     yield [os.path.join(pp, p), job_id]
+
+    @staticmethod
+    def red_process_lst(process_lst):
+        def kill_if_not_none(process):
+            if process is not None:
+                process.kill()
+            return None
+
+        return [
+            p
+            for p in [
+                p if p is not None and p.poll() is None else kill_if_not_none(process=p)
+                for p in process_lst
+            ]
+            if p is not None
+        ]
+             
+    @staticmethod
+    def _get_log_line(active_jobs, total_jobs):
+        line = str(datetime.today()) +\
+            " " +\
+            str(active_jobs) +\
+            " " +\
+            str(total_jobs) +\
+            " " +\
+            str(process.memory_info().rss / 1024 / 1024 / 1024)
+        if os.name != "nt":
+            line += "GB " +\
+                str(
+                    resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
+                    / 1024 
+                    / 1024
+                ) +\
+                "GB " +\
+                str(
+                    resource.getrusage(resource.RUSAGE_CHILDREN).ru_maxrss
+                    / 1024
+                    / 1024
+                )
+        line += + "GB\n"
+        return line
