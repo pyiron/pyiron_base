@@ -221,9 +221,15 @@ class WorkerJob(PythonTemplateJob):
                     + " "
                     + str(process.memory_info().rss / 1024 / 1024 / 1024)
                     + "GB "
-                    + str(resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1024 / 1024)
+                    + str(
+                        resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1024 / 1024
+                    )
                     + "GB "
-                    + str(resource.getrusage(resource.RUSAGE_CHILDREN).ru_maxrss / 1024 / 1024)
+                    + str(
+                        resource.getrusage(resource.RUSAGE_CHILDREN).ru_maxrss
+                        / 1024
+                        / 1024
+                    )
                     + "GB"
                     + "\n"
                 )
@@ -261,9 +267,15 @@ class WorkerJob(PythonTemplateJob):
                     + " "
                     + str(process.memory_info().rss / 1024 / 1024 / 1024)
                     + "GB "
-                    + str(resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1024 / 1024)
+                    + str(
+                        resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1024 / 1024
+                    )
                     + "GB "
-                    + str(resource.getrusage(resource.RUSAGE_CHILDREN).ru_maxrss / 1024 / 1024)
+                    + str(
+                        resource.getrusage(resource.RUSAGE_CHILDREN).ru_maxrss
+                        / 1024
+                        / 1024
+                    )
                     + "GB"
                     + "\n"
                 )
@@ -340,10 +352,12 @@ class WorkerJob(PythonTemplateJob):
             return None
 
         return [
-            p for p in [
+            p
+            for p in [
                 p if p is not None and p.poll() is None else kill_if_not_none(process=p)
                 for p in process_lst
-            ] if p is not None
+            ]
+            if p is not None
         ]
 
     def _file_based_wait(self, process_lst):
