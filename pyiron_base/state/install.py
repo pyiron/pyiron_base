@@ -45,7 +45,6 @@ def _download_resources(
     temp_directory = tempfile.gettempdir()
     temp_zip_file = os.path.join(temp_directory, zip_file)
     temp_extract_folder = os.path.join(temp_directory, git_folder_name)
-    print(f"url:{giturl_for_zip_file}")
     urllib2.urlretrieve(giturl_for_zip_file, temp_zip_file)
     if os.path.exists(user_directory):
         raise ValueError(
