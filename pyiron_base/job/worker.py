@@ -215,8 +215,9 @@ class WorkerJob(PythonTemplateJob):
             # job submission
             with open(log_file, "a") as f:
                 f.write(self._get_log_line(
-                    active_jobs=len(active_job_ids), 
-                    total_jobs=len(df)
+                    waiting_jobs=len(df)-len(active_job_ids)
+                    active_jobs=len(process_lst),
+                    finished_jobs=len(active_job_ids)-len(process_lst)
                 ))
             process_lst = self.red_process_lst(process_lst=process_lst)
 
@@ -246,8 +247,9 @@ class WorkerJob(PythonTemplateJob):
                 break
             with open(log_file, "a") as f:
                 f.write(self._get_log_line(
-                    active_jobs=len(file_memory_lst), 
-                    total_jobs=0  # The total number is not determined
+                    waiting_jobs=0,  # The number of waiting jobs is not determined
+                    active_jobs=len(process_lst),
+                    finished_jobs=len(file_memory_lst)-len(process_lst)
                 ))
             process_lst = self.red_process_lst(process_lst=process_lst)
 
@@ -425,12 +427,14 @@ class WorkerJob(PythonTemplateJob):
         ]
              
     @staticmethod
-    def _get_log_line(active_jobs, total_jobs):
+    def _get_log_line(waiting_jobs, active_jobs, finished_jobs):
         line = str(datetime.today()) +\
+            " " +\
+            str(waiting_jobs) +\
             " " +\
             str(active_jobs) +\
             " " +\
-            str(total_jobs) +\
+            str(finished_jobs) +\
             " " +\
             str(process.memory_info().rss / 1024 / 1024 / 1024)
         if os.name != "nt":
