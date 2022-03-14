@@ -115,7 +115,7 @@ def install_dialog(silently=False):
                 config_file_name="~/.pyiron",
                 zip_file="resources.tar.gz",
                 resource_directory="~/pyiron/resources",
-                giturl_for_zip_file="https://github.com/pyiron/pyiron-resources/releases/download/0.0.18/resources-0.0.18.tar.gz",
+                giturl_for_zip_file="https://github.com/pyiron/pyiron-resources/releases/download/latest/resources-0.0.18.tar.gz",
                 git_folder_name="resources",
             )
         else:
