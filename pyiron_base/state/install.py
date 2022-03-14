@@ -94,8 +94,8 @@ def _write_config_file(
             os.makedirs(project_path)
 
 
-def install_dialog(input_by_user=True):
-    if input_by_user:
+def install_dialog(silently=False):
+    if not silently:
         user_input = None
     else:
         user_input = "yes"
