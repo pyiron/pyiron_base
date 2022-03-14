@@ -20,11 +20,14 @@ __email__ = "janssen@mpie.de"
 __status__ = "production"
 __date__ = "Sep 1, 2017"
 
+_resource_latest_tag = "0.0.18"
+
 
 def _download_resources(
     zip_file="resources.tar.gz",
     resource_directory="~/pyiron/resources",
-    giturl_for_zip_file="https://github.com/pyiron/pyiron-resources/releases/download/0.0.18/resources-0.0.18.tar.gz",
+    giturl_for_zip_file="https://github.com/pyiron/pyiron-resources/releases/download/"
+                        f"{_resource_latest_tag}/resources-{_resource_latest_tag}.tar.gz",
     git_folder_name="resources",
 ):
     """
@@ -45,6 +48,7 @@ def _download_resources(
     temp_directory = tempfile.gettempdir()
     temp_zip_file = os.path.join(temp_directory, zip_file)
     temp_extract_folder = os.path.join(temp_directory, git_folder_name)
+    print(f"url:{giturl_for_zip_file}")
     urllib2.urlretrieve(giturl_for_zip_file, temp_zip_file)
     if os.path.exists(user_directory):
         raise ValueError(
@@ -115,7 +119,8 @@ def install_dialog(silently=False):
                 config_file_name="~/.pyiron",
                 zip_file="resources.tar.gz",
                 resource_directory="~/pyiron/resources",
-                giturl_for_zip_file="https://github.com/pyiron/pyiron-resources/releases/download/latest/resources-0.0.18.tar.gz",
+                giturl_for_zip_file="https://github.com/pyiron/pyiron-resources/releases/download/"
+                                    f"{_resource_latest_tag}/resources-{_resource_latest_tag}.tar.gz",
                 git_folder_name="resources",
             )
         else:
@@ -129,7 +134,8 @@ def install_pyiron(
     zip_file="resources.tar.gz",
     project_path="~/pyiron/projects",
     resource_directory="~/pyiron/resources",
-    giturl_for_zip_file="https://github.com/pyiron/pyiron-resources/releases/download/0.0.18/resources-0.0.18.tar.gz",
+    giturl_for_zip_file="https://github.com/pyiron/pyiron-resources/releases/download/"
+                        f"{_resource_latest_tag}/resources-{_resource_latest_tag}.tar.gz",
     git_folder_name="resources",
 ):
     """
