@@ -20,14 +20,11 @@ __email__ = "janssen@mpie.de"
 __status__ = "production"
 __date__ = "Sep 1, 2017"
 
-_resource_latest_tag = "0.0.18"
-
 
 def _download_resources(
     zip_file="resources.tar.gz",
     resource_directory="~/pyiron/resources",
-    giturl_for_zip_file="https://github.com/pyiron/pyiron-resources/releases/download/"
-                        f"{_resource_latest_tag}/resources-{_resource_latest_tag}.tar.gz",
+    giturl_for_zip_file="https://github.com/pyiron/pyiron-resources/releases/latest/download/resources.tar.gz",
     git_folder_name="resources",
 ):
     """
@@ -119,8 +116,7 @@ def install_dialog(silently=False):
                 config_file_name="~/.pyiron",
                 zip_file="resources.tar.gz",
                 resource_directory="~/pyiron/resources",
-                giturl_for_zip_file="https://github.com/pyiron/pyiron-resources/releases/download/"
-                                    f"{_resource_latest_tag}/resources-{_resource_latest_tag}.tar.gz",
+                giturl_for_zip_file="https://github.com/pyiron/pyiron-resources/releases/latest/download/resources.tar.gz",
                 git_folder_name="resources",
             )
         else:
@@ -134,8 +130,7 @@ def install_pyiron(
     zip_file="resources.tar.gz",
     project_path="~/pyiron/projects",
     resource_directory="~/pyiron/resources",
-    giturl_for_zip_file="https://github.com/pyiron/pyiron-resources/releases/download/"
-                        f"{_resource_latest_tag}/resources-{_resource_latest_tag}.tar.gz",
+    giturl_for_zip_file="https://github.com/pyiron/pyiron-resources/releases/latest/download/resources.tar.gz",
     git_folder_name="resources",
 ):
     """
