@@ -254,25 +254,9 @@ class ScriptJob(GenericJob):
             )
 
     def enable_mpi4py(self):
-        if not self._enable_mpi4py:
-            self.executable = self._executable_command(
-                working_directory=self.working_directory,
-                script_path=self._script_path,
-                enable_mpi4py=True,
-                cores=self.server.cores,
-            )
-            self.executable._mpi = True
         self._enable_mpi4py = True
 
     def disable_mpi4py(self):
-        if self._enable_mpi4py:
-            self.executable = self._executable_command(
-                working_directory=self.working_directory,
-                script_path=self._script_path,
-                enable_mpi4py=False,
-                cores=self.server.cores,
-            )
-            self.executable._mpi = False
         self._enable_mpi4py = False
 
     def validate_ready_to_run(self):
@@ -354,6 +338,8 @@ class ScriptJob(GenericJob):
                 enable_mpi4py=self._enable_mpi4py,
                 cores=self.server.cores,
             )
+            if self._enable_mpi4py:
+                self.executable._mpi = True
 
     def collect_output(self):
         """
