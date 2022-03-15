@@ -3,6 +3,7 @@
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
 import os
+from pyiron_base.generic.object import HasStorage
 
 """
 Executable class loading executables from static/bin/<code>/
@@ -20,7 +21,7 @@ __status__ = "production"
 __date__ = "Sep 1, 2017"
 
 
-class Executable(object):
+class Executable(HasStorage):
     def __init__(
         self,
         path_binary_codes,
@@ -37,6 +38,9 @@ class Executable(object):
             path_binary_codes (list): path to the binary codes as an absolute path
             overwrite_nt_flag (bool):
         """
+        super().__init__()
+        self.storage.table_name = "executable"
+
         self.__version__ = None
         if code is not None:  # Backwards compatibility
             if not isinstance(code.__name__, str):
