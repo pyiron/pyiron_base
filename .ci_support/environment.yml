@@ -9,7 +9,7 @@ dependencies:
 - gitpython =3.1.27
 - h5io =0.1.7
 - h5py =3.6.0
-- numpy =1.22.2
+- numpy =1.22.3
 - pandas =1.4.1
 - pathlib2 =2.3.7.post1
 - pint =0.18
@@ -17,5 +17,5 @@ dependencies:
 - pyfileindex =0.0.6
 - pysqa =0.0.16
 - pytables =3.7.0
-- sqlalchemy =1.4.31
+- sqlalchemy =1.4.32
 - tqdm =4.63.0
