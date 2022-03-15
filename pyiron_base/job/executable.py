@@ -55,22 +55,22 @@ class Executable(HasStorage):
             backwards_compatible_path_lst = [
                 os.path.join(path, self.__name__) for path in path_binary_codes
             ]
-            self._path_bin = [
+            self.storage.path_bin = [
                 exe_path
                 for exe_path in (code_path_lst + backwards_compatible_path_lst)
                 if os.path.exists(exe_path)
             ]
         else:  # Backwards compatibility
             self.__name__ = codename.lower()
-            self._path_bin = [
+            self.storage.path_bin = [
                 os.path.join(path, self.__name__)
                 for path in path_binary_codes
                 if os.path.exists(os.path.join(path, self.__name__))
             ]
         if overwrite_nt_flag:
-            self._operation_system_nt = False
+            self.storage.operation_system_nt = False
         else:
-            self._operation_system_nt = os.name == "nt"
+            self.storage.operation_system_nt = os.name == "nt"
         self._executable_lst = self._executable_versions_list()
         self._executable = None
         self._executable_path = None
@@ -233,13 +233,13 @@ class Executable(HasStorage):
         Returns:
             dict: list of the available version
         """
-        if self._operation_system_nt:
+        if self.storage.operation_system_nt:
             extension = ".bat"
         else:
             extension = ".sh"
         try:
             executable_dict = {}
-            for path in self._path_bin:
+            for path in self.storage.path_bin:
                 for executable in os.listdir(path):
                     if (
                         executable.startswith("run_" + self.__name__ + "_")
