@@ -211,9 +211,10 @@ class DataContainer(MutableMapping, HasGroups, HasHDF):
 
     Or a class that uses a DataContainer for storage, but doesn't derive from it.
 
-    >>> class FancyClass:
+    >>> from pyiron_base.generic.object import HasStorage
+    >>> class FancyClass(HasStorage):
     ...     def __init__(self, foo):
-    ...         self.storage = DataContainer()
+    ...         super().__init__()
     ...         self.storage.foo = foo
     ...
     ...     @property
@@ -223,12 +224,6 @@ class DataContainer(MutableMapping, HasGroups, HasHDF):
     ...     @foo.setter
     ...     def foo(self, val):
     ...         self.storage.foo = val
-    ...
-    ...     def from_hdf(self, hdf, group_name):
-    ...         self.storage.from_hdf(hdf=hdf, group_name=group_name)
-    ...
-    ...     def to_hdf(self, hdf, group_name):
-    ...         self.storage.to_hdf(hdf=hdf, group_name=group_name)
     ...
     ...     def _repr_json_(self):
     ...         return self.storage._repr_json_()
