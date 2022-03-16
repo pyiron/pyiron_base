@@ -454,7 +454,7 @@ class PyironTable(HasGroups):
     def _iterate_over_job_lst(self, job_lst, function_lst, level):
         pr_len = len(self._project.project_path.split("/"))
         diff_dict_lst = []
-        for job_inspect in tqdm(job_lst):
+        for job_inspect in tqdm(job_lst, desc="Processing jobs"):
             if self.convert_to_object:
                 job = job_inspect.to_object()
             else:
@@ -493,7 +493,7 @@ class PyironTable(HasGroups):
             job_id_lst = self._get_filtered_job_ids_from_project()
 
         job_update_lst = []
-        for job_id in tqdm(job_id_lst):
+        for job_id in tqdm(job_id_lst, desc="Loading and filtering jobs"):
             try:
                 job = self._project.inspect(job_id)
             except IndexError:  # In case the job was deleted while the pyiron table is running

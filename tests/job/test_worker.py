@@ -1,4 +1,5 @@
 import os
+import time
 from pyiron_base._tests import TestWithCleanProject
 
 
@@ -26,3 +27,4 @@ class TestScriptJob(TestWithCleanProject):
         self.worker.status.collect = True
         df = self.sub_project.job_table()
         self.assertEqual(len(df[df.status == "finished"]), 1)
+        time.sleep(10)  # Wait for the worker process to finish

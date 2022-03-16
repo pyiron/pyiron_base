@@ -24,7 +24,7 @@ __date__ = "Sep 1, 2017"
 def _download_resources(
     zip_file="resources.tar.gz",
     resource_directory="~/pyiron/resources",
-    giturl_for_zip_file="https://github.com/pyiron/pyiron-resources/releases/download/0.0.17/resources-0.0.17.tar.gz",
+    giturl_for_zip_file="https://github.com/pyiron/pyiron-resources/releases/latest/download/resources.tar.gz",
     git_folder_name="resources",
 ):
     """
@@ -94,8 +94,12 @@ def _write_config_file(
             os.makedirs(project_path)
 
 
-def install_dialog():
-    user_input = None
+def install_dialog(silently=False):
+    if not silently:
+        user_input = None
+    else:
+        user_input = "yes"
+
     if "PYIRONCONFIG" in os.environ.keys():
         config_file = os.environ["PYIRONCONFIG"]
     else:
@@ -111,7 +115,7 @@ def install_dialog():
                 config_file_name="~/.pyiron",
                 zip_file="resources.tar.gz",
                 resource_directory="~/pyiron/resources",
-                giturl_for_zip_file="https://github.com/pyiron/pyiron-resources/releases/download/0.0.17/resources-0.0.17.tar.gz",
+                giturl_for_zip_file="https://github.com/pyiron/pyiron-resources/releases/latest/download/resources.tar.gz",
                 git_folder_name="resources",
             )
         else:
@@ -125,7 +129,7 @@ def install_pyiron(
     zip_file="resources.tar.gz",
     project_path="~/pyiron/projects",
     resource_directory="~/pyiron/resources",
-    giturl_for_zip_file="https://github.com/pyiron/pyiron-resources/releases/download/0.0.17/resources-0.0.17.tar.gz",
+    giturl_for_zip_file="https://github.com/pyiron/pyiron-resources/releases/latest/download/resources.tar.gz",
     git_folder_name="resources",
 ):
     """

@@ -19,7 +19,8 @@ __date__ = "Jul 16, 2020"
 
 
 import copy
-from typing import Callable, Iterable, Optional
+from typing import Callable, Iterable, List, Optional
+
 
 import numpy as np
 import h5py
@@ -485,21 +486,50 @@ class FlattenedStorage(HasHDF):
         """
         Add array for given structure.
 
-        Works for per atom and per arrays.
+        Works for per chunk and per element arrays.
 
         Args:
             name (str): name of array to set
             frame (int, str): selects structure to set, as in :method:`.get_strucure()`
+            value: value (for per chunk) or array of values (for per element); type and shape as per :meth:`.hasarray()`.
 
         Raises:
             `KeyError`: if array with name does not exists
         """
 
+        def ensure_str_array_size(array, strlen):
+            """
+            Ensures that the given array can store at least string of length `strlen`.
+
+            Args:
+                array (ndarray): array of dtype <U
+                strlen (int): maximum length that should fit in it
+            Returns:
+                ndarray: either `array` or resized copy
+            """
+            current_length = array.itemsize // np.dtype("1U").itemsize
+            if current_length < strlen:
+                return array.astype(f"{2 * strlen}U")
+            else:
+                return array
+
         if isinstance(frame, str):
             frame = self.find_chunk(frame)
         if name in self._per_element_arrays:
+            if self._per_element_arrays[name].dtype.char == "U":
+                self._per_element_arrays[name] = ensure_str_array_size(
+                    self._per_element_arrays[name], max(map(len, value))
+                )
             self._per_element_arrays[name][self._get_per_element_slice(frame)] = value
         elif name in self._per_chunk_arrays:
+            if self._per_chunk_arrays[name].dtype.char == "U":
+                if isinstance(value, np.ndarray) and value.ndim == 0:
+                    strlen = len(value.item())
+                else:
+                    strlen = len(value)
+                self._per_chunk_arrays[name] = ensure_str_array_size(
+                    self._per_chunk_arrays[name], strlen
+                )
             self._per_chunk_arrays[name][frame] = value
         else:
             raise KeyError(f"no array named {name}")
@@ -541,6 +571,15 @@ class FlattenedStorage(HasHDF):
         else:
             return None
         return {"shape": a.shape[1:], "dtype": a.dtype, "per": per}
+
+    def list_arrays(self) -> List[str]:
+        """
+        Return a list of names of arrays inside the storage.
+
+        Returns:
+            list of str: array names
+        """
+        return list(self._per_chunk_arrays) + list(self._per_element_arrays)
 
     def sample(
         self, selector: Callable[["FlattenedStorage", int], bool]
@@ -803,7 +842,7 @@ class FlattenedStorage(HasHDF):
         if new_elements > self._num_elements_alloc:
             self._resize_elements(max(new_elements, self._num_elements_alloc * 2))
         if self.current_chunk_index + 1 > self._num_chunks_alloc:
-            self._resize_chunks(self._num_chunks_alloc * 2)
+            self._resize_chunks(max(1, self._num_chunks_alloc * 2))
 
         if new_elements > self.num_elements:
             self.num_elements = new_elements

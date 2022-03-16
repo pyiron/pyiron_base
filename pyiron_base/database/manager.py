@@ -5,6 +5,7 @@
 A class for mediating connections to SQL databases.
 """
 
+from urllib.parse import quote_plus
 from pyiron_base.state.logger import logger
 from pyiron_base.generic.util import Singleton
 from pyiron_base.state.settings import settings as s
@@ -65,6 +66,7 @@ class DatabaseManager(metaclass=Singleton):
 
     @staticmethod
     def _sqlalchemy_string(prefix, user, key, host, database):
+        key = quote_plus(key)
         return f"{prefix}://{user}:{key}@{host}/{database}"
 
     def _credentialed_sqalchemy_string(self, prefix):

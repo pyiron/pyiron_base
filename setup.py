@@ -20,7 +20,6 @@ setup(
                  'License :: OSI Approved :: BSD License',
                  'Intended Audience :: Science/Research',
                  'Operating System :: OS Independent',
-                 'Programming Language :: Python :: 3.7',
                  'Programming Language :: Python :: 3.8',
                  'Programming Language :: Python :: 3.9',
                  'Programming Language :: Python :: 3.10'
@@ -31,20 +30,19 @@ setup(
     install_requires=[
         'dill==0.3.4',
         'future==0.18.2',
-        'gitpython==3.1.24',
-        'h5io==0.1.4',
+        'gitpython==3.1.27',
+        'h5io==0.1.7',
         'h5py==3.6.0',
-        'numpy==1.21.5',
-        'pandas==1.3.5',
-        'pathlib2==2.3.6',
+        'numpy==1.22.3',
+        'pandas==1.4.1',
+        'pathlib2==2.3.7.post1',
         'pint==0.18',
         'psutil==5.9.0',
         'pyfileindex==0.0.6',
-        'pysqa==0.0.15',
-        'sqlalchemy==1.4.29',
-        'tables==3.6.1',
-        'tqdm==4.62.3',
-        'typing_extensions==4.0.1'
+        'pysqa==0.0.16',
+        'sqlalchemy==1.4.32',
+        'tables==3.7.0',
+        'tqdm==4.63.0'
     ],
     cmdclass=versioneer.get_cmdclass(),
 

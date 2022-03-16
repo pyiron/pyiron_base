@@ -1,3 +1,5 @@
+# This workflow is used to apply the automated changes (by dependabot) to the dependencies in setup.py also to the .ci_support/environment.yml ```
+
 name: UpdateDependabotPR
 
 on:

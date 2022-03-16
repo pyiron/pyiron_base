@@ -5,6 +5,7 @@
 Worker Class to execute calculation in an asynchronous way
 """
 import os
+import psutil
 import time
 from datetime import datetime
 from multiprocessing import Pool
@@ -126,10 +127,14 @@ class WorkerJob(PythonTemplateJob):
 
     def __init__(self, project, job_name):
         super(WorkerJob, self).__init__(project, job_name)
-        self.input.project = None
+        if not state.database.database_is_disabled:
+            self.input.project = project.path
+        else:
+            self.input.project = self.working_directory
         self.input.cores_per_job = 1
         self.input.sleep_interval = 10
         self.input.child_runtime = 0
+        self.input.queue_limit_factor = 2
 
     @property
     def project_to_watch(self):
@@ -147,6 +152,14 @@ class WorkerJob(PythonTemplateJob):
     @cores_per_job.setter
     def cores_per_job(self, cores):
         self.input.cores_per_job = int(cores)
+
+    @property
+    def queue_limit_factor(self):
+        return self.input.queue_limit_factor
+
+    @queue_limit_factor.setter
+    def queue_limit_factor(self, limit_factor):
+        self.input.queue_limit_factor = limit_factor
 
     @property
     def child_runtime(self):
@@ -177,8 +190,10 @@ class WorkerJob(PythonTemplateJob):
         pr = self.project_to_watch
         self.project_hdf5.create_working_directory()
         log_file = os.path.join(self.working_directory, "worker.log")
-        active_job_ids = []
-        with Pool(processes=int(self.server.cores / self.cores_per_job)) as pool:
+        active_job_ids, res_lst = [], []
+        process = psutil.Process(os.getpid())
+        number_tasks = int(self.server.cores / self.cores_per_job)
+        with Pool(processes=number_tasks) as pool:
             while True:
                 # Check the database if there are more calculation to execute
                 df = pr.job_table()
@@ -187,7 +202,11 @@ class WorkerJob(PythonTemplateJob):
                     & (df["masterid"] == master_id)
                     & (~df["id"].isin(active_job_ids))
                 ]
-                if len(df_sub) > 0:  # Check if there are jobs to execute
+                if (
+                    len(df_sub) > 0
+                    and sum([i for r, i in res_lst if not r.ready()])
+                    < number_tasks * self.input.queue_limit_factor
+                ):  # Check if there are jobs to execute
                     path_lst = [
                         [pp, p, job_id]
                         for pp, p, job_id in zip(
@@ -202,8 +221,14 @@ class WorkerJob(PythonTemplateJob):
                         for pp, p, job_id in path_lst
                     ]
                     active_job_ids += [j[1] for j in job_lst]
-                    pool.map_async(worker_function, job_lst)
+                    result = pool.map_async(worker_function, job_lst)
+                    res_lst.append([result, len(job_lst)])
                 elif self.status.collect or self.status.aborted or self.status.finished:
+                    if self.status.collect:
+                        while sum([i for r, i in res_lst if not r.ready()]) > 0:
+                            time.sleep(self.input.sleep_interval)
+                            if self.status.aborted or self.status.finished:
+                                break
                     break  # The infinite loop can be stopped by setting the job status to collect.
                 else:  # The sleep interval can be set as part of the input
                     if self.input.child_runtime > 0:
@@ -235,6 +260,9 @@ class WorkerJob(PythonTemplateJob):
                         + str(len(df))
                         + " "
                         + str(len(df_sub))
+                        + " "
+                        + str(process.memory_info().rss / 1024 / 1024 / 1024)
+                        + "GB"
                         + "\n"
                     )
 
@@ -252,8 +280,10 @@ class WorkerJob(PythonTemplateJob):
         self.project_hdf5.create_working_directory()
         working_directory = self.working_directory
         log_file = os.path.join(working_directory, "worker.log")
-        file_memory_lst = []
-        with Pool(processes=int(self.server.cores / self.cores_per_job)) as pool:
+        file_memory_lst, res_lst = [], []
+        process = psutil.Process(os.getpid())
+        number_tasks = int(self.server.cores / self.cores_per_job)
+        with Pool(number_tasks) as pool:
             while True:
                 file_lst = [
                     os.path.join(working_directory, f)
@@ -262,13 +292,23 @@ class WorkerJob(PythonTemplateJob):
                 ]
                 file_vec = ~np.isin(file_lst, file_memory_lst)
                 file_lst = np.array(file_lst)[file_vec].tolist()
-                if len(file_lst) > 0:
+                if (
+                    len(file_lst) > 0
+                    and sum([i for r, i in res_lst if not r.ready()])
+                    < number_tasks * self.input.queue_limit_factor
+                ):
                     job_submit_lst = [
                         self._get_working_directory_and_h5path(path=f) for f in file_lst
                     ]
                     file_memory_lst += file_lst
-                    pool.map_async(worker_function, job_submit_lst)
-                elif self.project_hdf5["status"] in ["collect", "finished"]:
+                    result = pool.map_async(worker_function, job_submit_lst)
+                    res_lst.append([result, len(job_submit_lst)])
+                elif self.project_hdf5["status"] in ["collect", "aborted", "finished"]:
+                    if self.project_hdf5["status"] == "collect":
+                        while sum([i for r, i in res_lst if not r.ready()]) > 0:
+                            time.sleep(self.input.sleep_interval)
+                            if self.project_hdf5["status"] in ["aborted", "finished"]:
+                                break
                     break
                 time.sleep(self.input.sleep_interval)
 
@@ -279,6 +319,9 @@ class WorkerJob(PythonTemplateJob):
                         + str(len(file_memory_lst))
                         + " "
                         + str(len(file_lst))
+                        + " "
+                        + str(process.memory_info().rss / 1024 / 1024 / 1024)
+                        + "GB"
                         + "\n"
                     )
 
@@ -326,5 +369,10 @@ class WorkerJob(PythonTemplateJob):
                     )
                 log_str += "\n"
                 f.write(log_str)
+            if (
+                not state.database.database_is_disabled
+                and state.database.get_job_status(job_id=self.job_id) == "aborted"
+            ):
+                raise ValueError("The worker job was aborted.")
             time.sleep(interval_in_s)
         self.status.collect = True

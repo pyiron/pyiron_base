@@ -10,15 +10,15 @@ import posixpath
 import shutil
 from tqdm.auto import tqdm
 import pandas
+import pint
 import importlib
+import math
 import numpy as np
-import pkgutil
-from git import Repo, InvalidGitRepositoryError
-from warnings import warn
+
+from pyiron_base.project.maintenance import Maintenance
 from pyiron_base.project.path import ProjectPath
 from pyiron_base.database.filetable import FileTable
 from pyiron_base.state import state
-from pyiron_base.database.performance import get_database_statistics
 from pyiron_base.database.jobtable import (
     get_job_ids,
     get_job_id,
@@ -141,7 +141,7 @@ class Project(ProjectPath, HasGroups):
     @property
     def maintenance(self):
         if self._maintenance is None:
-            self._maintenance = Maintenance()
+            self._maintenance = Maintenance(self)
         return self._maintenance
 
     @property
@@ -193,6 +193,42 @@ class Project(ProjectPath, HasGroups):
             except KeyError:
                 pass
         return self._data
+
+    @property
+    def size(self):
+        """
+        Get the size of the project
+        """
+        size = (
+            sum(
+                [
+                    sum([os.path.getsize(os.path.join(path, f)) for f in files])
+                    for path, dirs, files in os.walk(self.path)
+                ]
+            )
+            * pint.UnitRegistry().byte
+        )
+        return self._size_conversion(size)
+
+    @staticmethod
+    def _size_conversion(size: pint.Quantity):
+        sign_prefactor = 1
+        if size < 0:
+            sign_prefactor = -1
+            size *= -1
+        elif size == 0:
+            return size
+
+        prefix_index = math.floor(math.log2(size) / 10) - 1
+        prefix = ["Ki", "Mi", "Gi", "Ti", "Pi"]
+
+        size *= sign_prefactor
+        if prefix_index < 0:
+            return size
+        elif prefix_index < 5:
+            return size.to(f"{prefix[prefix_index]}byte")
+        else:
+            return size.to(f"{prefix[-1]}byte")
 
     def copy(self):
         """
@@ -297,7 +333,7 @@ class Project(ProjectPath, HasGroups):
         Returns:
             GenericJob: job object depending on the job_type selected
         """
-        job_name = job_name.replace(".", "_")
+        job_name = _get_safe_job_name(name=job_name)
         job = JobType(
             job_type,
             project=ProjectHDFio(project=self.copy(), file_name=job_name),
@@ -476,20 +512,15 @@ class Project(ProjectPath, HasGroups):
             job_specifier=job_specifier,
         )
 
+    @deprecate("use self.size instead.")
     def get_project_size(self):
         """
-        Get the size of the project in MegaByte.
+        Get the size of the project.
 
         Returns:
             float: project size
         """
-        folder_size = sum(
-            [
-                sum([os.path.getsize(os.path.join(path, file)) for file in files])
-                for (path, dirs, files) in os.walk(self.path)
-            ]
-        )
-        return folder_size / (1024 * 1024.0)
+        return self.size
 
     @deprecate("use maintenance.get_repository_status() instead.")
     def get_repository_status(self):
@@ -562,14 +593,22 @@ class Project(ProjectPath, HasGroups):
         """
         return self.iter_jobs(path="output", recursive=recursive)
 
-    def iter_groups(self):
+    def iter_groups(self, progress: bool = True) -> Generator:
         """
         Iterate over the groups within the current project
 
-        Returns:
-            yield: Yield of sub projects/ groups/ folders
+        Args:
+            progress (bool): Display a progress bar during the iteration
+
+        Yields:
+            :class:`.Project`: sub projects/ groups/ folders
         """
-        for group in self.list_groups():
+        groups = self.list_groups()
+        if progress:
+            groups = tqdm(groups)
+        for group in groups:
+            if progress:
+                groups.set_postfix(group=group)
             yield self[group]
 
     def items(self):
@@ -581,14 +620,22 @@ class Project(ProjectPath, HasGroups):
         """
         return [(key, self[key]) for key in self.keys()]
 
-    def update_from_remote(self, recursive=True):
+    def update_from_remote(self, recursive=True, ignore_exceptions=False):
         """
         Update jobs from the remote server
 
         Args:
             recursive (bool): search subprojects [True/False] - default=True
+            ignore_exceptions (bool): ignore eventual exceptions when retrieving jobs - default=False
+
+        Returns:
+            returns None if ignore_exceptions is False or when no error occured.
+            returns a list with job ids when errors occured, but were ignored
+
         """
-        update_from_remote(project=self, recursive=recursive)
+        return update_from_remote(
+            project=self, recursive=recursive, ignore_exceptions=ignore_exceptions
+        )
 
     def job_table(
         self,
@@ -627,22 +674,19 @@ class Project(ProjectPath, HasGroups):
         ]
     )
 
-    def get_jobs_status(self, recursive=True, element_lst=None):
+    def get_jobs_status(self, recursive=True, **kwargs):
         """
         Gives a overview of all jobs status.
 
         Args:
             recursive (bool): search subprojects [True/False] - default=True
-            element_lst (list): list of elements required in the chemical formular - by default None
+            kwargs: passed directly to :method:`.job_table` and can be used to filter jobs you want to have the status
+            for
 
         Returns:
             pandas.Series: prints an overview of the job status.
         """
-        df = self.job_table(
-            recursive=recursive,
-            all_columns=True,
-            element_lst=element_lst,
-        )
+        df = self.job_table(recursive=recursive, all_columns=True, **kwargs)
         return df["status"].value_counts()
 
     def keys(self):
@@ -746,6 +790,8 @@ class Project(ProjectPath, HasGroups):
             state.logger.warning(
                 "SQL filter '%s' is active (may exclude job) ", self.sql_query
             )
+        if not isinstance(job_specifier, (int, np.integer)):
+            job_specifier = _get_safe_job_name(name=job_specifier)
         job_id = self.get_job_id(job_specifier=job_specifier)
         if job_id is None:
             state.logger.warning(
@@ -771,14 +817,14 @@ class Project(ProjectPath, HasGroups):
             GenericJob, JobCore: Either the full GenericJob object or just a reduced JobCore object
         """
         jobpath = getattr(importlib.import_module("pyiron_base.job.path"), "JobPath")
-        if job_id:
+        if job_id is not None:
             job = jobpath(db=self.db, job_id=job_id, user=self.user)
             if convert_to_object:
                 job = job.to_object()
                 job.reset_job_id(job_id=job_id)
                 job.set_input_to_read_only()
             return job
-        elif db_entry:
+        elif db_entry is not None:
             job = jobpath(db=self.db, db_entry=db_entry)
             if convert_to_object:
                 job = job.to_object()
@@ -1063,10 +1109,6 @@ class Project(ProjectPath, HasGroups):
                 "To prevent users from accidentally deleting files - enable has to be set to True."
             )
         if not self.db.view_mode:
-            for sub_project_name in self.list_groups():
-                if "_hdf5" not in sub_project_name:
-                    sub_project = self.open(sub_project_name)
-                    sub_project.remove(enable=enable, enforce=enforce)
             self._remove_jobs_helper(recursive=True)
             for file in self.list_files():
                 os.remove(os.path.join(self.path, file))
@@ -1074,9 +1116,13 @@ class Project(ProjectPath, HasGroups):
                 print("remove directory: {}".format(self.path))
                 shutil.rmtree(self.path, ignore_errors=True)
             else:
-                self.parent_group.removedirs(self.base_name)
+                for root, *_ in os.walk(self.path, topdown=False):
+                    # dirs and files return values of the iterator are not updated when removing files, so we need to
+                    # manually call listdir
+                    if len(os.listdir(root)) == 0:
+                        os.rmdir(root)
         else:
-            raise EnvironmentError("copy_to: is not available in Viewermode !")
+            raise EnvironmentError("remove() is not available in view_mode!")
 
     def set_job_status(self, job_specifier, status, project=None):
         """
@@ -1276,7 +1322,13 @@ class Project(ProjectPath, HasGroups):
             job=job, interval_in_s=interval_in_s, max_iterations=max_iterations
         )
 
-    def wait_for_jobs(self, interval_in_s=5, max_iterations=100, recursive=True):
+    def wait_for_jobs(
+        self,
+        interval_in_s=5,
+        max_iterations=100,
+        recursive=True,
+        ignore_exceptions=False,
+    ):
         """
         Wait for the calculation in the project to be finished
 
@@ -1284,6 +1336,7 @@ class Project(ProjectPath, HasGroups):
             interval_in_s (int): interval when the job status is queried from the database - default 5 sec.
             max_iterations (int): maximum number of iterations - default 100
             recursive (bool): search subprojects [True/False] - default=True
+            ignore_exceptions (bool): ignore eventual exceptions when retrieving jobs - default=False
 
         Raises:
             ValueError: max_iterations reached, but jobs still running
@@ -1293,6 +1346,7 @@ class Project(ProjectPath, HasGroups):
             interval_in_s=interval_in_s,
             max_iterations=max_iterations,
             recursive=recursive,
+            ignore_exceptions=ignore_exceptions,
         )
 
     @staticmethod
@@ -1548,84 +1602,6 @@ class Project(ProjectPath, HasGroups):
                 f"{cls.__name__} already has an attribute {name}. Please use a new name for registration."
             )
         setattr(cls, name, property(lambda self: tools(self)))
-
-
-class Maintenance:
-    """
-    The purpose of maintenance class is to provide
-    some measures of perfomance for pyiron, whether local to the project
-    or global (describing the status of pyiron on the running machine)
-    """
-
-    def __init__(self):
-        """
-        initialize the local and global attributes
-        """
-        self._global = GlobalMaintenance()
-        self._local = None
-
-    @property
-    def global_status(self):
-        return self._global
-
-    @staticmethod
-    def get_repository_status():
-
-        """
-        Finds the hashes and versions for every `pyiron` module available.
-
-        Returns:
-            pandas.DataFrame: The name of each module and the hash and version for its current git head.
-        """
-        module_names = [
-            name for _, name, _ in pkgutil.iter_modules() if name.startswith("pyiron")
-        ]
-
-        report = pandas.DataFrame(
-            columns=["Module", "Git head", "Version"], index=range(len(module_names))
-        )
-        for i, name in enumerate(module_names):
-            module = importlib.import_module(name)
-            try:
-                repo = Repo(os.path.dirname(os.path.dirname(module.__file__)))
-                hash_ = repo.head.reference.commit.hexsha
-            except InvalidGitRepositoryError:
-                hash_ = "Not a repo"
-            if hasattr(module, "__version__"):
-                version = module.__version__
-            else:
-                version = "not defined"
-            report.loc[i] = [name, hash_, version]
-
-        return report
-
-
-class GlobalMaintenance:
-    def __init__(self):
-        """
-        initialize the flag self._check_postgres, to control whether pyiron is
-        set to communicate with a postgres database.
-        """
-        connection_string = state.database.sql_connection_string
-        if "postgresql" not in connection_string:
-            warn(
-                """
-                The database statistics is only available for a Postgresql database
-                """
-            )
-            self._check_postgres = False
-        else:
-            self._check_postgres = True
-
-    def get_database_statistics(self):
-        if self._check_postgres:
-            return get_database_statistics()
-        else:
-            raise RuntimeError(
-                """
-                The detabase statistics is only available for a Postgresql database
-                """
-            )
 
 
 class Creator:

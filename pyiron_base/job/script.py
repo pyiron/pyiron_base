@@ -218,6 +218,7 @@ class ScriptJob(GenericJob):
         self.__name__ = "Script"
         self._script_path = None
         self.input = DataContainer(table_name="custom_dict")
+        self._enable_mpi4py = False
 
     @property
     def script_path(self):
@@ -240,12 +241,23 @@ class ScriptJob(GenericJob):
         if isinstance(path, str):
             self._script_path = self._get_abs_path(path)
             self.executable = self._executable_command(
-                working_directory=self.working_directory, script_path=self._script_path
+                working_directory=self.working_directory,
+                script_path=self._script_path,
+                enable_mpi4py=self._enable_mpi4py,
+                cores=self.server.cores,
             )
+            if self._enable_mpi4py:
+                self.executable._mpi = True
         else:
             raise TypeError(
                 "path should be a string, but ", path, " is a ", type(path), " instead."
             )
+
+    def enable_mpi4py(self):
+        self._enable_mpi4py = True
+
+    def disable_mpi4py(self):
+        self._enable_mpi4py = False
 
     def validate_ready_to_run(self):
         if self.script_path is None:
@@ -272,6 +284,7 @@ class ScriptJob(GenericJob):
         super(ScriptJob, self).to_hdf(hdf=hdf, group_name=group_name)
         with self.project_hdf5.open("input") as hdf5_input:
             hdf5_input["path"] = self._script_path
+            hdf5_input["parallel"] = self._enable_mpi4py
             self.input.to_hdf(hdf5_input)
 
     def from_hdf(self, hdf=None, group_name=None):
@@ -299,6 +312,8 @@ class ScriptJob(GenericJob):
                     pass
         elif version == "0.2.0":
             with self.project_hdf5.open("input") as hdf5_input:
+                if "parallel" in hdf5_input.list_nodes():
+                    self._enable_mpi4py = hdf5_input["parallel"]
                 try:
                     self.script_path = hdf5_input["path"]
                 except TypeError:
@@ -317,6 +332,14 @@ class ScriptJob(GenericJob):
                 src=self._script_path,
                 dst=os.path.join(self.working_directory, file_name),
             )
+            self.executable = self._executable_command(
+                working_directory=self.working_directory,
+                script_path=self._script_path,
+                enable_mpi4py=self._enable_mpi4py,
+                cores=self.server.cores,
+            )
+            if self._enable_mpi4py:
+                self.executable._mpi = True
 
     def collect_output(self):
         """
@@ -346,13 +369,17 @@ class ScriptJob(GenericJob):
         pass
 
     @staticmethod
-    def _executable_command(working_directory, script_path):
+    def _executable_command(
+        working_directory, script_path, enable_mpi4py=False, cores=1
+    ):
         """
         internal function to generate the executable command to either use jupyter or python
 
         Args:
             working_directory (str): working directory of the current job
             script_path (str): path to the script which should be executed in the working directory
+            enable_mpi4py (bool): flag to enable mpi4py
+            cores (int): number of cores to use
 
         Returns:
             str: executable command
@@ -364,8 +391,10 @@ class ScriptJob(GenericJob):
                 "jupyter nbconvert --ExecutePreprocessor.timeout=9999999 --to notebook --execute "
                 + path
             )
-        elif file_name[-3:] == ".py":
+        elif file_name[-3:] == ".py" and not enable_mpi4py:
             return "python " + path
+        elif file_name[-3:] == ".py" and enable_mpi4py:
+            return ["mpirun", "-np", str(cores), "python", path]
         else:
             raise ValueError("Filename not recognized: ", path)
 

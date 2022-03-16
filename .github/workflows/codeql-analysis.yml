@@ -1,3 +1,5 @@
+# This workflow is used to find vulnerablities inside the codebase with CodeQL
+
 name: "Code scanning - action"
 
 on:

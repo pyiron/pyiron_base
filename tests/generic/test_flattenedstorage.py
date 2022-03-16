@@ -96,6 +96,17 @@ class TestFlattenedStorage(TestWithProject):
                                    store_static._per_chunk_arrays["bar"][:store_dynamic.current_element_index]).all(),
                         "Array of per chunk quantity not equal after adding chunks.")
 
+        # Regression test, where adding chunks to a storage with no pre-allocation raised an error
+        store_empty = FlattenedStorage(num_chunks=0, num_elements=0)
+        store_empty.add_array("foo", per="element")
+        store_empty.add_array("bar", per="chunk")
+
+        try:
+            for f, b in zip(foo, bar):
+                store_empty.add_chunk(len(f), foo=f, bar=b)
+        except:
+            self.fail("Empty storage should be correctly resized when adding chunks!")
+
     def test_init(self):
         """Adding arrays via __init__ should be equivalent to adding them via add_chunks manually."""
 
@@ -255,7 +266,7 @@ class TestFlattenedStorage(TestWithProject):
                                  "Nested array returned from get_array_ragged has wrong dtype!")
 
     def test_has_array(self):
-        """hasarray should return correct information for added array; None otherwise."""
+        """has_array should return correct information for added array; None otherwise."""
 
         store = FlattenedStorage()
         store.add_array("energy", per="chunk")
@@ -273,6 +284,15 @@ class TestFlattenedStorage(TestWithProject):
 
         self.assertEqual(store.has_array("missing"), None, "has_array does not return None for nonexisting array.")
 
+    def test_list_arrays(self):
+        """list_arrays should return the string names of all arrays."""
+        store = FlattenedStorage()
+        self.assertEqual(sorted(store.list_arrays()), sorted(["identifier", "length", "start_index"]),
+                         "Array names of empty storage don't match default arrays!")
+        store.add_array("energy", per="chunk")
+        store.add_array("forces", shape=(3,), per="element")
+        self.assertEqual(sorted(store.list_arrays()), sorted(["identifier", "length", "start_index", "energy", "forces"]),
+                         "Array names don't match added ones!")
 
     def test_hdf_empty(self):
         """Writing an empty storage should result in an empty storage when reading."""
@@ -484,3 +504,18 @@ class TestFlattenedStorage(TestWithProject):
                         "Per element array changed in copy when original is!")
         self.assertTrue((even_sum_before == copy["even_sum"]).all(),
                         "Per chunk array changed in copy when original is!")
+
+    def test_string_resize(self):
+        """string arrays should be automatically resized, when longer strings are added"""
+
+        store = FlattenedStorage()
+        store.add_array("chunkstr", dtype="<3U", per="chunk")
+        store.add_array("elemstr", shape=(2,), dtype="<3U", per="element")
+        for i in range(1, 14):
+            store.add_chunk(1, chunkstr="a" * i, elemstr=["a" * i] * 2)
+        for i in range(1, 14):
+            self.assertEqual(store["chunkstr", i - 1], "a" * i,
+                             "Per chunk string array not correctly resized!")
+            self.assertEqual(store["elemstr", i - 1].tolist(),
+                             [["a" * i] * 2],
+                             "Per element string array not correctly resized!")

@@ -16,8 +16,12 @@ import h5io
 import numpy as np
 import sys
 from typing import Union
+
+from pyiron_base.generic.util import deprecate
+
 from pyiron_base.interfaces.has_groups import HasGroups
 from pyiron_base.state import state
+from pyiron_base.generic.dynamic import JOB_DYN_DICT, class_constructor
 import warnings
 
 __author__ = "Joerg Neugebauer, Jan Janssen"
@@ -218,8 +222,8 @@ class FileHDFio(HasGroups, MutableMapping):
                 f"Deprecated data structure! "
                 f"Returned array was converted from dtype='O' to dtype={result.dtype} "
                 f"via `np.array(result.tolist())`.\n"
-                f"Please run rewrite_hdf5() to update this data! "
-                f"To update all your data run update_scripts/pyiron_base_0.3_to_0.4.py"
+                f"Please run rewrite_hdf5() (from a job: job.project_hdf5.rewrite_hdf5() ) to update this data! "
+                f"To update all your data run Project.maintenance.update.base_v0_3_to_v0_4('all')."
             )
             return result
         else:
@@ -809,36 +813,35 @@ class FileHDFio(HasGroups, MutableMapping):
         #         self.hd_copy(hdf_old[p], h_new, exclude_groups=exclude_groups, exclude_nodes=exclude_nodes)
         return hdf_new
 
+    @deprecate(job_name="ignored!", exclude_groups="ignored!", exclude_nodes="ignored!")
     def rewrite_hdf5(
-        self, job_name, info=False, exclude_groups=None, exclude_nodes=None
+        self, job_name=None, info=False, exclude_groups=None, exclude_nodes=None
     ):
         """
-        args:
-            info (True/False): whether to give the information on how much space has been saved
-            exclude_groups (list/None): list of groups to delete from hdf
-            exclude_nodes (list/None): list of nodes to delete from hdf
-        """
-        # hdf = self._hdf5
-        if exclude_groups is None:
-            exclude_groups = ["interactive"]
-        file_name = self.file_name
-        _path = file_name.split("/")[-1]
-        _path = ".".join(_path.split(".")[:-1])
-        # path = '/'.join(p_lst[:-1])
-        new_file = _path + "_rewrite"
+        Rewrite the entire hdf file.
 
-        hdf_new = ProjectHDFio(
-            project=self.project, file_name=new_file, h5_path="/" + job_name
-        )
-        hdf_new = self.hd_copy(
-            self, hdf_new, exclude_groups=exclude_groups, exclude_nodes=exclude_nodes
-        )
+        Args:
+            info (True/False): whether to give the information on how much space has been saved
+        """
+        if job_name is not None:
+            state.logger.warning(
+                "Specifying job_name is deprecated and ignored! Future versions will change signature."
+            )
+        file_name = self.file_name
+        new_file = file_name + "_rewrite"
+
+        self_hdf = FileHDFio(file_name=file_name)
+        hdf_new = FileHDFio(file_name=new_file, h5_path="/")
+
+        old_logger_level = state.logger.level
+        state.logger.level = 50
+        hdf_new = self.hd_copy(self_hdf, hdf_new)
+        state.logger.level = old_logger_level
 
         if info:
-            print("job: {}".format(job_name))
             print(
                 "compression rate from old to new: {}".format(
-                    self.file_size(self) / self.file_size(hdf_new)
+                    self.file_size(self_hdf) / self.file_size(hdf_new)
                 )
             )
             print(
@@ -1362,7 +1365,11 @@ class ProjectHDFio(FileHDFio):
                 "Object type in hdf5-file must be identical to input parameter"
             )
         class_name = class_name or self.get("TYPE")
-        class_object = self.import_class(class_name)
+        class_path = class_name.split("<class '")[-1].split("'>")[0]
+        if not class_path.startswith("abc."):
+            class_object = self.import_class(class_name)
+        else:
+            class_object = class_constructor(cp=JOB_DYN_DICT[class_path.split(".")[-1]])
 
         # Backwards compatibility since the format of TYPE changed
         if class_name != str(class_object):

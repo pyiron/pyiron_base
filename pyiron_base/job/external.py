@@ -32,30 +32,36 @@ class Notebook(object):
 
     @staticmethod
     def get_custom_dict():
-        folder = Path(".").cwd().parts[-1]
-        project_folder = Path(".").cwd().parents[1]
-        hdf_file = project_folder / folder
-        hdf_file = str(hdf_file).replace("\\", "/") + ".h5"
-        if Path(hdf_file).exists():
-            obj = DataContainer()
-            obj.from_hdf(
-                hdf=FileHDFio(hdf_file), group_name=folder + "/input/custom_dict"
-            )
-            obj["project_dir"] = str(project_folder)
-            return obj
-        elif Path("input.json").exists():
-            with open("input.json") as f:
-                return json.load(f)
-        else:
-            warnings.warn("{} not found".format(hdf_file))
-            return None
+        return load()
 
     @staticmethod
     def store_custom_output_dict(output_dict):
-        folder = Path(".").cwd().parts[-1]
-        hdf_file = Path(".").cwd().parents[1] / folder
-        hdf_file = str(hdf_file) + ".h5"
-        hdf = FileHDFio(hdf_file)
-        hdf[folder].create_group("output")
-        obj = DataContainer(output_dict)
-        obj.to_hdf(hdf[folder + "/output"])
+        dump(output_dict=output_dict)
+
+
+def load():
+    folder = Path(".").cwd().parts[-1]
+    project_folder = Path(".").cwd().parents[1]
+    hdf_file = project_folder / folder
+    hdf_file = str(hdf_file).replace("\\", "/") + ".h5"
+    if Path(hdf_file).exists():
+        obj = DataContainer()
+        obj.from_hdf(hdf=FileHDFio(hdf_file), group_name=folder + "/input/custom_dict")
+        obj["project_dir"] = str(project_folder)
+        return obj
+    elif Path("input.json").exists():
+        with open("input.json") as f:
+            return json.load(f)
+    else:
+        warnings.warn("{} not found".format(hdf_file))
+        return None
+
+
+def dump(output_dict):
+    folder = Path(".").cwd().parts[-1]
+    hdf_file = Path(".").cwd().parents[1] / folder
+    hdf_file = str(hdf_file) + ".h5"
+    hdf = FileHDFio(hdf_file)
+    hdf[folder].create_group("output")
+    obj = DataContainer(output_dict)
+    obj.to_hdf(hdf[folder + "/output"])

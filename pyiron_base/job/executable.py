@@ -220,7 +220,7 @@ class Executable(object):
         """
         Executable path
         """
-        return self.executable_path
+        return str(self.executable_path)
 
     def _executable_versions_list(self):
         """
