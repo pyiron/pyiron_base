@@ -103,7 +103,14 @@ class JobType(object):
             return
         elif cls_name not in cls._job_class_dict:
             cls._job_class_dict[cls_name] = _cls
+        elif (
+            isinstance(cls._job_class_dict[cls_name], str)
+            and cls._job_class_dict[cls_name] + f".{cls_name}"
+            == repr(_cls).split("<class '")[-1].split("'>")[0]
+        ):
+            cls._job_class_dict[cls_name] = _cls
         else:
+            print(repr(_cls).split("<class '")[-1].split("'>")[0])
             raise ValueError(f"A JobType with name {cls_name} is already defined!")
 
     @staticmethod
