@@ -1489,10 +1489,10 @@ class GenericJob(JobCore):
             self._logger.info("busy master: {} {}".format(master_id, self.get_job_id()))
             del self
 
-    @staticmethod
-    def _register_jobtype_name() -> Union[str, None]:
+    @classmethod
+    def _register_jobtype_name(cls) -> Union[str, None]:
         """Name of the JobType this class is to be registered with; None for do not register."""
-        return None
+        return cls.__name__ 
 
     def __init_subclass__(cls, **kwargs):
         super().__init_subclass__(**kwargs)
