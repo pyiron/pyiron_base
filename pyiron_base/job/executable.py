@@ -41,19 +41,19 @@ class Executable(HasStorage):
         super().__init__()
         self.storage.table_name = "executable"
 
-        self.__version__ = None
+        self.storage.version = None
         if code is not None:  # Backwards compatibility
             if not isinstance(code.__name__, str):
                 raise TypeError("The codename should be a string.")
             codename = code.__name__
             module = code.__module__.split(".")[1]
         if codename is not None and module is not None:
-            self.__name__ = codename.lower()
+            self.storage.name = codename.lower()
             code_path_lst = [
                 os.path.join(path, module, "bin") for path in path_binary_codes
             ]
             backwards_compatible_path_lst = [
-                os.path.join(path, self.__name__) for path in path_binary_codes
+                os.path.join(path, self.storage.name) for path in path_binary_codes
             ]
             self.storage.path_bin = [
                 exe_path
@@ -61,30 +61,30 @@ class Executable(HasStorage):
                 if os.path.exists(exe_path)
             ]
         else:  # Backwards compatibility
-            self.__name__ = codename.lower()
+            self.storage.name = codename.lower()
             self.storage.path_bin = [
-                os.path.join(path, self.__name__)
+                os.path.join(path, self.storage.name)
                 for path in path_binary_codes
-                if os.path.exists(os.path.join(path, self.__name__))
+                if os.path.exists(os.path.join(path, self.storage.name))
             ]
         if overwrite_nt_flag:
             self.storage.operation_system_nt = False
         else:
             self.storage.operation_system_nt = os.name == "nt"
-        self._executable_lst = self._executable_versions_list()
-        self._executable = None
-        self._executable_path = None
-        self._mpi = False
-        if self._executable_lst:
+        self.storage.executable_lst = self._executable_versions_list()
+        self.storage.executable = None
+        self.storage.executable_path = None
+        self.storage.mpi = False
+        if self.storage.executable_lst:
             self.version = self.default_version
-        self._accepted_return_codes = [0]
+        self.storage.accepted_return_codes = [0]
 
     @property
     def accepted_return_codes(self):
         """
         list of int: accept all of the return codes in this list as the result of a successful run
         """
-        return self._accepted_return_codes
+        return self.storage.accepted_return_codes
 
     @accepted_return_codes.setter
     def accepted_return_codes(self, value):
@@ -92,7 +92,7 @@ class Executable(HasStorage):
             not isinstance(c, int) or c > 255 for c in value
         ):
             raise ValueError("accepted_return_codes must be a list of integers <= 255!")
-        self._accepted_return_codes = value
+        self.storage.accepted_return_codes = value
 
     @property
     def version(self):
@@ -102,7 +102,7 @@ class Executable(HasStorage):
         Returns:
             str: version
         """
-        return self.__version__
+        return self.storage.version
 
     @property
     def default_version(self):
@@ -113,10 +113,10 @@ class Executable(HasStorage):
         Returns:
             str: default_version
         """
-        for executable in self._executable_lst.keys():
+        for executable in self.storage.executable_lst.keys():
             if "default" in executable and "mpi" not in executable:
                 return executable
-        return sorted(self._executable_lst.keys())[0]
+        return sorted(self.storage.executable_lst.keys())[0]
 
     @version.setter
     def version(self, new_version):
@@ -126,11 +126,11 @@ class Executable(HasStorage):
         Args:
             new_version (str): version
         """
-        if new_version in self._executable_lst.keys():
-            self.__version__ = new_version
+        if new_version in self.storage.executable_lst.keys():
+            self.storage.version = new_version
             if "mpi" in new_version:
-                self._mpi = True
-            self._executable_path = None
+                self.storage.mpi = True
+            self.storage.executable_path = None
         else:
             raise ValueError(
                 "Version  [%s] is not supported, please choose one of the following versions: "
@@ -146,9 +146,9 @@ class Executable(HasStorage):
         Returns:
             bool: [True/False]
         """
-        if not self._mpi and self.version and "_mpi" in self.version:
-            self._mpi = True
-        return self._mpi
+        if not self.storage.mpi and self.version and "_mpi" in self.version:
+            self.storage.mpi = True
+        return self.storage.mpi
 
     @mpi.setter
     def mpi(self, mpi_bool):
@@ -182,7 +182,7 @@ class Executable(HasStorage):
         Returns:
             list: list of the available version
         """
-        return sorted(list(self._executable_lst.keys()))
+        return sorted(list(self.storage.executable_lst.keys()))
 
     @property
     def executable_path(self):
@@ -192,11 +192,11 @@ class Executable(HasStorage):
         Returns:
             str: absolute path
         """
-        if self._executable_path is not None:
+        if self.storage.executable_path is not None:
             if os.name == "nt":
-                return self._executable_path.replace("\\", "/")
+                return self.storage.executable_path.replace("\\", "/")
             else:
-                return self._executable_path
+                return self.storage.executable_path
         return self._executable_select()
 
     @executable_path.setter
@@ -207,12 +207,12 @@ class Executable(HasStorage):
         Args:
             new_path: absolute path
         """
-        self.__version__ = new_path
-        self._executable_path = new_path
+        self.storage.version = new_path
+        self.storage.executable_path = new_path
         if new_path and "mpi" in new_path:
-            self._mpi = True
+            self.storage.mpi = True
         else:
-            self._mpi = False
+            self.storage.mpi = False
 
     def __repr__(self):
         """
@@ -242,16 +242,16 @@ class Executable(HasStorage):
             for path in self.storage.path_bin:
                 for executable in os.listdir(path):
                     if (
-                        executable.startswith("run_" + self.__name__ + "_")
+                        executable.startswith("run_" + self.storage.name + "_")
                         & executable.endswith(extension)
                         and executable[
-                            len("run_" + self.__name__) + 1 : -len(extension)
+                            len("run_" + self.storage.name) + 1 : -len(extension)
                         ]
                         not in executable_dict.keys()
                     ):
                         executable_dict[
                             executable[
-                                len("run_" + self.__name__) + 1 : -len(extension)
+                                len("run_" + self.storage.name) + 1 : -len(extension)
                             ]
                         ] = os.path.join(path, executable).replace("\\", "/")
             return executable_dict
@@ -266,6 +266,6 @@ class Executable(HasStorage):
             str: absolute executable path
         """
         try:
-            return self._executable_lst[self.version]
+            return self.storage.executable_lst[self.version]
         except KeyError:
             return ""
