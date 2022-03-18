@@ -1236,7 +1236,7 @@ class GenericJob(JobCore):
         try:
             self.executable.from_hdf(self._hdf5)
         except ValueError:
-            pass # older versions of pyiron did not save executable information
+            pass  # older versions of pyiron did not save executable information
         with self._hdf5.open("input") as hdf_input:
             if "generic_dict" in hdf_input.list_nodes():
                 generic_dict = hdf_input["generic_dict"]
