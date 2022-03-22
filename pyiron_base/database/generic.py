@@ -89,6 +89,12 @@ class IsDatabase(ABC):
         """
         Get a job table in a project based on matching values from any column in the project database
 
+        The values in `kwargs` can be wildcards, with the following special charaters:
+            - !value matches in the inverse of value
+            - *value matches anything that ends in value
+            - value* matches anything that starts with value
+            - *value* matches anything that contains value
+
         Args:
             df (pandas.DataFrame): DataFrame to be filtered
             **kwargs (dict): Optional arguments for filtering with keys matching the project database column name
@@ -106,16 +112,23 @@ class IsDatabase(ABC):
                     f"Column name {key} does not exist in the project database!"
                 )
         for key, val in kwargs.items():
+            invert = False
+            if val[0] == "!":
+                invert = True
+                val = val[1:]
             if val is None:
-                mask &= df[key].isnull()
+                update = df[key].isnull()
             elif str(val).startswith("*") and str(val).endswith("*"):
-                mask &= df[key].str.contains(str(val).replace("*", ""))
+                update = df[key].str.contains(str(val).replace("*", ""))
             elif str(val).endswith("*"):
-                mask &= df[key].str.startswith(str(val).replace("*", ""))
+                update = df[key].str.startswith(str(val).replace("*", ""))
             elif str(val).startswith("*"):
-                mask &= df[key].str.endswith(str(val).replace("*", ""))
+                update = df[key].str.endswith(str(val).replace("*", ""))
             else:
-                mask &= df[key] == val
+                update = df[key] == val
+            if invert:
+                update = ~update
+            mask &= update
         return df[mask]
 
     def job_table(
