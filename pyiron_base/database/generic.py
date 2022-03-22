@@ -113,7 +113,7 @@ class IsDatabase(ABC):
                 )
         for key, val in kwargs.items():
             invert = False
-            if val[0] == "!":
+            if val is not None and val[0] == "!":
                 invert = True
                 val = val[1:]
             if val is None:
