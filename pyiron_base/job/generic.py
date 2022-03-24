@@ -26,6 +26,7 @@ from pyiron_base.job.util import (
 from pyiron_base.generic.util import static_isinstance, deprecate
 from pyiron_base.server.generic import Server
 from pyiron_base.database.filetable import FileTable
+from pyiron_base import DataContainer
 import subprocess
 import warnings
 
@@ -179,6 +180,7 @@ class GenericJob(JobCore):
         self._python_only_job = False
         self.interactive_cache = None
         self.error = GenericError(job=self)
+        self._meta = DataContainer(table_name="meta")
 
         for sig in intercepted_signals:
             signal.signal(sig, self.signal_intercept)
@@ -234,6 +236,18 @@ class GenericJob(JobCore):
         """
         self._executable_activate()
         self._executable.executable_path = exe
+
+    @property
+    def meta(self):
+        """
+        Generic meta data attached to this job.
+
+        pyiron will not use any information stored in this.
+
+        Returns:
+            :class:`~.DataContainer`
+        """
+        return self._meta
 
     @property
     def server(self):
@@ -1193,6 +1207,7 @@ class GenericJob(JobCore):
         if self._import_directory is not None:
             self._hdf5["import_directory"] = self._import_directory
         self._server.to_hdf(self._hdf5)
+        self._meta.to_hdf(self._hdf5)
         with self._hdf5.open("input") as hdf_input:
             generic_dict = {
                 "restart_file_list": self._restart_file_list,
@@ -1232,6 +1247,10 @@ class GenericJob(JobCore):
         if "import_directory" in self._hdf5.list_nodes():
             self._import_directory = self._hdf5["import_directory"]
         self._server.from_hdf(self._hdf5)
+        try:
+            self._meta.from_hdf(self._hdf5)
+        except ValueError:
+            pass # no meta data written for this job previously
         with self._hdf5.open("input") as hdf_input:
             if "generic_dict" in hdf_input.list_nodes():
                 generic_dict = hdf_input["generic_dict"]
