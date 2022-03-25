@@ -492,7 +492,7 @@ class ParallelMaster(GenericMaster):
             cores_for_session (list): list of currently active cores - list of integers
 
         Returns:
-            bool: [True/False]
+            bool: True if job cannot be run; False if enough cores are available for it
         """
         return (
             self.get_child_cores() + job.server.cores + sum(cores_for_session)
