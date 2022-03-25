@@ -625,31 +625,32 @@ class ParallelMaster(GenericMaster):
             self._logger.debug(
                 "{} child project {}".format(self.job_name, self.project.__str__())
             )
-            job = next(self._job_generator, None)
-            if job is not None:
+            if not self._job_generator.finished():
                 if (
                     self.server.run_mode.non_modal
                     or self.server.run_mode.queue
                     or self.server.run_mode.modal
-                ) and job.server.run_mode.interactive:
+                ) and self.ref_job.server.run_mode.interactive:
                     self.run_if_interactive()
                 elif self.server.run_mode.queue:
                     self._run_if_master_modal_child_non_modal()
                 elif job.server.run_mode.queue:
                     self._run_if_child_queue()
-                elif self.server.run_mode.non_modal and job.server.run_mode.non_modal:
+                elif self.server.run_mode.non_modal and self.ref_job.server.run_mode.non_modal:
                     self._run_if_master_non_modal_child_non_modal()
-                elif (self.server.run_mode.modal and job.server.run_mode.modal) or (
-                    self.server.run_mode.interactive and job.server.run_mode.interactive
+                elif (self.server.run_mode.modal and self.ref_job.server.run_mode.modal) or (
+                    self.server.run_mode.interactive and self.ref_job.server.run_mode.interactive
                 ):
                     self._run_if_master_modal_child_modal()
-                elif self.server.run_mode.modal and job.server.run_mode.non_modal:
+                elif self.server.run_mode.modal and self.ref_job.server.run_mode.non_modal:
                     self._run_if_master_modal_child_non_modal()
                 else:
                     raise RuntimeError(
                             "Unsupported combination of master and child run modes: "
                             f"{self.server.run_mode} {self.ref_job.server.run_mode}"
                     )
+            else:
+                self.refresh_job_status()
         else:
             self.status.collect = True
             self.run()
@@ -937,6 +938,15 @@ class JobGenerator(object):
     def __len__(self):
         return len(self.parameter_list_cached)
 
+    def finished(self):
+        """
+        Check whether all jobs have been generated from this generator.
+
+        Return:
+            bool: True if all jobs have been generated
+        """
+        return self._childcounter >= len(self.parameter_list_cached)
+
     def next(self):
         """
         Iterate over the child jobs
@@ -944,7 +954,7 @@ class JobGenerator(object):
         Returns:
             :class:`~.GenericJob`: new job object
         """
-        if len(self.parameter_list_cached) > self._childcounter:
+        if not self.finished():
             current_parameter = self.parameter_list_cached[self._childcounter]
             job = self._master.create_child_job(
                 self.job_name(parameter=current_parameter)
