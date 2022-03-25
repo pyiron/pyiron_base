@@ -554,14 +554,11 @@ class ParallelMaster(GenericMaster):
         else:
             self.run_static()
 
-    def _run_if_master_modal_child_modal(self, job):
+    def _run_if_master_modal_child_modal(self):
         """
         run function which is executed when the Parallelmaster as well as its childs are running in modal mode.
-
-        Args:
-            job (GenericJob): child job to be started
         """
-        while job is not None:
+        for job in self._job_generator:
             self._logger.debug("create job: %s %s", job.job_info_str, job.master_id)
             if not job.status.finished:
                 self.submission_status.submit_next()
@@ -569,7 +566,6 @@ class ParallelMaster(GenericMaster):
                 self._logger.info(
                     "{}: finished job {}".format(self.job_name, job.job_name)
                 )
-            job = next(self._job_generator, None)
         if self.is_finished():
             self.status.collect = True
             self.run()
@@ -646,7 +642,7 @@ class ParallelMaster(GenericMaster):
                 elif (self.server.run_mode.modal and job.server.run_mode.modal) or (
                     self.server.run_mode.interactive and job.server.run_mode.interactive
                 ):
-                    self._run_if_master_modal_child_modal(job)
+                    self._run_if_master_modal_child_modal()
                 elif self.server.run_mode.modal and job.server.run_mode.non_modal:
                     self._run_if_master_modal_child_non_modal()
                 else:
