@@ -524,22 +524,18 @@ class ParallelMaster(GenericMaster):
                 job = None
         return job_to_be_run_lst
 
-    def _run_if_child_queue(self, job):
+    def _run_if_child_queue(self):
         """
         run function which is executed when the child jobs are submitted to the queue. In this case all child jobs are
         submitted at the same time without considering the number of cores specified for the Parallelmaster.
-
-        Args:
-            job (GenericJob): child job to be started
         """
-        while job is not None:
+        for job in self._job_generator:
             self._logger.debug("create job: %s %s", job.job_info_str, job.master_id)
             if not job.status.finished:
                 job.run()
                 self._logger.info(
                     "{}: submitted job {}".format(self.job_name, job.job_name)
                 )
-            job = next(self._job_generator, None)
         self.submission_status.submitted_jobs = self.submission_status.total_jobs
         self.status.suspended = True
         if self.is_finished():
@@ -649,7 +645,7 @@ class ParallelMaster(GenericMaster):
                 elif self.server.run_mode.queue:
                     self._run_if_master_modal_child_non_modal()
                 elif job.server.run_mode.queue:
-                    self._run_if_child_queue(job)
+                    self._run_if_child_queue()
                 elif self.server.run_mode.non_modal and job.server.run_mode.non_modal:
                     self._run_if_master_non_modal_child_non_modal(job)
                 elif (self.server.run_mode.modal and job.server.run_mode.modal) or (
