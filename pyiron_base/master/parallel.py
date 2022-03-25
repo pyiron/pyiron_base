@@ -942,13 +942,13 @@ class JobGenerator(object):
             :class:`~.GenericJob`: new job object
         """
         if len(self.parameter_list_cached) > self._childcounter:
-            current_paramenter = self.parameter_list_cached[self._childcounter]
+            current_parameter = self.parameter_list_cached[self._childcounter]
             job = self._master.create_child_job(
-                self.job_name(parameter=current_paramenter)
+                self.job_name(parameter=current_parameter)
             )
             if job is not None:
                 self._childcounter += 1
-                job = self.modify_job(job=job, parameter=current_paramenter)
+                job = self.modify_job(job=job, parameter=current_parameter)
                 return job
             else:
                 raise StopIteration()
