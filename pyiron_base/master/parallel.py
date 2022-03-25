@@ -646,7 +646,10 @@ class ParallelMaster(GenericMaster):
                 elif self.server.run_mode.modal and job.server.run_mode.non_modal:
                     self._run_if_master_modal_child_non_modal()
                 else:
-                    raise TypeError()
+                    raise RuntimeError(
+                            "Unsupported combination of master and child run modes: "
+                            f"{self.server.run_mode} {self.ref_job.server.run_mode}"
+                    )
         else:
             self.status.collect = True
             self.run()
