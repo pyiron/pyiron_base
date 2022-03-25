@@ -499,18 +499,19 @@ class ParallelMaster(GenericMaster):
             > self.server.cores
         )
 
-    def _next_job_series(self, job):
+    def _next_job_series(self):
         """
         Generate a list of child jobs to be executed in the next iteration.
-
-        Args:
-            job (GenericJob): child job to be started
 
         Returns:
             list: list of GenericJob objects
         """
         job_to_be_run_lst, cores_for_session = [], []
-        while job is not None:
+        for job in self._job_generator:
+            # Potential BUG: if we break here because we can't run job it won't be in the iterator anymore next time
+            # this is called
+            if self._validate_cores(job, cores_for_session):
+                break
             self._logger.debug("create job: %s %s", job.job_info_str, job.master_id)
             if not job.status.finished:
                 self.submission_status.submit_next()
@@ -519,9 +520,6 @@ class ParallelMaster(GenericMaster):
                 self._logger.info(
                     "{}: finished job {}".format(self.job_name, job.job_name)
                 )
-            job = next(self._job_generator, None)
-            if job is not None and self._validate_cores(job, cores_for_session):
-                job = None
         return job_to_be_run_lst
 
     def _run_if_child_queue(self):
@@ -542,14 +540,11 @@ class ParallelMaster(GenericMaster):
             self.status.collect = True
             self.run()
 
-    def _run_if_master_non_modal_child_non_modal(self, job):
+    def _run_if_master_non_modal_child_non_modal(self):
         """
         run function which is executed when the Parallelmaster as well as its childs are running in non modal mode.
-
-        Args:
-            job (GenericJob): child job to be started
         """
-        job_to_be_run_lst = self._next_job_series(job)
+        job_to_be_run_lst = self._next_job_series()
         if self.project.db.get_job_status(job_id=self.job_id) != "busy":
             self.status.suspended = True
             for job in job_to_be_run_lst:
@@ -647,7 +642,7 @@ class ParallelMaster(GenericMaster):
                 elif job.server.run_mode.queue:
                     self._run_if_child_queue()
                 elif self.server.run_mode.non_modal and job.server.run_mode.non_modal:
-                    self._run_if_master_non_modal_child_non_modal(job)
+                    self._run_if_master_non_modal_child_non_modal()
                 elif (self.server.run_mode.modal and job.server.run_mode.modal) or (
                     self.server.run_mode.interactive and job.server.run_mode.interactive
                 ):
