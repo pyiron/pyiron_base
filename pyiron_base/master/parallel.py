@@ -588,13 +588,10 @@ class ParallelMaster(GenericMaster):
         else:
             self.status.suspended = True
 
-    def _run_if_master_modal_child_non_modal(self, job):
+    def _run_if_master_modal_child_non_modal(self):
         """
         run function which is executed when the Parallelmaster is running in modal mode and its childs are running in
         non modal mode.
-
-        Args:
-            job (GenericJob): child job to be started
         """
         pool = multiprocessing.Pool(self.server.cores)
         job_lst = []
@@ -650,7 +647,7 @@ class ParallelMaster(GenericMaster):
                 ) and job.server.run_mode.interactive:
                     self.run_if_interactive()
                 elif self.server.run_mode.queue:
-                    self._run_if_master_modal_child_non_modal(job=job)
+                    self._run_if_master_modal_child_non_modal()
                 elif job.server.run_mode.queue:
                     self._run_if_child_queue(job)
                 elif self.server.run_mode.non_modal and job.server.run_mode.non_modal:
@@ -660,7 +657,7 @@ class ParallelMaster(GenericMaster):
                 ):
                     self._run_if_master_modal_child_modal(job)
                 elif self.server.run_mode.modal and job.server.run_mode.non_modal:
-                    self._run_if_master_modal_child_non_modal(job)
+                    self._run_if_master_modal_child_non_modal()
                 else:
                     raise TypeError()
         else:
