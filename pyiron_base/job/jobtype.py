@@ -101,17 +101,32 @@ class JobType(object):
     def register_job_type(cls, cls_name, _cls):
         if cls_name is None:
             return
-        elif cls_name not in cls._job_class_dict:
+        elif cls_name not in cls._job_class_dict and isinstance(_cls, str):
             cls._job_class_dict[cls_name] = _cls
         elif (
-            isinstance(cls._job_class_dict[cls_name], str)
-            and cls._job_class_dict[cls_name] + f".{cls_name}"
-            == repr(_cls).split("<class '")[-1].split("'>")[0]
+            cls_name in cls._job_class_dict
+            and isinstance(_cls, str)
+            and cls._job_class_dict[cls_name] == _cls
         ):
-            cls._job_class_dict[cls_name] = _cls
+            pass
+        elif cls_name not in cls._job_class_dict and not isinstance(_cls, str):
+            cls._job_class_dict[cls_name] = cls._get_class_path_str(_cls)
+        elif (
+            cls_name in cls._job_class_dict
+            and not isinstance(_cls, str)
+            and cls._job_class_dict[cls_name] == cls._get_class_path_str(_cls)
+        ):
+            pass
         else:
-            print(repr(_cls).split("<class '")[-1].split("'>")[0])
-            raise ValueError(f"A JobType with name {cls_name} is already defined!")
+            raise ValueError(
+                f"A JobType with name {cls_name} is already defined! New class = {repr(_cls)}, "
+                f"already registered class = {repr(cls._job_class_dict[cls_name])}."
+            )
+
+    @staticmethod
+    def _get_class_path_str(_cls):
+        full_path = repr(_cls).split("<class '")[-1].split("'>")[0]
+        return ".".join(full_path.split(".")[:-1])
 
     @staticmethod
     def convert_str_to_class(job_class_dict, class_name):

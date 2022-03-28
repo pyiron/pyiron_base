@@ -4,6 +4,7 @@
 """
 InteractiveBase class extends the Generic Job class with all the functionality to run the job object interactivley.
 """
+from typing import Union
 
 import numpy as np
 from pyiron_base.job.generic import GenericJob
@@ -364,6 +365,13 @@ class InteractiveBase(GenericJob):
                     ]
                 else:
                     self._interactive_write_frequency = 1
+
+    @classmethod
+    def _register_jobtype_name(cls) -> Union[str, None]:
+        if cls.__name__ == "InteractiveBase":
+            return None
+        else:
+            return cls.__name__
 
 
 class _WithInteractiveOpen:

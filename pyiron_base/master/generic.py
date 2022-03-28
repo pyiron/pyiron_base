@@ -7,6 +7,8 @@ The GenericMaster is the template class for all meta jobs
 
 import inspect
 import textwrap
+from typing import Union
+
 from pyiron_base.job.generic import GenericJob
 from pyiron_base.job.jobstatus import job_status_finished_lst
 
@@ -549,6 +551,13 @@ class GenericMaster(GenericJob):
             parent (:class:`.GenericJob`): job instance that this job was created from
         """
         self.ref_job = parent
+
+    @classmethod
+    def _register_jobtype_name(cls) -> Union[str, None]:
+        if cls.__name__ == "GenericMaster":
+            return None
+        else:
+            return cls.__name__
 
 
 def get_function_from_string(function_str):

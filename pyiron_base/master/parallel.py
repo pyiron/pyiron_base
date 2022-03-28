@@ -7,6 +7,8 @@ The parallel master class is a metajob consisting of a list of jobs which are ex
 
 from collections import OrderedDict
 from datetime import datetime
+from typing import Union
+
 import numpy as np
 import pandas
 import multiprocessing
@@ -987,3 +989,10 @@ class JobGenerator(object):
         else:
             self._master.refresh_job_status()
             raise StopIteration()
+
+    @classmethod
+    def _register_jobtype_name(cls) -> Union[str, None]:
+        if cls.__name__ == "ParallelMaster":
+            return None
+        else:
+            return cls.__name__

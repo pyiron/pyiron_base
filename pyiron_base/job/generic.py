@@ -1492,7 +1492,7 @@ class GenericJob(JobCore):
     @classmethod
     def _register_jobtype_name(cls) -> Union[str, None]:
         """Name of the JobType this class is to be registered with; None for do not register."""
-        return cls.__name__ 
+        return cls.__name__
 
     def __init_subclass__(cls, **kwargs):
         super().__init_subclass__(**kwargs)

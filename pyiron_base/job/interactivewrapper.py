@@ -4,6 +4,8 @@
 
 from datetime import datetime
 import warnings
+from typing import Union
+
 from pyiron_base.generic.parameters import GenericParameters
 from pyiron_base.job.generic import GenericJob
 from pyiron_base.master.generic import GenericMaster
@@ -158,3 +160,10 @@ class InteractiveWrapper(GenericMaster):
         return self._get_item_when_str(
             item=item, child_id_lst=child_id_lst, child_name_lst=child_name_lst
         )
+
+    @classmethod
+    def _register_jobtype_name(cls) -> Union[str, None]:
+        if cls.__name__ == "InteractiveWrapper":
+            return None
+        else:
+            return cls.__name__

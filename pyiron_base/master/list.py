@@ -4,6 +4,7 @@
 """
 The ListMaster behaves like a list, just for job objects.
 """
+from typing import Union
 
 from pyiron_base.generic.parameters import GenericParameters
 from pyiron_base.job.core import JobCore
@@ -368,3 +369,10 @@ class ListMaster(GenericMaster):
             int: length of the ListMaster
         """
         return len(self.child_ids + self._job_name_lst)
+
+    @classmethod
+    def _register_jobtype_name(cls) -> Union[str, None]:
+        if cls.__name__ == "ListMaster":
+            return None
+        else:
+            return cls.__name__
