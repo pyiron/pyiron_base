@@ -70,7 +70,7 @@ class TestParallelMaster(TestWithProject):
     def test_convergence(self):
         self.assertTrue(self.master_toy.convergence_check())
         self.assertTrue(self.master_toy.status.finished)
-        # Make one of the childs have a non-finished status
+        # Make one of the children have a non-finished status
         self.master_toy[-1].status.aborted = True
         self.master_toy.status.collect = True
         self.master_toy.run()
