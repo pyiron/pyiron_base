@@ -3,10 +3,8 @@
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
 import unittest
-import os
-from pyiron_base.project.generic import Project
 from pyiron_base import JobGenerator, ParallelMaster
-from pyiron_base._tests import PyironTestCase
+from pyiron_base._tests import TestWithCleanProject
 
 
 class TestGenerator(JobGenerator):
@@ -25,17 +23,22 @@ class TestGenerator(JobGenerator):
         job.input['parameter'] = parameter
         return job
 
+
 class TestMaster(ParallelMaster):
 
     def __init__(self, job_name, project):
         super().__init__(job_name, project)
         self._job_generator = TestGenerator(self)
 
-class TestParallelMaster(PyironTestCase):
+
+class TestParallelMaster(TestWithCleanProject):
+
     @classmethod
     def setUpClass(cls):
-        cls.file_location = os.path.dirname(os.path.abspath(__file__))
-        cls.project = Project(os.path.join(cls.file_location, "jobs_testing"))
+        # cls.file_location = os.path.dirname(os.path.abspath(__file__))
+        # cls.project = Project(os.path.join(cls.file_location, "jobs_testing"))
+        #
+        super().setUpClass()
         cls.master = cls.project.create_job(TestMaster, "master")
         cls.master.ref_job = cls.project.create_job(cls.project.job_type.ScriptJob, "ref")
 
@@ -59,6 +62,9 @@ class TestParallelMaster(PyironTestCase):
         j.server.run_mode = 'interactive'
         i = j.create_job(TestMaster, "test_child")
         self.assertEqual(i.ref_job, j, "Reference job of interactive wrapper to set after creation.")
+
+    def test_convergence(self):
+        self.assertTrue(self.master.status, "created")
 
 
 if __name__ == "__main__":
