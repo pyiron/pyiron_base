@@ -4,7 +4,7 @@
 
 import unittest
 from pyiron_base import JobGenerator, ParallelMaster
-from pyiron_base._tests import TestWithCleanProject
+from pyiron_base._tests import TestWithProject, ToyJob
 
 
 class TestGenerator(JobGenerator):
@@ -30,17 +30,21 @@ class TestMaster(ParallelMaster):
         super().__init__(job_name, project)
         self._job_generator = TestGenerator(self)
 
+    # Implement since required
+    def collect_output(self):
+        pass
 
-class TestParallelMaster(TestWithCleanProject):
+
+class TestParallelMaster(TestWithProject):
 
     @classmethod
     def setUpClass(cls):
-        # cls.file_location = os.path.dirname(os.path.abspath(__file__))
-        # cls.project = Project(os.path.join(cls.file_location, "jobs_testing"))
-        #
         super().setUpClass()
         cls.master = cls.project.create_job(TestMaster, "master")
         cls.master.ref_job = cls.project.create_job(cls.project.job_type.ScriptJob, "ref")
+        cls.master_toy = cls.project.create_job(TestMaster, "master_toy")
+        cls.master_toy.ref_job = cls.project.create_job(ToyJob, "ref")
+        cls.master_toy.run()
 
     def test_jobgenerator_name(self):
         """Generated jobs have to be unique instances, in order, the correct name and correct parameters."""
@@ -64,7 +68,9 @@ class TestParallelMaster(TestWithCleanProject):
         self.assertEqual(i.ref_job, j, "Reference job of interactive wrapper to set after creation.")
 
     def test_convergence(self):
-        self.assertTrue(self.master.status, "created")
+        self.assertTrue(self.master_toy.convergence_check())
+        self.master_toy[-1].status.aborted = True
+        self.assertFalse(self.master_toy.convergence_check())
 
 
 if __name__ == "__main__":
