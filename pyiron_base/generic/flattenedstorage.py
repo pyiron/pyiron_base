@@ -25,6 +25,7 @@ import numpy as np
 import h5py
 from pyiron_base.interfaces.has_hdf import HasHDF
 
+
 def _ensure_str_array_size(array, strlen):
     """
     Ensures that the given array can store at least string of length `strlen`.
@@ -766,8 +767,7 @@ class FlattenedStorage(HasHDF):
         ] = self.current_element_index
         self._per_chunk_arrays["length"][self.current_chunk_index] = n
         self._per_chunk_arrays["identifier"] = _ensure_str_array_size(
-            self._per_chunk_arrays["identifier"],
-            len(identifier)
+            self._per_chunk_arrays["identifier"], len(identifier)
         )
         self._per_chunk_arrays["identifier"][self.current_chunk_index] = identifier
 
