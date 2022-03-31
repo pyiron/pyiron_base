@@ -26,6 +26,23 @@ import h5py
 from pyiron_base.interfaces.has_hdf import HasHDF
 
 
+def _ensure_str_array_size(array, strlen):
+    """
+    Ensures that the given array can store at least string of length `strlen`.
+
+    Args:
+        array (ndarray): array of dtype <U
+        strlen (int): maximum length that should fit in it
+    Returns:
+        ndarray: either `array` or resized copy
+    """
+    current_length = array.itemsize // np.dtype("1U").itemsize
+    if current_length < strlen:
+        return array.astype(f"{2 * strlen}U")
+    else:
+        return array
+
+
 class FlattenedStorage(HasHDF):
     """
     Efficient storage of ragged arrays in flattened arrays.
@@ -496,27 +513,11 @@ class FlattenedStorage(HasHDF):
             `KeyError`: if array with name does not exists
         """
 
-        def ensure_str_array_size(array, strlen):
-            """
-            Ensures that the given array can store at least string of length `strlen`.
-
-            Args:
-                array (ndarray): array of dtype <U
-                strlen (int): maximum length that should fit in it
-            Returns:
-                ndarray: either `array` or resized copy
-            """
-            current_length = array.itemsize // np.dtype("1U").itemsize
-            if current_length < strlen:
-                return array.astype(f"{2 * strlen}U")
-            else:
-                return array
-
         if isinstance(frame, str):
             frame = self.find_chunk(frame)
         if name in self._per_element_arrays:
             if self._per_element_arrays[name].dtype.char == "U":
-                self._per_element_arrays[name] = ensure_str_array_size(
+                self._per_element_arrays[name] = _ensure_str_array_size(
                     self._per_element_arrays[name], max(map(len, value))
                 )
             self._per_element_arrays[name][self._get_per_element_slice(frame)] = value
@@ -526,7 +527,7 @@ class FlattenedStorage(HasHDF):
                     strlen = len(value.item())
                 else:
                     strlen = len(value)
-                self._per_chunk_arrays[name] = ensure_str_array_size(
+                self._per_chunk_arrays[name] = _ensure_str_array_size(
                     self._per_chunk_arrays[name], strlen
                 )
             self._per_chunk_arrays[name][frame] = value
@@ -765,6 +766,9 @@ class FlattenedStorage(HasHDF):
             self.current_chunk_index
         ] = self.current_element_index
         self._per_chunk_arrays["length"][self.current_chunk_index] = n
+        self._per_chunk_arrays["identifier"] = _ensure_str_array_size(
+            self._per_chunk_arrays["identifier"], len(identifier)
+        )
         self._per_chunk_arrays["identifier"][self.current_chunk_index] = identifier
 
         for k, a in arrays.items():
