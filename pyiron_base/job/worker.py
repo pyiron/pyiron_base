@@ -215,7 +215,7 @@ class WorkerJob(PythonTemplateJob):
             # job submission
             with open(log_file, "a") as f:
                 f.write(self._get_log_line(
-                    waiting_jobs=len(df)-len(active_job_ids)
+                    waiting_jobs=len(df)-len(active_job_ids),
                     active_jobs=len(process_lst),
                     finished_jobs=len(active_job_ids)-len(process_lst)
                 ))
