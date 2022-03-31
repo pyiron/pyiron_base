@@ -214,11 +214,13 @@ class WorkerJob(PythonTemplateJob):
 
             # job submission
             with open(log_file, "a") as f:
-                f.write(self._get_log_line(
-                    waiting_jobs=len(df)-len(active_job_ids),
-                    active_jobs=len(process_lst),
-                    finished_jobs=len(active_job_ids)-len(process_lst)
-                ))
+                f.write(
+                    self._get_log_line(
+                        waiting_jobs=len(df) - len(active_job_ids),
+                        active_jobs=len(process_lst),
+                        finished_jobs=len(active_job_ids) - len(process_lst),
+                    )
+                )
             process_lst = self.red_process_lst(process_lst=process_lst)
 
         # The job is finished
@@ -246,11 +248,13 @@ class WorkerJob(PythonTemplateJob):
             if self._file_based_wait(process_lst=process_lst):
                 break
             with open(log_file, "a") as f:
-                f.write(self._get_log_line(
-                    waiting_jobs=0,  # The number of waiting jobs is not determined
-                    active_jobs=len(process_lst),
-                    finished_jobs=len(file_memory_lst)-len(process_lst)
-                ))
+                f.write(
+                    self._get_log_line(
+                        waiting_jobs=0,  # The number of waiting jobs is not determined
+                        active_jobs=len(process_lst),
+                        finished_jobs=len(file_memory_lst) - len(process_lst),
+                    )
+                )
             process_lst = self.red_process_lst(process_lst=process_lst)
 
         # The job is finished
@@ -425,30 +429,28 @@ class WorkerJob(PythonTemplateJob):
             ]
             if p is not None
         ]
-             
+
     @staticmethod
     def _get_log_line(waiting_jobs, active_jobs, finished_jobs):
-        line = str(datetime.today()) +\
-            " " +\
-            str(waiting_jobs) +\
-            " " +\
-            str(active_jobs) +\
-            " " +\
-            str(finished_jobs) +\
-            " " +\
-            str(process.memory_info().rss / 1024 / 1024 / 1024)
+        line = (
+            str(datetime.today())
+            + " "
+            + str(waiting_jobs)
+            + " "
+            + str(active_jobs)
+            + " "
+            + str(finished_jobs)
+            + " "
+            + str(process.memory_info().rss / 1024 / 1024 / 1024)
+        )
         if os.name != "nt":
-            line += "GB " +\
-                str(
-                    resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
-                    / 1024 
-                    / 1024
-                ) +\
-                "GB " +\
-                str(
-                    resource.getrusage(resource.RUSAGE_CHILDREN).ru_maxrss
-                    / 1024
-                    / 1024
+            line += (
+                "GB "
+                + str(resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1024 / 1024)
+                + "GB "
+                + str(
+                    resource.getrusage(resource.RUSAGE_CHILDREN).ru_maxrss / 1024 / 1024
                 )
-        line += + "GB\n"
+            )
+        line += +"GB\n"
         return line
