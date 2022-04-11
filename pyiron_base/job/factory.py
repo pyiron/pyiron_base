@@ -66,9 +66,7 @@ class JobFactoryCore(PyironFactory, ABC):
                     GenericJob: job object depending on the job_type selected
                 """
                 return JobType(
-                    class_name=self._job_class_dict[
-                        name
-                    ],  # Pass the class directly, JobType can handle that
+                    class_name=name,  # Pass the class directly, JobType can handle that
                     project=ProjectHDFio(
                         project=self._project.copy(), file_name=job_name
                     ),
