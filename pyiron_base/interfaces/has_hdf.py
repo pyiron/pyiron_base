@@ -132,8 +132,8 @@ class HasHDF(ABC):
     >>> from pyiron_base import GenericJob
     >>> class MyHybridJob(GenericJob, HasHDF):
     ...     def to_hdf(self, hdf, group_name):
-    ...         GenericJob(self, hdf=hdf, group_name=group_name)
-    ...         HasHDF(self, hdf=self.project_hdf5, group_name="")
+    ...         GenericJob.to_hdf(self, hdf=hdf, group_name=group_name)
+    ...         HasHDF.to_hdf(self, hdf=self.project_hdf5, group_name="")
     ...     def from_hdf(self, hdf, group_name):
     ...         MyOldClass.from_hdf(self, hdf=hdf, group_name=group_name)
     ...         HasHDF.to_hdf(self, hdf=self.project_hdf5, group_name="")
