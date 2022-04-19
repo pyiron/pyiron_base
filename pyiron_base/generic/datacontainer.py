@@ -815,8 +815,10 @@ class DataContainer(MutableMapping, HasGroups, HasHDF):
                     k, i = name.split("__index_", maxsplit=1)
                     i = int(i)
                 except ValueError:
-                    raise ValueError(f"Could not parse item name {name} in HDF group {hdf.h5_path}. "
-                                     "Was this group really written by a DataContainer?") from None
+                    raise ValueError(
+                        f"Could not parse item name {name} in HDF group {hdf.h5_path}. "
+                        "Was this group really written by a DataContainer?"
+                    ) from None
                 if k == "":
                     return i, i
                 else:
