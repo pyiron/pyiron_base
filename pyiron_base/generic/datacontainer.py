@@ -811,8 +811,12 @@ class DataContainer(MutableMapping, HasGroups, HasHDF):
             def normalize_key(name):
                 # split a dataset/group name into the position in the list and
                 # the key
-                k, i = name.split("__index_", maxsplit=1)
-                i = int(i)
+                try:
+                    k, i = name.split("__index_", maxsplit=1)
+                    i = int(i)
+                except ValueError:
+                    raise ValueError(f"Could not parse item name {name} in HDF group {hdf.h5_path}. "
+                                     "Was this group really written by a DataContainer?") from None
                 if k == "":
                     return i, i
                 else:
