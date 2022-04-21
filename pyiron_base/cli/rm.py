@@ -38,5 +38,5 @@ def main(args):
         pr.remove_jobs(recursive=args.recursive, silently=True)
     else:
         pr.remove(enable=True)
-        if not os.listdir(args.project):
+        if os.path.exists(args.project) and not os.listdir(args.project):
             os.rmdir(args.project)
