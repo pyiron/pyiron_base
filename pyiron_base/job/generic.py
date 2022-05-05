@@ -1193,6 +1193,7 @@ class GenericJob(JobCore):
         if self._import_directory is not None:
             self._hdf5["import_directory"] = self._import_directory
         self._server.to_hdf(self._hdf5)
+        self.executable.to_hdf(self._hdf5)
         with self._hdf5.open("input") as hdf_input:
             generic_dict = {
                 "restart_file_list": self._restart_file_list,
@@ -1232,6 +1233,10 @@ class GenericJob(JobCore):
         if "import_directory" in self._hdf5.list_nodes():
             self._import_directory = self._hdf5["import_directory"]
         self._server.from_hdf(self._hdf5)
+        try:
+            self.executable.from_hdf(self._hdf5)
+        except ValueError:
+            pass  # older versions of pyiron did not save executable information
         with self._hdf5.open("input") as hdf_input:
             if "generic_dict" in hdf_input.list_nodes():
                 generic_dict = hdf_input["generic_dict"]
@@ -1626,12 +1631,7 @@ class GenericJob(JobCore):
         Internal helper function to load type and version from HDF5 file root
         """
         self.__obj_type__ = self._hdf5["TYPE"]
-        if self._executable:
-            try:
-                self.executable.version = self._hdf5["VERSION"]
-            except ValueError:
-                self.executable.executable_path = self._hdf5["VERSION"]
-        else:
+        if self._executable is None:
             self.__obj_version__ = self._hdf5["VERSION"]
 
     def _runtime(self):
