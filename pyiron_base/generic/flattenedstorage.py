@@ -19,7 +19,7 @@ __date__ = "Jul 16, 2020"
 
 
 import copy
-from typing import Callable, Iterable, List
+from typing import Callable, Iterable, List, Tuple, Any
 
 import numpy as np
 import h5py
@@ -811,7 +811,7 @@ class FlattenedStorage(HasHDF):
             if k == "start_index":
                 a += self._per_chunk_arrays[k][self.num_chunks]
             if k not in self._per_chunk_arrays.keys():
-                dtype, fill = _get_dtype_and_fill(storage=other, name=k)
+                dtype, fill = get_dtype_and_fill(storage=other, name=k)
                 self.add_array(name=k, dtype=dtype, fill=fill, per="chunk")
             self._per_chunk_arrays[k][
                 self.num_chunks : combined_num_chunks
@@ -819,7 +819,7 @@ class FlattenedStorage(HasHDF):
 
         for k, a in other._per_element_arrays.items():
             if k not in self._per_element_arrays.keys():
-                dtype, fill = _get_dtype_and_fill(storage=other, name=k)
+                dtype, fill = get_dtype_and_fill(storage=other, name=k)
                 self.add_array(name=k, dtype=dtype, fill=fill, per="element")
             self._per_element_arrays[k][
                 self.num_elements : combined_num_elements
@@ -950,7 +950,7 @@ class FlattenedStorage(HasHDF):
             self._fill_values = hdf["_fill_values"]
 
 
-def _get_dtype_and_fill(storage: FlattenedStorage, name: str):
+def get_dtype_and_fill(storage: FlattenedStorage, name: str) -> Tuple[np.generic, Any]:
     fill = None
     if name in storage._fill_values.keys():
         fill = storage._fill_values[name]
