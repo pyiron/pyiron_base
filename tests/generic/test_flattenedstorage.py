@@ -522,3 +522,41 @@ class TestFlattenedStorage(TestWithProject):
                              "Per element string array not correctly resized!")
             self.assertEqual(store["identifier", i - 1], "i" * i * 3,
                              "Chunk identifiers not correctly resized!")
+
+    def test_extend(self):
+        store = FlattenedStorage()
+        store.add_array("foo", fill=np.nan, per="chunk")
+        store.add_array("bar", shape=(2,), fill=0, per="element")
+        foo = []
+        bar = []
+        store2 = FlattenedStorage()
+        store2.add_array("foo", fill=np.nan, per="chunk")
+        store2.add_array("bar", shape=(2,), fill=0, per="element")
+        store2.add_array("foobar", fill=0, dtype=int, per="chunk")
+        store2.add_array("barfoo", shape=(2,), fill=0.0, per="element")
+
+        for i in range(0, 3):
+            # default length for identifiers is 20 chars, so we need to push it a bit more
+            foo_val = i
+            bar_val = np.array([i, i**2]*i).reshape(i,2)
+            foo.append(foo_val)
+            bar.append(bar_val)
+            store.add_chunk(i, identifier=f"ID{i}", foo=foo_val, bar=bar_val)
+            
+        for i in range(3, 5):
+            # default length for identifiers is 20 chars, so we need to push it a bit more
+            foo_val = i
+            bar_val = np.array([i, i**2]*i).reshape(i,2)
+            foo.append(foo_val)
+            bar.append(bar_val)
+            store2.add_chunk(i, identifier=f"ID{i}", foo=foo_val, bar=bar_val, foobar=foo_val*2, barfoo=bar_val*3)
+
+        foo = np.array(foo)
+        bar = np.concatenate(bar)
+        foobar = foo*2
+        barfoo = bar*3
+        store.extend(store2)
+        self.assertTrue(np.all(foo==store.get_array("foo")))
+        self.assertTrue(np.all(bar==store.get_array("bar")))
+        self.assertTrue(np.all(foobar[3:5]==store.get_array("foobar")[3:5]))
+        self.assertTrue(np.all(barfoo[3:10]==store.get_array("barfoo")[3:10]))
