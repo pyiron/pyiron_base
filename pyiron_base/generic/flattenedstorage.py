@@ -200,11 +200,11 @@ class FlattenedStorage(HasHDF):
     __version__ = "0.2.0"
     __hdf_version__ = "0.3.0"
     _default_fill_values = {
-            np.dtype("int32"): -1,
-            np.dtype("int64"): -1,
-            np.dtype("float32"): np.nan,
-            np.dtype("float64"): np.nan,
-        }
+        np.dtype("int32"): -1,
+        np.dtype("int64"): -1,
+        np.dtype("float32"): np.nan,
+        np.dtype("float64"): np.nan,
+    }
 
     def __init__(self, num_chunks=1, num_elements=1, **kwargs):
         """
@@ -798,10 +798,9 @@ class FlattenedStorage(HasHDF):
         self.current_element_index = i
         # return last_chunk_index, last_element_index
 
-
     def append_storage(self, other: FlattenedStorage):
         self._check_compatible_fill_values(other=other)
-        
+
         combined_num_chunks = self.num_chunks + other.num_chunks
         combined_num_elements = self.num_elements + other.num_elements
         if combined_num_chunks > self._num_chunks_alloc:
@@ -815,33 +814,26 @@ class FlattenedStorage(HasHDF):
                 a += self._per_chunk_arrays[k][self.num_chunks]
             dtype, fill = _get_dtype_and_fill(storage=other, name=k)
             if k not in self._per_chunk_arrays.keys():
-                self.add_array(
-                    name=k,
-                    dtype=dtype,
-                    fill=fill,
-                    per="chunk"
-                    )
-            self._per_chunk_arrays[k][self.num_chunks:combined_num_chunks] = other._per_chunk_arrays[k][0:other.num_chunks]
+                self.add_array(name=k, dtype=dtype, fill=fill, per="chunk")
+            self._per_chunk_arrays[k][
+                self.num_chunks : combined_num_chunks
+            ] = other._per_chunk_arrays[k][0 : other.num_chunks]
 
         for k, a in self._per_element_arrays.items():
             dtype, fill = _get_dtype_and_fill(storage=other, name=k)
-            if k not in self._per_element_arrays.keys(): 
-                self.add_array(
-                    name=k,
-                    dtype=dtype,
-                    fill=fill,
-                    per="element"
-                    )
-            self._per_element_arrays[k][self.num_elements:combined_num_elements] = other._per_element_arrays[k][0:other.num_elements]
+            if k not in self._per_element_arrays.keys():
+                self.add_array(name=k, dtype=dtype, fill=fill, per="element")
+            self._per_element_arrays[k][
+                self.num_elements : combined_num_elements
+            ] = other._per_element_arrays[k][0 : other.num_elements]
         self.num_elements = combined_num_elements
         self.num_chunks = combined_num_chunks
         self.current_chunk_index = self.num_chunks
         self.current_element_index = self.num_elements
 
-
     def _check_compatible_fill_values(self, other: FlattenedStorage):
         """
-        Check if fill values of 2 FlattenedStorages match to prevent errors due to wrong fill values, 
+        Check if fill values of 2 FlattenedStorages match to prevent errors due to wrong fill values,
         f.e. after appending to the storage.
 
         Args:
@@ -849,16 +841,17 @@ class FlattenedStorage(HasHDF):
 
         Raises:
             ValueError: Raises when the storages have different fill values for a key
-        """        
+        """
         for k in self._fill_values.keys():
             if k in other._fill_values.keys():
                 if np.isnan(self._fill_values[k]) and np.isnan(other._fill_values[k]):
                     continue
                 else:
                     if self._fill_values[k] != other._fill_values[k]:
-                        raise ValueError("Fill values for arrays in storages don't match, can't perform requested operation")
+                        raise ValueError(
+                            "Fill values for arrays in storages don't match, can't perform requested operation"
+                        )
 
-        
     def _get_hdf_group_name(self):
         return "flat_storage"
 
@@ -959,6 +952,7 @@ class FlattenedStorage(HasHDF):
         if version >= "0.3.0":
             self._fill_values = hdf["_fill_values"]
 
+
 def _get_dtype_and_fill(storage: FlattenedStorage, name: str):
     fill = None
     if name in storage._fill_values.keys():
@@ -970,5 +964,7 @@ def _get_dtype_and_fill(storage: FlattenedStorage, name: str):
         try:
             fill = FlattenedStorage._default_fill_values(dtype)
         except KeyError:
-            raise ValueError(f"Could not determine a default fill value for array {name}")
+            raise ValueError(
+                f"Could not determine a default fill value for array {name}"
+            )
     return dtype, fill
