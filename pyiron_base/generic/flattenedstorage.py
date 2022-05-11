@@ -840,15 +840,14 @@ class FlattenedStorage(HasHDF):
         Raises:
             ValueError: Raises when the storages have different fill values for a key
         """
-        for k in self._fill_values.keys():
-            if k in other._fill_values.keys():
-                if np.isnan(self._fill_values[k]) and np.isnan(other._fill_values[k]):
-                    continue
-                else:
-                    if self._fill_values[k] != other._fill_values[k]:
-                        raise ValueError(
-                            "Fill values for arrays in storages don't match, can't perform requested operation"
-                        )
+        for k in set(self._fill_values).intersection(other._fill_values):
+            if np.isnan(self._fill_values[k]) and np.isnan(other._fill_values[k]):
+                continue
+            else:
+                if self._fill_values[k] != other._fill_values[k]:
+                    raise ValueError(
+                        "Fill values for arrays in storages don't match, can't perform requested operation"
+                    )
 
     def _get_hdf_group_name(self):
         return "flat_storage"
