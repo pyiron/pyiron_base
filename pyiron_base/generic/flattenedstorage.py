@@ -824,7 +824,9 @@ class FlattenedStorage(HasHDF):
         for k, a in other._per_element_arrays.items():
             if k not in self._per_element_arrays.keys():
                 dtype, fill = get_dtype_and_fill(storage=other, name=k)
-                self.add_array(name=k, shape=a.shape[1:], dtype=dtype, fill=fill, per="element")
+                self.add_array(
+                    name=k, shape=a.shape[1:], dtype=dtype, fill=fill, per="element"
+                )
             self._per_element_arrays[k][self.num_elements : combined_num_elements] = a[
                 0 : other.num_elements
             ]
