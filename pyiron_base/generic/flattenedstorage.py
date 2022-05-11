@@ -18,9 +18,7 @@ __status__ = "production"
 __date__ = "Jul 16, 2020"
 
 
-import chunk
 import copy
-from multiprocessing.sharedctypes import Value
 from typing import Callable, Iterable, List
 
 import numpy as np
@@ -798,7 +796,7 @@ class FlattenedStorage(HasHDF):
         self.current_element_index = i
         # return last_chunk_index, last_element_index
 
-    def extend_storage(self, other: "FlattenedStorage"):
+    def extend(self, other: "FlattenedStorage"):
         self._check_compatible_fill_values(other=other)
 
         combined_num_chunks = self.num_chunks + other.num_chunks
