@@ -798,7 +798,7 @@ class FlattenedStorage(HasHDF):
         self.current_element_index = i
         # return last_chunk_index, last_element_index
 
-    def append_storage(self, other: FlattenedStorage):
+    def extend_storage(self, other: FlattenedStorage):
         self._check_compatible_fill_values(other=other)
 
         combined_num_chunks = self.num_chunks + other.num_chunks
@@ -834,7 +834,7 @@ class FlattenedStorage(HasHDF):
     def _check_compatible_fill_values(self, other: FlattenedStorage):
         """
         Check if fill values of 2 FlattenedStorages match to prevent errors due to wrong fill values,
-        f.e. after appending to the storage.
+        f.e. after extending to the storage.
 
         Args:
             other (FlattenedStorage): Another FlattenedStorage instance
