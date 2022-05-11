@@ -819,7 +819,7 @@ class FlattenedStorage(HasHDF):
                 self.num_chunks : combined_num_chunks
             ] = other._per_chunk_arrays[k][0 : other.num_chunks]
 
-        for k, a in self._per_element_arrays.items():
+        for k, a in other._per_element_arrays.items():
             dtype, fill = _get_dtype_and_fill(storage=other, name=k)
             if k not in self._per_element_arrays.keys():
                 self.add_array(name=k, dtype=dtype, fill=fill, per="element")
