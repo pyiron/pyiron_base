@@ -809,13 +809,17 @@ class FlattenedStorage(HasHDF):
         for k, a in other._per_chunk_arrays.items():
             # add start_index of last chunk to start_index of other for correct mapping
             if k == "start_index":
-                a  = a + self._per_chunk_arrays[k][self.num_chunks] # no += to prevent inplace mutation
+                last = self.num_chunks-1
+                len_last = self._per_chunk_arrays["length"][last]
+                a = a + self._per_chunk_arrays[k][last] + len_last # no += to prevent inplace mutation
+                print(a)
             if k not in self._per_chunk_arrays.keys():
                 dtype, fill = get_dtype_and_fill(storage=other, name=k)
                 self.add_array(name=k, dtype=dtype, fill=fill, per="chunk")
             self._per_chunk_arrays[k][
                 self.num_chunks : combined_num_chunks
             ] = a[0 : other.num_chunks]
+            print(k, a)
 
         for k, a in other._per_element_arrays.items():
             if k not in self._per_element_arrays.keys():
