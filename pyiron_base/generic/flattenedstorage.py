@@ -962,7 +962,7 @@ def _get_dtype_and_fill(storage: FlattenedStorage, name: str):
         a = storage.get_array(name)
         dtype = a.dtype
         try:
-            fill = FlattenedStorage._default_fill_values(dtype)
+            fill = FlattenedStorage._default_fill_values[dtype]
         except KeyError:
             raise ValueError(
                 f"Could not determine a default fill value for array {name}"
