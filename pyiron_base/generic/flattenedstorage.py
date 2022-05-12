@@ -20,6 +20,7 @@ __date__ = "Jul 16, 2020"
 
 import copy
 from typing import Callable, Iterable, List, Tuple, Any
+from matplotlib.pyplot import fill
 
 import numpy as np
 import h5py
@@ -249,8 +250,8 @@ class FlattenedStorage(HasHDF):
         self._per_element_arrays = {}
 
         self._per_chunk_arrays = {
-            "start_index": np.empty(self._num_chunks_alloc, dtype=np.int32),
-            "length": np.empty(self._num_chunks_alloc, dtype=np.int32),
+            "start_index": np.full(self._num_chunks_alloc, dtype=np.int32, fill=0),
+            "length": np.empty(self._num_chunks_alloc, dtype=np.int32, fill=0),
             "identifier": np.empty(self._num_chunks_alloc, dtype=np.dtype("U20")),
         }
 
@@ -808,7 +809,9 @@ class FlattenedStorage(HasHDF):
 
         for k, a in other._per_chunk_arrays.items():
             # add start_index of last chunk to start_index of other for correct mapping
-            if k == "start_index":
+            if (
+                k == "start_index" and len(self) > 0
+            ):  # Check if len > 0 to ensure that no random values are accessed for length and start_index after empty init
                 last = self.num_chunks - 1
                 len_last = self._per_chunk_arrays["length"][last]
                 a = (
