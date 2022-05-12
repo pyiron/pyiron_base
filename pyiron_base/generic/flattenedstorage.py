@@ -20,7 +20,6 @@ __date__ = "Jul 16, 2020"
 
 import copy
 from typing import Callable, Iterable, List, Tuple, Any
-from matplotlib.pyplot import fill
 
 import numpy as np
 import h5py
