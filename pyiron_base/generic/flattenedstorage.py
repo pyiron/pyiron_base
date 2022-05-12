@@ -253,7 +253,7 @@ class FlattenedStorage(HasHDF):
             "start_index": np.full(
                 self._num_chunks_alloc, dtype=np.int32, fill_value=0
             ),
-            "length": np.empty(self._num_chunks_alloc, dtype=np.int32, fill_value=0),
+            "length": np.full(self._num_chunks_alloc, dtype=np.int32, fill_value=0),
             "identifier": np.empty(self._num_chunks_alloc, dtype=np.dtype("U20")),
         }
 
