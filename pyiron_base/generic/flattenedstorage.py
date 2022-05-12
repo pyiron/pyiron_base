@@ -250,8 +250,10 @@ class FlattenedStorage(HasHDF):
         self._per_element_arrays = {}
 
         self._per_chunk_arrays = {
-            "start_index": np.full(self._num_chunks_alloc, dtype=np.int32, fill=0),
-            "length": np.empty(self._num_chunks_alloc, dtype=np.int32, fill=0),
+            "start_index": np.full(
+                self._num_chunks_alloc, dtype=np.int32, fill_value=0
+            ),
+            "length": np.empty(self._num_chunks_alloc, dtype=np.int32, fill_value=0),
             "identifier": np.empty(self._num_chunks_alloc, dtype=np.dtype("U20")),
         }
 
