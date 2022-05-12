@@ -816,7 +816,9 @@ class FlattenedStorage(HasHDF):
                 )  # no += to prevent inplace mutation
             if k not in self._per_chunk_arrays.keys():
                 dtype, fill = get_dtype_and_fill(storage=other, name=k)
-                self.add_array(name=k, dtype=dtype, fill=fill, per="chunk")
+                self.add_array(
+                    name=k, dtype=dtype, shape=a.shape[1:], fill=fill, per="chunk"
+                )
             self._per_chunk_arrays[k][self.num_chunks : combined_num_chunks] = a[
                 0 : other.num_chunks
             ]
