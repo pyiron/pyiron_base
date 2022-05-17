@@ -150,7 +150,7 @@ class SerialMasterBase(GenericMaster):
         Returns:
             GenericJob: start job
         """
-        if self._start_job:
+        if self._start_job is not None:
             return self._start_job
         elif len(self) > 0:
             self._start_job = self[-1]
@@ -184,7 +184,7 @@ class SerialMasterBase(GenericMaster):
         Returns:
             GenericParameters: input of the start job
         """
-        if self.start_job:
+        if self.start_job is not None:
             return self._start_job.input
         else:
             return None
@@ -197,7 +197,7 @@ class SerialMasterBase(GenericMaster):
         Args:
             value (GenericParameters): input of the start job
         """
-        if self.start_job:
+        if self.start_job is not None:
             self._start_job.input = value
         else:
             raise ValueError(
@@ -358,7 +358,7 @@ class SerialMasterBase(GenericMaster):
 
     def _run_if_master_non_modal_child_non_modal(self, job):
         job.run()
-        if self.master_id:
+        if self.master_id is not None:
             del self
 
     def _run_if_master_modal_child_modal(self, job):
