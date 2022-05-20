@@ -96,7 +96,13 @@ class InputField:
     """
 
     def __init__(
-        self, name, doc, data_type=None, fget=lambda x: x, fset=lambda x: x, default=None
+        self,
+        name,
+        doc,
+        data_type=None,
+        fget=lambda x: x,
+        fset=lambda x: x,
+        default=None,
     ):
         self._name = name
         self.fget = fget
@@ -123,12 +129,12 @@ class InputField:
 
     def __set__(self, instance, value):
         if self._check_type(value):
-            raise TypeError(f'{self._name} must be of type {self.str_type}!')
+            raise TypeError(f"{self._name} must be of type {self.str_type}!")
         instance.storage[self._name] = self.fset(value)
 
     @property
     def str_type(self):
         if isinstance(self._type, list) or isinstance(self._type, tuple):
-            return '/'.join([str(tt) for tt in self._type])
+            return "/".join([str(tt) for tt in self._type])
         else:
             return self._type
