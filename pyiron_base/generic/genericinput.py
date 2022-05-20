@@ -100,10 +100,10 @@ class InputField:
         name,
         doc,
         data_type=None,
-        fget=lambda x: x,
-        fset=lambda x: x,
         default=None,
         required=True,
+        fget=lambda x: x,
+        fset=lambda x: x,
     ):
         """
         Args:
@@ -113,10 +113,10 @@ class InputField:
                 checks the input. If the check should not take place, set `None`.
                 If several types should be specified, use `list` or `tuple` to
                 set all types.
+            default (None/data_type): Default value
+            required (bool): Whether the value is required to be defined
             fget (function): Getter function
             fset (function): Setter function
-            default (None/data_type): Default value
-            requred (bool): Whether the value is required to be defined
         """
         self._name = name
         self.fget = fget
