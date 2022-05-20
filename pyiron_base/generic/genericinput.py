@@ -104,6 +104,18 @@ class InputField:
         fset=lambda x: x,
         default=None,
     ):
+        """
+        Args:
+            name (str): Name of the attribute
+            doc (str): Docstring of the attribute
+            data_type (None/type/list/tuple): Data type. If set, setter function
+                checks the input. If the check should not take place, set `None`.
+                If several types should be specified, use `list` or `tuple` to
+                set all types.
+            fget (function): Getter function
+            fset (function): Setter function
+            default (None/data_type): Default value
+        """
         self._name = name
         self.fget = fget
         self.fset = fset
