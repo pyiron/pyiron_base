@@ -209,7 +209,18 @@ class DataContainer(MutableMapping, HasGroups, HasHDF):
     >>> e
     ExtendedContainer({'foo': 1, 'bar': 5})
 
-    Or a class that uses a DataContainer for storage, but doesn't derive from it.
+    Be aware the :class:`.DataContainer` and its subclasses are recursive data structures, i.e. your fancy attribute
+    will be available also on sub groups.
+
+    >>> g = e.create_group('sub')
+    >>> g.fnord = 23
+    >>> g.my_fancy_field
+    42
+    >>> e
+    ExtendedContainer({'foo': 1, 'bar': 5, 'sub': ExtendedContainer({'fnord': 23})})
+
+    For that reason most of time you'll actually want a class that uses a DataContainer for storage, but doesn't derive
+    from it.
 
     >>> from pyiron_base.generic.object import HasStorage
     >>> class FancyClass(HasStorage):
