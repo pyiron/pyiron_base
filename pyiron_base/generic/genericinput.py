@@ -103,6 +103,7 @@ class InputField:
         fget=lambda x: x,
         fset=lambda x: x,
         default=None,
+        required=True,
     ):
         """
         Args:
@@ -115,6 +116,7 @@ class InputField:
             fget (function): Getter function
             fset (function): Setter function
             default (None/data_type): Default value
+            requred (bool): Whether the value is required to be defined
         """
         self._name = name
         self.fget = fget
@@ -122,12 +124,13 @@ class InputField:
         self.__doc__ = doc
         self._type = data_type
         self._default = default
+        self._required = required
 
     def __get__(self, instance, owner=None):
         value = instance.storage.get(self._name, default=None)
         if value is None:
             value = self._default
-        if value is None:
+        if value is None and self.required:
             raise AttributeError(f'"{self._name}" not defined (yet)!')
         return self.fget(value)
 
