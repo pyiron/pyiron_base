@@ -57,7 +57,7 @@ class GenericInput(HasStorage):
             if isinstance(v, InputField):
                 doc += f"\n\t{k}"
                 if v.str_type is not None:
-                    doc += f"({v.str_type})"
+                    doc += f" ({v.str_type})"
                 doc += f": {v.__doc__}"
         return doc
 
