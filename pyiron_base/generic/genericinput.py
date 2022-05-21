@@ -54,14 +54,24 @@ class GenericInput(HasStorage):
         if self.__doc__ is not None:
             doc += self.__doc__ + "\n"
         doc += "\nAttributes:\n"
-        doc += "-----------"
+        doc += "-----------\n\t"
+        doc += "\n\t".join(self._all_items)
+        return doc
+
+    @property
+    def _all_items(self):
+        doc = []
         for k, v in self.__class__.__dict__.items():
             if isinstance(v, InputField):
-                doc += f"\n\t{k}"
+                doc_tmp = f"{k}"
                 if v.str_type is not None:
-                    doc += f" ({v.str_type})"
-                doc += f": {v.__doc__}"
+                    doc_tmp += f" ({v.str_type})"
+                doc_tmp += f": {v.__doc__}"
+                doc.append(doc_tmp)
         return doc
+
+    def __repr__(self):
+        return "\n".join(self._all_items)
 
 
 class InputField:
