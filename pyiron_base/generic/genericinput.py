@@ -50,8 +50,10 @@ class GenericInput(HasStorage):
 
     def _make_doc(self):
         cn = self.__class__.__name__
-        doc = cn + "\n" + "-" * len(cn) + "\n" + self.__doc__ + "\n\n"
-        doc += "Attributes:\n"
+        doc = cn + "\n" + "-" * len(cn) + "\n"
+        if self.__doc__ is not None:
+            doc += self.__doc__ + "\n"
+        doc += "\nAttributes:\n"
         doc += "-----------"
         for k, v in self.__class__.__dict__.items():
             if isinstance(v, InputField):
