@@ -36,7 +36,7 @@ class TemplateJob(GenericJob, HasStorage):
 
     @property
     def _output_class(self) -> Type[DataContainer]:
-        """Children can overwrite this method to return some other child of DataContainer for custom behaviour"""
+        """Children can overwrite this method to return some other child of `DataContainer` for custom behaviour"""
         return DataContainer
 
     @property
