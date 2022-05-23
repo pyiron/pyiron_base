@@ -7,6 +7,8 @@ Template class to define jobs
 
 from pyiron_base.job.generic import GenericJob
 from pyiron_base.generic.object import HasStorage
+from pyiron_base.generic.datacontainer import DataContainer
+from typing import Type
 
 __author__ = "Jan Janssen"
 __copyright__ = (
@@ -24,16 +26,40 @@ class TemplateJob(GenericJob, HasStorage):
     def __init__(self, project, job_name):
         GenericJob.__init__(self, project, job_name)
         HasStorage.__init__(self)
-        self.storage.create_group("input")
-        self.storage.create_group("output")
+        self.storage.input = self._input_class(table_name='input')
+        self.storage.output = self._output_class(table_name='output')
 
     @property
-    def input(self):
+    def _input_class(self) -> Type[DataContainer]:
+        """Children can overwrite this method to return some other child of DataContainer for custom behaviour"""
+        return DataContainer
+
+    @property
+    def _output_class(self) -> Type[DataContainer]:
+        """Children can overwrite this method to return some other child of DataContainer for custom behaviour"""
+        return DataContainer
+
+    @property
+    def input(self) -> Type[DataContainer]:
         return self.storage.input
 
+    @input.setter
+    def input(self, new_input):
+        raise AttributeError(
+            "Input cannot be overwritten; to get custom output behaviour, override the `_input_class` property to "
+            "return your own custom class (which inherits from `DataContainer`)."
+        )
+
     @property
-    def output(self):
+    def output(self) -> Type[DataContainer]:
         return self.storage.output
+
+    @output.setter
+    def output(self, new_output):
+        raise AttributeError(
+            "Output cannot be overwritten; to get custom output behaviour, override the `_output_class` property to "
+            "return your own custom class (which inherits from `DataContainer`)."
+        )
 
     def to_hdf(self, hdf=None, group_name=None):
         GenericJob.to_hdf(self, hdf=hdf, group_name=group_name)
