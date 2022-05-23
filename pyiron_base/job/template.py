@@ -46,8 +46,21 @@ class TemplateJob(GenericJob, HasStorage):
     @input.setter
     def input(self, new_input):
         raise AttributeError(
-            "Input cannot be overwritten; to get custom output behaviour, override the `_input_class` property to "
-            "return your own custom class (which inherits from `DataContainer`)."
+            """
+            Input cannot be overwritten; to get custom input behaviour, override the `_input_class` property to return 
+            your own custom class (which inherits from `DataContainer`).
+            
+            Example:
+            >>> class MyInput(DataContainer):
+            >>>     def __init__(self, init=None, table_name=None, lazy=False, wrap_blacklist=()):
+            >>>         super().__init__(init=init, table_name=table_name, lazy=lazy, wrap_blacklist=wrap_blacklist)
+            >>>         self.foo = 42
+            >>>
+            >>> class MyJob(TemplateJob):
+            >>>     @property
+            >>>     def _input_class(self) -> MyInput:
+            >>>         return MyInput
+            """
         )
 
     @property
@@ -57,8 +70,21 @@ class TemplateJob(GenericJob, HasStorage):
     @output.setter
     def output(self, new_output):
         raise AttributeError(
-            "Output cannot be overwritten; to get custom output behaviour, override the `_output_class` property to "
-            "return your own custom class (which inherits from `DataContainer`)."
+            """
+            Output cannot be overwritten; to get custom output behaviour, override the `_output_class` property to return 
+            your own custom class (which inherits from `DataContainer`).
+
+            Example:
+            >>> class MyOutput(DataContainer):
+            >>>     def __init__(self, init=None, table_name=None, lazy=False, wrap_blacklist=()):
+            >>>         super().__init__(init=init, table_name=table_name, lazy=lazy, wrap_blacklist=wrap_blacklist)
+            >>>         self.bar = 'towel'
+            >>>
+            >>> class MyJob(TemplateJob):
+            >>>     @property
+            >>>     def _output_class(self) -> MyOutput:
+            >>>         return MyOutput
+            """
         )
 
     def to_hdf(self, hdf=None, group_name=None):
