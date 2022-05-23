@@ -26,8 +26,8 @@ class TemplateJob(GenericJob, HasStorage):
     def __init__(self, project, job_name):
         GenericJob.__init__(self, project, job_name)
         HasStorage.__init__(self)
-        self.storage.input = self._input_class(table_name='input')
-        self.storage.output = self._output_class(table_name='output')
+        self.storage.input = self._input_class(table_name="input")
+        self.storage.output = self._output_class(table_name="output")
 
     @property
     def _input_class(self) -> Type[DataContainer]:
