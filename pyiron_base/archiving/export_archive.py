@@ -4,6 +4,7 @@ from shutil import copyfile
 from pyfileindex import PyFileIndex
 import tarfile
 from shutil import rmtree
+from pyiron_base.archiving.shared import getdir
 from pyiron_base.generic.util import static_isinstance
 
 
@@ -14,14 +15,6 @@ def new_job_id(job_id, job_translate_dict):
         return job_translate_dict[job_id]
     else:
         return None
-
-
-def getdir(path):
-    path_base_name = os.path.basename(path)
-    if path_base_name == "":
-        return os.path.basename(os.path.dirname(path))
-    else:
-        return path_base_name
 
 
 def update_project(project_instance, directory_to_transfer, archive_directory, df):
