@@ -98,9 +98,9 @@ def run_job_with_status_created(job):
     elif job.server.run_mode.modal:
         job.run_static()
     elif (
-            job.server.run_mode.non_modal
-            or job.server.run_mode.thread
-            or job.server.run_mode.worker
+        job.server.run_mode.non_modal
+        or job.server.run_mode.thread
+        or job.server.run_mode.worker
     ):
         job.run_if_non_modal()
     elif job.server.run_mode.queue:
@@ -111,7 +111,9 @@ def run_job_with_status_created(job):
         job.run_if_interactive_non_modal()
 
 
-def run_job_with_status_submitted(job):  # Submitted jobs are handled by the job wrapper!
+def run_job_with_status_submitted(
+    job,
+):  # Submitted jobs are handled by the job wrapper!
     """
     Internal helper function the run if submitted function is called when the job status is 'submitted'. It means
     the job is waiting in the queue. ToDo: Display a list of the users jobs in the queue.
@@ -120,8 +122,8 @@ def run_job_with_status_submitted(job):  # Submitted jobs are handled by the job
         job (GenericJob): pyiron job object
     """
     if (
-            job.server.run_mode.queue
-            and not job.project.queue_check_job_is_waiting_or_running(job)
+        job.server.run_mode.queue
+        and not job.project.queue_check_job_is_waiting_or_running(job)
     ):
         if not state.queue_adapter.remote_flag:
             job.run(delete_existing_job=True)
@@ -140,8 +142,8 @@ def run_job_with_status_running(job):
         job (GenericJob): pyiron job object
     """
     if (
-            job.server.run_mode.queue
-            and not job.project.queue_check_job_is_waiting_or_running(job)
+        job.server.run_mode.queue
+        and not job.project.queue_check_job_is_waiting_or_running(job)
     ):
         job.run(delete_existing_job=True)
     elif job.server.run_mode.interactive:
@@ -484,9 +486,7 @@ def execute_job_with_external_executable(job):
             job.status.aborted = True
             if job.job_id is not None:
                 job.project.db.item_update(job._runtime(), job.job_id)
-            error_file = posixpath.join(
-                job.project_hdf5.working_directory, "error.msg"
-            )
+            error_file = posixpath.join(job.project_hdf5.working_directory, "error.msg")
             with open(error_file, "w") as f:
                 f.write(e.output)
             if job.server.run_mode.non_modal:

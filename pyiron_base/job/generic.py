@@ -33,7 +33,7 @@ from pyiron_base.job.runfunction import (
     run_job_with_runmode_interactive,
     run_job_with_runmode_interactive_non_modal,
     run_job_with_runmode_queue,
-    execute_job_with_external_executable
+    execute_job_with_external_executable,
 )
 from pyiron_base.job.util import (
     _copy_restart_files,
@@ -736,7 +736,7 @@ class GenericJob(JobCore):
                 run_job_with_status_finished(
                     job=self,
                     delete_existing_job=delete_existing_job,
-                    run_again=run_again
+                    run_again=run_again,
                 )
         except Exception:
             self.drop_status_to_aborted()
