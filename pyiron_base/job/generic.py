@@ -5,18 +5,36 @@
 Generic Job class extends the JobCore class with all the functionality to run the job object.
 """
 
-import signal
 from datetime import datetime
-import os
-
-import posixpath
-import multiprocessing
 import h5io
-from pyiron_base.job.wrapper import JobWrapper
+import os
+import posixpath
+import signal
+import warnings
+
 from pyiron_base.state import state
 from pyiron_base.job.executable import Executable
 from pyiron_base.job.jobstatus import JobStatus
 from pyiron_base.job.core import JobCore
+from pyiron_base.job.runfunction import (
+    run_job_with_parameter_repair,
+    run_job_with_status_initialized,
+    run_job_with_status_created,
+    run_job_with_status_submitted,
+    run_job_with_status_running,
+    run_job_with_status_refresh,
+    run_job_with_status_busy,
+    run_job_with_status_collect,
+    run_job_with_status_suspended,
+    run_job_with_status_finished,
+    run_job_with_runmode_manually,
+    run_job_with_runmode_modal,
+    run_job_with_runmode_non_modal,
+    run_job_with_runmode_interactive,
+    run_job_with_runmode_interactive_non_modal,
+    run_job_with_runmode_queue,
+    execute_job_with_external_executable
+)
 from pyiron_base.job.util import (
     _copy_restart_files,
     _kill_child,
@@ -26,8 +44,6 @@ from pyiron_base.job.util import (
 from pyiron_base.generic.util import static_isinstance, deprecate
 from pyiron_base.server.generic import Server
 from pyiron_base.database.filetable import FileTable
-import subprocess
-import warnings
 
 __author__ = "Joerg Neugebauer, Jan Janssen"
 __copyright__ = (
@@ -705,7 +721,7 @@ class GenericJob(JobCore):
             elif status == "created":
                 self._run_if_created()
             elif status == "submitted":
-                self._run_if_submitted()
+                run_job_with_status_submitted(job=self)
             elif status == "running":
                 self._run_if_running()
             elif status == "collect":
@@ -717,7 +733,11 @@ class GenericJob(JobCore):
             elif status == "busy":
                 self._run_if_busy()
             elif status == "finished":
-                self._run_if_finished(delete_existing_job=delete_existing_job)
+                run_job_with_status_finished(
+                    job=self,
+                    delete_existing_job=delete_existing_job,
+                    run_again=run_again
+                )
         except Exception:
             self.drop_status_to_aborted()
             raise
@@ -733,82 +753,13 @@ class GenericJob(JobCore):
         The run if modal function is called by run to execute the simulation, while waiting for the output. For this we
         use subprocess.check_output()
         """
-        self.run_static()
+        run_job_with_runmode_modal(job=self)
 
     def run_static(self):
         """
         The run static function is called by run to execute the simulation.
         """
-        self._logger.info(
-            "{}, status: {}, run job (modal)".format(self.job_info_str, self.status)
-        )
-        if self.executable.executable_path == "":
-            self.status.aborted = True
-            raise ValueError("No executable set!")
-        self.status.running = True
-        if self.job_id is not None:
-            self.project.db.item_update({"timestart": datetime.now()}, self.job_id)
-        job_crashed, out = False, None
-        if self.server.cores == 1 or not self.executable.mpi:
-            executable = str(self.executable)
-            shell = True
-        elif isinstance(self.executable.executable_path, list):
-            executable = self.executable.executable_path[:] + [
-                str(self.server.cores),
-                str(self.server.threads),
-            ]
-            shell = False
-        else:
-            executable = [
-                self.executable.executable_path,
-                str(self.server.cores),
-                str(self.server.threads),
-            ]
-            shell = False
-        try:
-            out = subprocess.run(
-                executable,
-                cwd=self.project_hdf5.working_directory,
-                shell=shell,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.STDOUT,
-                universal_newlines=True,
-                check=True,
-            ).stdout
-        except subprocess.CalledProcessError as e:
-            out = e.output
-            if e.returncode in self.executable.accepted_return_codes:
-                pass
-            elif not self.server.accept_crash:
-                self._logger.warning("Job aborted")
-                self._logger.warning(e.output)
-                self.status.aborted = True
-                if self.job_id is not None:
-                    self.project.db.item_update(self._runtime(), self.job_id)
-                error_file = posixpath.join(
-                    self.project_hdf5.working_directory, "error.msg"
-                )
-                with open(error_file, "w") as f:
-                    f.write(e.output)
-                if self.server.run_mode.non_modal:
-                    state.database.close_connection()
-                raise RuntimeError("Job aborted")
-            else:
-                job_crashed = True
-
-        with open(
-            posixpath.join(self.project_hdf5.working_directory, "error.out"), mode="w"
-        ) as f_err:
-            f_err.write(out)
-
-        self.set_input_to_read_only()
-        self.status.collect = True
-        self._logger.info(
-            "{}, status: {}, output: {}".format(self.job_info_str, self.status, out)
-        )
-        self.run()
-        if job_crashed:
-            self.status.aborted = True
+        execute_job_with_external_executable(job=self)
 
     def transfer_from_remote(self):
         state.queue_adapter.get_job_from_remote(
@@ -872,9 +823,7 @@ class GenericJob(JobCore):
         For jobs which executables are available as Python library, those can also be executed with a library call
         instead of calling an external executable. This is usually faster than a single core python job.
         """
-        raise NotImplementedError(
-            "This function needs to be implemented in the specific class."
-        )
+        run_job_with_runmode_interactive(job=self)
 
     def interactive_close(self):
         """
@@ -911,60 +860,14 @@ class GenericJob(JobCore):
         For jobs which executables are available as Python library, those can also be executed with a library call
         instead of calling an external executable. This is usually faster than a single core python job.
         """
-        raise NotImplementedError(
-            "This function needs to be implemented in the specific class."
-        )
+        run_job_with_runmode_interactive_non_modal(job=self)
 
     def run_if_non_modal(self):
         """
         The run if non modal function is called by run to execute the simulation in the background. For this we use
         multiprocessing.Process()
         """
-        if not state.database.database_is_disabled:
-            if not state.database.using_local_database:
-                args = (self.job_id, self.project_hdf5.working_directory, False, None)
-            else:
-                args = (
-                    self.job_id,
-                    self.project_hdf5.working_directory,
-                    False,
-                    str(self.project.db.conn.engine.url),
-                )
-
-            p = multiprocessing.Process(
-                target=multiprocess_wrapper,
-                args=args,
-            )
-
-            if self.master_id and self.server.run_mode.non_modal:
-                del self
-                p.start()
-            else:
-                if self.server.run_mode.non_modal:
-                    p.start()
-                else:
-                    self._process = p
-                    self._process.start()
-        else:
-            command = (
-                "python -m pyiron_base.cli wrapper -p "
-                + self.working_directory
-                + " -f "
-                + self.project_hdf5.file_name
-                + self.project_hdf5.h5_path
-            )
-            working_directory = self.project_hdf5.working_directory
-            if not os.path.exists(working_directory):
-                os.makedirs(working_directory)
-            del self
-            subprocess.Popen(
-                command,
-                cwd=working_directory,
-                shell=True,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.STDOUT,
-                universal_newlines=True,
-            )
+        run_job_with_runmode_non_modal(job=self)
 
     def run_if_manually(self, _manually_print=True):
         """
@@ -974,14 +877,7 @@ class GenericJob(JobCore):
         Args:
             _manually_print (bool): Print explanation how to run the simulation manually - default=True.
         """
-        if _manually_print:
-            abs_working = posixpath.abspath(self.project_hdf5.working_directory)
-            print(
-                "You have selected to start the job manually. "
-                + "To run it, go into the working directory {} and ".format(abs_working)
-                + "call 'python -m pyiron_base.cli wrapper -p {}".format(abs_working)
-                + " -j {} ' ".format(self.job_id)
-            )
+        run_job_with_runmode_manually(job=self, _manually_print=_manually_print)
 
     def run_if_scheduler(self):
         """
@@ -991,65 +887,7 @@ class GenericJob(JobCore):
         Returns:
             int: Returns the queue ID for the job.
         """
-        if state.queue_adapter is None:
-            raise TypeError("No queue adapter defined.")
-        if state.queue_adapter.remote_flag:
-            filename = state.queue_adapter.convert_path_to_remote(
-                path=self.project_hdf5.file_name
-            )
-            working_directory = state.queue_adapter.convert_path_to_remote(
-                path=self.working_directory
-            )
-            command = (
-                "python -m pyiron_base.cli wrapper -p "
-                + working_directory
-                + " -f "
-                + filename
-                + self.project_hdf5.h5_path
-                + " --submit"
-            )
-            state.queue_adapter.transfer_file_to_remote(
-                file=self.project_hdf5.file_name, transfer_back=False
-            )
-        elif state.database.database_is_disabled:
-            command = (
-                "python -m pyiron_base.cli wrapper -p "
-                + self.working_directory
-                + " -f "
-                + self.project_hdf5.file_name
-                + self.project_hdf5.h5_path
-            )
-        else:
-            command = (
-                "python -m pyiron_base.cli wrapper -p "
-                + self.working_directory
-                + " -j "
-                + str(self.job_id)
-            )
-        que_id = state.queue_adapter.submit_job(
-            queue=self.server.queue,
-            job_name="pi_" + str(self.job_id),
-            working_directory=self.project_hdf5.working_directory,
-            cores=self.server.cores,
-            run_time_max=self.server.run_time,
-            memory_max=self.server.memory_limit,
-            command=command,
-        )
-        if que_id is not None:
-            self.server.queue_id = que_id
-            self._server.to_hdf(self._hdf5)
-            print("Queue system id: ", que_id)
-        else:
-            self._logger.warning("Job aborted")
-            self.status.aborted = True
-            raise ValueError("run_queue.sh crashed")
-        state.logger.debug("submitted %s", self.job_name)
-        self._logger.debug("job status: %s", self.status)
-        self._logger.info(
-            "{}, status: {}, submitted: queue id {}".format(
-                self.job_info_str, self.status, que_id
-            )
-        )
+        return run_job_with_runmode_queue(job=self)
 
     def send_to_database(self):
         """
@@ -1396,14 +1234,7 @@ class GenericJob(JobCore):
         Args:
             _manually_print (bool): [True/False] print command for execution - default=True
         """
-        if _manually_print:
-            print(
-                "You have selected to start the job manually. "
-                "To run it, go into the working directory {} and "
-                "call 'python run_job.py' ".format(
-                    posixpath.abspath(self.project_hdf5.working_directory)
-                )
-            )
+        run_job_with_runmode_manually(job=self, _manually_print=_manually_print)
 
     def _run_if_new(self, debug=False):
         """
@@ -1413,14 +1244,7 @@ class GenericJob(JobCore):
         Args:
             debug (bool): Debug Mode
         """
-        self.validate_ready_to_run()
-        if self.server.run_mode.queue:
-            self.check_setup()
-        if self.check_if_job_exists():
-            print("job exists already and therefore was not created!")
-        else:
-            self.save()
-            self.run()
+        run_job_with_status_initialized(job=self, debug=debug)
 
     def _run_if_created(self):
         """
@@ -1431,76 +1255,28 @@ class GenericJob(JobCore):
         Returns:
             int: Queue ID - if the job was send to the queue
         """
-        self.status.submitted = True
-
-        # Different run modes
-        if self.server.run_mode.manual:
-            self.run_if_manually()
-        elif self.server.run_mode.worker:
-            self.run_if_manually(_manually_print=False)
-        elif self.server.run_mode.modal:
-            self.run_static()
-        elif (
-            self.server.run_mode.non_modal
-            or self.server.run_mode.thread
-            or self.server.run_mode.worker
-        ):
-            self.run_if_non_modal()
-        elif self.server.run_mode.queue:
-            self.run_if_scheduler()
-        elif self.server.run_mode.interactive:
-            self.run_if_interactive()
-        elif self.server.run_mode.interactive_non_modal:
-            self.run_if_interactive_non_modal()
+        return run_job_with_status_created(job=self)
 
     def _run_if_repair(self):
         """
         Internal helper function the run if repair function is called when the run() function is called with the
         'repair' parameter.
         """
-        self._run_if_created()
-
-    def _run_if_submitted(self):  # Submitted jobs are handled by the job wrapper!
-        """
-        Internal helper function the run if submitted function is called when the job status is 'submitted'. It means
-        the job is waiting in the queue. ToDo: Display a list of the users jobs in the queue.
-        """
-        if (
-            self.server.run_mode.queue
-            and not self.project.queue_check_job_is_waiting_or_running(self)
-        ):
-            if not state.queue_adapter.remote_flag:
-                self.run(delete_existing_job=True)
-            else:
-                self.transfer_from_remote()
-        else:
-            print("Job " + str(self.job_id) + " is waiting in the que!")
+        run_job_with_parameter_repair(job=self)
 
     def _run_if_running(self):
         """
         Internal helper function the run if running function is called when the job status is 'running'. It allows the
         user to interact with the simulation while it is running.
         """
-        if (
-            self.server.run_mode.queue
-            and not self.project.queue_check_job_is_waiting_or_running(self)
-        ):
-            self.run(delete_existing_job=True)
-        elif self.server.run_mode.interactive:
-            self.run_if_interactive()
-        elif self.server.run_mode.interactive_non_modal:
-            self.run_if_interactive_non_modal()
-        else:
-            print("Job " + str(self.job_id) + " is running!")
+        run_job_with_status_running(job=self)
 
     def run_if_refresh(self):
         """
         Internal helper function the run if refresh function is called when the job status is 'refresh'. If the job was
         suspended previously, the job is going to be started again, to be continued.
         """
-        raise NotImplementedError(
-            "Refresh is not supported for this job type for job  " + str(self.job_id)
-        )
+        run_job_with_status_refresh(job=self)
 
     def set_input_to_read_only(self):
         """
@@ -1513,9 +1289,7 @@ class GenericJob(JobCore):
         """
         Internal helper function the run if busy function is called when the job status is 'busy'.
         """
-        raise NotImplementedError(
-            "Refresh is not supported for this job type for job  " + str(self.job_id)
-        )
+        run_job_with_status_busy(job=self)
 
     def _run_if_collect(self):
         """
@@ -1523,60 +1297,14 @@ class GenericJob(JobCore):
         the simulation output using the standardized functions collect_output() and collect_logfiles(). Afterwards the
         status is set to 'finished'
         """
-        self.collect_output()
-        self.collect_logfiles()
-        if self.job_id is not None:
-            self.project.db.item_update(self._runtime(), self.job_id)
-        if self.status.collect:
-            if not self.convergence_check():
-                self.status.not_converged = True
-            else:
-                if self._compress_by_default:
-                    self.compress()
-                self.status.finished = True
-            self._hdf5["status"] = self.status.string
-        if self.job_id is not None:
-            self._calculate_successor()
-        self.send_to_database()
-        self.update_master()
+        run_job_with_status_collect(job=self)
 
     def _run_if_suspended(self):
         """
         Internal helper function the run if suspended function is called when the job status is 'suspended'. It
         restarts the job by calling the run if refresh function after setting the status to 'refresh'.
         """
-        self.status.refresh = True
-        self.run()
-
-    @deprecate(
-        run_again="Either delete the job via job.remove() or use delete_existing_job=True.",
-        version="0.4.0",
-    )
-    def _run_if_finished(self, delete_existing_job=False, run_again=False):
-        """
-        Internal helper function the run if finished function is called when the job status is 'finished'. It loads
-        the existing job.
-
-        Args:
-            delete_existing_job (bool): Delete the existing job and run the simulation again.
-            run_again (bool): Same as delete_existing_job (deprecated)
-        """
-        if run_again:
-            delete_existing_job = True
-        if delete_existing_job:
-            parent_id = self.parent_id
-            self.parent_id = None
-            self.remove()
-            self._job_id = None
-            self.status.initialized = True
-            self.parent_id = parent_id
-            self.run()
-        else:
-            self.logger.warning(
-                "The job {} is being loaded instead of running. To re-run use the argument "
-                "'delete_existing_job=True in create_job'".format(self.job_name)
-            )
-            self.from_hdf()
+        run_job_with_status_suspended(job=self)
 
     def _executable_activate(self, enforce=False, codename=None):
         """
@@ -1779,13 +1507,3 @@ class GenericError(object):
             return ""
         elif print_yes:
             return string.join(self._job[file_name])
-
-
-def multiprocess_wrapper(job_id, working_dir, debug=False, connection_string=None):
-    job_wrap = JobWrapper(
-        working_directory=str(working_dir),
-        job_id=int(job_id),
-        debug=debug,
-        connection_string=connection_string,
-    )
-    job_wrap.job.run_static()
