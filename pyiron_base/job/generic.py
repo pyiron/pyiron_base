@@ -1193,7 +1193,8 @@ class GenericJob(JobCore):
         if self._import_directory is not None:
             self._hdf5["import_directory"] = self._import_directory
         self._server.to_hdf(self._hdf5)
-        self.executable.to_hdf(self._hdf5)
+        if self._executable is not None:
+            self.executable.to_hdf(self._hdf5)
         with self._hdf5.open("input") as hdf_input:
             generic_dict = {
                 "restart_file_list": self._restart_file_list,
