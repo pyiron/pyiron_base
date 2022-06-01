@@ -4,16 +4,9 @@ import numpy as np
 from shutil import rmtree
 from distutils.dir_util import copy_tree
 import tarfile
+from pyiron_base.archiving.shared import getdir
 from pyiron_base.generic.util import static_isinstance
 from pyiron_base.state import state
-
-
-def getdir(path):
-    path_base_name = os.path.basename(path)
-    if path_base_name == "":
-        return os.path.basename(os.path.dirname(path))
-    else:
-        return path_base_name
 
 
 def update_id_lst(record_lst, job_id_lst):
