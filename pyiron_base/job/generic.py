@@ -1233,10 +1233,8 @@ class GenericJob(JobCore):
         if "import_directory" in self._hdf5.list_nodes():
             self._import_directory = self._hdf5["import_directory"]
         self._server.from_hdf(self._hdf5)
-        try:
+        if 'executable' in self._hdf5.list_groups():
             self.executable.from_hdf(self._hdf5)
-        except ValueError:
-            pass  # older versions of pyiron did not save executable information
         with self._hdf5.open("input") as hdf_input:
             if "generic_dict" in hdf_input.list_nodes():
                 generic_dict = hdf_input["generic_dict"]
