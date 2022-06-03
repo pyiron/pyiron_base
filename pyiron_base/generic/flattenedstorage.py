@@ -198,10 +198,19 @@ class FlattenedStorage(HasHDF):
     __version__ = "0.2.0"
     __hdf_version__ = "0.3.0"
     _default_fill_values = {
+        np.dtype("int8"): -1,
+        np.dtype("int16"): -1,
         np.dtype("int32"): -1,
         np.dtype("int64"): -1,
+        np.dtype("float16"): np.nan,
         np.dtype("float32"): np.nan,
         np.dtype("float64"): np.nan,
+        np.dtype("object") : None,
+        np.dtype("str"): "_default",
+        np.dtype("uint8"): 0,
+        np.dtype("uint16"): 0,
+        np.dtype("uint32"): 0,
+        np.dtype("uint64"): 0,
     }
 
     def __init__(self, num_chunks=1, num_elements=1, **kwargs):
