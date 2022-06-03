@@ -198,10 +198,19 @@ class FlattenedStorage(HasHDF):
     __version__ = "0.2.0"
     __hdf_version__ = "0.3.0"
     _default_fill_values = {
+        np.dtype("int8"): -1,
+        np.dtype("int16"): -1,
         np.dtype("int32"): -1,
         np.dtype("int64"): -1,
+        np.dtype("float16"): np.nan,
         np.dtype("float32"): np.nan,
         np.dtype("float64"): np.nan,
+        np.dtype("object"): None,
+        np.dtype("uint8"): 0,
+        np.dtype("uint16"): 0,
+        np.dtype("uint32"): 0,
+        np.dtype("uint64"): 0,
+        str: "_default",
     }
 
     def __init__(self, num_chunks=1, num_elements=1, **kwargs):
@@ -969,7 +978,10 @@ def get_dtype_and_fill(storage: FlattenedStorage, name: str) -> Tuple[np.generic
         dtype = type(fill)
     else:
         a = storage.get_array(name)
-        dtype = a.dtype
+        if a.dtype.char == "U":
+            dtype = str
+        else:
+            dtype = a.dtype
         try:
             fill = FlattenedStorage._default_fill_values[dtype]
         except KeyError:
