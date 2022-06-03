@@ -205,7 +205,7 @@ class FlattenedStorage(HasHDF):
         np.dtype("float16"): np.nan,
         np.dtype("float32"): np.nan,
         np.dtype("float64"): np.nan,
-        np.dtype("object") : None,
+        np.dtype("object"): None,
         np.dtype("str"): "_default",
         np.dtype("uint8"): 0,
         np.dtype("uint16"): 0,
