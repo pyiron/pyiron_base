@@ -782,6 +782,8 @@ class DataContainer(MutableMapping, HasGroups, HasHDF):
         >>> all(a is not b for a, b in zip(pl.copy().values(), pl.values()))
         True
         """
+        if self._lazy:
+            _ = self.to_builtin(stringify=False)
         return copy.deepcopy(self)
 
     def _get_hdf_group_name(self):
