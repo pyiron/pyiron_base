@@ -905,10 +905,22 @@ class DataContainer(MutableMapping, HasGroups, HasHDF):
         """
         write(self.to_builtin(), file_name)
 
+    def force(self, recursive=True):
+        """
+        Load all HDFStubs present in the data container.
+
+        Args:
+            recursive (bool): force also nested data containers, default True
+        """
+        if not self._lazy: return
+
+        for v in self.values():
+            if recursive and isinstance(v, DataContainer):
+                v.force()
+
     def __init_subclass__(cls):
         # called whenever a subclass of DataContainer is defined, then register all subclasses with the same function
         # that the DataContainer is registered
         HDFStub.register(cls, lambda h, g: h[g].to_object(lazy=True))
-
 
 HDFStub.register(DataContainer, lambda h, g: h[g].to_object(lazy=True))
