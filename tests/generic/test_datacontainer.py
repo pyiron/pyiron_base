@@ -596,7 +596,14 @@ class TestDataContainer(TestWithCleanProject):
         self.assertTrue(all(not isinstance(v, HDFStub) for v in ll[0]._store),
                         "Nested values not loaded after force even though recursive==True!")
 
-
+    def test_lazy_copy(self):
+        """Copying lazy data containers should not throw an error."""
+        try:
+            self.pl.to_hdf(self.hdf, "lazy")
+            ll = self.hdf["lazy"].to_object(lazy=True)
+            ll.copy()
+        except Exception as e:
+            self.fail(f"Copy of a lazy data container raised {e}!")
 
     def test_stub_sublasses(self):
         """Sub classes of DataContainer should also be able to be lazily loaded."""
