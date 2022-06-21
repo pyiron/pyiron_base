@@ -913,7 +913,8 @@ class DataContainer(MutableMapping, HasGroups, HasHDF):
         Args:
             recursive (bool): force also nested data containers, default True
         """
-        if not self._lazy and not recursive: return
+        if not self._lazy and not recursive:
+            return
 
         # values are loaded from HDF once they are accessed via __getitem__, which is implicetly called by values()
         for v in self.values():
@@ -924,5 +925,6 @@ class DataContainer(MutableMapping, HasGroups, HasHDF):
         # called whenever a subclass of DataContainer is defined, then register all subclasses with the same function
         # that the DataContainer is registered
         HDFStub.register(cls, lambda h, g: h[g].to_object(lazy=True))
+
 
 HDFStub.register(DataContainer, lambda h, g: h[g].to_object(lazy=True))
