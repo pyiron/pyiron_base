@@ -13,6 +13,7 @@ import shutil
 import warnings
 
 from pyiron_base.interfaces.has_groups import HasGroups
+from pyiron_base.generic.hdfio import ProjectHDFio
 from pyiron_base.job.util import (
     _get_project_for_copy,
     _copy_database_entry,
