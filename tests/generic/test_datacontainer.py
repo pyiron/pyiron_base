@@ -578,18 +578,18 @@ class TestDataContainer(TestWithCleanProject):
                         "Loaded value not stored back into container!")
 
     def test_force_stubs(self):
-        """Calling force on a lazy loaded container should load all data from HDF."""
+        """Calling _force_load on a lazy loaded container should load all data from HDF."""
 
         self.pl.to_hdf(self.hdf, "lazy")
         ll = self.hdf["lazy"].to_object(lazy=True)
-        ll.force(recursive=False)
+        ll._force_load(recursive=False)
         self.assertTrue(all(not isinstance(v, HDFStub) for v in ll._store),
                         "Not all values loaded after force!")
         ll0 = ll[0]
         self.assertTrue(all(isinstance(v, HDFStub) for v in ll[0]._store),
                         "Nested values loaded after force even though recursive==False!")
 
-        ll.force()
+        ll._force_load()
         self.assertTrue(all(not isinstance(v, HDFStub) for v in ll._store),
                         "Not all values loaded after force!")
         ll0 = ll[0]
