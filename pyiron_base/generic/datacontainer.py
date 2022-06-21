@@ -913,7 +913,7 @@ class DataContainer(MutableMapping, HasGroups, HasHDF):
         Args:
             recursive (bool): force also nested data containers, default True
         """
-        if not self._lazy: return
+        if not self._lazy and not recursive: return
 
         # values are loaded from HDF once they are accessed via __getitem__, which is implicetly called by values()
         for v in self.values():
