@@ -586,14 +586,14 @@ class TestDataContainer(TestWithCleanProject):
         self.assertTrue(all(not isinstance(v, HDFStub) for v in ll._store),
                         "Not all values loaded after force!")
         ll0 = ll[0]
-        self.assertTrue(all(isinstance(v, HDFStub) for v in ll[0]._store),
+        self.assertTrue(all(isinstance(v, HDFStub) for v in ll._store),
                         "Nested values loaded after force even though recursive==False!")
 
         ll._force_load()
-        self.assertTrue(all(not isinstance(v, HDFStub) for v in ll._store),
+        self.assertTrue(all(not isinstance(v, HDFStub) for v in ll0._store),
                         "Not all values loaded after force!")
         ll0 = ll[0]
-        self.assertTrue(all(not isinstance(v, HDFStub) for v in ll[0]._store),
+        self.assertTrue(all(not isinstance(v, HDFStub) for v in ll0._store),
                         "Nested values not loaded after force even though recursive==True!")
 
     def test_lazy_copy(self):
