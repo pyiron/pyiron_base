@@ -360,22 +360,6 @@ class JobPathBase(JobCore):
         except AttributeError:
             pass
 
-    def __getitem__(self, item):
-        """
-        Get/ read data from the HDF5 file
-
-        Args:
-            item (str, slice): path to the data or key of the data object
-
-        Returns:
-            dict, list, float, int: data or data object
-        """
-        if item in self.list_files():
-            file_name = posixpath.join(self.working_directory, "{}".format(item))
-            with open(file_name) as f:
-                return f.readlines()
-        return self.project_hdf5.__getitem__(item)
-
 
 class JobPath(JobPathBase):
     """
