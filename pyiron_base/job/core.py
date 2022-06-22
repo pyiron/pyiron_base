@@ -891,7 +891,11 @@ class JobCore(HasGroups):
         # first try to access HDF5 directly to make the common case fast
         try:
             group = self._hdf5[item]
-            if isinstance(group, ProjectHDFio) and "NAME" in group and group["NAME"] == "DataContainer":
+            if (
+                isinstance(group, ProjectHDFio)
+                and "NAME" in group
+                and group["NAME"] == "DataContainer"
+            ):
                 return group.to_object(lazy=True)
             else:
                 return group
@@ -899,6 +903,7 @@ class JobCore(HasGroups):
             pass
 
         name_lst = item.split("/")
+
         def successive_path_splits(name_lst):
             """
             Yield successive split/joins of a path, i.e.
@@ -914,16 +919,20 @@ class JobCore(HasGroups):
                 # where we are looking for data in the container
                 data_path = "/".join(name_lst[-1:])
                 yield container_path, data_path
+
         for container_path, data_path in successive_path_splits(name_lst):
             try:
                 group = self._hdf5[item]
-                if isinstance(group, ProjectHDFio) and "NAME" in group and group["NAME"] == "DataContainer":
+                if (
+                    isinstance(group, ProjectHDFio)
+                    and "NAME" in group
+                    and group["NAME"] == "DataContainer"
+                ):
                     return group.to_object(lazy=True)[data_path]
             except (ValueError, IndexError, KeyError):
                 # either group does not contain a data container or it is does, but it does not have the path we're
                 # looking for
                 pass
-
 
         item_obj = name_lst[0]
         if item_obj in self._list_ext_childs():
