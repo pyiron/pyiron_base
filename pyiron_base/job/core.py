@@ -884,7 +884,7 @@ class JobCore(HasGroups):
         """
 
         if item in self.list_files():
-            file_name = posixpath.join(self.working_directory, "{}".format(item_obj))
+            file_name = posixpath.join(self.working_directory, "{}".format(item))
             with open(file_name) as f:
                 return f.readlines()
 
