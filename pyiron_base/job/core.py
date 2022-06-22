@@ -882,6 +882,13 @@ class JobCore(HasGroups):
         Returns:
             dict, list, float, int, :class:`.DataContainer`, None: data or data object; if nothing is found None is returned
         """
+
+        if item in self.list_files():
+            file_name = posixpath.join(self.working_directory, "{}".format(item_obj))
+            with open(file_name) as f:
+                return f.readlines()
+
+        # first try to access HDF5 directly to make the common case fast
         try:
             group = self._hdf5[item]
             if isinstance(group, ProjectHDFio) and "NAME" in group and group["NAME"] == "DataContainer":
@@ -892,7 +899,6 @@ class JobCore(HasGroups):
             pass
 
         name_lst = item.split("/")
-        # First look for data containers, if not found continue with the rest of the logic
         def successive_path_splits(name_lst):
             """
             Yield successive split/joins of a path, i.e.
@@ -928,11 +934,6 @@ class JobCore(HasGroups):
                 return child
             else:
                 return child["/".join(name_lst[1:])]
-
-        if name_lst[0] in self.list_files():
-            file_name = posixpath.join(self.working_directory, "{}".format(item_obj))
-            with open(file_name) as f:
-                return f.readlines()
         return None
 
     def __setitem__(self, key, value):
