@@ -44,7 +44,8 @@ class TestCopyTo(TestWithProject):
         ham = self.project.create.job.ScriptJob("job_single_ex")
         ham.to_hdf()
         ham.copy_to(job_ser)
-        self.assertTrue(job_ser['job_single_ex/input/custom_dict'])
+        self.assertTrue(job_ser['job_single_ex/input/custom_dict'] is not None,
+                        "Input not copied!")
         ham.remove()
         job_ser.remove()
 
