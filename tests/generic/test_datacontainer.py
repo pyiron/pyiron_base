@@ -577,6 +577,34 @@ class TestDataContainer(TestWithCleanProject):
         self.assertTrue(not isinstance(ll._store[0], HDFStub),
                         "Loaded value not stored back into container!")
 
+    def test_force_stubs(self):
+        """Calling _force_load on a lazy loaded container should load all data from HDF."""
+
+        self.pl.to_hdf(self.hdf, "lazy")
+        ll = self.hdf["lazy"].to_object(lazy=True)
+        ll._force_load(recursive=False)
+        self.assertTrue(all(not isinstance(v, HDFStub) for v in ll._store),
+                        "Not all values loaded after force!")
+        ll0 = ll[0]
+        self.assertTrue(all(isinstance(v, HDFStub) for v in ll0._store),
+                        "Nested values loaded after force even though recursive==False!")
+
+        ll._force_load()
+        self.assertTrue(all(not isinstance(v, HDFStub) for v in ll._store),
+                        "Not all values loaded after force!")
+        ll0 = ll[0]
+        self.assertTrue(all(not isinstance(v, HDFStub) for v in ll0._store),
+                        "Nested values not loaded after force even though recursive==True!")
+
+    def test_lazy_copy(self):
+        """Copying lazy data containers should not throw an error."""
+        try:
+            self.pl.to_hdf(self.hdf, "lazy")
+            ll = self.hdf["lazy"].to_object(lazy=True)
+            ll.copy()
+        except Exception as e:
+            self.fail(f"Copy of a lazy data container raised {e}!")
+
     def test_stub_sublasses(self):
         """Sub classes of DataContainer should also be able to be lazily loaded."""
 

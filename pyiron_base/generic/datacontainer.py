@@ -782,6 +782,7 @@ class DataContainer(MutableMapping, HasGroups, HasHDF):
         >>> all(a is not b for a, b in zip(pl.copy().values(), pl.values()))
         True
         """
+        self._force_load()
         return copy.deepcopy(self)
 
     def _get_hdf_group_name(self):
@@ -904,6 +905,21 @@ class DataContainer(MutableMapping, HasGroups, HasHDF):
             file_name(str): the name of the file to be writen to.
         """
         write(self.to_builtin(), file_name)
+
+    def _force_load(self, recursive=True):
+        """
+        Load all HDFStubs present in the data container.
+
+        Args:
+            recursive (bool): force also nested data containers, default True
+        """
+        if not self._lazy and not recursive:
+            return
+
+        # values are loaded from HDF once they are accessed via __getitem__, which is implicetly called by values()
+        for v in self.values():
+            if recursive and isinstance(v, DataContainer):
+                v._force_load()
 
     def __init_subclass__(cls):
         # called whenever a subclass of DataContainer is defined, then register all subclasses with the same function
