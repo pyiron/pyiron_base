@@ -13,6 +13,7 @@ import shutil
 import warnings
 
 from pyiron_base.interfaces.has_groups import HasGroups
+from pyiron_base.generic.hdfio import ProjectHDFio
 from pyiron_base.job.util import (
     _get_project_for_copy,
     _copy_database_entry,
@@ -872,18 +873,67 @@ class JobCore(HasGroups):
         `item` is first looked up in this jobs HDF5 file, then in the HDF5 files of any child jobs and finally it is
         matched against any files in the job directory as described above.
 
+        If `item` doesn't match any value (i.e. `None` would be returned), but along its path a `DataContainer` is
+        located, it will be lazily loaded from HDF and then indexed with the remaineder of the path.
+
         Args:
             item (str, slice): path to the data or key of the data object
 
         Returns:
-            dict, list, float, int, None: data or data object; if nothing is found None is returned
+            dict, list, float, int, :class:`.DataContainer`, None: data or data object; if nothing is found None is returned
         """
+
+        if item in self.list_files():
+            file_name = posixpath.join(self.working_directory, "{}".format(item))
+            with open(file_name) as f:
+                return f.readlines()
+
+        # first try to access HDF5 directly to make the common case fast
         try:
-            return self._hdf5[item]
+            group = self._hdf5[item]
+            if (
+                isinstance(group, ProjectHDFio)
+                and "NAME" in group
+                and group["NAME"] == "DataContainer"
+            ):
+                return group.to_object(lazy=True)
+            else:
+                return group
         except ValueError:
             pass
 
         name_lst = item.split("/")
+
+        def successive_path_splits(name_lst):
+            """
+            Yield successive split/joins of a path, i.e.
+            /a/b/c/d
+            gives
+            /a/b/c, d
+            /a/b, c/d
+            /a, b/c/d
+            """
+            for i in range(1, len(name_lst)):
+                # where we are looking for the data container
+                container_path = "/".join(name_lst[:-i])
+                # where we are looking for data in the container
+                data_path = "/".join(name_lst[-1:])
+                yield container_path, data_path
+
+        for container_path, data_path in successive_path_splits(name_lst):
+            try:
+                group = self._hdf5[item]
+                if (
+                    isinstance(group, ProjectHDFio)
+                    and "NAME" in group
+                    and group["NAME"] == "DataContainer"
+                ):
+                    return group.to_object(lazy=True)[data_path]
+            except (ValueError, IndexError, KeyError):
+                # either group does not contain a data container or it is does, but it does not have the path we're
+                # looking for
+                pass
+
         item_obj = name_lst[0]
         if item_obj in self._list_ext_childs():
             # ToDo: Murn['strain_0.9'] - sucht im HDF5 file, dort gibt es aber die entsprechenden Gruppen noch nicht.
@@ -893,11 +943,6 @@ class JobCore(HasGroups):
                 return child
             else:
                 return child["/".join(name_lst[1:])]
-
-        if name_lst[0] in self.list_files():
-            file_name = posixpath.join(self.working_directory, "{}".format(item_obj))
-            with open(file_name) as f:
-                return f.readlines()
         return None
 
     def __setitem__(self, key, value):

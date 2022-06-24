@@ -42,7 +42,7 @@ class TestScriptJob(TestWithCleanProject):
         job.input.update(input_dict)
         job.run()
 
-        data_dict = job["output"].to_object().to_builtin()
+        data_dict = job["output"]
         for k, v in input_dict.items():
             self.assertTrue(data_dict[k], v)
         self.project.remove_job("test_input")
