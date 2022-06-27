@@ -63,6 +63,8 @@ class Maintenance:
                 hash_ = repo.head.reference.commit.hexsha
             except InvalidGitRepositoryError:
                 hash_ = "Not a repo"
+            except ValueError:
+                hash_ = "Error while resolving sha"
             if hasattr(module, "__version__"):
                 version = module.__version__
             else:
