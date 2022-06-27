@@ -707,13 +707,16 @@ class GenericJob(JobCore):
             status = self.status.string
             if run_mode is not None:
                 self.server.run_mode = run_mode
-            if delete_existing_job and self.job_id:
-                self._logger.info("run repair " + str(self.job_id))
+            if delete_existing_job:
                 status = "initialized"
-                master_id, parent_id = self.master_id, self.parent_id
-                self.remove(_protect_childs=False)
-                self.reset_job_id()
-                self.master_id, self.parent_id = master_id, parent_id
+                if self.job_id:
+                    self._logger.info("run repair " + str(self.job_id))
+                    master_id, parent_id = self.master_id, self.parent_id
+                    self.remove(_protect_childs=False)
+                    self.reset_job_id()
+                    self.master_id, self.parent_id = master_id, parent_id
+                else:
+                    self.remove(_protect_childs=False)
             if repair and self.job_id and not self.status.finished:
                 self._run_if_repair()
             elif status == "initialized":
