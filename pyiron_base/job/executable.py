@@ -78,7 +78,7 @@ class Executable(HasStorage):
         self.storage.executable = None
         self._executable_path = None
         self.storage.mpi = False
-        if self.storage.executable_lst:
+        if self.executable_lst:
             self.version = self.default_version
         self.storage.accepted_return_codes = [0]
 
@@ -116,10 +116,10 @@ class Executable(HasStorage):
         Returns:
             str: default_version
         """
-        for executable in self.storage.executable_lst.keys():
+        for executable in self.executable_lst.keys():
             if "default" in executable and "mpi" not in executable:
                 return executable
-        return sorted(self.storage.executable_lst.keys())[0]
+        return sorted(self.executable_lst.keys())[0]
 
     @version.setter
     def version(self, new_version):
@@ -185,7 +185,7 @@ class Executable(HasStorage):
         Returns:
             list: list of the available version
         """
-        return sorted(list(self.storage.executable_lst.keys()))
+        return sorted(list(self.executable_lst.keys()))
 
     @property
     def executable_path(self):
@@ -269,7 +269,7 @@ class Executable(HasStorage):
             str: absolute executable path
         """
         try:
-            return self.storage.executable_lst[self.version]
+            return self.executable_lst[self.version]
         except KeyError:
             return ""
 
