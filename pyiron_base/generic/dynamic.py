@@ -76,7 +76,7 @@ def _init_constructor_dynamic(class_name, module, input_dict):
         self._executable = Executable(
             codename=class_name,
             module=module,
-            path_binary_codes=state.settings.resource_paths,
+            path_binary_codes=None,
         )
 
     return __init__

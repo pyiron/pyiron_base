@@ -1318,13 +1318,13 @@ class GenericJob(JobCore):
                 self._executable = Executable(
                     codename=codename,
                     module=codename,
-                    path_binary_codes=state.settings.resource_paths,
+                    path_binary_codes=None,
                 )
             elif len(self.__module__.split(".")) > 1:
                 self._executable = Executable(
                     codename=self.__name__,
                     module=self.__module__.split(".")[-2],
-                    path_binary_codes=state.settings.resource_paths,
+                    path_binary_codes=None,
                 )
             elif self.__module__ == "__main__":
                 # Special case when the job classes defined in Jupyter notebooks
@@ -1332,12 +1332,12 @@ class GenericJob(JobCore):
                 self._executable = Executable(
                     codename=parent_class.__name__,
                     module=parent_class.__module__.split(".")[-2],
-                    path_binary_codes=state.settings.resource_paths,
+                    path_binary_codes=None,
                 )
             else:
                 self._executable = Executable(
                     codename=self.__name__,
-                    path_binary_codes=state.settings.resource_paths,
+                    path_binary_codes=None,
                 )
 
     def _type_to_hdf(self):
