@@ -41,7 +41,7 @@ class Executable(HasStorage):
         """
         super().__init__()
         self.storage.table_name = "executable"
-        
+
         if path_binary_codes is None:
             path_binary_codes = state.settings.resource_paths
         self.storage.version = None
