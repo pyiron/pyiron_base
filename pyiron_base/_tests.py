@@ -105,7 +105,9 @@ class ToyJob(PythonTemplateJob):
     # Check for valid input
     def validate_ready_to_run(self):
         if not isinstance(self.input.data_in, int):
-            raise ValueError(f"data_in in should be of type int, not {type(self.input.data_in)}.")
+            raise ValueError(
+                f"data_in in should be of type int, not {type(self.input.data_in)}."
+            )
 
     # This function is executed
     def run_static(self):
