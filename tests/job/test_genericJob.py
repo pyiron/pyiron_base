@@ -6,7 +6,8 @@ import unittest
 import os
 from pyiron_base.generic.parameters import GenericParameters
 from pyiron_base.job.generic import GenericJob
-from pyiron_base._tests import TestWithFilledProject
+from pyiron_base._tests import TestWithFilledProject, ToyJob
+
 
 class ReturnCodeJob(GenericJob):
     def __init__(self, project, job_name):
@@ -139,9 +140,13 @@ class TestGenericJob(TestWithFilledProject):
             ham.decompress()
             self.assertTrue(os.path.exists(os.path.join(ham.working_directory, 'test_file')))
         with self.subTest("test remove"):
+            self.assertTrue(os.path.isfile("/".join([cwd, self.project_name, "job_single_move_2.h5"])))
             ham.project_hdf5.remove_file()
-            self.assertFalse(os.path.isfile("/".join([cwd, self.project_name, "job_single_debug_2.h5"])))
+            self.assertFalse(os.path.isfile("/".join([cwd, self.project_name, "job_single_move_2.h5"])))
             self.assertFalse(os.path.isfile(ham.project_hdf5.file_name))
+            self.assertTrue(os.path.exists(os.path.join(ham.working_directory, 'test_file')))
+            ham.remove()
+            self.assertFalse(os.path.exists(os.path.join(ham.working_directory, 'test_file')))
 
     def test_move(self):
         pr_a = self.project.open("project_a")
