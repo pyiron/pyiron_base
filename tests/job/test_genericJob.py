@@ -275,6 +275,28 @@ class TestGenericJob(TestWithFilledProject):
     def test_run_if_finished(self):
         pass
 
+    def test_run_with_delete_existing_job_for_aborted_jobs(self):
+        job = self.project.create_job(ToyJob, 'rerun_aborted')
+        with self.subTest("Drop to aborted if validate_ready_to_run fails"):
+            job.input.data_in = 'some_str'
+            self.assertRaises(ValueError, job.run)
+            self.assertTrue(job.status.aborted)
+            self.assertIsNone(job.job_id)
+        with self.subTest("run without delete_existing_job does not change anything."):
+            job.run()
+            self.assertTrue(job.status.aborted)
+        with self.subTest("changing input and run(delete_existing_job=True) should run"):
+            job.input.data_in = 10
+            job.run(delete_existing_job=True)
+            self.assertIsInstance(job.job_id, int)
+            self.assertEqual(job.output.data_out, 11)
+            self.assertTrue(job.status.finished)
+        with self.subTest("changing input and run(delete_existing_job=True) should run also for finished jobs"):
+            job.input.data_in = 15
+            job.run(delete_existing_job=True)
+            self.assertEqual(job.output.data_out, 16)
+            self.assertTrue(job.status.finished)
+
     def test_suspend(self):
         pass
 
