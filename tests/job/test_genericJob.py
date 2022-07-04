@@ -6,7 +6,8 @@ import unittest
 import os
 from pyiron_base.generic.parameters import GenericParameters
 from pyiron_base.job.generic import GenericJob
-from pyiron_base._tests import TestWithFilledProject
+from pyiron_base._tests import TestWithFilledProject, ToyJob
+
 
 class ReturnCodeJob(GenericJob):
     def __init__(self, project, job_name):
@@ -139,9 +140,13 @@ class TestGenericJob(TestWithFilledProject):
             ham.decompress()
             self.assertTrue(os.path.exists(os.path.join(ham.working_directory, 'test_file')))
         with self.subTest("test remove"):
+            self.assertTrue(os.path.isfile("/".join([cwd, self.project_name, "job_single_move_2.h5"])))
             ham.project_hdf5.remove_file()
-            self.assertFalse(os.path.isfile("/".join([cwd, self.project_name, "job_single_debug_2.h5"])))
+            self.assertFalse(os.path.isfile("/".join([cwd, self.project_name, "job_single_move_2.h5"])))
             self.assertFalse(os.path.isfile(ham.project_hdf5.file_name))
+            self.assertTrue(os.path.exists(os.path.join(ham.working_directory, 'test_file')))
+            ham.remove()
+            self.assertFalse(os.path.exists(os.path.join(ham.working_directory, 'test_file')))
 
     def test_move(self):
         pr_a = self.project.open("project_a")
@@ -269,6 +274,28 @@ class TestGenericJob(TestWithFilledProject):
 
     def test_run_if_finished(self):
         pass
+
+    def test_run_with_delete_existing_job_for_aborted_jobs(self):
+        job = self.project.create_job(ToyJob, 'rerun_aborted')
+        with self.subTest("Drop to aborted if validate_ready_to_run fails"):
+            job.input.data_in = 'some_str'
+            self.assertRaises(ValueError, job.run)
+            self.assertTrue(job.status.aborted)
+            self.assertIsNone(job.job_id)
+        with self.subTest("run without delete_existing_job does not change anything."):
+            job.run()
+            self.assertTrue(job.status.aborted)
+        with self.subTest("changing input and run(delete_existing_job=True) should run"):
+            job.input.data_in = 10
+            job.run(delete_existing_job=True)
+            self.assertIsInstance(job.job_id, int)
+            self.assertEqual(job.output.data_out, 11)
+            self.assertTrue(job.status.finished)
+        with self.subTest("changing input and run(delete_existing_job=True) should run also for finished jobs"):
+            job.input.data_in = 15
+            job.run(delete_existing_job=True)
+            self.assertEqual(job.output.data_out, 16)
+            self.assertTrue(job.status.finished)
 
     def test_suspend(self):
         pass
