@@ -60,11 +60,13 @@ class Maintenance:
             module = importlib.import_module(name)
             try:
                 repo = Repo(os.path.dirname(os.path.dirname(module.__file__)))
-                hash_ = repo.head.reference.commit.hexsha
             except InvalidGitRepositoryError:
                 hash_ = "Not a repo"
-            except ValueError:
-                hash_ = "Error while resolving sha"
+            else:
+                try:
+                    hash_ = repo.head.reference.commit.hexsha
+                except ValueError:
+                    hash_ = "Error while resolving sha"
             if hasattr(module, "__version__"):
                 version = module.__version__
             else:
