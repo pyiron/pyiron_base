@@ -124,7 +124,7 @@ class TestProjectOperations(TestWithFilledProject):
 
     def test_maintenance_get_repository_status(self):
         df = self.project.maintenance.get_repository_status()
-        self.assertIn('pyiron_base', df.Module)
+        self.assertIn('pyiron_base', df.Module.values)
 
 
 class TestToolRegistration(TestWithProject):
