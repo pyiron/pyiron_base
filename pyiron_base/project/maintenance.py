@@ -65,7 +65,7 @@ class Maintenance:
             else:
                 try:
                     hash_ = repo.head.reference.commit.hexsha
-                except ValueError:
+                except (ValueError, TypeError):
                     hash_ = "Error while resolving sha"
             if hasattr(module, "__version__"):
                 version = module.__version__
