@@ -122,6 +122,10 @@ class TestProjectOperations(TestWithFilledProject):
         self.assertIsInstance([val for val in self.project.iter_jobs(recursive=True, status="suspended",
                                                                      convert_to_object=True)][0], ToyJob)
 
+    def test_maintenance_get_repository_status(self):
+        df = self.project.maintenance.get_repository_status()
+        self.assertIn('pyiron_base', df.Module.values)
+
 
 class TestToolRegistration(TestWithProject):
     def setUp(self) -> None:
