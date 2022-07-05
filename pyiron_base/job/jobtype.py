@@ -14,6 +14,7 @@ from pyiron_base.generic.util import Singleton
 from pyiron_base.generic.factory import PyironFactory
 from pyiron_base.job.jobstatus import job_status_finished_lst
 from pyiron_base.generic.dynamic import JOB_DYN_DICT, class_constructor
+from typing import Type
 
 __author__ = "Joerg Neugebauer, Jan Janssen"
 __copyright__ = (
@@ -36,7 +37,7 @@ JOB_CLASS_DICT = {
 }
 
 
-class JobType(object):
+class JobType:
     """
     The JobTypeBase class creates a new object of a given class type.
     """
@@ -56,7 +57,7 @@ class JobType(object):
         The __new__() method allows to create objects from other classes - the class selected by class_name
 
         Args:
-            class_name (str): The specific class name of the class this object belongs to.
+            class_name (str/Type('GenericJob')): The specific class name of the class this object belongs to.
             project (Project): Project object (defines path where job will be created and stored)
             job_name (str): name of the job (must be unique within this project path)
             job_class_dict (dict): dictionary with the jobtypes to choose from.
@@ -129,7 +130,7 @@ class JobType(object):
         return ".".join(full_path.split(".")[:-1])
 
     @staticmethod
-    def convert_str_to_class(job_class_dict, class_name):
+    def convert_str_to_class(job_class_dict, class_name) -> Type["GenericJob"]:
         """
         convert the name of a class to the corresponding class object - only for pyiron internal classes.
 
