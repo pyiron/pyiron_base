@@ -8,11 +8,8 @@ Generic Job class extends the JobCore class with all the functionality to run th
 from datetime import datetime
 import os
 import posixpath
-import multiprocessing
 from typing import Union
-
 import h5io
-from pyiron_base.job.wrapper import JobWrapper
 from pyiron_base.job.jobtype import JobType
 import signal
 import warnings
@@ -1499,7 +1496,7 @@ class GenericJob(JobCore):
         super().__init_subclass__(**kwargs)
         # If the _register_jobtype_name is not defined in the new class definition _itself_ it falls back to the
         # default, i.e. to register the class with the class.__name__
-        if '_register_jobtype_name' not in cls.__dict__.keys():
+        if "_register_jobtype_name" not in cls.__dict__.keys():
             register_name = cls.__name__
         else:
             # This one follows the method resolution order
