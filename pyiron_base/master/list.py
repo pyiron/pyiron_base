@@ -372,7 +372,4 @@ class ListMaster(GenericMaster):
 
     @classmethod
     def _register_jobtype_name(cls) -> Union[str, None]:
-        if cls.__name__ == "ListMaster":
-            return None
-        else:
-            return cls.__name__
+        return None

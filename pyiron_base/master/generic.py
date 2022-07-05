@@ -554,10 +554,7 @@ class GenericMaster(GenericJob):
 
     @classmethod
     def _register_jobtype_name(cls) -> Union[str, None]:
-        if cls.__name__ == "GenericMaster":
-            return None
-        else:
-            return cls.__name__
+        return None
 
 
 def get_function_from_string(function_str):

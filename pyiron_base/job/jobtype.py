@@ -111,6 +111,8 @@ class JobType:
         ):
             pass
         elif cls_name not in cls._job_class_dict and not isinstance(_cls, str):
+            if cls_name != _cls.__name__:
+                raise NotImplementedError("Currently, the given name has to match the class name.")
             cls._job_class_dict[cls_name] = cls._get_class_path_str(_cls)
         elif (
             cls_name in cls._job_class_dict

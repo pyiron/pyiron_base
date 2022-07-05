@@ -46,10 +46,7 @@ class TemplateJob(GenericJob, HasStorage):
 
     @classmethod
     def _register_jobtype_name(cls) -> Union[str, None]:
-        if cls.__name__ == "TemplateJob":
-            return None
-        else:
-            return cls.__name__
+        return None
 
 
 class PythonTemplateJob(TemplateJob):
@@ -62,7 +59,4 @@ class PythonTemplateJob(TemplateJob):
 
     @classmethod
     def _register_jobtype_name(cls) -> Union[str, None]:
-        if cls.__name__ == "PythonTemplateJob":
-            return None
-        else:
-            return cls.__name__
+        return None

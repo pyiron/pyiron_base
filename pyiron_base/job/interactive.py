@@ -368,10 +368,7 @@ class InteractiveBase(GenericJob):
 
     @classmethod
     def _register_jobtype_name(cls) -> Union[str, None]:
-        if cls.__name__ == "InteractiveBase":
-            return None
-        else:
-            return cls.__name__
+        return None
 
 
 class _WithInteractiveOpen:
