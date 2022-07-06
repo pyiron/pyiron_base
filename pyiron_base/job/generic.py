@@ -1229,15 +1229,6 @@ class GenericJob(JobCore):
         if not (self.status.finished or self.status.suspended):
             self.status.aborted = True
 
-    def _run_manually(self, _manually_print=True):
-        """
-        Internal helper function to run a job manually.
-
-        Args:
-            _manually_print (bool): [True/False] print command for execution - default=True
-        """
-        run_job_with_runmode_manually(job=self, _manually_print=_manually_print)
-
     def _run_if_new(self, debug=False):
         """
         Internal helper function the run if new function is called when the job status is 'initialized'. It prepares
