@@ -32,4 +32,4 @@ class TestJobType(PyironTestCase):
         ]
         for key in excluded_jobs:
             with self.subTest(key):
-                self.assertNotIn(key, old_job_type_dict)
+                self.assertNotIn(key, job_dict)
