@@ -99,6 +99,13 @@ class JobType:
         return job
 
     @classmethod
+    def un_register_job_type(cls, job_name):
+        if job_name in cls._job_class_dict:
+            del cls._job_class_dict[job_name]
+        else:
+            raise KeyError(f"No JobType with name '{job_name}' found.")
+
+    @classmethod
     def register_job_type(cls, cls_name, _cls):
         if cls_name is None:
             return
@@ -163,6 +170,10 @@ class JobType:
             class_name,
             [job for job in list(job_class_dict.keys())],
         )
+
+
+def unregistered_jobtype(cls):
+    JobType.un_register_job_type(cls.__name__)
 
 
 class JobFactory(PyironFactory):
