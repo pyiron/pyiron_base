@@ -742,7 +742,9 @@ class GenericJob(JobCore):
                     run_again=run_again,
                 )
             elif status == "aborted":
-                raise ValueError("Running an aborted job with `delete_existing_job=False` is meaningless.")
+                raise ValueError(
+                    "Running an aborted job with `delete_existing_job=False` is meaningless."
+                )
         except Exception:
             self.drop_status_to_aborted()
             raise
