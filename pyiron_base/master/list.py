@@ -371,4 +371,3 @@ class ListMaster(GenericMaster):
             int: length of the ListMaster
         """
         return len(self.child_ids + self._job_name_lst)
-
