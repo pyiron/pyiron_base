@@ -4,12 +4,11 @@
 
 from datetime import datetime
 import warnings
-from typing import Union
 
 from pyiron_base.generic.parameters import GenericParameters
 from pyiron_base.job.generic import GenericJob
+from pyiron_base.job.jobtype import unregistered_jobtype
 from pyiron_base.master.generic import GenericMaster
-from pyiron_base.generic.util import deprecate
 
 __author__ = "Jan Janssen"
 __copyright__ = (
@@ -23,6 +22,7 @@ __status__ = "development"
 __date__ = "Jan 8, 2021"
 
 
+@unregistered_jobtype
 class InteractiveWrapper(GenericMaster):
     def __init__(self, project, job_name):
         super(InteractiveWrapper, self).__init__(project, job_name)
@@ -160,7 +160,3 @@ class InteractiveWrapper(GenericMaster):
         return self._get_item_when_str(
             item=item, child_id_lst=child_id_lst, child_name_lst=child_name_lst
         )
-
-    @classmethod
-    def _register_jobtype_name(cls) -> Union[str, None]:
-        return None

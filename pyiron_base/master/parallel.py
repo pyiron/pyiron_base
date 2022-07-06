@@ -7,7 +7,6 @@ The parallel master class is a metajob consisting of a list of jobs which are ex
 
 from collections import OrderedDict
 from datetime import datetime
-from typing import Union
 
 import numpy as np
 import pandas
@@ -18,6 +17,7 @@ from pyiron_base.master.generic import GenericMaster
 from pyiron_base.master.submissionstatus import SubmissionStatus
 from pyiron_base.generic.parameters import GenericParameters
 from pyiron_base.job.jobstatus import JobStatus
+from pyiron_base.job.jobtype import unregistered_jobtype
 from pyiron_base.state import state
 from pyiron_base.job.wrapper import job_wrapper_function
 from pyiron_base.generic.util import deprecate
@@ -34,6 +34,7 @@ __status__ = "production"
 __date__ = "Sep 1, 2017"
 
 
+@unregistered_jobtype
 class ParallelMaster(GenericMaster):
     """
     MasterJob that handles the creation and analysis of several parallel jobs (including master and
@@ -989,7 +990,3 @@ class JobGenerator(object):
         else:
             self._master.refresh_job_status()
             raise StopIteration()
-
-    @classmethod
-    def _register_jobtype_name(cls) -> Union[str, None]:
-        return None

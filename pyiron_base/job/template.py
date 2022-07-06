@@ -4,10 +4,10 @@
 """
 Template class to define jobs
 """
-from typing import Union
 
 from pyiron_base.job.generic import GenericJob
 from pyiron_base.generic.object import HasStorage
+from pyiron_base.job.jobtype import unregistered_jobtype
 
 __author__ = "Jan Janssen"
 __copyright__ = (
@@ -21,6 +21,7 @@ __status__ = "development"
 __date__ = "May 15, 2020"
 
 
+@unregistered_jobtype
 class TemplateJob(GenericJob, HasStorage):
     def __init__(self, project, job_name):
         GenericJob.__init__(self, project, job_name)
@@ -44,11 +45,8 @@ class TemplateJob(GenericJob, HasStorage):
         GenericJob.from_hdf(self, hdf=hdf, group_name=group_name)
         HasStorage.from_hdf(self, hdf=self.project_hdf5, group_name="")
 
-    @classmethod
-    def _register_jobtype_name(cls) -> Union[str, None]:
-        return None
 
-
+@unregistered_jobtype
 class PythonTemplateJob(TemplateJob):
     def __init__(self, project, job_name):
         super().__init__(project, job_name)
@@ -56,7 +54,3 @@ class PythonTemplateJob(TemplateJob):
 
     def _check_if_input_should_be_written(self):
         return False
-
-    @classmethod
-    def _register_jobtype_name(cls) -> Union[str, None]:
-        return None
