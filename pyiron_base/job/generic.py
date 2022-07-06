@@ -184,6 +184,10 @@ class GenericJob(JobCore):
                 self.project_hdf5.file_name, job_name + "/status"
             )
             self._status = JobStatus(initial_status=initial_status)
+            if "job_id" in self.list_nodes():
+                self._job_id = h5io.read_hdf5(
+                    self.project_hdf5.file_name, job_name + "/job_id"
+                )
         else:
             self._status = JobStatus()
         self._restart_file_list = list()
@@ -1105,6 +1109,12 @@ class GenericJob(JobCore):
         if not state.database.database_is_disabled:
             job_id = self.project.db.add_item_dict(self.db_entry())
             self._job_id = job_id
+            h5io.write_hdf5(
+                self.project_hdf5.file_name,
+                job_id,
+                title=self.job_name + "/job_id",
+                overwrite="update",
+            )
             self.refresh_job_status()
         else:
             job_id = self.job_name
