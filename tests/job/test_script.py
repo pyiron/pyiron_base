@@ -39,7 +39,7 @@ class TestScriptJob(TestWithCleanProject):
         with open(self.simple_script, 'w') as f:
             f.write("print(42)")
         self.job.script_path = self.simple_script
-        self.job.run()
+        self.job.run(delete_existing_job=True)
 
     def test_project_data(self):
         self.project.data.in_ = 6
