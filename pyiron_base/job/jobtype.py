@@ -174,6 +174,7 @@ class JobType:
 
 def unregistered_jobtype(cls):
     JobType.un_register_job_type(cls.__name__)
+    return cls
 
 
 class JobFactory(PyironFactory):
