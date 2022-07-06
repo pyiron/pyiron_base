@@ -1486,22 +1486,9 @@ class GenericJob(JobCore):
             self._logger.info("busy master: {} {}".format(master_id, self.get_job_id()))
             del self
 
-    @classmethod
-    def _register_jobtype_name(cls) -> Union[str, None]:
-        """Name of the JobType this class is to be registered with; None for do not register.
-        Behavior is not inherited"""
-        return cls.__name__
-
     def __init_subclass__(cls, **kwargs):
         super().__init_subclass__(**kwargs)
-        # If the _register_jobtype_name is not defined in the new class definition _itself_ it falls back to the
-        # default, i.e. to register the class with the class.__name__
-        if "_register_jobtype_name" not in cls.__dict__.keys():
-            register_name = cls.__name__
-        else:
-            # This one follows the method resolution order
-            register_name = cls._register_jobtype_name()
-        JobType.register_job_type(register_name, cls)
+        JobType.register_job_type(cls.__name__, cls)
 
 
 class GenericError(object):
