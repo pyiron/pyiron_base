@@ -14,7 +14,7 @@ from pyiron_base.generic.util import Singleton
 from pyiron_base.generic.factory import PyironFactory
 from pyiron_base.job.jobstatus import job_status_finished_lst
 from pyiron_base.generic.dynamic import JOB_DYN_DICT, class_constructor
-from typing import Type
+from typing import Type, Union
 
 __author__ = "Joerg Neugebauer, Jan Janssen"
 __copyright__ = (
@@ -100,43 +100,43 @@ class JobType:
 
     @classmethod
     def unregister(cls, job_name_or_class):
-      if insinstance(job_name_or_class, type):
-        job_name_or_class = job_name_or_class.__name__
-        if job_name in cls._job_class_dict:
-            del cls._job_class_dict[job_name]
+        if isinstance(job_name_or_class, type):
+            job_name_or_class = job_name_or_class.__name__
+        if job_name_or_class in cls._job_class_dict:
+            del cls._job_class_dict[job_name_or_class]
         else:
-            raise KeyError(f"No JobType with name '{job_name}' found.")
+            raise KeyError(f"No JobType with name '{job_name_or_class}' found.")
+        return cls
 
     @classmethod
-    def register(cls, job_class_or_module_str, job_name=None):
-        if cls_name is None:
+    def register(cls, job_class_or_module_str: Union[type, str], job_name: str = None):
+        if job_class_or_module_str is None:
             return
-        elif cls_name not in cls._job_class_dict and isinstance(_cls, str):
-            cls._job_class_dict[cls_name] = _cls
-        elif (
-            cls_name in cls._job_class_dict
-            and isinstance(_cls, str)
-            and cls._job_class_dict[cls_name] == _cls
-        ):
-            pass
-        elif cls_name not in cls._job_class_dict and not isinstance(_cls, str):
-            if cls_name != _cls.__name__:
+        elif isinstance(job_class_or_module_str, type):
+            cls_module_str = job_class_or_module_str.__module__
+            if job_name is not None and job_class_or_module_str.__name__ != job_name:
                 raise NotImplementedError(
                     "Currently, the given name has to match the class name."
                 )
-            cls._job_class_dict[cls_name] = _cls.__module__
-        elif (
-            cls_name in cls._job_class_dict
-            and not isinstance(_cls, str)
-            and cls._job_class_dict[cls_name] == _cls.__module__
-        ):
-            pass
+            else:
+                job_name = job_class_or_module_str.__name__
+        elif job_name is not None:
+            cls_module_str = job_class_or_module_str
         else:
             raise ValueError(
-                f"A JobType with name {cls_name} is already defined! New class = {repr(_cls)}, "
-                f"already registered class = {repr(cls._job_class_dict[cls_name])}."
+                "The job_name needs to be provided if a job_module_string is provided."
             )
 
+        if (
+            job_name in cls._job_class_dict
+            and cls_module_str != cls._job_class_dict[job_name]
+        ):
+            raise ValueError(
+                f"A JobType with name {job_name} is already defined! New class = {cls_module_str}, "
+                f"already registered class = {cls._job_class_dict[job_name]}."
+            )
+        else:
+            cls._job_class_dict[job_name] = cls_module_str
 
     @staticmethod
     def convert_str_to_class(job_class_dict, class_name) -> Type["GenericJob"]:
