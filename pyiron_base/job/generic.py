@@ -1486,6 +1486,7 @@ class GenericJob(JobCore):
             del self
 
     def __init_subclass__(cls, **kwargs):
+        """Auto register all subclasses of GenericJob as available JobType."""
         super().__init_subclass__(**kwargs)
         JobType.register(cls)
 

@@ -2,7 +2,7 @@
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
 from pyiron_base._tests import PyironTestCase
-from pyiron_base import JobType
+from pyiron_base import JobType, GenericJob
 
 
 class TestJobType(PyironTestCase):
@@ -33,3 +33,9 @@ class TestJobType(PyironTestCase):
         for key in excluded_jobs:
             with self.subTest(key):
                 self.assertNotIn(key, job_dict)
+
+    def test_convert_str_to_class(self):
+        for job_type in JobType._job_class_dict:
+            with self.subTest(job_type):
+                cls = JobType.convert_str_to_class(JobType._job_class_dict, job_type)
+                self.assertIsInstance(cls, GenericJob)

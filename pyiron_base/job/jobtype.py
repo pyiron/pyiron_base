@@ -100,6 +100,15 @@ class JobType:
 
     @classmethod
     def unregister(cls, job_name_or_class):
+        """Unregister job type from the exposed list of available job types
+
+        Args:
+            job_name_or_class(str/type): name of the job or job class
+
+        Returns:
+            None if a str is provided as job_name_or_class
+            job_name_or_class if a class is provided. Therefore, this method can be used as class decorator.
+        """
         _cls = None
         if isinstance(job_name_or_class, type):
             _cls = job_name_or_class
@@ -112,6 +121,13 @@ class JobType:
 
     @classmethod
     def register(cls, job_class_or_module_str: Union[type, str], job_name: str = None):
+        """Register job type from the exposed list of available job types
+
+        Args:
+            job_class_or_module_str(type/str/None): job class itself, string representation of the job class module as
+                provided by cls.__module__, or None for do not register.
+            job_name(str/None): Name of the job to register. Must match cls.__name__. Can be omitted for class input.
+        """
         if job_class_or_module_str is None:
             return
         elif isinstance(job_class_or_module_str, type):
