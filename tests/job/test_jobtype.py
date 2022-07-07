@@ -5,17 +5,18 @@ from pyiron_base._tests import PyironTestCase
 from pyiron_base import JobType, GenericJob
 
 
+old_job_type_dict = {
+    "FlexibleMaster": "pyiron_base.master.flexible",
+    "ScriptJob": "pyiron_base.job.script",
+    "SerialMasterBase": "pyiron_base.master.serial",
+    "TableJob": "pyiron_base.table.datamining",
+    "WorkerJob": "pyiron_base.job.worker",
+}
+
+
 class TestJobType(PyironTestCase):
     def test_job_class_dict(self):
         job_dict = JobType._job_class_dict
-
-        old_job_type_dict = {
-            "FlexibleMaster": "pyiron_base.master.flexible",
-            "ScriptJob": "pyiron_base.job.script",
-            "SerialMasterBase": "pyiron_base.master.serial",
-            "TableJob": "pyiron_base.table.datamining",
-            "WorkerJob": "pyiron_base.job.worker",
-        }
 
         for key in old_job_type_dict:
             self.assertIn(key, job_dict)
@@ -37,8 +38,13 @@ class TestJobType(PyironTestCase):
     def test_convert_str_to_class(self):
         for job_type in JobType._job_class_dict:
             with self.subTest(job_type):
-                cls = JobType.convert_str_to_class(JobType._job_class_dict, job_type)
-                self.assertTrue(
-                    issubclass(cls, GenericJob),
-                    msg=f"{cls} is not a subclass of GenericJob",
-                )
+                try:
+                    cls = JobType.convert_str_to_class(JobType._job_class_dict, job_type)
+                except AttributeError:
+                    print(f"Could not receive {job_type} class from {JobType._job_class_dict[job_type]}.")
+                    self.assertNotIn(job_type, old_job_type_dict)
+                else:
+                    self.assertTrue(
+                        issubclass(cls, GenericJob),
+                        msg=f"{cls} is not a subclass of GenericJob",
+                    )
