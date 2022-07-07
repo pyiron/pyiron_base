@@ -99,14 +99,16 @@ class JobType:
         return job
 
     @classmethod
-    def un_register_job_type(cls, job_name):
+    def unregister(cls, job_name_or_class):
+      if insinstance(job_name_or_class, type):
+        job_name_or_class = job_name_or_class.__name__
         if job_name in cls._job_class_dict:
             del cls._job_class_dict[job_name]
         else:
             raise KeyError(f"No JobType with name '{job_name}' found.")
 
     @classmethod
-    def register_job_type(cls, cls_name, _cls):
+    def register(cls, job_class_or_module_str, job_name=None):
         if cls_name is None:
             return
         elif cls_name not in cls._job_class_dict and isinstance(_cls, str):
@@ -122,11 +124,11 @@ class JobType:
                 raise NotImplementedError(
                     "Currently, the given name has to match the class name."
                 )
-            cls._job_class_dict[cls_name] = cls._get_class_path_str(_cls)
+            cls._job_class_dict[cls_name] = _cls.__module__
         elif (
             cls_name in cls._job_class_dict
             and not isinstance(_cls, str)
-            and cls._job_class_dict[cls_name] == cls._get_class_path_str(_cls)
+            and cls._job_class_dict[cls_name] == _cls.__module__
         ):
             pass
         else:
@@ -135,10 +137,6 @@ class JobType:
                 f"already registered class = {repr(cls._job_class_dict[cls_name])}."
             )
 
-    @staticmethod
-    def _get_class_path_str(_cls):
-        full_path = repr(_cls).split("<class '")[-1].split("'>")[0]
-        return ".".join(full_path.split(".")[:-1])
 
     @staticmethod
     def convert_str_to_class(job_class_dict, class_name) -> Type["GenericJob"]:
@@ -170,11 +168,6 @@ class JobType:
             class_name,
             [job for job in list(job_class_dict.keys())],
         )
-
-
-def unregistered_jobtype(cls):
-    JobType.un_register_job_type(cls.__name__)
-    return cls
 
 
 class JobFactory(PyironFactory):

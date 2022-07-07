@@ -4,7 +4,6 @@
 """
 The ListMaster behaves like a list, just for job objects.
 """
-from typing import Union
 
 from pyiron_base.generic.parameters import GenericParameters
 from pyiron_base.job.core import JobCore

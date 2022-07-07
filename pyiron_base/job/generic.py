@@ -8,7 +8,6 @@ Generic Job class extends the JobCore class with all the functionality to run th
 from datetime import datetime
 import os
 import posixpath
-from typing import Union
 import h5io
 from pyiron_base.job.jobtype import JobType
 import signal
