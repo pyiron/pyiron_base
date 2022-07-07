@@ -38,4 +38,7 @@ class TestJobType(PyironTestCase):
         for job_type in JobType._job_class_dict:
             with self.subTest(job_type):
                 cls = JobType.convert_str_to_class(JobType._job_class_dict, job_type)
-                self.assertIsInstance(cls, GenericJob)
+                self.assertTrue(
+                    issubclass(cls, GenericJob),
+                    msg=f"{cls} is not a subclass of GenericJob",
+                )
