@@ -106,7 +106,7 @@ class JobType:
             del cls._job_class_dict[job_name_or_class]
         else:
             raise KeyError(f"No JobType with name '{job_name_or_class}' found.")
-        return cls
+        return job_name_or_class
 
     @classmethod
     def register(cls, job_class_or_module_str: Union[type, str], job_name: str = None):
