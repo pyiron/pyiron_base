@@ -260,12 +260,12 @@ def run_job_with_runmode_manually(job, _manually_print=True):
         _manually_print (bool): [True/False] print command for execution - default=True
     """
     if _manually_print:
+        abs_working = posixpath.abspath(job.project_hdf5.working_directory)
         print(
             "You have selected to start the job manually. "
-            "To run it, go into the working directory {} and "
-            "call 'python run_job.py' ".format(
-                posixpath.abspath(job.project_hdf5.working_directory)
-            )
+            + "To run it, go into the working directory {} and ".format(abs_working)
+            + "call 'python -m pyiron_base.cli wrapper -p {}".format(abs_working)
+            + " -j {} ' ".format(job.job_id)
         )
 
 
