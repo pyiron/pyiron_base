@@ -100,14 +100,15 @@ class JobType:
 
     @classmethod
     def unregister(cls, job_name_or_class):
+        _cls = None 
         if isinstance(job_name_or_class, type):
+            _cls = job_name_or_class
             job_name_or_class = job_name_or_class.__name__
         if job_name_or_class in cls._job_class_dict:
             del cls._job_class_dict[job_name_or_class]
         else:
             raise KeyError(f"No JobType with name '{job_name_or_class}' found.")
-        return job_name_or_class
-
+        return _cls
     @classmethod
     def register(cls, job_class_or_module_str: Union[type, str], job_name: str = None):
         if job_class_or_module_str is None:
