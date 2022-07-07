@@ -7,7 +7,7 @@ InteractiveBase class extends the Generic Job class with all the functionality t
 
 import numpy as np
 from pyiron_base.job.generic import GenericJob
-from pyiron_base.job.jobtype import unregistered_jobtype
+from pyiron_base.job.jobtype import JobType
 
 __author__ = "Osamu Waseda, Jan Janssen"
 __copyright__ = (
@@ -21,7 +21,7 @@ __status__ = "production"
 __date__ = "Sep 1, 2018"
 
 
-@unregistered_jobtype
+@JobType.unregister
 class InteractiveBase(GenericJob):
     """
     InteractiveBase class extends the Generic Job class with all the functionality to run the job object interactively.

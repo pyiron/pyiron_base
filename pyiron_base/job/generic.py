@@ -1487,7 +1487,7 @@ class GenericJob(JobCore):
 
     def __init_subclass__(cls, **kwargs):
         super().__init_subclass__(**kwargs)
-        JobType.register_job_type(cls.__name__, cls)
+        JobType.register(cls)
 
 
 class GenericError(object):

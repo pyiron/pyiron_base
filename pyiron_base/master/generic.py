@@ -10,7 +10,7 @@ import textwrap
 
 from pyiron_base.job.generic import GenericJob
 from pyiron_base.job.jobstatus import job_status_finished_lst
-from pyiron_base.job.jobtype import unregistered_jobtype
+from pyiron_base.job.jobtype import JobType
 
 __author__ = "Jan Janssen"
 __copyright__ = (
@@ -24,7 +24,7 @@ __status__ = "production"
 __date__ = "Sep 1, 2017"
 
 
-@unregistered_jobtype
+@JobType.unregister
 class GenericMaster(GenericJob):
     """
     The GenericMaster is the template class for all meta jobs - meaning all jobs which contain multiple other jobs. It
