@@ -282,8 +282,8 @@ class TestGenericJob(TestWithFilledProject):
             self.assertRaises(ValueError, job.run)
             self.assertTrue(job.status.aborted)
             self.assertIsNone(job.job_id)
-        with self.subTest("run without delete_existing_job does not change anything."):
-            job.run()
+        with self.subTest("run without delete_existing_job raises a RuntimeError."):
+            self.assertRaises(ValueError, job.run)
             self.assertTrue(job.status.aborted)
         with self.subTest("changing input and run(delete_existing_job=True) should run"):
             job.input.data_in = 10
