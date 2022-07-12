@@ -6,9 +6,10 @@ Generic Job class extends the JobCore class with all the functionality to run th
 """
 
 from datetime import datetime
-import h5io
 import os
 import posixpath
+import h5io
+from pyiron_base.job.jobtype import JobType
 import signal
 import warnings
 
@@ -1488,6 +1489,11 @@ class GenericJob(JobCore):
             project.db.set_job_status(job_id=master_id, status="busy")
             self._logger.info("busy master: {} {}".format(master_id, self.get_job_id()))
             del self
+
+    def __init_subclass__(cls, **kwargs):
+        """Auto register all subclasses of GenericJob as available JobType."""
+        super().__init_subclass__(**kwargs)
+        JobType.register(cls)
 
 
 class GenericError(object):

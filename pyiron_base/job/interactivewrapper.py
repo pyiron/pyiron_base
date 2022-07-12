@@ -4,10 +4,11 @@
 
 from datetime import datetime
 import warnings
+
 from pyiron_base.generic.parameters import GenericParameters
 from pyiron_base.job.generic import GenericJob
+from pyiron_base.job.jobtype import JobType
 from pyiron_base.master.generic import GenericMaster
-from pyiron_base.generic.util import deprecate
 
 __author__ = "Jan Janssen"
 __copyright__ = (
@@ -21,6 +22,7 @@ __status__ = "development"
 __date__ = "Jan 8, 2021"
 
 
+@JobType.unregister
 class InteractiveWrapper(GenericMaster):
     def __init__(self, project, job_name):
         super(InteractiveWrapper, self).__init__(project, job_name)

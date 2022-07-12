@@ -7,6 +7,7 @@ Template class to define jobs
 
 from pyiron_base.job.generic import GenericJob
 from pyiron_base.generic.object import HasStorage
+from pyiron_base.job.jobtype import JobType
 
 __author__ = "Jan Janssen"
 __copyright__ = (
@@ -20,6 +21,7 @@ __status__ = "development"
 __date__ = "May 15, 2020"
 
 
+@JobType.unregister
 class TemplateJob(GenericJob, HasStorage):
     def __init__(self, project, job_name):
         GenericJob.__init__(self, project, job_name)
@@ -44,6 +46,7 @@ class TemplateJob(GenericJob, HasStorage):
         HasStorage.from_hdf(self, hdf=self.project_hdf5, group_name="")
 
 
+@JobType.unregister
 class PythonTemplateJob(TemplateJob):
     def __init__(self, project, job_name):
         super().__init__(project, job_name)

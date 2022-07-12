@@ -10,6 +10,7 @@ from pyiron_base.job.core import JobCore
 from pyiron_base.job.generic import GenericJob
 from pyiron_base.master.generic import GenericMaster
 from pyiron_base.master.submissionstatus import SubmissionStatus
+from pyiron_base.job.jobtype import JobType
 
 __author__ = "Jan Janssen"
 __copyright__ = (
@@ -23,6 +24,7 @@ __status__ = "production"
 __date__ = "Sep 1, 2017"
 
 
+@JobType.unregister
 class ListMaster(GenericMaster):
     """
     The ListMaster is the most simple MetaJob derived from the GenericMaster. It behaves like a Python list object. Jobs

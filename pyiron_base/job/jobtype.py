@@ -14,6 +14,7 @@ from pyiron_base.generic.util import Singleton
 from pyiron_base.generic.factory import PyironFactory
 from pyiron_base.job.jobstatus import job_status_finished_lst
 from pyiron_base.generic.dynamic import JOB_DYN_DICT, class_constructor
+from typing import Type, Union
 
 __author__ = "Joerg Neugebauer, Jan Janssen"
 __copyright__ = (
@@ -36,17 +37,19 @@ JOB_CLASS_DICT = {
 }
 
 
-class JobType(object):
+class JobType:
     """
     The JobTypeBase class creates a new object of a given class type.
     """
+
+    _job_class_dict = JOB_CLASS_DICT
 
     def __new__(
         cls,
         class_name,
         project,
         job_name,
-        job_class_dict,
+        job_class_dict=None,
         delete_existing_job=False,
         delete_aborted_job=False,
     ):
@@ -54,7 +57,7 @@ class JobType(object):
         The __new__() method allows to create objects from other classes - the class selected by class_name
 
         Args:
-            class_name (str): The specific class name of the class this object belongs to.
+            class_name (str/Type('GenericJob')): The specific class name of the class this object belongs to.
             project (Project): Project object (defines path where job will be created and stored)
             job_name (str): name of the job (must be unique within this project path)
             job_class_dict (dict): dictionary with the jobtypes to choose from.
@@ -65,7 +68,7 @@ class JobType(object):
             GenericJob: object of type class_name
         """
         job_name = _get_safe_job_name(job_name)
-        cls.job_class_dict = job_class_dict
+        cls.job_class_dict = job_class_dict or cls._job_class_dict
         if isinstance(class_name, str):
             job_class = cls.convert_str_to_class(
                 job_class_dict=cls.job_class_dict, class_name=class_name
@@ -95,8 +98,66 @@ class JobType(object):
             job.set_input_to_read_only()
         return job
 
+    @classmethod
+    def unregister(cls, job_name_or_class):
+        """Unregister job type from the exposed list of available job types
+
+        Args:
+            job_name_or_class(str/type): name of the job or job class
+
+        Returns:
+            None if a str is provided as job_name_or_class
+            job_name_or_class if a class is provided. Therefore, this method can be used as class decorator.
+        """
+        _cls = None
+        if isinstance(job_name_or_class, type):
+            _cls = job_name_or_class
+            job_name_or_class = job_name_or_class.__name__
+        if job_name_or_class in cls._job_class_dict:
+            del cls._job_class_dict[job_name_or_class]
+        else:
+            raise KeyError(f"No JobType with name '{job_name_or_class}' found.")
+        return _cls
+
+    @classmethod
+    def register(cls, job_class_or_module_str: Union[type, str], job_name: str = None):
+        """Register job type from the exposed list of available job types
+
+        Args:
+            job_class_or_module_str(type/str/None): job class itself, string representation of the job class module as
+                provided by cls.__module__, or None for do not register.
+            job_name(str/None): Name of the job to register. Must match cls.__name__. Can be omitted for class input.
+        """
+        if job_class_or_module_str is None:
+            return
+        elif isinstance(job_class_or_module_str, type):
+            cls_module_str = job_class_or_module_str.__module__
+            if job_name is not None and job_class_or_module_str.__name__ != job_name:
+                raise NotImplementedError(
+                    "Currently, the given name has to match the class name."
+                )
+            else:
+                job_name = job_class_or_module_str.__name__
+        elif job_name is not None:
+            cls_module_str = job_class_or_module_str
+        else:
+            raise ValueError(
+                "The job_name needs to be provided if a job_module_string is provided."
+            )
+
+        if (
+            job_name in cls._job_class_dict
+            and cls_module_str != cls._job_class_dict[job_name]
+        ):
+            raise ValueError(
+                f"A JobType with name {job_name} is already defined! New class = {cls_module_str}, "
+                f"already registered class = {cls._job_class_dict[job_name]}."
+            )
+        else:
+            cls._job_class_dict[job_name] = cls_module_str
+
     @staticmethod
-    def convert_str_to_class(job_class_dict, class_name):
+    def convert_str_to_class(job_class_dict, class_name) -> Type["GenericJob"]:
         """
         convert the name of a class to the corresponding class object - only for pyiron internal classes.
 
