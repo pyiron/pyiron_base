@@ -156,15 +156,17 @@ class JobType:
         if cls_module_str.startswith("pyiron."):
             # Currently, we set all sub-modules of pyiron_atomistics to be sub-modules of pyiron. Thus, any class
             # pyiron.submodule.PyironClass is identical to pyiron_atomistics_submodule.PyironClass:
-            cls_module_str.replace("pyiron.", "pyiron_atomistics")
+            cls_module_str = cls_module_str.replace("pyiron.", "pyiron_atomistics.")
 
         if (
             not overwrite
             and job_name in cls._job_class_dict
             and cls_module_str != cls._job_class_dict[job_name]
         ):
-            info_text = f"A JobType with name {job_name} is already defined! New class = {cls_module_str}, "
-            f"already registered class = {cls._job_class_dict[job_name]}."
+            info_text = (
+                f"A JobType with name '{job_name}' is already defined! New class = '{cls_module_str}', "
+                f"already registered class = '{cls._job_class_dict[job_name]}'."
+            )
             if _autoregister:
                 state.logger.info(
                     info_text + " Not replaced since attempted by auto-registration!"
