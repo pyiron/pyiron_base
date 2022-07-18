@@ -59,7 +59,16 @@ def compress_dir(archive_directory):
     rmtree(archive_directory)
 
 
-def copy_files_to_archive(directory_to_transfer, archive_directory, compressed=True):
+def copy_files_to_archive(directory_to_transfer, archive_directory, compressed=True, copy_all_files=False):
+    """
+    Create an archive of jobs in directory_to_transfer.
+
+    Args:
+        directory_to_transfer (str): project directory with jobs to export
+        archive_directory (str): name of the final archive; if no file ending is given .tar.gz is added automatically when needed
+        compressed (bool): if True compress archive_directory as a tarball; default True
+        copy_all_files (bool): if True include job output files in archive, otherwise just include .h5 files; default False
+    """
     if archive_directory[-7:] == ".tar.gz":
         archive_directory = archive_directory[:-7]
         if not compressed:
@@ -70,7 +79,10 @@ def copy_files_to_archive(directory_to_transfer, archive_directory, compressed=T
     else:
         directory_to_transfer = os.path.basename(directory_to_transfer[:-1])
     # print("directory to transfer: "+directory_to_transfer)
-    pfi = PyFileIndex(path=directory_to_transfer, filter_function=filter_function)
+    if not copy_all_files:
+        pfi = PyFileIndex(path=directory_to_transfer, filter_function=filter_function)
+    else:
+        pfi = PyFileIndex(path=directory_to_transfer)
     df_files = pfi.dataframe[~pfi.dataframe.is_directory]
 
     # Create directories
