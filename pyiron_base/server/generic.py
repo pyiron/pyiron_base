@@ -6,6 +6,7 @@ Server object class which is connected to each job containing the technical deta
 """
 
 from collections import OrderedDict
+import numbers
 from pyiron_base.state import state
 from pyiron_base.server.runmode import Runmode
 import socket
@@ -246,6 +247,12 @@ class Server:  # add the option to return the job id and the hold id to the serv
         Args:
             new_cores (int): number of cores
         """
+        if not isinstance(new_cores, numbers.Integral):
+            converted = int(new_cores)
+            # if the conversion truncated the number, raise error otherwise silently accept it
+            if new_cores != converted:
+                raise ValueError(f"cores must be an integer number, not {new_cores}!")
+            new_cores = converted
         if state.queue_adapter is not None and self._active_queue is not None:
             cores = state.queue_adapter.check_queue_parameters(
                 queue=self.queue,
