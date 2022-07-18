@@ -1535,19 +1535,19 @@ class Project(ProjectPath, HasGroups):
                 for entry in db_entry_in_old_format:
                     self.db.item_update({"project": self.project_path}, entry["id"])
 
-    def pack(self, destination_path, csv_file_name="export.csv", compress=True):
+    def pack(self, destination_path, csv_file_name="export.csv", compress=True, copy_all_files=False):
         """
-        by this funtion, the job table is exported to a csv file
-        and the project directory is copied and compressed (by default) to a file.
+        Export job table to a csv file and copy (and optionally compress) the project directory.
 
         Args:
-        destination_path (str) gives the ralative path, in which the project folder is copied and the compressed
-        csv_file_name (str) is the name of the csv file used to store the project table.
-        compress (boolian), if true, the function will compress the destination_path to a tar.gz file.
+            destination_path (str): gives the relative path, in which the project folder is copied and compressed
+            csv_file_name (str): is the name of the csv file used to store the project table.
+            compress (bool): if true, the function will compress the destination_path to a tar.gz file.
+            copy_all_files (bool):
         """
         directory_to_transfer = os.path.basename(self.path[:-1])
         export_archive.copy_files_to_archive(
-            directory_to_transfer, destination_path, compressed=compress
+            directory_to_transfer, destination_path, compressed=compress, copy_all_files=copy_all_files
         )
         df = export_archive.export_database(
             self, directory_to_transfer, destination_path
