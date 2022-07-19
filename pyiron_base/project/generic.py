@@ -1535,7 +1535,13 @@ class Project(ProjectPath, HasGroups):
                 for entry in db_entry_in_old_format:
                     self.db.item_update({"project": self.project_path}, entry["id"])
 
-    def pack(self, destination_path, csv_file_name="export.csv", compress=True, copy_all_files=False):
+    def pack(
+        self,
+        destination_path,
+        csv_file_name="export.csv",
+        compress=True,
+        copy_all_files=False,
+    ):
         """
         Export job table to a csv file and copy (and optionally compress) the project directory.
 
@@ -1547,7 +1553,10 @@ class Project(ProjectPath, HasGroups):
         """
         directory_to_transfer = os.path.basename(self.path[:-1])
         export_archive.copy_files_to_archive(
-            directory_to_transfer, destination_path, compressed=compress, copy_all_files=copy_all_files
+            directory_to_transfer,
+            destination_path,
+            compressed=compress,
+            copy_all_files=copy_all_files,
         )
         df = export_archive.export_database(
             self, directory_to_transfer, destination_path

@@ -59,7 +59,9 @@ def compress_dir(archive_directory):
     rmtree(archive_directory)
 
 
-def copy_files_to_archive(directory_to_transfer, archive_directory, compressed=True, copy_all_files=False):
+def copy_files_to_archive(
+    directory_to_transfer, archive_directory, compressed=True, copy_all_files=False
+):
     """
     Create an archive of jobs in directory_to_transfer.
 
