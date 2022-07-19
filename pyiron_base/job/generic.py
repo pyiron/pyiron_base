@@ -1493,7 +1493,7 @@ class GenericJob(JobCore):
     def __init_subclass__(cls, **kwargs):
         """Auto register all subclasses of GenericJob as available JobType."""
         super().__init_subclass__(**kwargs)
-        JobType.register(cls)
+        JobType.register(cls, _autoregister=True)
 
 
 class GenericError(object):
