@@ -9,7 +9,7 @@ import datetime
 import re
 import sys
 import pandas as pd
-import pyiron_base.job.jobstatus
+import pyiron_base.jobs.job.extension.jobstatus
 from pyiron_base import Project
 
 __author__ = "Marvin Poul"

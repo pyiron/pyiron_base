@@ -13,7 +13,7 @@ import re
 import time
 import os
 from datetime import datetime
-from pyiron_base.generic.util import deprecate
+from pyiron_base.utils.util import deprecate
 import pandas
 from sqlalchemy import (
     create_engine,

@@ -5,7 +5,7 @@
 import numpy as np
 from pyiron_base._tests import PyironTestCase
 import pyiron_base
-from pyiron_base.generic.units import PyironUnitRegistry, UnitConverter
+from pyiron_base.utils.units import PyironUnitRegistry, UnitConverter
 import pint
 
 pint_registry = pint.UnitRegistry()

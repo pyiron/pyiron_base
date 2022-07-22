@@ -6,7 +6,7 @@ import unittest
 from os.path import dirname, join, abspath
 from os import remove
 from pyiron_base.project.generic import Project
-from pyiron_base.generic.object import HasStorage, HasDatabase, PyironObject
+from pyiron_base.utils.object import HasStorage, HasDatabase, PyironObject
 from pyiron_base import DataContainer
 from pyiron_base.database.generic import DatabaseAccess
 from pyiron_base._tests import TestWithCleanProject

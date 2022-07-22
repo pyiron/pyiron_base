@@ -38,7 +38,7 @@ from configparser import ConfigParser
 from pyiron_base.state.logger import logger
 from pyiron_base.state.publications import publications
 from pathlib import Path
-from pyiron_base.generic.util import deprecate, Singleton
+from pyiron_base.utils.util import deprecate, Singleton
 from typing import Union, Dict, List
 from distutils.util import strtobool
 from copy import deepcopy

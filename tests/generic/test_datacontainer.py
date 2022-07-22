@@ -2,9 +2,9 @@
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 import pyiron_base
 from pyiron_base._tests import TestWithCleanProject, PyironTestCase
-from pyiron_base.generic.datacontainer import DataContainer
-from pyiron_base.generic.hdfstub import HDFStub
-from pyiron_base.generic.inputlist import InputList
+from pyiron_base.storage.datacontainer import DataContainer
+from pyiron_base.storage.hdfstub import HDFStub
+from pyiron_base.storage.inputlist import InputList
 from collections.abc import Iterator
 import copy
 import os
@@ -24,7 +24,7 @@ class TestDataContainer(TestWithCleanProject):
 
     @property
     def docstring_module(self):
-        return pyiron_base.generic.datacontainer
+        return pyiron_base.storage.datacontainer
 
     @classmethod
     def setUpClass(cls):

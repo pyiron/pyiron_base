@@ -3,7 +3,7 @@
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
 from pyiron_base._tests import TestWithProject
-from pyiron_base.toolkit import BaseTools
+from pyiron_base.jobs.job.toolkit import BaseTools
 
 
 class TestToolkit(TestWithProject):

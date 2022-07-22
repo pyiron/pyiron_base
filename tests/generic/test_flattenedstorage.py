@@ -1,7 +1,7 @@
 import numpy as np
 
 from pyiron_base._tests import TestWithProject
-from pyiron_base.generic.flattenedstorage import FlattenedStorage
+from pyiron_base.storage.flattenedstorage import FlattenedStorage
 
 class TestFlattenedStorage(TestWithProject):
 

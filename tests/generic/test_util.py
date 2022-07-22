@@ -4,9 +4,9 @@
 
 import unittest
 import warnings
-from pyiron_base.generic.util import static_isinstance
-from pyiron_base.generic.util import deprecate, deprecate_soon
-from pyiron_base.generic.util import ImportAlarm
+from pyiron_base.utils.util import static_isinstance
+from pyiron_base.utils.util import deprecate, deprecate_soon
+from pyiron_base.utils.util import ImportAlarm
 from pyiron_base._tests import PyironTestCase
 
 

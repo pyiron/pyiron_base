@@ -1,6 +1,6 @@
 from pyiron_base._tests import TestWithProject
-from pyiron_base.generic.datacontainer import DataContainer
-from pyiron_base.generic.hdfstub import HDFStub
+from pyiron_base.storage.datacontainer import DataContainer
+from pyiron_base.storage.hdfstub import HDFStub
 
 import numpy as np
 
