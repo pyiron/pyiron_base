@@ -1366,7 +1366,13 @@ class ProjectHDFio(FileHDFio):
             )
         class_name = class_name or self.get("TYPE")
         class_path = class_name.split("<class '")[-1].split("'>")[0]
-        if not class_path.startswith("abc."):
+        class_convert_dict = {  # Fix backwards compatibility
+            "pyiron_base.generic.datacontainer.DataContainer": "pyiron_base.storage.datacontainer.DataContainer",
+            "pyiron_base.table.datamining.TableJob": "pyiron_base.jobs.datamining.TableJob",
+        }
+        if class_name in class_convert_dict.keys():
+            class_object = self.import_class(class_convert_dict[class_name])
+        elif not class_path.startswith("abc."):
             class_object = self.import_class(class_name)
         else:
             class_object = class_constructor(cp=JOB_DYN_DICT[class_path.split(".")[-1]])
