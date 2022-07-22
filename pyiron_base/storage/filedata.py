@@ -10,8 +10,8 @@ from functools import lru_cache
 
 import pandas
 
-from pyiron_base.generic.hdfio import FileHDFio, ProjectHDFio
-from pyiron_base.generic.util import ImportAlarm
+from pyiron_base.storage.hdfio import FileHDFio, ProjectHDFio
+from pyiron_base.utils.util import ImportAlarm
 
 __author__ = "Niklas Siemer"
 __copyright__ = (
