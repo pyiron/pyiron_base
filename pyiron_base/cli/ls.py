@@ -72,10 +72,10 @@ def register(parser):
         "-s",
         "--status",
         nargs="+",
-        choices=pyiron_base.job.jobstatus.job_status_lst,
+        choices=pyiron_base.jobs.job.extension.jobstatus.job_status_lst,
         metavar="status",
         help="job status must be one of the given, one of {}".format(
-            ", ".join(pyiron_base.job.jobstatus.job_status_lst)
+            ", ".join(pyiron_base.jobs.job.extension.jobstatus.job_status_lst)
         ),
     )
     filter.add_argument(

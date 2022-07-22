@@ -338,7 +338,7 @@ def validate_que_request(item):
             que_id = item.server.queue_id
         else:
             raise ValueError("This job does not have a queue ID.")
-    elif static_isinstance(item.__class__, "pyiron_base.job.core.JobCore"):
+    elif static_isinstance(item.__class__, "pyiron_base.jobs.job.core.JobCore"):
         if "server" in item.project_hdf5.list_nodes():
             server_hdf_dict = item.project_hdf5["server"]
             if "qid" in server_hdf_dict.keys():
