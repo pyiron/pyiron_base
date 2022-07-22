@@ -401,7 +401,7 @@ class TestFileHDFio(PyironTestCase):
                     self.assertEqual(len(w), 1)
                     self.assertEqual(
                         str(w[0].message),
-                        "pyiron_base.generic.hdfio.rewrite_hdf5(job_name=job_name) "
+                        "pyiron_base.storage.hdfio.rewrite_hdf5(job_name=job_name) "
                         + "is deprecated.",
                     )
                 self.assertEqual(
@@ -418,7 +418,7 @@ class TestFileHDFio(PyironTestCase):
                 self.assertEqual(len(w), 1)
                 self.assertEqual(
                     str(w[0].message),
-                    "pyiron_base.generic.hdfio.rewrite_hdf5(exclude_groups=some) "
+                    "pyiron_base.storage.hdfio.rewrite_hdf5(exclude_groups=some) "
                     + "is deprecated.",
                 )
 
@@ -428,7 +428,7 @@ class TestFileHDFio(PyironTestCase):
                 self.assertEqual(len(w), 1)
                 self.assertEqual(
                     str(w[0].message),
-                    "pyiron_base.generic.hdfio.rewrite_hdf5(exclude_nodes=any) "
+                    "pyiron_base.storage.hdfio.rewrite_hdf5(exclude_nodes=any) "
                     + "is deprecated.",
                 )
 

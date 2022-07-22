@@ -30,11 +30,11 @@ __date__ = "Sep 1, 2017"
 
 
 JOB_CLASS_DICT = {
-    "FlexibleMaster": "pyiron_base.master.flexible",
-    "ScriptJob": "pyiron_base.job.script",
-    "SerialMasterBase": "pyiron_base.master.serial",
-    "TableJob": "pyiron_base.table.datamining",
-    "WorkerJob": "pyiron_base.job.worker",
+    "FlexibleMaster": "pyiron_base.jobs.master.flexible",
+    "ScriptJob": "pyiron_base.jobs.script",
+    "SerialMasterBase": "pyiron_base.jobs.master.serial",
+    "TableJob": "pyiron_base.jobs.datamining",
+    "WorkerJob": "pyiron_base.jobs.worker",
 }
 
 

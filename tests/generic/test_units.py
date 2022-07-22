@@ -15,7 +15,7 @@ class TestUnits(PyironTestCase):
 
     @property
     def docstring_module(self):
-        return pyiron_base.generic.units
+        return pyiron_base.utils.units
 
     def test_units(self):
         base_units = PyironUnitRegistry()
