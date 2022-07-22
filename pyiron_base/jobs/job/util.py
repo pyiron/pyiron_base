@@ -87,7 +87,7 @@ def _get_project_for_copy(job, project, new_job_name):
         Project, ProjectHDFio
     """
     if static_isinstance(
-        obj=project.__class__, obj_type="pyiron_base.job.core.JobCore"
+        obj=project.__class__, obj_type="pyiron_base.jobs.job.core.JobCore"
     ):
         file_project = project.project
         hdf5_project = project.project_hdf5.open(new_job_name)
