@@ -9,15 +9,15 @@ from datetime import datetime
 import os
 import posixpath
 import h5io
-from pyiron_base.job.jobtype import JobType
+from pyiron_base.jobs.job.jobtype import JobType
 import signal
 import warnings
 
 from pyiron_base.state import state
-from pyiron_base.job.executable import Executable
-from pyiron_base.job.jobstatus import JobStatus
-from pyiron_base.job.core import JobCore
-from pyiron_base.job.runfunction import (
+from pyiron_base.jobs.job.extension.executable import Executable
+from pyiron_base.jobs.job.extension.jobstatus import JobStatus
+from pyiron_base.jobs.job.core import JobCore
+from pyiron_base.jobs.job.runfunction import (
     run_job_with_parameter_repair,
     run_job_with_status_initialized,
     run_job_with_status_created,
@@ -36,14 +36,14 @@ from pyiron_base.job.runfunction import (
     run_job_with_runmode_queue,
     execute_job_with_external_executable,
 )
-from pyiron_base.job.util import (
+from pyiron_base.jobs.job.util import (
     _copy_restart_files,
     _kill_child,
     _job_store_before_copy,
     _job_reload_after_copy,
 )
-from pyiron_base.generic.util import static_isinstance, deprecate
-from pyiron_base.server.generic import Server
+from pyiron_base.utils.util import static_isinstance, deprecate
+from pyiron_base.jobs.job.extension.server.generic import Server
 from pyiron_base.database.filetable import FileTable
 
 __author__ = "Joerg Neugebauer, Jan Janssen"

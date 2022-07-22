@@ -12,15 +12,15 @@ import numpy as np
 import pandas
 import multiprocessing
 import importlib
-from pyiron_base.job.generic import GenericJob
-from pyiron_base.master.generic import GenericMaster
-from pyiron_base.master.submissionstatus import SubmissionStatus
-from pyiron_base.generic.parameters import GenericParameters
-from pyiron_base.job.jobstatus import JobStatus
-from pyiron_base.job.jobtype import JobType
+from pyiron_base.jobs.job.generic import GenericJob
+from pyiron_base.jobs.master.generic import GenericMaster
+from pyiron_base.jobs.master.submissionstatus import SubmissionStatus
+from pyiron_base.storage.parameters import GenericParameters
+from pyiron_base.jobs.job.extension.jobstatus import JobStatus
+from pyiron_base.jobs.job.jobtype import JobType
 from pyiron_base.state import state
-from pyiron_base.job.wrapper import job_wrapper_function
-from pyiron_base.generic.util import deprecate
+from pyiron_base.jobs.job.wrapper import job_wrapper_function
+from pyiron_base.utils.util import deprecate
 
 __author__ = "Joerg Neugebauer, Jan Janssen"
 __copyright__ = (
