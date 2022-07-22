@@ -46,7 +46,7 @@ setup(
     ],
     cmdclass=versioneer.get_cmdclass(),
 
-    entry_points = {
+    entry_points={
             "console_scripts": [
                 'pyiron=pyiron_base.cli:main'
             ]
