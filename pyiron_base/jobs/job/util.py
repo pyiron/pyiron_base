@@ -223,7 +223,7 @@ def _kill_child(job):
     """
     if (
         static_isinstance(
-            obj=job.__class__, obj_type="pyiron_base.master.GenericMaster"
+            obj=job.__class__, obj_type="pyiron_base.jobs.master.GenericMaster"
         )
         and not job.server.run_mode.queue
         and (job.status.running or job.status.submitted)
