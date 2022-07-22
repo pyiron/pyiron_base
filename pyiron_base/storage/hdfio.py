@@ -1370,7 +1370,7 @@ class ProjectHDFio(FileHDFio):
             "pyiron_base.generic.datacontainer.DataContainer": "pyiron_base.storage.datacontainer.DataContainer",
             "pyiron_base.generic.inputlist.InputList": "pyiron_base.storage.inputlist.InputList",
         }
-        if class_name in class_convert_dict.keys():
+        if class_path in class_convert_dict.keys():
             class_name_new = "<class '" + class_convert_dict[class_path] + "'>"
             class_object = self.import_class(class_name_new)
         elif not class_path.startswith("abc."):
