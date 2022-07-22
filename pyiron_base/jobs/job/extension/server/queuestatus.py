@@ -320,7 +320,9 @@ def validate_que_request(item):
 
     if isinstance(item, int):
         que_id = item
-    elif static_isinstance(item.__class__, "pyiron_base.jobs.master.generic.GenericMaster"):
+    elif static_isinstance(
+        item.__class__, "pyiron_base.jobs.master.generic.GenericMaster"
+    ):
         if item.server.queue_id:
             que_id = item.server.queue_id
         else:
