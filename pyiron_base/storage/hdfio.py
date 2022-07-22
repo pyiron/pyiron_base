@@ -1368,10 +1368,16 @@ class ProjectHDFio(FileHDFio):
         class_path = class_name.split("<class '")[-1].split("'>")[0]
         class_convert_dict = {  # Fix backwards compatibility
             "pyiron_base.generic.datacontainer.DataContainer": "pyiron_base.storage.datacontainer.DataContainer",
+            "pyiron_base.generic.inputlist.InputList": "pyiron_base.storage.inputlist.InputList",
             "pyiron_base.table.datamining.TableJob": "pyiron_base.jobs.datamining.TableJob",
+            "pyiron_base.master.list.ListMaster": "pyiron_base.jobs.master.list.ListMaster",
+            "pyiron_base.master.flexible.FlexibleMaster": "pyiron_base.jobs.master.flexible.FlexibleMaster",
+            "pyiron_base.master.serial.SerialMasterBase": "pyiron_base.jobs.master.serial.SerialMasterBase",
+            "pyiron_base.master.parallel.ParallelMaster": "pyiron_base.jobs.master.parallel.ParallelMaster",
         }
         if class_name in class_convert_dict.keys():
-            class_object = self.import_class(class_convert_dict[class_name])
+            class_name_new = "<class '" + class_convert_dict[class_path] + "'>"
+            class_object = self.import_class(class_name_new)
         elif not class_path.startswith("abc."):
             class_object = self.import_class(class_name)
         else:
