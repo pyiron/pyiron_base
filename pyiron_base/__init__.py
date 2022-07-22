@@ -11,7 +11,7 @@ from pyiron_base.generic.hdfio import FileHDFio, ProjectHDFio
 from pyiron_base.generic.datacontainer import DataContainer
 from pyiron_base.generic.inputlist import InputList
 from pyiron_base.generic.parameters import GenericParameters
-from pyiron_base.generic.util import deprecate, deprecate_soon, ImportAlarm
+from pyiron_base.generic.util import Deprecator, deprecate, deprecate_soon, ImportAlarm
 from pyiron_base.job.executable import Executable
 from pyiron_base.job.external import Notebook, load, dump
 from pyiron_base.job.generic import GenericJob
@@ -39,6 +39,8 @@ from pyiron_base.state.install import install_dialog
 from pyiron_base.table.datamining import PyironTable, TableJob
 from pyiron_base.generic.object import HasDatabase, HasStorage, PyironObject
 from pyiron_base.database.performance import get_database_statistics
+from pyiron_base.interfaces.has_groups import HasGroups
+from pyiron_base.interfaces.has_hdf import HasHDF
 
 from pyiron_base.toolkit import Toolkit, BaseTools
 
