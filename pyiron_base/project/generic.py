@@ -816,7 +816,9 @@ class Project(ProjectPath, HasGroups):
         Returns:
             GenericJob, JobCore: Either the full GenericJob object or just a reduced JobCore object
         """
-        jobpath = getattr(importlib.import_module("pyiron_base.job.path"), "JobPath")
+        jobpath = getattr(
+            importlib.import_module("pyiron_base.jobs.job.path"), "JobPath"
+        )
         if job_id is not None:
             job = jobpath(db=self.db, job_id=job_id, user=self.user)
             if convert_to_object:
@@ -1230,9 +1232,9 @@ class Project(ProjectPath, HasGroups):
         Returns:
             GenericJob, JobCore: Either the full GenericJob object or just a reduced JobCore object
         """
-        job = getattr(importlib.import_module("pyiron_base.job.path"), "JobPathBase")(
-            job_path=job_path
-        )
+        job = getattr(
+            importlib.import_module("pyiron_base.jobs.job.path"), "JobPathBase"
+        )(job_path=job_path)
         if convert_to_object:
             job = job.to_object()
         job.set_input_to_read_only()
