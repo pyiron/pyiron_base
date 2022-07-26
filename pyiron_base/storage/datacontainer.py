@@ -222,7 +222,7 @@ class DataContainer(MutableMapping, HasGroups, HasHDF):
     For that reason most of time you'll actually want a class that uses a DataContainer for storage, but doesn't derive
     from it.
 
-    >>> from pyiron_base.utils.object import HasStorage
+    >>> from pyiron_base.interfaces.object import HasStorage
     >>> class FancyClass(HasStorage):
     ...     def __init__(self, foo):
     ...         super().__init__()
