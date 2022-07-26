@@ -2,9 +2,9 @@
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 import pyiron_base
 from pyiron_base._tests import TestWithCleanProject, PyironTestCase
-from pyiron_base.generic.datacontainer import DataContainer
-from pyiron_base.generic.hdfstub import HDFStub
-from pyiron_base.generic.inputlist import InputList
+from pyiron_base.storage.datacontainer import DataContainer
+from pyiron_base.storage.hdfstub import HDFStub
+from pyiron_base.storage.inputlist import InputList
 from collections.abc import Iterator
 import copy
 import os
@@ -24,7 +24,7 @@ class TestDataContainer(TestWithCleanProject):
 
     @property
     def docstring_module(self):
-        return pyiron_base.generic.datacontainer
+        return pyiron_base.storage.datacontainer
 
     @classmethod
     def setUpClass(cls):
@@ -360,14 +360,14 @@ class TestDataContainer(TestWithCleanProject):
         self.pl.to_hdf(hdf=self.hdf)
         self.assertEqual(self.hdf["input/NAME"], "DataContainer")
         self.assertEqual(self.hdf["input/OBJECT"], "DataContainer")
-        self.assertEqual(self.hdf["input/TYPE"], "<class 'pyiron_base.generic.datacontainer.DataContainer'>")
+        self.assertEqual(self.hdf["input/TYPE"], "<class 'pyiron_base.storage.datacontainer.DataContainer'>")
 
         h = self.hdf.open('nested')
         pl = DataContainer(self.pl)
         pl.to_hdf(hdf=h)
         self.assertEqual(h["NAME"], "DataContainer")
         self.assertEqual(h["OBJECT"], "DataContainer")
-        self.assertEqual(h["TYPE"], "<class 'pyiron_base.generic.datacontainer.DataContainer'>")
+        self.assertEqual(h["TYPE"], "<class 'pyiron_base.storage.datacontainer.DataContainer'>")
 
     def test_to_hdf_items(self):
         """Should write all sublists to HDF groups and simple items to HDF datasets."""
@@ -388,7 +388,7 @@ class TestDataContainer(TestWithCleanProject):
         """Should be possible to give a custom group name."""
         self.pl.to_hdf(hdf=self.hdf, group_name="test_group")
         self.assertEqual(self.hdf["test_group/NAME"], "DataContainer")
-        self.assertEqual(self.hdf["test_group/TYPE"], "<class 'pyiron_base.generic.datacontainer.DataContainer'>")
+        self.assertEqual(self.hdf["test_group/TYPE"], "<class 'pyiron_base.storage.datacontainer.DataContainer'>")
         self.assertEqual(self.hdf["test_group/OBJECT"], "DataContainer")
 
     def test_to_hdf_readonly(self):

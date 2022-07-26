@@ -1,7 +1,7 @@
 import os
 import unittest
 from pyiron_base import Project
-from pyiron_base.archiving.import_archive import getdir, extract_archive
+from pyiron_base.project.archiving.import_archive import getdir, extract_archive
 from pandas._testing import assert_frame_equal
 from filecmp import dircmp
 from shutil import rmtree

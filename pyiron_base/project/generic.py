@@ -28,13 +28,13 @@ from pyiron_base.database.jobtable import (
     get_job_working_directory,
     get_job_status,
 )
-from pyiron_base.generic.hdfio import ProjectHDFio
-from pyiron_base.generic.filedata import load_file
-from pyiron_base.generic.util import deprecate
-from pyiron_base.job.util import _special_symbol_replacements, _get_safe_job_name
+from pyiron_base.storage.hdfio import ProjectHDFio
+from pyiron_base.storage.filedata import load_file
+from pyiron_base.utils.deprecate import deprecate
+from pyiron_base.jobs.job.util import _special_symbol_replacements, _get_safe_job_name
 from pyiron_base.interfaces.has_groups import HasGroups
-from pyiron_base.job.jobtype import JobType, JobTypeChoice, JobFactory
-from pyiron_base.server.queuestatus import (
+from pyiron_base.jobs.job.jobtype import JobType, JobTypeChoice, JobFactory
+from pyiron_base.jobs.job.extension.server.queuestatus import (
     queue_delete_job,
     queue_is_empty,
     queue_table,
@@ -44,9 +44,9 @@ from pyiron_base.server.queuestatus import (
     queue_enable_reservation,
     queue_check_job_is_waiting_or_running,
 )
-from pyiron_base.job.external import Notebook
+from pyiron_base.project.external import Notebook
 from pyiron_base.project.data import ProjectData
-from pyiron_base.archiving import import_archive, export_archive
+from pyiron_base.project.archiving import export_archive, import_archive
 from typing import Generator, Union, Dict
 
 __author__ = "Joerg Neugebauer, Jan Janssen"
@@ -816,7 +816,9 @@ class Project(ProjectPath, HasGroups):
         Returns:
             GenericJob, JobCore: Either the full GenericJob object or just a reduced JobCore object
         """
-        jobpath = getattr(importlib.import_module("pyiron_base.job.path"), "JobPath")
+        jobpath = getattr(
+            importlib.import_module("pyiron_base.jobs.job.path"), "JobPath"
+        )
         if job_id is not None:
             job = jobpath(db=self.db, job_id=job_id, user=self.user)
             if convert_to_object:
@@ -1230,9 +1232,9 @@ class Project(ProjectPath, HasGroups):
         Returns:
             GenericJob, JobCore: Either the full GenericJob object or just a reduced JobCore object
         """
-        job = getattr(importlib.import_module("pyiron_base.job.path"), "JobPathBase")(
-            job_path=job_path
-        )
+        job = getattr(
+            importlib.import_module("pyiron_base.jobs.job.path"), "JobPathBase"
+        )(job_path=job_path)
         if convert_to_object:
             job = job.to_object()
         job.set_input_to_read_only()

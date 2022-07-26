@@ -3,7 +3,7 @@
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
 import unittest
-from pyiron_base.server.generic import Server
+from pyiron_base.jobs.job.extension.server.generic import Server
 from pyiron_base._tests import PyironTestCase
 
 

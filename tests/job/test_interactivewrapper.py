@@ -4,7 +4,7 @@
 
 import os
 from pyiron_base.project.generic import Project
-from pyiron_base.job.interactivewrapper import InteractiveWrapper
+from pyiron_base.jobs.master.interactivewrapper import InteractiveWrapper
 from pyiron_base._tests import PyironTestCase
 
 class TestInteractiveWrapper(PyironTestCase):

@@ -4,8 +4,8 @@
 
 import unittest
 import os
-from pyiron_base.generic.parameters import GenericParameters
-from pyiron_base.job.generic import GenericJob
+from pyiron_base.storage.parameters import GenericParameters
+from pyiron_base.jobs.job.generic import GenericJob
 from pyiron_base._tests import TestWithFilledProject, ToyJob
 
 

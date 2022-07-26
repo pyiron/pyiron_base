@@ -15,8 +15,8 @@ Spec:
     - The `Project` tab completion menu should not get cluttered (i.e. nest everything under `Project.foo`)
 """
 
-from pyiron_base.generic.datacontainer import DataContainer
-from pyiron_base.generic.hdfio import ProjectHDFio
+from pyiron_base.storage.datacontainer import DataContainer
+from pyiron_base.storage.hdfio import ProjectHDFio
 
 __author__ = "Liam Huber"
 __copyright__ = (

@@ -8,7 +8,7 @@ from os import remove
 import pint
 from pyiron_base.project.generic import Project
 from pyiron_base._tests import PyironTestCase, TestWithProject, TestWithFilledProject, ToyJob
-from pyiron_base.toolkit import BaseTools
+from pyiron_base.jobs.job.toolkit import BaseTools
 
 
 class TestProjectData(PyironTestCase):

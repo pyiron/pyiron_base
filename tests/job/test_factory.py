@@ -3,10 +3,10 @@
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
 from pyiron_base._tests import TestWithCleanProject
-from pyiron_base.job.factory import JobFactory
-from pyiron_base.job.script import ScriptJob
+from pyiron_base.jobs.job.factory import JobFactory
+from pyiron_base.jobs.script import ScriptJob
 from pyiron_base.state import state
-from pyiron_base.job.template import PythonTemplateJob
+from pyiron_base.jobs.job.template import PythonTemplateJob
 
 
 class CustomJob(PythonTemplateJob):

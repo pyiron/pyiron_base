@@ -1,7 +1,7 @@
 import os
 import unittest
 from pyiron_base import Project
-from pyiron_base.archiving.export_archive import export_database
+from pyiron_base.project.archiving.export_archive import export_database
 import pandas as pd
 from pandas._testing import assert_frame_equal
 from filecmp import dircmp

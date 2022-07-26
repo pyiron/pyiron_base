@@ -3,7 +3,7 @@
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
 import unittest
-from pyiron_base.generic.factory import PyironFactory
+from pyiron_base.interfaces.factory import PyironFactory
 from pyiron_base._tests import PyironTestCase
 
 
