@@ -226,7 +226,10 @@ class JobFactory(PyironFactory):
         return list(self._job_class_dict.keys()) + list(self._job_dyn_dict.keys())
 
     def __getattr__(self, name):
-        if name in self._job_class_dict.keys():
+        if (
+            name in self._job_class_dict.keys()
+            and name not in self._job_dyn_dict.keys()
+        ):
 
             def wrapper(job_name, delete_existing_job=False, delete_aborted_job=False):
                 """
