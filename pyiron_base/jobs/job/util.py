@@ -7,11 +7,11 @@ Helper functions for the JobCore and GenericJob objects
 import os
 import posixpath
 import psutil
-from pyiron_base.utils.util import static_isinstance
 import tarfile
 import stat
 import shutil
 from typing import Union, Dict
+from pyiron_base.utils.instance import static_isinstance
 
 __author__ = "Jan Janssen"
 __copyright__ = (

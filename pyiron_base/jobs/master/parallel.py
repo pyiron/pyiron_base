@@ -20,7 +20,7 @@ from pyiron_base.jobs.job.extension.jobstatus import JobStatus
 from pyiron_base.jobs.job.jobtype import JobType
 from pyiron_base.state import state
 from pyiron_base.jobs.job.wrapper import job_wrapper_function
-from pyiron_base.utils.util import deprecate
+from pyiron_base.utils.deprecate import deprecate
 
 __author__ = "Joerg Neugebauer, Jan Janssen"
 __copyright__ = (

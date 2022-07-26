@@ -7,7 +7,7 @@ import os
 import posixpath
 import subprocess
 
-from pyiron_base.utils.util import deprecate
+from pyiron_base.utils.deprecate import deprecate
 from pyiron_base.jobs.job.wrapper import JobWrapper
 from pyiron_base.state import state
 

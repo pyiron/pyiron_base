@@ -42,7 +42,8 @@ from pyiron_base.jobs.job.util import (
     _job_store_before_copy,
     _job_reload_after_copy,
 )
-from pyiron_base.utils.util import static_isinstance, deprecate
+from pyiron_base.utils.instance import static_isinstance
+from pyiron_base.utils.deprecate import deprecate
 from pyiron_base.jobs.job.extension.server.generic import Server
 from pyiron_base.database.filetable import FileTable
 

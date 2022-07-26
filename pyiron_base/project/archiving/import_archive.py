@@ -5,7 +5,7 @@ from shutil import rmtree
 from distutils.dir_util import copy_tree
 import tarfile
 from pyiron_base.project.archiving.shared import getdir
-from pyiron_base.utils.util import static_isinstance
+from pyiron_base.utils.instance import static_isinstance
 from pyiron_base.state import state
 
 

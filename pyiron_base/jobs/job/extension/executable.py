@@ -3,7 +3,7 @@
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
 import os
-from pyiron_base.utils.object import HasStorage
+from pyiron_base.interfaces.object import HasStorage
 from pyiron_base.state import state
 
 """

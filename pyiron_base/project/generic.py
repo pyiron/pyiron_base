@@ -30,7 +30,7 @@ from pyiron_base.database.jobtable import (
 )
 from pyiron_base.storage.hdfio import ProjectHDFio
 from pyiron_base.storage.filedata import load_file
-from pyiron_base.utils.util import deprecate
+from pyiron_base.utils.deprecate import deprecate
 from pyiron_base.jobs.job.util import _special_symbol_replacements, _get_safe_job_name
 from pyiron_base.interfaces.has_groups import HasGroups
 from pyiron_base.jobs.job.jobtype import JobType, JobTypeChoice, JobFactory

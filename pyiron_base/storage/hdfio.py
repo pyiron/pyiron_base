@@ -17,7 +17,7 @@ import numpy as np
 import sys
 from typing import Union
 
-from pyiron_base.utils.util import deprecate
+from pyiron_base.utils.deprecate import deprecate
 
 from pyiron_base.interfaces.has_groups import HasGroups
 from pyiron_base.state import state

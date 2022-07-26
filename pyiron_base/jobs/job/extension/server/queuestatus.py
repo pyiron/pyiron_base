@@ -8,7 +8,7 @@ Set of functions to interact with the queuing system directly from within pyiron
 import pandas
 import time
 from pyiron_base.state import state
-from pyiron_base.utils.util import static_isinstance
+from pyiron_base.utils.instance import static_isinstance
 from pyiron_base.jobs.job.extension.jobstatus import job_status_finished_lst
 
 __author__ = "Jan Janssen"

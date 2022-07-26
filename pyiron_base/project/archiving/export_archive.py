@@ -5,7 +5,7 @@ from pyfileindex import PyFileIndex
 import tarfile
 from shutil import rmtree
 from pyiron_base.project.archiving.shared import getdir
-from pyiron_base.utils.util import static_isinstance
+from pyiron_base.utils.instance import static_isinstance
 
 
 def new_job_id(job_id, job_translate_dict):

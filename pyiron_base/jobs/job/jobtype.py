@@ -10,7 +10,7 @@ import inspect
 import os
 from pyiron_base.jobs.job.util import _get_safe_job_name
 from pyiron_base.storage.hdfio import ProjectHDFio
-from pyiron_base.utils.util import Singleton
+from pyiron_base.interfaces.singleton import Singleton
 from pyiron_base.interfaces.factory import PyironFactory
 from pyiron_base.jobs.job.extension.jobstatus import job_status_finished_lst
 from pyiron_base.jobs.dynamic import JOB_DYN_DICT, class_constructor
