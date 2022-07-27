@@ -230,9 +230,7 @@ class JobFactory(PyironFactory):
         # we first have to check whether name is in _job_dyn_dict before we check the general _job_class_dict
         if name in self._job_dyn_dict:
 
-            def wrapper(
-                job_name, delete_existing_job=False, delete_aborted_job=False
-            ):
+            def wrapper(job_name, delete_existing_job=False, delete_aborted_job=False):
                 """
                 Create one of the following jobs:
                 - 'ExampleJob': example job just generating random number
