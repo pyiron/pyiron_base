@@ -1614,6 +1614,23 @@ class Project(ProjectPath, HasGroups):
             )
         setattr(cls, name, property(lambda self: tools(self)))
 
+    def symlink(self, target):
+        """
+        Move underlying project folder to target and create a symlink to it.
+        """
+        if os.name != "posix":
+            raise OSError("Symlinking projects is only supported on unix systems!")
+        if len(self.job_table().query('status.isin(["submitted", "running"])')) > 0:
+            raise RuntimeError("Refusing to symlink and move a project that has submitted or running jobs!")
+        os.makedirs(target, exist_ok=True)
+        target = os.path.join(target, self.name)
+        if os.path.exists(target) and len(os.listdir(target)) > 0:
+            raise RuntimeError("Refusing to symlink and move a project to non-empty directory!")
+        shutil.move(self.path, os.path.dirname(target))
+        destination = self.path
+        if destination[-1] == '/':
+            destination = destination[:-1]
+        os.symlink(target, destination)
 
 class Creator:
     def __init__(self, project):
