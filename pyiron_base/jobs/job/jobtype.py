@@ -228,7 +228,7 @@ class JobFactory(PyironFactory):
     def __getattr__(self, name):
         # FIXME: due to a bug in job registration dynamically created jobs are also present in self._job_class_dict, so
         # we first have to check whether name is in _job_dyn_dict before we check the general _job_class_dict
-        if name in self._job_dyn_dict.keys():
+        if name in self._job_dyn_dict:
 
             def wrapper(
                 job_name, delete_existing_job=False, delete_aborted_job=False
@@ -266,7 +266,7 @@ class JobFactory(PyironFactory):
 
             return wrapper
 
-        elif name in self._job_class_dict.keys():
+        elif name in self._job_class_dict:
 
             def wrapper(job_name, delete_existing_job=False, delete_aborted_job=False):
                 """
