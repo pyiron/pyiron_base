@@ -363,15 +363,8 @@ class Settings(metaclass=Singleton):
 
         if not os.path.isfile(credential_file):
             raise FileNotFoundError(credential_file)
-        parser = ConfigParser(inline_comment_prefixes=(";",), interpolation=None)
-        parser.read(credential_file)
-        for sec_name, section in parser.items():
-            for k, v in section.items():
-                try:
-                    config[self.file_credential_map[k.upper()]] = v
-                except KeyError:
-                    pass
-        return config
+        config = self._parse_config_file(credential_file, self.file_credential_map)
+        return config or {}
 
     def _get_config_from_file(self) -> Union[Dict, None]:
         if "PYIRONCONFIG" in os.environ.keys():
@@ -379,21 +372,27 @@ class Settings(metaclass=Singleton):
         else:
             config_file = os.path.expanduser(os.path.join("~", ".pyiron"))
 
+        config = self._parse_config_file(config_file, self.file_configuration_map)
+
+        if config is not None:
+            config = self._fix_boolean_var_in_config(config=config)
+            config = self._add_credentials_from_file(config)
+
+        return config
+
+    @staticmethod
+    def _parse_config_file(config_file, map_dict):
         if os.path.isfile(config_file):
             parser = ConfigParser(inline_comment_prefixes=(";",), interpolation=None)
             parser.read(config_file)
             config = {}
             for sec_name, section in parser.items():
                 for k, v in section.items():
-                    try:
-                        config[self.file_configuration_map[k.upper()]] = v
-                    except KeyError:
-                        pass
-            config = self._fix_boolean_var_in_config(config=config)
-            config = self._add_credentials_from_file(config)
+                    if k.upper() in map_dict:
+                        config[map_dict[k.upper()]] = v
+            return config
         else:
-            config = None
-        return config
+            return None
 
     def _update_from_dict(self, config: Dict, map_: Union[None, Dict] = None) -> None:
         """
