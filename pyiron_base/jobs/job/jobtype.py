@@ -61,7 +61,7 @@ class JobType:
             class_name (str/Type('GenericJob')): The specific class name of the class this object belongs to.
             project (Project): Project object (defines path where job will be created and stored)
             job_name (str): name of the job (must be unique within this project path)
-            job_class_dict (dict): dictionary with the jobtypes to choose from.
+            job_class_dict (dict/None): dictionary with the jobtypes to choose from.
             delete_existing_job (bool): delete an existing job - default false
             delete_aborted_job (bool): delete an existing and aborted job - default false
 
@@ -248,16 +248,14 @@ class JobFactory(PyironFactory):
                     GenericJob: job object depending on the job_type selected
                 """
                 job_name = _get_safe_job_name(job_name)
+                job_class = class_constructor(cp=self._job_dyn_dict[name])
                 return JobType(
-                    class_name=name,
+                    class_name=job_class,
                     project=ProjectHDFio(
                         project=self._project.copy(), file_name=job_name
                     ),
                     job_name=job_name,
-                    job_class_dict={
-                        name: class_constructor(cp=cp)
-                        for name, cp in self._job_dyn_dict.items()
-                    },
+                    job_class_dict=None,
                     delete_existing_job=delete_existing_job,
                     delete_aborted_job=delete_aborted_job,
                 )
