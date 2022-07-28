@@ -85,11 +85,12 @@ def _init_constructor_dynamic(class_name, module, input_dict):
 def class_constructor(cp):
     if "templates" in cp:
         from pyiron_base.jobs.script import ScriptJob
+        from pyiron_base.jobs.job.jobtype import JobType
 
         class_name = os.path.basename(cp)
         script_path = os.path.join(cp, "script.py")
         input_dict = _load_input(path=cp)
-        return type(
+        cls = type(
             class_name,
             (ScriptJob,),
             {
@@ -100,13 +101,16 @@ def class_constructor(cp):
                 )
             },
         )
+        JobType.unregister(cls)
+        return cls
     elif "dynamic" in cp:
         from pyiron_base.jobs.job.template import TemplateJob
+        from pyiron_base.jobs.job.jobtype import JobType
 
         class_name = os.path.basename(cp)
         input_dict = _load_input(path=cp)
         script = _get_script(cp=cp)
-        return type(
+        cls = type(
             class_name,
             (TemplateJob,),
             {
@@ -121,6 +125,8 @@ def class_constructor(cp):
                 "collect_output": _get_collect_output(script=script),
             },
         )
+        JobType.unregister(cls)
+        return cls
 
 
 def _get_template_classes():
