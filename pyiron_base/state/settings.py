@@ -363,7 +363,13 @@ class Settings(metaclass=Singleton):
 
         if not os.path.isfile(credential_file):
             raise FileNotFoundError(credential_file)
-        credentials = self._parse_config_file(credential_file, self.file_credential_map) or {}
+        elif oct(os.stat(credential_file).st_mode)[-2:] != "00":
+            logger.warning(
+                "Credentials file can be read by other users - check permissions."
+            )
+        credentials = (
+            self._parse_config_file(credential_file, self.file_credential_map) or {}
+        )
         config.update(credentials)
         return config
 
