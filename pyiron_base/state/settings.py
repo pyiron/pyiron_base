@@ -363,8 +363,9 @@ class Settings(metaclass=Singleton):
 
         if not os.path.isfile(credential_file):
             raise FileNotFoundError(credential_file)
-        config = self._parse_config_file(credential_file, self.file_credential_map)
-        return config or {}
+        credentials = self._parse_config_file(credential_file, self.file_credential_map) or {}
+        config.update(credentials)
+        return config
 
     def _get_config_from_file(self) -> Union[Dict, None]:
         if "PYIRONCONFIG" in os.environ.keys():
