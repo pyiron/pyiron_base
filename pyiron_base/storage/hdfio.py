@@ -1308,16 +1308,23 @@ class ProjectHDFio(FileHDFio):
             type: class object of the given name
         """
         internal_class_name = class_name.split(".")[-1][:-2]
-        if internal_class_name in self._project.job_type.job_class_dict:
-            module_path = self._project.job_type.job_class_dict[internal_class_name]
-        else:
-            class_path = class_name.split()[-1].split(".")[:-1]
-            class_path[0] = class_path[0][1:]
-            module_path = ".".join(class_path)
-        return getattr(
-            importlib.import_module(module_path),
-            internal_class_name,
-        )
+        class_path = class_name.split()[-1].split(".")[:-1]
+        class_path[0] = class_path[0][1:]
+        module_path = ".".join(class_path)
+        try:
+            return getattr(
+                importlib.import_module(module_path),
+                internal_class_name,
+            )
+        except ImportError:
+            if internal_class_name in self._project.job_type.job_class_dict:
+                module_path = self._project.job_type.job_class_dict[internal_class_name]
+                return getattr(
+                    importlib.import_module(module_path),
+                    internal_class_name,
+                )
+            else:
+                raise
 
     def create_instance(self, cls, **kwargs):
         """
