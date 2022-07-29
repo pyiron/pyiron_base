@@ -144,45 +144,37 @@ class TestSettings(TestCase):
             })
     
     def test_get_config_from_environment(self):
-        os.environ["PYIRONFOO"] = "foo"
-        os.environ["PYIRONSQLFILE"] = "bar"
-        os.environ["PYIRONPROJECTPATHS"] = "baz"
-        env_dict = s._get_config_from_environment()
-        self.assertNotIn(
-            "foo", env_dict.values(),
-            msg="Just having PYIRON in the key isn't enough, it needs to be a real key"
-        )
-        ref_dict = {
-            "sql_file": "bar",
-            "project_paths": "baz"
-        }
-        for k, v in env_dict.items():
-            self.assertEqual(ref_dict[k], v, msg="Valid item failed to read from environment")
+        self.env["PYIRONFOO"] = "foo"
+        self.env["PYIRONSQLFILE"] = "bar"
+        self.env["PYIRONPROJECTPATHS"] = "baz"
+        with self.subTest("no interference"):
+            env_dict = s._get_config_from_environment()
+            ref_dict = {"sql_file": "bar", "project_paths": "baz"}
+            self.assertEqual(
+                ref_dict, env_dict, msg="Config parsed from environment differs from expectation!"
+            )
+
+        self.env["PYIRONCONFIG"] = "."
+        with self.subTest(
+            "Should use environment variables even if PYIRONCONFIG is specified."
+        ):
+            env_dict = s._get_config_from_environment()
+            self.assertEqual(
+                ref_dict, env_dict, msg="Config parsed from environment differs from expectation!"
+            )
 
     def test_get_config_from_file(self):
         self.default_loc.write_text(
             "[HEADING]\n"
             "FOO = foo\n"
-            "SQL_FILE = bar\n"
+            "FILE = bar\n"
             "[HEADING2]\n"
             "PROJECT_PATHS = baz\n"
             ";USER = boa\n"
         )
         file_dict = s._get_config_from_file()
-        self.assertNotIn(
-            "foo", file_dict.values(),
-            msg="It needs to be a real key"
-        )
-        self.assertNotIn(
-            "boa", file_dict.values(),
-            msg="This was commented out and shouldn't be read"
-        )
-        ref_dict = {
-            "sql_file": "bar",
-            "project_paths": "baz"
-        }
-        for k, v in file_dict.items():
-            self.assertEqual(ref_dict[k], v, msg="Valid item failed to read from file")
+        ref_dict = {"sql_file": "bar", "project_paths": "baz"}
+        self.assertEqual(ref_dict, file_dict, msg="Config parsed from file differs from expectation!")
 
     def test_update(self):
         # System environment variables
