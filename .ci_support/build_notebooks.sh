@@ -18,6 +18,7 @@ cat <<EOT >> ~/.pyiron
 PROJECT_PATHS = $(pwd)
 RESOURCE_PATHS = $(pwd)
 EOT
+cat ~/.pyiron
 
 # execute notebooks
 i=0;
