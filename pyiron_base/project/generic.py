@@ -256,15 +256,15 @@ class Project(ProjectPath, HasGroups):
         if not self.view_mode:
             if not isinstance(destination, Project):
                 raise TypeError("A project can only be copied to another project.")
-            for sub_project_name in self.list_groups():
+            for sub_project_name in tqdm(self.list_groups(), desc="Copying sub-projects"):
                 if "_hdf5" not in sub_project_name:
                     sub_project = self.open(sub_project_name)
                     destination_sub_project = destination.open(sub_project_name)
                     sub_project.copy_to(destination_sub_project)
-            for job_id in self.get_job_ids(recursive=False):
+            for job_id in tqdm(self.get_job_ids(recursive=False), desc="Copying jobs"):
                 ham = self.load(job_id)
                 ham.copy_to(project=destination)
-            for file in self.list_files():
+            for file in tqdm(self.list_files(), desc="Copying files"):
                 if ".h5" not in file:
                     shutil.copy(os.path.join(self.path, file), destination.path)
             return destination
