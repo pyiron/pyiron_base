@@ -12,6 +12,13 @@ else
     kernel="python3"
 fi;
 
+# Create config
+cat <<EOT >> ~/.pyiron
+[DEFAULT]
+PROJECT_PATHS = $(pwd)
+RESOURCE_PATHS = $(pwd)
+EOT
+
 # execute notebooks
 i=0;
 for notebook in $(ls notebooks/*.ipynb); do
