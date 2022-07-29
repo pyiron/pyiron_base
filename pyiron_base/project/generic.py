@@ -14,6 +14,7 @@ import pint
 import importlib
 import math
 import numpy as np
+import warnings
 
 from pyiron_base.project.maintenance import Maintenance
 from pyiron_base.project.path import ProjectPath
@@ -1609,10 +1610,11 @@ class Project(ProjectPath, HasGroups):
             tools (Toolkit): The tools to register.
         """
         if hasattr(cls, name):
-            raise AttributeError(
+            warnings.warn(
                 f"{cls.__name__} already has an attribute {name}. Please use a new name for registration."
             )
-        setattr(cls, name, property(lambda self: tools(self)))
+        else:
+            setattr(cls, name, property(lambda self: tools(self)))
 
 
 class Creator:
