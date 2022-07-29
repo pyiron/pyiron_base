@@ -1617,7 +1617,22 @@ class Project(ProjectPath, HasGroups):
     def symlink(self, target):
         """
         Move underlying project folder to target and create a symlink to it.
+
+        The project itself does not change and is not updated in the database.  Instead the project folder is moved into
+        a subdirectory of target with the same name as the project and a symlink is placed in the previous project path
+        pointing to the newly created one.
+
+        Args:
+            target (str): new folder for the project
+
+        Raises:
+            OSError: when calling this method on non-unix systems
+            RuntimeError: the project path is already a symlink
+            RuntimeError: the project path has submitted or running jobs inside it, wait until after they are finished
+            RuntimeError: target already contains a subdirectory with the project name and it is not empty
         """
+        if stat.S_ISLNK(os.lstat(self.path)):
+            raise RuntimeError("Refusing to symlink and move a project that is already symlinked!")
         if os.name != "posix":
             raise OSError("Symlinking projects is only supported on unix systems!")
         if len(self.job_table().query('status.isin(["submitted", "running"])')) > 0:
