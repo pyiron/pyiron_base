@@ -127,16 +127,16 @@ class TestProjectOperations(TestWithFilledProject):
         self.assertIn('pyiron_base', df.Module.values)
 
 
-class TestToolRegistration(TestWithProject):
-    def setUp(self) -> None:
-        self.tools = BaseTools(self.project)
-
-    def test_registration(self):
-        self.project.register_tools('foo', self.tools)
-        with self.assertRaises(AttributeError):
-            self.project.register_tools('foo', self.tools)  # Name taken
-        with self.assertRaises(AttributeError):
-            self.project.register_tools('load', self.tools)  # Already another method
+# class TestToolRegistration(TestWithProject):
+#     def setUp(self) -> None:
+#         self.tools = BaseTools(self.project)
+#
+#     def test_registration(self):
+#         self.project.register_tools('foo', self.tools)
+#         with self.assertRaises(AttributeError):
+#             self.project.register_tools('foo', self.tools)  # Name taken
+#         with self.assertRaises(AttributeError):
+#             self.project.register_tools('load', self.tools)  # Already another method
 
 
 if __name__ == '__main__':
