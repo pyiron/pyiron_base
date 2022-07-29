@@ -335,6 +335,11 @@ class Settings(metaclass=Singleton):
             config_file = os.path.expanduser(os.path.join("~", ".pyiron"))
 
         if os.path.isfile(config_file):
+            if oct(os.stat(config_file).st_mode)[-2:] != "00":
+                logger.warning(
+                    "Configuration file may be read by others - check permissions to secure "
+                    "credential information!"
+                )
             parser = ConfigParser(inline_comment_prefixes=(";",), interpolation=None)
             parser.read(config_file)
             config = {}
