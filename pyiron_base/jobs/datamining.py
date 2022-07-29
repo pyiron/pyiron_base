@@ -739,7 +739,8 @@ class TableJob(GenericJob):
         """
         if job_status_list is None:
             job_status_list = ["finished"]
-        self.project.db.item_update({"timestart": datetime.now()}, self.job_id)
+        if self.job_id is not None:
+            self.project.db.item_update({"timestart": datetime.now()}, self.job_id)
         with self.project_hdf5.open("input") as hdf5_input:
             self._pyiron_table.create_table(
                 enforce_update=self._enforce_update,
@@ -752,7 +753,8 @@ class TableJob(GenericJob):
             os.path.join(self.working_directory, "pyirontable.csv"), index=False
         )
         self._save_output()
-        self.project.db.item_update(self._runtime(), self.job_id)
+        if self.job_id is not None:
+            self.project.db.item_update(self._runtime(), self.job_id)
 
     def write_input(self):
         pass
