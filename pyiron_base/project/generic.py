@@ -1635,7 +1635,7 @@ class Project(ProjectPath, HasGroups):
             RuntimeError: target already contains a subdirectory with the project name and it is not empty
         """
         target = os.path.join(target_dir, self.name)
-        if stat.S_ISLNK(os.lstat(self.path)):
+        if stat.S_ISLNK(os.lstat(self.path).st_mode):
             if os.readlink(self.path) == target:
                 return
             raise RuntimeError("Refusing to symlink and move a project that is already symlinked!")
