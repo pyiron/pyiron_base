@@ -1614,34 +1614,38 @@ class Project(ProjectPath, HasGroups):
             )
         setattr(cls, name, property(lambda self: tools(self)))
 
-    def symlink(self, target):
+    def symlink(self, target_dir):
         """
         Move underlying project folder to target and create a symlink to it.
 
         The project itself does not change and is not updated in the database.  Instead the project folder is moved into
-        a subdirectory of target with the same name as the project and a symlink is placed in the previous project path
+        a subdirectory of target_dir with the same name as the project and a symlink is placed in the previous project path
         pointing to the newly created one.
 
+        If self.path is already a symlink pointing inside target_dir, this method will silently return.
+
         Args:
-            target (str): new folder for the project
+            target_dir (str): new parent folder for the project
 
         Raises:
             OSError: when calling this method on non-unix systems
-            RuntimeError: the project path is already a symlink
+            RuntimeError: the project path is already a symlink to somewhere else
             RuntimeError: the project path has submitted or running jobs inside it, wait until after they are finished
             RuntimeError: target already contains a subdirectory with the project name and it is not empty
         """
+        target = os.path.join(target_dir, self.name)
         if stat.S_ISLNK(os.lstat(self.path)):
+            if os.readlink(self.path) == target:
+                return
             raise RuntimeError("Refusing to symlink and move a project that is already symlinked!")
         if os.name != "posix":
             raise OSError("Symlinking projects is only supported on unix systems!")
         if len(self.job_table().query('status.isin(["submitted", "running"])')) > 0:
             raise RuntimeError("Refusing to symlink and move a project that has submitted or running jobs!")
-        os.makedirs(target, exist_ok=True)
-        target = os.path.join(target, self.name)
+        os.makedirs(target_dir, exist_ok=True)
         if os.path.exists(target) and len(os.listdir(target)) > 0:
             raise RuntimeError("Refusing to symlink and move a project to non-empty directory!")
-        shutil.move(self.path, os.path.dirname(target))
+        shutil.move(self.path, target_dir)
         destination = self.path
         if destination[-1] == '/':
             destination = destination[:-1]
