@@ -1644,8 +1644,11 @@ class Project(ProjectPath, HasGroups):
         if len(self.job_table().query('status.isin(["submitted", "running"])')) > 0:
             raise RuntimeError("Refusing to symlink and move a project that has submitted or running jobs!")
         os.makedirs(target_dir, exist_ok=True)
-        if os.path.exists(target) and len(os.listdir(target)) > 0:
-            raise RuntimeError("Refusing to symlink and move a project to non-empty directory!")
+        if os.path.exists(target):
+            if len(os.listdir(target)) > 0:
+                raise RuntimeError("Refusing to symlink and move a project to non-empty directory!")
+            else:
+                os.rmdir(target)
         shutil.move(self.path, target_dir)
         destination = self.path
         if destination[-1] == '/':
