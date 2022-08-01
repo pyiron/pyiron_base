@@ -1635,8 +1635,11 @@ class Project(ProjectPath, HasGroups):
             RuntimeError: target already contains a subdirectory with the project name and it is not empty
         """
         target = os.path.join(target_dir, self.name)
-        if stat.S_ISLNK(os.lstat(self.path).st_mode):
-            if os.readlink(self.path) == target:
+        destination = self.path
+        if destination[-1] == '/':
+            destination = destination[:-1]
+        if stat.S_ISLNK(os.lstat(destination).st_mode):
+            if os.readlink(destination) == target:
                 return
             raise RuntimeError("Refusing to symlink and move a project that is already symlinked!")
         if os.name != "posix":
@@ -1650,9 +1653,6 @@ class Project(ProjectPath, HasGroups):
             else:
                 os.rmdir(target)
         shutil.move(self.path, target_dir)
-        destination = self.path
-        if destination[-1] == '/':
-            destination = destination[:-1]
         os.symlink(target, destination)
 
 class Creator:
