@@ -77,7 +77,9 @@ class JobType:
         elif inspect.isclass(class_name):
             if (
                 class_name.__name__ not in cls._job_class_dict
-                or cls._convert_pyiron_to_pyiron_atomistics_module(class_name.__module__)
+                or cls._convert_pyiron_to_pyiron_atomistics_module(
+                    class_name.__module__
+                )
                 == cls._job_class_dict[class_name.__name__]
             ):
                 job_class = class_name
@@ -158,7 +160,9 @@ class JobType:
         if job_class_or_module_str is None:
             return
         elif isinstance(job_class_or_module_str, type):
-            cls_module_str = cls._convert_pyiron_to_pyiron_atomistics_module(job_class_or_module_str.__module__)
+            cls_module_str = cls._convert_pyiron_to_pyiron_atomistics_module(
+                job_class_or_module_str.__module__
+            )
             if job_name is not None and job_class_or_module_str.__name__ != job_name:
                 raise NotImplementedError(
                     "Currently, the given name has to match the class name."
@@ -166,7 +170,9 @@ class JobType:
             else:
                 job_name = job_class_or_module_str.__name__
         elif job_name is not None:
-            cls_module_str = cls._convert_pyiron_to_pyiron_atomistics_module(job_class_or_module_str)
+            cls_module_str = cls._convert_pyiron_to_pyiron_atomistics_module(
+                job_class_or_module_str
+            )
         else:
             raise ValueError(
                 "The job_name needs to be provided if a job_module_string is provided."
