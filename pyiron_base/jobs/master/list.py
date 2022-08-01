@@ -24,7 +24,6 @@ __status__ = "production"
 __date__ = "Sep 1, 2017"
 
 
-@JobType.unregister
 class ListMaster(GenericMaster):
     """
     The ListMaster is the most simple MetaJob derived from the GenericMaster. It behaves like a Python list object. Jobs

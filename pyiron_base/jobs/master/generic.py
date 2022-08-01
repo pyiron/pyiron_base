@@ -24,7 +24,6 @@ __status__ = "production"
 __date__ = "Sep 1, 2017"
 
 
-@JobType.unregister
 class GenericMaster(GenericJob):
     """
     The GenericMaster is the template class for all meta jobs - meaning all jobs which contain multiple other jobs. It
