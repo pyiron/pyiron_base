@@ -7,8 +7,14 @@ import warnings
 from io import StringIO
 import numpy as np
 from pyiron_base.storage.hdfio import FileHDFio, _is_ragged_in_1st_dim_only, state
-from pyiron_base._tests import PyironTestCase, TestWithProject
+from pyiron_base._tests import PyironTestCase, TestWithProject, ToyJob as BaseToyJob
+from pyiron_base import GenericJob, JobType
 import unittest
+
+
+# Defining a ToyJob at an importable position. This is used for ProjectHDFio.import_class testing.
+class ToyJob(GenericJob):
+    pass
 
 
 def _write_full_hdf_content(hdf):
@@ -630,6 +636,28 @@ class TestProjectHDFio(TestWithProject):
 
         #    new_hdf.h5_path = '/'
         #    _check_full_hdf_values(self, new_hdf, group='job_sibling')
+
+    def test_import_class(self):
+
+        with self.subTest("import ToyJob without interfering:"):
+            toy_job_cls = self.empty_hdf5.import_class(str(BaseToyJob))
+            self.assertIs(toy_job_cls, BaseToyJob)
+
+        try:
+            JobType.register(ToyJob)
+
+            with self.subTest("Import ToyJob while another ToyJob is registered"):
+                with self.assertLogs(state.logger) as log:
+                    toy_job_cls = self.empty_hdf5.import_class(str(BaseToyJob))
+                    self.assertEqual(len(log.output), 1)
+                    self.assertEqual(
+                        log.output[0],
+                        'INFO:pyiron_log:Using registered module "test_fileHDFio" instead of custom/old module '
+                        '"pyiron_base._tests" to import job type "ToyJob"!',
+                    )
+                self.assertIs(toy_job_cls, ToyJob)
+        finally:
+            JobType.unregister(ToyJob)
 
 
 if __name__ == "__main__":

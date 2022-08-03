@@ -1308,12 +1308,18 @@ class ProjectHDFio(FileHDFio):
             type: class object of the given name
         """
         internal_class_name = class_name.split(".")[-1][:-2]
+        class_path = class_name.split()[-1].split(".")[:-1]
+        class_path[0] = class_path[0][1:]
+        class_module_path = ".".join(class_path)
         if internal_class_name in self._project.job_type.job_class_dict:
             module_path = self._project.job_type.job_class_dict[internal_class_name]
+            if class_module_path != module_path:
+                state.logger.info(
+                    f'Using registered module "{module_path}" instead of custom/old module "{class_module_path}" to'
+                    f' import job type "{internal_class_name}"!'
+                )
         else:
-            class_path = class_name.split()[-1].split(".")[:-1]
-            class_path[0] = class_path[0][1:]
-            module_path = ".".join(class_path)
+            module_path = class_module_path
         return getattr(
             importlib.import_module(module_path),
             internal_class_name,
