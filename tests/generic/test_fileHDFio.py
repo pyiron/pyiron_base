@@ -641,7 +641,9 @@ class TestProjectHDFio(TestWithProject):
 
         with self.subTest("import ToyJob without interfering:"):
             toy_job_cls = self.empty_hdf5.import_class(str(BaseToyJob))
-            self.assertIs(toy_job_cls, BaseToyJob)
+            self.assertIs(
+                toy_job_cls, BaseToyJob, msg="Did not return the requested class."
+            )
 
         try:
             JobType.register(ToyJob)
@@ -649,13 +651,28 @@ class TestProjectHDFio(TestWithProject):
             with self.subTest("Import ToyJob while another ToyJob is registered"):
                 with self.assertLogs(state.logger) as log:
                     toy_job_cls = self.empty_hdf5.import_class(str(BaseToyJob))
-                    self.assertEqual(len(log.output), 1)
                     self.assertEqual(
-                        log.output[0],
-                        'INFO:pyiron_log:Using registered module "test_fileHDFio" instead of custom/old module '
-                        '"pyiron_base._tests" to import job type "ToyJob"!',
+                        len(log.output),
+                        1,
+                        msg="The conversion info should be the only thing logged here.",
                     )
-                self.assertIs(toy_job_cls, ToyJob)
+                    log_msg = log.output[0]
+                    self.assertTrue(
+                        log_msg.startswith('INFO:pyiron_log:Using registered module "'),
+                        msg="Unexpected log message.",
+                    )
+                    self.assertTrue(
+                        log_msg.endswith(
+                            'test_fileHDFio" instead of custom/old module '
+                            '"pyiron_base._tests" to import job type "ToyJob"!'
+                        ),
+                        msg="Unexpected log message.",
+                    )
+                self.assertIs(
+                    toy_job_cls,
+                    ToyJob,
+                    msg="Did not convert to internal (registered) JobClass.",
+                )
         finally:
             JobType.unregister(ToyJob)
 
