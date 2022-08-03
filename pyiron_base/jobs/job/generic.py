@@ -1491,11 +1491,6 @@ class GenericJob(JobCore):
             self._logger.info("busy master: {} {}".format(master_id, self.get_job_id()))
             del self
 
-    def __init_subclass__(cls, **kwargs):
-        """Auto register all subclasses of GenericJob as available JobType."""
-        super().__init_subclass__(**kwargs)
-        JobType.register(cls, _autoregister=True)
-
 
 class GenericError(object):
     def __init__(self, job):
