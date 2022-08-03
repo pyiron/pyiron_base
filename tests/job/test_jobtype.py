@@ -55,41 +55,29 @@ class TestJobType(PyironTestCase):
 
     def test_register(self):
         job_class_list_no_error = [
-            ('job1', 'pyiron_module.sub_module'),
-            ('job2', 'pyiron_module.sub_module'),
-            ('job3', 'pyiron_module.sub_module'),
-            ('job1', 'pyiron_module.sub_module'),
-            ('job_atomistics', 'pyiron_atomistics.sub_module'),
-            ('job_atomistics', 'pyiron.sub_module'),
+            ("job1", "pyiron_module.sub_module"),
+            ("job2", "pyiron_module.sub_module"),
+            ("job3", "pyiron_module.sub_module"),
+            ("job1", "pyiron_module.sub_module"),
+            ("job_atomistics", "pyiron_atomistics.sub_module"),
+            ("job_atomistics", "pyiron.sub_module"),
         ]
         for job_type in job_class_list_no_error:
             with self.subTest(job_type[1]):
                 JobType.register(job_type[1], job_type[0])
                 self.assertIn(job_type[0], JobType._job_class_dict)
 
-        self.assertRaises(ValueError, JobType.register, 'pyiron_module.other_sub_module', 'job1')
-        self.assertEqual(JobType._job_class_dict['job1'], 'pyiron_module.sub_module')
+        self.assertRaises(
+            ValueError, JobType.register, ("pyiron_module.other_sub_module", "job1")
+        )
+        self.assertEqual(JobType._job_class_dict["job1"], "pyiron_module.sub_module")
 
-        with self.subTest('overwrite'):
-            JobType.register('pyiron_module.other_sub_module', 'job1', overwrite=True)
-            self.assertEqual(JobType._job_class_dict['job1'], 'pyiron_module.other_sub_module')
-
-        with self.subTest('auto_register'):
-            JobType.register('not.a.module', 'job2', _autoregister=True)
-            self.assertEqual(JobType._job_class_dict['job2'], 'pyiron_module.sub_module')
-
-        with self.subTest('genericJob'):
-            class JobClass(GenericJob):
-                pass
-            self.assertIn('JobClass', JobType._job_class_dict)
-            self.assertEqual(JobType._job_class_dict['JobClass'], self.__module__)
-
-        with self.subTest('auto_register genericJob'):
-            class job2(GenericJob):
-                pass
-            self.assertEqual(JobType._job_class_dict['job2'], 'pyiron_module.sub_module')
+        with self.subTest("overwrite"):
+            JobType.register("pyiron_module.other_sub_module", "job1", overwrite=True)
+            self.assertEqual(
+                JobType._job_class_dict["job1"], "pyiron_module.other_sub_module"
+            )
 
         # Cleanup
-        for job in ['job1', 'job2', 'job3', 'job_atomistics', 'JobClass']:
+        for job in ["job1", "job2", "job3", "job_atomistics"]:
             JobType.unregister(job)
-

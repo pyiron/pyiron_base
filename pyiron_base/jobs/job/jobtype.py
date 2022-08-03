@@ -126,7 +126,6 @@ class JobType:
         job_class_or_module_str: Union[type, str],
         job_name: str = None,
         overwrite=False,
-        _autoregister=False,
     ):
         """Register job type from the exposed list of available job types
 
@@ -163,16 +162,10 @@ class JobType:
             and job_name in cls._job_class_dict
             and cls_module_str != cls._job_class_dict[job_name]
         ):
-            info_text = (
+            ValueError(
                 f"A JobType with name '{job_name}' is already defined! New class = '{cls_module_str}', "
                 f"already registered class = '{cls._job_class_dict[job_name]}'."
             )
-            if _autoregister:
-                state.logger.info(
-                    info_text + " Not replaced since attempted by auto-registration!"
-                )
-            else:
-                raise ValueError(info_text)
         else:
             cls._job_class_dict[job_name] = cls_module_str
 

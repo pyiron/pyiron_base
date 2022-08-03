@@ -22,7 +22,6 @@ __status__ = "development"
 __date__ = "Jan 8, 2021"
 
 
-@JobType.unregister
 class InteractiveWrapper(GenericMaster):
     def __init__(self, project, job_name):
         super(InteractiveWrapper, self).__init__(project, job_name)
