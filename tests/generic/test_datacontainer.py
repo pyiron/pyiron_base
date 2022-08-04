@@ -2,9 +2,9 @@
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 import pyiron_base
 from pyiron_base._tests import TestWithCleanProject, PyironTestCase
-from pyiron_base.generic.datacontainer import DataContainer
-from pyiron_base.generic.hdfstub import HDFStub
-from pyiron_base.generic.inputlist import InputList
+from pyiron_base.storage.datacontainer import DataContainer
+from pyiron_base.storage.hdfstub import HDFStub
+from pyiron_base.storage.inputlist import InputList
 from collections.abc import Iterator
 import copy
 import os
@@ -24,7 +24,7 @@ class TestDataContainer(TestWithCleanProject):
 
     @property
     def docstring_module(self):
-        return pyiron_base.generic.datacontainer
+        return pyiron_base.storage.datacontainer
 
     @classmethod
     def setUpClass(cls):
@@ -360,14 +360,14 @@ class TestDataContainer(TestWithCleanProject):
         self.pl.to_hdf(hdf=self.hdf)
         self.assertEqual(self.hdf["input/NAME"], "DataContainer")
         self.assertEqual(self.hdf["input/OBJECT"], "DataContainer")
-        self.assertEqual(self.hdf["input/TYPE"], "<class 'pyiron_base.generic.datacontainer.DataContainer'>")
+        self.assertEqual(self.hdf["input/TYPE"], "<class 'pyiron_base.storage.datacontainer.DataContainer'>")
 
         h = self.hdf.open('nested')
         pl = DataContainer(self.pl)
         pl.to_hdf(hdf=h)
         self.assertEqual(h["NAME"], "DataContainer")
         self.assertEqual(h["OBJECT"], "DataContainer")
-        self.assertEqual(h["TYPE"], "<class 'pyiron_base.generic.datacontainer.DataContainer'>")
+        self.assertEqual(h["TYPE"], "<class 'pyiron_base.storage.datacontainer.DataContainer'>")
 
     def test_to_hdf_items(self):
         """Should write all sublists to HDF groups and simple items to HDF datasets."""
@@ -388,7 +388,7 @@ class TestDataContainer(TestWithCleanProject):
         """Should be possible to give a custom group name."""
         self.pl.to_hdf(hdf=self.hdf, group_name="test_group")
         self.assertEqual(self.hdf["test_group/NAME"], "DataContainer")
-        self.assertEqual(self.hdf["test_group/TYPE"], "<class 'pyiron_base.generic.datacontainer.DataContainer'>")
+        self.assertEqual(self.hdf["test_group/TYPE"], "<class 'pyiron_base.storage.datacontainer.DataContainer'>")
         self.assertEqual(self.hdf["test_group/OBJECT"], "DataContainer")
 
     def test_to_hdf_readonly(self):
@@ -576,6 +576,34 @@ class TestDataContainer(TestWithCleanProject):
 
         self.assertTrue(not isinstance(ll._store[0], HDFStub),
                         "Loaded value not stored back into container!")
+
+    def test_force_stubs(self):
+        """Calling _force_load on a lazy loaded container should load all data from HDF."""
+
+        self.pl.to_hdf(self.hdf, "lazy")
+        ll = self.hdf["lazy"].to_object(lazy=True)
+        ll._force_load(recursive=False)
+        self.assertTrue(all(not isinstance(v, HDFStub) for v in ll._store),
+                        "Not all values loaded after force!")
+        ll0 = ll[0]
+        self.assertTrue(all(isinstance(v, HDFStub) for v in ll0._store),
+                        "Nested values loaded after force even though recursive==False!")
+
+        ll._force_load()
+        self.assertTrue(all(not isinstance(v, HDFStub) for v in ll._store),
+                        "Not all values loaded after force!")
+        ll0 = ll[0]
+        self.assertTrue(all(not isinstance(v, HDFStub) for v in ll0._store),
+                        "Nested values not loaded after force even though recursive==True!")
+
+    def test_lazy_copy(self):
+        """Copying lazy data containers should not throw an error."""
+        try:
+            self.pl.to_hdf(self.hdf, "lazy")
+            ll = self.hdf["lazy"].to_object(lazy=True)
+            ll.copy()
+        except Exception as e:
+            self.fail(f"Copy of a lazy data container raised {e}!")
 
     def test_stub_sublasses(self):
         """Sub classes of DataContainer should also be able to be lazily loaded."""

@@ -2,11 +2,7 @@
 # Copyright (c) Max-Planck-Institut für Eisenforschung GmbH - Computational Materials Design (CM) Department
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
-import unittest
-from os.path import dirname, join, abspath
-from os import remove
-from pyiron_base.project.generic import Project
-from pyiron_base.generic.object import HasStorage, HasDatabase, PyironObject
+from pyiron_base.interfaces.object import HasStorage, HasDatabase, PyironObject
 from pyiron_base import DataContainer
 from pyiron_base.database.generic import DatabaseAccess
 from pyiron_base._tests import TestWithCleanProject

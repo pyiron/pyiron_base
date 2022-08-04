@@ -8,7 +8,7 @@ from os import remove
 import pint
 from pyiron_base.project.generic import Project
 from pyiron_base._tests import PyironTestCase, TestWithProject, TestWithFilledProject, ToyJob
-from pyiron_base.toolkit import BaseTools
+from pyiron_base.jobs.job.toolkit import BaseTools
 
 
 class TestProjectData(PyironTestCase):
@@ -109,6 +109,10 @@ class TestProjectOperations(TestWithFilledProject):
         self.assertEqual(len(self.project.job_table(recursive=True, job="*_1*")), 2)
         self.assertEqual(len(self.project.job_table(recursive=True, job="*_*")), 4)
         self.assertEqual(len(self.project.job_table(recursive=False, status="finished", job="toy_1")), 1)
+        self.assertEqual(len(self.project.job_table(recursive=True, status="!finished")), 2)
+        self.assertEqual(len(self.project.job_table(recursive=True, status="!aborted")), 3)
+        self.assertEqual(len(self.project.job_table(recursive=True, job="!toy_1")), 2)
+        self.assertEqual(len(self.project.job_table(recursive=True, job="!toy_*")), 0)
         self.assertRaises(ValueError, self.project.job_table, gibberish=True)
 
     def test_get_iter_jobs(self):
@@ -117,6 +121,10 @@ class TestProjectOperations(TestWithFilledProject):
         self.assertEqual([val for val in self.project.iter_jobs(recursive=False, status="suspended")], [])
         self.assertIsInstance([val for val in self.project.iter_jobs(recursive=True, status="suspended",
                                                                      convert_to_object=True)][0], ToyJob)
+
+    def test_maintenance_get_repository_status(self):
+        df = self.project.maintenance.get_repository_status()
+        self.assertIn('pyiron_base', df.Module.values)
 
 
 class TestToolRegistration(TestWithProject):

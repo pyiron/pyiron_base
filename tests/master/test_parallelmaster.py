@@ -3,10 +3,8 @@
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
 import unittest
-import os
-from pyiron_base.project.generic import Project
 from pyiron_base import JobGenerator, ParallelMaster
-from pyiron_base._tests import PyironTestCase
+from pyiron_base._tests import TestWithProject, ToyJob
 
 
 class TestGenerator(JobGenerator):
@@ -25,19 +23,28 @@ class TestGenerator(JobGenerator):
         job.input['parameter'] = parameter
         return job
 
+
 class TestMaster(ParallelMaster):
 
     def __init__(self, job_name, project):
         super().__init__(job_name, project)
         self._job_generator = TestGenerator(self)
 
-class TestParallelMaster(PyironTestCase):
+    # Implement since required
+    def collect_output(self):
+        pass
+
+
+class TestParallelMaster(TestWithProject):
+
     @classmethod
     def setUpClass(cls):
-        cls.file_location = os.path.dirname(os.path.abspath(__file__))
-        cls.project = Project(os.path.join(cls.file_location, "jobs_testing"))
+        super().setUpClass()
         cls.master = cls.project.create_job(TestMaster, "master")
         cls.master.ref_job = cls.project.create_job(cls.project.job_type.ScriptJob, "ref")
+        cls.master_toy = cls.project.create_job(TestMaster, "master_toy")
+        cls.master_toy.ref_job = cls.project.create_job(ToyJob, "ref")
+        cls.master_toy.run()
 
     def test_jobgenerator_name(self):
         """Generated jobs have to be unique instances, in order, the correct name and correct parameters."""
@@ -59,6 +66,16 @@ class TestParallelMaster(PyironTestCase):
         j.server.run_mode = 'interactive'
         i = j.create_job(TestMaster, "test_child")
         self.assertEqual(i.ref_job, j, "Reference job of interactive wrapper to set after creation.")
+
+    def test_convergence(self):
+        self.assertTrue(self.master_toy.convergence_check())
+        self.assertTrue(self.master_toy.status.finished)
+        # Make one of the children have a non-finished status
+        self.master_toy[-1].status.aborted = True
+        self.master_toy.status.collect = True
+        self.master_toy.run()
+        self.assertFalse(self.master_toy.convergence_check())
+        self.assertTrue(self.master_toy.status.not_converged)
 
 
 if __name__ == "__main__":

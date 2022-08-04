@@ -5,7 +5,7 @@
 import numpy as np
 from pyiron_base._tests import PyironTestCase
 import pyiron_base
-from pyiron_base.generic.units import PyironUnitRegistry, UnitConverter
+from pyiron_base.utils.units import PyironUnitRegistry, UnitConverter
 import pint
 
 pint_registry = pint.UnitRegistry()
@@ -15,7 +15,7 @@ class TestUnits(PyironTestCase):
 
     @property
     def docstring_module(self):
-        return pyiron_base.generic.units
+        return pyiron_base.utils.units
 
     def test_units(self):
         base_units = PyironUnitRegistry()

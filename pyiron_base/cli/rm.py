@@ -5,7 +5,7 @@ Remove jobs from pyiron project or whole project.
 """
 
 import os
-from pyiron_base import Project
+from pyiron_base.project.generic import Project
 
 __author__ = "Marvin Poul"
 __copyright__ = (
@@ -38,5 +38,5 @@ def main(args):
         pr.remove_jobs(recursive=args.recursive, silently=True)
     else:
         pr.remove(enable=True)
-        if not os.listdir(args.project):
+        if os.path.exists(args.project) and not os.listdir(args.project):
             os.rmdir(args.project)

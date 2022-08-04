@@ -3,7 +3,7 @@
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
 import unittest
-from pyiron_base.job.interactive import InteractiveBase
+from pyiron_base.jobs.job.interactive import InteractiveBase
 from pyiron_base._tests import TestWithProject
 
 

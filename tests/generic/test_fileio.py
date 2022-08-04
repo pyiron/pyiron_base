@@ -1,7 +1,7 @@
 # Copyright (c) Max-Planck-Institut für Eisenforschung GmbH - Computational Materials Design (CM) Department
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
-from pyiron_base.generic.fileio import read, write
+from pyiron_base.storage.fileio import read, write
 import os
 from pyiron_base._tests import PyironTestCase
 

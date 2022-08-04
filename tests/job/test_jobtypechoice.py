@@ -2,7 +2,7 @@
 # Copyright (c) Max-Planck-Institut für Eisenforschung GmbH - Computational Materials Design (CM) Department
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
-from pyiron_base.job.jobtype import JobTypeChoice, JobFactory
+from pyiron_base.jobs.job.jobtype import JobTypeChoice, JobFactory
 from pyiron_base import JOB_CLASS_DICT
 from pyiron_base._tests import PyironTestCase
 

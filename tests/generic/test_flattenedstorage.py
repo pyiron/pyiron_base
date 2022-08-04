@@ -1,7 +1,7 @@
 import numpy as np
 
 from pyiron_base._tests import TestWithProject
-from pyiron_base.generic.flattenedstorage import FlattenedStorage
+from pyiron_base.storage.flattenedstorage import FlattenedStorage
 
 class TestFlattenedStorage(TestWithProject):
 
@@ -512,10 +512,51 @@ class TestFlattenedStorage(TestWithProject):
         store.add_array("chunkstr", dtype="<3U", per="chunk")
         store.add_array("elemstr", shape=(2,), dtype="<3U", per="element")
         for i in range(1, 14):
-            store.add_chunk(1, chunkstr="a" * i, elemstr=["a" * i] * 2)
+            # default length for identifiers is 20 chars, so we need to push it a bit more
+            store.add_chunk(1, identifier="i" * i * 3, chunkstr="a" * i, elemstr=["a" * i] * 2)
         for i in range(1, 14):
             self.assertEqual(store["chunkstr", i - 1], "a" * i,
                              "Per chunk string array not correctly resized!")
             self.assertEqual(store["elemstr", i - 1].tolist(),
                              [["a" * i] * 2],
                              "Per element string array not correctly resized!")
+            self.assertEqual(store["identifier", i - 1], "i" * i * 3,
+                             "Chunk identifiers not correctly resized!")
+
+    def test_extend(self):
+        store = FlattenedStorage()
+        store.add_array("foo", fill=np.nan, per="chunk")
+        store.add_array("bar", shape=(2,), fill=0, per="element")
+        foo = []
+        bar = []
+        store2 = FlattenedStorage()
+        store2.add_array("foo", fill=np.nan, per="chunk")
+        store2.add_array("bar", shape=(2,), fill=0, per="element")
+        store2.add_array("foobar", fill=0, dtype=int, per="chunk")
+        store2.add_array("barfoo", shape=(2,), fill=0.0, per="element")
+
+        for i in range(0, 3):
+            # default length for identifiers is 20 chars, so we need to push it a bit more
+            foo_val = i
+            bar_val = np.array([i, i**2]*i).reshape(i,2)
+            foo.append(foo_val)
+            bar.append(bar_val)
+            store.add_chunk(i, identifier=f"ID{i}", foo=foo_val, bar=bar_val)
+            
+        for i in range(3, 5):
+            # default length for identifiers is 20 chars, so we need to push it a bit more
+            foo_val = i
+            bar_val = np.array([i, i**2]*i).reshape(i,2)
+            foo.append(foo_val)
+            bar.append(bar_val)
+            store2.add_chunk(i, identifier=f"ID{i}", foo=foo_val, bar=bar_val, foobar=foo_val*2, barfoo=bar_val*3)
+
+        foo = np.array(foo)
+        bar = np.concatenate(bar)
+        foobar = foo*2
+        barfoo = bar*3
+        store.extend(store2)
+        self.assertTrue(np.all(foo==store.get_array("foo")))
+        self.assertTrue(np.all(bar==store.get_array("bar")))
+        self.assertTrue(np.all(foobar[3:5]==store.get_array("foobar")[3:5]))
+        self.assertTrue(np.all(barfoo[3:10]==store.get_array("barfoo")[3:10]))

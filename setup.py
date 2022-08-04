@@ -28,25 +28,25 @@ setup(
     keywords='pyiron',
     packages=find_packages(exclude=["*tests*", "*docs*", "*binder*", "*conda*", "*notebooks*", "*.ci_support*"]),
     install_requires=[
-        'dill==0.3.4',
+        'dill==0.3.5.1',
         'future==0.18.2',
         'gitpython==3.1.27',
         'h5io==0.1.7',
-        'h5py==3.6.0',
-        'numpy==1.22.2',
-        'pandas==1.4.1',
+        'h5py==3.7.0',
+        'numpy==1.23.1',
+        'pandas==1.4.3',
         'pathlib2==2.3.7.post1',
-        'pint==0.18',
-        'psutil==5.9.0',
+        'pint==0.19.2',
+        'psutil==5.9.1',
         'pyfileindex==0.0.6',
         'pysqa==0.0.16',
-        'sqlalchemy==1.4.31',
+        'sqlalchemy==1.4.39',
         'tables==3.7.0',
-        'tqdm==4.63.0'
+        'tqdm==4.64.0'
     ],
     cmdclass=versioneer.get_cmdclass(),
 
-    entry_points = {
+    entry_points={
             "console_scripts": [
                 'pyiron=pyiron_base.cli:main'
             ]

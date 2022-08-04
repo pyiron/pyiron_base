@@ -5,7 +5,7 @@
 import unittest
 import os
 from pyiron_base.project.generic import Project
-from pyiron_base.master.serial import SerialMasterBase
+from pyiron_base.jobs.master.serial import SerialMasterBase
 from pyiron_base._tests import PyironTestCase
 
 
@@ -28,7 +28,8 @@ class TestGenericJob(PyironTestCase):
         job_ser.to_hdf()
         job_ser_reload = self.project.create.job.SerialMasterBase("job_list")
         job_ser_reload.from_hdf()
-        self.assertTrue(job_ser_reload['job_single/input/custom_dict'])
+        self.assertTrue(job_ser_reload['job_single/input/custom_dict'] is not None,
+                        "Input not available in job loaded from HDF")
         job_ser.remove()
         ham.remove()
 
@@ -45,10 +46,12 @@ class TestGenericJob(PyironTestCase):
         job_ser = self.project.create.job.SerialMasterBase("job_list_ex")
         job_ser.append(ham)
         job_ser.to_hdf()
-        self.assertTrue(job_ser['job_single_ex/input/custom_dict'])
+        self.assertTrue(job_ser['job_single_ex/input/custom_dict'] is not None,
+                        "Input not saved to HDF after to_hdf()")
         job_ser_reload = self.project.create.job.SerialMasterBase("job_list_ex")
         job_ser_reload.from_hdf()
-        self.assertTrue(job_ser_reload['job_single_ex/input/custom_dict'])
+        self.assertTrue(job_ser_reload['job_single_ex/input/custom_dict'] is not None,
+                        "Input not available in job loaded from HDF")
         job_ser.remove()
         ham.remove()
 

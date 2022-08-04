@@ -5,8 +5,8 @@
 from copy import deepcopy
 import pandas
 import os
-from pyiron_base.generic.parameters import GenericParameters
-from pyiron_base.generic.hdfio import ProjectHDFio
+from pyiron_base.storage.parameters import GenericParameters
+from pyiron_base.storage.hdfio import ProjectHDFio
 from pyiron_base.project.generic import Project
 from pyiron_base._tests import PyironTestCase
 import unittest
