@@ -9,7 +9,6 @@ from datetime import datetime
 import os
 import posixpath
 import h5io
-from pyiron_base.jobs.job.jobtype import JobType
 import signal
 import warnings
 
@@ -34,6 +33,7 @@ from pyiron_base.jobs.job.runfunction import (
     run_job_with_runmode_interactive,
     run_job_with_runmode_interactive_non_modal,
     run_job_with_runmode_queue,
+    run_job_with_runmode_srun,
     execute_job_with_external_executable,
 )
 from pyiron_base.jobs.job.util import (
@@ -883,36 +883,11 @@ class GenericJob(JobCore):
         run_job_with_runmode_non_modal(job=self)
 
     def run_if_srun(self):
-        working_directory = self.project_hdf5.working_directory
-        if not state.database.database_is_disabled:
-            if not state.database.using_local_database:
-                command = (
-                    "srun python -m pyiron_base.cli wrapper -p "
-                    + working_directory
-                    + "- j "
-                    + self.job_id
-                )
-            else:
-                raise ValueError("run_if_srun() does not support local databases.")
-        else:
-            command = (
-                "srun python -m pyiron_base.cli wrapper -p "
-                + working_directory
-                + " -f "
-                + self.project_hdf5.file_name
-                + self.project_hdf5.h5_path
-            )
-        if not os.path.exists(working_directory):
-            os.makedirs(working_directory)
-        del self
-        subprocess.Popen(
-            command,
-            cwd=working_directory,
-            shell=True,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-            universal_newlines=True,
-        )
+        """
+        The run if srun function is called by run to execute the simulation using srun, this allows distributing
+        calculation to separate nodes in a SLURM based HPC cluster.
+        """
+        run_job_with_runmode_srun(job=self)
 
     def run_if_manually(self, _manually_print=True):
         """
