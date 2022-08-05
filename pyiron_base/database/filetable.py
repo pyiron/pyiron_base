@@ -58,16 +58,20 @@ class FileTable(IsDatabase, metaclass=Singleton):
         fileindex = fileindex.iloc[fileindex.path.values.argsort()]
         job_lst = []
         for path, mtime in zip(fileindex.path, fileindex.mtime):
-            job_dict = self.get_extract(path, mtime)
-            job_dict["id"] = len(working_dir_lst) + 1
-            working_dir_lst.append(
-                job_dict["project"][:-1] + job_dict["subjob"] + "_hdf5/"
-            )
-            if job_dict["project"] in working_dir_lst:
-                job_dict["masterid"] = working_dir_lst.index(job_dict["project"]) + 1
+            try:
+                job_dict = self.get_extract(path, mtime)
+            except ValueError:
+                pass
             else:
-                job_dict["masterid"] = None
-            job_lst.append(job_dict)
+                job_dict["id"] = len(working_dir_lst) + 1
+                working_dir_lst.append(
+                    job_dict["project"][:-1] + job_dict["subjob"] + "_hdf5/"
+                )
+                if job_dict["project"] in working_dir_lst:
+                    job_dict["masterid"] = working_dir_lst.index(job_dict["project"]) + 1
+                else:
+                    job_dict["masterid"] = None
+                job_lst.append(job_dict)
         return job_lst
 
     def add_item_dict(self, par_dict):
@@ -163,13 +167,14 @@ class FileTable(IsDatabase, metaclass=Singleton):
             job_lst = self.init_table(
                 fileindex=df_new, working_dir_lst=list(working_dir_lst)
             )
-            df = pandas.DataFrame(job_lst)[self._columns]
-            if len(files_lst) != 0 and len(working_dir_lst) != 0:
-                self._job_table = pandas.concat([self._job_table, df]).reset_index(
-                    drop=True
-                )
-            else:
-                self._job_table = df
+            if len(job_lst) > 0:
+                df = pandas.DataFrame(job_lst)[self._columns]
+                if len(files_lst) != 0 and len(working_dir_lst) != 0:
+                    self._job_table = pandas.concat([self._job_table, df]).reset_index(
+                        drop=True
+                    )
+                else:
+                    self._job_table = df
 
     def _get_table_headings(self, table_name=None):
         return self._job_table.columns.values
