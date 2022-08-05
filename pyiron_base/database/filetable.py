@@ -68,7 +68,9 @@ class FileTable(IsDatabase, metaclass=Singleton):
                     job_dict["project"][:-1] + job_dict["subjob"] + "_hdf5/"
                 )
                 if job_dict["project"] in working_dir_lst:
-                    job_dict["masterid"] = working_dir_lst.index(job_dict["project"]) + 1
+                    job_dict["masterid"] = (
+                        working_dir_lst.index(job_dict["project"]) + 1
+                    )
                 else:
                     job_dict["masterid"] = None
                 job_lst.append(job_dict)
