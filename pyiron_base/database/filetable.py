@@ -58,7 +58,7 @@ class FileTable(IsDatabase, metaclass=Singleton):
         fileindex = fileindex.iloc[fileindex.path.values.argsort()]
         job_lst = []
         for path, mtime in zip(fileindex.path, fileindex.mtime):
-            try:
+            try:  # Ignore HDF5 files which are not created by pyiron
                 job_dict = self.get_extract(path, mtime)
             except ValueError:
                 pass
