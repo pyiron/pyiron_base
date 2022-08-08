@@ -7,6 +7,25 @@ from pyfileindex import PyFileIndex
 from pyiron_base.interfaces.singleton import Singleton
 from pyiron_base.database.generic import IsDatabase
 
+table_columns = {
+    "id": None,
+    "status": None,
+    "chemicalformula": None,
+    "job": None,
+    "subjob": None,
+    "projectpath": None,
+    "project": None,
+    "hamilton": None,
+    "hamversion": None,
+    "timestart": None,
+    "computer": None,
+    "parentid": None,
+    "username": None,
+    "timestop": None,
+    "totalcputime": None,
+    "masterid": None,
+}
+
 
 def filter_function(file_name):
     return ".h5" in file_name
@@ -17,24 +36,7 @@ class FileTable(IsDatabase, metaclass=Singleton):
         self._fileindex = None
         self._job_table = None
         self._project = os.path.abspath(project)
-        self._columns = [
-            "id",
-            "status",
-            "chemicalformula",
-            "job",
-            "subjob",
-            "projectpath",
-            "project",
-            "timestart",
-            "timestop",
-            "totalcputime",
-            "computer",
-            "hamilton",
-            "hamversion",
-            "parentid",
-            "masterid",
-            "username",
-        ]
+        self._columns = list(table_columns.keys())
         self.force_reset()
 
     def _get_view_mode(self):
@@ -87,16 +89,10 @@ class FileTable(IsDatabase, metaclass=Singleton):
             "status": "initialized",
             "chemicalformula": None,
             "timestart": datetime.datetime.now(),
-            "computer": None,
-            "parentid": None,
-            "username": None,
-            "timestop": None,
-            "totalcputime": None,
-            "masterid": None,
         }
-        for k, v in default_values.items():
-            if k not in par_dict.keys():
-                par_dict[k] = v
+        for k in table_columns.keys():
+            if k not in par_dict.keys() and k in default_values.keys():
+                par_dict[k] = default_values[k]
         self._job_table = pandas.concat(
             [self._job_table, pandas.DataFrame([par_dict])[self._columns]]
         ).reset_index(drop=True)
