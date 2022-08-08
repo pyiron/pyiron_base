@@ -346,6 +346,8 @@ class FileTable(IsDatabase, metaclass=Singleton):
             "hamilton": get_hamilton_from_file(hdf5_file=path, job_name=job),
             "hamversion": get_hamilton_version_from_file(hdf5_file=path, job_name=job),
         })
+        del return_dict["id"]
+        del return_dict["masterid"]
         return return_dict
 
 
