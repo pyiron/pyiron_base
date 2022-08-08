@@ -90,16 +90,13 @@ class FileTable(IsDatabase, metaclass=Singleton):
             "chemicalformula": None,
             "timestart": datetime.datetime.now(),
         }
-        for k, v in table_columns.items():
-            if k not in par_dict.keys():
-                if k in default_values.keys():
-                    par_dict[k] = default_values[k]
-                else:
-                    par_dict[k] = v
+        par_dict_merged = table_columns.copy()
+        par_dict_merged.update(default_values)
+        par_dict_merged.update(par_dict)
         self._job_table = pandas.concat(
-            [self._job_table, pandas.DataFrame([par_dict])[self._columns]]
+            [self._job_table, pandas.DataFrame([par_dict_merged])[self._columns]]
         ).reset_index(drop=True)
-        return int(par_dict["id"])
+        return int(par_dict_merged["id"])
 
     def item_update(self, par_dict, item_id):
         if isinstance(item_id, list):
