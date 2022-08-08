@@ -94,7 +94,7 @@ class FileTable(IsDatabase, metaclass=Singleton):
             if k not in par_dict.keys():
                 if k in default_values.keys():
                     par_dict[k] = default_values[k]
-                else: 
+                else:
                     par_dict[k] = v
         self._job_table = pandas.concat(
             [self._job_table, pandas.DataFrame([par_dict])[self._columns]]
