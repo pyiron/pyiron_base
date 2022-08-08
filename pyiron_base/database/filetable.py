@@ -335,17 +335,21 @@ class FileTable(IsDatabase, metaclass=Singleton):
         job = os.path.splitext(basename)[0]
         time = datetime.datetime.fromtimestamp(mtime)
         return_dict = table_columns.copy()
-        return_dict.update({
-            "status": get_job_status_from_file(hdf5_file=path, job_name=job),
-            "job": job,
-            "subjob": "/" + job,
-            "project": os.path.dirname(path) + "/",
-            "timestart": time,
-            "timestop": time,
-            "totalcputime": 0.0,
-            "hamilton": get_hamilton_from_file(hdf5_file=path, job_name=job),
-            "hamversion": get_hamilton_version_from_file(hdf5_file=path, job_name=job),
-        })
+        return_dict.update(
+            {
+                "status": get_job_status_from_file(hdf5_file=path, job_name=job),
+                "job": job,
+                "subjob": "/" + job,
+                "project": os.path.dirname(path) + "/",
+                "timestart": time,
+                "timestop": time,
+                "totalcputime": 0.0,
+                "hamilton": get_hamilton_from_file(hdf5_file=path, job_name=job),
+                "hamversion": get_hamilton_version_from_file(
+                    hdf5_file=path, job_name=job
+                ),
+            }
+        )
         del return_dict["id"]
         del return_dict["masterid"]
         return return_dict
