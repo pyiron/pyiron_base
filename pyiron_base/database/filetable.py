@@ -7,6 +7,25 @@ from pyfileindex import PyFileIndex
 from pyiron_base.interfaces.singleton import Singleton
 from pyiron_base.database.generic import IsDatabase
 
+table_columns = {
+    "id": None,
+    "status": None,
+    "chemicalformula": None,
+    "job": None,
+    "subjob": None,
+    "projectpath": None,
+    "project": None,
+    "hamilton": None,
+    "hamversion": None,
+    "timestart": None,
+    "computer": None,
+    "parentid": None,
+    "username": None,
+    "timestop": None,
+    "totalcputime": None,
+    "masterid": None,
+}
+
 
 def filter_function(file_name):
     return ".h5" in file_name
@@ -17,24 +36,7 @@ class FileTable(IsDatabase, metaclass=Singleton):
         self._fileindex = None
         self._job_table = None
         self._project = os.path.abspath(project)
-        self._columns = [
-            "id",
-            "status",
-            "chemicalformula",
-            "job",
-            "subjob",
-            "projectpath",
-            "project",
-            "timestart",
-            "timestop",
-            "totalcputime",
-            "computer",
-            "hamilton",
-            "hamversion",
-            "parentid",
-            "masterid",
-            "username",
-        ]
+        self._columns = list(table_columns.keys())
         self.force_reset()
 
     def _get_view_mode(self):
@@ -87,20 +89,14 @@ class FileTable(IsDatabase, metaclass=Singleton):
             "status": "initialized",
             "chemicalformula": None,
             "timestart": datetime.datetime.now(),
-            "computer": None,
-            "parentid": None,
-            "username": None,
-            "timestop": None,
-            "totalcputime": None,
-            "masterid": None,
         }
-        for k, v in default_values.items():
-            if k not in par_dict.keys():
-                par_dict[k] = v
+        par_dict_merged = table_columns.copy()
+        par_dict_merged.update(default_values)
+        par_dict_merged.update(par_dict)
         self._job_table = pandas.concat(
-            [self._job_table, pandas.DataFrame([par_dict])[self._columns]]
+            [self._job_table, pandas.DataFrame([par_dict_merged])[self._columns]]
         ).reset_index(drop=True)
-        return int(par_dict["id"])
+        return int(par_dict_merged["id"])
 
     def item_update(self, par_dict, item_id):
         if isinstance(item_id, list):
@@ -338,22 +334,25 @@ class FileTable(IsDatabase, metaclass=Singleton):
         basename = os.path.basename(path)
         job = os.path.splitext(basename)[0]
         time = datetime.datetime.fromtimestamp(mtime)
-        return {
-            "status": get_job_status_from_file(hdf5_file=path, job_name=job),
-            "chemicalformula": None,
-            "job": job,
-            "subjob": "/" + job,
-            "projectpath": None,
-            "project": os.path.dirname(path) + "/",
-            "timestart": time,
-            "timestop": time,
-            "totalcputime": 0.0,
-            "computer": None,
-            "username": None,
-            "parentid": None,
-            "hamilton": get_hamilton_from_file(hdf5_file=path, job_name=job),
-            "hamversion": get_hamilton_version_from_file(hdf5_file=path, job_name=job),
-        }
+        return_dict = table_columns.copy()
+        return_dict.update(
+            {
+                "status": get_job_status_from_file(hdf5_file=path, job_name=job),
+                "job": job,
+                "subjob": "/" + job,
+                "project": os.path.dirname(path) + "/",
+                "timestart": time,
+                "timestop": time,
+                "totalcputime": 0.0,
+                "hamilton": get_hamilton_from_file(hdf5_file=path, job_name=job),
+                "hamversion": get_hamilton_version_from_file(
+                    hdf5_file=path, job_name=job
+                ),
+            }
+        )
+        del return_dict["id"]
+        del return_dict["masterid"]
+        return return_dict
 
 
 def get_hamilton_from_file(hdf5_file, job_name):
