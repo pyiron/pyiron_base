@@ -334,22 +334,19 @@ class FileTable(IsDatabase, metaclass=Singleton):
         basename = os.path.basename(path)
         job = os.path.splitext(basename)[0]
         time = datetime.datetime.fromtimestamp(mtime)
-        return {
+        return_dict = table_columns.copy()
+        return_dict.update({
             "status": get_job_status_from_file(hdf5_file=path, job_name=job),
-            "chemicalformula": None,
             "job": job,
             "subjob": "/" + job,
-            "projectpath": None,
             "project": os.path.dirname(path) + "/",
             "timestart": time,
             "timestop": time,
             "totalcputime": 0.0,
-            "computer": None,
-            "username": None,
-            "parentid": None,
             "hamilton": get_hamilton_from_file(hdf5_file=path, job_name=job),
             "hamversion": get_hamilton_version_from_file(hdf5_file=path, job_name=job),
-        }
+        })
+        return return_dict
 
 
 def get_hamilton_from_file(hdf5_file, job_name):
