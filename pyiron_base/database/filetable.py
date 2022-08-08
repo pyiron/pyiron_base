@@ -90,11 +90,14 @@ class FileTable(IsDatabase, metaclass=Singleton):
             "chemicalformula": None,
             "timestart": datetime.datetime.now(),
         }
-        par_with_defaults_dict = table_columns.copy()
-        par_with_defaults_dict.update(default_values)
-        par_with_defaults_dict.update(par_dict)
+        for k, v in table_columns.items():
+            if k not in par_dict.keys():
+                if k in default_values.keys():
+                    par_dict[k] = default_values[k]
+                else: 
+                    par_dict[k] = v
         self._job_table = pandas.concat(
-            [self._job_table, pandas.DataFrame([par_with_defaults_dict])[self._columns]]
+            [self._job_table, pandas.DataFrame([par_dict])[self._columns]]
         ).reset_index(drop=True)
         return int(par_dict["id"])
 
