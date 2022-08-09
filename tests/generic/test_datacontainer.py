@@ -39,7 +39,13 @@ class TestDataContainer(TestWithCleanProject):
             ]}
         ], table_name="input")
         cls.pl["tail"] = DataContainer([2, 4, 8])
-        cls.hdf = cls.project.create_hdf(cls.project.path, "test")
+
+    def setUp(self):
+        self.hdf = self.project.create_hdf(self.project.path, "test")
+
+    def tearDown(self):
+        self.hdf.remove_file()
+        self.hdf = None
 
     # Init tests
     def test_init_none(self):
@@ -397,7 +403,7 @@ class TestDataContainer(TestWithCleanProject):
         self.assertTrue("READ_ONLY" in self.hdf["read_only_f"].list_nodes(), "read-only parameter not saved in HDF")
         self.assertEqual(
             self.pl.read_only,
-            self.hdf[self.pl.table_name]["READ_ONLY"],
+            self.hdf["read_only_f"]["READ_ONLY"],
             "read-only parameter not correctly written to HDF"
         )
 
@@ -460,6 +466,7 @@ class TestDataContainer(TestWithCleanProject):
     def test_hdf_empty_group(self):
         """Writing a list without table_name or group_name should only work if the HDF group is empty."""
         l = DataContainer([1, 2, 3])
+        self.hdf["dummy"] = True
         with self.assertRaises(ValueError, msg="No exception when writing to full hdf group."):
             l.to_hdf(self.hdf)
         h = self.hdf.create_group("empty_group")
