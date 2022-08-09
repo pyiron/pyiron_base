@@ -637,6 +637,17 @@ class TestDataContainer(TestWithCleanProject):
         self.assertTrue(not isinstance(ll._store[0], HDFStub),
                         "Loaded value not stored back into container!")
 
+    def test_overwrite_with_group(self):
+        """Writing to HDF second time after replacing a node by a group should not raise an error."""
+        d = DataContainer({"test": 42})
+        d.to_hdf(hdf=self.hdf, group_name="overwrite")
+        del d.test
+        d.create_group("test")
+        d.test.foo = 42
+        try:
+            d.to_hdf(hdf=self.hdf, group_name="overwrite")
+        except Exception as e:
+            self.fail(f"to_hdf raised \"{e}\"!")
 
 class TestInputList(PyironTestCase):
 
