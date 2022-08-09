@@ -287,6 +287,14 @@ class TestFileHDFio(PyironTestCase):
         self.to_be_removed_hdf.remove_file()
         self.assertFalse(os.path.isfile(path))
 
+    def test_delitem(self):
+        """After deleting an entry, it should not be accessible anymore."""
+        with self.full_hdf5.open("content") as opened_hdf:
+            opened_hdf["dummy"] = 42
+            del opened_hdf["dummy"]
+            self.assertNotIn("dummy", opened_hdf.list_nodes(), msg="Entry still in HDF after del!")
+
+
     def test_get_from_table(self):
         pass
 
