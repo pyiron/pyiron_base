@@ -916,7 +916,7 @@ class DataContainer(MutableMapping, HasGroups, HasHDF):
         if not self._lazy and not recursive:
             return
 
-        # values are loaded from HDF once they are accessed via __getitem__, which is implicetly called by values()
+        # values are loaded from HDF once they are accessed via __getitem__, which is implicitly called by values()
         for v in self.values():
             if recursive and isinstance(v, DataContainer):
                 v._force_load()
