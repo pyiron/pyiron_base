@@ -81,3 +81,19 @@ class TestJobType(PyironTestCase):
         # Cleanup
         for job in ["job1", "job2", "job3", "job_atomistics"]:
             JobType.unregister(job)
+
+    def test_get_job_for_registered_class(self):
+        from pyiron_base import Project, ProjectHDFio
+
+        class Toy(GenericJob):
+            pass
+
+        self.assertNotIn('Toy', JobType._job_class_dict)
+        job = JobType(Toy, ProjectHDFio(Project('.'), 'job_name'), 'job_name')
+        self.assertIsInstance(job, Toy)
+
+        JobType.register('some.random.path', 'Toy')
+
+        with self.assertRaises(ValueError):
+            job = JobType(Toy, ProjectHDFio(Project('.'), 'job_name'), 'job_name')
+
