@@ -211,8 +211,10 @@ class HasHDF(ABC):
             group_name if group_name is not None else self._get_hdf_group_name()
         )
         with _WithHDF(hdf, group_name) as hdf:
-            if group_name is None \
-                    and (len(hdf.list_nodes()) > 0 or len(hdf.list_dirs())) > 0:
+            if (
+                group_name is None
+                and (len(hdf.list_nodes()) > 0 or len(hdf.list_dirs())) > 0
+            ):
                 raise ValueError("HDF group must be empty when group_name is not set.")
             self._to_hdf(hdf)
             self._store_type_to_hdf(hdf)
