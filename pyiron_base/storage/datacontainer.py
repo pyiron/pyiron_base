@@ -790,11 +790,13 @@ class DataContainer(MutableMapping, HasGroups, HasHDF):
 
     def _to_hdf(self, hdf):
         hdf["READ_ONLY"] = self.read_only
+        written_keys = _internal_hdf_nodes.copy()
         for i, (k, v) in enumerate(self.items()):
             if isinstance(k, str) and "__index_" in k:
                 raise ValueError("Key {} clashes with internal use!".format(k))
 
             k = "{}__index_{}".format(k if isinstance(k, str) else "", i)
+            written_keys.append(k)
 
             # pandas objects also have a to_hdf method that is entirely unrelated to ours
             if hasattr(v, "to_hdf") and not isinstance(
@@ -815,6 +817,12 @@ class DataContainer(MutableMapping, HasGroups, HasHDF):
                         "Error saving {} (key {}): DataContainer doesn't support saving elements "
                         'of type "{}" to HDF!'.format(v, k, type(v))
                     ) from None
+        for n in hdf.list_nodes():
+            if n not in written_keys:
+                del hdf[n]
+        for g in hdf.list_groups():
+            if g not in written_keys:
+                del hdf[g]
 
     def _from_hdf(self, hdf, version=None):
         self.clear()
