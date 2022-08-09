@@ -661,6 +661,30 @@ class TestDataContainer(TestWithCleanProject):
         except Exception as e:
             self.fail(f"to_hdf raised \"{e}\"!")
 
+    def test_overwrite_no_dangling_items(self):
+        """Writing to HDF a second time should leave only items in HDF that are currently in the container."""
+        d = self.pl.copy()
+        d.to_hdf(self.hdf)
+        del d[len(d) - 1]
+        d.to_hdf(self.hdf)
+        items = [k for k in self.hdf[d.table_name].list_nodes() if "__index_" in k] \
+              + [k for k in self.hdf[d.table_name].list_groups() if "__index_" in k]
+        self.assertEqual(len(d), len(items),
+                         "Number of items in HDF does not match length of container!")
+
+    def test_overwrite_ordering(self):
+        """Writing to HDF a second time with different item order should not leave other items in the HDF."""
+        d = self.pl.copy()
+        d.to_hdf(self.hdf)
+        d = DataContainer(list(reversed(list(d.values()))),
+                          table_name=d.table_name)
+        d.to_hdf(self.hdf)
+        items = [k for k in self.hdf[d.table_name].list_nodes() if "__index_" in k] \
+              + [k for k in self.hdf[d.table_name].list_groups() if "__index_" in k]
+        self.assertEqual(len(d), len(items),
+                         "Number of items in HDF does not match length of container!")
+
+
 class TestInputList(PyironTestCase):
 
     def test_deprecation_warning(self):
