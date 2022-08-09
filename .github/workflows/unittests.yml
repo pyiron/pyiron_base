@@ -40,4 +40,6 @@ jobs:
     - name: Test
       shell: bash -l {0}
       timeout-minutes: 30
-      run: coverage run --omit pyiron/_version.py -Wdefault -Werror::DeprecationWarning:pyiron_base -m unittest discover tests
+      run: |
+        export PYTHONWARNINGS=default,error::DeprecationWarning:pyiron_base
+        coverage run --omit pyiron/_version.py -m unittest discover tests
