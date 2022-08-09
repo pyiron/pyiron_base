@@ -800,6 +800,10 @@ class DataContainer(MutableMapping, HasGroups, HasHDF):
             if hasattr(v, "to_hdf") and not isinstance(
                 v, (pandas.DataFrame, pandas.Series)
             ):
+                # if v will be written as a group, but a node of the same name k exists already in the file, h5py will
+                # complain, so delete it first
+                if k in hdf.list_nodes():
+                    del hdf[k]
                 v.to_hdf(hdf=hdf, group_name=k)
             else:
                 # if the value doesn't know how to serialize itself, assume
