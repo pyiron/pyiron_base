@@ -649,6 +649,18 @@ class TestDataContainer(TestWithCleanProject):
         except Exception as e:
             self.fail(f"to_hdf raised \"{e}\"!")
 
+    def test_overwrite_with_node(self):
+        """Writing to HDF second time after replacing a group by a node should not raise an error."""
+        d = DataContainer({"test": {"foo": 42}})
+        d.to_hdf(hdf=self.hdf, group_name="overwrite")
+        del d.test
+        d.create_group("test")
+        d.test = 42
+        try:
+            d.to_hdf(hdf=self.hdf, group_name="overwrite")
+        except Exception as e:
+            self.fail(f"to_hdf raised \"{e}\"!")
+
 class TestInputList(PyironTestCase):
 
     def test_deprecation_warning(self):
