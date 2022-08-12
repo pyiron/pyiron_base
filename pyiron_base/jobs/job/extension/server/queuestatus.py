@@ -37,8 +37,7 @@ def queue_table(job_ids=None, project_only=True, full_table=False):
     Returns:
         pandas.DataFrame: Output from the queuing system - optimized for the Sun grid engine
     """
-    if job_ids is None:
-        job_ids = []
+    job_ids = [] if job_ids is None else job_ids
     if project_only and not job_ids:
         return []
     if state.queue_adapter is not None:
