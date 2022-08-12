@@ -25,7 +25,7 @@ __date__ = "Sep 1, 2017"
 QUEUE_SCRIPT_PREFIX = "pi_"
 
 
-def queue_table(job_ids=[], project_only=True, full_table=False):
+def queue_table(job_ids=None, project_only=True, full_table=False):
     """
     Display the queuing system table as pandas.Dataframe
 
@@ -37,6 +37,7 @@ def queue_table(job_ids=[], project_only=True, full_table=False):
     Returns:
         pandas.DataFrame: Output from the queuing system - optimized for the Sun grid engine
     """
+    job_ids = [] if job_ids is None else job_ids
     if project_only and not job_ids:
         return []
     if state.queue_adapter is not None:
@@ -92,7 +93,7 @@ def queue_info_by_job_id(job_id):
     as dictionary
 
     Args:
-        requested_id (int): query for a specific job_id
+        job_id (int): query for a specific job_id
 
     Returns:
         dict: Dictionary with the output from the queuing system - optimized for the Sun grid engine
