@@ -38,7 +38,7 @@ try:
     import nbformat, nbconvert
 
     _has_imported["nbformat"] = True
-except ImportError:
+except (ImportError, DeprecationWarning):
     _has_imported["nbformat"] = False
 
 if all(_has_imported.values()):

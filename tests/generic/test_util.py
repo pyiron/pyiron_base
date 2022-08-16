@@ -40,6 +40,7 @@ class TestDeprecator(PyironTestCase):
             return 4*a
 
         with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter('always')
             self.assertEqual(foo(1), 2,
                              "Decorated function does not return original "
                              "return value")
@@ -48,6 +49,7 @@ class TestDeprecator(PyironTestCase):
                         "Raised warning is not a DeprecationWarning")
 
         with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter('always')
             self.assertEqual(bar(1), 4,
                              "Decorated function does not return original "
                              "return value")
@@ -62,6 +64,7 @@ class TestDeprecator(PyironTestCase):
             return 3*a
 
         with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter('always')
             self.assertEqual(baz(1), 3,
                              "Decorated function does not return original "
                              "return value")
@@ -75,12 +78,14 @@ class TestDeprecator(PyironTestCase):
             return 2*a
 
         with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter('always')
             self.assertEqual(foo(1, bar=True), 2,
                              "Decorated function does not return original "
                              "return value")
         self.assertTrue(len(w) > 0, "No warning raised!")
 
         with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter('always')
             self.assertEqual(foo(1, foo=True), 2,
                              "Decorated function does not return original "
                              "return value")
@@ -93,12 +98,14 @@ class TestDeprecator(PyironTestCase):
             return 2*a
 
         with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter('always')
             self.assertEqual(foo(1, bar=True), 2,
                              "Decorated function does not return original "
                              "return value")
         self.assertTrue(len(w) > 0, "No warning raised!")
 
         with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter('always')
             self.assertEqual(foo(1, baz=True), 2,
                              "Decorated function does not return original "
                              "return value")
@@ -116,6 +123,7 @@ class TestDeprecator(PyironTestCase):
             pass
 
         with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter('always')
             foo(bar=True)
             food(baz=True)
         self.assertEqual(len(w), 2, "Not all warnings preserved.")

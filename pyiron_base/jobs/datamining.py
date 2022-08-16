@@ -3,6 +3,7 @@
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
 import codecs
+import warnings
 from collections import OrderedDict
 from datetime import datetime
 import dill as pickle
@@ -617,9 +618,11 @@ class TableJob(GenericJob):
 
     def _save_output(self):
         with self.project_hdf5.open("output") as hdf5_output:
-            self.pyiron_table._df.to_hdf(
-                hdf5_output.file_name, hdf5_output.h5_path + "/table"
-            )
+            with warnings.catch_warnings():
+                warnings.simplefilter('default', DeprecationWarning)
+                self.pyiron_table._df.to_hdf(
+                    hdf5_output.file_name, hdf5_output.h5_path + "/table"
+                )
 
     def to_hdf(self, hdf=None, group_name=None):
         """

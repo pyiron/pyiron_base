@@ -10,7 +10,10 @@ import posixpath
 import shutil
 from tqdm.auto import tqdm
 import pandas
-import pint
+import warnings
+with warnings.catch_warnings():
+    warnings.simplefilter('ignore', DeprecationWarning)
+    import pint
 import importlib
 import math
 import numpy as np

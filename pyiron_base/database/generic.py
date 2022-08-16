@@ -779,25 +779,28 @@ class DatabaseAccess(IsDatabase):
 
         # change the date of str datatype back into datetime object
         output_list = []
-        for col in row:
-            # ensures working with db entries, which are camel case
-            timestop_index = [item.lower() for item in col.keys()].index("timestop")
-            timestart_index = [item.lower() for item in col.keys()].index("timestart")
-            tmp_values = col.values()
-            if (
-                col.values()[timestop_index] and col.values()[timestart_index]
-            ) is not None:
-                # changes values
-                try:
-                    tmp_values[timestop_index] = datetime.strptime(
-                        str(tmp_values[timestop_index]), "%Y-%m-%d %H:%M:%S.%f"
-                    )
-                    tmp_values[timestart_index] = datetime.strptime(
-                        str(tmp_values[timestart_index]), "%Y-%m-%d %H:%M:%S.%f"
-                    )
-                except ValueError:
-                    print("error in: ", str(col))
-            output_list += [dict(zip(col.keys(), tmp_values))]
+        # TODO: update and remove DeprecationWarning filter
+        with warnings.catch_warnings():
+            warnings.simplefilter('default', DeprecationWarning)
+            for col in row:
+                # ensures working with db entries, which are camel case
+                timestop_index = [item.lower() for item in col.keys()].index("timestop")
+                timestart_index = [item.lower() for item in col.keys()].index("timestart")
+                tmp_values = col.values()
+                if (
+                    col.values()[timestop_index] and col.values()[timestart_index]
+                ) is not None:
+                    # changes values
+                    try:
+                        tmp_values[timestop_index] = datetime.strptime(
+                            str(tmp_values[timestop_index]), "%Y-%m-%d %H:%M:%S.%f"
+                        )
+                        tmp_values[timestart_index] = datetime.strptime(
+                            str(tmp_values[timestart_index]), "%Y-%m-%d %H:%M:%S.%f"
+                        )
+                    except ValueError:
+                        print("error in: ", str(col))
+                output_list += [dict(zip(col.keys(), tmp_values))]
         return output_list
 
     def _check_chem_formula_length(self, par_dict):

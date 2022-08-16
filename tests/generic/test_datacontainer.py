@@ -489,7 +489,9 @@ class TestDataContainer(TestWithCleanProject):
         """Values that implement to_hdf/from_hdf, should write themselves to the HDF file correctly."""
         pl = DataContainer(table_name="pandas")
         pl.append(pd.DataFrame({"a": [1, 2], "b": ["x", "y"]}))
-        pl.to_hdf(hdf=self.hdf)
+        with warnings.catch_warnings():
+            warnings.simplefilter('default')
+            pl.to_hdf(hdf=self.hdf)
         pl2 = self.hdf["pandas"].to_object()
         self.assertEqual(type(pl[0]), type(pl2[0]))
 
