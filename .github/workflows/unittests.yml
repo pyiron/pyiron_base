@@ -10,6 +10,8 @@ on:
     
 env:
   CACHE_NUMBER: 0  # increase to reset cache manually
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  CODACY_PROJECT_TOKEN: ${{ secrets.CODACY_PROJECT_TOKEN }}
 
 jobs:
   build:
