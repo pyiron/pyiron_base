@@ -43,7 +43,6 @@ jobs:
       shell: bash -l {0}
       run: |
         python .ci_support/pyironconfig.py
-        conda env update --name test --file .ci_support/environment-notebooks.yml
     - name: Test
       shell: bash -l {0}
       run: ./.ci_support/test_backwards.sh
