@@ -9,7 +9,6 @@ on:
     branches: [ master ]
     
 env:
-  CACHE_NUMBER: 0  # increase to reset cache manually
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   CODACY_PROJECT_TOKEN: ${{ secrets.CODACY_PROJECT_TOKEN }}
 
@@ -58,8 +57,10 @@ jobs:
         channel-priority: strict
         activate-environment: my-env
         use-mamba: true
-    - name: Set cache date
-      run: echo "DATE=$(date +'%Y%m%d')" >> $GITHUB_ENV
+    - name: Set cache date and number
+      run: |
+        echo "DATE=$(date +'%Y%m%d')" >> $GITHUB_ENV
+        cat .github/variables/cache_number.env >> $GITHUB_ENV
     - uses: actions/cache@v2
       with:
         path: ${{ matrix.prefix }}

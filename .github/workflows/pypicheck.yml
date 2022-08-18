@@ -8,9 +8,6 @@ on:
   pull_request:
     branches: [ master ]
 
-env:
-  CACHE_NUMBER: 0  # increase to reset cache manually
-
 jobs:
   build:
 
@@ -29,8 +26,10 @@ jobs:
         channel-priority: strict
         activate-environment: my-env
         use-mamba: true
-    - name: Set cache date
-      run: echo "DATE=$(date +'%Y%m%d')" >> $GITHUB_ENV
+    - name: Set cache date and number
+      run: |
+        echo "DATE=$(date +'%Y%m%d')" >> $GITHUB_ENV
+        cat .github/variables/cache_number.env >> $GITHUB_ENV
     - uses: actions/cache@v2
       with:
         path: /usr/share/miniconda3/envs/my-env
