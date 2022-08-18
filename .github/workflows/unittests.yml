@@ -47,6 +47,8 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
+    - name: Setup environment
+      run: cp .ci_support/environment.yml environment.yml
     - name: Setup Mambaforge
       uses: conda-incubator/setup-miniconda@v2
       with:
@@ -64,7 +66,7 @@ jobs:
         key: ${{ matrix.label }}-conda-${{ hashFiles('environment.yml') }}-${{ env.DATE }}-${{ env.CACHE_NUMBER }}
       id: cache
     - name: Update environment
-      run: mamba env update -n my-env -f .ci_support/environment.yml
+      run: mamba env update -n my-env -f environment.yml
       if: steps.cache.outputs.cache-hit != 'true'  
     - name: Setup
       shell: bash -l {0}
