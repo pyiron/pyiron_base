@@ -77,7 +77,7 @@ jobs:
     - name: Test
       shell: bash -l {0}
       timeout-minutes: 30
-      run: coverage run --omit pyiron/_version.py -m unittest discover tests
+      run: coverage run --omit pyiron_base/_version.py -m unittest discover tests
     - name: Coverage
       if: matrix.label == 'linux-64-py-3-10'
       shell: bash -l {0}
