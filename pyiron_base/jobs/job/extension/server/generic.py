@@ -81,11 +81,11 @@ class Server:  # add the option to return the job id and the hold id to the serv
         self._run_time = None
         self._memory_limit = None
         self._host = self._init_host(host=host)
+        self._run_mode = Runmode()
 
-        self._active_queue = queue
+        self.queue = queue
 
         self._user = state.settings.login_user
-        self._run_mode = Runmode()
         self.run_mode = run_mode
 
         self._queue_id = None
@@ -182,15 +182,15 @@ class Server:  # add the option to return the job id and the hold id to the serv
                     run_time_max=self.run_time,
                     memory_max=self.memory_limit,
                 )
-                if cores != self.cores:
+                if self.cores is not None and cores != self.cores:
                     self._cores = cores
                     state.logger.warning(f"Updated the number of cores to: {cores}")
-                if run_time_max != self.run_time:
+                if self.run_time is not None and run_time_max != self.run_time:
                     self._run_time = run_time_max
                     state.logger.warning(
                         f"Updated the run time limit to: {run_time_max}"
                     )
-                if memory_max != self.memory_limit:
+                if self.memory_limit is not None and memory_max != self.memory_limit:
                     self._memory_limit = memory_max
                     state.logger.warning(f"Updated the memory limit to: {memory_max}")
                 self._active_queue = new_scheduler
