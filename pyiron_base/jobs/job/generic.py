@@ -175,6 +175,7 @@ class GenericJob(JobCore):
         self.__name__ = type(self).__name__
         self.__version__ = "0.4"
         self.__hdf_version__ = "0.1.0"
+        self._parsed_version = None
         self._server = Server()
         self._logger = state.logger
         self._executable = None
@@ -214,14 +215,17 @@ class GenericJob(JobCore):
         Returns:
             str: version number
         """
-        if self.__version__:
+        if self._executable is None:
+            self._executable_activate()
+
+        if self._parsed_version is not None:
+            return self._parsed_version
+        elif self._executable is not None:
+            return self._executable.version
+        elif self.__version__:
             return self.__version__
         else:
-            self._executable_activate()
-            if self._executable is not None:
-                return self._executable.version
-            else:
-                return None
+            return None
 
     @version.setter
     def version(self, new_version):
