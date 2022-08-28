@@ -910,12 +910,12 @@ class FlattenedStorage(HasHDF):
 
     def _from_hdf(self, hdf, version=None):
         def read_array(name, hdf):
-            a = np.array(hdf[name])
+            a = np.asarray(hdf[name])
             if a.dtype.char == "S":
                 # if saved as bytes, we wrote this as an encoded unicode string, so manually decode here
                 # TODO: string arrays with shape != () not handled
-                a = np.array(
-                    [s.decode("utf8") for s in a],
+                a = np.fromiter(
+                    (s.decode("utf8") for s in a),
                     # itemsize of original a is four bytes per character, so divide by four to get
                     # length of the orignal stored unicode string; np.dtype('U1').itemsize is just a
                     # platform agnostic way of knowing how wide a unicode charater is for numpy
