@@ -33,7 +33,7 @@ class TestRunmode(PyironTestCase):
         cls.resource_paths = list(state.settings.resource_paths)
         here = os.getcwd()
         cls.test_resources = os.path.join(here, "testqueueadapters")
-        resources = [os.path.join(cls.test_resources, f"res0")]
+        resources = [os.path.join(cls.test_resources, "res0")]
         queue_dir = os.path.join(resources[0], "queues")
         os.makedirs(queue_dir)
         _write_queue_config(
@@ -107,8 +107,8 @@ class TestRunmode(PyironTestCase):
             with self.subTest(server.queue):
                 try:
                     server.queue = None
-                except:
-                    self.fail("queue should accept None")
+                except Exception as err:
+                    self.fail(f"queue should accept None, but got {err}")
 
                 self.assertEqual(
                     server._active_queue, None, "active queue not set to None"
@@ -219,6 +219,86 @@ class TestRunmode(PyironTestCase):
                 "On changing queue, None is converted to max_value.",
             )
             self.assertIsNone(self.server_main.memory_limit)
+
+    def test_set_runtime(self):
+        with self.subTest("None queue"):
+            self.server.run_time = 15
+            self.assertEqual(self.server.run_time, 15, "could not set run_time to 15")
+            self.assertEqual(
+                self.server.cores, 1, "setting run_time should not change cores"
+            )
+            self.assertIs(
+                self.server.memory_limit,
+                None,
+                "setting run_time should not set a memory_limit",
+            )
+        with self.subTest("main queue"):
+            self.server_main.run_time = 15
+            self.assertEqual(
+                self.server_main.run_time, 15, "could not set run_time to 15"
+            )
+            self.assertEqual(
+                self.server_main.cores,
+                1,
+                "setting run_time should not change run_time",
+            )
+            self.assertIs(
+                self.server_main.memory_limit,
+                None,
+                "setting run_time should not set a memory_limit",
+            )
+        with self.subTest("main queue long run_time"):
+            with self.assertLogs(state.logger) as w:
+                self.server_main.run_time = 500
+                self.assertEqual(len(w.output), 1)
+                self.assertEqual(
+                    w.output[0], "WARNING:pyiron_log:Updated the run time limit to: 42"
+                )
+            self.assertEqual(
+                self.server_main.run_time,
+                42,
+                "run_time should be maximum 42 defined as by the config",
+            )
+            self.assertEqual(
+                self.server_main.cores,
+                1,
+                "setting run_time should not change cores",
+            )
+            self.assertIs(
+                self.server_main.memory_limit,
+                None,
+                "setting run_time should not set a memory_limit",
+            )
+
+    def test_set_memory_limit(self):
+        with self.subTest("None queue"):
+            self.server.memory_limit = 25
+            self.assertEqual(
+                self.server.memory_limit, 25, "could not set memory_limit to 25"
+            )
+            self.assertEqual(
+                self.server.cores, 1, "setting run_time should not change cores"
+            )
+            self.assertIs(
+                self.server.run_time,
+                None,
+                "setting memory_limit should not set a run_time",
+            )
+        with self.subTest("main queue"):
+            self.server_main.memory_limit = 25
+            self.assertEqual(
+                self.server_main.memory_limit, 25, "could not set memory_limit to 25"
+            )
+            self.assertEqual(
+                self.server_main.cores,
+                1,
+                "setting memory_limit should not change run_time",
+            )
+            self.assertIs(
+                self.server_main.run_time,
+                None,
+                "setting memory_limit should not set a run_time",
+            )
 
 
 if __name__ == "__main__":
