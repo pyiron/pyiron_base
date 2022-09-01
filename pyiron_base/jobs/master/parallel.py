@@ -34,7 +34,6 @@ __status__ = "production"
 __date__ = "Sep 1, 2017"
 
 
-@JobType.unregister
 class ParallelMaster(GenericMaster):
     """
     MasterJob that handles the creation and analysis of several parallel jobs (including master and

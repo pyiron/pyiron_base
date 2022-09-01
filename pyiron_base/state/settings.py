@@ -56,7 +56,8 @@ __date__ = "Sep 1, 2017"
 
 
 class Settings(metaclass=Singleton):
-    """
+    """The unique settings object (singleton) for the currently running pyiron instance.
+
     The settings object reads configuration data from the following sources in decreasing order of priority: system
     environment values (starting with 'PYIRON'), a configuration file identified in the PYIRONCONFIG system environment
     variable, or a default configuration file in ~/.pyiron. One (or none) of these is used to overwrite default values
@@ -83,6 +84,9 @@ class Settings(metaclass=Singleton):
         project_check_enabled / PROJECT_CHECK_ENABLED / PYIRONPROJECTCHECKENABLED (bool):
         disable_database / DISABLE_DATABASE / PYIRONDISABLE (bool): Whether to turn off the database and use a
             file-system-based hierarchy. (Default is False.)
+        credentials_file / CREDENTIALS_FILE / CREDENTIALSFILE (str): Path to an additional credentials file holding
+            credential information. If specified, the values in the credentials_file overwrite the values of other
+            sources.
 
     Properties:
         configuration (dict): Global variables for configuring the pyiron experience.
@@ -123,6 +127,7 @@ class Settings(metaclass=Singleton):
         env_dict = self._get_config_from_environment()
         file_dict = self._get_config_from_file()
         if user_dict is not None:
+            user_dict = self._add_credentials_from_file(user_dict)
             self._update_from_dict(user_dict)
         elif env_dict is not None:
             self._update_from_dict(env_dict)
@@ -159,6 +164,7 @@ class Settings(metaclass=Singleton):
                 "sql_database": None,
                 "project_check_enabled": False,
                 "disable_database": False,
+                "credentials_file": None,
             }
         )
 
@@ -182,6 +188,7 @@ class Settings(metaclass=Singleton):
             "PYIRONSQLDATABASE": "sql_database",
             "PYIRONPROJECTCHECKENABLED": "project_check_enabled",
             "PYIRONDISABLE": "disable_database",
+            "PYIRONCREDENTIALSFILE": "credentials_file",
         }
 
     @property
@@ -206,7 +213,26 @@ class Settings(metaclass=Singleton):
             "NAME": "sql_database",
             "PROJECT_CHECK_ENABLED": "project_check_enabled",
             "DISABLE_DATABASE": "disable_database",
+            "CREDENTIALS_FILE": "credentials_file",
         }
+
+    @property
+    def file_credential_map(self) -> Dict:
+        return {
+            "PASSWD": "sql_user_key",
+            "VIEWERPASSWD": "sql_view_user_key",
+        }
+
+    @property
+    def environment_credential_map(self) -> Dict:
+        return {
+            "PYIRONSQLVIEWUSERKEY": "sql_view_user_key",
+            "PYIRONSQLUSERKEY": "sql_user_key",
+        }
+
+    @property
+    def _credential_keys(self) -> List:
+        return list(self.environment_credential_map.values())
 
     @staticmethod
     def convert_path_to_abs_posix(path: str) -> str:
@@ -321,12 +347,31 @@ class Settings(metaclass=Singleton):
     def _get_config_from_environment(self) -> Union[Dict, None]:
         config = {}
         for k, v in os.environ.items():
-            try:
+            if k in self.environment_configuration_map:
                 config[self.environment_configuration_map[k]] = v
-            except KeyError:
-                pass
+            elif k in self.environment_credential_map:
+                config[self.environment_credential_map[k]] = v
         config = self._fix_boolean_var_in_config(config=config)
+        config = self._add_credentials_from_file(config)
         return config if len(config) > 0 else None
+
+    def _add_credentials_from_file(self, config: dict) -> Dict:
+        if "credentials_file" not in config:
+            return config
+        else:
+            credential_file = config["credentials_file"]
+
+        if not os.path.isfile(credential_file):
+            raise FileNotFoundError(credential_file)
+        elif oct(os.stat(credential_file).st_mode)[-2:] != "00":
+            logger.warning(
+                "Credentials file can be read by other users - check permissions."
+            )
+        credentials = (
+            self._parse_config_file(credential_file, self.file_credential_map) or {}
+        )
+        config.update(credentials)
+        return config
 
     def _get_config_from_file(self) -> Union[Dict, None]:
         if "PYIRONCONFIG" in os.environ.keys():
@@ -334,6 +379,16 @@ class Settings(metaclass=Singleton):
         else:
             config_file = os.path.expanduser(os.path.join("~", ".pyiron"))
 
+        config = self._parse_config_file(config_file, self.file_configuration_map)
+
+        if config is not None:
+            config = self._fix_boolean_var_in_config(config=config)
+            config = self._add_credentials_from_file(config)
+
+        return config
+
+    @staticmethod
+    def _parse_config_file(config_file, map_dict):
         if os.path.isfile(config_file):
             if oct(os.stat(config_file).st_mode)[-2:] != "00":
                 logger.warning(
@@ -345,14 +400,11 @@ class Settings(metaclass=Singleton):
             config = {}
             for sec_name, section in parser.items():
                 for k, v in section.items():
-                    try:
-                        config[self.file_configuration_map[k.upper()]] = v
-                    except KeyError:
-                        pass
-            config = self._fix_boolean_var_in_config(config=config)
+                    if k.upper() in map_dict:
+                        config[map_dict[k.upper()]] = v
+            return config
         else:
-            config = None
-        return config
+            return None
 
     def _update_from_dict(self, config: Dict, map_: Union[None, Dict] = None) -> None:
         """
@@ -379,7 +431,7 @@ class Settings(metaclass=Singleton):
                 self._configuration[key] = (
                     value if isinstance(value, bool) else strtobool(value)
                 )
-            elif key not in self._configuration.keys():
+            elif key not in self._configuration and key not in self._credential_keys:
                 raise KeyError(
                     f"Got unexpected configuration key {key}, please choose from among {self._configuration.keys()}"
                 )

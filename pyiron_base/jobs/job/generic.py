@@ -9,7 +9,6 @@ from datetime import datetime
 import os
 import posixpath
 import h5io
-from pyiron_base.jobs.job.jobtype import JobType
 import signal
 import warnings
 
@@ -34,6 +33,7 @@ from pyiron_base.jobs.job.runfunction import (
     run_job_with_runmode_interactive,
     run_job_with_runmode_interactive_non_modal,
     run_job_with_runmode_queue,
+    run_job_with_runmode_srun,
     execute_job_with_external_executable,
 )
 from pyiron_base.jobs.job.util import (
@@ -882,6 +882,13 @@ class GenericJob(JobCore):
         """
         run_job_with_runmode_non_modal(job=self)
 
+    def run_if_srun(self):
+        """
+        The run if srun function is called by run to execute the simulation using srun, this allows distributing
+        calculation to separate nodes in a SLURM based HPC cluster.
+        """
+        run_job_with_runmode_srun(job=self)
+
     def run_if_manually(self, _manually_print=True):
         """
         The run if manually function is called by run if the user decides to execute the simulation manually - this
@@ -1490,11 +1497,6 @@ class GenericJob(JobCore):
             project.db.set_job_status(job_id=master_id, status="busy")
             self._logger.info("busy master: {} {}".format(master_id, self.get_job_id()))
             del self
-
-    def __init_subclass__(cls, **kwargs):
-        """Auto register all subclasses of GenericJob as available JobType."""
-        super().__init_subclass__(**kwargs)
-        JobType.register(cls, _autoregister=True)
 
 
 class GenericError(object):

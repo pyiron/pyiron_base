@@ -45,39 +45,49 @@ class TestSettings(TestCase):
                 self.env.pop(k)
 
     def test_validate_sql_configuration_completeness(self):
-        s._validate_sql_configuration({
-            "sql_type": "MySQL",
-            "user": "something",
-            "sql_user_key": "something",
-            "sql_host": "something",
-            "sql_database": "something"
-        })
-        with self.assertRaises(ValueError):  # All other values missing
-            s._validate_sql_configuration({
+        s._validate_sql_configuration(
+            {
                 "sql_type": "MySQL",
-                # "user": "something",
-                # "sql_user_key": "something",
-                # "sql_host": "something",
-                # "sql_database": "something"
-            })
+                "user": "something",
+                "sql_user_key": "something",
+                "sql_host": "something",
+                "sql_database": "something",
+            }
+        )
+        with self.assertRaises(ValueError):  # All other values missing
+            s._validate_sql_configuration(
+                {
+                    "sql_type": "MySQL",
+                    # "user": "something",
+                    # "sql_user_key": "something",
+                    # "sql_host": "something",
+                    # "sql_database": "something"
+                }
+            )
 
-        s._validate_sql_configuration({
-            "sql_type": "Postgres",
-            "user": "something",
-            "sql_user_key": "something",
-            "sql_host": "something",
-            "sql_database": "something"
-        })
-        with self.assertRaises(ValueError):  # One other value missing
-            s._validate_sql_configuration({
+        s._validate_sql_configuration(
+            {
                 "sql_type": "Postgres",
                 "user": "something",
                 "sql_user_key": "something",
-                # "sql_host": "something",
-                "sql_database": "something"
-            })
+                "sql_host": "something",
+                "sql_database": "something",
+            }
+        )
+        with self.assertRaises(ValueError):  # One other value missing
+            s._validate_sql_configuration(
+                {
+                    "sql_type": "Postgres",
+                    "user": "something",
+                    "sql_user_key": "something",
+                    # "sql_host": "something",
+                    "sql_database": "something",
+                }
+            )
 
-        s._validate_sql_configuration({"sql_type": "SQLalchemy", "sql_connection_string": "something"})
+        s._validate_sql_configuration(
+            {"sql_type": "SQLalchemy", "sql_connection_string": "something"}
+        )
         with self.assertRaises(ValueError):  # Connection string missing
             s._validate_sql_configuration({"sql_type": "SQLalchemy"})
 
@@ -88,11 +98,10 @@ class TestSettings(TestCase):
 
         sql_dir = Path("./foo").resolve()
         sql_file = Path("./foo/thedatabase.db").resolve()
-        s._validate_sql_configuration({
-            "sql_type": "SQLite",
-            "sql_file": sql_file
-        })
-        self.assertTrue(os.path.isdir(sql_dir), msg="Failed to create host dir for SQL file")
+        s._validate_sql_configuration({"sql_type": "SQLite", "sql_file": sql_file})
+        self.assertTrue(
+            os.path.isdir(sql_dir), msg="Failed to create host dir for SQL file"
+        )
         rmtree(sql_dir)
 
         with self.assertRaises(ValueError):  # Connection string missing
@@ -101,28 +110,34 @@ class TestSettings(TestCase):
         s._validate_sql_configuration({"user": "nothing_about_sql_type"})
 
     def test_validate_viewer_configuration_completeness(self):
-        s._validate_viewer_configuration({
-            "sql_type": "Postgres",
-            "sql_view_table_name": "something",
-            "sql_view_user": "something",
-            "sql_view_user_key": "something"
-        })
-
-        with self.assertRaises(ValueError):
-            s._validate_viewer_configuration({
+        s._validate_viewer_configuration(
+            {
                 "sql_type": "Postgres",
-                # "sql_view_table_name": "something",
-                "sql_view_user": "something",
-                "sql_view_user_key": "something"
-            })
-
-        with self.assertRaises(ValueError):
-            s._validate_viewer_configuration({
-                "sql_type": "MySQL",  # Right now it ONLY works for postgres
                 "sql_view_table_name": "something",
                 "sql_view_user": "something",
-                "sql_view_user_key": "something"
-            })
+                "sql_view_user_key": "something",
+            }
+        )
+
+        with self.assertRaises(ValueError):
+            s._validate_viewer_configuration(
+                {
+                    "sql_type": "Postgres",
+                    # "sql_view_table_name": "something",
+                    "sql_view_user": "something",
+                    "sql_view_user_key": "something",
+                }
+            )
+
+        with self.assertRaises(ValueError):
+            s._validate_viewer_configuration(
+                {
+                    "sql_type": "MySQL",  # Right now it ONLY works for postgres
+                    "sql_view_table_name": "something",
+                    "sql_view_user": "something",
+                    "sql_view_user_key": "something",
+                }
+            )
 
         s._validate_sql_configuration({"user": "nothing_about_sql_view"})
 
@@ -131,27 +146,36 @@ class TestSettings(TestCase):
 
     def test_validate_no_database_configuration(self):
         with self.assertRaises(ValueError):
-            s._validate_no_database_configuration({
-                "disable_database": True,
-                "project_check_enabled": True,
-                "project_paths": [],
-            })
+            s._validate_no_database_configuration(
+                {
+                    "disable_database": True,
+                    "project_check_enabled": True,
+                    "project_paths": [],
+                }
+            )
         with self.assertRaises(ValueError):
-            s._validate_no_database_configuration({
-                "disable_database": True,
-                "project_check_enabled": False,
-                "project_paths": ["/my/path/a"],
-            })
-    
+            s._validate_no_database_configuration(
+                {
+                    "disable_database": True,
+                    "project_check_enabled": False,
+                    "project_paths": ["/my/path/a"],
+                }
+            )
+
     def test_get_config_from_environment(self):
         self.env["PYIRONFOO"] = "foo"
         self.env["PYIRONSQLFILE"] = "bar"
         self.env["PYIRONPROJECTPATHS"] = "baz"
         with self.subTest("no interference"):
             env_dict = s._get_config_from_environment()
+            self.assertNotIn(
+                "foo",
+                env_dict.values(),
+                msg="Just having PYIRON in the key isn't enough, it needs to be a real key",
+            )
             ref_dict = {"sql_file": "bar", "project_paths": "baz"}
             self.assertEqual(
-                ref_dict, env_dict, msg="Config parsed from environment differs from expectation!"
+                ref_dict, env_dict, msg="Valid item failed to read from environment"
             )
 
         self.env["PYIRONCONFIG"] = "."
@@ -159,9 +183,47 @@ class TestSettings(TestCase):
             "Should use environment variables even if PYIRONCONFIG is specified."
         ):
             env_dict = s._get_config_from_environment()
-            self.assertEqual(
-                ref_dict, env_dict, msg="Config parsed from environment differs from expectation!"
+            self.assertNotIn(
+                "foo",
+                env_dict.values(),
+                msg="Just having PYIRON in the key isn't enough, it needs to be a real key",
             )
+            ref_dict = {"sql_file": "bar", "project_paths": "baz"}
+            self.assertEqual(
+                ref_dict, env_dict, msg="Valid item failed to read from environment"
+            )
+
+        local_loc = Path(self.cwd + "/.pyiron_credentials")
+        local_loc.write_text(f"[DEFAULT]\nPASSWD = something_else\n")
+        local_loc_str = s.convert_path_to_abs_posix(str(local_loc))
+        self.env["PYIRONCREDENTIALSFILE"] = local_loc_str
+        with self.subTest("Should read credentials file if specified"):
+            env_dict = s._get_config_from_environment()
+            self.assertNotIn(
+                "foo",
+                env_dict.values(),
+                msg="Just having PYIRON in the key isn't enough, it needs to be a real key",
+            )
+            ref_dict = {
+                "sql_file": "bar",
+                "project_paths": "baz",
+                "credentials_file": local_loc_str,
+                "sql_user_key": "something_else",
+            }
+            self.assertEqual(ref_dict, env_dict)
+        local_loc.unlink()
+
+    def test__parse_config_file(self):
+        local_loc = Path(self.cwd + "/.pyiron_credentials")
+        local_loc.write_text(
+            f"[DEFAULT]\nPASSWD = something_else\nNoValidKey = None\n[OTHER]\nKey = Value"
+        )
+        config = s._parse_config_file(
+            local_loc, {"PASSWD": "sql_user_key", "KEY": "key"}
+        )
+        ref_dict = {"sql_user_key": "something_else", "key": "Value"}
+        self.assertEqual(ref_dict, config)
+        local_loc.unlink()
 
     def test_get_config_from_file(self):
         self.default_loc.write_text(
@@ -173,8 +235,15 @@ class TestSettings(TestCase):
             ";USER = boa\n"
         )
         file_dict = s._get_config_from_file()
+
+        self.assertNotIn("foo", file_dict.values(), msg="It needs to be a real key")
+        self.assertNotIn(
+            "boa",
+            file_dict.values(),
+            msg="This was commented out and shouldn't be read",
+        )
         ref_dict = {"sql_file": "bar", "project_paths": "baz"}
-        self.assertEqual(ref_dict, file_dict, msg="Config parsed from file differs from expectation!")
+        self.assertEqual(ref_dict, file_dict, msg="Valid item failed to read from file")
 
     def test_update(self):
         # System environment variables
@@ -196,36 +265,41 @@ class TestSettings(TestCase):
         user_val = 0
         s.update({"connection_timeout": user_val})
         self.assertEqual(
-            user_val, s.configuration["connection_timeout"],
-            msg="User-specified update values should take top priority"
+            user_val,
+            s.configuration["connection_timeout"],
+            msg="User-specified update values should take top priority",
         )
 
         s.update()
         self.assertEqual(
-            env_val, s.configuration["connection_timeout"],
-            msg="System environment values take second priority"
+            env_val,
+            s.configuration["connection_timeout"],
+            msg="System environment values take second priority",
         )
 
         self.env.pop("PYIRONCONNECTIONTIMEOUT")
         s.update()
         self.assertEqual(
-            local_val, s.configuration["connection_timeout"],
-            msg="A config file specified in the env takes third priority."
+            local_val,
+            s.configuration["connection_timeout"],
+            msg="A config file specified in the env takes third priority.",
         )
 
         self.env.pop("PYIRONCONFIG")
         local_loc.unlink()
         s.update()
         self.assertEqual(
-            default_val, s.configuration["connection_timeout"],
-            msg="The default config file is the last thing to be read"
+            default_val,
+            s.configuration["connection_timeout"],
+            msg="The default config file is the last thing to be read",
         )
 
         default_loc.unlink()
         s.update()
         self.assertEqual(
-            s.default_configuration["connection_timeout"], s.configuration["connection_timeout"],
-            msg="Code base default should be used after all other options are exhausted"
+            s.default_configuration["connection_timeout"],
+            s.configuration["connection_timeout"],
+            msg="Code base default should be used after all other options are exhausted",
         )
 
     def test_adding_conda_path_to_resources(self):
@@ -238,8 +312,9 @@ class TestSettings(TestCase):
         before = len(s.configuration["resource_paths"])
         s.update()
         self.assertEqual(
-            before, len(s.configuration["resource_paths"]),
-            msg="No conda dirs exist, resources length should not change"
+            before,
+            len(s.configuration["resource_paths"]),
+            msg="No conda dirs exist, resources length should not change",
         )
 
         roots = []
@@ -257,22 +332,22 @@ class TestSettings(TestCase):
         s.update()
         self.assertTrue(
             any([stems[0].as_posix() in p for p in s.configuration["resource_paths"]]),
-            msg="The new resource should have been added"
+            msg="The new resource should have been added",
         )
         self.assertFalse(
             any([stems[1].as_posix() in p for p in s.configuration["resource_paths"]]),
-            msg="Once CONDA_PREFIX path is found, CONDA_DIR should be ignored"
+            msg="Once CONDA_PREFIX path is found, CONDA_DIR should be ignored",
         )
 
         stems[0].rmdir()
         s.update()
         self.assertFalse(
             any([stems[0].as_posix() in p for p in s.configuration["resource_paths"]]),
-            msg="The CONDA_PREFIX no longer contains /share/pyiron and should not be present"
+            msg="The CONDA_PREFIX no longer contains /share/pyiron and should not be present",
         )
         self.assertTrue(
             any([stems[1].as_posix() in p for p in s.configuration["resource_paths"]]),
-            msg="CONDA_DIR is still valid and should be found after CONDA_PREFIX fails"
+            msg="CONDA_DIR is still valid and should be found after CONDA_PREFIX fails",
         )
 
         # Clean up
@@ -281,33 +356,39 @@ class TestSettings(TestCase):
 
     @staticmethod
     def _niceify_path(p: str):
-        return (Path(p)
-                .expanduser()
-                .resolve()
-                .absolute()
-                .as_posix()
-                .replace("\\", "/")
-                )
+        return Path(p).expanduser().resolve().absolute().as_posix().replace("\\", "/")
 
     def test_path_conversion(self):
-        p1 = '~/here/is/a/path/'
-        p2 = 'here\\is\\another'
-        s.update({'resource_paths': f'{p1}, {p2}'})
+        p1 = "~/here/is/a/path/"
+        p2 = "here\\is\\another"
+        s.update({"resource_paths": f"{p1}, {p2}"})
         self.assertListEqual(
             [self._niceify_path(p1), self._niceify_path(p2)],
-            s.configuration['resource_paths']
+            s.configuration["resource_paths"],
         )
 
     def test_convert_to_list_of_paths(self):
         paths = f"foo, bar{os.pathsep}baz/"
 
-        self.assertIsInstance(s._convert_to_list_of_paths(paths), list, msg="Wrong output type")
+        self.assertIsInstance(
+            s._convert_to_list_of_paths(paths), list, msg="Wrong output type"
+        )
 
         for p in s._convert_to_list_of_paths(paths):
-            self.assertEqual(self._niceify_path(p), p, msg="Failed to convert element from string input")
+            self.assertEqual(
+                self._niceify_path(p),
+                p,
+                msg="Failed to convert element from string input",
+            )
 
-        for p in s._convert_to_list_of_paths(paths.replace(',', os.pathsep).split(os.pathsep)):
-            self.assertEqual(self._niceify_path(p), p, msg="Failed to convert element from list input")
+        for p in s._convert_to_list_of_paths(
+            paths.replace(",", os.pathsep).split(os.pathsep)
+        ):
+            self.assertEqual(
+                self._niceify_path(p),
+                p,
+                msg="Failed to convert element from list input",
+            )
 
-        for p in s._convert_to_list_of_paths(paths, ensure_ends_with='/'):
-            self.assertEqual('/', p[-1], msg="End was not ensured")
+        for p in s._convert_to_list_of_paths(paths, ensure_ends_with="/"):
+            self.assertEqual("/", p[-1], msg="End was not ensured")

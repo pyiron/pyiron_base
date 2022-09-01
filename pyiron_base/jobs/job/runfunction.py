@@ -97,6 +97,8 @@ def run_job_with_status_created(job):
         job.run_if_manually(_manually_print=False)
     elif job.server.run_mode.modal:
         job.run_static()
+    elif job.server.run_mode.srun:
+        job.run_if_srun()
     elif (
         job.server.run_mode.non_modal
         or job.server.run_mode.thread
@@ -430,6 +432,39 @@ def run_job_with_runmode_queue(job):
         "{}, status: {}, submitted: queue id {}".format(
             job.job_info_str, job.status, que_id
         )
+    )
+
+
+def run_job_with_runmode_srun(job):
+    working_directory = job.project_hdf5.working_directory
+    if not state.database.database_is_disabled:
+        if not state.database.using_local_database:
+            command = (
+                "srun python -m pyiron_base.cli wrapper -p "
+                + working_directory
+                + "- j "
+                + job.job_id
+            )
+        else:
+            raise ValueError("run_if_srun() does not support local databases.")
+    else:
+        command = (
+            "srun python -m pyiron_base.cli wrapper -p "
+            + working_directory
+            + " -f "
+            + job.project_hdf5.file_name
+            + job.project_hdf5.h5_path
+        )
+    if not os.path.exists(working_directory):
+        os.makedirs(working_directory)
+    del job
+    subprocess.Popen(
+        command,
+        cwd=working_directory,
+        shell=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        universal_newlines=True,
     )
 
 

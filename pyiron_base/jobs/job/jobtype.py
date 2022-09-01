@@ -75,7 +75,20 @@ class JobType:
                 job_class_dict=cls.job_class_dict, class_name=class_name
             )
         elif inspect.isclass(class_name):
-            job_class = class_name
+            if (
+                class_name.__name__ not in cls._job_class_dict
+                or cls._convert_pyiron_to_pyiron_atomistics_module(
+                    class_name.__module__
+                )
+                == cls._job_class_dict[class_name.__name__]
+            ):
+                job_class = class_name
+            else:
+                raise ValueError(
+                    f"You are trying to instantiate a job with the class {class_name} named {class_name.__name__} "
+                    f"from module {class_name.__module__}, however, this name has already been registered with the"
+                    f" module {cls._job_class_dict[class_name.__name__]}."
+                )
         else:
             raise TypeError()
         job = job_class(project, job_name)
@@ -120,13 +133,20 @@ class JobType:
             raise KeyError(f"No JobType with name '{job_name_or_class}' found.")
         return _cls
 
+    @staticmethod
+    def _convert_pyiron_to_pyiron_atomistics_module(cls_module_str):
+        if cls_module_str.startswith("pyiron."):
+            # Currently, we set all sub-modules of pyiron_atomistics to be sub-modules of pyiron. Thus, any class
+            # pyiron.submodule.PyironClass is identical to pyiron_atomistics_submodule.PyironClass:
+            cls_module_str = cls_module_str.replace("pyiron.", "pyiron_atomistics.")
+        return cls_module_str
+
     @classmethod
     def register(
         cls,
         job_class_or_module_str: Union[type, str],
         job_name: str = None,
         overwrite=False,
-        _autoregister=False,
     ):
         """Register job type from the exposed list of available job types
 
@@ -139,7 +159,9 @@ class JobType:
         if job_class_or_module_str is None:
             return
         elif isinstance(job_class_or_module_str, type):
-            cls_module_str = job_class_or_module_str.__module__
+            cls_module_str = cls._convert_pyiron_to_pyiron_atomistics_module(
+                job_class_or_module_str.__module__
+            )
             if job_name is not None and job_class_or_module_str.__name__ != job_name:
                 raise NotImplementedError(
                     "Currently, the given name has to match the class name."
@@ -147,32 +169,23 @@ class JobType:
             else:
                 job_name = job_class_or_module_str.__name__
         elif job_name is not None:
-            cls_module_str = job_class_or_module_str
+            cls_module_str = cls._convert_pyiron_to_pyiron_atomistics_module(
+                job_class_or_module_str
+            )
         else:
             raise ValueError(
                 "The job_name needs to be provided if a job_module_string is provided."
             )
-
-        if cls_module_str.startswith("pyiron."):
-            # Currently, we set all sub-modules of pyiron_atomistics to be sub-modules of pyiron. Thus, any class
-            # pyiron.submodule.PyironClass is identical to pyiron_atomistics_submodule.PyironClass:
-            cls_module_str = cls_module_str.replace("pyiron.", "pyiron_atomistics.")
 
         if (
             not overwrite
             and job_name in cls._job_class_dict
             and cls_module_str != cls._job_class_dict[job_name]
         ):
-            info_text = (
+            ValueError(
                 f"A JobType with name '{job_name}' is already defined! New class = '{cls_module_str}', "
                 f"already registered class = '{cls._job_class_dict[job_name]}'."
             )
-            if _autoregister:
-                state.logger.info(
-                    info_text + " Not replaced since attempted by auto-registration!"
-                )
-            else:
-                raise ValueError(info_text)
         else:
             cls._job_class_dict[job_name] = cls_module_str
 
