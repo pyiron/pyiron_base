@@ -1636,24 +1636,31 @@ class Project(ProjectPath, HasGroups):
         """
         target = os.path.join(target_dir, self.name)
         destination = self.path
-        if destination[-1] == '/':
+        if destination[-1] == "/":
             destination = destination[:-1]
         if stat.S_ISLNK(os.lstat(destination).st_mode):
             if os.readlink(destination) == target:
                 return
-            raise RuntimeError("Refusing to symlink and move a project that is already symlinked!")
+            raise RuntimeError(
+                "Refusing to symlink and move a project that is already symlinked!"
+            )
         if os.name != "posix":
             raise OSError("Symlinking projects is only supported on unix systems!")
         if len(self.job_table().query('status.isin(["submitted", "running"])')) > 0:
-            raise RuntimeError("Refusing to symlink and move a project that has submitted or running jobs!")
+            raise RuntimeError(
+                "Refusing to symlink and move a project that has submitted or running jobs!"
+            )
         os.makedirs(target_dir, exist_ok=True)
         if os.path.exists(target):
             if len(os.listdir(target)) > 0:
-                raise RuntimeError("Refusing to symlink and move a project to non-empty directory!")
+                raise RuntimeError(
+                    "Refusing to symlink and move a project to non-empty directory!"
+                )
             else:
                 os.rmdir(target)
         shutil.move(self.path, target_dir)
         os.symlink(target, destination)
+
 
 class Creator:
     def __init__(self, project):
