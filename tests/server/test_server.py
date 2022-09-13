@@ -190,33 +190,21 @@ class TestRunmode(PyironTestCase):
 
     def test_set_queue(self):
         with self.subTest("None -> main"):
-            with self.assertLogs(state.logger) as w:
-                self.server.queue = "main"
-                self.assertEqual(len(w.output), 1)
-                self.assertEqual(
-                    w.output[0], "WARNING:pyiron_log:Updated the run time limit to: 42"
-                )
+            self.server.queue = "main"
             self.assertEqual(self.server.queue, "main")
             self.assertEqual(self.server.cores, 1)
-            self.assertEqual(
+            self.assertIsNone(
                 self.server.run_time,
-                42,
-                "On changing queue, None is converted to max_value.",
+                "On changing queue, None is conserved.",
             )
             self.assertIsNone(self.server.memory_limit)
         with self.subTest("main -> main"):
-            with self.assertLogs(state.logger) as w:
-                self.server_main.queue = "main"
-                self.assertEqual(len(w.output), 1)
-                self.assertEqual(
-                    w.output[0], "WARNING:pyiron_log:Updated the run time limit to: 42"
-                )
+            self.server_main.queue = "main"
             self.assertEqual(self.server_main.queue, "main")
             self.assertEqual(self.server_main.cores, 1)
-            self.assertEqual(
+            self.assertIsNone(
                 self.server_main.run_time,
-                42,
-                "On changing queue, None is converted to max_value.",
+                "On changing queue, None is conserved.",
             )
             self.assertIsNone(self.server_main.memory_limit)
 
