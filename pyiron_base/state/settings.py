@@ -87,6 +87,9 @@ class Settings(metaclass=Singleton):
         credentials_file / CREDENTIALS_FILE / CREDENTIALSFILE (str): Path to an additional credentials file holding
             credential information. If specified, the values in the credentials_file overwrite the values of other
             sources.
+        write_work_dir_warnings / WRITE_WORK_DIR_WARNINGS / PYIRONWRITEWORKDIRWARNINGS (bool): Whether to write
+            the working directory warning files to inform users about possibly modified content. (Default is True).
+
 
     Properties:
         configuration (dict): Global variables for configuring the pyiron experience.
@@ -165,6 +168,7 @@ class Settings(metaclass=Singleton):
                 "project_check_enabled": False,
                 "disable_database": False,
                 "credentials_file": None,
+                "write_work_dir_warnings": True,
             }
         )
 
@@ -189,6 +193,7 @@ class Settings(metaclass=Singleton):
             "PYIRONPROJECTCHECKENABLED": "project_check_enabled",
             "PYIRONDISABLE": "disable_database",
             "PYIRONCREDENTIALSFILE": "credentials_file",
+            "PYIRONWRITEWORKDIRWARNINGS": "write_work_dir_warnings"
         }
 
     @property
@@ -214,6 +219,7 @@ class Settings(metaclass=Singleton):
             "PROJECT_CHECK_ENABLED": "project_check_enabled",
             "DISABLE_DATABASE": "disable_database",
             "CREDENTIALS_FILE": "credentials_file",
+            "WRITE_WORK_DIR_WARNINGS": "write_work_dir_warnings",
         }
 
     @property
