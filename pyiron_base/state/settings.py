@@ -193,7 +193,7 @@ class Settings(metaclass=Singleton):
             "PYIRONPROJECTCHECKENABLED": "project_check_enabled",
             "PYIRONDISABLE": "disable_database",
             "PYIRONCREDENTIALSFILE": "credentials_file",
-            "PYIRONWRITEWORKDIRWARNINGS": "write_work_dir_warnings"
+            "PYIRONWRITEWORKDIRWARNINGS": "write_work_dir_warnings",
         }
 
     @property
