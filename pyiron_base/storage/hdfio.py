@@ -1296,14 +1296,18 @@ class ProjectHDFio(FileHDFio):
         """
         if not os.path.isdir(self.working_directory):
             os.makedirs(self.working_directory)
-            if state.settings.configuration['write_work_dir_warnings']:
-                with open(os.path.join(self.working_directory, "WARN_pyiron_modified_content"), 'w') as f:
+            if state.settings.configuration["write_work_dir_warnings"]:
+                with open(
+                    os.path.join(
+                        self.working_directory, "WARN_pyiron_modified_content"
+                    ),
+                    "w",
+                ) as f:
                     f.write(
                         "Files in this directory are intended to be written and read by pyiron. \n\n"
-                        "pyiron may transform user input to enhance performance, thus, use these files with care!"
-                        "Consult the log and/or the documentation to gain further information."
-                        ""
-                        "To disable writing these warning files, specify "
+                        "pyiron may transform user input to enhance performance, thus, use these files with care!\n"
+                        "Consult the log and/or the documentation to gain further information.\n\n"
+                        "To disable writing these warning files, specify \n"
                         "WRITE_WORK_DIR_WARNINGS=False in the .pyiron configuration file (or set the "
                         "PYIRONWRITEWORKDIRWARNINGS environment variable accordingly)."
                     )
