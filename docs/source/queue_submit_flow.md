@@ -1,5 +1,7 @@
 # How pyiron submits a job into the queue
 
+If you just want to configure the queue setup, look into the [documentation](https://pyiron.readthedocs.io/en/latest/source/installation.html#hpc-cluster-with-postgresql-database-and-jupyterhub). The following details on the code flow for job submission to the queue.
+
 Every time pyiron submits a job to the queue (reachable from the current location - for remote setup this is run on the remote machine) it runs:
 
 https://github.com/pyiron/pyiron_base/blob/b1e188458e96ae2fe71591ffef2769748481c204/pyiron_base/jobs/job/runfunction.py#L406-L420
