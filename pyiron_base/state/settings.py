@@ -390,6 +390,11 @@ class Settings(metaclass=Singleton):
     @staticmethod
     def _parse_config_file(config_file, map_dict):
         if os.path.isfile(config_file):
+            if oct(os.stat(config_file).st_mode)[-2:] != "00":
+                logger.warning(
+                    "Configuration file may be read by others - check permissions to secure "
+                    "credential information!"
+                )
             parser = ConfigParser(inline_comment_prefixes=(";",), interpolation=None)
             parser.read(config_file)
             config = {}

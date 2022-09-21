@@ -235,6 +235,7 @@ class TestSettings(TestCase):
             ";USER = boa\n"
         )
         file_dict = s._get_config_from_file()
+
         self.assertNotIn("foo", file_dict.values(), msg="It needs to be a real key")
         self.assertNotIn(
             "boa",
