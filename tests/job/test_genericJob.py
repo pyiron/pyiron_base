@@ -113,7 +113,7 @@ class TestGenericJob(TestWithFilledProject):
             self.assertTrue(os.path.exists(ham.working_directory))
             with open(os.path.join(ham.working_directory, 'test_file'), 'w') as f:
                 f.write("Content")
-            self.assertEqual(
+            self.assertCountEqual(
                 ham.list_files(), ["test_file", "WARN_pyiron_modified_content"]
             )
         with self.subTest("Compress"):
