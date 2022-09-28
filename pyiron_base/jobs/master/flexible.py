@@ -214,12 +214,6 @@ class FlexibleMaster(GenericMaster):
                 self.status.refresh = True
                 self.run_if_refresh()
 
-    def write_input(self):
-        """
-        write_input is not implemented for FlexibleMaster jobs
-        """
-        pass
-
     def collect_output(self):
         """
         Collect output is not implemented for FlexibleMaster jobs

@@ -442,6 +442,7 @@ class SerialMasterBase(GenericMaster):
         """
         Write the input files - for the SerialMaster this only contains convergence goal.
         """
+        super().write_input()
         self._input.write_file(file_name="input.inp", cwd=self.working_directory)
 
     def __len__(self):

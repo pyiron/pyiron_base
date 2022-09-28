@@ -326,6 +326,7 @@ class ScriptJob(GenericJob):
         """
         Copy the script to the working directory - only python scripts and jupyter notebooks are supported
         """
+        super().write_input()
         if self._script_path is not None:
             file_name = os.path.basename(self._script_path)
             shutil.copyfile(
