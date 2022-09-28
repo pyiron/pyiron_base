@@ -238,7 +238,7 @@ class TestGenericJob(TestWithFilledProject):
                 job._create_working_directory()
                 job.write_input()
                 self.assertCountEqual(
-                    os.listdir(job.working_directory), ["input.yml", "WARN_pyiron_modified_content"]
+                    os.listdir(job.working_directory), ["input.yml", "WARNING_pyiron_modified_content"]
                 )
             with self.subTest("Suppress writing of warning file"):
                 job = self.project.create_job(ToyJob, "test_not_write_warning_file")
@@ -443,7 +443,7 @@ class TestGenericJob(TestWithFilledProject):
         self.assertEqual(
             len(wd_files),
             2,
-            "Only one input and the WARN_pyiron_modified_content file should "
+            "Only one input and the WARNING_pyiron_modified_content file should "
             "be present in the working directory",
         )
         self.assertEqual(

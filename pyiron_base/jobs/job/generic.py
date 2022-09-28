@@ -424,10 +424,10 @@ class GenericJob(JobCore):
         """
         if state.settings.configuration["write_work_dir_warnings"]:
             with open(
-                    os.path.join(
-                        self.working_directory, "WARN_pyiron_modified_content"
-                    ),
-                    "w",
+                os.path.join(
+                    self.working_directory, "WARNINGn_pyiron_modified_content"
+                ),
+                "w",
             ) as f:
                 f.write(
                     "Files in this directory are intended to be written and read by pyiron. \n\n"
@@ -535,7 +535,7 @@ class GenericJob(JobCore):
             copy_files=copy_files,
             delete_existing_job=delete_existing_job,
         )
-        print('DONE call JobCore._internal_copy_to')
+        print("DONE call JobCore._internal_copy_to")
         if reloaded:
             return new_job_core, file_project, hdf5_project, reloaded
 
