@@ -710,8 +710,6 @@ class JobCore(HasGroups):
             wd_content = os.listdir(new_job_core.working_directory)
             if len(wd_content) == 0:
                 os.rmdir(new_job_core.working_directory)
-            elif wd_content == ["WARN_pyiron_modified_content"]:
-                shutil.rmtree(new_job_core.working_directory)
             else:
                 raise RuntimeError(
                     f"Target directory for copy not empty! Content = {wd_content}."

@@ -105,7 +105,6 @@ class TestGenericJob(TestWithFilledProject):
             self.assertTrue(os.path.isfile(ham.project_hdf5.file_name))
         with self.subTest('Add files to working directory'):
             ham.project_hdf5.create_working_directory()
-            self.assertEqual(ham.list_files(), ["WARN_pyiron_modified_content"])
             self.assertEqual(
                 "/".join([cwd, self.project_name, "job_single_debug_2_hdf5/job_single_debug_2"]),
                 ham.working_directory
@@ -114,7 +113,7 @@ class TestGenericJob(TestWithFilledProject):
             with open(os.path.join(ham.working_directory, 'test_file'), 'w') as f:
                 f.write("Content")
             self.assertCountEqual(
-                ham.list_files(), ["test_file", "WARN_pyiron_modified_content"]
+                ham.list_files(), ["test_file"]
             )
         with self.subTest("Compress"):
             ham.compress()
@@ -228,6 +227,29 @@ class TestGenericJob(TestWithFilledProject):
         pass
 
     def test_write_input(self):
+        wd_warn_key = "write_work_dir_warnings"
+        previous_wd_warn_setting = self.project.state.settings.configuration[
+            wd_warn_key
+        ]
+        try:
+            with self.subTest("Writing warning file"):
+                self.project.state.settings.configuration[wd_warn_key] = True
+                job = self.project.create_job(ToyJob, "test_write_warning_file")
+                job._create_working_directory()
+                job.write_input()
+                self.assertCountEqual(
+                    os.listdir(job.working_directory), ["input.yml", "WARN_pyiron_modified_content"]
+                )
+            with self.subTest("Suppress writing of warning file"):
+                job = self.project.create_job(ToyJob, "test_not_write_warning_file")
+                job._create_working_directory()
+                self.project.state.settings.configuration[wd_warn_key] = False
+                job.write_input()
+                self.assertEqual(os.listdir(job.working_directory), ['input.yml'])
+        finally:
+            self.project.state.settings.configuration[
+                wd_warn_key
+            ] = previous_wd_warn_setting
         pass
 
     def test_collect_output(self):
@@ -370,27 +392,11 @@ class TestGenericJob(TestWithFilledProject):
         pass
 
     def test__create_working_directory(self):
-        wd_warn_key = "write_work_dir_warnings"
-        previous_wd_warn_setting = self.project.state.settings.configuration[
-            wd_warn_key
-        ]
-        try:
-            with self.subTest("Writing warning file"):
-                self.project.state.settings.configuration[wd_warn_key] = True
-                job = self.project.create_job(ToyJob, "test_create_wd")
-                job._create_working_directory()
-                self.assertEqual(
-                    os.listdir(job.working_directory), ["WARN_pyiron_modified_content"]
-                )
-            with self.subTest("Suppress writing of warning file"):
-                job = self.project.create_job(ToyJob, "test_create_wd2")
-                self.project.state.settings.configuration[wd_warn_key] = False
-                job._create_working_directory()
-                self.assertEqual(os.listdir(job.working_directory), [])
-        finally:
-            self.project.state.settings.configuration[
-                wd_warn_key
-            ] = previous_wd_warn_setting
+        job = self.project.create_job(ToyJob, "test_create_wd")
+        job._create_working_directory()
+        self.assertEqual(
+            os.listdir(job.working_directory), []
+        )
 
     def test__write_run_wrapper(self):
         pass

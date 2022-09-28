@@ -422,9 +422,21 @@ class GenericJob(JobCore):
         Write the input files for the external executable. This method has to be implemented in the individual
         hamiltonians.
         """
-        raise NotImplementedError(
-            "write procedure must be defined for derived Hamilton!"
-        )
+        if state.settings.configuration["write_work_dir_warnings"]:
+            with open(
+                    os.path.join(
+                        self.working_directory, "WARN_pyiron_modified_content"
+                    ),
+                    "w",
+            ) as f:
+                f.write(
+                    "Files in this directory are intended to be written and read by pyiron. \n\n"
+                    "pyiron may transform user input to enhance performance, thus, use these files with care!\n"
+                    "Consult the log and/or the documentation to gain further information.\n\n"
+                    "To disable writing these warning files, specify \n"
+                    "WRITE_WORK_DIR_WARNINGS=False in the .pyiron configuration file (or set the "
+                    "PYIRONWRITEWORKDIRWARNINGS environment variable accordingly)."
+                )
 
     def collect_output(self):
         """
@@ -523,6 +535,7 @@ class GenericJob(JobCore):
             copy_files=copy_files,
             delete_existing_job=delete_existing_job,
         )
+        print('DONE call JobCore._internal_copy_to')
         if reloaded:
             return new_job_core, file_project, hdf5_project, reloaded
 
