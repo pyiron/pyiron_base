@@ -425,7 +425,7 @@ class GenericJob(JobCore):
         if state.settings.configuration["write_work_dir_warnings"]:
             with open(
                 os.path.join(
-                    self.working_directory, "WARNINGn_pyiron_modified_content"
+                    self.working_directory, "WARNING_pyiron_modified_content"
                 ),
                 "w",
             ) as f:
