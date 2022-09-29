@@ -27,14 +27,26 @@ __date__ = "Mar 23, 2021"
 class HasStorage(HasHDF, ABC):
     """
     A base class for objects that use HDF5 data serialization via the `DataContainer` class.
+
+    Unless you know what you are doing sub classes should pass the `group_name` argument to :meth:`~.__init__` or
+    override :meth:`~.get_hdf_group_name()` to force a default name for the HDF group the object should write itself to.
     """
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, group_name=None, **kwargs):
+        """
+
+        Args:
+            group_name (str): default name of the HDF group where the whole object should be written to.
+        """
         self._storage = DataContainer(table_name="storage")
+        self._group_name = group_name
 
     @property
     def storage(self) -> DataContainer:
         return self._storage
+
+    def _get_hdf_group_name(self) -> str:
+        return self._group_name
 
     def _to_hdf(self, hdf: ProjectHDFio):
         self.storage.to_hdf(hdf=hdf)
