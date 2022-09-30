@@ -153,7 +153,7 @@ class FileHDFio(HasGroups, MutableMapping):
                 if self._is_convertable_dtype_object_array(obj):
                     obj = self._convert_dtype_obj_array(obj.copy())
                 return obj
-            except (ValueError, OSError):
+            except (ValueError, OSError, RuntimeError, NotImplementedError):
                 # h5io couldn't find a dataset with name item, but there still might be a group with that name, which we
                 # check in the rest of the method
                 pass
