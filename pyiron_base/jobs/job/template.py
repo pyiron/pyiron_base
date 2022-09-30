@@ -24,7 +24,7 @@ __date__ = "May 15, 2020"
 class TemplateJob(GenericJob, HasStorage):
     def __init__(self, project, job_name):
         GenericJob.__init__(self, project, job_name)
-        HasStorage.__init__(self)
+        HasStorage.__init__(self, group_name="")
         self.storage.create_group("input")
         self.storage.create_group("output")
 
@@ -38,11 +38,11 @@ class TemplateJob(GenericJob, HasStorage):
 
     def to_hdf(self, hdf=None, group_name=None):
         GenericJob.to_hdf(self, hdf=hdf, group_name=group_name)
-        HasStorage.to_hdf(self, hdf=self.project_hdf5, group_name="")
+        HasStorage.to_hdf(self, hdf=self.project_hdf5)
 
     def from_hdf(self, hdf=None, group_name=None):
         GenericJob.from_hdf(self, hdf=hdf, group_name=group_name)
-        HasStorage.from_hdf(self, hdf=self.project_hdf5, group_name="")
+        HasStorage.from_hdf(self, hdf=self.project_hdf5)
 
 
 class PythonTemplateJob(TemplateJob):

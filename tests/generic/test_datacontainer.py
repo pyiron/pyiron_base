@@ -39,7 +39,13 @@ class TestDataContainer(TestWithCleanProject):
             ]}
         ], table_name="input")
         cls.pl["tail"] = DataContainer([2, 4, 8])
-        cls.hdf = cls.project.create_hdf(cls.project.path, "test")
+
+    def setUp(self):
+        self.hdf = self.project.create_hdf(self.project.path, "test")
+
+    def tearDown(self):
+        self.hdf.remove_file()
+        self.hdf = None
 
     # Init tests
     def test_init_none(self):
@@ -397,7 +403,7 @@ class TestDataContainer(TestWithCleanProject):
         self.assertTrue("READ_ONLY" in self.hdf["read_only_f"].list_nodes(), "read-only parameter not saved in HDF")
         self.assertEqual(
             self.pl.read_only,
-            self.hdf[self.pl.table_name]["READ_ONLY"],
+            self.hdf["read_only_f"]["READ_ONLY"],
             "read-only parameter not correctly written to HDF"
         )
 
@@ -460,6 +466,7 @@ class TestDataContainer(TestWithCleanProject):
     def test_hdf_empty_group(self):
         """Writing a list without table_name or group_name should only work if the HDF group is empty."""
         l = DataContainer([1, 2, 3])
+        self.hdf["dummy"] = True
         with self.assertRaises(ValueError, msg="No exception when writing to full hdf group."):
             l.to_hdf(self.hdf)
         h = self.hdf.create_group("empty_group")
@@ -629,6 +636,53 @@ class TestDataContainer(TestWithCleanProject):
 
         self.assertTrue(not isinstance(ll._store[0], HDFStub),
                         "Loaded value not stored back into container!")
+
+    def test_overwrite_with_group(self):
+        """Writing to HDF second time after replacing a node by a group should not raise an error."""
+        d = DataContainer({"test": 42})
+        d.to_hdf(hdf=self.hdf, group_name="overwrite")
+        del d.test
+        d.create_group("test")
+        d.test.foo = 42
+        try:
+            d.to_hdf(hdf=self.hdf, group_name="overwrite")
+        except Exception as e:
+            self.fail(f"to_hdf raised \"{e}\"!")
+
+    def test_overwrite_with_node(self):
+        """Writing to HDF second time after replacing a group by a node should not raise an error."""
+        d = DataContainer({"test": {"foo": 42}})
+        d.to_hdf(hdf=self.hdf, group_name="overwrite")
+        del d.test
+        d.create_group("test")
+        d.test = 42
+        try:
+            d.to_hdf(hdf=self.hdf, group_name="overwrite")
+        except Exception as e:
+            self.fail(f"to_hdf raised \"{e}\"!")
+
+    def test_overwrite_no_dangling_items(self):
+        """Writing to HDF a second time should leave only items in HDF that are currently in the container."""
+        d = self.pl.copy()
+        d.to_hdf(self.hdf)
+        del d[len(d) - 1]
+        d.to_hdf(self.hdf)
+        items = [k for k in self.hdf[d.table_name].list_nodes() if "__index_" in k] \
+              + [k for k in self.hdf[d.table_name].list_groups() if "__index_" in k]
+        self.assertEqual(len(d), len(items),
+                         "Number of items in HDF does not match length of container!")
+
+    def test_overwrite_ordering(self):
+        """Writing to HDF a second time with different item order should not leave other items in the HDF."""
+        d = self.pl.copy()
+        d.to_hdf(self.hdf)
+        d = DataContainer(list(reversed(list(d.values()))),
+                          table_name=d.table_name)
+        d.to_hdf(self.hdf)
+        items = [k for k in self.hdf[d.table_name].list_nodes() if "__index_" in k] \
+              + [k for k in self.hdf[d.table_name].list_groups() if "__index_" in k]
+        self.assertEqual(len(d), len(items),
+                         "Number of items in HDF does not match length of container!")
 
 
 class TestInputList(PyironTestCase):

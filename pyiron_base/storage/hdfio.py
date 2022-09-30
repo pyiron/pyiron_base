@@ -260,7 +260,7 @@ class FileHDFio(HasGroups, MutableMapping):
         h5io.write_hdf5(
             self.file_name,
             value,
-            title=posixpath.join(self.h5_path, key),
+            title=self._get_h5_path(key),
             overwrite="update",
             use_json=use_json,
         )
@@ -275,7 +275,7 @@ class FileHDFio(HasGroups, MutableMapping):
         if self.file_exists:
             try:
                 with open_hdf5(self.file_name, mode="a") as store:
-                    del store[key]
+                    del store[self._get_h5_path(key)]
             except (AttributeError, KeyError):
                 pass
 
@@ -531,7 +531,7 @@ class FileHDFio(HasGroups, MutableMapping):
         Returns:
             FileHDFio: FileHDFio object pointing to the new group
         """
-        full_name = posixpath.join(self.h5_path, name)
+        full_name = self._get_h5_path(name)
         with open_hdf5(self.file_name, mode="a") as h:
             try:
                 h.create_group(full_name, track_order=track_order)
@@ -570,7 +570,7 @@ class FileHDFio(HasGroups, MutableMapping):
         if h5_rel_path.strip() == ".":
             h5_rel_path = ""
         if h5_rel_path.strip() != "":
-            new_h5_path.h5_path = posixpath.join(new_h5_path.h5_path, h5_rel_path)
+            new_h5_path.h5_path = self._get_h5_path(h5_rel_path)
         new_h5_path.history.append(h5_rel_path)
 
         return new_h5_path
