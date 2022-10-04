@@ -112,7 +112,9 @@ class TestGenericJob(TestWithFilledProject):
             self.assertTrue(os.path.exists(ham.working_directory))
             with open(os.path.join(ham.working_directory, 'test_file'), 'w') as f:
                 f.write("Content")
-            self.assertEqual(ham.list_files(), ['test_file'])
+            self.assertCountEqual(
+                ham.list_files(), ["test_file"]
+            )
         with self.subTest("Compress"):
             ham.compress()
             self.assertFalse(os.path.exists(os.path.join(ham.working_directory, 'test_file')))
@@ -225,6 +227,29 @@ class TestGenericJob(TestWithFilledProject):
         pass
 
     def test_write_input(self):
+        wd_warn_key = "write_work_dir_warnings"
+        previous_wd_warn_setting = self.project.state.settings.configuration[
+            wd_warn_key
+        ]
+        try:
+            with self.subTest("Writing warning file"):
+                self.project.state.settings.configuration[wd_warn_key] = True
+                job = self.project.create_job(ToyJob, "test_write_warning_file")
+                job._create_working_directory()
+                job.write_input()
+                self.assertCountEqual(
+                    os.listdir(job.working_directory), ["input.yml", "WARNING_pyiron_modified_content"]
+                )
+            with self.subTest("Suppress writing of warning file"):
+                job = self.project.create_job(ToyJob, "test_not_write_warning_file")
+                job._create_working_directory()
+                self.project.state.settings.configuration[wd_warn_key] = False
+                job.write_input()
+                self.assertEqual(os.listdir(job.working_directory), ['input.yml'])
+        finally:
+            self.project.state.settings.configuration[
+                wd_warn_key
+            ] = previous_wd_warn_setting
         pass
 
     def test_collect_output(self):
@@ -367,7 +392,11 @@ class TestGenericJob(TestWithFilledProject):
         pass
 
     def test__create_working_directory(self):
-        pass
+        job = self.project.create_job(ToyJob, "test_create_wd")
+        job._create_working_directory()
+        self.assertEqual(
+            os.listdir(job.working_directory), []
+        )
 
     def test__write_run_wrapper(self):
         pass
@@ -411,8 +440,15 @@ class TestGenericJob(TestWithFilledProject):
         self.assertEqual(wd_files[0], f"{job_restart.name}.tar.bz2", "Inconsistent name for the zipped file")
         job_restart.decompress()
         wd_files = job_restart.list_files()
-        self.assertEqual(len(wd_files), 1, "Only one input file should be present in the working directory")
-        self.assertEqual(wd_files[0], "input.yml", "Inconsistent name for the zipped file")
+        self.assertEqual(
+            len(wd_files),
+            2,
+            "Only one input and the WARNING_pyiron_modified_content file should "
+            "be present in the working directory",
+        )
+        self.assertEqual(
+            wd_files[0], "input.yml", "Inconsistent name for the zipped file"
+        )
 
     def test_return_codes(self):
         """Jobs exiting with return codes other than job.executable.allowed_codes should be marked as 'aborted'"""

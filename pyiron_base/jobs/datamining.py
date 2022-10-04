@@ -756,9 +756,6 @@ class TableJob(GenericJob):
         if self.job_id is not None:
             self.project.db.item_update(self._runtime(), self.job_id)
 
-    def write_input(self):
-        pass
-
     def get_dataframe(self):
         """
 

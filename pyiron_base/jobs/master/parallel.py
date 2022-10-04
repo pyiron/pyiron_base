@@ -252,6 +252,7 @@ class ParallelMaster(GenericMaster):
         Write the input files - this contains the GenericInput of the ParallelMaster as well as reseting the submission
         status.
         """
+        super().write_input()
         self.submission_status.submitted_jobs = 0
         self.input.write_file(file_name="input.inp", cwd=self.working_directory)
 
