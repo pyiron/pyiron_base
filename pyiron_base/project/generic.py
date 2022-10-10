@@ -563,10 +563,13 @@ class Project(ProjectPath, HasGroups):
         Iterate over the jobs within the current project and it is sub projects
 
         Args:
-            path (str): HDF5 path inside each job object
-            recursive (bool): search subprojects [True/False] - True by default
-            convert_to_object (bool): load the full GenericJob object (default) or just the HDF5 / JobCore object
-            progress (bool): if True (default), add an interactive progress bar to the iteration
+            path (str): HDF5 path inside each job object. (Default is None, which just uses the top level of the job's
+                HDF5 path.)
+            recursive (bool): search subprojects. (Default is True.)
+            convert_to_object (bool): load the full GenericJob object (default) or just the HDF5 / JobCore object. Note
+                that skipping the conversion to object can be *significantly* faster for large projects. (Default is
+                True, convert everything to the full python object.)
+            progress (bool): add an interactive progress bar to the iteration. (Default is True, show the bar.)
             **kwargs (dict): Optional arguments for filtering with keys matching the project database column name
                             (eg. status="finished"). Asterisk can be used to denote a wildcard, for zero or more
                             instances of any character
