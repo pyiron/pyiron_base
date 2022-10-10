@@ -566,8 +566,8 @@ class Project(ProjectPath, HasGroups):
             path (str): HDF5 path inside each job object. (Default is None, which just uses the top level of the job's
                 HDF5 path.)
             recursive (bool): search subprojects. (Default is True.)
-            convert_to_object (bool): load the full GenericJob object (Default, True) or just the HDF5 / JobCore object (False) (DO THIS FOR LARGE PROJECTS, IT'S MUCH FASTER). 
-                                      Default is to convert everything to the full python object, which is much slower!
+            convert_to_object (bool): load the full GenericJob object (default) or just the HDF5 / JobCore object. HDF5 / JobCore 
+            is *significantly* faster for large projects. (Default is True, convert everything to the full python object.)
             progress (bool): add an interactive progress bar to the iteration. (Default is True, show the bar.)
             **kwargs (dict): Optional arguments for filtering with keys matching the project database column name
                             (eg. status="finished"). Asterisk can be used to denote a wildcard, for zero or more
