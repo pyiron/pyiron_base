@@ -30,7 +30,7 @@ setup(
     install_requires=[
         'dill==0.3.5.1',
         'future==0.18.2',
-        'gitpython==3.1.27',
+        'gitpython==3.1.28',
         'h5io==0.1.7',
         'h5py==3.7.0',
         'numpy==1.23.3',
