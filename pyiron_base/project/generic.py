@@ -566,8 +566,8 @@ class Project(ProjectPath, HasGroups):
             path (str): HDF5 path inside each job object. (Default is None, which just uses the top level of the job's
                 HDF5 path.)
             recursive (bool): search subprojects. (Default is True.)
-            convert_to_object (bool): load the full GenericJob object (default, slow) or just the HDF5 / JobCore object (False, fast). HDF5 / JobCore
-            is **significantly** faster for large projects. (Default is True, convert everything to the full python object.)
+            convert_to_object (bool): load the full GenericJob object, else just return the HDF5 / JobCore object.
+                                     (Default is True, convert everything to the full python object.)
             progress (bool): add an interactive progress bar to the iteration. (Default is True, show the bar.)
             **kwargs (dict): Optional arguments for filtering with keys matching the project database column name
                             (eg. status="finished"). Asterisk can be used to denote a wildcard, for zero or more
@@ -575,6 +575,11 @@ class Project(ProjectPath, HasGroups):
 
         Returns:
             yield: Yield of GenericJob or JobCore
+
+        Note:
+            The default behavior of converting to object can cause **significant** slowdown in larger projects. In this
+            case, you may seriously wish to consider setting `convert_to_object=False` and access only the HDF5/JobCore
+            representation of the jobs instead.
         """
         job_id_lst = self.job_table(recursive=recursive, **kwargs)["id"]
         if progress:
