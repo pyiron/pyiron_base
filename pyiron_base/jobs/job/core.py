@@ -925,7 +925,7 @@ class JobCore(HasGroups):
 
         for container_path, data_path in successive_path_splits(name_lst):
             try:
-                group = self._hdf5[item]
+                group = self._hdf5[container_path]
                 if (
                     isinstance(group, ProjectHDFio)
                     and "NAME" in group
