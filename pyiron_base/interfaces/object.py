@@ -38,6 +38,7 @@ class HasStorage(HasHDF, ABC):
         Args:
             group_name (str): default name of the HDF group where the whole object should be written to.
         """
+        super().__init__(*args, **kwargs)
         self._storage = DataContainer(table_name="storage")
         self._group_name = group_name
 
