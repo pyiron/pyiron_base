@@ -2,12 +2,9 @@
 # Copyright (c) Max-Planck-Institut für Eisenforschung GmbH - Computational Materials Design (CM) Department
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
-from os import remove
-
 from traitlets import (
     Bool,
     default,
-    HasTraits,
     Instance,
     Int,
     List,
@@ -20,7 +17,7 @@ from traitlets import (
 
 from pyiron_base._tests import TestWithProject
 from pyiron_base.interfaces.has_hdf import HasHDF
-from pyiron_base.interfaces.input import Input
+from pyiron_base.storage.input import Input
 
 
 class Omelette(Input):
