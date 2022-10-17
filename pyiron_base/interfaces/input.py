@@ -6,6 +6,8 @@
 A parent class for managing input to pyiron jobs.
 """
 
+from __future__ import annotations
+
 from abc import ABC, ABCMeta
 from typing import Optional, TYPE_CHECKING
 
@@ -63,26 +65,22 @@ class Input(HasTraits, HasStorage, ABC, metaclass=ABCTraitsMeta):
         self.storage.locked = False
 
     @property
-    def locked(self):
+    def locked(self) -> bool:
         return self.storage.locked
 
-    def to_hdf(
-            self,
-            hdf: ProjectHDFio,
-            group_name: Optional[str] = None
-    ):
+    @locked.setter
+    def locked(self, lock_status: bool) -> None:
+        self.storage.locked = lock_status
+
+    def _to_hdf(self, hdf: ProjectHDFio):
         for k in self.traits().keys():
             setattr(self.storage, k, getattr(self, k))
-        super().to_hdf(hdf, group_name=group_name)
+        super()._to_hdf(hdf)
 
-    def from_hdf(
-            self,
-            hdf: ProjectHDFio,
-            group_name: Optional[str] = None
-    ):
+    def _from_hdf(self, hdf: ProjectHDFio, version: Optional[str] = None):
+        super()._from_hdf(hdf, version=version)
         for k, v in self.storage.items():
             setattr(self, k, v)
-        super().from_hdf(hdf, group_name=group_name)
 
     def lock(self):
         self.storage.locked = True
@@ -90,10 +88,10 @@ class Input(HasTraits, HasStorage, ABC, metaclass=ABCTraitsMeta):
     def unlock(self):
         self.storage.locked = False
 
-    def __setattr__(self, key, value):
-        if self.locked and key in self.traits().keys():
-            raise RuntimeError(
-                f"{self.__class__.__name__} is locked, so the trait {key} cannot be updated to {value}. Call "
-                f"`.unlock()` first if you're sure you know what you're doing."
-            )
-        super().__setattr__(key, value)
+    # def __setattr__(self, key, value):
+    #     if self.locked and key in self.traits().keys():
+    #         raise RuntimeError(
+    #             f"{self.__class__.__name__} is locked, so the trait {key} cannot be updated to {value}. Call "
+    #             f"`.unlock()` first if you're sure you know what you're doing."
+    #         )
+    #     super().__setattr__(key, value)
