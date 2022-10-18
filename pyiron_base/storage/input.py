@@ -37,7 +37,7 @@ class ABCTraitsMeta(MetaHasTraits, ABCMeta):
     pass
 
 
-class Input(HasTraits, HasStorage, ABC, metaclass=ABCTraitsMeta):
+class HasStoredTraits(HasTraits, HasStorage, ABC, metaclass=ABCTraitsMeta):
     """
     A base class for input to pyiron jobs, combining pyiron's `HasStorage` and `traitlets.HasTraits` for ease of access
     and validation/callbacks.
@@ -75,10 +75,10 @@ class Input(HasTraits, HasStorage, ABC, metaclass=ABCTraitsMeta):
         ... )
         >>>
         >>> from pyiron_base.interfaces.has_hdf import HasHDF
-        >>> from pyiron_base.storage.input import Input
+        >>> from pyiron_base.storage.input import HasStoredTraits
         >>>
         >>>
-        >>> class Omelette(Input):
+        >>> class Omelette(HasStoredTraits):
         ...     '''
         ...     A toy model for cooking an omelette with traitlets.
         ...     '''
@@ -170,7 +170,7 @@ class Input(HasTraits, HasStorage, ABC, metaclass=ABCTraitsMeta):
         ...         return value
         >>>
         >>>
-        >>> class HasDrink(Input):
+        >>> class HasDrink(HasStoredTraits):
         ...     '''
         ...     We can use our special trait type in `HasTraits` classes, but a lot of the time it will be overkill thanks
         ...     to the `Instance` trait type.
@@ -264,7 +264,7 @@ class Input(HasTraits, HasStorage, ABC, metaclass=ABCTraitsMeta):
         """
         self = args[0]
         self._read_only = False
-        super(Input, self).setup_instance(*args, **kwargs)
+        super(HasStoredTraits, self).setup_instance(*args, **kwargs)
 
     @property
     def read_only(self) -> bool:
@@ -304,7 +304,7 @@ class Input(HasTraits, HasStorage, ABC, metaclass=ABCTraitsMeta):
 
     def __setattr__(self, key, value):
         if key == '_read_only':
-            super(Input, self).__setattr__(key, value)
+            super(HasStoredTraits, self).__setattr__(key, value)
         elif self.read_only and key in self.traits().keys():
             raise RuntimeError(
                 f"{self.__class__.__name__} is locked, so the trait {key} cannot be updated to {value}. Call "

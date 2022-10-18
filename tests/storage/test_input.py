@@ -17,10 +17,10 @@ from traitlets import (
 
 from pyiron_base._tests import TestWithProject
 from pyiron_base.interfaces.has_hdf import HasHDF
-from pyiron_base.storage.input import Input
+from pyiron_base.storage.input import HasStoredTraits
 
 
-class Omelette(Input):
+class Omelette(HasStoredTraits):
     """
     A toy model for cooking an omelette with traitlets.
     """
@@ -112,7 +112,7 @@ class CaffeinatedTrait(TraitType):
         return value
 
 
-class HasDrink(Input):
+class HasDrink(HasStoredTraits):
     """
     We can use our special trait type in `HasTraits` classes, but a lot of the time it will be overkill thanks
     to the `Instance` trait type.
