@@ -17,7 +17,7 @@ from traitlets import (
 
 from pyiron_base._tests import TestWithProject
 from pyiron_base.interfaces.has_hdf import HasHDF
-from pyiron_base.storage.input import HasStoredTraits
+from pyiron_base.storage.has_stored_traits import HasStoredTraits
 
 
 class Omelette(HasStoredTraits):
