@@ -92,6 +92,9 @@ class Beverage(HasHDF):
 class CaffeinatedTrait(TraitType):
     """
     We can even make our own trait types.
+
+    In this case, we're making a counter-example -- custom traits with mutable defaults are dangerous! If more than one
+    object uses this trait, their default is the *same instance* of the mutable default.
     """
     default_value = Beverage('coffee')
 
@@ -116,7 +119,14 @@ class HasDrink(Input):
     In this toy example, our new trait type is just a little more restrictive than `Instance`.
     """
     drink1 = CaffeinatedTrait()
-    drink2 = Instance(klass=Beverage, default_value=Beverage('orange juice'))
+    drink2 = Instance(klass=Beverage)
+
+    @default('drink2')
+    def _default_drink2(self):
+        """
+        Similar to the danger with a custom `TraitType`, we can't just use
+        """
+        return Beverage('orange juice')
 
 
 class ComposedBreakfast(Omelette, HasDrink):
@@ -131,19 +141,30 @@ class ComposedBreakfast(Omelette, HasDrink):
 class NestedBreakfast(Omelette):
     """
     We can also nest input classes together.
+
+    Again, since our trait is an instance of something mutable, we want to use the `@default` decorator instead of the
+    `default_value` kwarg.
     """
-    drinks = Instance(klass=HasDrink, default_value=HasDrink())
+    drinks = Instance(klass=HasDrink)
+
+    @default('drinks')
+    def _drinks_default(self):
+        return HasDrink()
 
 
 class TestInput(TestWithProject):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        cls.hdf = cls.project.create_hdf(path=cls.project.path, job_name='h5_storage')
 
     def setUp(self) -> None:
         super().setUp()
+        self.hdf = self.project.create_hdf(path=self.project.path, job_name='h5_storage')
         self.omelette = Omelette()
+
+    def tearDown(self) -> None:
+        super().tearDown()
+        self.hdf.remove_file()
 
     def test_instantiation(self):
         with self.subTest("Defaults can be assigned by keyword or decorator"):
@@ -214,19 +235,47 @@ class TestInput(TestWithProject):
             loaded_omelette.from_hdf(self.hdf, group_name='my_group')
             self.assertEqual(self.omelette.n_eggs, loaded_omelette.n_eggs)
 
-        with self.subTest("Test composition serialization"):
-            breakfast = ComposedBreakfast(ingredients=['ham'], drink2=Beverage('tea'))
-            breakfast.to_hdf(self.hdf)
-            loaded_breakfast = ComposedBreakfast()
-            loaded_breakfast.from_hdf(self.hdf)
-            self.assertEqual(breakfast.ingredients, loaded_breakfast.ingredients)
-            self.assertEqual(breakfast.drink2.type_, loaded_breakfast.drink2.type_)
+    def test_composed_serialization(self):
+        breakfast = ComposedBreakfast(ingredients=['ham'], drink2=Beverage('tea'))
+        breakfast.to_hdf(self.hdf)
+        loaded_breakfast = ComposedBreakfast()
+        loaded_breakfast.from_hdf(self.hdf)
+        self.assertEqual(breakfast.ingredients, loaded_breakfast.ingredients)
+        self.assertEqual(breakfast.drink2.type_, loaded_breakfast.drink2.type_)
 
-        with self.subTest("Test nested serialization"):
-            breakfast = NestedBreakfast(ingredients=['ham'])
-            breakfast.drinks.drink2 = Beverage('tea')
-            breakfast.to_hdf(self.hdf)
-            loaded_breakfast = NestedBreakfast()
-            loaded_breakfast.from_hdf(self.hdf)
-            self.assertEqual(breakfast.ingredients, loaded_breakfast.ingredients)
-            self.assertEqual(breakfast.drinks.drink2.type_, loaded_breakfast.drinks.drink2.type_)
+    def test_nested_serialization(self):
+        breakfast = NestedBreakfast(ingredients=['ham'])
+        breakfast.drinks.drink2 = Beverage('tea')
+        breakfast.to_hdf(self.hdf)
+        loaded_breakfast = NestedBreakfast()
+        loaded_breakfast.from_hdf(self.hdf)
+        self.assertEqual(breakfast.ingredients, loaded_breakfast.ingredients)
+        self.assertEqual(breakfast.drinks.drink2.type_, loaded_breakfast.drinks.drink2.type_)
+
+    def test_locking(self):
+        nb = NestedBreakfast()
+        nb.drinks.drink2 = Beverage('tea')
+        nb.lock()
+        with self.assertRaises(RuntimeError):
+            # Test lock
+            nb.n_eggs = 12
+        with self.assertRaises(RuntimeError):
+            # Test recursion of lock
+            nb.drinks.drink2 = Beverage('orange juice')
+        nb.to_hdf(self.hdf)
+
+        loaded_nb = NestedBreakfast()
+        loaded_nb.from_hdf(self.hdf)
+        # Make sure read_only is getting (de)serialized OK
+        with self.assertRaises(RuntimeError):
+            # Test lock
+            loaded_nb.n_eggs = 12
+        with self.assertRaises(RuntimeError):
+            # Test recursion of lock
+            loaded_nb.drinks.drink2 = Beverage('coffee')
+
+        loaded_nb.unlock()
+        # Test unlock
+        loaded_nb.n_eggs = 12
+        # Test recursion of unlock
+        loaded_nb.drinks.drink2 = Beverage('coffee')  # It's a two-cup day

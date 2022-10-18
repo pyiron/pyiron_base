@@ -43,8 +43,9 @@ class Input(HasTraits, HasStorage, ABC, metaclass=ABCTraitsMeta):
     and validation/callbacks.
 
     Attributes:
-        locked (bool): Whether the traits are allowed to be updated, e.g. after running a job you may want
-            `job.input.lock()` to prevent the input from being changed post-facto. (Default is False.)
+        read_only (bool): Whether the traits (recursively in case and traits are also of this class) are allowed to be
+            updated or are read-only. This attribute is itself read-only, but can be updated with the `lock()` and
+            `unlock()` methods. (Default is False, allow both reading and writing of traits.)
 
     TODO: In-depth docstring with examples.
 
@@ -54,44 +55,60 @@ class Input(HasTraits, HasStorage, ABC, metaclass=ABCTraitsMeta):
         set, at the trait values (if any are set during instantiation) get set.
     """
 
-    def __init__(self, *args, group_name='input', **kwargs):
+    def setup_instance(*args, **kwargs):
         """
-        Make a new input container.
+        This is called **before** self.__init__ is called.
 
-        Args:
-            group_name:
+        Overrides `HasTraits.setup_instance`, which gets called in `HasTraits.__new__` and initializes instances of the
+        traits on self. Since we override `__setattr__` to depend on the attribute `_read_only`, we need to make sure
+        this is the very first attribute that gets set!
         """
-        super().__init__(*args, group_name=group_name, **kwargs)
-        self.storage.locked = False
+        self = args[0]
+        self._read_only = False
+        super(Input, self).setup_instance(*args, **kwargs)
 
     @property
-    def locked(self) -> bool:
-        return self.storage.locked
-
-    @locked.setter
-    def locked(self, lock_status: bool) -> None:
-        self.storage.locked = lock_status
+    def read_only(self) -> bool:
+        return self._read_only
 
     def _to_hdf(self, hdf: ProjectHDFio):
+        self.storage.is_read_only = self._read_only  # read_only and _read_only are already used on DataContainer
         for k in self.traits().keys():
             setattr(self.storage, k, getattr(self, k))
         super()._to_hdf(hdf)
 
     def _from_hdf(self, hdf: ProjectHDFio, version: Optional[str] = None):
         super()._from_hdf(hdf, version=version)
-        for k, v in self.storage.items():
-            setattr(self, k, v)
+        if len(self.storage) > 0:
+            read_only = self.storage.pop('is_read_only')
+            for k, v in self.storage.items():
+                setattr(self, k, v)
+            self._read_only = read_only
 
     def lock(self):
-        self.storage.locked = True
+        """Recursively make all traits read-only."""
+        self._read_only = True
+        for sub in self.trait_values().values():
+            try:
+                sub.lock()
+            except AttributeError:
+                pass
 
     def unlock(self):
-        self.storage.locked = False
+        """Recursively make all traits both readable and writeable"""
+        self._read_only = False
+        for sub in self.trait_values().values():
+            try:
+                sub.unlock()
+            except AttributeError:
+                pass
 
-    # def __setattr__(self, key, value):
-    #     if self.locked and key in self.traits().keys():
-    #         raise RuntimeError(
-    #             f"{self.__class__.__name__} is locked, so the trait {key} cannot be updated to {value}. Call "
-    #             f"`.unlock()` first if you're sure you know what you're doing."
-    #         )
-    #     super().__setattr__(key, value)
+    def __setattr__(self, key, value):
+        if key == '_read_only':
+            super(Input, self).__setattr__(key, value)
+        elif self.read_only and key in self.traits().keys():
+            raise RuntimeError(
+                f"{self.__class__.__name__} is locked, so the trait {key} cannot be updated to {value}. Call "
+                f"`.unlock()` first if you're sure you know what you're doing."
+            )
+        super().__setattr__(key, value)
