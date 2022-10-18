@@ -214,11 +214,19 @@ class TestInput(TestWithProject):
             another_omelette.ingredients.append('zucchini')
             self.assertEqual(True, another_omelette.acceptable)
 
-    def test_architectures(self):
-        self.assertEqual(
-            ComposedBreakfast().drink1,
-            NestedBreakfast().drinks.drink1
-        )
+    def test_architectures_and_mutability(self):
+        cb = ComposedBreakfast()
+        nb = NestedBreakfast()
+
+        with self.subTest("Test the counter example, where we see that mutable defaults are dangerous"):
+            self.assertEqual(cb.drink1, nb.drinks.drink1)  # The same instance!
+            cb.drink1.type_ = 'tea'
+            self.assertEqual('tea', nb.drinks.drink1.type_)  # So of course we can mutate that instance
+            nb.drinks.drink1 = Beverage('coffee')
+            self.assertNotEqual(cb.drink1.type_, nb.drinks.drink2.type_)  # But we are OK if we modify the entire trait
+
+        with self.subTest("When we use the `@default` decorator, we return safely return a new instance each time"):
+            self.assertNotEqual(cb.drink2, nb.drinks.drink2)
 
     def test_serialization(self):
         with self.subTest("Save and load to default location"):
