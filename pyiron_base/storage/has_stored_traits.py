@@ -91,8 +91,8 @@ class HasStoredTraits(HasTraits, HasStorage, ABC, metaclass=ABCTraitsMeta):
         ...     @default('acceptable')
         ...     def wait_for_a_complaint(self):
         ...         '''
-        ...         Default values can be assigned using the keyword, or more complex values can be constructed in a
-        ...         separate function and assigned using the `@default` decorator.
+        ...         Default values can be assigned using the keyword, for mutable defaults always use a separate
+        ...         function decorated with the `@default` decorator.
         ...         '''
         ...         return True
         ... 
@@ -126,11 +126,11 @@ class HasStoredTraits(HasTraits, HasStorage, ABC, metaclass=ABCTraitsMeta):
         >>> class Beverage(HasHDF):
         ...     '''
         ...     We can store custom objects in our input classes, but since they will ultimately be passed to a
-        ...     `pyiron_base.DataContainer` for serialization, they either need to be of a type that `DataContainer` can already
-        ...     handle, or they'll need to have `to_hdf` and `from_hdf` methods, e.g. by inheriting from `pyiron_base.HasHDF` or
-        ...     `pyiron_base.HasStorage`.
+        ...     `pyiron_base.DataContainer` for serialization, they either need to be of a type that `DataContainer`
+        ...     can already handle, or they'll need to have `to_hdf` and `from_hdf` methods, e.g. by inheriting from
+        ...     `pyiron_base.HasHDF` or `pyiron_base.HasStorage`.
         ...     '''
-        ...     _types = ['coffee', 'tea', 'orange juice']
+        ...     _types = ['coffee', 'tea', 'orange juice', 'water']
         ... 
         ...     def __init__(self, type_='coffee'):
         ...         if type_ not in self._types:
@@ -151,11 +151,17 @@ class HasStoredTraits(HasTraits, HasStorage, ABC, metaclass=ABCTraitsMeta):
         ...     '''
         ...     We can even make our own trait types.
         ... 
-        ...     In this case, we're making a counter-example -- custom traits with mutable defaults are dangerous! If more than one
-        ...     object uses this trait, their default is the *same instance* of the mutable default.
+        ...     In this case, our default value is mutable, so we need to be careful! Normally we would just assign the
+        ...     default to `default_value` (shown bug commented out). For mutable types we instead need to define a
+        ...     function with the name `make_dynamic_default`.
+        ...
+        ...     (This is not well documented in readthedocs for traitlets, but is easy to see in the source code for
+        ...     `TraitType`)
         ...     '''
-        ...     default_value = Beverage('coffee')
-        ... 
+        ...     # default_value = Beverage('coffee')  # DON'T DO THIS WITH MUTABLE DEFAULTS
+        ...     def make_dynamic_default(self):  # Do this instead
+        ...         return Beverage('coffee')
+        ...
         ...     def validate(self, obj, value):
         ...         '''
         ...         Let's just make sure it's a caffeinated beverage.
@@ -166,15 +172,15 @@ class HasStoredTraits(HasTraits, HasStorage, ABC, metaclass=ABCTraitsMeta):
         ...         if not isinstance(value, Beverage):
         ...             self.error(obj, value)
         ...         elif value.type_ not in ['coffee', 'tea']:
-        ...             raise ValueError(f"Expected a caffeinated beverage, but got {value.type_}")
+        ...             raise TraitError(f"Expected a caffeinated beverage, but got {value.type_}")
         ...         return value
         >>>
         >>>
         >>> class HasDrink(HasStoredTraits):
         ...     '''
-        ...     We can use our special trait type in `HasTraits` classes, but a lot of the time it will be overkill thanks
-        ...     to the `Instance` trait type.
-        ...     In this toy example, our new trait type is just a little more restrictive than `Instance`.
+        ...     We can use our special trait type in `HasTraits` classes, but a lot of the time it will be overkill
+        ...     thanks to the `Instance` trait type. In this case we can accomplish the same functionality with
+        ...     `@default` and `@validate` decorators.
         ...     '''
         ...     drink1 = CaffeinatedTrait()
         ...     drink2 = Instance(klass=Beverage)
@@ -185,6 +191,14 @@ class HasStoredTraits(HasTraits, HasStorage, ABC, metaclass=ABCTraitsMeta):
         ...         Similar to the danger with a custom `TraitType`, we can't just use
         ...         '''
         ...         return Beverage('orange juice')
+        ...
+        ...     @validate('drink2')
+        ...     def _non_caffeinated(self, proposal):
+        ...         if proposal['value'].type_ not in ['orange juice', 'water']:
+        ...         raise TraitError(
+        ...             f"Expected a beverage of type 'orange juice' or 'water', but got {proposal['value'].type_}"
+        ...         )
+        ...         return proposal['value']
         >>>
         >>>
         >>> class ComposedBreakfast(Omelette, HasDrink):
@@ -232,24 +246,28 @@ class HasStoredTraits(HasTraits, HasStorage, ABC, metaclass=ABCTraitsMeta):
         wide?
 
         However, when we choose the nested architecture, that means we have a mutable trait, and we need to be careful
-        with those: we warned about using a mutable object as a default value, because it really does give the *same*
-        instance of the trait to different trait owners:
+        with those: we warned about using a mutable object as a default value, however, `make_dynamic_default` method,
+        we safely get separate instances for each trait owner:
         >>> cb = ComposedBreakfast()
         >>> nb = NestedBreakfast()
         >>> cb.drink1 == nb.drinks.drink1
-        True
+        False
 
-        Using the `@default` decorator made sure to give us different instances
+        Similarly, when defining our trait with the `Instance` type and using the `@default` decorator:
         >>> cb.drink2 == np.drinks.drink2
         False
 
-        And we can (recursively) change the traits to read-only (read/write) mode using the `lock()` (`unlock()`)
-        method, e.g. if the child class is being used as input for a job you may want to lock the input when the job is
-        run. Be a bit careful though, since as with observer callbacks mutable traits can still be mutated.
+        We can (recursively) change the traits to read-only (read/write) mode using the `lock()` (`unlock()`) method,
+        e.g. if the child class is being used as input for a job you may want to lock the input when the job is run.
         >>> nb.lock()
         >>> nb.drinks.drink2 = Beverage('tea')
         RuntimeError: HasDrink is locked, so the trait drink2 cannot be updated to tea. Call `.unlock()` first if
         you're sure you know what you're doing.
+
+        Be a bit careful though, since as with observer callbacks mutable traits can still be mutated:
+        >>> nb.drinks.drink2.type_ = 'tea'
+        >>> nb.drinks.drink2
+        tea
 
         Further reading: the tests for this class use the same examples we have here, but are more in depth.
     """

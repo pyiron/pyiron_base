@@ -33,8 +33,8 @@ class Omelette(HasStoredTraits):
     @default('acceptable')
     def wait_for_a_complaint(self):
         """
-        Default values can be assigned using the keyword, or more complex values can be constructed in a
-        separate function and assigned using the `@default` decorator.
+        Default values can be assigned using the keyword, for mutable defaults always use a separate function decorated
+        with the `@default` decorator.
         """
         return True
 
@@ -72,7 +72,7 @@ class Beverage(HasHDF):
     handle, or they'll need to have `to_hdf` and `from_hdf` methods, e.g. by inheriting from `pyiron_base.HasHDF` or
     `pyiron_base.HasStorage`.
     """
-    _types = ['coffee', 'tea', 'orange juice']
+    _types = ['coffee', 'tea', 'orange juice', 'water']
 
     def __init__(self, type_='coffee'):
         if type_ not in self._types:
@@ -93,10 +93,15 @@ class CaffeinatedTrait(TraitType):
     """
     We can even make our own trait types.
 
-    In this case, we're making a counter-example -- custom traits with mutable defaults are dangerous! If more than one
-    object uses this trait, their default is the *same instance* of the mutable default.
+    In this case, our default value is mutable, so we need to be careful! Normally we would just assign the default to
+    `default_value` (shown bug commented out). For mutable types we instead need to define a function with the name
+    `make_dynamic_default`.
+
+    (This is not well documented in readthedocs for traitlets, but is easy to see in the source code for `TraitType`)
     """
-    default_value = Beverage('coffee')
+    # default_value = Beverage('coffee')  # DON'T DO THIS WITH MUTABLE DEFAULTS
+    def make_dynamic_default(self):  # Do this instead
+        return Beverage('coffee')
 
     def validate(self, obj, value):
         """
@@ -108,15 +113,15 @@ class CaffeinatedTrait(TraitType):
         if not isinstance(value, Beverage):
             self.error(obj, value)
         elif value.type_ not in ['coffee', 'tea']:
-            raise ValueError(f"Expected a caffeinated beverage, but got {value.type_}")
+            raise TraitError(f"Expected a caffeinated beverage, but got {value.type_}")
         return value
 
 
 class HasDrink(HasStoredTraits):
     """
     We can use our special trait type in `HasTraits` classes, but a lot of the time it will be overkill thanks
-    to the `Instance` trait type.
-    In this toy example, our new trait type is just a little more restrictive than `Instance`.
+    to the `Instance` trait type. In this case we can accomplish the same functionality with `@default` and
+    `@validate` decorators.
     """
     drink1 = CaffeinatedTrait()
     drink2 = Instance(klass=Beverage)
@@ -127,6 +132,14 @@ class HasDrink(HasStoredTraits):
         Similar to the danger with a custom `TraitType`, we can't just use
         """
         return Beverage('orange juice')
+
+    @validate('drink2')
+    def _non_caffeinated(self, proposal):
+        if proposal['value'].type_ not in ['orange juice', 'water']:
+            raise TraitError(
+                f"Expected a beverage of type 'orange juice' or 'water', but got {proposal['value'].type_}"
+            )
+        return proposal['value']
 
 
 class ComposedBreakfast(Omelette, HasDrink):
@@ -161,6 +174,7 @@ class TestInput(TestWithProject):
         super().setUp()
         self.hdf = self.project.create_hdf(path=self.project.path, job_name='h5_storage')
         self.omelette = Omelette()
+        self.drinks = HasDrink()
 
     def tearDown(self) -> None:
         super().tearDown()
@@ -197,6 +211,16 @@ class TestInput(TestWithProject):
             with self.assertRaises(TraitError):
                 self.omelette.n_eggs = 0
 
+        with self.subTest("Test custom trait"):
+            with self.assertRaises(TraitError):
+                self.drinks.drink1 = "not a beverage"
+            with self.assertRaises(TraitError):
+                self.drinks.drink2 = "not a beverage"
+            with self.assertRaises(TraitError):
+                self.drinks.drink1 = Beverage('water')  # Not caffeinated
+            with self.assertRaises(TraitError):
+                self.drinks.drink2 = Beverage('coffee')  # Caffeinated
+
     def test_observe(self):
         with self.subTest("Observe catches modifications to the trait value"):
             self.assertEqual(True, self.omelette.acceptable)
@@ -218,14 +242,16 @@ class TestInput(TestWithProject):
         cb = ComposedBreakfast()
         nb = NestedBreakfast()
 
-        with self.subTest("Test the counter example, where we see that mutable defaults are dangerous"):
-            self.assertEqual(cb.drink1, nb.drinks.drink1)  # The same instance!
+        with self.subTest("Make sure our mutable defaults for the custom trait are separate instances"):
+            self.assertNotEqual(cb.drink1, nb.drinks.drink1)
             cb.drink1.type_ = 'tea'
-            self.assertEqual('tea', nb.drinks.drink1.type_)  # So of course we can mutate that instance
-            nb.drinks.drink1 = Beverage('coffee')
-            self.assertNotEqual(cb.drink1.type_, nb.drinks.drink2.type_)  # But we are OK if we modify the entire trait
+            self.assertNotEqual(
+                nb.drinks.drink1.type_,
+                cb.drink1.type_,
+                msg="Mutating separate instances should work fine"
+            )
 
-        with self.subTest("When we use the `@default` decorator, we return safely return a new instance each time"):
+        with self.subTest("Using `Instance` and the `@default` decorator also works"):
             self.assertNotEqual(cb.drink2, nb.drinks.drink2)
 
     def test_serialization(self):
@@ -244,7 +270,7 @@ class TestInput(TestWithProject):
             self.assertEqual(self.omelette.n_eggs, loaded_omelette.n_eggs)
 
     def test_composed_serialization(self):
-        breakfast = ComposedBreakfast(ingredients=['ham'], drink2=Beverage('tea'))
+        breakfast = ComposedBreakfast(ingredients=['ham'], drink2=Beverage('water'))
         breakfast.to_hdf(self.hdf)
         loaded_breakfast = ComposedBreakfast()
         loaded_breakfast.from_hdf(self.hdf)
@@ -253,7 +279,7 @@ class TestInput(TestWithProject):
 
     def test_nested_serialization(self):
         breakfast = NestedBreakfast(ingredients=['ham'])
-        breakfast.drinks.drink2 = Beverage('tea')
+        breakfast.drinks.drink2 = Beverage('water')
         breakfast.to_hdf(self.hdf)
         loaded_breakfast = NestedBreakfast()
         loaded_breakfast.from_hdf(self.hdf)
@@ -262,7 +288,7 @@ class TestInput(TestWithProject):
 
     def test_locking(self):
         nb = NestedBreakfast()
-        nb.drinks.drink2 = Beverage('tea')
+        nb.drinks.drink2 = Beverage('water')
         nb.lock()
         with self.assertRaises(RuntimeError):
             # Test lock
@@ -280,10 +306,14 @@ class TestInput(TestWithProject):
             loaded_nb.n_eggs = 12
         with self.assertRaises(RuntimeError):
             # Test recursion of lock
-            loaded_nb.drinks.drink2 = Beverage('coffee')
+            loaded_nb.drinks.drink2 = Beverage('orange juice')
 
         loaded_nb.unlock()
         # Test unlock
         loaded_nb.n_eggs = 12
         # Test recursion of unlock
-        loaded_nb.drinks.drink2 = Beverage('coffee')  # It's a two-cup day
+        loaded_nb.drinks.drink1 = Beverage('tea')
+
+        with self.subTest("We can't lock mutability though"):
+            loaded_nb.lock()
+            loaded_nb.drinks.drink1.type_ = 'coffee'
