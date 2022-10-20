@@ -5,6 +5,7 @@
 import os
 from pyiron_base.project.generic import Project
 from pyiron_base.jobs.master.interactivewrapper import InteractiveWrapper
+import unittest
 from pyiron_base._tests import PyironTestCase
 
 class TestInteractiveWrapper(PyironTestCase):
@@ -21,4 +22,12 @@ class TestInteractiveWrapper(PyironTestCase):
         j = self.project.create.job.ScriptJob("test_parent")
         j.server.run_mode = 'interactive'
         i = j.create_job(InteractiveWrapper, "test_child")
-        self.assertEqual(i.ref_job, j, "Reference job of interactive wrapper to set after creation.")
+        self.assertEqual(
+            i.ref_job.job_name,
+            'test_parent',
+            "Reference job of interactive wrapper to set after creation."
+        )
+
+
+if __name__ == "__main__":
+    unittest.main()
