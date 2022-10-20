@@ -40,8 +40,7 @@ class InteractiveWrapper(GenericMaster):
             return self._ref_job
         try:
             if isinstance(self[0], GenericJob):
-                # Emergency solution to make sure that lazy=True is loaded for DataConatiner
-                self._ref_job = self[0].copy()
+                self._ref_job = self[0]
                 return self._ref_job
             else:
                 return None
