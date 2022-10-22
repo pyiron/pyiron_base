@@ -432,23 +432,33 @@ class TestGenericJob(TestWithFilledProject):
         self.assertEqual(wd_files[0], f"{job.name}.tar.bz2", "Inconsistent name for the zipped file")
 
     def test_restart(self):
-        job = self.project.load(self.project.get_job_ids()[0])
-        job_restart = job.restart()
-        job_restart.run()
-        wd_files = job_restart.list_files()
-        self.assertEqual(len(wd_files), 1, "Only one zipped file should be present in the working directory")
-        self.assertEqual(wd_files[0], f"{job_restart.name}.tar.bz2", "Inconsistent name for the zipped file")
-        job_restart.decompress()
-        wd_files = job_restart.list_files()
-        self.assertEqual(
-            len(wd_files),
-            2,
-            "Only one input and the WARNING_pyiron_modified_content file should "
-            "be present in the working directory",
-        )
-        self.assertEqual(
-            wd_files[0], "input.yml", "Inconsistent name for the zipped file"
-        )
+        wd_warn_key = "write_work_dir_warnings"
+        previous_wd_warn_setting = self.project.state.settings.configuration[
+            wd_warn_key
+        ]
+        try:
+            self.project.state.settings.configuration[wd_warn_key] = True
+            job = self.project.load(self.project.get_job_ids()[0])
+            job_restart = job.restart()
+            job_restart.run()
+            wd_files = job_restart.list_files()
+            self.assertEqual(len(wd_files), 1, "Only one zipped file should be present in the working directory")
+            self.assertEqual(wd_files[0], f"{job_restart.name}.tar.bz2", "Inconsistent name for the zipped file")
+            job_restart.decompress()
+            wd_files = job_restart.list_files()
+            self.assertEqual(
+                len(wd_files),
+                2,
+                "Only one input and the WARNING_pyiron_modified_content file should "
+                "be present in the working directory",
+            )
+            self.assertCountEqual(
+                wd_files, ["input.yml", "WARNING_pyiron_modified_content"]
+            )
+        finally:
+            self.project.state.settings.configuration[
+                wd_warn_key
+            ] = previous_wd_warn_setting
 
     def test_return_codes(self):
         """Jobs exiting with return codes other than job.executable.allowed_codes should be marked as 'aborted'"""
