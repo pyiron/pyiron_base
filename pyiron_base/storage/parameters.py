@@ -622,6 +622,8 @@ class GenericParameters:
             key (str): key to be set of modified
             value (float/int/str): value to be set
         """
+        if isinstance(value, np.ndarray):
+            value = value.tolist()
         if isinstance(key, int):
             if self.read_only and self._dataset["Value"][key] != value:
                 self._read_only_error()
