@@ -87,7 +87,8 @@ class TestGenericParameters(PyironTestCase):
     def test_ndarray(self):
         input_np = GenericParameters(table_name="ndarray")
         input_np['my_array'] = np.arange(5)
-        self.assertIsInstance(input_np['my_array'], list)
+        input_np['my_array'] = np.arange(5)
+        self.assertIsInstance(input_np['my_array'], np.ndarray)
 
     def test_remove_keys(self):
         self.assertFalse(self.generic_parameters_str.get("read_restart"))

@@ -425,7 +425,7 @@ class GenericParameters:
                 self._dataset["Comment"][i_key] = comment
             if self.read_only and str(self._dataset["Value"][i_key]) != str(val):
                 self._read_only_error()
-            self._dataset["Value"][i_key] = str(val)
+            self._dataset["Value"][i_key] = val
 
     def set(self, separator=None, **set_dict):
         """
@@ -622,8 +622,6 @@ class GenericParameters:
             key (str): key to be set of modified
             value (float/int/str): value to be set
         """
-        if isinstance(value, np.ndarray):
-            value = value.tolist()
         if isinstance(key, int):
             if self.read_only and self._dataset["Value"][key] != value:
                 self._read_only_error()
