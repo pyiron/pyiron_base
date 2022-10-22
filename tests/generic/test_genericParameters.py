@@ -10,6 +10,7 @@ from pyiron_base.storage.hdfio import ProjectHDFio
 from pyiron_base.project.generic import Project
 from pyiron_base._tests import PyironTestCase
 import unittest
+import numpy as np
 
 
 class TestGenericParameters(PyironTestCase):
@@ -82,6 +83,11 @@ class TestGenericParameters(PyironTestCase):
         self.assertEqual(gp_reload.get("dict"), {"a": 1, "b": 2})
         self.assertEqual(gp_reload.get("list"), [1, "s"])
         os.remove(file_name)
+
+    def test_ndarray(self):
+        input_np = GenericParameters(table_name="ndarray")
+        input_np['my_array'] = np.arange(5)
+        self.assertIsInstance(input_np['my_array'], list)
 
     def test_remove_keys(self):
         self.assertFalse(self.generic_parameters_str.get("read_restart"))
