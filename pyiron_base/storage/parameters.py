@@ -366,12 +366,10 @@ class GenericParameters:
         if i_line > -1:
             val = self._dataset["Value"][i_line]
             try:
-                val_v = literal_eval(val)
+                val = literal_eval(val)
             except (ValueError, SyntaxError):
-                val_v = val
-            if callable(val_v):
-                val_v = val
-            return val_v
+                pass
+            return val
         elif default_value is not None:
             return default_value
         else:
