@@ -28,37 +28,6 @@ class InteractiveWrapper(GenericMaster):
         self._ref_job = None
         self.input = GenericParameters("parameters")
 
-    @property
-    def ref_job(self):
-        """
-        Get the reference job template from which all jobs within the ParallelMaster are generated.
-
-        Returns:
-            GenericJob: reference job
-        """
-        if self._ref_job is not None:
-            return self._ref_job
-        try:
-            if isinstance(self[0], GenericJob):
-                self._ref_job = self[0]
-                return self._ref_job
-            else:
-                return None
-        except IndexError:
-            return None
-
-    @ref_job.setter
-    def ref_job(self, ref_job):
-        """
-        Set the reference job template from which all jobs within the ParallelMaster are generated.
-
-        Args:
-            ref_job (GenericJob): reference job
-        """
-        if not ref_job.server.run_mode.interactive:
-            warnings.warn("Run mode of the reference job not set to interactive")
-        self.append(ref_job)
-
     def set_input_to_read_only(self):
         self.input.read_only = True
 
