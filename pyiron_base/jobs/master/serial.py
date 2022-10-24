@@ -137,7 +137,7 @@ class SerialMasterBase(GenericMaster):
 
         self._output = GenericOutput()
         self._max_iterations = 100
-        self._start_job = None
+        self._ref_job = None
         self._convergence_goal = None
         self._convergence_goal_qwargs = {}
         self._convergence_goal_str = None
@@ -150,13 +150,7 @@ class SerialMasterBase(GenericMaster):
         Returns:
             GenericJob: start job
         """
-        if self._start_job is not None:
-            return self._start_job
-        elif len(self) > 0:
-            self._start_job = self[-1]
-            return self._start_job
-        else:
-            return None
+        return self._ref_job
 
     @start_job.setter
     def start_job(self, job):
@@ -166,15 +160,7 @@ class SerialMasterBase(GenericMaster):
         Args:
             job (GenericJob): start job
         """
-        self.append(job)
-
-    @property
-    def ref_job(self):
-        return self.start_job
-
-    @ref_job.setter
-    def ref_job(self, job):
-        self.append(job)
+        self.ref_job = job
 
     @property
     def input(self):
@@ -184,8 +170,8 @@ class SerialMasterBase(GenericMaster):
         Returns:
             GenericParameters: input of the start job
         """
-        if self.start_job is not None:
-            return self._start_job.input
+        if self.ref_job is not None:
+            return self._ref_job.input
         else:
             return None
 
@@ -197,8 +183,8 @@ class SerialMasterBase(GenericMaster):
         Args:
             value (GenericParameters): input of the start job
         """
-        if self.start_job is not None:
-            self._start_job.input = value
+        if self.ref_job is not None:
+            self._ref_job.input = value
         else:
             raise ValueError(
                 "Input can only be set after a start job has been assinged."
@@ -284,7 +270,7 @@ class SerialMasterBase(GenericMaster):
             GenericJob: New GenericJob object pointing to the same job
         """
         new_job = super(SerialMasterBase, self).copy()
-        new_job.start_job = self.start_job
+        new_job.ref_job = self.ref_job
         return new_job
 
     def from_hdf(self, hdf=None, group_name=None):

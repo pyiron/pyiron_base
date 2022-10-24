@@ -16,7 +16,6 @@ from pyiron_base.jobs.job.generic import GenericJob
 from pyiron_base.jobs.master.generic import GenericMaster
 from pyiron_base.jobs.master.submissionstatus import SubmissionStatus
 from pyiron_base.storage.parameters import GenericParameters
-from pyiron_base.jobs.job.extension.jobstatus import JobStatus
 from pyiron_base.jobs.job.jobtype import JobType
 from pyiron_base.state import state
 from pyiron_base.jobs.job.wrapper import job_wrapper_function
@@ -151,38 +150,6 @@ class ParallelMaster(GenericMaster):
         self._job_generator = None
         self.submission_status = SubmissionStatus(db=project.db, job_id=self.job_id)
         self.refresh_submission_status()
-
-    @property
-    def ref_job(self):
-        """
-        Get the reference job template from which all jobs within the ParallelMaster are generated.
-
-        Returns:
-            GenericJob: reference job
-        """
-        if self._ref_job:
-            return self._ref_job
-        try:
-            ref_job = self[0]
-            if isinstance(ref_job, GenericJob):
-                self._ref_job = ref_job
-                self._ref_job._job_id = None
-                self._ref_job._status = JobStatus(db=self.project.db)
-                return self._ref_job
-            else:
-                return None
-        except IndexError:
-            return None
-
-    @ref_job.setter
-    def ref_job(self, ref_job):
-        """
-        Set the reference job template from which all jobs within the ParallelMaster are generated.
-
-        Args:
-            ref_job (GenericJob): reference job
-        """
-        self.append(ref_job)
 
     @property
     def number_jobs_total(self):
