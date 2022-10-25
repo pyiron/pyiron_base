@@ -902,11 +902,18 @@ class Project(ProjectPath, HasGroups):
         Returns:
             pandas.DataFrame: Output from the queuing system - optimized for the Sun grid engine
         """
-        return queue_table(
-            job_ids=self.get_job_ids(recursive=recursive),
-            project_only=project_only,
-            full_table=full_table,
-        )
+        if not isinstance(self.db, FileTable):
+            return queue_table(
+                job_ids=self.get_job_ids(recursive=recursive),
+                project_only=project_only,
+                full_table=full_table,
+            )
+        else:
+            return queue_table(
+                project_only=project_only,
+                full_table=full_table,
+                working_directory_lst=[self.path]
+            )
 
     def queue_table_global(self, full_table=False):
         """
@@ -920,15 +927,40 @@ class Project(ProjectPath, HasGroups):
         """
         df = queue_table(job_ids=[], project_only=False, full_table=full_table)
         if len(df) != 0 and self.db is not None:
-            return pandas.DataFrame(
-                [
-                    self.db.get_item_by_id(
-                        int(str(queue_ID).replace("pi_", "").replace(".sh", ""))
-                    )
-                    for queue_ID in df["jobname"]
-                    if str(queue_ID).startswith("pi_")
-                ]
-            )
+            if not isinstance(self.db, FileTable):
+                return pandas.DataFrame(
+                    [
+                        self.db.get_item_by_id(
+                            int(str(queue_ID).replace("pi_", "").replace(".sh", ""))
+                        )
+                        for queue_ID in df["jobname"]
+                        if str(queue_ID).startswith("pi_")
+                    ]
+                )
+            else:
+                def get_id_from_job_table(job_table, job_path):
+                    job_dir = "_hdf5".join(job_path.split("_hdf5")[:-1])
+                    job_name = os.path.basename(job_dir)
+                    project = os.path.dirname(job_dir) + "/"
+                    return job_table[
+                        (job_table.job == job_name) &
+                        (job_table.project == project)
+                    ].id.values[0]
+
+                job_table_df = self.job_table()
+
+                return pandas.DataFrame(
+                    [
+                        self.db.get_item_by_id(
+                            int(get_id_from_job_table(
+                                job_table=job_table_df,
+                                job_path=working_directory
+                            ))
+                        )
+                        for queue_ID, working_directory in zip(df["jobname"], df["working_directory"])
+                        if str(queue_ID).startswith("pi_")
+                    ]
+                )
         else:
             return None
 
