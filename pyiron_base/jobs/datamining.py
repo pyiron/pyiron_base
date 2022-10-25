@@ -561,6 +561,7 @@ class TableJob(GenericJob):
     >>> table.filter_function = job_filter_function
 
     """
+
     _system_function_lst = [get_job_id]
 
     def __init__(self, project, job_name):
