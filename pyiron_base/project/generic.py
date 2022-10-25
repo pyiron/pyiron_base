@@ -655,8 +655,14 @@ class Project(ProjectPath, HasGroups):
         full_table=False,
         element_lst=None,
         job_name_contains="",
+        auto_refresh_job_status=False,
         **kwargs: dict,
     ):
+        """
+        auto_refresh_job_status (bool): will automatically reload job status by calling refresh_job_status() upon calling job_table
+        """
+        if auto_refresh_job_status:
+            self.refresh_job_status()
         return self.db.job_table(
             sql_query=self.sql_query,
             user=self.user,
