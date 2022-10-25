@@ -162,34 +162,6 @@ class SerialMasterBase(GenericMaster):
         """
         self.ref_job = job
 
-    @property
-    def input(self):
-        """
-        Get the input of the start job - the first job of the series.
-
-        Returns:
-            GenericParameters: input of the start job
-        """
-        if self.ref_job is not None:
-            return self._ref_job.input
-        else:
-            return None
-
-    @input.setter
-    def input(self, value):
-        """
-        Set the input of the start job - the first job of the series.
-
-        Args:
-            value (GenericParameters): input of the start job
-        """
-        if self.ref_job is not None:
-            self._ref_job.input = value
-        else:
-            raise ValueError(
-                "Input can only be set after a start job has been assinged."
-            )
-
     def set_input_to_read_only(self):
         """
         This function enforces read-only mode for the input classes, but it has to be implement in the individual
