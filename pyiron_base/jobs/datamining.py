@@ -512,6 +512,49 @@ class PyironTable(HasGroups):
 
 
 class TableJob(GenericJob):
+    """
+
+    Since a project can have a large number of jobs, it is often necessary
+    to “filter” the data to extract useful information. PyironTable is a tool
+    that allows the user to do this efficiently.
+
+    Example:
+    ```python
+
+    # Prepare random data
+    for T in T_range:
+        lmp = pr.create.job.Lammps(('lmp', T))
+        lmp.structure = pr.create.structure.bulk('Ni', cubic=True).repeat(5)
+        lmp.calc_md(temperature=T)
+        lmp.run()
+
+    def db_filter_function(job_table):
+        return (job_table.status == "finished") & (job_table.hamilton == "Lammps")
+
+    def get_energy(job):
+        return job["output/generic/energy_pot"][-1]
+
+    def get_temperature(job):
+        return job['output/generic/temperature'][-1]
+
+    table.db_filter_function = db_filter_function
+
+    table.add["energy"] = get_energy
+    table.add["temperature"] = get_temperature
+    table.run()
+    table.get_dataframe()
+    ```
+    This returns a dataframe containing job-id, energy and temperature.
+
+    Alternatively, the filter function can be applied on the job
+    ```python
+    def job_filter_function(job):
+        return (job.status == "finished") & ("lmp" in job.job_name)
+
+    table.filter_function = job_filter_function
+    ```
+
+    """
     _system_function_lst = [get_job_id]
 
     def __init__(self, project, job_name):
