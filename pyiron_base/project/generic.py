@@ -1227,6 +1227,7 @@ class Project(ProjectPath, HasGroups):
             return queue_delete_job(job_specifier)
         else:
             raise EnvironmentError("kill_job: is not available in Viewermode!")
+            
     @staticmethod
     def create_hdf(path, job_name):
         """
