@@ -1213,13 +1213,12 @@ class Project(ProjectPath, HasGroups):
         else:
             raise EnvironmentError("copy_to: is not available in Viewermode !")
 
-    def kill_job(self, job_specifier, force_kill = False):
+    def kill_job(self, job_specifier):
         """
         Kills a running job via the queueing system
 
         Args:
             job_specifier (int, GenericJob): Provide either the job_ID or the full hamiltonian
-            force_kill (bool): Attempts to kill the job even if status is not running
         Returns:
             str: Output from the queuing system as string - optimized for the Sun grid engine
         """
