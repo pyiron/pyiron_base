@@ -52,7 +52,26 @@ def _download_resources(
             user_directory,
         )
     with tarfile.open(temp_zip_file, "r:gz") as tar:
-        tar.extractall(temp_directory)
+        def is_within_directory(directory, target):
+            
+            abs_directory = os.path.abspath(directory)
+            abs_target = os.path.abspath(target)
+        
+            prefix = os.path.commonprefix([abs_directory, abs_target])
+            
+            return prefix == abs_directory
+        
+        def safe_extract(tar, path=".", members=None, *, numeric_owner=False):
+        
+            for member in tar.getmembers():
+                member_path = os.path.join(path, member.name)
+                if not is_within_directory(path, member_path):
+                    raise Exception("Attempted Path Traversal in Tar File")
+        
+            tar.extractall(path, members, numeric_owner=numeric_owner) 
+            
+        
+        safe_extract(tar, temp_directory)
     copytree(temp_extract_folder, user_directory)
     if os.name != "nt":  #
         for root, dirs, files in os.walk(user_directory):
