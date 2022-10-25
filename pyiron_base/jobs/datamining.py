@@ -194,9 +194,10 @@ class PyironTable(HasGroups):
 
         Example:
 
-            def function(df):
-                return (df["chemicalformula"=="H2"]) & (df["hamilton"=="Vasp"])
+        >>> def job_filter_function(df):
+        >>>    return (df["chemicalformula"=="H2"]) & (df["hamilton"=="Vasp"])
 
+        >>> table.db_filter_function = job_filter_function
         """
         return self._db_filter_function
 
@@ -208,6 +209,13 @@ class PyironTable(HasGroups):
     def filter_function(self):
         """
         Function to filter each job before more expensive functions are applied
+
+        Example:
+
+        >>> def job_filter_function(job):
+        >>>     return (job.status == "finished") & ("murn" in job.job_name)
+
+        >>> table.filter_function = job_filter_function
         """
         return self._filter_function
 
@@ -519,40 +527,38 @@ class TableJob(GenericJob):
     that allows the user to do this efficiently.
 
     Example:
-    ```python
 
-    # Prepare random data
-    for T in T_range:
-        lmp = pr.create.job.Lammps(('lmp', T))
-        lmp.structure = pr.create.structure.bulk('Ni', cubic=True).repeat(5)
-        lmp.calc_md(temperature=T)
-        lmp.run()
+    >>> # Prepare random data
+    >>> for T in T_range:
+    >>>     lmp = pr.create.job.Lammps(('lmp', T))
+    >>>     lmp.structure = pr.create.structure.bulk('Ni', cubic=True).repeat(5)
+    >>>     lmp.calc_md(temperature=T)
+    >>>     lmp.run()
 
-    def db_filter_function(job_table):
-        return (job_table.status == "finished") & (job_table.hamilton == "Lammps")
+    >>> def db_filter_function(job_table):
+    >>>     return (job_table.status == "finished") & (job_table.hamilton == "Lammps")
 
-    def get_energy(job):
-        return job["output/generic/energy_pot"][-1]
+    >>> def get_energy(job):
+    >>>     return job["output/generic/energy_pot"][-1]
 
-    def get_temperature(job):
-        return job['output/generic/temperature'][-1]
+    >>> def get_temperature(job):
+    >>>     return job['output/generic/temperature'][-1]
 
-    table.db_filter_function = db_filter_function
+    >>> table.db_filter_function = db_filter_function
 
-    table.add["energy"] = get_energy
-    table.add["temperature"] = get_temperature
-    table.run()
-    table.get_dataframe()
-    ```
+    >>> table.add["energy"] = get_energy
+    >>> table.add["temperature"] = get_temperature
+    >>> table.run()
+    >>> table.get_dataframe()
+
     This returns a dataframe containing job-id, energy and temperature.
 
     Alternatively, the filter function can be applied on the job
-    ```python
-    def job_filter_function(job):
-        return (job.status == "finished") & ("lmp" in job.job_name)
 
-    table.filter_function = job_filter_function
-    ```
+    >>> def job_filter_function(job):
+    >>>     return (job.status == "finished") & ("lmp" in job.job_name)
+
+    >>> table.filter_function = job_filter_function
 
     """
     _system_function_lst = [get_job_id]
@@ -632,6 +638,16 @@ class TableJob(GenericJob):
 
     @property
     def add(self):
+        """
+        Add a function to analyse job data
+
+        Example:
+
+        >>> def get_energy(job):
+        >>>     return job["output/generic/energy_pot"][-1]
+
+        >>> table.add["energy"] = get_energy
+        """
         return self._pyiron_table.add
 
     @property
