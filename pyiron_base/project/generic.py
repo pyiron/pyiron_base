@@ -912,7 +912,7 @@ class Project(ProjectPath, HasGroups):
             return queue_table(
                 project_only=project_only,
                 full_table=full_table,
-                working_directory_lst=[self.path]
+                working_directory_lst=[self.path],
             )
 
     def queue_table_global(self, full_table=False):
@@ -938,13 +938,13 @@ class Project(ProjectPath, HasGroups):
                     ]
                 )
             else:
+
                 def get_id_from_job_table(job_table, job_path):
                     job_dir = "_hdf5".join(job_path.split("_hdf5")[:-1])
                     job_name = os.path.basename(job_dir)
                     project = os.path.dirname(job_dir) + "/"
                     return job_table[
-                        (job_table.job == job_name) &
-                        (job_table.project == project)
+                        (job_table.job == job_name) & (job_table.project == project)
                     ].id.values[0]
 
                 job_table_df = self.job_table()
@@ -952,12 +952,15 @@ class Project(ProjectPath, HasGroups):
                 return pandas.DataFrame(
                     [
                         self.db.get_item_by_id(
-                            int(get_id_from_job_table(
-                                job_table=job_table_df,
-                                job_path=working_directory
-                            ))
+                            int(
+                                get_id_from_job_table(
+                                    job_table=job_table_df, job_path=working_directory
+                                )
+                            )
                         )
-                        for queue_ID, working_directory in zip(df["jobname"], df["working_directory"])
+                        for queue_ID, working_directory in zip(
+                            df["jobname"], df["working_directory"]
+                        )
                         if str(queue_ID).startswith("pi_")
                     ]
                 )
