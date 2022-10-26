@@ -62,7 +62,7 @@ class FileTable(IsDatabase, metaclass=Singleton):
         for path, mtime in zip(fileindex.path, fileindex.mtime):
             try:  # Ignore HDF5 files which are not created by pyiron
                 job_dict = self.get_extract(path, mtime)
-            except ValueError:
+            except (ValueError, OSError):
                 pass
             else:
                 job_dict["id"] = len(working_dir_lst) + 1
