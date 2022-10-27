@@ -34,6 +34,7 @@ class ABCTraitsMeta(MetaHasTraits, ABCMeta):
     """
     Just a bookkeeping necessity for classes that inherit from both `ABC` and `HasTraits`.
     """
+
     pass
 
 
@@ -59,7 +60,7 @@ class HasStoredTraits(HasTraits, HasStorage, ABC, metaclass=ABCTraitsMeta):
         If you write `__init__` in any child class, be sure to pass
         `super().__init__(*args, group_name=group_name, **kwargs)` to ensure that the group name for `HasStorage` gets
         set, at the trait values (if any are set during instantiation) get set.
-        
+
     Example:
         >>> from traitlets import (
         ...     Bool,
@@ -82,12 +83,12 @@ class HasStoredTraits(HasTraits, HasStorage, ABC, metaclass=ABCTraitsMeta):
         ...     '''
         ...     A toy model for cooking an omelette with traitlets.
         ...     '''
-        ... 
+        ...
         ...     # The traits
         ...     n_eggs = Int(default_value=2)
         ...     acceptable = Bool()
         ...     ingredients = List(default_value=[], trait=Unicode())
-        ... 
+        ...
         ...     @default('acceptable')
         ...     def wait_for_a_complaint(self):
         ...         '''
@@ -95,7 +96,7 @@ class HasStoredTraits(HasTraits, HasStorage, ABC, metaclass=ABCTraitsMeta):
         ...         function decorated with the `@default` decorator.
         ...         '''
         ...         return True
-        ... 
+        ...
         ...     @validate('n_eggs')
         ...     def _gotta_crack_some_eggs(self, proposal):
         ...         '''
@@ -108,7 +109,7 @@ class HasStoredTraits(HasTraits, HasStorage, ABC, metaclass=ABCTraitsMeta):
         ...                 f"You gotta crack some eggs to make a omelette, but asked for {proposal['value']}."
         ...             )
         ...         return proposal['value']
-        ... 
+        ...
         ...     @observe('ingredients')
         ...     def _picky_eater(self, change):
         ...         '''
@@ -131,18 +132,18 @@ class HasStoredTraits(HasTraits, HasStorage, ABC, metaclass=ABCTraitsMeta):
         ...     `pyiron_base.HasHDF` or `pyiron_base.HasStorage`.
         ...     '''
         ...     _types = ['coffee', 'tea', 'orange juice', 'water']
-        ... 
+        ...
         ...     def __init__(self, type_='coffee'):
         ...         if type_ not in self._types:
         ...             raise ValueError(f"The beverage type must be chosen from {self._types}")
         ...         self.type_ = type_
-        ... 
+        ...
         ...     def __repr__(self):
         ...         return self.type_
-        ... 
+        ...
         ...     def _to_hdf(self, hdf):
         ...         hdf['drink_type'] = self.type_
-        ... 
+        ...
         ...     def _from_hdf(self, hdf, version=None):
         ...         self.type_ = hdf['drink_type']
         >>>
@@ -150,7 +151,7 @@ class HasStoredTraits(HasTraits, HasStorage, ABC, metaclass=ABCTraitsMeta):
         >>> class CaffeinatedTrait(TraitType):
         ...     '''
         ...     We can even make our own trait types.
-        ... 
+        ...
         ...     In this case, our default value is mutable, so we need to be careful! Normally we would just assign the
         ...     default to `default_value` (shown bug commented out). For mutable types we instead need to define a
         ...     function with the name `make_dynamic_default`.
@@ -165,7 +166,7 @@ class HasStoredTraits(HasTraits, HasStorage, ABC, metaclass=ABCTraitsMeta):
         ...     def validate(self, obj, value):
         ...         '''
         ...         Let's just make sure it's a caffeinated beverage.
-        ... 
+        ...
         ...         Validations should return the value if everything works fine (maybe after some coercion), and hit
         ...         `self.error(obj, value)` if something goes wrong.
         ...         '''
@@ -184,7 +185,7 @@ class HasStoredTraits(HasTraits, HasStorage, ABC, metaclass=ABCTraitsMeta):
         ...     '''
         ...     drink1 = CaffeinatedTrait()
         ...     drink2 = Instance(klass=Beverage)
-        ... 
+        ...
         ...     @default('drink2')
         ...     def _default_drink2(self):
         ...         '''
@@ -213,12 +214,12 @@ class HasStoredTraits(HasTraits, HasStorage, ABC, metaclass=ABCTraitsMeta):
         >>> class NestedBreakfast(Omelette):
         ...     '''
         ...     We can also nest input classes together.
-        ... 
+        ...
         ...     Again, since our trait is an instance of something mutable, we want to use the `@default` decorator instead of the
         ...     `default_value` kwarg.
         ...     '''
         ...     drinks = Instance(klass=HasDrink)
-        ... 
+        ...
         ...     @default('drinks')
         ...     def _drinks_default(self):
         ...         return HasDrink()
@@ -289,7 +290,9 @@ class HasStoredTraits(HasTraits, HasStorage, ABC, metaclass=ABCTraitsMeta):
         return self._read_only
 
     def _to_hdf(self, hdf: ProjectHDFio):
-        self.storage.is_read_only = self._read_only  # read_only and _read_only are already used on DataContainer
+        self.storage.is_read_only = (
+            self._read_only
+        )  # read_only and _read_only are already used on DataContainer
         for k in self.traits().keys():
             setattr(self.storage, k, getattr(self, k))
         super()._to_hdf(hdf)
@@ -297,7 +300,7 @@ class HasStoredTraits(HasTraits, HasStorage, ABC, metaclass=ABCTraitsMeta):
     def _from_hdf(self, hdf: ProjectHDFio, version: Optional[str] = None):
         super()._from_hdf(hdf, version=version)
         if len(self.storage) > 0:
-            read_only = self.storage.pop('is_read_only')
+            read_only = self.storage.pop("is_read_only")
             for k, v in self.storage.items():
                 setattr(self, k, v)
             self._read_only = read_only
@@ -321,7 +324,7 @@ class HasStoredTraits(HasTraits, HasStorage, ABC, metaclass=ABCTraitsMeta):
                 pass
 
     def __setattr__(self, key, value):
-        if key == '_read_only':
+        if key == "_read_only":
             super(HasStoredTraits, self).__setattr__(key, value)
         elif self.read_only and key in self.traits().keys():
             raise RuntimeError(
