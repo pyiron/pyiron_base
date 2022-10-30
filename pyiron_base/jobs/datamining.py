@@ -229,6 +229,21 @@ class PyironTable:
     def create_table(
         self, file, job_status_list, enforce_update=False
     ):
+        """
+        Create or update the table.
+
+        If this method has been called before and there are new functions added to :attr:`.add`, apply them on the
+        previously analyzed jobs.
+        If this method has been called before and there are new jobs added to :attr:`.analysis_project`, apply all
+        functions to them.
+
+        The result is available via :meth:`.get_dataframe`.
+
+        Args:
+            file (FileHDFio): HDF were the previous state of the table is stored
+            job_status_list (list of str): only consider jobs with these statuses
+            enforce_update (bool): if True always regenerate the table completely.
+        """
         # if there's new keys, apply the *new* functions to the old jobs and name the resulting table `df_new_keys`
         # if there's new jobs, apply *all* functions to them and name the resulting table `df_new_ids`
 
@@ -318,15 +333,27 @@ class PyironTable:
         except (ValueError, TypeError):
             return {}
 
-    def _apply_list_of_functions_on_job(self, job, fucntion_lst):
+    def _apply_list_of_functions_on_job(self, job, function_lst):
         diff_dict = {}
-        for funct in fucntion_lst:
+        for funct in function_lst:
             funct_dict = self._apply_function_on_job(funct, job)
             for key, value in funct_dict.items():
                 diff_dict[key] = value
         return diff_dict
 
-    def _iterate_over_job_lst(self, job_lst, function_lst):
+    def _iterate_over_job_lst(self, job_lst: List, function_lst: List) -> List[dict]:
+        """
+        Apply functions to job.
+
+        Any functions that raise an error are set to `None` in the final list.
+
+        Args:
+            job_lst (list of JobPath): all jobs to analyze
+            function_lst (list of functions): all functions to apply on jobs.  Must return a dictionary.
+
+        Returns:
+            list of dict: a list of the merged dicts from all functions for each job
+        """
         diff_dict_lst = []
         for job_inspect in tqdm(job_lst, desc="Processing jobs"):
             if self.convert_to_object:
@@ -334,7 +361,7 @@ class PyironTable:
             else:
                 job = job_inspect
             diff_dict = self._apply_list_of_functions_on_job(
-                job=job, fucntion_lst=function_lst
+                job=job, function_lst=function_lst
             )
             diff_dict_lst.append(diff_dict)
         self.refill_dict(diff_dict_lst)
@@ -342,6 +369,9 @@ class PyironTable:
 
     @staticmethod
     def total_lst_of_keys(diff_dict_lst):
+        """
+        Get unique list of all keys occuring in list.
+        """
         total_key_lst = []
         for sub_dict in diff_dict_lst:
             for key in sub_dict.keys():
@@ -349,6 +379,11 @@ class PyironTable:
         return set(total_key_lst)
 
     def refill_dict(self, diff_dict_lst):
+        """
+        Ensure that all dictionaries in the list have the same keys.
+
+        Keys that are not in a dict are set to `None`.
+        """
         total_key_lst = self.total_lst_of_keys(diff_dict_lst)
         for sub_dict in diff_dict_lst:
             for key in total_key_lst:
@@ -359,7 +394,9 @@ class PyironTable:
         self, job_status_list, job_stored_ids=None
     ):
         """
-        Collect jobs to update the pyiron table
+        Collect jobs to update the pyiron table.
+
+        Jobs in `job_stored_ids` are ignored.
 
         Args:
             job_status_list (list): List of job status to consider
@@ -395,7 +432,6 @@ class PyironTable:
             HTML: Jupyter HTML object
         """
         return self._df._repr_html_()
-
 
 class TableJob(GenericJob):
     _system_function_lst = [get_job_id]
