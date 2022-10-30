@@ -15,7 +15,9 @@ from tqdm.auto import tqdm
 import types
 from typing import List, Tuple
 
+from pyiron_base.utils.deprecate import deprecate
 from pyiron_base.jobs.job.generic import GenericJob
+from pyiron_base.jobs.job.extension import jobstatus
 from pyiron_base.storage.hdfio import FileHDFio
 from pyiron_base.jobs.master.generic import get_function_from_string
 
@@ -412,6 +414,7 @@ class TableJob(GenericJob):
             csv_file_name=os.path.join(self.working_directory, "pyirontable.csv"),
         )
         self._enforce_update = False
+        self._job_status = ["finished"]
         self.analysis_project = project.project
 
     @property
@@ -433,6 +436,23 @@ class TableJob(GenericJob):
     @filter_function.setter
     def filter_function(self, funct):
         self._pyiron_table.filter_function = funct
+
+    @property
+    def job_status(self):
+        """
+        list of str: only jobs with status in this list are included in the table.
+        """
+        return self._job_status
+
+    @job_status.setter
+    def job_status(self, status):
+        if isinstance(status, str):
+            status = [status]
+        for s in status:
+            valid = jobstatus.job_status_lst
+            if s not in valid:
+                raise ValueError(f"'{s}' not a valid job status! Must be one of {valid}.")
+        self._job_status = status
 
     @property
     def pyiron_table(self):
@@ -607,6 +627,7 @@ class TableJob(GenericJob):
         self.update_table()
         self.status.finished = True
 
+    @deprecate(job_status_list="Use TableJob.job_status instead!")
     def update_table(self, job_status_list=None):
         """
         Update the pyiron table object, add new columns if a new function was added or add new rows for new jobs
@@ -615,7 +636,7 @@ class TableJob(GenericJob):
             job_status_list (list/None): List of job status which are added to the table by default ["finished"]
         """
         if job_status_list is None:
-            job_status_list = ["finished"]
+            job_status_list = self.job_status
         if self.job_id is not None:
             self.project.db.item_update({"timestart": datetime.now()}, self.job_id)
         with self.project_hdf5.open("input") as hdf5_input:
