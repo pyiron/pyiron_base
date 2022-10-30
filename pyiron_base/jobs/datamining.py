@@ -227,11 +227,8 @@ class PyironTable:
         return new_user_functions, new_system_functions
 
     def create_table(
-        self, file, enforce_update=False, job_status_list=None
+        self, file, job_status_list, enforce_update=False
     ):
-        if job_status_list is None:
-            job_status_list = ["finished"]
-
         # if there's new keys, apply the *new* functions to the old jobs and name the resulting table `df_new_keys`
         # if there's new jobs, apply *all* functions to them and name the resulting table `df_new_ids`
 
@@ -633,7 +630,8 @@ class TableJob(GenericJob):
         Update the pyiron table object, add new columns if a new function was added or add new rows for new jobs
 
         Args:
-            job_status_list (list/None): List of job status which are added to the table by default ["finished"]
+            job_status_list (list/None): List of job status which are added to the table by default ["finished"].
+                                         Deprecated, use :attr:`.job_status` instead!
         """
         if job_status_list is None:
             job_status_list = self.job_status
@@ -642,8 +640,8 @@ class TableJob(GenericJob):
         with self.project_hdf5.open("input") as hdf5_input:
             self._pyiron_table.create_table(
                 file=hdf5_input,
-                enforce_update=self._enforce_update,
                 job_status_list=job_status_list,
+                enforce_update=self._enforce_update,
             )
         self.to_hdf()
         self._pyiron_table._df.to_csv(
