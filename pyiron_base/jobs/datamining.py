@@ -161,13 +161,6 @@ class PyironTable(HasGroups):
         return self._filter
 
     @property
-    def _file_name_csv(self):
-        if self._csv_file is None:
-            return self._project.path + self.name + ".csv"
-        else:
-            return self._csv_file
-
-    @property
     def _file_name_txt(self):
         return self._project.path + self.name + ".txt"
 
@@ -307,13 +300,6 @@ class PyironTable(HasGroups):
         elif len(df_new_ids) > 0:
             self._df = df_new_ids
 
-    def refill_dict(self, diff_dict_lst):
-        total_key_lst = self.total_lst_of_keys(diff_dict_lst)
-        for sub_dict in diff_dict_lst:
-            for key in total_key_lst:
-                if key not in sub_dict.keys():
-                    sub_dict[key] = None
-
     def col_to_value(self, col_name):
         val_lst, key_lst, ind_lst = [], [], []
         for ind, name in enumerate(self._df[col_name]):
@@ -338,21 +324,6 @@ class PyironTable(HasGroups):
 
     def _list_groups(self):
         return list(set(self._df["col_0"]))
-
-    @staticmethod
-    def _apply_function_on_job(funct, job):
-        try:
-            return funct(job)
-        except (ValueError, TypeError):
-            return {}
-
-    @staticmethod
-    def total_lst_of_keys(diff_dict_lst):
-        total_key_lst = []
-        for sub_dict in diff_dict_lst:
-            for key in sub_dict.keys():
-                total_key_lst.append(key)
-        return set(total_key_lst)
 
     def __getitem__(self, item, max_level=5):
         rename_dict = OrderedDict()
@@ -387,6 +358,13 @@ class PyironTable(HasGroups):
     def _is_file(self):
         return self._project is not None and os.path.isfile(self._file_name_csv)
 
+    @property
+    def _file_name_csv(self):
+        if self._csv_file is None:
+            return self._project.path + self.name + ".csv"
+        else:
+            return self._csv_file
+
     def _load_csv(self):
         # Legacy method to read tables written to csv
         self._df = pandas.read_csv(self._file_name_csv)
@@ -415,6 +393,13 @@ class PyironTable(HasGroups):
         filter_funct = self.db_filter_function
         return project_table[filter_funct(project_table)]["id"].tolist()
 
+    @staticmethod
+    def _apply_function_on_job(funct, job):
+        try:
+            return funct(job)
+        except (ValueError, TypeError):
+            return {}
+
     def _apply_list_of_functions_on_job(self, job, fucntion_lst):
         diff_dict = {}
         for funct in fucntion_lst:
@@ -440,6 +425,21 @@ class PyironTable(HasGroups):
             diff_dict_lst.append(diff_dict)
         self.refill_dict(diff_dict_lst)
         return pandas.DataFrame(diff_dict_lst)
+
+    @staticmethod
+    def total_lst_of_keys(diff_dict_lst):
+        total_key_lst = []
+        for sub_dict in diff_dict_lst:
+            for key in sub_dict.keys():
+                total_key_lst.append(key)
+        return set(total_key_lst)
+
+    def refill_dict(self, diff_dict_lst):
+        total_key_lst = self.total_lst_of_keys(diff_dict_lst)
+        for sub_dict in diff_dict_lst:
+            for key in total_key_lst:
+                if key not in sub_dict.keys():
+                    sub_dict[key] = None
 
     def _collect_job_update_lst(
         self, job_status_list, filter_funct, job_stored_ids=None
