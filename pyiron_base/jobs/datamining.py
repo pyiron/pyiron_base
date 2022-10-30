@@ -13,6 +13,7 @@ import pandas
 from pandas.errors import EmptyDataError
 from tqdm.auto import tqdm
 import types
+from typing import List, Tuple
 
 from pyiron_base.jobs.job.generic import GenericJob
 from pyiron_base.storage.hdfio import FileHDFio
@@ -202,86 +203,65 @@ class PyironTable:
     def filter_function(self, funct):
         self._filter_function = funct
 
-
-    def create_table(
-        self, file, enforce_update=False, job_status_list=None
-    ):
-        skip_table_update = False
-        filter_funct = self.filter_function
-        if job_status_list is None:
-            job_status_list = ["finished"]
-        if self._is_file():
+    def _get_new_functions(self, file: FileHDFio) -> Tuple[List, List]:
+        try:
             (
                 temp_user_function_dict,
                 temp_system_function_dict,
             ) = self._get_data_from_hdf5(hdf=file)
-            job_update_lst = self._collect_job_update_lst(
-                job_status_list=job_status_list,
-                filter_funct=filter_funct,
-                job_stored_ids=self._get_job_ids(),
-            )
-            keys_update_user_lst = [
+            new_user_functions = [
                 key
                 for key in self.add._user_function_dict.keys()
                 if key not in temp_user_function_dict.keys()
             ]
-            keys_update_system_lst = [
+            new_system_functions = [
                 k
                 for k, v in self.add._system_function_dict.items()
                 if v and not temp_system_function_dict[k]
             ]
-            if (
-                len(job_update_lst) == 0
-                and len(keys_update_user_lst) == 0
-                and keys_update_system_lst == 0
-                and not enforce_update
-            ):
-                skip_table_update = True
-        else:
-            job_update_lst = self._collect_job_update_lst(
-                job_status_list=job_status_list,
-                filter_funct=filter_funct,
-                job_stored_ids=None,
-            )
-            keys_update_user_lst, keys_update_system_lst = [], []
-        if not skip_table_update and len(job_update_lst) != 0:
+        except:
+            new_user_functions = []
+            new_system_functions = []
+        return new_user_functions, new_system_functions
+
+    def create_table(
+        self, file, enforce_update=False, job_status_list=None
+    ):
+        filter_funct = self.filter_function
+        if job_status_list is None:
+            job_status_list = ["finished"]
+
+        # if there's new keys, apply the *new* functions to the old jobs and name the resulting table `df_new_keys`
+        # if there's new jobs, apply *all* functions to them and name the resulting table `df_new_ids`
+
+        # if enforce_update is given we recalculate the whole table below anyway, no need to patch up new keys
+        if not enforce_update:
+            new_user_functions, new_system_functions = self._get_new_functions(file)
+
+            if len(new_user_functions) > 0 or len(new_system_functions) > 0:
+                function_lst = [
+                        self.add._user_function_dict[k] for k in new_user_functions
+                ] + [
+                        funct for funct in self.add._system_function_lst
+                                    if funct.__name__ in new_system_functions
+                ]
+                df_new_keys = self._iterate_over_job_lst(
+                    job_lst=map(self._project.inspect, self._get_job_ids()), function_lst=function_lst
+                )
+                if len(df_new_keys) > 0:
+                    self._df = pandas.concat([self._df, df_new_keys], axis='columns')
+
+        new_jobs = self._collect_job_update_lst(
+            job_status_list=job_status_list,
+            filter_funct=filter_funct,
+            job_stored_ids=self._get_job_ids() if not enforce_update else None
+        )
+        if len(new_jobs) > 0:
             df_new_ids = self._iterate_over_job_lst(
-                job_lst=job_update_lst, function_lst=self.add._function_lst
+                job_lst=new_jobs, function_lst=self.add._function_lst
             )
-        else:
-            df_new_ids = pandas.DataFrame({})
-        if not skip_table_update and (
-            len(keys_update_user_lst) != 0 or len(keys_update_system_lst) != 0
-        ):
-            job_update_lst = self._collect_job_update_lst(
-                job_status_list=job_status_list,
-                filter_funct=filter_funct,
-                job_stored_ids=None,
-            )
-            function_lst = [
-                v
-                for k, v in self.add._user_function_dict.items()
-                if k in keys_update_system_lst
-            ] + [
-                funct
-                for funct in self.add._system_function_lst
-                if funct.__name__ in keys_update_system_lst
-            ]
-            df_new_keys = self._iterate_over_job_lst(
-                job_lst=job_update_lst, function_lst=function_lst
-            )
-        else:
-            df_new_keys = pandas.DataFrame({})
-        if len(self._df) > 0 and len(df_new_keys) > 0:
-            self._df = pandas.concat(
-                [self._df, df_new_keys], axis=1, sort=False
-            ).reset_index(drop=True)
-        if len(self._df) > 0 and len(df_new_ids) > 0:
-            self._df = pandas.concat([self._df, df_new_ids], sort=False).reset_index(
-                drop=True
-            )
-        elif len(df_new_ids) > 0:
-            self._df = df_new_ids
+            if len(df_new_ids) > 0:
+                self._df = pandas.concat([self._df, df_new_ids], ignore_index=True)
 
     def get_dataframe(self):
         return self._df
@@ -305,9 +285,6 @@ class PyironTable:
             str: pandas Dataframe structure as string
         """
         return self._df.__repr__()
-
-    def _is_file(self):
-        return self._project is not None and os.path.isfile(self._file_name_csv)
 
     @property
     def _file_name_csv(self):
