@@ -223,16 +223,6 @@ class PyironTable(HasGroups):
         file = FileHDFio(file_name=self._project.path + self.name + ".h5", h5_path="/")
         self.add._from_hdf(file)
 
-    def save(self, name=None):
-        self._name = name
-        self.to_hdf()
-        self._save_csv()
-
-    def load(self, name=None):
-        self._name = name
-        self.from_hdf()
-        self._load_csv()
-
     def create_table(
         self, enforce_update=False, level=3, file=None, job_status_list=None
     ):
@@ -397,10 +387,8 @@ class PyironTable(HasGroups):
     def _is_file(self):
         return self._project is not None and os.path.isfile(self._file_name_csv)
 
-    def _save_csv(self):
-        self._df.to_csv(self._file_name_csv, index=False)
-
     def _load_csv(self):
+        # Legacy method to read tables written to csv
         self._df = pandas.read_csv(self._file_name_csv)
 
     def _get_project_list(self, name, pr_len, level=3):
