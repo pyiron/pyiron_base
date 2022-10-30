@@ -317,17 +317,12 @@ class PyironTable(HasGroups):
         elif len(df_new_ids) > 0:
             self._df = df_new_ids
 
-    def convert_dict(self, input_dict):
-        return {key: self.str_to_value(value) for key, value in input_dict.items()}
-
     def refill_dict(self, diff_dict_lst):
         total_key_lst = self.total_lst_of_keys(diff_dict_lst)
-        for ind, sub_dict in enumerate(diff_dict_lst):
+        for sub_dict in diff_dict_lst:
             for key in total_key_lst:
                 if key not in sub_dict.keys():
-                    sub_dict[key] = self.EMPTY_STR
-                else:
-                    sub_dict[key] = self.str_to_value(sub_dict[key])
+                    sub_dict[key] = None
 
     def col_to_value(self, col_name):
         val_lst, key_lst, ind_lst = [], [], []
@@ -353,16 +348,6 @@ class PyironTable(HasGroups):
 
     def _list_groups(self):
         return list(set(self._df["col_0"]))
-
-    @staticmethod
-    def str_to_value(input_val):
-        if not isinstance(input_val, str):
-            return input_val
-        else:
-            try:
-                return eval(input_val)
-            except (TypeError, SyntaxError, NameError):
-                return input_val
 
     @staticmethod
     def _apply_function_on_job(funct, job):
