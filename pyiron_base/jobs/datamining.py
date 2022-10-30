@@ -300,22 +300,6 @@ class PyironTable(HasGroups):
         elif len(df_new_ids) > 0:
             self._df = df_new_ids
 
-    def col_to_value(self, col_name):
-        val_lst, key_lst, ind_lst = [], [], []
-        for ind, name in enumerate(self._df[col_name]):
-            #             print ('name: ', ind, name)
-            #             if name == self.EMPTY_STR:
-            #                 continue
-            name = name.split("_")
-            ind_lst.append(ind)
-            key_lst.append(name[0])
-            val_lst.append(eval(".".join(name[1:])))
-        if len(set(key_lst)) == 1:
-            key = key_lst[0]
-            self._df[key] = val_lst
-        else:
-            raise ValueError("key not unique: {}".format(set(key_lst)))
-
     def get_dataframe(self):
         return self._df
 
