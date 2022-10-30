@@ -16,7 +16,6 @@ import types
 
 from pyiron_base.jobs.job.generic import GenericJob
 from pyiron_base.storage.hdfio import FileHDFio
-from pyiron_base.interfaces.has_groups import HasGroups
 from pyiron_base.jobs.master.generic import get_function_from_string
 
 
@@ -124,7 +123,7 @@ class JobFilters(object):
         return filter_job_name_segment
 
 
-class PyironTable(HasGroups):
+class PyironTable:
     """
     Class for easy, efficient, and pythonic analysis of data from pyiron projects
 
@@ -147,7 +146,6 @@ class PyironTable(HasGroups):
         self._system_function_lst = system_function_lst
         self.add = FunctionContainer(system_function_lst=self._system_function_lst)
         self._csv_file = csv_file_name
-        self.EMPTY_STR = "-"
 
     @property
     def filter(self):
@@ -217,7 +215,7 @@ class PyironTable(HasGroups):
         self.add._from_hdf(file)
 
     def create_table(
-        self, enforce_update=False, level=3, file=None, job_status_list=None
+        self, enforce_update=False, file=None, job_status_list=None
     ):
         skip_table_update = False
         filter_funct = self.filter_function
@@ -263,7 +261,7 @@ class PyironTable(HasGroups):
             keys_update_user_lst, keys_update_system_lst = [], []
         if not skip_table_update and len(job_update_lst) != 0:
             df_new_ids = self._iterate_over_job_lst(
-                job_lst=job_update_lst, function_lst=self.add._function_lst, level=level
+                job_lst=job_update_lst, function_lst=self.add._function_lst
             )
         else:
             df_new_ids = pandas.DataFrame({})
@@ -285,7 +283,7 @@ class PyironTable(HasGroups):
                 if funct.__name__ in keys_update_system_lst
             ]
             df_new_keys = self._iterate_over_job_lst(
-                job_lst=job_update_lst, function_lst=function_lst, level=level
+                job_lst=job_update_lst, function_lst=function_lst
             )
         else:
             df_new_keys = pandas.DataFrame({})
@@ -306,23 +304,7 @@ class PyironTable(HasGroups):
     def _list_nodes(self):
         return list(self._df.columns)
 
-    def _list_groups(self):
-        return list(set(self._df["col_0"]))
-
-    def __getitem__(self, item, max_level=5):
-        rename_dict = OrderedDict()
-        if item in self.list_groups():
-            for i in range(1, max_level):
-                rename_dict["col_{}".format(i)] = "col_{}".format(i - 1)
-
-            new_table = PyironTable(
-                project=self._project[item],
-                system_function_lst=self._system_function_lst,
-                csv_file_name=os.path.join(self.working_directory, "pyirontable.csv"),
-            )
-            new_table._df = self._df.drop("col_0", axis=1)
-            new_table._df.rename(index=str, columns=rename_dict, inplace=True)
-            return new_table
+    def __getitem__(self, item):
         if item in self.list_nodes():
             return np.array(self._df[item])
         return None
@@ -352,13 +334,6 @@ class PyironTable(HasGroups):
     def _load_csv(self):
         # Legacy method to read tables written to csv
         self._df = pandas.read_csv(self._file_name_csv)
-
-    def _get_project_list(self, name, pr_len, level=3):
-        lst = [self.EMPTY_STR for _ in range(level)]
-        for i, p in enumerate(name.split("/")[pr_len - 1 : -1]):
-            if len(lst) > i:
-                lst[i] = p
-        return lst
 
     @staticmethod
     def _get_data_from_hdf5(hdf):
@@ -392,8 +367,7 @@ class PyironTable(HasGroups):
                 diff_dict[key] = value
         return diff_dict
 
-    def _iterate_over_job_lst(self, job_lst, function_lst, level):
-        pr_len = len(self._project.project_path.split("/"))
+    def _iterate_over_job_lst(self, job_lst, function_lst):
         diff_dict_lst = []
         for job_inspect in tqdm(job_lst, desc="Processing jobs"):
             if self.convert_to_object:
@@ -403,9 +377,6 @@ class PyironTable(HasGroups):
             diff_dict = self._apply_list_of_functions_on_job(
                 job=job, fucntion_lst=function_lst
             )
-            pr_lst = self._get_project_list(job.project.project_path, pr_len, level)
-            for ic, col in enumerate(pr_lst):
-                diff_dict["col_{}".format(ic)] = col
             diff_dict_lst.append(diff_dict)
         self.refill_dict(diff_dict_lst)
         return pandas.DataFrame(diff_dict_lst)
@@ -483,20 +454,11 @@ class TableJob(GenericJob):
             csv_file_name=os.path.join(self.working_directory, "pyirontable.csv"),
         )
         self._enforce_update = False
-        self._project_level = 0
         self.analysis_project = project.project
 
     @property
     def filter(self):
         return self._pyiron_table.filter
-
-    @property
-    def project_level(self):
-        return self._project_level
-
-    @project_level.setter
-    def project_level(self, level):
-        self._project_level = level
 
     @property
     def db_filter_function(self):
@@ -702,7 +664,6 @@ class TableJob(GenericJob):
             self._pyiron_table.create_table(
                 enforce_update=self._enforce_update,
                 file=hdf5_input,
-                level=self._project_level,
                 job_status_list=job_status_list,
             )
         self.to_hdf()
