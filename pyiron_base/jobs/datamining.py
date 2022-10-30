@@ -226,9 +226,7 @@ class PyironTable:
             new_system_functions = []
         return new_user_functions, new_system_functions
 
-    def create_table(
-        self, file, job_status_list, enforce_update=False
-    ):
+    def create_table(self, file, job_status_list, enforce_update=False):
         """
         Create or update the table.
 
@@ -253,20 +251,22 @@ class PyironTable:
 
             if len(new_user_functions) > 0 or len(new_system_functions) > 0:
                 function_lst = [
-                        self.add._user_function_dict[k] for k in new_user_functions
+                    self.add._user_function_dict[k] for k in new_user_functions
                 ] + [
-                        funct for funct in self.add._system_function_lst
-                                    if funct.__name__ in new_system_functions
+                    funct
+                    for funct in self.add._system_function_lst
+                    if funct.__name__ in new_system_functions
                 ]
                 df_new_keys = self._iterate_over_job_lst(
-                    job_lst=map(self._project.inspect, self._get_job_ids()), function_lst=function_lst
+                    job_lst=map(self._project.inspect, self._get_job_ids()),
+                    function_lst=function_lst,
                 )
                 if len(df_new_keys) > 0:
-                    self._df = pandas.concat([self._df, df_new_keys], axis='columns')
+                    self._df = pandas.concat([self._df, df_new_keys], axis="columns")
 
         new_jobs = self._collect_job_update_lst(
             job_status_list=job_status_list,
-            job_stored_ids=self._get_job_ids() if not enforce_update else None
+            job_stored_ids=self._get_job_ids() if not enforce_update else None,
         )
         if len(new_jobs) > 0:
             df_new_ids = self._iterate_over_job_lst(
@@ -390,9 +390,7 @@ class PyironTable:
                 if key not in sub_dict.keys():
                     sub_dict[key] = None
 
-    def _collect_job_update_lst(
-        self, job_status_list, job_stored_ids=None
-    ):
+    def _collect_job_update_lst(self, job_status_list, job_stored_ids=None):
         """
         Collect jobs to update the pyiron table.
 
@@ -420,7 +418,11 @@ class PyironTable:
                 job = self._project.inspect(job_id)
             except IndexError:  # In case the job was deleted while the pyiron table is running
                 job = None
-            if job is not None and job.status in job_status_list and self.filter_function(job):
+            if (
+                job is not None
+                and job.status in job_status_list
+                and self.filter_function(job)
+            ):
                 job_update_lst.append(job)
         return job_update_lst
 
@@ -432,6 +434,7 @@ class PyironTable:
             HTML: Jupyter HTML object
         """
         return self._df._repr_html_()
+
 
 class TableJob(GenericJob):
     _system_function_lst = [get_job_id]
@@ -484,7 +487,9 @@ class TableJob(GenericJob):
         for s in status:
             valid = jobstatus.job_status_lst
             if s not in valid:
-                raise ValueError(f"'{s}' not a valid job status! Must be one of {valid}.")
+                raise ValueError(
+                    f"'{s}' not a valid job status! Must be one of {valid}."
+                )
         self._job_status = status
 
     @property
