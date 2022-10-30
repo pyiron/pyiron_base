@@ -405,7 +405,6 @@ class TableJob(GenericJob):
         super(TableJob, self).__init__(project, job_name)
         self.__version__ = "0.1"
         self.__hdf_version__ = "0.3.0"
-        self.__name__ = "TableJob"
         self._analysis_project = None
         self._pyiron_table = PyironTable(
             project=None,
