@@ -159,10 +159,6 @@ class PyironTable:
         return self._filter
 
     @property
-    def _file_name_txt(self):
-        return self._project.path + self.name + ".txt"
-
-    @property
     def name(self):
         """
         Name of the table. Takes the project name if not specified
@@ -205,14 +201,6 @@ class PyironTable:
     @filter_function.setter
     def filter_function(self, funct):
         self._filter_function = funct
-
-    def to_hdf(self):
-        file = FileHDFio(file_name=self._project.path + self.name + ".h5", h5_path="/")
-        self.add._to_hdf(file)
-
-    def from_hdf(self):
-        file = FileHDFio(file_name=self._project.path + self.name + ".h5", h5_path="/")
-        self.add._from_hdf(file)
 
     def create_table(
         self, enforce_update=False, file=None, job_status_list=None
