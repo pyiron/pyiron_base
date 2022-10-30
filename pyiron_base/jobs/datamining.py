@@ -227,7 +227,6 @@ class PyironTable:
     def create_table(
         self, file, enforce_update=False, job_status_list=None
     ):
-        filter_funct = self.filter_function
         if job_status_list is None:
             job_status_list = ["finished"]
 
@@ -253,7 +252,6 @@ class PyironTable:
 
         new_jobs = self._collect_job_update_lst(
             job_status_list=job_status_list,
-            filter_funct=filter_funct,
             job_stored_ids=self._get_job_ids() if not enforce_update else None
         )
         if len(new_jobs) > 0:
@@ -359,14 +357,13 @@ class PyironTable:
                     sub_dict[key] = None
 
     def _collect_job_update_lst(
-        self, job_status_list, filter_funct, job_stored_ids=None
+        self, job_status_list, job_stored_ids=None
     ):
         """
         Collect jobs to update the pyiron table
 
         Args:
             job_status_list (list): List of job status to consider
-            filter_funct (function): Filter function
             job_stored_ids (list/ None): List of already analysed job ids
 
         Returns:
@@ -387,7 +384,7 @@ class PyironTable:
                 job = self._project.inspect(job_id)
             except IndexError:  # In case the job was deleted while the pyiron table is running
                 job = None
-            if job is not None and job.status in job_status_list and filter_funct(job):
+            if job is not None and job.status in job_status_list and self.filter_function(job):
                 job_update_lst.append(job)
         return job_update_lst
 
