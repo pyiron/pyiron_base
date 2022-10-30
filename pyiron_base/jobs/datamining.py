@@ -202,18 +202,15 @@ class PyironTable:
     def filter_function(self, funct):
         self._filter_function = funct
 
+
     def create_table(
-        self, enforce_update=False, file=None, job_status_list=None
+        self, file, enforce_update=False, job_status_list=None
     ):
         skip_table_update = False
         filter_funct = self.filter_function
         if job_status_list is None:
             job_status_list = ["finished"]
         if self._is_file():
-            if file is None:
-                file = FileHDFio(
-                    file_name=self._project.path + self.name + ".h5", h5_path="/"
-                )
             (
                 temp_user_function_dict,
                 temp_system_function_dict,
@@ -650,8 +647,8 @@ class TableJob(GenericJob):
             self.project.db.item_update({"timestart": datetime.now()}, self.job_id)
         with self.project_hdf5.open("input") as hdf5_input:
             self._pyiron_table.create_table(
-                enforce_update=self._enforce_update,
                 file=hdf5_input,
+                enforce_update=self._enforce_update,
                 job_status_list=job_status_list,
             )
         self.to_hdf()
