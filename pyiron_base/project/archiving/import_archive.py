@@ -21,54 +21,38 @@ def update_id_lst(record_lst, job_id_lst):
 
 
 def extract_archive(archive_directory):
-    fname = archive_directory + ".tar.gz"
-    tar = tarfile.open(fname, "r:gz")
-    tar.extractall()
-    tar.close()
+    arch_comp_name = archive_directory + ".tar.gz"
+    with tarfile.open(arch_comp_name, "r:gz") as tar:
+        tar.extractall()
 
 
-def import_jobs(project_instance, archive_directory, df, compressed=True):
-    # Copy HDF5 files
-    # if the archive_directory is a path(string)/name of the compressed file
-    if static_isinstance(
-        obj=archive_directory.__class__,
-        obj_type=[
-            "pyiron_base.project.generic.Project",
-        ],
-    ):
-        archive_directory = archive_directory.path
-    elif isinstance(archive_directory, str):
-        if archive_directory[-7:] == ".tar.gz":
-            archive_directory = archive_directory[:-7]
-            if not compressed:
-                compressed = True
+def import_jobs(cls, archive_directory, compressed=True):
+    if archive_directory[-7:] == ".tar.gz":
+        archive_directory = archive_directory[:-7]
+        if not compressed:
+            compressed = True
+
+    if compressed:
+        arch_comp_name = archive_directory + ".tar.gz"
+        with tarfile.open(arch_comp_name, "r:gz") as tar:
+            target_folder = os.path.join(os.path.dirname(archive_directory), os.path.basename(tar.members[0].name))
     else:
-        raise RuntimeError(
-            """the given path for importing from,
-            does not have the correct format paths
-            as string or pyiron Project objects are expected"""
-        )
-    if compressed:
-        extract_archive(os.path.relpath(archive_directory, os.getcwd()))
+        target_folder = archive_directory
 
-    archive_name = getdir(path=archive_directory)
+    if os.path.exists(target_folder):
+        raise ValueError("Cannot extract to existing folder")
 
-    # destination folder
-    des = project_instance.path
-    # source folder; archive folder
-    src = os.path.abspath(archive_directory)
-    copy_tree(src, des)
-    if compressed:
-        rmtree(src)
+    #otherise all ok, create project
+    pr = cls(path=target_folder)
 
-    # # Update Database
-    pr_import = project_instance.open(os.curdir)
+    #now open and extract archive
+    extract_archive(archive_directory)
 
-    df["project"] = [
-        os.path.join(pr_import.project_path, os.path.relpath(p, archive_name)) + "/"
-        for p in df["project"].values
-    ]
-    df["projectpath"] = len(df) * [pr_import.root_path]
+    #read csv
+    csv_file_name = os.path.join(target_folder, "export.csv")
+    df = pandas.read_csv(csv_file_name, index_col=0)
+
+    df["projectpath"] = len(df) * [pr.root_path]
     # Add jobs to database
     job_id_lst = []
     for entry in df.dropna(axis=1).to_dict(orient="records"):
@@ -84,7 +68,7 @@ def import_jobs(project_instance, archive_directory, df, compressed=True):
             entry["timestop"] = pandas.to_datetime(entry["timestop"])
         if "username" not in entry:
             entry["username"] = state.settings.login_user
-        job_id = pr_import.db.add_item_dict(par_dict=entry)
+        job_id = pr.db.add_item_dict(par_dict=entry)
         job_id_lst.append(job_id)
 
     # Update parent and master ids
@@ -94,6 +78,8 @@ def import_jobs(project_instance, archive_directory, df, compressed=True):
         update_id_lst(record_lst=df["parentid"].values, job_id_lst=job_id_lst),
     ):
         if masterid is not None or parentid is not None:
-            pr_import.db.item_update(
+            pr.db.item_update(
                 item_id=job_id, par_dict={"parentid": parentid, "masterid": masterid}
             )
+
+    return pr

@@ -1617,22 +1617,10 @@ class Project(ProjectPath, HasGroups):
             copy_all_files=copy_all_files,
         )
 
-    def unpack(self, origin_path, csv_file_name="export.csv", compress=True):
-        """
-        by this function, job table is imported from a given csv file,
-        and also the content of project directory is copied from a given path
-
-        Args:
-            origin_path (str): the relative path of a directory (or a compressed file without the tar.gz exention)
-                            from which the project directory is copied.
-            csv_file_name (str): the csv file from which the job_table is copied to the current project
-            compress (bool): if True, it looks for a compressed file
-        """
-        csv_path = csv_file_name
-        df = pandas.read_csv(csv_path, index_col=0)
-        import_archive.import_jobs(
-            self, archive_directory=origin_path, df=df, compressed=compress
-        )
+    @classmethod
+    def unpack(cls, origin_path, compress=True):
+        pr_inst = import_archive.import_jobs(cls, origin_path, compressed=compress)
+        return pr_inst
 
     @classmethod
     def register_tools(cls, name: str, tools):
