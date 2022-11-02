@@ -25,12 +25,15 @@ __date__ = "Sep 1, 2017"
 QUEUE_SCRIPT_PREFIX = "pi_"
 
 
-def queue_table(job_ids=None, project_only=True, full_table=False):
+def queue_table(
+    job_ids=None, working_directory_lst=None, project_only=True, full_table=False
+):
     """
     Display the queuing system table as pandas.Dataframe
 
     Args:
         job_ids (list): check for a specific list of job IDs - empty list by default
+        working_directory_lst (list): list of working directories to include - empty list by default
         project_only (bool): Query only for jobs within the current project - True by default
         full_table (bool): Return all entries from the queuing system without filtering - False by default
 
@@ -38,7 +41,10 @@ def queue_table(job_ids=None, project_only=True, full_table=False):
         pandas.DataFrame: Output from the queuing system - optimized for the Sun grid engine
     """
     job_ids = [] if job_ids is None else job_ids
-    if project_only and not job_ids:
+    working_directory_lst = (
+        [] if working_directory_lst is None else working_directory_lst
+    )
+    if project_only and not job_ids and not working_directory_lst:
         return []
     if state.queue_adapter is not None:
         if full_table:
@@ -56,13 +62,21 @@ def queue_table(job_ids=None, project_only=True, full_table=False):
                 ]
             ]
         else:
-            job_name_lst = [QUEUE_SCRIPT_PREFIX + str(job_id) for job_id in job_ids]
-            return df[
-                [
-                    True if job_name in job_name_lst else False
-                    for job_name in list(df.jobname)
+            if len(job_ids) > len(working_directory_lst):
+                job_name_lst = [QUEUE_SCRIPT_PREFIX + str(job_id) for job_id in job_ids]
+                return df[
+                    [
+                        True if job_name in job_name_lst else False
+                        for job_name in list(df.jobname)
+                    ]
                 ]
-            ]
+            else:
+                return df[
+                    [
+                        any([working_dir.startswith(p) for p in working_directory_lst])
+                        for working_dir in list(df.working_directory)
+                    ]
+                ]
     else:
         return None
 
