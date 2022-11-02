@@ -75,7 +75,7 @@ def copy_files_to_archive(
 
     if compressed:
         archived_file = compress_dir(tempdir.name)
-        move(archived_file, os.path.dirname(os.path.abspath(archive_directory)))
+        copyfile(archived_file, os.path.join(os.path.dirname(os.path.abspath(archive_directory)), f"{os.path.basename(directory_to_transfer)}.tar.gz"))
     else:
         if os.path.exists(archive_directory):
             raise Error("Folder exists, give different name or allow compression")
