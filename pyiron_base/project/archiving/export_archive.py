@@ -97,7 +97,7 @@ def export_files(directory_to_transfer, compressed, copy_all_files=False):
     )
 
     #now make these directories
-    for d in dir_list:
+    for d in dir_lst:
         os.makedirs(d.replace(directory_to_transfer, tempdir.name))
 
     #copy files
