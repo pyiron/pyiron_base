@@ -6,8 +6,6 @@ Classes to map the Python objects to HDF5 data structures
 """
 
 import numbers
-import time
-
 import h5py
 import os
 from collections.abc import MutableMapping
@@ -17,6 +15,7 @@ import posixpath
 import h5io
 import numpy as np
 import sys
+import time
 from typing import Union
 
 from pyiron_base.utils.deprecate import deprecate
