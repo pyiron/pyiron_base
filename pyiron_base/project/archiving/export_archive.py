@@ -60,11 +60,8 @@ def copy_files_to_archive(
         if not compressed:
             compressed = True
 
-    if directory_to_transfer[-1] != "/":
-        directory_to_transfer = os.path.basename(directory_to_transfer)
-    else:
-        directory_to_transfer = os.path.basename(directory_to_transfer[:-1])
-    # print("directory to transfer: "+directory_to_transfer)
+    directory_to_transfer = os.path.normpath(directory_to_transfer)
+    archive_directory = os.path.normpath(archive_directory)
 
     tempdir = export_files(directory_to_transfer, compressed, copy_all_files=copy_all_files)
     df = export_database(project, directory_to_transfer, archive_directory)
@@ -137,13 +134,14 @@ def export_database(pr, directory_to_transfer, archive_directory):
     ]
 
     #figure if we need to update archive names
+    path_rel_lst = [os.path.relpath(os.path.normpath(p)) for p in df['project'].values]
     if os.path.basename(directory_to_transfer) != os.path.basename(archive_directory):
         #we need to update the project name
         path_rel_lst = [
-            p.replace(os.path.basename(directory_to_transfer), os.path.basename(archive_directory)) for p in df["project"].values
+            p.replace(os.path.basename(directory_to_transfer), os.path.basename(archive_directory)) for p in path_rel_lst
         ]
-        df["project"] = path_rel_lst
     
+    df["project"] = path_rel_lst
     del df["projectpath"]
     
     return df

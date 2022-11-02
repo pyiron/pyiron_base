@@ -43,7 +43,7 @@ def import_jobs(cls, archive_directory, compressed=True):
         raise ValueError("Cannot extract to existing folder")
 
     #otherise all ok, create project
-    pr = cls(path=target_folder)
+    pr = cls(target_folder)
 
     #now open and extract archive
     extract_archive(archive_directory)
@@ -51,10 +51,14 @@ def import_jobs(cls, archive_directory, compressed=True):
     #read csv
     csv_file_name = os.path.join(target_folder, "export.csv")
     df = pandas.read_csv(csv_file_name, index_col=0)
-
+    df["project"] = [
+        os.path.join(pr.project_path, os.path.relpath(p, target_folder)) + "/"
+        for p in df["project"].values
+    ]
     df["projectpath"] = len(df) * [pr.root_path]
     # Add jobs to database
     job_id_lst = []
+
     for entry in df.dropna(axis=1).to_dict(orient="records"):
         if "id" in entry:
             del entry["id"]
@@ -70,7 +74,8 @@ def import_jobs(cls, archive_directory, compressed=True):
             entry["username"] = state.settings.login_user
         job_id = pr.db.add_item_dict(par_dict=entry)
         job_id_lst.append(job_id)
-
+    
+    print(job_id_lst)
     # Update parent and master ids
     for job_id, masterid, parentid in zip(
         job_id_lst,
