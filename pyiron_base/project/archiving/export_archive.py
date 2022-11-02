@@ -34,12 +34,11 @@ def generate_list_of_directories(df_files, directory_to_transfer):
     ]
 
 
-def compress_dir(archive_directory):
+def compress_dir(directory_to_transfer, archive_directory):
 
     arch_comp_name = archive_directory + ".tar.gz"
-    tar = tarfile.open(arch_comp_name, "w:gz")
-    tar.add(os.path.relpath(archive_directory, os.getcwd()))
-    tar.close()
+    with tarfile.open(arch_comp_name, "w:gz") as tar:
+        tar.add(archive_directory, arcname=os.path.basename(directory_to_transfer))
     rmtree(archive_directory)
     return arch_comp_name
 
@@ -73,7 +72,7 @@ def copy_files_to_archive(
     df.to_csv(csv_file_name)
 
     if compressed:
-        archived_file = compress_dir(tempdir.name)
+        archived_file = compress_dir(directory_to_transfer, tempdir.name)
         copyfile(archived_file, os.path.join(os.path.dirname(os.path.abspath(archive_directory)), f"{os.path.basename(directory_to_transfer)}.tar.gz"))
     else:
         if os.path.exists(archive_directory):
