@@ -1591,7 +1591,7 @@ class Project(ProjectPath, HasGroups):
 
     def pack(
         self,
-        destination_path,
+        destination_path=None,
         csv_file_name="export.csv",
         compress=True,
         copy_all_files=False,
@@ -1606,16 +1606,16 @@ class Project(ProjectPath, HasGroups):
             copy_all_files (bool):
         """
         directory_to_transfer = os.path.basename(self.path[:-1])
+        if destination_path is None:
+            destination_path = directory_to_transfer
+
         export_archive.copy_files_to_archive(
+            self,
             directory_to_transfer,
             destination_path,
             compressed=compress,
             copy_all_files=copy_all_files,
         )
-        df = export_archive.export_database(
-            self, directory_to_transfer, destination_path
-        )
-        df.to_csv(csv_file_name)
 
     def unpack(self, origin_path, csv_file_name="export.csv", compress=True):
         """
