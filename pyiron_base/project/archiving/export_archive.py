@@ -1,9 +1,8 @@
 import os
 import numpy as np
-from shutil import copyfile, move
+from shutil import copyfile, move, rmtree, copytree
 from pyfileindex import PyFileIndex
 import tarfile
-from shutil import rmtree
 import tempfile
 from pyiron_base.project.archiving.shared import getdir
 from pyiron_base.utils.instance import static_isinstance
@@ -78,7 +77,9 @@ def copy_files_to_archive(
         copyfile(archived_file, os.path.join(os.path.dirname(os.path.abspath(archive_directory)), f"{os.path.basename(directory_to_transfer)}.tar.gz"))
     else:
         if os.path.exists(archive_directory):
-            raise Error("Folder exists, give different name or allow compression")
+            raise ValueError("Folder exists, give different name or allow compression")
+        #now copy the whole set of folders
+        copytree(tempdir.name, archive_directory)
 
 def export_files(directory_to_transfer, compressed, copy_all_files=False):
     if not copy_all_files:
