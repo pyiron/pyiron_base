@@ -139,11 +139,11 @@ def export_database(pr, directory_to_transfer, archive_directory):
     #figure if we need to update archive names
     if os.path.basename(directory_to_transfer) != os.path.basename(archive_directory):
         #we need to update the project name
-
-    path_rel_lst = [
-        p.replace(os.path.basename(directory_to_transfer), os.path.basename(archive_directory)) for p in df["project"].values
-    ]
-    df["project"] = path_rel_lst
+        path_rel_lst = [
+            p.replace(os.path.basename(directory_to_transfer), os.path.basename(archive_directory)) for p in df["project"].values
+        ]
+        df["project"] = path_rel_lst
+    
     del df["projectpath"]
     
     return df
