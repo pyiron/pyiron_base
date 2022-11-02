@@ -6,6 +6,8 @@ Classes to map the Python objects to HDF5 data structures
 """
 
 import numbers
+import time
+
 import h5py
 import os
 from collections.abc import MutableMapping
@@ -257,13 +259,23 @@ class FileHDFio(HasGroups, MutableMapping):
             use_json = False
         elif isinstance(value, tuple):
             value = list(value)
-        h5io.write_hdf5(
-            self.file_name,
-            value,
-            title=self._get_h5_path(key),
-            overwrite="update",
-            use_json=use_json,
-        )
+        try:
+            h5io.write_hdf5(
+                self.file_name,
+                value,
+                title=self._get_h5_path(key),
+                overwrite="update",
+                use_json=use_json,
+            )
+        except BlockingIOError:
+            time.sleep(1)
+            h5io.write_hdf5(
+                self.file_name,
+                value,
+                title=self._get_h5_path(key),
+                overwrite="update",
+                use_json=use_json,
+            )
 
     def __delitem__(self, key):
         """
