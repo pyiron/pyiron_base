@@ -1,6 +1,6 @@
 import os
 import numpy as np
-from shutil import copyfile
+from shutil import copyfile, move
 from pyfileindex import PyFileIndex
 import tarfile
 from shutil import rmtree
@@ -75,7 +75,7 @@ def copy_files_to_archive(
 
     if compressed:
         archived_file = compress_dir(tempdir.name)
-        copyfile(archived_file, os.path.dirname(os.path.abspath(archive_directory)))
+        move(archived_file, os.path.dirname(os.path.abspath(archive_directory)))
     else:
         if os.path.exists(archive_directory):
             raise Error("Folder exists, give different name or allow compression")
@@ -98,7 +98,7 @@ def export_files(directory_to_transfer, compressed, copy_all_files=False):
 
     #now make these directories
     for d in dir_lst:
-        os.makedirs(d.replace(directory_to_transfer, tempdir.name))
+        os.makedirs(d.replace(directory_to_transfer, tempdir.name), exist_ok=True)
 
     #copy files
     for f in df_files.path.values:
