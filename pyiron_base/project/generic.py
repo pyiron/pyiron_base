@@ -105,7 +105,7 @@ class Project(ProjectPath, HasGroups):
     """
 
     def __init__(
-        self, path="", user=None, sql_query=None, default_working_directory=False
+        self, path="", user=None, sql_query=None, default_working_directory=False, unpack=False,
     ):
         if default_working_directory and path == "":
             inputdict = Notebook.get_custom_dict()
@@ -113,6 +113,9 @@ class Project(ProjectPath, HasGroups):
                 path = inputdict["project_dir"]
             else:
                 path = "."
+
+        if unpack:
+            path, archive_directory = import_archive.prepare_path(self, path)
 
         super(Project, self).__init__(path=path)
 
@@ -126,6 +129,9 @@ class Project(ProjectPath, HasGroups):
         self.job_type = JobTypeChoice()
 
         self._maintenance = None
+
+        if unpack:
+            self._unpack(archive_directory)
 
     @property
     def state(self):
@@ -1617,11 +1623,9 @@ class Project(ProjectPath, HasGroups):
             copy_all_files=copy_all_files,
         )
 
-    @classmethod
-    def unpack(cls, origin_path, compress=True):
-        pr_inst = import_archive.import_jobs(cls, origin_path, compressed=compress)
-        return pr_inst
-
+    def _unpack(self, origin_path):
+        import_archive.import_jobs(self, origin_path)
+        
     @classmethod
     def register_tools(cls, name: str, tools):
         """

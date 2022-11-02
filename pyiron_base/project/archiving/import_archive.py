@@ -25,34 +25,36 @@ def extract_archive(archive_directory):
     with tarfile.open(arch_comp_name, "r:gz") as tar:
         tar.extractall()
 
+def import_jobs_to_new_project(cls, archive_directory, compressed=True):
+    pass
+def import_jobs_to_existing_project(pr, archive_directory, compressed=True):
+    pass
 
-def import_jobs(cls, archive_directory, compressed=True):
+def prepare_path(pr, archive_directory):
     if archive_directory[-7:] == ".tar.gz":
         archive_directory = archive_directory[:-7]
-        if not compressed:
-            compressed = True
+    elif not os.path.exists(archive_directory+".tar.gz"):
+        raise FileNotFoundError("Cannot find archive")
 
-    if compressed:
-        arch_comp_name = archive_directory + ".tar.gz"
-        with tarfile.open(arch_comp_name, "r:gz") as tar:
-            target_folder = os.path.join(os.path.dirname(archive_directory), os.path.basename(tar.members[0].name))
-    else:
-        target_folder = archive_directory
+    arch_comp_name = archive_directory + ".tar.gz"
+    with tarfile.open(arch_comp_name, "r:gz") as tar:
+        target_folder = os.path.join(os.path.dirname(archive_directory), os.path.basename(tar.members[0].name))
 
     if os.path.exists(target_folder):
         raise ValueError("Cannot extract to existing folder")
+    
+    return target_folder, archive_directory
 
-    #otherise all ok, create project
-    pr = cls(target_folder)
+def import_jobs(pr, archive_directory):
 
     #now open and extract archive
     extract_archive(archive_directory)
 
     #read csv
-    csv_file_name = os.path.join(target_folder, "export.csv")
+    csv_file_name = os.path.join(pr.path, "export.csv")
     df = pandas.read_csv(csv_file_name, index_col=0)
     df["project"] = [
-        os.path.join(pr.project_path, os.path.relpath(p, target_folder)) + "/"
+        os.path.join(pr.project_path, os.path.relpath(p, pr.project_path)) + "/"
         for p in df["project"].values
     ]
     df["projectpath"] = len(df) * [pr.root_path]
@@ -75,7 +77,7 @@ def import_jobs(cls, archive_directory, compressed=True):
         job_id = pr.db.add_item_dict(par_dict=entry)
         job_id_lst.append(job_id)
     
-    print(job_id_lst)
+    #print(job_id_lst)
     # Update parent and master ids
     for job_id, masterid, parentid in zip(
         job_id_lst,
@@ -86,5 +88,3 @@ def import_jobs(cls, archive_directory, compressed=True):
             pr.db.item_update(
                 item_id=job_id, par_dict={"parentid": parentid, "masterid": masterid}
             )
-
-    return pr
