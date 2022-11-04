@@ -135,7 +135,6 @@ class SerialMasterBase(GenericMaster):
 
         self._output = GenericOutput()
         self._max_iterations = 100
-        self._ref_job = None
         self._convergence_goal = None
         self._convergence_goal_qwargs = {}
         self._convergence_goal_str = None

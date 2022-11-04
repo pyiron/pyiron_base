@@ -130,6 +130,7 @@ class GenericMaster(GenericJob):
         self._job_object_dict = {}
         self._child_id_func = None
         self._child_id_func_str = None
+        self._ref_job = None
 
     @property
     def input(self):

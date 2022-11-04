@@ -143,7 +143,6 @@ class ParallelMaster(GenericMaster):
     def __init__(self, project, job_name):
         super(ParallelMaster, self).__init__(project, job_name=job_name)
         self.__version__ = "0.3"
-        self._ref_job = None
         self._output = GenericOutput()
         self._job_generator = None
         self.submission_status = SubmissionStatus(db=project.db, job_id=self.job_id)

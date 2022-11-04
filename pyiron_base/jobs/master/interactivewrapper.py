@@ -22,10 +22,6 @@ __date__ = "Jan 8, 2021"
 
 
 class InteractiveWrapper(GenericMaster):
-    def __init__(self, project, job_name):
-        super(InteractiveWrapper, self).__init__(project, job_name)
-        self._ref_job = None
-
     def validate_ready_to_run(self):
         self.ref_job.validate_ready_to_run()
 
