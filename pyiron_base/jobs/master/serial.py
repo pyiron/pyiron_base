@@ -142,10 +142,6 @@ class SerialMasterBase(GenericMaster):
         self._convergence_goal_str = None
 
     @property
-    def _input(self):
-        return self.input
-
-    @property
     def start_job(self):
         """
         Get the first job of the series.

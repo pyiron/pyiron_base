@@ -124,11 +124,15 @@ class GenericMaster(GenericJob):
 
     def __init__(self, project, job_name):
         super(GenericMaster, self).__init__(project, job_name=job_name)
-        self.input = GenericParameters("parameters")  # e.g. convergence goal
+        self._input = GenericParameters("parameters")  # e.g. convergence goal
         self._job_name_lst = []
         self._job_object_dict = {}
         self._child_id_func = None
         self._child_id_func_str = None
+
+    @property
+    def input(self):
+        return self._input
 
     def set_input_to_read_only(self):
         self.input.read_only = True
