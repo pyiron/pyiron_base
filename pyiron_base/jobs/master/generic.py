@@ -136,6 +136,10 @@ class GenericMaster(GenericJob):
     def input(self):
         return self._input
 
+    @input.setter
+    def input(self, new_input):
+        self._input = new_input
+
     def set_input_to_read_only(self):
         self.input.read_only = True
 
