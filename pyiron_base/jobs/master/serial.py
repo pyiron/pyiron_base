@@ -251,7 +251,7 @@ class SerialMasterBase(GenericMaster):
         """
         super(SerialMasterBase, self).from_hdf(hdf=hdf, group_name=group_name)
         with self.project_hdf5.open("input") as hdf5_input:
-            self._input.from_hdf(hdf5_input)
+            self.input.from_hdf(hdf5_input)
             convergence_goal_str = hdf5_input["convergence_goal"]
             if convergence_goal_str == "None":
                 self._convergence_goal = None
@@ -379,7 +379,7 @@ class SerialMasterBase(GenericMaster):
         """
         super(SerialMasterBase, self).to_hdf(hdf=hdf, group_name=group_name)
         with self.project_hdf5.open("input") as hdf5_input:
-            self._input.to_hdf(hdf5_input)
+            self.input.to_hdf(hdf5_input)
             if self._convergence_goal is not None:
                 try:
                     hdf5_input["convergence_goal"] = inspect.getsource(
@@ -397,7 +397,7 @@ class SerialMasterBase(GenericMaster):
         Write the input files - for the SerialMaster this only contains convergence goal.
         """
         super().write_input()
-        self._input.write_file(file_name="input.inp", cwd=self.working_directory)
+        self.input.write_file(file_name="input.inp", cwd=self.working_directory)
 
     def __len__(self):
         """
