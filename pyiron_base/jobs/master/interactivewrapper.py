@@ -26,12 +26,6 @@ class InteractiveWrapper(GenericMaster):
     def __init__(self, project, job_name):
         super(InteractiveWrapper, self).__init__(project, job_name)
         self._ref_job = None
-        self.input = GenericParameters("parameters")
-
-    def set_input_to_read_only(self):
-        self.input.read_only = True
-
-    set_input_to_read_only.__doc__ = GenericMaster.set_input_to_read_only.__doc__
 
     def validate_ready_to_run(self):
         self.ref_job.validate_ready_to_run()

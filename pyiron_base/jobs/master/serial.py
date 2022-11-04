@@ -130,7 +130,6 @@ class SerialMasterBase(GenericMaster):
     """
 
     def __init__(self, project, job_name):
-        self._input = GenericParameters("parameters")  # e.g. convergence goal
 
         super(SerialMasterBase, self).__init__(project, job_name=job_name)
         self.__version__ = "0.3"
@@ -141,6 +140,10 @@ class SerialMasterBase(GenericMaster):
         self._convergence_goal = None
         self._convergence_goal_qwargs = {}
         self._convergence_goal_str = None
+
+    @property
+    def _input(self):
+        return self.input
 
     @property
     def start_job(self):
@@ -161,13 +164,6 @@ class SerialMasterBase(GenericMaster):
             job (GenericJob): start job
         """
         self.ref_job = job
-
-    def set_input_to_read_only(self):
-        """
-        This function enforces read-only mode for the input classes, but it has to be implement in the individual
-        classes.
-        """
-        self._input.read_only = True
 
     def get_initial_child_name(self):
         """
