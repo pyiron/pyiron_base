@@ -213,7 +213,7 @@ class GenericMaster(GenericJob):
         Returns:
             GenericJob: reference job
         """
-        if self._ref_job:
+        if self._ref_job is not None:
             return self._ref_job
         try:
             ref_job = self[0]
