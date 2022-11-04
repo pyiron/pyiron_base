@@ -10,7 +10,6 @@ import inspect
 import time
 import numpy as np
 from pyiron_base.jobs.master.generic import GenericMaster, get_function_from_string
-from pyiron_base.storage.parameters import GenericParameters
 
 __author__ = "Jan Janssen"
 __copyright__ = (

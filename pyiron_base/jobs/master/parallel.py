@@ -15,7 +15,6 @@ import importlib
 from pyiron_base.jobs.job.generic import GenericJob
 from pyiron_base.jobs.master.generic import GenericMaster
 from pyiron_base.jobs.master.submissionstatus import SubmissionStatus
-from pyiron_base.storage.parameters import GenericParameters
 from pyiron_base.jobs.job.jobtype import JobType
 from pyiron_base.state import state
 from pyiron_base.jobs.job.wrapper import job_wrapper_function

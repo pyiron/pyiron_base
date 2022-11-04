@@ -12,6 +12,7 @@ from pyiron_base.jobs.job.generic import GenericJob
 from pyiron_base.jobs.job.extension.jobstatus import job_status_finished_lst
 from pyiron_base.jobs.job.jobtype import JobType
 from pyiron_base.jobs.job.extension.jobstatus import JobStatus
+from pyiron_base.storage.parameters import GenericParameters
 
 __author__ = "Jan Janssen"
 __copyright__ = (
