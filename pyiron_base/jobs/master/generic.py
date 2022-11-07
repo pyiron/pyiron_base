@@ -405,6 +405,18 @@ class GenericMaster(GenericJob):
         """
         pass
 
+    def copy(self):
+        """
+        Copy the GenericJob object which links to the job and its HDF5 file
+
+        Returns:
+            :class:`.GenericJob`: New object pointing to the same job
+        """
+        new_job = super().copy()
+        if self.ref_job is not None:
+            new_job.ref_job = self.ref_job
+        return new_job
+
     def __len__(self):
         """
         Length of the GenericMaster equal the number of childs appended.

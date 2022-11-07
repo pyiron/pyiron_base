@@ -296,18 +296,6 @@ class ParallelMaster(GenericMaster):
             if self._job_id is not None and self._ref_job._master_id is None:
                 self._ref_job.master_id = self.job_id
 
-    def copy(self):
-        """
-        Copy the GenericJob object which links to the job and its HDF5 file
-
-        Returns:
-            :class:`.GenericJob`: New object pointing to the same job
-        """
-        new_job = super(ParallelMaster, self).copy()
-        if self.ref_job is not None:
-            new_job.ref_job = self.ref_job
-        return new_job
-
     def _after_generic_copy_to(self, original, new_database_entry, reloaded):
         super()._after_generic_copy_to(original, new_database_entry, reloaded)
         self.submission_status = SubmissionStatus(

@@ -218,17 +218,6 @@ class SerialMasterBase(GenericMaster):
                     else:
                         hh[node] = None
 
-    def copy(self):
-        """
-        Copy the GenericJob object which links to the job and its HDF5 file
-
-        Returns:
-            GenericJob: New GenericJob object pointing to the same job
-        """
-        new_job = super(SerialMasterBase, self).copy()
-        new_job.ref_job = self.ref_job
-        return new_job
-
     def from_hdf(self, hdf=None, group_name=None):
         """
         Restore the SerialMaster from an HDF5 file
