@@ -1478,7 +1478,7 @@ def read_hdf5(fname, title="h5io", slash="ignore"):
         return h5io.read_hdf5(fname=fname, title=title, slash=slash)
     except BlockingIOError:
         time.sleep(1)
-        return h5io.read_hdf5(fname=fname, title=title, slash=slash)
+        return read_hdf5(fname=fname, title=title, slash=slash)
 
 
 def write_hdf5(
@@ -1502,7 +1502,7 @@ def write_hdf5(
         )
     except BlockingIOError:
         time.sleep(1)
-        h5io.write_hdf5(
+        write_hdf5(
             fname=fname,
             data=data,
             overwrite=overwrite,
