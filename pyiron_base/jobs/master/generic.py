@@ -399,6 +399,12 @@ class GenericMaster(GenericJob):
             ]
         )
 
+    def collect_logfiles(self):
+        """
+        The collect logfiles function is required by the GenericJob class, therefore we use an empty template here.
+        """
+        pass
+
     def __len__(self):
         """
         Length of the GenericMaster equal the number of childs appended.

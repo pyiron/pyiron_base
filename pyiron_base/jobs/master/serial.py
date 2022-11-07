@@ -218,12 +218,6 @@ class SerialMasterBase(GenericMaster):
                     else:
                         hh[node] = None
 
-    def collect_logfiles(self):
-        """
-        The collect logfiles function is required by the GenericJob class, therefore we use an empty template here.
-        """
-        pass
-
     def copy(self):
         """
         Copy the GenericJob object which links to the job and its HDF5 file

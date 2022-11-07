@@ -220,13 +220,6 @@ class ParallelMaster(GenericMaster):
         """
         raise NotImplementedError("Implement in derived class")
 
-    def collect_logfiles(self):
-        """
-        Collect the log files of the external executable and store the information in the HDF5 file. This method is
-        currently not implemented for the ParallelMaster.
-        """
-        pass
-
     def output_to_pandas(self, sort_by=None, h5_path="output"):
         """
         Convert output of all child jobs to a pandas Dataframe object.
