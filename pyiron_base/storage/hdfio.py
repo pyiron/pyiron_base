@@ -1473,7 +1473,7 @@ class ProjectHDFio(FileHDFio):
         return self._project.__class__(path=self.file_path)
 
 
-def read_hdf5(fname, title='h5io', slash='ignore')
+def read_hdf5(fname, title='h5io', slash='ignore'):
     try:
         return h5io.read_hdf5(fname=fname, title=title, slash=slash)
     except BlockingIOError:
