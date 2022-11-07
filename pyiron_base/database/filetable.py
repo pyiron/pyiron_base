@@ -2,10 +2,10 @@ import numpy as np
 import os
 import pandas
 import datetime
-import h5io
 from pyfileindex import PyFileIndex
 from pyiron_base.interfaces.singleton import Singleton
 from pyiron_base.database.generic import IsDatabase
+from pyiron_base.storage.hdfio import write_hdf5, read_hdf5
 
 table_columns = {
     "id": None,
@@ -322,7 +322,7 @@ class FileTable(IsDatabase, metaclass=Singleton):
     def set_job_status(self, job_id, status):
         db_entry = self.get_item_by_id(item_id=job_id)
         self._job_table.loc[self._job_table.id == job_id, "status"] = status
-        h5io.write_hdf5(
+        write_hdf5(
             db_entry["project"] + db_entry["subjob"] + ".h5",
             status,
             title=db_entry["subjob"][1:] + "/status",
@@ -356,15 +356,15 @@ class FileTable(IsDatabase, metaclass=Singleton):
 
 
 def get_hamilton_from_file(hdf5_file, job_name):
-    return h5io.read_hdf5(hdf5_file, job_name + "/TYPE").split(".")[-1].split("'")[0]
+    return read_hdf5(hdf5_file, job_name + "/TYPE").split(".")[-1].split("'")[0]
 
 
 def get_hamilton_version_from_file(hdf5_file, job_name):
-    return h5io.read_hdf5(hdf5_file, job_name + "/VERSION")
+    return read_hdf5(hdf5_file, job_name + "/VERSION")
 
 
 def get_job_status_from_file(hdf5_file, job_name):
     if os.path.exists(hdf5_file):
-        return h5io.read_hdf5(hdf5_file, job_name + "/status")
+        return read_hdf5(hdf5_file, job_name + "/status")
     else:
         return None

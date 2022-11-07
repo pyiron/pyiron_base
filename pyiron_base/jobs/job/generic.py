@@ -8,7 +8,6 @@ Generic Job class extends the JobCore class with all the functionality to run th
 from datetime import datetime
 import os
 import posixpath
-import h5io
 import signal
 import warnings
 
@@ -46,6 +45,7 @@ from pyiron_base.utils.instance import static_isinstance
 from pyiron_base.utils.deprecate import deprecate
 from pyiron_base.jobs.job.extension.server.generic import Server
 from pyiron_base.database.filetable import FileTable
+from pyiron_base.storage.hdfio import write_hdf5, read_hdf5
 
 __author__ = "Joerg Neugebauer, Jan Janssen"
 __copyright__ = (
@@ -182,12 +182,12 @@ class GenericJob(JobCore):
             self._status = JobStatus(db=project.db, job_id=self.job_id)
             self.refresh_job_status()
         elif os.path.exists(self.project_hdf5.file_name):
-            initial_status = h5io.read_hdf5(
+            initial_status = read_hdf5(
                 self.project_hdf5.file_name, job_name + "/status"
             )
             self._status = JobStatus(initial_status=initial_status)
             if "job_id" in self.list_nodes():
-                self._job_id = h5io.read_hdf5(
+                self._job_id = read_hdf5(
                     self.project_hdf5.file_name, job_name + "/job_id"
                 )
         else:
@@ -470,7 +470,7 @@ class GenericJob(JobCore):
             )
         elif state.database.database_is_disabled:
             self._status = JobStatus(
-                initial_status=h5io.read_hdf5(
+                initial_status=read_hdf5(
                     self.project_hdf5.file_name, self.job_name + "/status"
                 )
             )
@@ -1132,7 +1132,7 @@ class GenericJob(JobCore):
         if not state.database.database_is_disabled:
             job_id = self.project.db.add_item_dict(self.db_entry())
             self._job_id = job_id
-            h5io.write_hdf5(
+            write_hdf5(
                 self.project_hdf5.file_name,
                 job_id,
                 title=self.job_name + "/job_id",
