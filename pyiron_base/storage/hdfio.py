@@ -1473,7 +1473,7 @@ class ProjectHDFio(FileHDFio):
         return self._project.__class__(path=self.file_path)
 
 
-def read_hdf5(fname, title='h5io', slash='ignore'):
+def read_hdf5(fname, title="h5io", slash="ignore"):
     try:
         return h5io.read_hdf5(fname=fname, title=title, slash=slash)
     except BlockingIOError:
@@ -1481,8 +1481,15 @@ def read_hdf5(fname, title='h5io', slash='ignore'):
         return h5io.read_hdf5(fname=fname, title=title, slash=slash)
 
 
-def write_hdf5(fname, data, overwrite=False, compression=4,
-               title='h5io', slash='error', use_json=False):
+def write_hdf5(
+    fname,
+    data,
+    overwrite=False,
+    compression=4,
+    title="h5io",
+    slash="error",
+    use_json=False,
+):
     try:
         h5io.write_hdf5(
             fname=fname,
@@ -1491,7 +1498,7 @@ def write_hdf5(fname, data, overwrite=False, compression=4,
             compression=compression,
             title=title,
             slash=slash,
-            use_json=use_json
+            use_json=use_json,
         )
     except BlockingIOError:
         time.sleep(1)
@@ -1502,5 +1509,5 @@ def write_hdf5(fname, data, overwrite=False, compression=4,
             compression=compression,
             title=title,
             slash=slash,
-            use_json=use_json
+            use_json=use_json,
         )
