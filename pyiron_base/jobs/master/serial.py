@@ -194,7 +194,6 @@ class SerialMasterBase(GenericMaster):
                 ham_old.job_name.split("_")[:-1] + [str(len(self.child_ids))]
             )
         new_job = ham_old.restart(job_name=job_name)
-        new_job.server.cores = self.server.cores
         return new_job
 
     def collect_output(self):
