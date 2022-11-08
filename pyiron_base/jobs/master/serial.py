@@ -118,27 +118,6 @@ class SerialMasterBase(GenericMaster):
         new_job = ham_old.restart(job_name=job_name)
         return new_job
 
-    def collect_output(self):
-        """
-        Collect the output files of the individual jobs and set the output of the last job to be the output of the
-        SerialMaster - so the SerialMaster contains the same output as its last child.
-        """
-        ham_lst = [self.project_hdf5.inspect(child_id) for child_id in self.child_ids]
-        if (
-            "output" in ham_lst[0].list_groups()
-            and "generic" in ham_lst[0]["output"].list_groups()
-        ):
-            nodes = ham_lst[0]["output/generic"].list_nodes()
-            with self.project_hdf5.open("output/generic") as hh:
-                for node in nodes:
-                    if ham_lst[0]["output/generic/{}".format(node)] is not None:
-                        hh[node] = np.concatenate(
-                            [ham["output/generic/{}".format(node)] for ham in ham_lst],
-                            axis=0,
-                        )
-                    else:
-                        hh[node] = None
-
     def from_hdf(self, hdf=None, group_name=None):
         """
         Restore the SerialMaster from an HDF5 file

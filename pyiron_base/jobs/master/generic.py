@@ -7,10 +7,10 @@ The GenericMaster is the template class for all meta jobs
 
 import inspect
 import textwrap
+import numpy as np
 
 from pyiron_base.jobs.job.generic import GenericJob
 from pyiron_base.jobs.job.extension.jobstatus import job_status_finished_lst
-from pyiron_base.jobs.job.jobtype import JobType
 from pyiron_base.jobs.job.extension.jobstatus import JobStatus
 from pyiron_base.storage.parameters import GenericParameters
 
@@ -314,10 +314,33 @@ class GenericMaster(GenericJob):
 
     def collect_output(self):
         """
-        Collect the output files of the external executable and store the
-        information in the HDF5 file.
+        Collect the output files of the individual jobs and set the output of the last job to be the output of the
+        SerialMaster - so the SerialMaster contains the same output as its last child.
         """
-        raise NotImplementedError("Implement in derived class")
+        if self.ref_job.server.run_mode.interactive:
+            if (
+                "output" in self.ref_job.list_groups()
+                and "generic" in self.ref_job["output"].list_groups()
+            ):
+                with self.project_hdf5.open("output/generic") as hh:
+                    for node in self.ref_job["output/generic"].list_nodes():
+                        if self.ref_job["output/generic/{}".format(node)] is not None:
+                            hh[node] = self.ref_job["output/generic/{}".format(node)]
+        ham_lst = [self.project_hdf5.inspect(child_id) for child_id in self.child_ids]
+        if (
+            "output" in ham_lst[0].list_groups()
+            and "generic" in ham_lst[0]["output"].list_groups()
+        ):
+            nodes = ham_lst[0]["output/generic"].list_nodes()
+            with self.project_hdf5.open("output/generic") as hh:
+                for node in nodes:
+                    if ham_lst[0]["output/generic/{}".format(node)] is not None:
+                        hh[node] = np.concatenate(
+                            [ham["output/generic/{}".format(node)] for ham in ham_lst],
+                            axis=0,
+                        )
+                    else:
+                        hh[node] = None
 
     def _after_generic_copy_to(self, original, new_database_entry, reloaded):
         if reloaded:
