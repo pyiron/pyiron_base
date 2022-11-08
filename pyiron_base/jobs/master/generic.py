@@ -657,7 +657,6 @@ class GenericMaster(GenericJob):
             self.server.run_mode.interactive = True
 
 
-
 def get_function_from_string(function_str):
     """
     Convert a string of source code to a function
