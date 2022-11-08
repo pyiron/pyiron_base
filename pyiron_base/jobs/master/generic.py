@@ -312,6 +312,13 @@ class GenericMaster(GenericJob):
                 child.move_to(project.open(self.job_name + "_hdf5"))
         super(GenericMaster, self).move_to(project)
 
+    def collect_output(self):
+        """
+        Collect the output files of the external executable and store the
+        information in the HDF5 file.
+        """
+        raise NotImplementedError("Implement in derived class")
+
     def _after_generic_copy_to(self, original, new_database_entry, reloaded):
         if reloaded:
             return

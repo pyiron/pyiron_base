@@ -65,9 +65,6 @@ class InteractiveWrapper(GenericMaster):
 
     from_hdf.__doc__ = GenericMaster.from_hdf.__doc__
 
-    def collect_output(self):
-        pass
-
     def _db_entry_update_run_time(self):
         """
 

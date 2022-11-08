@@ -213,13 +213,6 @@ class ParallelMaster(GenericMaster):
         self.submission_status.submitted_jobs = 0
         self.input.write_file(file_name="input.inp", cwd=self.working_directory)
 
-    def collect_output(self):
-        """
-        Collect the output files of the external executable and store the information in the HDF5 file. This method has
-        to be implemented in the individual meta jobs derived from the ParallelMaster.
-        """
-        raise NotImplementedError("Implement in derived class")
-
     def output_to_pandas(self, sort_by=None, h5_path="output"):
         """
         Convert output of all child jobs to a pandas Dataframe object.
