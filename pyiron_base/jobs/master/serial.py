@@ -25,7 +25,8 @@ __date__ = "Sep 1, 2017"
 
 
 class SerialMasterBase(GenericMaster):
-    """
+    (
+        """
     The serial master class is a metajob consisting of a dynamic list of jobs which are executed in serial mode. The job
     is derived from the GenericMaster.
 
@@ -45,7 +46,10 @@ class SerialMasterBase(GenericMaster):
     >>> job_ser.set_goal(convergence_goal, max_steps=10)
     >>> job_ser.run()
 
-    """ + "\n    Args:" + GenericMaster.__doc__.split("\n    Args:")[-1]
+    """
+        + "\n    Args:"
+        + GenericMaster.__doc__.split("\n    Args:")[-1]
+    )
 
     def __init__(self, project, job_name):
 
