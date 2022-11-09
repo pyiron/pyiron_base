@@ -313,10 +313,7 @@ class GenericMaster(GenericJob):
         super(GenericMaster, self).move_to(project)
 
     def collect_output(self):
-        """
-        Collect the output files of the individual jobs and set the output of the last job to be the output of the
-        SerialMaster - so the SerialMaster contains the same output as its last child.
-        """
+        """Collect the generic output files of the individual jobs"""
         if self.ref_job.server.run_mode.interactive:
             output = self.ref_job["output/generic"]
             if output is not None:
