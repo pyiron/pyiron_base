@@ -318,7 +318,7 @@ class GenericMaster(GenericJob):
         SerialMaster - so the SerialMaster contains the same output as its last child.
         """
         if self.ref_job.server.run_mode.interactive:
-            output = self.ref_job['output/generic']
+            output = self.ref_job["output/generic"]
             if output is not None:
                 with self.project_hdf5.open("output/generic") as hh:
                     for node in self.ref_job["output/generic"].list_nodes():
