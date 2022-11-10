@@ -999,10 +999,7 @@ class JobCore(HasGroups):
         Raises:
             FileNotFoundError: if the given file name does not exist in the job folder
         """
-        if file_name in self.list_files():
-            print(*self[file_name][-lines:])
-        else:
-            raise FileNotFoundError(file_name)
+        print(*self._read_file(file_name)[-lines:])
 
     def __repr__(self):
         """
