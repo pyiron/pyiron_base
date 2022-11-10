@@ -595,9 +595,7 @@ class JobCore(HasGroups):
         Returns:
             list: list of file names
         """
-        if os.path.isdir(self.working_directory):
-            return os.listdir(self.working_directory)
-        return []
+        return _job_list_files(self)
 
     def list_childs(self):
         """

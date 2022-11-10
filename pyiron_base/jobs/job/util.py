@@ -308,6 +308,22 @@ def _job_is_compressed(job):
     return False
 
 
+def _job_list_files(job):
+    """
+    Returns list of files in the jobs working directory.
+
+    If the job is compressed, return a list of files in the archive.
+
+    Args:
+        job (JobCore): job object to inspect files in
+
+    Returns:
+        list of str: file names
+    """
+    if os.path.isdir(self.working_directory):
+        return os.listdir(self.working_directory)
+    return []
+
 def _job_archive(job):
     """
     Compress HDF5 file of the job object to tar-archive
