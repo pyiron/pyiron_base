@@ -324,6 +324,27 @@ def _job_list_files(job):
         return os.listdir(self.working_directory)
     return []
 
+
+def _read_file(self, file_name):
+    """
+    Return list of lines of the given file.
+
+    Transparently decompresses the file if job is compressed.
+
+    Args:
+        file_name (str): the file to print
+
+    Raises:
+        FileNotFoundError: if the given file name does not exist in the job folder
+    """
+    if file_name not in self.list_files():
+        raise FileNotFoundError(file_name)
+
+    file_name = posixpath.join(self.working_directory, "{}".format(item))
+    with open(file_name) as f:
+        return f.readlines()
+
+
 def _job_archive(job):
     """
     Compress HDF5 file of the job object to tar-archive

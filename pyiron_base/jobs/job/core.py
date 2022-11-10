@@ -26,6 +26,8 @@ from pyiron_base.jobs.job.util import (
     _job_is_compressed,
     _job_compress,
     _job_decompress,
+    _job_list_files,
+    _job_read_file,
     _job_delete_files,
     _job_delete_hdf,
     _job_remove_folder,
@@ -863,25 +865,6 @@ class JobCore(HasGroups):
         del self._master_id
         del self._status
 
-    def _read_file(self, file_name):
-        """
-        Return list of lines of the given file.
-
-        Transparently decompresses the file if job is compressed.
-
-        Args:
-            file_name (str): the file to print
-
-        Raises:
-            FileNotFoundError: if the given file name does not exist in the job folder
-        """
-        if file_name not in self.list_files():
-            raise FileNotFoundError(file_name)
-
-        file_name = posixpath.join(self.working_directory, "{}".format(item))
-        with open(file_name) as f:
-            return f.readlines()
-
     def __getitem__(self, item):
         """
         Get/read data from the HDF5 file, child jobs or access log files.
@@ -904,7 +887,7 @@ class JobCore(HasGroups):
         """
 
         if item in self.list_files():
-            return self._read_file(item)
+            return _job_read_file(item)
 
         # first try to access HDF5 directly to make the common case fast
         try:
@@ -997,7 +980,7 @@ class JobCore(HasGroups):
         Raises:
             FileNotFoundError: if the given file name does not exist in the job folder
         """
-        print(*self._read_file(file_name)[-lines:])
+        print(*_job_read_file(file_name)[-lines:])
 
     def __repr__(self):
         """
