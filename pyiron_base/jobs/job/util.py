@@ -322,11 +322,15 @@ def _job_list_files(job):
         list of str: file names
     """
     if os.path.isdir(self.working_directory):
-        return os.listdir(self.working_directory)
+        if _job_is_compressed(job):
+            with tarfile.open(_job_compressed_name, "r") as tar:
+                return [member.name for i in tar.getmembers() if member.isfile()]
+        else:
+            return os.listdir(self.working_directory)
     return []
 
 
-def _read_file(self, file_name):
+def _job_read_file(self, file_name):
     """
     Return list of lines of the given file.
 
@@ -342,8 +346,12 @@ def _read_file(self, file_name):
         raise FileNotFoundError(file_name)
 
     file_name = posixpath.join(self.working_directory, "{}".format(item))
-    with open(file_name) as f:
-        return f.readlines()
+    if _job_is_compressed(job):
+        with tarfile.open(_job_compressed_name(job)) as f:
+            return f.extractfile(item).readlines()
+    else:
+        with open(file_name) as f:
+            return f.readlines()
 
 
 def _job_archive(job):
