@@ -865,6 +865,25 @@ class JobCore(HasGroups):
         del self._master_id
         del self._status
 
+    def _read_file(self, file_name):
+        """
+        Return list of lines of the given file.
+
+        Transparently decompresses the file if job is compressed.
+
+        Args:
+            file_name (str): the file to print
+
+        Raises:
+            FileNotFoundError: if the given file name does not exist in the job folder
+        """
+        if file_name not in self.list_files():
+            raise FileNotFoundError(file_name)
+
+        file_name = posixpath.join(self.working_directory, "{}".format(item))
+        with open(file_name) as f:
+            return f.readlines()
+
     def __getitem__(self, item):
         """
         Get/read data from the HDF5 file, child jobs or access log files.
@@ -887,9 +906,7 @@ class JobCore(HasGroups):
         """
 
         if item in self.list_files():
-            file_name = posixpath.join(self.working_directory, "{}".format(item))
-            with open(file_name) as f:
-                return f.readlines()
+            return self._read_file(item)
 
         # first try to access HDF5 directly to make the common case fast
         try:
