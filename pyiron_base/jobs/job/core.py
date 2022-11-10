@@ -971,6 +971,22 @@ class JobCore(HasGroups):
         """
         del self.project_hdf5[posixpath.join(self.project_hdf5.h5_path, key)]
 
+    def tail(self, file_name, lines=100):
+        """
+        Print the last lines of the given file in the job folder.
+
+        Args:
+            file_name (str): the file to print
+            lines (int): how many lines to print
+
+        Raises:
+            FileNotFoundError: if the given file name does not exist in the job folder
+        """
+        if file_name in self.list_files():
+            print(*self[file_name][-lines:])
+        else:
+            raise FileNotFoundError(file_name)
+
     def __repr__(self):
         """
         Human readable string representation
