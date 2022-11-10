@@ -241,6 +241,11 @@ def _kill_child(job):
                     job_process.kill()
 
 
+def _job_compressed_name(job):
+    """Return the canonical file name of a compressed job."""
+    return os.path.join(job.working_directory, job.job_name + ".tar.bz2"),
+
+
 def _job_compress(job, files_to_compress=None):
     """
     Compress the output files of a job object.
@@ -255,10 +260,7 @@ def _job_compress(job, files_to_compress=None):
         cwd = os.getcwd()
         try:
             os.chdir(job.working_directory)
-            with tarfile.open(
-                os.path.join(job.working_directory, job.job_name + ".tar.bz2"),
-                "w:bz2",
-            ) as tar:
+            with tarfile.open(_job_compressed_name(job), "w:bz2") as tar:
                 for name in files_to_compress:
                     if "tar" not in name and not stat.S_ISFIFO(os.stat(name).st_mode):
                         tar.add(name)
@@ -272,7 +274,7 @@ def _job_compress(job, files_to_compress=None):
         finally:
             os.chdir(cwd)
     else:
-        print("The files are already compressed!")
+        job.logger.info("The files are already compressed!")
 
 
 def _job_decompress(job):
@@ -283,8 +285,7 @@ def _job_decompress(job):
         job (JobCore): job object to decompress
     """
     try:
-        tar_file_name = os.path.join(job.working_directory, job.job_name + ".tar.bz2")
-        with tarfile.open(tar_file_name, "r:bz2") as tar:
+        with tarfile.open(_job_compressed_name(job), "r:bz2") as tar:
             tar.extractall(job.working_directory)
         os.remove(tar_file_name)
     except IOError:
@@ -301,7 +302,7 @@ def _job_is_compressed(job):
     Returns:
         bool: [True/False]
     """
-    compressed_name = job.job_name + ".tar.bz2"
+    compressed_name = os.path.basename(_job_compressed_name(job))
     for name in job.list_files():
         if compressed_name in name:
             return True
