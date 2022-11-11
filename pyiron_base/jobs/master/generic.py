@@ -242,15 +242,6 @@ class GenericMaster(GenericJob):
         """
         self.append(ref_job)
 
-    def first_child_name(self):
-        """
-        Get the name of the first child job
-
-        Returns:
-            str: name of the first child job
-        """
-        return self.project.db.get_item_by_id(self.child_ids[0])["job"]
-
     def append(self, job):
         """
         Append a job to the GenericMaster - just like you would append an element to a list.
