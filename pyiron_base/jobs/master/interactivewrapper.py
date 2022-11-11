@@ -92,25 +92,3 @@ class InteractiveWrapper(GenericMaster):
         self._calculate_successor()
         self.send_to_database()
         self.update_master()
-
-    def __getitem__(self, item):
-        """
-        Get/ read data from the GenericMaster
-
-        Args:
-            item (str, slice): path to the data or key of the data object
-
-        Returns:
-            dict, list, float, int: data or data object
-        """
-        child_id_lst = self.child_ids
-        child_name_lst = [
-            self.project.db.get_item_by_id(child_id)["job"]
-            for child_id in self.child_ids
-        ]
-        if isinstance(item, int):
-            total_lst = child_name_lst + self._job_name_lst
-            item = total_lst[item]
-        return self._get_item_when_str(
-            item=item, child_id_lst=child_id_lst, child_name_lst=child_name_lst
-        )
