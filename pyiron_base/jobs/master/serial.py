@@ -56,7 +56,6 @@ class SerialMasterBase(GenericMaster):
         self.__version__ = "0.3"
 
         self._output = GenericOutput()
-        self._max_iterations = 100
         self._convergence_goal = None
         self._convergence_goal_qwargs = {}
         self._convergence_goal_str = None
