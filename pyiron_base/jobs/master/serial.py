@@ -261,7 +261,9 @@ class SerialMasterBase(GenericMaster):
                         self._convergence_goal
                     )
                 except IOError:
-                    hdf5_input["convergence_goal"] = inspect.getsource(self._convergence_goal)
+                    hdf5_input["convergence_goal"] = inspect.getsource(
+                        self._convergence_goal
+                    )
 
                 hdf5_input["convergence_goal_qwargs"] = self._convergence_goal_qwargs
             else:
