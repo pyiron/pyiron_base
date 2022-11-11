@@ -197,7 +197,7 @@ class ParallelMaster(GenericMaster):
         """
         if self.status.finished:
             return True
-        if len(self.child_ids) < len(self._job_generator):
+        if len(self) < len(self._job_generator):
             return False
         return set(
             [self.project.db.get_job_status(child_id) for child_id in self.child_ids]
