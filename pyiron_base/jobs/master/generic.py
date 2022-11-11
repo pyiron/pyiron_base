@@ -148,15 +148,15 @@ class GenericMaster(GenericJob):
     @property
     def child_names(self):
         """
-        Dictionary matching the child ID to the child job name
+        List of matching the child ID to the child job name
 
         Returns:
             dict: {child_id: child job name }
         """
-        child_dict = {}
-        for child_id in self.child_ids:
-            child_dict[child_id] = self.project.db.get_item_by_id(child_id)["job"]
-        return child_dict
+        return {
+            child_id: self.project.db.get_item_by_id(child_id)["job"]
+            for child_id in self.child_ids
+        }
 
     @property
     def child_ids(self):
@@ -452,16 +452,12 @@ class GenericMaster(GenericJob):
         Returns:
             dict, list, float, int: data or data object
         """
-        child_id_lst = self.child_ids
-        child_name_lst = [
-            self.project.db.get_item_by_id(child_id)["job"]
-            for child_id in child_id_lst
-        ]
+        child_name_lst = list(self.child_names)
         if isinstance(item, int):
             total_lst = self._job_name_lst + child_name_lst
             item = total_lst[item]
         return self._get_item_when_str(
-            item=item, child_id_lst=child_id_lst, child_name_lst=child_name_lst
+            item=item, child_id_lst=self.child_ids, child_name_lst=child_name_lst
         )
 
     def __getattr__(self, item):
