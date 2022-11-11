@@ -30,10 +30,6 @@ class TestMaster(ParallelMaster):
         super().__init__(job_name, project)
         self._job_generator = TestGenerator(self)
 
-    # Implement since required
-    def collect_output(self):
-        pass
-
 
 class TestParallelMaster(TestWithProject):
 
