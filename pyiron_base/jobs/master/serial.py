@@ -58,6 +58,7 @@ class SerialMasterBase(GenericMaster):
         self._output = GenericOutput()
         self._convergence_goal = None
         self._convergence_goal_qwargs = {}
+        self._convergence_goal_str = None
 
     @property
     def start_job(self):
@@ -223,6 +224,7 @@ class SerialMasterBase(GenericMaster):
         """
         self._convergence_goal = convergence_goal
         self._convergence_goal_qwargs = qwargs
+        self._convergence_goal_str = inspect.getsource(convergence_goal)
         if self.project_hdf5.file_exists:
             self.to_hdf()
 
@@ -252,10 +254,7 @@ class SerialMasterBase(GenericMaster):
                         self._convergence_goal
                     )
                 except IOError:
-                    hdf5_input["convergence_goal"] = inspect.getsource(
-                        self._convergence_goal
-                    )
-
+                    hdf5_input["convergence_goal"] = self._convergence_goal_str
                 hdf5_input["convergence_goal_qwargs"] = self._convergence_goal_qwargs
             else:
                 hdf5_input["convergence_goal"] = "None"
