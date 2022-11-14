@@ -1054,9 +1054,6 @@ class DatabaseProperties(object):
     def __bool__(self):
         return self._job_dict is not None
 
-    def __nonzero__(self):  # __bool__() for Python 2.7
-        return self._job_dict is not None
-
     def __dir__(self):
         return list(self._job_dict.keys())
 
@@ -1064,7 +1061,10 @@ class DatabaseProperties(object):
         if name in self._job_dict.keys():
             return self._job_dict[name]
         else:
-            raise AttributeError
+            raise AttributeError(name)
+
+    def __repr__(self):
+        return f"{self.__class__.__name__}({repr(self._job_dict)})"
 
 
 class HDF5Content(object):
