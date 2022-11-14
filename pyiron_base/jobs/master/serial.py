@@ -125,6 +125,7 @@ class SerialMasterBase(GenericMaster):
             if convergence_goal_str == "None":
                 self._convergence_goal = None
             else:
+                self._convergence_goal_str = convergence_goal_str
                 self._convergence_goal = get_function_from_string(convergence_goal_str)
                 self._convergence_goal_qwargs = hdf5_input["convergence_goal_qwargs"]
 
