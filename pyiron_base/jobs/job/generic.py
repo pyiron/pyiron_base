@@ -533,7 +533,6 @@ class GenericJob(JobCore):
             copy_files=copy_files,
             delete_existing_job=delete_existing_job,
         )
-        print("DONE call JobCore._internal_copy_to")
         if reloaded:
             return new_job_core, file_project, hdf5_project, reloaded
 
