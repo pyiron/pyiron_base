@@ -37,7 +37,7 @@ setup(
         'pandas==1.5.1',
         'pathlib2==2.3.7.post1',
         'pint==0.19.2',
-        'psutil==5.9.3',
+        'psutil==5.9.4',
         'pyfileindex==0.0.7',
         'pysqa==0.0.17',
         'sqlalchemy==1.4.44',
