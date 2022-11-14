@@ -227,8 +227,7 @@ class GenericMaster(GenericJob):
                 self._ref_job._job_id = None
                 self._ref_job._status = JobStatus(db=self.project.db)
                 return self._ref_job
-            else:
-                return None
+            return None
         except IndexError:
             return None
 
