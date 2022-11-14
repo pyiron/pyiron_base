@@ -452,7 +452,7 @@ class GenericMaster(GenericJob):
         Returns:
             dict, list, float, int: data or data object
         """
-        child_name_lst = list(self.child_names.values())
+        child_name_lst = list(self.child_names.keys())
         if isinstance(item, int):
             total_lst = self._job_name_lst + child_name_lst
             item = total_lst[item]
