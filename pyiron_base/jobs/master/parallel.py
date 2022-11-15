@@ -175,16 +175,6 @@ class ParallelMaster(GenericMaster):
             )
             self.submission_status.refresh()
 
-    def interactive_ref_job_initialize(self):
-        """
-        To execute the reference job in interactive mode it is necessary to initialize it.
-        """
-        if len(self._job_name_lst) > 0:
-            self._ref_job = self.pop(-1)
-            self._ref_job.job_name = self.job_name + "_" + self._ref_job.job_name
-            if self._job_id is not None and self._ref_job._master_id is None:
-                self._ref_job.master_id = self.job_id
-
     def _after_generic_copy_to(self, original, new_database_entry, reloaded):
         super()._after_generic_copy_to(original, new_database_entry, reloaded)
         self.submission_status = SubmissionStatus(

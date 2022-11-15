@@ -36,11 +36,7 @@ class InteractiveWrapper(GenericMaster):
     check_setup.__doc__ = GenericMaster.check_setup.__doc__
 
     def ref_job_initialize(self):
-        if len(self._job_name_lst) > 0:
-            self._ref_job = self.pop(-1)
-            if self._job_id is not None and self._ref_job._master_id is None:
-                self._ref_job.master_id = self.job_id
-                self._ref_job.server.cores = self.server.cores
+        self.interactive_ref_job_initialize()
 
     def to_hdf(self, hdf=None, group_name=None):
         if self._ref_job is not None and self._ref_job.job_id is None:

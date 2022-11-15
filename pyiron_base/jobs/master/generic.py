@@ -328,6 +328,15 @@ class GenericMaster(GenericJob):
                     else:
                         hh[node] = None
 
+    def interactive_ref_job_initialize(self):
+        """
+        To execute the reference job in interactive mode it is necessary to initialize it.
+        """
+        if len(self._job_name_lst) > 0:
+            self._ref_job = self.pop(-1)
+            if self._job_id is not None and self._ref_job._master_id is None:
+                self._ref_job.master_id = self.job_id
+
     def write_input(self):
         """
         Write the input files - for the SerialMaster this only contains convergence goal.
