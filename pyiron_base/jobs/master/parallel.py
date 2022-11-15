@@ -61,6 +61,7 @@ class ParallelMaster(GenericMaster):
     >>> master.run()
 
     """
+
     def __init__(self, project, job_name):
         super(ParallelMaster, self).__init__(project, job_name=job_name)
         self.__version__ = "0.3"
