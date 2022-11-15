@@ -318,13 +318,7 @@ def run_job_with_runmode_non_modal(job):
     """
     if not state.database.database_is_disabled:
         if not state.database.using_local_database:
-            args = (
-                job.project_hdf5.working_directory,
-                job.job_id,
-                None,
-                False,
-                None
-            )
+            args = (job.project_hdf5.working_directory, job.job_id, None, False, None)
         else:
             args = (
                 job.project_hdf5.working_directory,
@@ -539,7 +533,9 @@ def execute_job_with_external_executable(job):
         job.status.aborted = True
 
 
-def multiprocess_wrapper(working_directory, job_id=None, file_path=None, debug=False, connection_string=None):
+def multiprocess_wrapper(
+    working_directory, job_id=None, file_path=None, debug=False, connection_string=None
+):
     if job_id is not None:
         job_wrap = JobWrapper(
             working_directory=str(working_directory),
