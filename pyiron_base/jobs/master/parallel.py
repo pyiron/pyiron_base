@@ -5,7 +5,6 @@
 The parallel master class is a metajob consisting of a list of jobs which are executed in parallel.
 """
 
-from collections import OrderedDict
 from datetime import datetime
 
 import numpy as np

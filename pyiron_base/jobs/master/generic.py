@@ -5,6 +5,7 @@
 The GenericMaster is the template class for all meta jobs
 """
 
+from collections import OrderedDict
 import inspect
 import textwrap
 import numpy as np
@@ -251,7 +252,8 @@ class GenericMaster(GenericJob):
         """
         if self.status.initialized and not job.status.initialized:
             raise ValueError(
-                "Reference job must have status initialized, not ", job.status.string,
+                "Reference job must have status initialized, not ",
+                job.status.string,
             )
         if job.job_name not in self._job_name_lst:
             self._job_name_lst.append(job.job_name)

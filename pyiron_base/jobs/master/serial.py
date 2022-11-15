@@ -5,7 +5,6 @@
 The serial master class is a metajob consisting of a dynamic list of jobs which are executed in serial mode.
 """
 
-from collections import OrderedDict
 import inspect
 import time
 import numpy as np
