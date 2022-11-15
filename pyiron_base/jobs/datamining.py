@@ -689,7 +689,9 @@ class TableJob(GenericJob):
             if job_status in job_status_lst and job_status not in self._job_status_lst:
                 self._job_status_lst.append(job_status)
             else:
-                raise ValueError("The job_status " + job_status + " is not a valid job_status.")
+                raise ValueError(
+                    "The job_status " + job_status + " is not a valid job_status."
+                )
 
     def _save_output(self):
         with self.project_hdf5.open("output") as hdf5_output:
