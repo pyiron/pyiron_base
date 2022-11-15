@@ -229,7 +229,7 @@ class ParallelMaster(GenericMaster):
         Returns:
             int: length of the ListMaster
         """
-        return len(self.child_ids)
+        return len(self.child_ids + self._job_name_lst)
 
     def run_if_refresh(self):
         """
