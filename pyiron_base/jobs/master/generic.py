@@ -457,6 +457,15 @@ class GenericMaster(GenericJob):
             new_job.ref_job = self.ref_job
         return new_job
 
+    def __len__(self):
+        """
+        Length of the ListMaster equal the number of childs appended.
+
+        Returns:
+            int: length of the ListMaster
+        """
+        return len(self.child_ids + self._job_name_lst)
+
     def __getitem__(self, item):
         """
         Get/ read data from the GenericMaster

@@ -219,15 +219,6 @@ class ParallelMaster(GenericMaster):
             if j in job_names
         ]
 
-    def __len__(self):
-        """
-        Length of the ListMaster equal the number of childs appended.
-
-        Returns:
-            int: length of the ListMaster
-        """
-        return len(self.child_ids + self._job_name_lst)
-
     def run_if_refresh(self):
         """
         Internal helper function the run if refresh function is called when the job status is 'refresh'. If the job was
