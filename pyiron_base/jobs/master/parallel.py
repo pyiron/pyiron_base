@@ -65,7 +65,6 @@ class ParallelMaster(GenericMaster):
     def __init__(self, project, job_name):
         super(ParallelMaster, self).__init__(project, job_name=job_name)
         self.__version__ = "0.3"
-        self._output = GenericOutput()
         self._job_generator = None
         self.submission_status = SubmissionStatus(db=project.db, job_id=self.job_id)
         self.refresh_submission_status()
@@ -683,15 +682,6 @@ class ParallelMaster(GenericMaster):
         """
         reload_self = self.to_object()
         reload_self._run_if_created()
-
-
-class GenericOutput(OrderedDict):
-    """
-    Generic Output just a place holder to store the output of the last child directly in the ParallelMaster.
-    """
-
-    def __init__(self):
-        super(GenericOutput, self).__init__()
 
 
 class JobGenerator(object):

@@ -126,6 +126,7 @@ class GenericMaster(GenericJob):
     def __init__(self, project, job_name):
         super(GenericMaster, self).__init__(project, job_name=job_name)
         self._input = GenericParameters("parameters")  # e.g. convergence goal
+        self._output = GenericOutput()
         self._job_name_lst = []
         self._job_object_dict = {}
         self._child_id_func = None
@@ -630,6 +631,15 @@ class GenericMaster(GenericJob):
             parent (:class:`.GenericJob`): job instance that this job was created from
         """
         self.ref_job = parent
+
+
+class GenericOutput(OrderedDict):
+    """
+    Generic Output just a place holder to store the output of the last child directly in the SerialMaster.
+    """
+
+    def __init__(self):
+        super(GenericOutput, self).__init__()
 
 
 def get_function_from_string(function_str):
