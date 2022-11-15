@@ -113,18 +113,6 @@ class ParallelMaster(GenericMaster):
         with self.project_hdf5.open("input") as hdf5_input:
             self.input.to_hdf(hdf5_input)
 
-    def from_hdf(self, hdf=None, group_name=None):
-        """
-        Restore the ParallelMaster from an HDF5 file
-
-        Args:
-            hdf (ProjectHDFio): HDF5 group object - optional
-            group_name (str): HDF5 subgroup name - optional
-        """
-        super(ParallelMaster, self).from_hdf(hdf=hdf, group_name=group_name)
-        with self.project_hdf5.open("input") as hdf5_input:
-            self.input.from_hdf(hdf5_input)
-
     def write_input(self):
         """
         Write the input files - this contains the GenericInput of the ParallelMaster as well as reseting the submission

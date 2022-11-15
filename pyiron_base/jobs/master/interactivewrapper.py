@@ -51,20 +51,6 @@ class InteractiveWrapper(GenericMaster):
 
     to_hdf.__doc__ = GenericMaster.to_hdf.__doc__
 
-    def from_hdf(self, hdf=None, group_name=None):
-        """
-        Restore the InteractiveWrapper from an HDF5 file
-
-        Args:
-            hdf (ProjectHDFio): HDF5 group object - optional
-            group_name (str): HDF5 subgroup name - optional
-        """
-        super(InteractiveWrapper, self).from_hdf(hdf=hdf, group_name=group_name)
-        with self.project_hdf5.open("input") as hdf5_input:
-            self.input.from_hdf(hdf5_input)
-
-    from_hdf.__doc__ = GenericMaster.from_hdf.__doc__
-
     def _db_entry_update_run_time(self):
         """
 

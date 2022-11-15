@@ -56,7 +56,6 @@ class SerialMasterBase(GenericMaster):
         super(SerialMasterBase, self).__init__(project, job_name=job_name)
         self.__version__ = "0.3"
 
-        self._output = GenericOutput()
         self._convergence_goal = None
         self._convergence_goal_qwargs = {}
         self._convergence_goal_str = None
@@ -120,7 +119,6 @@ class SerialMasterBase(GenericMaster):
         """
         super(SerialMasterBase, self).from_hdf(hdf=hdf, group_name=group_name)
         with self.project_hdf5.open("input") as hdf5_input:
-            self.input.from_hdf(hdf5_input)
             convergence_goal_str = hdf5_input["convergence_goal"]
             if convergence_goal_str == "None":
                 self._convergence_goal = None
