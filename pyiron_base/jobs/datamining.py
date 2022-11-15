@@ -18,6 +18,7 @@ from pyiron_base.jobs.job.generic import GenericJob
 from pyiron_base.storage.hdfio import FileHDFio
 from pyiron_base.interfaces.has_groups import HasGroups
 from pyiron_base.jobs.master.generic import get_function_from_string
+from pyiron_base.jobs.job.extension.jobstatus import job_status_lst
 
 
 __author__ = "Uday Gajera, Jan Janssen, Joerg Neugebauer"
@@ -576,6 +577,7 @@ class TableJob(GenericJob):
             csv_file_name=os.path.join(self.working_directory, "pyirontable.csv"),
         )
         self._enforce_update = False
+        self._job_status_lst = ["finished"]
         self._project_level = 0
         self.analysis_project = project.project
 
@@ -675,6 +677,20 @@ class TableJob(GenericJob):
         else:
             raise TypeError()
 
+    @property
+    def job_status_list(self):
+        return self._job_status_lst
+
+    @job_status_list.setter
+    def job_status_list(self, job_status_list):
+        if not isinstance(job_status_list, list):
+            raise TypeError("The job_status_list property requires a list.")
+        for job_status in job_status_list:
+            if job_status in job_status_lst and job_status not in self._job_status_lst:
+                self._job_status_lst.append(job_status)
+            else:
+                raise ValueError("The job_status " + job_status + " is not a valid job_status.")
+
     def _save_output(self):
         with self.project_hdf5.open("output") as hdf5_output:
             self.pyiron_table._df.to_hdf(
@@ -711,6 +727,8 @@ class TableJob(GenericJob):
                 _to_pickle(
                     hdf5_input, "db_filter", self.pyiron_table._db_filter_function
                 )
+            if self._job_status_lst != ["finished"]:
+                hdf5_input["job_status_list"] = self._job_status_lst
         if len(self.pyiron_table._df) != 0:
             self._save_output()
 
@@ -755,6 +773,8 @@ class TableJob(GenericJob):
                     self.pyiron_table.db_filter_function = _from_pickle(
                         hdf5_input, "db_filter"
                     )
+            if "job_status_list" in hdf5_input.list_nodes():
+                self._job_status_lst = hdf5_input["job_status_list"]
             bool_dict = hdf5_input["bool_dict"]
             self._enforce_update = bool_dict["enforce_update"]
             self._pyiron_table.convert_to_object = bool_dict["convert_to_object"]
@@ -787,7 +807,7 @@ class TableJob(GenericJob):
     def run_static(self):
         self._create_working_directory()
         self.status.running = True
-        self.update_table()
+        self.update_table(job_status_list=self._job_status_lst)
         self.status.finished = True
 
     def update_table(self, job_status_list=None):
