@@ -45,9 +45,6 @@ class ParallelMaster(GenericMaster):
     >>>     def parameter_list(self):
     >>>         return list(range(10))
     >>>
-    >>>     def job_name(self, parameter):
-    >>>         return "test_{}".format(parameter)
-    >>>
     >>>     @staticmethod
     >>>     def modify_job(job, parameter):
     >>>         job.input['parameter'] = parameter
