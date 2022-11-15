@@ -221,7 +221,7 @@ class GenericMaster(GenericJob):
         if self._ref_job is not None:
             return self._ref_job
         try:
-            ref_job = self[0]
+            ref_job = self[-1]
             if isinstance(ref_job, GenericJob):
                 self._ref_job = ref_job
                 self._ref_job._job_id = None

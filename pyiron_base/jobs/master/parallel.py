@@ -33,6 +33,34 @@ __date__ = "Sep 1, 2017"
 
 
 class ParallelMaster(GenericMaster):
+    """
+
+    Example:
+
+    >>> from pyiron_base import JobGenerator, Project
+    >>>
+    >>>
+    >>> class TestGenerator(JobGenerator):
+    >>>
+    >>>     @property
+    >>>     def parameter_list(self):
+    >>>         return list(range(10))
+    >>>
+    >>>     def job_name(self, parameter):
+    >>>         return "test_{}".format(parameter)
+    >>>
+    >>>     @staticmethod
+    >>>     def modify_job(job, parameter):
+    >>>         job.input['parameter'] = parameter
+    >>>         return job
+    >>>
+    >>> pr = Project('my_project')
+    >>> job = pr.create_job('JobOfMyChoice', 'job')
+    >>> master = job.create_job('ParallelMaster', 'master')
+    >>> master._job_generator = TestGenerator(master)
+    >>> master.run()
+
+    """
     def __init__(self, project, job_name):
         super(ParallelMaster, self).__init__(project, job_name=job_name)
         self.__version__ = "0.3"
@@ -654,9 +682,6 @@ class ParallelMaster(GenericMaster):
         """
         reload_self = self.to_object()
         reload_self._run_if_created()
-
-
-ParallelMaster.__doc__ = GenericMaster.__doc__
 
 
 class GenericOutput(OrderedDict):
