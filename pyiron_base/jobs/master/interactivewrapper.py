@@ -46,8 +46,6 @@ class InteractiveWrapper(GenericMaster):
         if self._ref_job is not None and self._ref_job.job_id is None:
             self.append(self._ref_job)
         super(InteractiveWrapper, self).to_hdf(hdf=hdf, group_name=group_name)
-        with self.project_hdf5.open("input") as hdf5_input:
-            self.input.to_hdf(hdf5_input)
 
     to_hdf.__doc__ = GenericMaster.to_hdf.__doc__
 

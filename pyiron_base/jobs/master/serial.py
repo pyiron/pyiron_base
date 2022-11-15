@@ -246,7 +246,6 @@ class SerialMasterBase(GenericMaster):
         """
         super(SerialMasterBase, self).to_hdf(hdf=hdf, group_name=group_name)
         with self.project_hdf5.open("input") as hdf5_input:
-            self.input.to_hdf(hdf5_input)
             if self._convergence_goal is not None:
                 try:
                     hdf5_input["convergence_goal"] = inspect.getsource(
