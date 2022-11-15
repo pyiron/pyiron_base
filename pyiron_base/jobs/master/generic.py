@@ -10,6 +10,7 @@ import inspect
 import textwrap
 import numpy as np
 
+from pyiron_base.utils.deprecate import deprecate
 from pyiron_base.jobs.job.generic import GenericJob
 from pyiron_base.jobs.job.extension.jobstatus import job_status_finished_lst
 from pyiron_base.jobs.job.extension.jobstatus import JobStatus
@@ -211,6 +212,10 @@ class GenericMaster(GenericJob):
             dict: Dictionary of currently loaded jobs
         """
         return self._job_object_dict
+
+    @deprecate("Use master.ref_job.job_name instead")
+    def first_child_name(self):
+        return list(self.child_names.values())[0]
 
     @property
     def ref_job(self):
