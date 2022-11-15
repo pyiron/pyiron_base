@@ -257,13 +257,6 @@ class SerialMasterBase(GenericMaster):
             else:
                 hdf5_input["convergence_goal"] = "None"
 
-    def write_input(self):
-        """
-        Write the input files - for the SerialMaster this only contains convergence goal.
-        """
-        super().write_input()
-        self.input.write_file(file_name="input.inp", cwd=self.working_directory)
-
     def __len__(self):
         """
         Length of the SerialMaster equal the number of childs appended.

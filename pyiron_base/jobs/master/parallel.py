@@ -108,7 +108,6 @@ class ParallelMaster(GenericMaster):
         """
         super().write_input()
         self.submission_status.submitted_jobs = 0
-        self.input.write_file(file_name="input.inp", cwd=self.working_directory)
 
     def output_to_pandas(self, sort_by=None, h5_path="output"):
         """
