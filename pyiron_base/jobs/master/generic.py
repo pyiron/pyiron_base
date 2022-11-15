@@ -251,14 +251,13 @@ class GenericMaster(GenericJob):
         """
         if self.status.initialized and not job.status.initialized:
             raise ValueError(
-                "GenericMaster requires reference jobs to have status initialized, rather than ",
-                job.status.string,
+                "Reference job must have status initialized, not ", job.status.string,
             )
-        if job.server.cores >= self.server.cores:
-            self.server.cores = job.server.cores
         if job.job_name not in self._job_name_lst:
             self._job_name_lst.append(job.job_name)
             self._child_job_update_hdf(parent_job=self, child_job=job)
+            if job.server.cores >= self.server.cores:
+                self.server.cores = job.server.cores
 
     def pop(self, i=-1):
         """

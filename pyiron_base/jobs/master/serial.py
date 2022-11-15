@@ -94,8 +94,6 @@ class SerialMasterBase(GenericMaster):
             raise ValueError("No job available in job list, please append a job first.")
         if len(self._job_name_lst) > len(self.child_ids):
             return self.pop(-1)
-        if self.ref_job.server.run_mode.interactive:
-            return self.ref_job
         ham_old = self.project.load(self.child_ids[-1], convert_to_object=True)
         if ham_old.status.aborted:
             ham_old.status.created = True
