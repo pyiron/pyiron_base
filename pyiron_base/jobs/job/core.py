@@ -297,10 +297,12 @@ class JobCore(HasGroups):
         """
         self._hdf5 = project.copy()
 
-    def rewrite_hdf5(self):
+    def relocate_hdf5(self, h5_path=None):
+        if h5_path is None:
+            h5_path = "/" + self.job_name
         self.project_hdf5.remove_group()
         self.project_hdf5 = self.project_hdf5.__class__(
-            self.project, self.job_name, h5_path="/" + self.job_name
+            self.project, self.job_name, h5_path=h5_path
         )
 
     @property
