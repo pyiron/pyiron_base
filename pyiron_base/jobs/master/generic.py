@@ -237,10 +237,7 @@ class GenericMaster(GenericJob):
         del self._job_name_lst[i]
         with self.project_hdf5.open("input") as hdf5_input:
             hdf5_input["job_list"] = self._job_name_lst
-        job_to_return.project_hdf5.remove_group()
-        job_to_return.project_hdf5 = self.project_hdf5.__class__(
-            self.project, job_to_return.job_name, h5_path="/" + job_to_return.job_name
-        )
+        job_to_return.rewrite_hdf5()
         if isinstance(job_to_return, GenericMaster):
             for sub_job in job_to_return._job_object_dict.values():
                 self._child_job_update_hdf(parent_job=job_to_return, child_job=sub_job)
