@@ -1016,6 +1016,15 @@ class FileHDFio(HasGroups, MutableMapping):
                 hdf_group._walk(level=level + 1)
 
     def to_dict(self, ndarray_to_list=True):
+        """
+        Transform file content into dictionary
+        
+        Args:
+            ndarray_to_list (bool): Whether or not to transform ndarray into list
+            
+        Returns:
+            (dict): dict containing hdf file content
+        """
         return self._convert_to_dict(self, ndarray_to_list=ndarray_to_list)
 
     def _convert_to_dict(self, s, ndarray_to_list=True):
@@ -1029,6 +1038,7 @@ class FileHDFio(HasGroups, MutableMapping):
         return results
 
     def hexdigest(self):
+        """Hash in hexdecimal digits"""
         return dict_hash(self.to_dict())
 
 
