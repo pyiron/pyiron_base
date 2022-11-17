@@ -1015,6 +1015,22 @@ class FileHDFio(HasGroups, MutableMapping):
             with self.open(group) as hdf_group:
                 hdf_group._walk(level=level + 1)
 
+    def to_dict(self, ndarray_to_list=True):
+        return self._convert_to_dict(self, ndarray_to_list=ndarray_to_list)
+
+    def _convert_to_dict(self, s, ndarray_to_list=True):
+        def to_list(v):
+            if isinstance(v, np.ndarray) and ndarray_to_list:
+                return v.tolist()
+            return v
+        results = {k: to_list(s[k]) for k in s.list_nodes()}
+        for k in s.list_groups():
+            results[k] = self._convert_to_dict(s[k])
+        return results
+
+    def hexdigest(self):
+        return dict_hash(self.to_dict())
+
 
 class ProjectHDFio(FileHDFio):
     """
@@ -1482,19 +1498,3 @@ class ProjectHDFio(FileHDFio):
             Project: pyiron project object
         """
         return self._project.__class__(path=self.file_path)
-
-    def to_dict(self, ndarray_to_list=True):
-        return self._convert_to_dict(self, ndarray_to_list=ndarray_to_list)
-
-    def _convert_to_dict(self, s, ndarray_to_list=True):
-        def to_list(v):
-            if isinstance(v, np.ndarray) and ndarray_to_list:
-                return v.tolist()
-            return v
-        results = {k: to_list(s[k]) for k in s.list_nodes()}
-        for k in s.list_groups():
-            results[k] = self._convert_to_dict(s[k])
-        return results
-
-    def hexdigest(self):
-        return dict_hash(self.to_dict())
