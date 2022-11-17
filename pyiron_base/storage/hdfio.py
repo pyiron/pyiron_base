@@ -23,6 +23,7 @@ from pyiron_base.utils.deprecate import deprecate
 from pyiron_base.interfaces.has_groups import HasGroups
 from pyiron_base.state import state
 from pyiron_base.jobs.dynamic import JOB_DYN_DICT, class_constructor
+from pyiron_base.storage.hash import dict_hash
 import warnings
 
 __author__ = "Joerg Neugebauer, Jan Janssen"
@@ -1481,3 +1482,19 @@ class ProjectHDFio(FileHDFio):
             Project: pyiron project object
         """
         return self._project.__class__(path=self.file_path)
+
+    def to_dict(self, ndarray_to_list=True):
+        return self._convert_to_dict(self, ndarray_to_list=ndarray_to_list)
+
+    def _convert_to_dict(self, s, ndarray_to_list=True):
+        def to_list(v):
+            if isinstance(v, np.ndarray) and ndarray_to_list:
+                return v.tolist()
+            return v
+        results = {k: to_list(s[k]) for k in s.list_nodes()}
+        for k in s.list_groups():
+            results[k] = self._convert_to_dict(s[k])
+        return results
+
+    def hexdigest(self):
+        return dict_hash(self.to_dict())
