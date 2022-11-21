@@ -416,6 +416,21 @@ class JobCore(HasGroups):
 
         # After all children are deleted, remove the job itself.
         self.remove_child()
+    
+    def kill(self):
+        """
+        Function that stops a job by killing it via queueing system commands (e.g. scancel/qdel in terminal)
+        It can update the status of the job to "aborted" in the job database.
+
+        Use case: A python-side equivalent method to call "scancel JOBID" (slurm) or "qdel JOBID" (PBSPro/torque) via pyiron
+
+        This command is "dumb", it will attempt to kill anything that it is called on, regardless of job-status.
+        """
+        if "server" in self.project_hdf5.list_nodes():
+            server_hdf_dict = self.project_hdf5["server"]
+            if not self.view_mode:
+                self.project.queue_delete_job(server_hdf_dict["qid"])
+                self._status = "aborted"
 
     def remove_child(self):
         """
@@ -432,13 +447,8 @@ class JobCore(HasGroups):
 
         # Delete job from HPC-computing-queue if it is still running.
         job_status = str(self.status)
-        if (
-            job_status in ["submitted", "running", "collect"]
-            and "server" in self.project_hdf5.list_nodes()
-        ):
-            server_hdf_dict = self.project_hdf5["server"]
-            if "qid" in server_hdf_dict.keys() and server_hdf_dict["qid"] is not None:
-                self.project.queue_delete_job(server_hdf_dict["qid"])
+        if job_status in ["submitted", "running", "collect"]:
+            self.kill()
 
         # Delete working directory:
         _job_delete_files(job=self)

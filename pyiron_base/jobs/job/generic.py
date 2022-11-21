@@ -654,16 +654,21 @@ class GenericJob(JobCore):
         _kill_child(job=self)
         super(GenericJob, self).remove_child()
 
-    def kill(self):
-        if self.status.running or self.status.submitted:
-            master_id, parent_id = self.master_id, self.parent_id
-            self.remove()
-            self.reset_job_id()
-            self.master_id, self.parent_id = master_id, parent_id
+    def kill(self, force_kill=True):
+        """
+        Kills a job via queueing system commands.
+
+        force_kill (bool) : Attempt a job-kill regardless of status when set to True.
+                            Set to False if you don't know what you are doing (unlikely).
+        """
+        if force_kill:
+            super(GenericJob, self).kill()
         else:
-            raise ValueError(
-                "The kill() function is only available during the execution of the job."
-            )
+            if self.status.running or self.status.submitted:
+                super(GenericJob, self).kill()
+                raise ValueError(
+                    "The kill() function is only available during the execution of the job."
+                )
 
     def validate_ready_to_run(self):
         """

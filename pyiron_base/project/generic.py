@@ -1212,21 +1212,6 @@ class Project(ProjectPath, HasGroups):
             return queue_delete_job(item)
         else:
             raise EnvironmentError("copy_to: is not available in Viewermode !")
-
-    def kill_job(self, job_specifier):
-        """
-        Kills a running job via the queueing system
-
-        Args:
-            job_specifier (int, GenericJob): Provide either the job_ID or the full hamiltonian
-        Returns:
-            str: Output from the queuing system as string - optimized for the Sun grid engine
-        """
-        if not self.view_mode:
-            set_job_status(self.db, job_specifier = job_specifier, status = "aborted")
-            return queue_delete_job(job_specifier)
-        else:
-            raise EnvironmentError("kill_job: is not available in Viewermode!")
             
     @staticmethod
     def create_hdf(path, job_name):
