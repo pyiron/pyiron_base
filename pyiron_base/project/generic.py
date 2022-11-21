@@ -1212,7 +1212,7 @@ class Project(ProjectPath, HasGroups):
             return queue_delete_job(item)
         else:
             raise EnvironmentError("copy_to: is not available in Viewermode !")
-            
+
     @staticmethod
     def create_hdf(path, job_name):
         """

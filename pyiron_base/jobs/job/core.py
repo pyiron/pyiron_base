@@ -416,7 +416,7 @@ class JobCore(HasGroups):
 
         # After all children are deleted, remove the job itself.
         self.remove_child()
-    
+
     def kill(self):
         """
         Function that stops a job by killing it via queueing system commands (e.g. scancel/qdel in terminal)
