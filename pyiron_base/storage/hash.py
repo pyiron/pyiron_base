@@ -5,7 +5,6 @@
 Create hash for a given dictionary
 """
 
-import numpy as np
 from typing import Dict, Any
 import hashlib
 import json
