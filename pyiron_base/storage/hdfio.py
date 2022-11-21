@@ -1473,12 +1473,16 @@ class ProjectHDFio(FileHDFio):
         return self._project.__class__(path=self.file_path)
 
 
-def read_hdf5(fname, title="h5io", slash="ignore"):
+def read_hdf5(fname, title="h5io", slash="ignore", _counter=0):
     try:
         return h5io.read_hdf5(fname=fname, title=title, slash=slash)
     except BlockingIOError:
-        time.sleep(1)
-        return read_hdf5(fname=fname, title=title, slash=slash)
+        state.logger.warn("Two or more processes tried to access the file " + fname + ". Try again in 1sec. It is the " + _counter + " time.")
+        if _counter < 10:
+            time.sleep(1)
+            return read_hdf5(fname=fname, title=title, slash=slash, _counter=_counter+1)
+        else:
+            raise BlockingIOError("Tried 10 times, but still get a BlockingIOError")
 
 
 def write_hdf5(
@@ -1489,6 +1493,7 @@ def write_hdf5(
     title="h5io",
     slash="error",
     use_json=False,
+    _counter=0
 ):
     try:
         h5io.write_hdf5(
@@ -1501,13 +1506,18 @@ def write_hdf5(
             use_json=use_json,
         )
     except BlockingIOError:
-        time.sleep(1)
-        write_hdf5(
-            fname=fname,
-            data=data,
-            overwrite=overwrite,
-            compression=compression,
-            title=title,
-            slash=slash,
-            use_json=use_json,
-        )
+        state.logger.warn("Two or more processes tried to access the file " + fname + ". Try again in 1sec. It is the " + _counter + " time.")
+        if _counter < 10:
+            time.sleep(1)
+            write_hdf5(
+                fname=fname,
+                data=data,
+                overwrite=overwrite,
+                compression=compression,
+                title=title,
+                slash=slash,
+                use_json=use_json,
+                _counter=_counter+1
+            )
+        else:
+            raise BlockingIOError("Tried 10 times, but still get a BlockingIOError")
