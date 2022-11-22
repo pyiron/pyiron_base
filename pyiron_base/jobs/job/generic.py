@@ -653,7 +653,7 @@ class GenericJob(JobCore):
         _kill_child(job=self)
         super(GenericJob, self).remove_child()
 
-    def kill(self, force_kill=True):
+    def kill(self):
         """
         Kills a job via queueing system commands (e.g. scancel/qdel in terminal)
         It can update the status of the job to "aborted" in the job database.
