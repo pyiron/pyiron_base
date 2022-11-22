@@ -338,12 +338,9 @@ def run_job_with_runmode_non_modal(job):
         target=multiprocess_wrapper,
         args=args,
     )
+    # TODO: job.kill() functionality needs to work on all three of these branches.. which requires understanding this logic
     if job.master_id and job.server.run_mode.non_modal:
         del job
-        # TODO: This is really weird - I can't understand this
-        # PLACEHOLDER COMMENT LINES SO THAT KILL FUNCTIONALITY CAN ACT ON SUBPROCESSES IF JOB HAS THE JOB._PROCESS ATTRIBUTE
-        #job._process = p
-        #job._process.start()
         p.start()
     else:
         if job.server.run_mode.non_modal:
