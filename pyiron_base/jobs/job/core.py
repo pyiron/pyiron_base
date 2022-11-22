@@ -437,7 +437,7 @@ class JobCore(HasGroups):
                 if "qid" in server_hdf_dict.keys() and server_hdf_dict["qid"] is not None:
                     self.project.queue_delete_job(server_hdf_dict["qid"])
                     self._status = "aborted"
-                    self.project.db.item_update({"status": "aborted"})
+                    self.project.db.item_update({"status": "aborted"}, self._job_id)
             # TODO: implement a branch which enables killing of subprocesses if job._process exists
             # see subprocess /pyiron_base/pyiron_base/jobs/job/runfunction.py --> run_job_with_runmode_non_modal
             # PSEUDOCODE:
@@ -794,6 +794,9 @@ class JobCore(HasGroups):
                         posixpath.join(new_job_core.project_hdf5.h5_path, group)
                     ]
             new_job_core._status = "initialized"
+            # THIS PROBABLY DOESN'T WORK! DATABASE NEEDS TO BE UPDATED - SEE KILL METHOD 
+            # self.project.db.item_update({"status": "aborted"}, self._job_id)
+            
         return new_job_core
 
     def move_to(self, project):
