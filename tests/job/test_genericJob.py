@@ -2,8 +2,10 @@
 # Copyright (c) Max-Planck-Institut für Eisenforschung GmbH - Computational Materials Design (CM) Department
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
+import contextlib
 import unittest
 import os
+import io
 from pyiron_base.storage.parameters import GenericParameters
 from pyiron_base.jobs.job.generic import GenericJob
 from pyiron_base._tests import TestWithFilledProject, ToyJob
@@ -488,6 +490,27 @@ class TestGenericJob(TestWithFilledProject):
         except RuntimeError:
             pass
         self.assertTrue(j.status.aborted, "Job did not abort even though return code is 2!")
+
+    def test_tail(self):
+        """job.tail should print the last lines of a file to stdout"""
+        job = self.project.load(self.project.get_job_ids()[0])
+        job.decompress()
+        content = ["Content", "More", "Lines"]
+        with open(os.path.join(job.working_directory, "test_file"), "w") as f:
+            f.write("\n".join(content))
+
+        for i in range(len(content)):
+            with contextlib.redirect_stdout(io.StringIO()) as f:
+                job.tail("test_file", lines=i+1)
+            self.assertEqual(f.getvalue(), "\n".join(content[-i-1:]) + "\n",
+                             "tail read incorrect lines from output file when job uncompressed!")
+
+        job.compress()
+        for i in range(len(content)):
+            with contextlib.redirect_stdout(io.StringIO()) as f:
+                job.tail("test_file", lines=i+1)
+            self.assertEqual(f.getvalue(), "\n".join(content[-i-1:]) + "\n",
+                             "tail read incorrect lines from output file when job compressed!")
 
 if __name__ == "__main__":
     unittest.main()

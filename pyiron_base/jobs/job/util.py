@@ -343,11 +343,11 @@ def _job_read_file(job, file_name):
     if file_name not in job.list_files():
         raise FileNotFoundError(file_name)
 
-    file_name = posixpath.join(job.working_directory, "{}".format(item))
     if _job_is_compressed(job):
-        with tarfile.open(_job_compressed_name(job)) as f:
-            return f.extractfile(item).readlines()
+        with tarfile.open(_job_compressed_name(job), encoding="utf8") as f:
+            return [line.decode("utf8") for line in f.extractfile(file_name).readlines()]
     else:
+        file_name = posixpath.join(job.working_directory, file_name)
         with open(file_name) as f:
             return f.readlines()
 
