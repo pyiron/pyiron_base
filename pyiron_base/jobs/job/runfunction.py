@@ -318,22 +318,33 @@ def run_job_with_runmode_non_modal(job):
     """
     if not state.database.database_is_disabled:
         if not state.database.using_local_database:
-            args = (job.job_id, job.project_hdf5.working_directory, False, None)
+            args = (job.project_hdf5.working_directory, job.job_id, None, False, None)
         else:
             args = (
-                job.job_id,
                 job.project_hdf5.working_directory,
+                job.job_id,
+                None,
                 False,
                 str(job.project.db.conn.engine.url),
             )
-
-        p = multiprocessing.Process(
-            target=multiprocess_wrapper,
-            args=args,
+    else:
+        args = (
+            job.project_hdf5.working_directory,
+            None,
+            job.project_hdf5.file_name + job.project_hdf5.h5_path,
+            False,
+            None,
         )
 
-        if job.master_id and job.server.run_mode.non_modal:
-            del job
+    p = multiprocessing.Process(
+        target=multiprocess_wrapper,
+        args=args,
+    )
+    if job.master_id and job.server.run_mode.non_modal:
+        del job
+        p.start()
+    else:
+        if job.server.run_mode.non_modal:
             p.start()
         else:
             if job.server.run_mode.non_modal:
@@ -361,8 +372,9 @@ def run_job_with_runmode_non_modal(job):
             stderr=subprocess.STDOUT,
             universal_newlines=True,
         )
-        job._process = p
-        job._process.start()
+        # PLACEHOLDER COMMENT LINES SO THAT KILL FUNCTIONALITY CAN ACT ON SUBPROCESSES IF JOB HAS THE JOB._PROCESS ATTRIBUTE
+            #job._process = p
+            #job._process.start()
 
 
 def run_job_with_runmode_queue(job):
@@ -547,11 +559,31 @@ def execute_job_with_external_executable(job):
         job.status.aborted = True
 
 
-def multiprocess_wrapper(job_id, working_dir, debug=False, connection_string=None):
-    job_wrap = JobWrapper(
-        working_directory=str(working_dir),
-        job_id=int(job_id),
-        debug=debug,
-        connection_string=connection_string,
-    )
+def multiprocess_wrapper(
+    working_directory, job_id=None, file_path=None, debug=False, connection_string=None
+):
+    if job_id is not None:
+        job_wrap = JobWrapper(
+            working_directory=str(working_directory),
+            job_id=int(job_id),
+            debug=debug,
+            connection_string=connection_string,
+        )
+    elif file_path is not None:
+        hdf5_file = (
+            ".".join(file_path.split(".")[:-1])
+            + "."
+            + file_path.split(".")[-1].split("/")[0]
+        )
+        h5_path = "/".join(file_path.split(".")[-1].split("/")[1:])
+        job_wrap = JobWrapper(
+            working_directory,
+            job_id=None,
+            hdf5_file=hdf5_file,
+            h5_path="/" + h5_path,
+            debug=debug,
+            connection_string=connection_string,
+        )
+    else:
+        raise ValueError("Either job_id or file_path have to be not None.")
     job_wrap.job.run_static()

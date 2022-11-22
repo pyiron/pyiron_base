@@ -15,6 +15,7 @@ import posixpath
 import h5io
 import numpy as np
 import sys
+import time
 from typing import Union
 
 from pyiron_base.utils.deprecate import deprecate
@@ -149,7 +150,7 @@ class FileHDFio(HasGroups, MutableMapping):
                 # underlying file once, this reduces the number of file opens in the most-likely case from 2 to 1 (1 to
                 # check whether the data is there and 1 to read it) and increases in the worst case from 1 to 2 (1 to
                 # try to read it here and one more time to verify it's not a group below).
-                obj = h5io.read_hdf5(self.file_name, title=self._get_h5_path(item))
+                obj = read_hdf5(self.file_name, title=self._get_h5_path(item))
                 if self._is_convertable_dtype_object_array(obj):
                     obj = self._convert_dtype_obj_array(obj.copy())
                 return obj
@@ -257,7 +258,7 @@ class FileHDFio(HasGroups, MutableMapping):
             use_json = False
         elif isinstance(value, tuple):
             value = list(value)
-        h5io.write_hdf5(
+        write_hdf5(
             self.file_name,
             value,
             title=self._get_h5_path(key),
@@ -901,7 +902,7 @@ class FileHDFio(HasGroups, MutableMapping):
         Returns:
             dict, list, float, int: data or data object
         """
-        return h5io.read_hdf5(self.file_name, title=self._get_h5_path(item))
+        return read_hdf5(self.file_name, title=self._get_h5_path(item))
 
     # def _open_store(self, mode="r"):
     #     """
@@ -1470,3 +1471,67 @@ class ProjectHDFio(FileHDFio):
             Project: pyiron project object
         """
         return self._project.__class__(path=self.file_path)
+
+
+def read_hdf5(fname, title="h5io", slash="ignore", _counter=0):
+    try:
+        return h5io.read_hdf5(fname=fname, title=title, slash=slash)
+    except BlockingIOError:
+        state.logger.warn(
+            "Two or more processes tried to access the file "
+            + fname
+            + ". Try again in 1sec. It is the "
+            + _counter
+            + " time."
+        )
+        if _counter < 10:
+            time.sleep(1)
+            return read_hdf5(
+                fname=fname, title=title, slash=slash, _counter=_counter + 1
+            )
+        else:
+            raise BlockingIOError("Tried 10 times, but still get a BlockingIOError")
+
+
+def write_hdf5(
+    fname,
+    data,
+    overwrite=False,
+    compression=4,
+    title="h5io",
+    slash="error",
+    use_json=False,
+    _counter=0,
+):
+    try:
+        h5io.write_hdf5(
+            fname=fname,
+            data=data,
+            overwrite=overwrite,
+            compression=compression,
+            title=title,
+            slash=slash,
+            use_json=use_json,
+        )
+    except BlockingIOError:
+        state.logger.warn(
+            "Two or more processes tried to access the file "
+            + fname
+            + ". Try again in 1sec. It is the "
+            + _counter
+            + " time."
+        )
+        if _counter < 10:
+            time.sleep(1)
+            write_hdf5(
+                fname=fname,
+                data=data,
+                overwrite=overwrite,
+                compression=compression,
+                title=title,
+                slash=slash,
+                use_json=use_json,
+                _counter=_counter + 1,
+            )
+        else:
+            raise BlockingIOError("Tried 10 times, but still get a BlockingIOError")

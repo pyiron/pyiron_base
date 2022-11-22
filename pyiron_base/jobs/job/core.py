@@ -299,6 +299,18 @@ class JobCore(HasGroups):
         """
         self._hdf5 = project.copy()
 
+    def relocate_hdf5(self, h5_path=None):
+        """
+        Relocate the hdf file. This function is needed when the child job is
+        spawned by a parent job (cf. pyiron_base.jobs.master.generic)
+        """
+        if h5_path is None:
+            h5_path = "/" + self.job_name
+        self.project_hdf5.remove_group()
+        self.project_hdf5 = self.project_hdf5.__class__(
+            self.project, self.job_name, h5_path=h5_path
+        )
+
     @property
     def project(self):
         """
@@ -1087,9 +1099,6 @@ class DatabaseProperties(object):
     def __bool__(self):
         return self._job_dict is not None
 
-    def __nonzero__(self):  # __bool__() for Python 2.7
-        return self._job_dict is not None
-
     def __dir__(self):
         return list(self._job_dict.keys())
 
@@ -1097,7 +1106,10 @@ class DatabaseProperties(object):
         if name in self._job_dict.keys():
             return self._job_dict[name]
         else:
-            raise AttributeError
+            raise AttributeError(name)
+
+    def __repr__(self):
+        return f"{self.__class__.__name__}({repr(self._job_dict)})"
 
 
 class HDF5Content(object):
