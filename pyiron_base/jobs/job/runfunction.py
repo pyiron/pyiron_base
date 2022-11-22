@@ -312,7 +312,6 @@ def run_job_with_runmode_non_modal(job):
     """
     The run if non modal function is called by run to execute the simulation in the background. For this we use
     multiprocessing.Process()
-
     Args:
         job (GenericJob): pyiron job object
     """
@@ -335,46 +334,24 @@ def run_job_with_runmode_non_modal(job):
             False,
             None,
         )
-
     p = multiprocessing.Process(
         target=multiprocess_wrapper,
         args=args,
     )
     if job.master_id and job.server.run_mode.non_modal:
         del job
+        # TODO: This is really weird - I can't understand this
+        # PLACEHOLDER COMMENT LINES SO THAT KILL FUNCTIONALITY CAN ACT ON SUBPROCESSES IF JOB HAS THE JOB._PROCESS ATTRIBUTE
+        #job._process = p
+        #job._process.start()
         p.start()
     else:
         if job.server.run_mode.non_modal:
             p.start()
         else:
-            if job.server.run_mode.non_modal:
-                p.start()
-            else:
-                job._process = p
-                job._process.start()
-    else:
-        command = (
-            "python -m pyiron_base.cli wrapper -p "
-            + job.working_directory
-            + " -f "
-            + job.project_hdf5.file_name
-            + job.project_hdf5.h5_path
-        )
-        working_directory = job.project_hdf5.working_directory
-        if not os.path.exists(working_directory):
-            os.makedirs(working_directory)
-        del job
-        subprocess.Popen(
-            command,
-            cwd=working_directory,
-            shell=True,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-            universal_newlines=True,
-        )
-        # PLACEHOLDER COMMENT LINES SO THAT KILL FUNCTIONALITY CAN ACT ON SUBPROCESSES IF JOB HAS THE JOB._PROCESS ATTRIBUTE
-            #job._process = p
-            #job._process.start()
+            job._process = p
+            job._process.start()
+        
 
 
 def run_job_with_runmode_queue(job):
