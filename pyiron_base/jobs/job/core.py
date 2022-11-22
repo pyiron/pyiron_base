@@ -30,6 +30,8 @@ from pyiron_base.jobs.job.util import (
     _job_delete_hdf,
     _job_remove_folder,
 )
+
+
 from pyiron_base.state import state
 
 __author__ = "Jan Janssen"
@@ -417,20 +419,38 @@ class JobCore(HasGroups):
         # After all children are deleted, remove the job itself.
         self.remove_child()
 
-    def kill(self):
+    def kill(self, enable = True):
         """
-        Function that stops a job by killing it via queueing system commands (e.g. scancel/qdel in terminal)
-        It can update the status of the job to "aborted" in the job database.
+        Function that kills a job via queueing system commands (e.g. scancel/qdel in terminal)
+        It also updates the status of the job to "aborted" in the job database.
+
+        enable (bool): Attempt a job-kill regardless of status when set to True.
+                       Set to False if you don't know what you are doing (unlikely).
 
         Use case: A python-side equivalent method to call "scancel JOBID" (slurm) or "qdel JOBID" (PBSPro/torque) via pyiron
 
         This command is "dumb", it will attempt to kill anything that it is called on, regardless of job-status.
         """
-        if "server" in self.project_hdf5.list_nodes():
-            server_hdf_dict = self.project_hdf5["server"]
-            if "qid" in server_hdf_dict.keys() and server_hdf_dict["qid"] is not None:
-                self.project.queue_delete_job(server_hdf_dict["qid"])
-                self._status = "aborted"
+        def base_kill():
+            if "server" in self.project_hdf5.list_nodes():
+                server_hdf_dict = self.project_hdf5["server"]
+                if "qid" in server_hdf_dict.keys() and server_hdf_dict["qid"] is not None:
+                    self.project.queue_delete_job(server_hdf_dict["qid"])
+                    self._status = "aborted"
+                    self.project.db.item_update({"status": "aborted"})
+            # TODO: implement a branch which enables killing of subprocesses if job._process exists
+            # see subprocess /pyiron_base/pyiron_base/jobs/job/runfunction.py --> run_job_with_runmode_non_modal
+            # PSEUDOCODE:
+            # elif hasattr(self, "_process"):
+            # INSERT KILL CODE FOR SUBPROCESS HERE
+        if enable:
+            base_kill()
+        else:
+            if self.status.running or self.status.submitted:
+                base_kill() 
+            else:
+                raise ValueError("The kill() function is only available during the execution of the job.")
+        self.logger.warn("The job.kill() functionality has changed! It now kills the job via queueing system commands and preserves the files and directory")
 
     def remove_child(self):
         """

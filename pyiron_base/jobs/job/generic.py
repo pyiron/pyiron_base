@@ -656,19 +656,18 @@ class GenericJob(JobCore):
 
     def kill(self, force_kill=True):
         """
-        Kills a job via queueing system commands.
+        Kills a job via queueing system commands (e.g. scancel/qdel in terminal)
+        It can update the status of the job to "aborted" in the job database.
 
-        force_kill (bool) : Attempt a job-kill regardless of status when set to True.
-                            Set to False if you don't know what you are doing (unlikely).
+        enable (bool): Attempt a job-kill regardless of status when set to True.
+                       Set to False if you don't know what you are doing (unlikely).
+
+        Use case: A python-side equivalent method to call "scancel JOBID" (slurm) or "qdel JOBID" (PBSPro/torque) via pyiron
+
+        This command is "dumb", it will attempt to kill anything that it is called on, regardless of job-status.
         """
-        if force_kill:
-            super(GenericJob, self).kill()
-        else:
-            if self.status.running or self.status.submitted:
-                super(GenericJob, self).kill()
-                raise ValueError(
-                    "The kill() function is only available during the execution of the job."
-                )
+        super(GenericJob, self).kill()
+
 
     def validate_ready_to_run(self):
         """
