@@ -243,7 +243,7 @@ def _kill_child(job):
 
 def _job_compressed_name(job):
     """Return the canonical file name of a compressed job."""
-    return os.path.join(job.working_directory, job.job_name + ".tar.bz2"),
+    return os.path.join(job.working_directory, job.job_name + ".tar.bz2")
 
 
 def _job_compress(job, files_to_compress=None):
@@ -303,10 +303,7 @@ def _job_is_compressed(job):
         bool: [True/False]
     """
     compressed_name = os.path.basename(_job_compressed_name(job))
-    for name in job.list_files():
-        if compressed_name in name:
-            return True
-    return False
+    return compressed_name in os.listdir(job.working_directory)
 
 
 def _job_list_files(job):
@@ -321,16 +318,16 @@ def _job_list_files(job):
     Returns:
         list of str: file names
     """
-    if os.path.isdir(self.working_directory):
+    if os.path.isdir(job.working_directory):
         if _job_is_compressed(job):
-            with tarfile.open(_job_compressed_name, "r") as tar:
+            with tarfile.open(_job_compressed_name(job), "r") as tar:
                 return [member.name for i in tar.getmembers() if member.isfile()]
         else:
-            return os.listdir(self.working_directory)
+            return os.listdir(job.working_directory)
     return []
 
 
-def _job_read_file(self, file_name):
+def _job_read_file(job, file_name):
     """
     Return list of lines of the given file.
 
@@ -342,10 +339,10 @@ def _job_read_file(self, file_name):
     Raises:
         FileNotFoundError: if the given file name does not exist in the job folder
     """
-    if file_name not in self.list_files():
+    if file_name not in job.list_files():
         raise FileNotFoundError(file_name)
 
-    file_name = posixpath.join(self.working_directory, "{}".format(item))
+    file_name = posixpath.join(job.working_directory, "{}".format(item))
     if _job_is_compressed(job):
         with tarfile.open(_job_compressed_name(job)) as f:
             return f.extractfile(item).readlines()
