@@ -361,6 +361,8 @@ def run_job_with_runmode_non_modal(job):
             stderr=subprocess.STDOUT,
             universal_newlines=True,
         )
+        job._process = p
+        job._process.start()
 
 
 def run_job_with_runmode_queue(job):
