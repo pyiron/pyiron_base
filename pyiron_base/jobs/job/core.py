@@ -428,9 +428,8 @@ class JobCore(HasGroups):
         """
         if "server" in self.project_hdf5.list_nodes():
             server_hdf_dict = self.project_hdf5["server"]
-            if not self.view_mode:
-                self.project.queue_delete_job(server_hdf_dict["qid"])
-                self._status = "aborted"
+            self.project.queue_delete_job(server_hdf_dict["qid"])
+            self._status = "aborted"
 
     def remove_child(self):
         """
