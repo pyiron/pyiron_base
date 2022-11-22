@@ -353,7 +353,6 @@ def run_job_with_runmode_non_modal(job):
             job._process.start()
         
 
-
 def run_job_with_runmode_queue(job):
     """
     The run if queue function is called by run if the user decides to submit the job to and queing system. The job
