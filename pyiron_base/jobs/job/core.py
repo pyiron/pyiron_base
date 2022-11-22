@@ -431,7 +431,7 @@ class JobCore(HasGroups):
         # After all children are deleted, remove the job itself.
         self.remove_child()
 
-    def kill(self, enable = True):
+    def kill(self, enable=True):
         """
         Function that kills a job via queueing system commands (e.g. scancel/qdel in terminal)
         It also updates the status of the job to "aborted" in the job database.
@@ -443,10 +443,14 @@ class JobCore(HasGroups):
 
         This command is "dumb", it will attempt to kill anything that it is called on, regardless of job-status.
         """
+
         def base_kill():
             if "server" in self.project_hdf5.list_nodes():
                 server_hdf_dict = self.project_hdf5["server"]
-                if "qid" in server_hdf_dict.keys() and server_hdf_dict["qid"] is not None:
+                if (
+                    "qid" in server_hdf_dict.keys()
+                    and server_hdf_dict["qid"] is not None
+                ):
                     self.project.queue_delete_job(server_hdf_dict["qid"])
                     self._status = "aborted"
                     self.project.db.item_update({"status": "aborted"}, self._job_id)
@@ -455,14 +459,19 @@ class JobCore(HasGroups):
             # PSEUDOCODE:
             # elif hasattr(self, "_process"):
             # INSERT KILL CODE FOR SUBPROCESS HERE
+
         if enable:
             base_kill()
         else:
             if self.status.running or self.status.submitted:
-                base_kill() 
+                base_kill()
             else:
-                raise ValueError("The kill() function is only available during the execution of the job.")
-        self.logger.warn("The job.kill() functionality has changed! It now kills the job via queueing system commands and preserves the files and directory")
+                raise ValueError(
+                    "The kill() function is only available during the execution of the job."
+                )
+        self.logger.warn(
+            "The job.kill() functionality has changed! It now kills the job via queueing system commands and preserves the files and directory"
+        )
 
     def remove_child(self):
         """
@@ -806,9 +815,9 @@ class JobCore(HasGroups):
                         posixpath.join(new_job_core.project_hdf5.h5_path, group)
                     ]
             new_job_core._status = "initialized"
-            # THIS PROBABLY DOESN'T WORK! DATABASE NEEDS TO BE UPDATED - SEE KILL METHOD 
+            # THIS PROBABLY DOESN'T WORK! DATABASE NEEDS TO BE UPDATED - SEE KILL METHOD
             # self.project.db.item_update({"status": "aborted"}, self._job_id)
-            
+
         return new_job_core
 
     def move_to(self, project):

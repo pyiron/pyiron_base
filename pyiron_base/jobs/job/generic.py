@@ -667,7 +667,6 @@ class GenericJob(JobCore):
         """
         super(GenericJob, self).kill()
 
-
     def validate_ready_to_run(self):
         """
         Validate that the calculation is ready to be executed. By default no generic checks are performed, but one could
