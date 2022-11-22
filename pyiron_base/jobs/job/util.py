@@ -284,8 +284,9 @@ def _job_decompress(job):
     Args:
         job (JobCore): job object to decompress
     """
+    tar_file_name = _job_compressed_name(job)
     try:
-        with tarfile.open(_job_compressed_name(job), "r:bz2") as tar:
+        with tarfile.open(tar_file_name, "r:bz2") as tar:
             tar.extractall(job.working_directory)
         os.remove(tar_file_name)
     except IOError:
@@ -321,7 +322,7 @@ def _job_list_files(job):
     if os.path.isdir(job.working_directory):
         if _job_is_compressed(job):
             with tarfile.open(_job_compressed_name(job), "r") as tar:
-                return [member.name for i in tar.getmembers() if member.isfile()]
+                return [member.name for member in tar.getmembers() if member.isfile()]
         else:
             return os.listdir(job.working_directory)
     return []

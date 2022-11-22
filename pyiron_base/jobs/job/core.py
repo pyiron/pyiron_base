@@ -887,7 +887,7 @@ class JobCore(HasGroups):
         """
 
         if item in self.list_files():
-            return _job_read_file(item)
+            return _job_read_file(job, item)
 
         # first try to access HDF5 directly to make the common case fast
         try:
@@ -980,7 +980,7 @@ class JobCore(HasGroups):
         Raises:
             FileNotFoundError: if the given file name does not exist in the job folder
         """
-        print(*_job_read_file(file_name)[-lines:])
+        print(*_job_read_file(job, file_name)[-lines:])
 
     def __repr__(self):
         """

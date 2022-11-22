@@ -427,7 +427,7 @@ class TestGenericJob(TestWithFilledProject):
 
     def test_compress(self):
         job = self.project.load(self.project.get_job_ids()[0])
-        wd_files = job.list_files()
+        wd_files = os.listdir(job.working_directory)
         self.assertEqual(len(wd_files), 1, "Only one zipped file should be present in the working directory")
         self.assertEqual(wd_files[0], f"{job.name}.tar.bz2", "Inconsistent name for the zipped file")
 
@@ -441,7 +441,7 @@ class TestGenericJob(TestWithFilledProject):
             job = self.project.load(self.project.get_job_ids()[0])
             job_restart = job.restart()
             job_restart.run()
-            wd_files = job_restart.list_files()
+            wd_files = os.listdir(job_restart.working_directory)
             self.assertEqual(len(wd_files), 1, "Only one zipped file should be present in the working directory")
             self.assertEqual(wd_files[0], f"{job_restart.name}.tar.bz2", "Inconsistent name for the zipped file")
             job_restart.decompress()
