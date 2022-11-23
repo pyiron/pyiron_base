@@ -656,7 +656,7 @@ class GenericJob(JobCore):
     def kill(self):
         """
         Kills a job via queueing system commands (e.g. scancel/qdel in terminal)
-        It can update the status of the job to "aborted" in the job database.
+        It updates the status of the job to "aborted" in the database.
 
         enable (bool): Attempt a job-kill regardless of status when set to True.
                        This will set the status to "aborted" no matter if the job was successfully killed or not!

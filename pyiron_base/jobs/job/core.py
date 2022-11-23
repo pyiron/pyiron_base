@@ -434,13 +434,13 @@ class JobCore(HasGroups):
     def kill(self, enable=True):
         """
         Kills a job via queueing system commands (e.g. scancel/qdel in terminal)
-        It can update the status of the job to "aborted" in the job database.
+        It updates the status of the job to "aborted" in the database.
 
         enable (bool): Attempt a job-kill regardless of status when set to True.
                        This will set the status to "aborted" no matter if the job was successfully killed or not!
                        Set to False if you don't know what you are doing (unlikely).
-                       When False, it checks that the job is actually in a queued/running state in the database
-                       before attempting to remove it from the queue and set the aborted status.
+                       When False, it checks that the job is actually in a queued/running state
+                       in the database before attempting to remove it from the queue and set the aborted status.
 
         Use case: A python-side equivalent method to call "scancel JOBID" (slurm) or "qdel JOBID" (PBSPro/torque) via pyiron
         This command is "dumb" by default, it will attempt to kill anything that it is called on, regardless of job-status.
