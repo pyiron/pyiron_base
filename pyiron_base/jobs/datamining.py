@@ -459,6 +459,12 @@ class TableJob(GenericJob):
 
     @property
     def db_filter_function(self):
+        """
+        function: database level filter function
+
+        The function should accept a dataframe, the job table of :attr:`~.analysis_project` and return a bool index into
+        it.  Jobs where the index is `False` are excluced from the analysis.
+        """
         return self._pyiron_table.db_filter_function
 
     @db_filter_function.setter
@@ -467,6 +473,12 @@ class TableJob(GenericJob):
 
     @property
     def filter_function(self):
+        """
+        function: job level filter function
+
+        The function should accept a GenericJob or JobCore object and return a bool, if it returns `False` the job is
+        excluced from the analysis.
+        """
         return self._pyiron_table.filter_function
 
     @filter_function.setter
@@ -497,6 +509,7 @@ class TableJob(GenericJob):
         return self._pyiron_table
 
     @property
+    @deprecate("Use analysis_project instead!")
     def ref_project(self):
         return self.analysis_project
 
@@ -528,6 +541,9 @@ class TableJob(GenericJob):
 
     @property
     def convert_to_object(self):
+        """
+        bool: if `True` convert fully load jobs before passing them to functions, if `False` use inspect mode.
+        """
         return self._pyiron_table.convert_to_object
 
     @convert_to_object.setter
@@ -536,6 +552,9 @@ class TableJob(GenericJob):
 
     @property
     def enforce_update(self):
+        """
+        bool: if `True` re-evaluate all function on all jobs when :meth:`.update_table` is called.
+        """
         return self._enforce_update
 
     @enforce_update.setter
@@ -668,7 +687,10 @@ class TableJob(GenericJob):
     @deprecate(job_status_list="Use TableJob.job_status instead!")
     def update_table(self, job_status_list=None):
         """
-        Update the pyiron table object, add new columns if a new function was added or add new rows for new jobs
+        Update the pyiron table object, add new columns if a new function was added or add new rows for new jobs.
+
+        By default this function does not recompute already evaluated functions on already existing jobs.  To force a
+        complete re-evaluation set :attr:`~.enforce_update` to `True`.
 
         Args:
             job_status_list (list/None): List of job status which are added to the table by default ["finished"].
@@ -694,6 +716,7 @@ class TableJob(GenericJob):
 
     def get_dataframe(self):
         """
+        Returns aggregated results over all jobs.
 
         Returns:
             pandas.Dataframe
