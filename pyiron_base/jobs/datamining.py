@@ -13,10 +13,12 @@ import pandas
 from pandas.errors import EmptyDataError
 from tqdm.auto import tqdm
 import types
+from typing import List, Tuple
 
+from pyiron_base.utils.deprecate import deprecate
 from pyiron_base.jobs.job.generic import GenericJob
+from pyiron_base.jobs.job.extension import jobstatus
 from pyiron_base.storage.hdfio import FileHDFio
-from pyiron_base.interfaces.has_groups import HasGroups
 from pyiron_base.jobs.master.generic import get_function_from_string
 
 
@@ -124,7 +126,7 @@ class JobFilters(object):
         return filter_job_name_segment
 
 
-class PyironTable(HasGroups):
+class PyironTable:
     """
     Class for easy, efficient, and pythonic analysis of data from pyiron projects
 
@@ -147,7 +149,6 @@ class PyironTable(HasGroups):
         self._system_function_lst = system_function_lst
         self.add = FunctionContainer(system_function_lst=self._system_function_lst)
         self._csv_file = csv_file_name
-        self.EMPTY_STR = "-"
 
     @property
     def filter(self):
@@ -159,17 +160,6 @@ class PyironTable(HasGroups):
 
         """
         return self._filter
-
-    @property
-    def _file_name_csv(self):
-        if self._csv_file is None:
-            return self._project.path + self.name + ".csv"
-        else:
-            return self._csv_file
-
-    @property
-    def _file_name_txt(self):
-        return self._project.path + self.name + ".txt"
 
     @property
     def name(self):
@@ -223,135 +213,75 @@ class PyironTable(HasGroups):
     def filter_function(self, funct):
         self._filter_function = funct
 
-    def to_hdf(self):
-        file = FileHDFio(file_name=self._project.path + self.name + ".h5", h5_path="/")
-        self.add._to_hdf(file)
-
-    def from_hdf(self):
-        file = FileHDFio(file_name=self._project.path + self.name + ".h5", h5_path="/")
-        self.add._from_hdf(file)
-
-    def save(self, name=None):
-        self._name = name
-        self.to_hdf()
-        self._save_csv()
-
-    def load(self, name=None):
-        self._name = name
-        self.from_hdf()
-        self._load_csv()
-
-    def create_table(
-        self, enforce_update=False, level=3, file=None, job_status_list=None
-    ):
-        skip_table_update = False
-        filter_funct = self.filter_function
-        if job_status_list is None:
-            job_status_list = ["finished"]
-        if self._is_file():
-            if file is None:
-                file = FileHDFio(
-                    file_name=self._project.path + self.name + ".h5", h5_path="/"
-                )
+    def _get_new_functions(self, file: FileHDFio) -> Tuple[List, List]:
+        try:
             (
                 temp_user_function_dict,
                 temp_system_function_dict,
             ) = self._get_data_from_hdf5(hdf=file)
-            job_update_lst = self._collect_job_update_lst(
-                job_status_list=job_status_list,
-                filter_funct=filter_funct,
-                job_stored_ids=self._get_job_ids(),
-            )
-            keys_update_user_lst = [
+            new_user_functions = [
                 key
                 for key in self.add._user_function_dict.keys()
                 if key not in temp_user_function_dict.keys()
             ]
-            keys_update_system_lst = [
+            new_system_functions = [
                 k
                 for k, v in self.add._system_function_dict.items()
                 if v and not temp_system_function_dict[k]
             ]
-            if (
-                len(job_update_lst) == 0
-                and len(keys_update_user_lst) == 0
-                and keys_update_system_lst == 0
-                and not enforce_update
-            ):
-                skip_table_update = True
-        else:
-            job_update_lst = self._collect_job_update_lst(
-                job_status_list=job_status_list,
-                filter_funct=filter_funct,
-                job_stored_ids=None,
-            )
-            keys_update_user_lst, keys_update_system_lst = [], []
-        if not skip_table_update and len(job_update_lst) != 0:
+        except:
+            new_user_functions = []
+            new_system_functions = []
+        return new_user_functions, new_system_functions
+
+    def create_table(self, file, job_status_list, enforce_update=False):
+        """
+        Create or update the table.
+
+        If this method has been called before and there are new functions added to :attr:`.add`, apply them on the
+        previously analyzed jobs.
+        If this method has been called before and there are new jobs added to :attr:`.analysis_project`, apply all
+        functions to them.
+
+        The result is available via :meth:`.get_dataframe`.
+
+        Args:
+            file (FileHDFio): HDF were the previous state of the table is stored
+            job_status_list (list of str): only consider jobs with these statuses
+            enforce_update (bool): if True always regenerate the table completely.
+        """
+        # if there's new keys, apply the *new* functions to the old jobs and name the resulting table `df_new_keys`
+        # if there's new jobs, apply *all* functions to them and name the resulting table `df_new_ids`
+
+        # if enforce_update is given we recalculate the whole table below anyway, no need to patch up new keys
+        if not enforce_update:
+            new_user_functions, new_system_functions = self._get_new_functions(file)
+
+            if len(new_user_functions) > 0 or len(new_system_functions) > 0:
+                function_lst = [
+                    self.add._user_function_dict[k] for k in new_user_functions
+                ] + [
+                    funct
+                    for funct in self.add._system_function_lst
+                    if funct.__name__ in new_system_functions
+                ]
+                df_new_keys = self._iterate_over_job_lst(
+                    job_lst=map(self._project.inspect, self._get_job_ids()),
+                    function_lst=function_lst,
+                )
+                if len(df_new_keys) > 0:
+                    self._df = pandas.concat([self._df, df_new_keys], axis="columns")
+
+        new_jobs = self._collect_job_update_lst(
+            job_status_list=job_status_list,
+            job_stored_ids=self._get_job_ids() if not enforce_update else None,
+        )
+        if len(new_jobs) > 0:
             df_new_ids = self._iterate_over_job_lst(
-                job_lst=job_update_lst, function_lst=self.add._function_lst, level=level
+                job_lst=new_jobs, function_lst=self.add._function_lst
             )
-        else:
-            df_new_ids = pandas.DataFrame({})
-        if not skip_table_update and (
-            len(keys_update_user_lst) != 0 or len(keys_update_system_lst) != 0
-        ):
-            job_update_lst = self._collect_job_update_lst(
-                job_status_list=job_status_list,
-                filter_funct=filter_funct,
-                job_stored_ids=None,
-            )
-            function_lst = [
-                v
-                for k, v in self.add._user_function_dict.items()
-                if k in keys_update_system_lst
-            ] + [
-                funct
-                for funct in self.add._system_function_lst
-                if funct.__name__ in keys_update_system_lst
-            ]
-            df_new_keys = self._iterate_over_job_lst(
-                job_lst=job_update_lst, function_lst=function_lst, level=level
-            )
-        else:
-            df_new_keys = pandas.DataFrame({})
-        if len(self._df) > 0 and len(df_new_keys) > 0:
-            self._df = pandas.concat(
-                [self._df, df_new_keys], axis=1, sort=False
-            ).reset_index(drop=True)
-        if len(self._df) > 0 and len(df_new_ids) > 0:
-            self._df = pandas.concat([self._df, df_new_ids], sort=False).reset_index(
-                drop=True
-            )
-        elif len(df_new_ids) > 0:
-            self._df = df_new_ids
-
-    def convert_dict(self, input_dict):
-        return {key: self.str_to_value(value) for key, value in input_dict.items()}
-
-    def refill_dict(self, diff_dict_lst):
-        total_key_lst = self.total_lst_of_keys(diff_dict_lst)
-        for ind, sub_dict in enumerate(diff_dict_lst):
-            for key in total_key_lst:
-                if key not in sub_dict.keys():
-                    sub_dict[key] = self.EMPTY_STR
-                else:
-                    sub_dict[key] = self.str_to_value(sub_dict[key])
-
-    def col_to_value(self, col_name):
-        val_lst, key_lst, ind_lst = [], [], []
-        for ind, name in enumerate(self._df[col_name]):
-            #             print ('name: ', ind, name)
-            #             if name == self.EMPTY_STR:
-            #                 continue
-            name = name.split("_")
-            ind_lst.append(ind)
-            key_lst.append(name[0])
-            val_lst.append(eval(".".join(name[1:])))
-        if len(set(key_lst)) == 1:
-            key = key_lst[0]
-            self._df[key] = val_lst
-        else:
-            raise ValueError("key not unique: {}".format(set(key_lst)))
+            if len(df_new_ids) > 0:
+                self._df = pandas.concat([self._df, df_new_ids], ignore_index=True)
 
     def get_dataframe(self):
         return self._df
@@ -359,48 +289,7 @@ class PyironTable(HasGroups):
     def _list_nodes(self):
         return list(self._df.columns)
 
-    def _list_groups(self):
-        return list(set(self._df["col_0"]))
-
-    @staticmethod
-    def str_to_value(input_val):
-        if not isinstance(input_val, str):
-            return input_val
-        else:
-            try:
-                return eval(input_val)
-            except (TypeError, SyntaxError, NameError):
-                return input_val
-
-    @staticmethod
-    def _apply_function_on_job(funct, job):
-        try:
-            return funct(job)
-        except (ValueError, TypeError):
-            return {}
-
-    @staticmethod
-    def total_lst_of_keys(diff_dict_lst):
-        total_key_lst = []
-        for sub_dict in diff_dict_lst:
-            for key in sub_dict.keys():
-                total_key_lst.append(key)
-        return set(total_key_lst)
-
-    def __getitem__(self, item, max_level=5):
-        rename_dict = OrderedDict()
-        if item in self.list_groups():
-            for i in range(1, max_level):
-                rename_dict["col_{}".format(i)] = "col_{}".format(i - 1)
-
-            new_table = PyironTable(
-                project=self._project[item],
-                system_function_lst=self._system_function_lst,
-                csv_file_name=os.path.join(self.working_directory, "pyirontable.csv"),
-            )
-            new_table._df = self._df.drop("col_0", axis=1)
-            new_table._df.rename(index=str, columns=rename_dict, inplace=True)
-            return new_table
+    def __getitem__(self, item):
         if item in self.list_nodes():
             return np.array(self._df[item])
         return None
@@ -417,21 +306,16 @@ class PyironTable(HasGroups):
         """
         return self._df.__repr__()
 
-    def _is_file(self):
-        return self._project is not None and os.path.isfile(self._file_name_csv)
-
-    def _save_csv(self):
-        self._df.to_csv(self._file_name_csv, index=False)
+    @property
+    def _file_name_csv(self):
+        if self._csv_file is None:
+            return self._project.path + self.name + ".csv"
+        else:
+            return self._csv_file
 
     def _load_csv(self):
+        # Legacy method to read tables written to csv
         self._df = pandas.read_csv(self._file_name_csv)
-
-    def _get_project_list(self, name, pr_len, level=3):
-        lst = [self.EMPTY_STR for _ in range(level)]
-        for i, p in enumerate(name.split("/")[pr_len - 1 : -1]):
-            if len(lst) > i:
-                lst[i] = p
-        return lst
 
     @staticmethod
     def _get_data_from_hdf5(hdf):
@@ -450,16 +334,34 @@ class PyironTable(HasGroups):
         filter_funct = self.db_filter_function
         return project_table[filter_funct(project_table)]["id"].tolist()
 
-    def _apply_list_of_functions_on_job(self, job, fucntion_lst):
+    @staticmethod
+    def _apply_function_on_job(funct, job):
+        try:
+            return funct(job)
+        except (ValueError, TypeError):
+            return {}
+
+    def _apply_list_of_functions_on_job(self, job, function_lst):
         diff_dict = {}
-        for funct in fucntion_lst:
+        for funct in function_lst:
             funct_dict = self._apply_function_on_job(funct, job)
             for key, value in funct_dict.items():
                 diff_dict[key] = value
         return diff_dict
 
-    def _iterate_over_job_lst(self, job_lst, function_lst, level):
-        pr_len = len(self._project.project_path.split("/"))
+    def _iterate_over_job_lst(self, job_lst: List, function_lst: List) -> List[dict]:
+        """
+        Apply functions to job.
+
+        Any functions that raise an error are set to `None` in the final list.
+
+        Args:
+            job_lst (list of JobPath): all jobs to analyze
+            function_lst (list of functions): all functions to apply on jobs.  Must return a dictionary.
+
+        Returns:
+            list of dict: a list of the merged dicts from all functions for each job
+        """
         diff_dict_lst = []
         for job_inspect in tqdm(job_lst, desc="Processing jobs"):
             if self.convert_to_object:
@@ -467,24 +369,43 @@ class PyironTable(HasGroups):
             else:
                 job = job_inspect
             diff_dict = self._apply_list_of_functions_on_job(
-                job=job, fucntion_lst=function_lst
+                job=job, function_lst=function_lst
             )
-            pr_lst = self._get_project_list(job.project.project_path, pr_len, level)
-            for ic, col in enumerate(pr_lst):
-                diff_dict["col_{}".format(ic)] = col
             diff_dict_lst.append(diff_dict)
         self.refill_dict(diff_dict_lst)
         return pandas.DataFrame(diff_dict_lst)
 
-    def _collect_job_update_lst(
-        self, job_status_list, filter_funct, job_stored_ids=None
-    ):
+    @staticmethod
+    def total_lst_of_keys(diff_dict_lst):
         """
-        Collect jobs to update the pyiron table
+        Get unique list of all keys occuring in list.
+        """
+        total_key_lst = []
+        for sub_dict in diff_dict_lst:
+            for key in sub_dict.keys():
+                total_key_lst.append(key)
+        return set(total_key_lst)
+
+    def refill_dict(self, diff_dict_lst):
+        """
+        Ensure that all dictionaries in the list have the same keys.
+
+        Keys that are not in a dict are set to `None`.
+        """
+        total_key_lst = self.total_lst_of_keys(diff_dict_lst)
+        for sub_dict in diff_dict_lst:
+            for key in total_key_lst:
+                if key not in sub_dict.keys():
+                    sub_dict[key] = None
+
+    def _collect_job_update_lst(self, job_status_list, job_stored_ids=None):
+        """
+        Collect jobs to update the pyiron table.
+
+        Jobs in `job_stored_ids` are ignored.
 
         Args:
             job_status_list (list): List of job status to consider
-            filter_funct (function): Filter function
             job_stored_ids (list/ None): List of already analysed job ids
 
         Returns:
@@ -505,7 +426,11 @@ class PyironTable(HasGroups):
                 job = self._project.inspect(job_id)
             except IndexError:  # In case the job was deleted while the pyiron table is running
                 job = None
-            if job is not None and job.status in job_status_list and filter_funct(job):
+            if (
+                job is not None
+                and job.status in job_status_list
+                and self.filter_function(job)
+            ):
                 job_update_lst.append(job)
         return job_update_lst
 
@@ -568,7 +493,6 @@ class TableJob(GenericJob):
         super(TableJob, self).__init__(project, job_name)
         self.__version__ = "0.1"
         self.__hdf_version__ = "0.3.0"
-        self.__name__ = "TableJob"
         self._analysis_project = None
         self._pyiron_table = PyironTable(
             project=None,
@@ -576,7 +500,7 @@ class TableJob(GenericJob):
             csv_file_name=os.path.join(self.working_directory, "pyirontable.csv"),
         )
         self._enforce_update = False
-        self._project_level = 0
+        self._job_status = ["finished"]
         self.analysis_project = project.project
 
     @property
@@ -584,15 +508,13 @@ class TableJob(GenericJob):
         return self._pyiron_table.filter
 
     @property
-    def project_level(self):
-        return self._project_level
-
-    @project_level.setter
-    def project_level(self, level):
-        self._project_level = level
-
-    @property
     def db_filter_function(self):
+        """
+        function: database level filter function
+
+        The function should accept a dataframe, the job table of :attr:`~.analysis_project` and return a bool index into
+        it.  Jobs where the index is `False` are excluced from the analysis.
+        """
         return self._pyiron_table.db_filter_function
 
     @db_filter_function.setter
@@ -601,6 +523,12 @@ class TableJob(GenericJob):
 
     @property
     def filter_function(self):
+        """
+        function: job level filter function
+
+        The function should accept a GenericJob or JobCore object and return a bool, if it returns `False` the job is
+        excluced from the analysis.
+        """
         return self._pyiron_table.filter_function
 
     @filter_function.setter
@@ -608,10 +536,30 @@ class TableJob(GenericJob):
         self._pyiron_table.filter_function = funct
 
     @property
+    def job_status(self):
+        """
+        list of str: only jobs with status in this list are included in the table.
+        """
+        return self._job_status
+
+    @job_status.setter
+    def job_status(self, status):
+        if isinstance(status, str):
+            status = [status]
+        for s in status:
+            valid = jobstatus.job_status_lst
+            if s not in valid:
+                raise ValueError(
+                    f"'{s}' not a valid job status! Must be one of {valid}."
+                )
+        self._job_status = status
+
+    @property
     def pyiron_table(self):
         return self._pyiron_table
 
     @property
+    @deprecate("Use analysis_project instead!")
     def ref_project(self):
         return self.analysis_project
 
@@ -653,6 +601,9 @@ class TableJob(GenericJob):
 
     @property
     def convert_to_object(self):
+        """
+        bool: if `True` convert fully load jobs before passing them to functions, if `False` use inspect mode.
+        """
         return self._pyiron_table.convert_to_object
 
     @convert_to_object.setter
@@ -661,6 +612,9 @@ class TableJob(GenericJob):
 
     @property
     def enforce_update(self):
+        """
+        bool: if `True` re-evaluate all function on all jobs when :meth:`.update_table` is called.
+        """
         return self._enforce_update
 
     @enforce_update.setter
@@ -790,23 +744,27 @@ class TableJob(GenericJob):
         self.update_table()
         self.status.finished = True
 
+    @deprecate(job_status_list="Use TableJob.job_status instead!")
     def update_table(self, job_status_list=None):
         """
-        Update the pyiron table object, add new columns if a new function was added or add new rows for new jobs
+        Update the pyiron table object, add new columns if a new function was added or add new rows for new jobs.
+
+        By default this function does not recompute already evaluated functions on already existing jobs.  To force a
+        complete re-evaluation set :attr:`~.enforce_update` to `True`.
 
         Args:
-            job_status_list (list/None): List of job status which are added to the table by default ["finished"]
+            job_status_list (list/None): List of job status which are added to the table by default ["finished"].
+                                         Deprecated, use :attr:`.job_status` instead!
         """
         if job_status_list is None:
-            job_status_list = ["finished"]
+            job_status_list = self.job_status
         if self.job_id is not None:
             self.project.db.item_update({"timestart": datetime.now()}, self.job_id)
         with self.project_hdf5.open("input") as hdf5_input:
             self._pyiron_table.create_table(
-                enforce_update=self._enforce_update,
                 file=hdf5_input,
-                level=self._project_level,
                 job_status_list=job_status_list,
+                enforce_update=self._enforce_update,
             )
         self.to_hdf()
         self._pyiron_table._df.to_csv(
@@ -818,6 +776,7 @@ class TableJob(GenericJob):
 
     def get_dataframe(self):
         """
+        Returns aggregated results over all jobs.
 
         Returns:
             pandas.Dataframe
