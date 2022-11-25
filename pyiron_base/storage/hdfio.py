@@ -1376,6 +1376,7 @@ class ProjectHDFio(FileHDFio):
         class_convert_dict = {  # Fix backwards compatibility
             "pyiron_base.generic.datacontainer.DataContainer": "pyiron_base.storage.datacontainer.DataContainer",
             "pyiron_base.generic.inputlist.InputList": "pyiron_base.storage.inputlist.InputList",
+            "pyiron_base.generic.flattenedstorage.FlattenedStorage": "pyiron_base.storage.flattenedstorage.FlattenedStorage",
         }
         if class_path in class_convert_dict.keys():
             class_name_new = "<class '" + class_convert_dict[class_path] + "'>"
