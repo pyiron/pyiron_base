@@ -104,13 +104,19 @@ _doc_str_job_core_attr = """\
 
 
 class JobCore(HasGroups):
-    __doc__ = ("""
+    __doc__ = (
+        """
     The JobCore the most fundamental pyiron job class. From this class the GenericJob as well as the reduced 
     JobPath class are derived. While JobPath only provides access to the HDF5 file it is about one order faster.
     
     Implements :class:`.HasGroups`.  Groups are HDF groups in the HDF file associated with the job and any 
     child jobs, nodes are HDF dataset in the HDF file.
-""" + "\n" + _doc_str_job_core_args + "\n" + _doc_str_job_core_attr)
+"""
+        + "\n"
+        + _doc_str_job_core_args
+        + "\n"
+        + _doc_str_job_core_attr
+    )
 
     def __init__(self, project, job_name):
         job_name = _get_safe_job_name(job_name)

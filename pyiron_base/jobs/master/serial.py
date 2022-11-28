@@ -10,7 +10,11 @@ import inspect
 import time
 import numpy as np
 from pyiron_base.jobs.job.core import _doc_str_job_core_args
-from pyiron_base.jobs.master.generic import GenericMaster, get_function_from_string, _doc_str_generic_master_attr
+from pyiron_base.jobs.master.generic import (
+    GenericMaster,
+    get_function_from_string,
+    _doc_str_generic_master_attr,
+)
 from pyiron_base.storage.parameters import GenericParameters
 
 __author__ = "Jan Janssen"
@@ -26,7 +30,10 @@ __date__ = "Sep 1, 2017"
 
 
 # Modular Docstrings
-_doc_str_serial_master_base_attr = _doc_str_generic_master_attr + "\n" + """\
+_doc_str_serial_master_base_attr = (
+    _doc_str_generic_master_attr
+    + "\n"
+    + """\
         .. attribute:: start_job
 
             The first job of the series.
@@ -35,13 +42,20 @@ _doc_str_serial_master_base_attr = _doc_str_generic_master_attr + "\n" + """\
 
             The input of the start job - the first job of the series.
 """
+)
 
 
 class SerialMasterBase(GenericMaster):
-    __doc__ = ("""
+    __doc__ = (
+        """
     The serial master class is a metajob consisting of a dynamic list of jobs which are executed in serial mode. The job
     is derived from the GenericMaster.
-""" + "\n" + _doc_str_job_core_args + "\n" + _doc_str_serial_master_base_attr)
+"""
+        + "\n"
+        + _doc_str_job_core_args
+        + "\n"
+        + _doc_str_serial_master_base_attr
+    )
 
     def __init__(self, project, job_name):
         self._input = GenericParameters("parameters")  # e.g. convergence goal
