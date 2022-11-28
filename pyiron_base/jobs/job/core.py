@@ -44,14 +44,15 @@ __status__ = "production"
 __date__ = "Sep 1, 2017"
 
 
-_job_core_args = """\
+# Modular Docstrings
+_doc_str_job_core_args = """\
     Args:
         project (ProjectHDFio): ProjectHDFio instance which points to the HDF5 file the job is stored in
         job_name (str): name of the job, which has to be unique within the project
 
 """
 
-_job_core_attr = """\
+_doc_str_job_core_attr = """\
     Attributes:
 
         .. attribute:: job_name
@@ -109,7 +110,7 @@ class JobCore(HasGroups):
     
     Implements :class:`.HasGroups`.  Groups are HDF groups in the HDF file associated with the job and any 
     child jobs, nodes are HDF dataset in the HDF file.
-""" + "\n" + _job_core_args + "\n" + _job_core_attr)
+""" + "\n" + _doc_str_job_core_args + "\n" + _doc_str_job_core_attr)
 
     def __init__(self, project, job_name):
         job_name = _get_safe_job_name(job_name)
