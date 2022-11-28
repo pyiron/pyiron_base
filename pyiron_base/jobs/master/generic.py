@@ -459,10 +459,10 @@ class GenericMaster(GenericJob):
 
     def __len__(self):
         """
-        Length of the ListMaster equal the number of childs appended.
+        Length of the GenericMaster equal the number of childs appended.
 
         Returns:
-            int: length of the ListMaster
+            int: length of the GenericMaster
         """
         return len(self.child_ids + self._job_name_lst)
 
