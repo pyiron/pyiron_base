@@ -10,7 +10,7 @@ dependencies:
 - h5io =0.1.7
 - h5py =3.7.0
 - numpy =1.23.5
-- pandas =1.5.1
+- pandas =1.5.2
 - pathlib2 =2.3.7.post1
 - pint =0.19.2
 - psutil =5.9.4
