@@ -501,6 +501,7 @@ class TableJob(GenericJob):
         )
         self._enforce_update = False
         self._job_status = ["finished"]
+        self._python_only_job = True
         self.analysis_project = project.project
 
     @property
