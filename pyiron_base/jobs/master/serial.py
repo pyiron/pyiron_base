@@ -58,11 +58,8 @@ class SerialMasterBase(GenericMaster):
     )
 
     def __init__(self, project, job_name):
-        self._input = GenericParameters("parameters")  # e.g. convergence goal
-
         super(SerialMasterBase, self).__init__(project, job_name=job_name)
         self.__version__ = "0.3"
-
         self._output = GenericOutput()
         self._max_iterations = 100
         self._start_job = None
@@ -103,41 +100,6 @@ class SerialMasterBase(GenericMaster):
     @ref_job.setter
     def ref_job(self, job):
         self.append(job)
-
-    @property
-    def input(self):
-        """
-        Get the input of the start job - the first job of the series.
-
-        Returns:
-            GenericParameters: input of the start job
-        """
-        if self.start_job is not None:
-            return self._start_job.input
-        else:
-            return None
-
-    @input.setter
-    def input(self, value):
-        """
-        Set the input of the start job - the first job of the series.
-
-        Args:
-            value (GenericParameters): input of the start job
-        """
-        if self.start_job is not None:
-            self._start_job.input = value
-        else:
-            raise ValueError(
-                "Input can only be set after a start job has been assinged."
-            )
-
-    def set_input_to_read_only(self):
-        """
-        This function enforces read-only mode for the input classes, but it has to be implement in the individual
-        classes.
-        """
-        self._input.read_only = True
 
     def get_initial_child_name(self):
         """
@@ -225,7 +187,6 @@ class SerialMasterBase(GenericMaster):
         """
         super(SerialMasterBase, self).from_hdf(hdf=hdf, group_name=group_name)
         with self.project_hdf5.open("input") as hdf5_input:
-            self._input.from_hdf(hdf5_input)
             convergence_goal_str = hdf5_input["convergence_goal"]
             if convergence_goal_str == "None":
                 self._convergence_goal = None
@@ -353,7 +314,6 @@ class SerialMasterBase(GenericMaster):
         """
         super(SerialMasterBase, self).to_hdf(hdf=hdf, group_name=group_name)
         with self.project_hdf5.open("input") as hdf5_input:
-            self._input.to_hdf(hdf5_input)
             if self._convergence_goal is not None:
                 try:
                     hdf5_input["convergence_goal"] = inspect.getsource(

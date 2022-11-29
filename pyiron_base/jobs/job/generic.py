@@ -1271,7 +1271,7 @@ class GenericJob(JobCore):
 
     def set_input_to_read_only(self):
         """
-        This function enforces read-only mode for the input classes, but it has to be implement in the individual
+        This function enforces read-only mode for the input classes, but it has to be implemented in the individual
         classes.
         """
         pass

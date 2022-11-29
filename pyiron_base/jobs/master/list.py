@@ -52,19 +52,11 @@ class ListMaster(GenericMaster):
     )
 
     def __init__(self, project, job_name):
-        self._input = GenericParameters("parameters")
         super(ListMaster, self).__init__(project, job_name=job_name)
         self.__version__ = "0.1"
         self._input["mode"] = "parallel"
         self.submission_status = SubmissionStatus(db=project.db, job_id=self.job_id)
         self.refresh_submission_status()
-
-    def set_input_to_read_only(self):
-        """
-        This function enforces read-only mode for the input classes, but it has to be implement in the individual
-        classes.
-        """
-        self._input.read_only = True
 
     def reset_job_id(self, job_id=None):
         """

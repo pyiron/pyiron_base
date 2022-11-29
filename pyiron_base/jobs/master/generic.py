@@ -7,7 +7,9 @@ The GenericMaster is the template class for all meta jobs
 
 import inspect
 import textwrap
+from functools import wraps
 
+from pyiron_base.storage.parameters import GenericParameters
 from pyiron_base.jobs.job.core import _doc_str_job_core_args
 from pyiron_base.jobs.job.generic import GenericJob, _doc_str_generic_job_attr
 from pyiron_base.jobs.job.extension.jobstatus import job_status_finished_lst
@@ -52,6 +54,7 @@ class GenericMaster(GenericJob):
 
     def __init__(self, project, job_name):
         super(GenericMaster, self).__init__(project, job_name=job_name)
+        self._input = GenericParameters("parameters")
         self._job_name_lst = []
         self._job_object_dict = {}
         self._child_id_func = None
@@ -94,6 +97,19 @@ class GenericMaster(GenericJob):
         else:
             return self.project.open(self.job_name + "_hdf5")
 
+    @property
+    def input(self):
+        return self._input
+
+    @input.setter
+    def input(self, new_input: GenericParameters):
+        if isinstance(new_input, GenericParameters):
+            self._input = new_input
+        else:
+            raise TypeError(
+                f"Expected a GenericParameters object but got {new_input.__class__}"
+            )
+
     def child_hdf(self, job_name):
         """
         Find correct HDF for new children.  Depending on `self.server.new_hdf` this creates a new hdf file or creates
@@ -122,6 +138,10 @@ class GenericMaster(GenericJob):
             dict: Dictionary of currently loaded jobs
         """
         return self._job_object_dict
+
+    @wraps(GenericJob.set_input_to_read_only)
+    def set_input_to_read_only(self):
+        self._input.read_only = True
 
     def first_child_name(self):
         """
@@ -225,6 +245,7 @@ class GenericMaster(GenericJob):
         """
         super(GenericMaster, self).to_hdf(hdf=hdf, group_name=group_name)
         with self.project_hdf5.open("input") as hdf5_input:
+            self.input.to_hdf(hdf5_input)
             hdf5_input["job_list"] = self._job_name_lst
             self._to_hdf_child_function(hdf=hdf5_input)
         for job in self._job_object_dict.values():
@@ -240,6 +261,7 @@ class GenericMaster(GenericJob):
         """
         super(GenericMaster, self).from_hdf(hdf=hdf, group_name=group_name)
         with self.project_hdf5.open("input") as hdf5_input:
+            self.input.from_hdf(hdf5_input)
             job_list_tmp = hdf5_input["job_list"]
             self._from_hdf_child_function(hdf=hdf5_input)
             self._job_name_lst = job_list_tmp
