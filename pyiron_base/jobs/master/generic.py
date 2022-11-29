@@ -176,7 +176,7 @@ class GenericMaster(GenericJob):
         if isinstance(new_input, GenericParameters):
             self._input = new_input
         else:
-            raise TypeError(f"Expected a GenericParameters object but got {new_input.__class__})
+            raise TypeError(f"Expected a GenericParameters object but got {new_input.__class__}")
 
     def child_hdf(self, job_name):
         """
