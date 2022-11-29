@@ -143,7 +143,6 @@ class ParallelMaster(GenericMaster):
     """
 
     def __init__(self, project, job_name):
-        self.input = GenericParameters("parameters")
         super(ParallelMaster, self).__init__(project, job_name=job_name)
         self.__version__ = "0.3"
         self._ref_job = None
@@ -203,13 +202,6 @@ class ParallelMaster(GenericMaster):
             num_jobs (int): number of submitted jobs
         """
         self.submission_status.total_jobs = num_jobs
-
-    def set_input_to_read_only(self):
-        """
-        This function enforces read-only mode for the input classes, but it has to be implement in the individual
-        classes.
-        """
-        self.input.read_only = True
 
     def reset_job_id(self, job_id=None):
         """

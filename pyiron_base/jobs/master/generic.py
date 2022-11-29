@@ -9,6 +9,7 @@ import inspect
 import textwrap
 
 from pyiron_base.jobs.job.generic import GenericJob
+from pyiron_base.storage.parameters import GenericParameters
 from pyiron_base.jobs.job.extension.jobstatus import job_status_finished_lst
 from pyiron_base.jobs.job.jobtype import JobType
 
@@ -123,6 +124,7 @@ class GenericMaster(GenericJob):
 
     def __init__(self, project, job_name):
         super(GenericMaster, self).__init__(project, job_name=job_name)
+        self._input = GenericParameters("parameters")
         self._job_name_lst = []
         self._job_object_dict = {}
         self._child_id_func = None
@@ -164,6 +166,14 @@ class GenericMaster(GenericJob):
         else:
             return self.project.open(self.job_name + "_hdf5")
 
+    @property
+    def input(self):
+        return self._input
+
+    @input.setter
+    def input(self, new_input):
+        self._input = new_input
+
     def child_hdf(self, job_name):
         """
         Find correct HDF for new children.  Depending on `self.server.new_hdf` this creates a new hdf file or creates
@@ -192,6 +202,11 @@ class GenericMaster(GenericJob):
             dict: Dictionary of currently loaded jobs
         """
         return self._job_object_dict
+
+    def set_input_to_read_only(self):
+        self._input.read_only = True
+
+    set_input_to_read_only.__doc__ = GenericJob.set_input_to_read_only.__doc__
 
     def first_child_name(self):
         """
