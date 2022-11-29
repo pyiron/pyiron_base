@@ -7,6 +7,7 @@ The GenericMaster is the template class for all meta jobs
 
 import inspect
 import textwrap
+from functools import wraps
 
 from pyiron_base.jobs.job.generic import GenericJob
 from pyiron_base.storage.parameters import GenericParameters
@@ -206,7 +207,6 @@ class GenericMaster(GenericJob):
         """
         return self._job_object_dict
 
-    from functools import wraps  # TODO: Move import to head
     @wraps(GenericJob.set_input_to_read_only)
     def set_input_to_read_only(self):
         self._input.read_only = True
