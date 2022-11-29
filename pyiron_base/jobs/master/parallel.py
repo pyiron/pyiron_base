@@ -12,7 +12,8 @@ import pandas
 import multiprocessing
 import importlib
 from pyiron_base.jobs.job.generic import GenericJob
-from pyiron_base.jobs.master.generic import GenericMaster
+from pyiron_base.jobs.job.core import _doc_str_job_core_args
+from pyiron_base.jobs.master.generic import GenericMaster, _doc_str_generic_master_attr
 from pyiron_base.jobs.master.submissionstatus import SubmissionStatus
 from pyiron_base.jobs.job.jobtype import JobType
 from pyiron_base.state import state
@@ -31,10 +32,29 @@ __status__ = "production"
 __date__ = "Sep 1, 2017"
 
 
-class ParallelMaster(GenericMaster):
-    """
+# Modular Docstrings
+_doc_str_parallel_master_attr = (
+    _doc_str_generic_master_attr
+    + "\n"
+    + """\
+        .. attribute:: ref_job
 
-    Example:
+            Reference job template from which all jobs within the ParallelMaster are generated.
+
+        .. attribute:: number_jobs_total
+
+            Total number of jobs
+"""
+)
+
+
+class ParallelMaster(GenericMaster):
+    __doc__ = (
+        """
+    MasterJob that handles the creation and analysis of several parallel jobs (including master and
+    continuation jobs), Examples are Murnaghan or Phonon calculations.
+
+   Example:
 
     >>> from pyiron_base import JobGenerator, Project
     >>>
@@ -56,7 +76,14 @@ class ParallelMaster(GenericMaster):
     >>> master._job_generator = TestGenerator(master)
     >>> master.run()
 
-    """
+    Subclasses *must* implement :meth:`.collect_output()`.  Additionally :attr:`._job_generator` must be
+    initialized with an instance of :class:`.JobGenerator` in the subclasses' `__init__`.
+"""
+        + "\n"
+        + _doc_str_job_core_args
+        + "\n"
+        + _doc_str_parallel_master_attr
+    )
 
     def __init__(self, project, job_name):
         super(ParallelMaster, self).__init__(project, job_name=job_name)
@@ -96,14 +123,6 @@ class ParallelMaster(GenericMaster):
             self.submission_status = SubmissionStatus(
                 db=self.project.db, job_id=self.job_id
             )
-
-    def write_input(self):
-        """
-        Write the input files - this contains the GenericInput of the ParallelMaster as well as reseting the submission
-        status.
-        """
-        super().write_input()
-        self.submission_status.submitted_jobs = 0
 
     def output_to_pandas(self, sort_by=None, h5_path="output"):
         """
@@ -270,6 +289,17 @@ class ParallelMaster(GenericMaster):
         )
         self.update_master()
         # self.send_to_database()
+
+    def _run_if_new(self, debug=False):
+        """
+        Internal helper function the run if new function is called when the job status is 'initialized'. It prepares
+        the hdf5 file and the corresponding directory structure.
+
+        Args:
+            debug (bool): Debug Mode
+        """
+        self.submission_status.submitted_jobs = 0
+        super()._run_if_new(debug=debug)
 
     def convergence_check(self) -> bool:
         """

@@ -92,7 +92,7 @@ class PyironUnitRegistry:
             data_type (type): Data type in which the quantity has to be stored
 
         """
-        if not isinstance(unit, (pint.unit.Unit, pint.quantity.Quantity)):
+        if not isinstance(unit, (pint.Unit, pint.Quantity)):
             raise ValueError("The unit should be a `pint` unit or quantity")
         self._unit_dict[quantity] = unit
         self._dtype_dict[quantity] = data_type

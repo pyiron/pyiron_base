@@ -44,18 +44,15 @@ __status__ = "production"
 __date__ = "Sep 1, 2017"
 
 
-class JobCore(HasGroups):
-    """
-    The JobCore the most fundamental pyiron job class. From this class the GenericJob as well as the reduced JobPath
-    class are derived. While JobPath only provides access to the HDF5 file it is about one order faster.
-
-    Implements :class:`.HasGroups`.  Groups are HDF groups in the HDF file associated with the job and any child jobs,
-    nodes are HDF dataset in the HDF file.
-
+# Modular Docstrings
+_doc_str_job_core_args = """\
     Args:
         project (ProjectHDFio): ProjectHDFio instance which points to the HDF5 file the job is stored in
         job_name (str): name of the job, which has to be unique within the project
 
+"""
+
+_doc_str_job_core_attr = """\
     Attributes:
 
         .. attribute:: job_name
@@ -64,8 +61,8 @@ class JobCore(HasGroups):
 
         .. attribute:: status
 
-            execution status of the job, can be one of the following [initialized, appended, created, submitted, running,
-                                                                      aborted, collect, suspended, refresh, busy, finished]
+            execution status of the job, can be one of the following [initialized, appended, created, submitted, 
+                running, aborted, collect, suspended, refresh, busy, finished]
 
         .. attribute:: job_id
 
@@ -77,8 +74,8 @@ class JobCore(HasGroups):
 
         .. attribute:: master_id
 
-            job id of the master job - a meta job which groups a series of jobs, which are executed either in parallel or in
-            serial.
+            job id of the master job - a meta job which groups a series of jobs, which are executed either in parallel 
+                or in serial.
 
         .. attribute:: child_ids
 
@@ -103,7 +100,23 @@ class JobCore(HasGroups):
         .. attribute:: path
 
             path to the job as a combination of absolute file system path and path within the HDF5 file.
-    """
+"""
+
+
+class JobCore(HasGroups):
+    __doc__ = (
+        """
+    The JobCore the most fundamental pyiron job class. From this class the GenericJob as well as the reduced 
+    JobPath class are derived. While JobPath only provides access to the HDF5 file it is about one order faster.
+    
+    Implements :class:`.HasGroups`.  Groups are HDF groups in the HDF file associated with the job and any 
+    child jobs, nodes are HDF dataset in the HDF file.
+"""
+        + "\n"
+        + _doc_str_job_core_args
+        + "\n"
+        + _doc_str_job_core_attr
+    )
 
     def __init__(self, project, job_name):
         job_name = _get_safe_job_name(job_name)
@@ -296,6 +309,18 @@ class JobCore(HasGroups):
             project (ProjectHDFio): HDF5 project
         """
         self._hdf5 = project.copy()
+
+    def relocate_hdf5(self, h5_path=None):
+        """
+        Relocate the hdf file. This function is needed when the child job is
+        spawned by a parent job (cf. pyiron_base.jobs.master.generic)
+        """
+        if h5_path is None:
+            h5_path = "/" + self.job_name
+        self.project_hdf5.remove_group()
+        self.project_hdf5 = self.project_hdf5.__class__(
+            self.project, self.job_name, h5_path=h5_path
+        )
 
     @property
     def project(self):

@@ -6,7 +6,8 @@ The Flexible master uses a list of functions to connect multiple jobs in a serie
 """
 
 import inspect
-from pyiron_base.jobs.master.generic import GenericMaster
+from pyiron_base.jobs.job.core import _doc_str_job_core_args
+from pyiron_base.jobs.master.generic import GenericMaster, _doc_str_generic_master_attr
 from pyiron_base.jobs.job.extension.jobstatus import job_status_finished_lst
 
 __author__ = "Jan Janssen, Liam Huber"
@@ -22,12 +23,14 @@ __date__ = "Mar 24, 2019"
 
 
 class FlexibleMaster(GenericMaster):
-    (
+    __doc__ = (
         """
     The FlexibleMaster uses a list of functions to connect multiple jobs in a series.
-    """
-        + "\n    Args:"
-        + GenericMaster.__doc__.split("\n    Args:")[-1]
+"""
+        + "\n"
+        + _doc_str_job_core_args
+        + "\n"
+        + _doc_str_generic_master_attr
     )
 
     def __init__(self, project, job_name):

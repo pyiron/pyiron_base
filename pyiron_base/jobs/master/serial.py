@@ -8,8 +8,14 @@ The serial master class is a metajob consisting of a dynamic list of jobs which 
 import inspect
 import time
 import numpy as np
-from pyiron_base.jobs.master.generic import GenericMaster, get_function_from_string
 from pyiron_base.jobs.job.generic import GenericJob
+from pyiron_base.jobs.job.core import _doc_str_job_core_args
+from pyiron_base.jobs.master.generic import (
+    GenericMaster,
+    get_function_from_string,
+    _doc_str_generic_master_attr,
+)
+from pyiron_base.storage.parameters import GenericParameters
 
 __author__ = "Jan Janssen"
 __copyright__ = (
@@ -23,14 +29,24 @@ __status__ = "production"
 __date__ = "Sep 1, 2017"
 
 
+# Modular Docstrings
+_doc_str_serial_master_base_attr = (
+    _doc_str_generic_master_attr
+    + "\n"
+    + """\
+        .. attribute:: start_job
+            The input of the start job - the first job of the series.
+"""
+)
+
+
 class SerialMasterBase(GenericMaster):
-    (
+    __doc__ = (
         """
-    The serial master class is a metajob consisting of a dynamic list of jobs
-    which are executed in serial mode.
-
+    The serial master class is a metajob consisting of a dynamic list of jobs which are executed in serial mode. The job
+    is derived from the GenericMaster.
+    
     Example:
-
     >>> def convergence_goal(self, **qwargs):
     >>>     if len(self[-1].output.energy_pot) > qwargs['max_steps']:
     >>>         return None
@@ -44,17 +60,16 @@ class SerialMasterBase(GenericMaster):
     >>> job_ser.append(job)
     >>> job_ser.set_goal(convergence_goal, max_steps=10)
     >>> job_ser.run()
-
-    """
-        + "\n    Args:"
-        + GenericMaster.__doc__.split("\n    Args:")[-1]
+"""
+        + "\n"
+        + _doc_str_job_core_args
+        + "\n"
+        + _doc_str_serial_master_base_attr
     )
 
     def __init__(self, project, job_name):
-
         super(SerialMasterBase, self).__init__(project, job_name=job_name)
         self.__version__ = "0.3"
-
         self._convergence_goal = None
         self._convergence_goal_qwargs = {}
         self._convergence_goal_str = None

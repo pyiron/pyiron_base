@@ -9,9 +9,11 @@ from collections import OrderedDict
 import inspect
 import textwrap
 import numpy as np
-
+from functools import wraps
 from pyiron_base.utils.deprecate import deprecate
-from pyiron_base.jobs.job.generic import GenericJob
+from pyiron_base.storage.parameters import GenericParameters
+from pyiron_base.jobs.job.core import _doc_str_job_core_args
+from pyiron_base.jobs.job.generic import GenericJob, _doc_str_generic_job_attr
 from pyiron_base.jobs.job.extension.jobstatus import job_status_finished_lst
 from pyiron_base.jobs.job.extension.jobstatus import JobStatus
 from pyiron_base.storage.parameters import GenericParameters
@@ -28,125 +30,41 @@ __status__ = "production"
 __date__ = "Sep 1, 2017"
 
 
-class GenericMaster(GenericJob):
-    """
-    The GenericMaster is the template class for all meta jobs - meaning all jobs which contain multiple other jobs. It
-    defines the shared functionality of the different kind of job series.
-
-    Args:
-        project (ProjectHDFio): ProjectHDFio instance which points to the HDF5 file the job is stored in
-        job_name (str): name of the job, which has to be unique within the project
-
-    Attributes:
-
-        .. attribute:: job_name
-
-            name of the job, which has to be unique within the project
-
-        .. attribute:: status
-
-            execution status of the job, can be one of the following [initialized, appended, created, submitted,
-                                                                      running, aborted, collect, suspended, refresh,
-                                                                      busy, finished]
-
-        .. attribute:: job_id
-
-            unique id to identify the job in the pyiron database
-
-        .. attribute:: parent_id
-
-            job id of the predecessor job - the job which was executed before the current one in the current job series
-
-        .. attribute:: master_id
-
-            job id of the master job - a meta job which groups a series of jobs, which are executed either in parallel
-            or in serial.
-
-        .. attribute:: child_ids
-
-            list of child job ids - only meta jobs have child jobs - jobs which list the meta job as their master
-
-        .. attribute:: project
-
-            Project instance the jobs is located in
-
-        .. attribute:: project_hdf5
-
-            ProjectHDFio instance which points to the HDF5 file the job is stored in
-
-        .. attribute:: job_info_str
-
-            short string to describe the job by it is job_name and job ID - mainly used for logging
-
-        .. attribute:: working_directory
-
-            working directory of the job is executed in - outside the HDF5 file
-
-        .. attribute:: path
-
-            path to the job as a combination of absolute file system path and path within the HDF5 file.
-
-        .. attribute:: version
-
-            Version of the hamiltonian, which is also the version of the executable unless a custom executable is used.
-
-        .. attribute:: executable
-
-            Executable used to run the job - usually the path to an external executable.
-
-        .. attribute:: library_activated
-
-            For job types which offer a Python library pyiron can use the python library instead of an external
-            executable.
-
-        .. attribute:: server
-
-            Server object to handle the execution environment for the job.
-
-        .. attribute:: queue_id
-
-            the ID returned from the queuing system - it is most likely not the same as the job ID.
-
-        .. attribute:: logger
-
-            logger object to monitor the external execution and internal pyiron warnings.
-
-        .. attribute:: restart_file_list
-
-            list of files which are used to restart the calculation from these files.
-
-        .. attribute:: job_type
-
-            Job type object with all the available job types: ['ExampleJob', 'SerialMaster', 'ParallelMaster',
-                                                               'ScriptJob', 'ListMaster']
-
+# Modular Docstrings
+_doc_str_generic_master_attr = (
+    _doc_str_generic_job_attr
+    + "\n"
+    + """\
         .. attribute:: child_names
 
             Dictionary matching the child ID to the child job name.
-    """
+"""
+)
+
+
+class GenericMaster(GenericJob):
+    __doc__ = (
+        """
+    The GenericMaster is the template class for all meta jobs - meaning all jobs which contain multiple other jobs. It
+    defines the shared functionality of the different kind of job series.
+
+"""
+        + "\n"
+        + _doc_str_job_core_args
+        + "\n"
+        + _doc_str_generic_master_attr
+    )
 
     def __init__(self, project, job_name):
         super(GenericMaster, self).__init__(project, job_name=job_name)
-        self._input = GenericParameters("parameters")  # e.g. convergence goal
+        self._input = GenericParameters("parameters")
         self._output = GenericOutput()
         self._job_name_lst = []
         self._job_object_dict = {}
         self._child_id_func = None
         self._child_id_func_str = None
         self._ref_job = None
-
-    @property
-    def input(self):
-        return self._input
-
-    @input.setter
-    def input(self, new_input):
-        self._input = new_input
-
-    def set_input_to_read_only(self):
-        self.input.read_only = True
-
-    set_input_to_read_only.__doc__ = GenericJob.set_input_to_read_only.__doc__
+        self._python_only_job = True
 
     @property
     def child_names(self):
@@ -184,6 +102,19 @@ class GenericMaster(GenericJob):
         else:
             return self.project.open(self.job_name + "_hdf5")
 
+    @property
+    def input(self):
+        return self._input
+
+    @input.setter
+    def input(self, new_input: GenericParameters):
+        if isinstance(new_input, GenericParameters):
+            self._input = new_input
+        else:
+            raise TypeError(
+                f"Expected a GenericParameters object but got {new_input.__class__}"
+            )
+
     def child_hdf(self, job_name):
         """
         Find correct HDF for new children.  Depending on `self.server.new_hdf` this creates a new hdf file or creates
@@ -212,6 +143,10 @@ class GenericMaster(GenericJob):
             dict: Dictionary of currently loaded jobs
         """
         return self._job_object_dict
+
+    @wraps(GenericJob.set_input_to_read_only)
+    def set_input_to_read_only(self):
+        self._input.read_only = True
 
     @deprecate("Use master.ref_job.job_name instead")
     def first_child_name(self):
@@ -283,10 +218,7 @@ class GenericMaster(GenericJob):
         del self._job_name_lst[i]
         with self.project_hdf5.open("input") as hdf5_input:
             hdf5_input["job_list"] = self._job_name_lst
-        job_to_return.project_hdf5.remove_group()
-        job_to_return.project_hdf5 = self.project_hdf5.__class__(
-            self.project, job_to_return.job_name, h5_path="/" + job_to_return.job_name
-        )
+        job_to_return.relocate_hdf5()
         if isinstance(job_to_return, GenericMaster):
             for sub_job in job_to_return._job_object_dict.values():
                 self._child_job_update_hdf(parent_job=job_to_return, child_job=sub_job)
@@ -385,6 +317,7 @@ class GenericMaster(GenericJob):
         """
         super(GenericMaster, self).to_hdf(hdf=hdf, group_name=group_name)
         with self.project_hdf5.open("input") as hdf5_input:
+            self.input.to_hdf(hdf5_input)
             hdf5_input["job_list"] = self._job_name_lst
             self._to_hdf_child_function(hdf=hdf5_input)
             self.input.to_hdf(hdf5_input)
