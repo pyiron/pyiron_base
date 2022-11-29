@@ -171,15 +171,6 @@ class ParallelMaster(GenericMaster):
         with self.project_hdf5.open("input") as hdf5_input:
             self.input.from_hdf(hdf5_input)
 
-    def write_input(self):
-        """
-        Write the input files - this contains the GenericInput of the ParallelMaster as well as reseting the submission
-        status.
-        """
-        super().write_input()
-        self.submission_status.submitted_jobs = 0
-        self.input.write_file(file_name="input.inp", cwd=self.working_directory)
-
     def collect_output(self):
         """
         Collect the output files of the external executable and store the information in the HDF5 file. This method has
@@ -412,6 +403,17 @@ class ParallelMaster(GenericMaster):
         )
         self.update_master()
         # self.send_to_database()
+
+    def _run_if_new(self, debug=False):
+        """
+        Internal helper function the run if new function is called when the job status is 'initialized'. It prepares
+        the hdf5 file and the corresponding directory structure.
+
+        Args:
+            debug (bool): Debug Mode
+        """
+        self.submission_status.submitted_jobs = 0
+        super()._run_if_new(debug=debug)
 
     def convergence_check(self) -> bool:
         """

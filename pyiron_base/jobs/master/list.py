@@ -200,14 +200,6 @@ class ListMaster(GenericMaster):
         ):
             self.status.finished = True
 
-    def write_input(self):
-        """
-        Write the input files - for the ListMaster this only contains the execution mode, which is 'parallel' by
-        default.
-        """
-        super().write_input()
-        self._input.write_file(file_name="input.inp", cwd=self.working_directory)
-
     def copy(self):
         """
         Copy the ListMaster object which links to the job and its HDF5 file
