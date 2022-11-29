@@ -62,5 +62,6 @@ class TestGenericJob(PyironTestCase):
         i = j.create_job(SerialMasterBase, "test_child")
         self.assertEqual(i.ref_job, j, "Reference job of interactive wrapper to set after creation.")
 
+
 if __name__ == "__main__":
     unittest.main()
