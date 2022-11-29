@@ -12,6 +12,7 @@ import stat
 import shutil
 from typing import Union, Dict
 from pyiron_base.utils.instance import static_isinstance
+from pyiron_base.utils.safetar import safe_extract
 
 __author__ = "Jan Janssen"
 __copyright__ = (
@@ -285,7 +286,7 @@ def _job_decompress(job):
     try:
         tar_file_name = os.path.join(job.working_directory, job.job_name + ".tar.bz2")
         with tarfile.open(tar_file_name, "r:bz2") as tar:
-            tar.extractall(job.working_directory)
+            safe_extract(tar, job.working_directory)
         os.remove(tar_file_name)
     except IOError:
         pass
@@ -348,7 +349,7 @@ def _job_unarchive(job):
     try:
         tar_name = os.path.join(fpath, job.job_name + ".tar.bz2")
         with tarfile.open(tar_name, "r:bz2") as tar:
-            tar.extractall(fpath)
+            safe_extract(tar, fpath)
         os.remove(tar_name)
     finally:
         pass
