@@ -310,6 +310,7 @@ class GenericMaster(GenericJob):
         """
         super(GenericMaster, self).to_hdf(hdf=hdf, group_name=group_name)
         with self.project_hdf5.open("input") as hdf5_input:
+            self.input.to_hdf(hdf5_input)
             hdf5_input["job_list"] = self._job_name_lst
             self._to_hdf_child_function(hdf=hdf5_input)
         for job in self._job_object_dict.values():
@@ -325,6 +326,7 @@ class GenericMaster(GenericJob):
         """
         super(GenericMaster, self).from_hdf(hdf=hdf, group_name=group_name)
         with self.project_hdf5.open("input") as hdf5_input:
+            self.input.from_hdf(hdf5_input)
             job_list_tmp = hdf5_input["job_list"]
             self._from_hdf_child_function(hdf=hdf5_input)
             self._job_name_lst = job_list_tmp
