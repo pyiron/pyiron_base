@@ -171,8 +171,11 @@ class GenericMaster(GenericJob):
         return self._input
 
     @input.setter
-    def input(self, new_input):
-        self._input = new_input
+    def input(self, new_input: GenericParameters):
+        if isinstance(new_input, GenericParameters):
+            self._input = new_input
+        else:
+            raise TypeError(f"Expected a GenericParameters object but got {new_input.__class__})
 
     def child_hdf(self, job_name):
         """
