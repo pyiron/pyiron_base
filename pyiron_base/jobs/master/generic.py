@@ -203,10 +203,10 @@ class GenericMaster(GenericJob):
         """
         return self._job_object_dict
 
+    from functools import wraps  # TODO: Move import to head
+    @wraps(GenericJob.set_input_to_read_only)
     def set_input_to_read_only(self):
         self._input.read_only = True
-
-    set_input_to_read_only.__doc__ = GenericJob.set_input_to_read_only.__doc__
 
     def first_child_name(self):
         """
