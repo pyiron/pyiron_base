@@ -8,8 +8,10 @@ The GenericMaster is the template class for all meta jobs
 import inspect
 import textwrap
 from functools import wraps
+from typing import Union
 
 from pyiron_base.storage.parameters import GenericParameters
+from pyiron_base.storage.datacontainer import DataContainer
 from pyiron_base.jobs.job.core import _doc_str_job_core_args
 from pyiron_base.jobs.job.generic import GenericJob, _doc_str_generic_job_attr
 from pyiron_base.jobs.job.extension.jobstatus import job_status_finished_lst
@@ -102,8 +104,8 @@ class GenericMaster(GenericJob):
         return self._input
 
     @input.setter
-    def input(self, new_input: GenericParameters):
-        if isinstance(new_input, GenericParameters):
+    def input(self, new_input: Union[GenericParameters, DataContainer]):
+        if isinstance(new_input, (GenericParameters, DataContainer)):
             self._input = new_input
         else:
             raise TypeError(
