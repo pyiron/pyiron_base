@@ -327,7 +327,7 @@ class GenericMaster(GenericJob):
             for child_id in self.child_ids
         ]
         if isinstance(item, int):
-            total_lst = child_name_lst + self._job_name_lst
+            total_lst = self._job_name_lst + child_name_lst
             item = total_lst[item]
         return self._get_item_when_str(
             item=item, child_id_lst=child_id_lst, child_name_lst=child_name_lst
