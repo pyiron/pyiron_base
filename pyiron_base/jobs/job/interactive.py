@@ -307,7 +307,7 @@ class InteractiveBase(GenericJob):
         if not isinstance(self.project.db, FileTable):
             self.project.db.item_update(self._runtime(), self._job_id)
         else:
-            self._hdf5["status"] = job.status.string
+            self._hdf5["status"] = self.status.string
         self._interactive_library = None
         for key in self.interactive_cache.keys():
             self.interactive_cache[key] = []
