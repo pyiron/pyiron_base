@@ -72,10 +72,10 @@ class GenericMaster(GenericJob):
         Returns:
             dict: {child_id: child job name }
         """
-        child_dict = {}
-        for child_id in self.child_ids:
-            child_dict[child_id] = self.project.db.get_item_by_id(child_id)["job"]
-        return child_dict
+        return {
+            child_id: self.project.db.get_item_by_id(child_id)["job"]
+            for child_id in self.child_ids
+        }
 
     @property
     def child_ids(self):
