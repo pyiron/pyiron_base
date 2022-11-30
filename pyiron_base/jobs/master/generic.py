@@ -10,8 +10,12 @@ import inspect
 import textwrap
 import numpy as np
 from functools import wraps
+from typing import Union
+
 from pyiron_base.utils.deprecate import deprecate
 from pyiron_base.storage.parameters import GenericParameters
+from pyiron_base.storage.datacontainer import DataContainer
+from pyiron_base.interfaces.object import HasStorage
 from pyiron_base.jobs.job.core import _doc_str_job_core_args
 from pyiron_base.jobs.job.generic import GenericJob, _doc_str_generic_job_attr
 from pyiron_base.jobs.job.extension.jobstatus import job_status_finished_lst
@@ -107,12 +111,12 @@ class GenericMaster(GenericJob):
         return self._input
 
     @input.setter
-    def input(self, new_input: GenericParameters):
-        if isinstance(new_input, GenericParameters):
+    def input(self, new_input: Union[DataContainer, GenericParameters, HasStorage]):
+        if isinstance(new_input, (DataContainer, GenericParameters, HasStorage)):
             self._input = new_input
         else:
             raise TypeError(
-                f"Expected a GenericParameters object but got {new_input.__class__}"
+                f"Expected a DataContainer, GenericParameters or HasStorage object but got {new_input.__class__}"
             )
 
     def child_hdf(self, job_name):
