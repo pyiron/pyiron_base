@@ -8,7 +8,6 @@ from pyiron_base.project.generic import Project
 from pyiron_base.jobs.job.generic import GenericJob
 from pyiron_base.jobs.master.generic import GenericMaster
 from pyiron_base._tests import PyironTestCase
-import unittest
 
 
 class TestGenericJob(PyironTestCase):
