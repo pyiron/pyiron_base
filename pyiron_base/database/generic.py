@@ -358,41 +358,39 @@ class AutorestoredConnection:
         self._logger = logger
         self._timeout = timeout
 
+    def execute_once(self, *args, **kwargs):
+        with self._lock:
+            if self._conn is None or self._conn.closed:
+                self._conn = self.engine.connect()
+                if self._timeout > 0:
+                    # only log reconnections when we keep the connection alive between requests otherwise we'll spam
+                    # the log
+                    if self._conn is None:
+                        self._logger.info(
+                            "Reconnecting to DB; connection did not exist."
+                        )
+                    else:
+                        self._logger.info(
+                            "Reconnecting to DB; connection was closed."
+                        )
+                    if self._watchdog is not None:
+                        # in case connection is dead, but watchdog is still up, something else killed the connection,
+                        # make the watchdog quit, then making a new one
+                        self._watchdog.kill()
+                    self._watchdog = ConnectionWatchDog(
+                        self._conn, self._lock, timeout=self._timeout
+                    )
+                    self._watchdog.start()
+            if self._timeout > 0:
+                self._watchdog.kick()
+            return self._conn.execute(*args, **kwargs)
+
     def execute(self, *args, **kwargs):
-        while True:
-            try:
-                with self._lock:
-                    if self._conn is None or self._conn.closed:
-                        self._conn = self.engine.connect()
-                        if self._timeout > 0:
-                            # only log reconnections when we keep the connection alive between requests otherwise we'll spam
-                            # the log
-                            if self._conn is None:
-                                self._logger.info(
-                                    "Reconnecting to DB; connection not existing."
-                                )
-                            else:
-                                self._logger.info(
-                                    "Reconnecting to DB; connection closed."
-                                )
-                            if self._watchdog is not None:
-                                # in case connection is dead, but watchdog is still up, something else killed the connection,
-                                # make the watchdog quit, then making a new one
-                                self._watchdog.kill()
-                            self._watchdog = ConnectionWatchDog(
-                                self._conn, self._lock, timeout=self._timeout
-                            )
-                            self._watchdog.start()
-                    if self._timeout > 0:
-                        self._watchdog.kick()
-                    result = self._conn.execute(*args, **kwargs)
-                    break
-            except OperationalError as e:
-                print(
-                    f"Database connection failed with operational error {e}, waiting 5s, then re-trying."
-                )
-                time.sleep(5)
-        return result
+        return retry(lambda: self.execute_once(*args, **kwargs),
+                error=OperationalError,
+                msg=f"Database connection failed with operational error.",
+                delay=5
+        )
 
     def close(self):
         if self._conn is not None:
