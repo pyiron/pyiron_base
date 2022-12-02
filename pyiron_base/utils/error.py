@@ -8,7 +8,6 @@ In order to be accessible from anywhere in pyiron, they *must* remain free of an
 """
 import functools
 from itertools import count
-from math import inf
 import time
 from typing import Callable, TypeVar, Type, Tuple, Optional, Union
 import warnings

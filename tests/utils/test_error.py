@@ -35,7 +35,7 @@ class TestRetry(unittest.TestCase):
                     return self.n
         func = Func()
         try:
-            ret = retry(func, error=ValueError, msg="", delay=1e-6)
+            retry(func, error=ValueError, msg="", delay=1e-6)
         except ValueError:
             self.fail("retry did not catch exception!")
 

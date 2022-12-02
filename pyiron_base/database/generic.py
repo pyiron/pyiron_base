@@ -387,7 +387,7 @@ class AutorestoredConnection:
         return retry(
             lambda: self.execute_once(*args, **kwargs),
             error=OperationalError,
-            msg=f"Database connection failed with operational error.",
+            msg="Database connection failed with operational error.",
             delay=5,
         )
 
@@ -443,12 +443,13 @@ class DatabaseAccess(IsDatabase):
             raise ValueError("Connection to database failed: " + str(except_msg))
 
         self._chem_formula_lim_length = 50
-        # too many jobs trying to talk to the database can cause this too fail.
+
         def _create_table():
             self.__reload_db()
             self.simulation_table = HistoricalTable(str(table_name), self.metadata)
             self.metadata.create_all()
 
+        # too many jobs trying to talk to the database can cause this too fail.
         retry(
             _create_table,
             error=OperationalError,
