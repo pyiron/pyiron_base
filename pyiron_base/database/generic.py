@@ -370,9 +370,7 @@ class AutorestoredConnection:
                             "Reconnecting to DB; connection did not exist."
                         )
                     else:
-                        self._logger.info(
-                            "Reconnecting to DB; connection was closed."
-                        )
+                        self._logger.info("Reconnecting to DB; connection was closed.")
                     if self._watchdog is not None:
                         # in case connection is dead, but watchdog is still up, something else killed the connection,
                         # make the watchdog quit, then making a new one
@@ -386,10 +384,11 @@ class AutorestoredConnection:
             return self._conn.execute(*args, **kwargs)
 
     def execute(self, *args, **kwargs):
-        return retry(lambda: self.execute_once(*args, **kwargs),
-                error=OperationalError,
-                msg=f"Database connection failed with operational error.",
-                delay=5
+        return retry(
+            lambda: self.execute_once(*args, **kwargs),
+            error=OperationalError,
+            msg=f"Database connection failed with operational error.",
+            delay=5,
         )
 
     def close(self):
@@ -449,12 +448,14 @@ class DatabaseAccess(IsDatabase):
             self.__reload_db()
             self.simulation_table = HistoricalTable(str(table_name), self.metadata)
             self.metadata.create_all()
-        retry(_create_table,
-                error=OperationalError,
-                msg="Database busy with too many connections.",
-                atmost=10,
-                delay=0.1,
-                delay_factor=2
+
+        retry(
+            _create_table,
+            error=OperationalError,
+            msg="Database busy with too many connections.",
+            atmost=10,
+            delay=0.1,
+            delay_factor=2,
         )
         self._view_mode = False
 

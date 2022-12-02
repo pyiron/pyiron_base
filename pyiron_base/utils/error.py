@@ -106,13 +106,15 @@ class ImportAlarm:
 
 
 T = TypeVar("T")
+
+
 def retry(
-        func: Callable[[], T],
-        error: Union[Type[Exception], Tuple[Type[Exception], ...]],
-        msg: str,
-        atmost: Optional[int] = None,
-        delay: float = 1.0,
-        delay_factor: float = 1.0
+    func: Callable[[], T],
+    error: Union[Type[Exception], Tuple[Type[Exception], ...]],
+    msg: str,
+    atmost: Optional[int] = None,
+    delay: float = 1.0,
+    delay_factor: float = 1.0,
 ) -> T:
     """
     Try to call `func` until it no longer raises `error`.
@@ -143,7 +145,9 @@ def retry(
         try:
             return func()
         except error as e:
-            logger.warn(f"{msg} Trying again in {delay}s. Tried {i + 1} times so far...")
+            logger.warn(
+                f"{msg} Trying again in {delay}s. Tried {i + 1} times so far..."
+            )
             time.sleep(delay)
             delay *= delay_factor
             # e drops out of the namespace after the except clause ends, so
