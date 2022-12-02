@@ -724,11 +724,13 @@ class JobCore(HasGroups):
 
         # Update the database entry
         if self.job_id:
-            _copy_database_entry(
-                new_job_core=new_job_core,
-                job_copied_id=self.job_id,
-                new_database_entry=new_database_entry,
-            )
+            if new_database_entry:
+                _copy_database_entry(
+                    new_job_core=new_job_core,
+                    job_copied_id=self.job_id,
+                )
+            else:
+                new_job_core.reset_job_id(job_id=None)
 
         # Copy files outside the HDF5 file
         if copy_files and os.path.exists(self.working_directory):
