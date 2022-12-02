@@ -112,7 +112,7 @@ def retry(
         msg: str,
         atmost: Optional[int] = None,
         delay: float = 1.0,
-        delay_factor: float = 1
+        delay_factor: float = 1.0
 ) -> T:
     """
     Try to call `func` until it no longer raises `error`.
