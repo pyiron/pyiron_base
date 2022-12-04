@@ -967,7 +967,7 @@ class Project(ProjectPath, HasGroups):
         else:
             return None
 
-    def refresh_job_status(self, *jobs):
+    def refresh_job_status(self, *jobs, by_status=["running", "submitted"]):
         """
         Check if job is still running or crashed on the cluster node.
 
@@ -975,10 +975,12 @@ class Project(ProjectPath, HasGroups):
 
         Args:
             *jobs (str, int): name of the job or job ID, any number of them
+            by_status (iterable of str): if not jobs are given, select all jobs
+                with the given status in this project
         """
         if len(jobs) == 0:
             df = self.job_table()
-            jobs = df[df.status.isin(["running", "submitted"])].id
+            jobs = df[df.status.isin(by_status)].id
         if self.db is not None:
             for job_specifier in jobs:
                 if isinstance(job_specifier, str):
