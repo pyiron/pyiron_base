@@ -20,3 +20,4 @@ dependencies:
 - sqlalchemy =1.4.42
 - tqdm =4.64.1
 - traitlets =5.5.0
+- monty =v2022.9.9

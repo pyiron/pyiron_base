@@ -4,6 +4,7 @@
 """
 Helper functions for the JobCore and GenericJob objects
 """
+from itertools import islice
 import os
 import posixpath
 import psutil
@@ -12,6 +13,7 @@ import stat
 import shutil
 from typing import Union, Dict
 from pyiron_base.utils.instance import static_isinstance
+import monty.io
 
 __author__ = "Jan Janssen"
 __copyright__ = (
@@ -328,14 +330,18 @@ def _job_list_files(job):
     return []
 
 
-def _job_read_file(job, file_name):
+def _job_read_file(job, file_name, tail=None):
     """
     Return list of lines of the given file.
 
     Transparently decompresses the file if job is compressed.
 
+    If `tail` is given and job is decompressed, only read the last lines
+    instead of traversing the full file.
+
     Args:
         file_name (str): the file to print
+        tail (int, optional): only return the last lines
 
     Raises:
         FileNotFoundError: if the given file name does not exist in the job folder
@@ -345,13 +351,26 @@ def _job_read_file(job, file_name):
 
     if _job_is_compressed(job):
         with tarfile.open(_job_compressed_name(job), encoding="utf8") as f:
-            return [
+            lines = [
                 line.decode("utf8") for line in f.extractfile(file_name).readlines()
             ]
+            if tail is None:
+                return lines
+            else:
+                return lines[-tail:]
     else:
         file_name = posixpath.join(job.working_directory, file_name)
-        with open(file_name) as f:
-            return f.readlines()
+        if tail is None:
+            with open(file_name) as f:
+                return f.readlines()
+        else:
+            lines = list(reversed([l + "\n" for l in islice(monty.io.reverse_readfile(file_name), tail)]))
+            # compatibility with the other methods
+            # monty strips all newlines, where as reading the other ways does
+            # not.  So if a file does not end with a newline (as most text
+            # files) adding it to every line like above adds an additional one.
+            lines[-1] = lines[-1].rstrip("\n")
+            return lines
 
 
 def _job_archive(job):
