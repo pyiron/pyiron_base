@@ -493,19 +493,19 @@ class TestGenericJob(TestWithFilledProject):
         job.decompress()
         content = ["Content", "More", "Lines"]
         with open(os.path.join(job.working_directory, "test_file"), "w") as f:
-            f.write("\n".join(content))
+            f.write(os.linesep.join(content))
 
         for i in range(len(content)):
             with contextlib.redirect_stdout(io.StringIO()) as f:
                 job.tail("test_file", lines=i+1)
-            self.assertEqual(f.getvalue(), "\n".join(content[-i-1:]) + "\n",
+            self.assertEqual(f.getvalue(), os.linesep.join(content[-i-1:]) + os.linesep,
                              "tail read incorrect lines from output file when job uncompressed!")
 
         job.compress()
         for i in range(len(content)):
             with contextlib.redirect_stdout(io.StringIO()) as f:
                 job.tail("test_file", lines=i+1)
-            self.assertEqual(f.getvalue(), "\n".join(content[-i-1:]) + "\n",
+            self.assertEqual(f.getvalue(), os.linesep.join(content[-i-1:]) + os.linesep,
                              "tail read incorrect lines from output file when job compressed!")
 
 if __name__ == "__main__":
