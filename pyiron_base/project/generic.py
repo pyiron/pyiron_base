@@ -1025,7 +1025,14 @@ class Project(ProjectPath, HasGroups):
                 que_mode
                 and self.db.get_item_by_id(job_id)["status"] in ["running", "submitted"]
             ):
-                if not self.queue_check_job_is_waiting_or_running(self.inspect(job_id)):
+                job = self.inspect(job_id)
+                # a job can be in status running or submitted without being on
+                # the queue, if the run mode is worker or non_modal.  In this
+                # case we do not want to check the queue status, so we just
+                # short circuit here.
+                if job["server"]["run_mode"] in ["worker", "non_modal"]:
+                    return
+                if not self.queue_check_job_is_waiting_or_running(job):
                     self.db.set_job_status(job_id=job_id, status="aborted")
 
     def remove_file(self, file_name):
