@@ -914,7 +914,7 @@ class JobCore(HasGroups):
         """
 
         if item in self.list_files():
-            return _job_read_file(job, item)
+            return _job_read_file(self, item)
 
         # first try to access HDF5 directly to make the common case fast
         try:
