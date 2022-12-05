@@ -1723,6 +1723,19 @@ class Project(ProjectPath, HasGroups):
         shutil.move(self.path, target_dir)
         os.symlink(target, destination)
 
+    def unlink(self):
+        """
+        If the project folder is symlinked somewhere else remove the link and restore the original folder.
+
+        If it is not symlinked, silently return.
+        """
+        if not stat.S_ISLNK(os.lstat(self.path).st_mode):
+            return
+
+        target = os.readlink(self.path)
+        os.unlink(self.path)
+        shutil.move(target, self.path)
+
 
 class Creator:
     def __init__(self, project):
