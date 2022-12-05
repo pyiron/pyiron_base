@@ -12,6 +12,7 @@ import stat
 import shutil
 from typing import Union, Dict
 from pyiron_base.utils.instance import static_isinstance
+from pyiron_base.utils.safetar import safe_extract
 
 __author__ = "Jan Janssen"
 __copyright__ = (
@@ -25,26 +26,23 @@ __status__ = "production"
 __date__ = "Nov 28, 2020"
 
 
-def _copy_database_entry(new_job_core, job_copied_id, new_database_entry=True):
+def _copy_database_entry(new_job_core, job_copied_id):
     """
     Copy database entry from previous job
 
     Args:
         new_job_core (GenericJob): Copy of the job object
         job_copied_id (int): Job id of the copied job
-        new_database_entry (bool): [True/False] to create a new database entry - default True
     """
-    if new_database_entry:
-        db_entry = new_job_core.project.db.get_item_by_id(job_copied_id)
-        if db_entry is not None:
-            db_entry["project"] = new_job_core.project_hdf5.project_path
-            db_entry["projectpath"] = new_job_core.project_hdf5.root_path
-            db_entry["subjob"] = new_job_core.project_hdf5.h5_path
-            del db_entry["id"]
-            job_id = new_job_core.project.db.add_item_dict(db_entry)
-            new_job_core.reset_job_id(job_id=job_id)
-    else:
-        new_job_core.reset_job_id(job_id=None)
+    db_entry = new_job_core.project.db.get_item_by_id(job_copied_id)
+    if db_entry is not None:
+        db_entry["job"] = new_job_core.job_name
+        db_entry["subjob"] = new_job_core.project_hdf5.h5_path
+        db_entry["project"] = new_job_core.project_hdf5.project_path
+        db_entry["projectpath"] = new_job_core.project_hdf5.root_path
+        del db_entry["id"]
+        job_id = new_job_core.project.db.add_item_dict(db_entry)
+        new_job_core.reset_job_id(job_id=job_id)
 
 
 def _copy_to_delete_existing(project_class, job_name, delete_job):
@@ -285,7 +283,7 @@ def _job_decompress(job):
     try:
         tar_file_name = os.path.join(job.working_directory, job.job_name + ".tar.bz2")
         with tarfile.open(tar_file_name, "r:bz2") as tar:
-            tar.extractall(job.working_directory)
+            safe_extract(tar, job.working_directory)
         os.remove(tar_file_name)
     except IOError:
         pass
@@ -348,7 +346,7 @@ def _job_unarchive(job):
     try:
         tar_name = os.path.join(fpath, job.job_name + ".tar.bz2")
         with tarfile.open(tar_name, "r:bz2") as tar:
-            tar.extractall(fpath)
+            safe_extract(tar, fpath)
         os.remove(tar_name)
     finally:
         pass

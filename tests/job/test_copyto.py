@@ -62,6 +62,22 @@ class TestCopyTo(TestWithProject):
             )
         )
 
+    def test_copy_to_name(self):
+        """Regression test: copied jobs should have the updated name in the database.
+
+        The was a bug where copied jobs would have the new name on the filesystem but still the old name in the
+        database.
+        """
+        ham = self.project.create_job("ScriptJob", "copy_test")
+        ham.save()
+
+        new_ham = ham.copy_to(new_job_name="copy_test_new")
+        self.assertEqual(new_ham.name, "copy_test_new", "New job has wrong name.")
+        self.assertEqual(new_ham.name, new_ham.database_entry.job, "New job has wrong name in the database.")
+
+        ham.remove()
+        new_ham.remove()
+
 
 if __name__ == "__main__":
     unittest.main()
