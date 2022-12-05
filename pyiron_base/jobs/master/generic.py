@@ -20,7 +20,6 @@ from pyiron_base.jobs.job.core import _doc_str_job_core_args
 from pyiron_base.jobs.job.generic import GenericJob, _doc_str_generic_job_attr
 from pyiron_base.jobs.job.extension.jobstatus import job_status_finished_lst
 from pyiron_base.jobs.job.extension.jobstatus import JobStatus
-from pyiron_base.storage.parameters import GenericParameters
 
 __author__ = "Jan Janssen"
 __copyright__ = (

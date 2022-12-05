@@ -45,7 +45,7 @@ class SerialMasterBase(GenericMaster):
         """
     The serial master class is a metajob consisting of a dynamic list of jobs which are executed in serial mode. The job
     is derived from the GenericMaster.
-    
+
     Example:
     >>> def convergence_goal(self, **qwargs):
     >>>     if len(self[-1].output.energy_pot) > qwargs['max_steps']:
