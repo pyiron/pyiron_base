@@ -531,6 +531,7 @@ def execute_job_with_external_executable(job):
     job.run()
     if job_crashed:
         job.status.aborted = True
+        job._hdf5["status"] = job.status.string
 
 
 def multiprocess_wrapper(

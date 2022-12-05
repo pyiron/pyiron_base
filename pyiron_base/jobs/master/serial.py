@@ -9,7 +9,12 @@ from collections import OrderedDict
 import inspect
 import time
 import numpy as np
-from pyiron_base.jobs.master.generic import GenericMaster, get_function_from_string
+from pyiron_base.jobs.job.core import _doc_str_job_core_args
+from pyiron_base.jobs.master.generic import (
+    GenericMaster,
+    get_function_from_string,
+    _doc_str_generic_master_attr,
+)
 from pyiron_base.storage.parameters import GenericParameters
 
 __author__ = "Jan Janssen"
@@ -24,102 +29,11 @@ __status__ = "production"
 __date__ = "Sep 1, 2017"
 
 
-class SerialMasterBase(GenericMaster):
-    """
-    The serial master class is a metajob consisting of a dynamic list of jobs which are executed in serial mode. The job
-    is derived from the GenericMaster.
-
-    Args:
-        project (ProjectHDFio): ProjectHDFio instance which points to the HDF5 file the job is stored in
-        job_name (str): name of the job, which has to be unique within the project
-
-    Attributes:
-
-        .. attribute:: job_name
-
-            name of the job, which has to be unique within the project
-
-        .. attribute:: status
-
-            execution status of the job, can be one of the following [initialized, appended, created, submitted,
-                                                                      running, aborted, collect, suspended, refresh,
-                                                                      busy, finished]
-
-        .. attribute:: job_id
-
-            unique id to identify the job in the pyiron database
-
-        .. attribute:: parent_id
-
-            job id of the predecessor job - the job which was executed before the current one in the current job series
-
-        .. attribute:: master_id
-
-            job id of the master job - a meta job which groups a series of jobs, which are executed either in parallel
-            or in serial.
-
-        .. attribute:: child_ids
-
-            list of child job ids - only meta jobs have child jobs - jobs which list the meta job as their master
-
-        .. attribute:: project
-
-            Project instance the jobs is located in
-
-        .. attribute:: project_hdf5
-
-            ProjectHDFio instance which points to the HDF5 file the job is stored in
-
-        .. attribute:: job_info_str
-
-            short string to describe the job by it is job_name and job ID - mainly used for logging
-
-        .. attribute:: working_directory
-
-            working directory of the job is executed in - outside the HDF5 file
-
-        .. attribute:: path
-
-            path to the job as a combination of absolute file system path and path within the HDF5 file.
-
-        .. attribute:: version
-
-            Version of the hamiltonian, which is also the version of the executable unless a custom executable is used.
-
-        .. attribute:: executable
-
-            Executable used to run the job - usually the path to an external executable.
-
-        .. attribute:: library_activated
-
-            For job types which offer a Python library pyiron can use the python library instead of an external
-            executable.
-
-        .. attribute:: server
-
-            Server object to handle the execution environment for the job.
-
-        .. attribute:: queue_id
-
-            the ID returned from the queuing system - it is most likely not the same as the job ID.
-
-        .. attribute:: logger
-
-            logger object to monitor the external execution and internal pyiron warnings.
-
-        .. attribute:: restart_file_list
-
-            list of files which are used to restart the calculation from these files.
-
-        .. attribute:: job_type
-
-            Job type object with all the available job types: ['ExampleJob', 'SerialMaster', 'ParallelMaster',
-                                                               'ScriptJob', 'ListMaster']
-
-        .. attribute:: child_names
-
-            Dictionary matching the child ID to the child job name.
-
+# Modular Docstrings
+_doc_str_serial_master_base_attr = (
+    _doc_str_generic_master_attr
+    + "\n"
+    + """\
         .. attribute:: start_job
 
             The first job of the series.
@@ -127,14 +41,25 @@ class SerialMasterBase(GenericMaster):
         .. attribute:: input
 
             The input of the start job - the first job of the series.
-    """
+"""
+)
+
+
+class SerialMasterBase(GenericMaster):
+    __doc__ = (
+        """
+    The serial master class is a metajob consisting of a dynamic list of jobs which are executed in serial mode. The job
+    is derived from the GenericMaster.
+"""
+        + "\n"
+        + _doc_str_job_core_args
+        + "\n"
+        + _doc_str_serial_master_base_attr
+    )
 
     def __init__(self, project, job_name):
-        self._input = GenericParameters("parameters")  # e.g. convergence goal
-
         super(SerialMasterBase, self).__init__(project, job_name=job_name)
         self.__version__ = "0.3"
-
         self._output = GenericOutput()
         self._max_iterations = 100
         self._start_job = None
@@ -175,41 +100,6 @@ class SerialMasterBase(GenericMaster):
     @ref_job.setter
     def ref_job(self, job):
         self.append(job)
-
-    @property
-    def input(self):
-        """
-        Get the input of the start job - the first job of the series.
-
-        Returns:
-            GenericParameters: input of the start job
-        """
-        if self.start_job is not None:
-            return self._start_job.input
-        else:
-            return None
-
-    @input.setter
-    def input(self, value):
-        """
-        Set the input of the start job - the first job of the series.
-
-        Args:
-            value (GenericParameters): input of the start job
-        """
-        if self.start_job is not None:
-            self._start_job.input = value
-        else:
-            raise ValueError(
-                "Input can only be set after a start job has been assinged."
-            )
-
-    def set_input_to_read_only(self):
-        """
-        This function enforces read-only mode for the input classes, but it has to be implement in the individual
-        classes.
-        """
-        self._input.read_only = True
 
     def get_initial_child_name(self):
         """
@@ -297,7 +187,6 @@ class SerialMasterBase(GenericMaster):
         """
         super(SerialMasterBase, self).from_hdf(hdf=hdf, group_name=group_name)
         with self.project_hdf5.open("input") as hdf5_input:
-            self._input.from_hdf(hdf5_input)
             convergence_goal_str = hdf5_input["convergence_goal"]
             if convergence_goal_str == "None":
                 self._convergence_goal = None
@@ -425,7 +314,6 @@ class SerialMasterBase(GenericMaster):
         """
         super(SerialMasterBase, self).to_hdf(hdf=hdf, group_name=group_name)
         with self.project_hdf5.open("input") as hdf5_input:
-            self._input.to_hdf(hdf5_input)
             if self._convergence_goal is not None:
                 try:
                     hdf5_input["convergence_goal"] = inspect.getsource(
@@ -438,13 +326,6 @@ class SerialMasterBase(GenericMaster):
             else:
                 hdf5_input["convergence_goal"] = "None"
 
-    def write_input(self):
-        """
-        Write the input files - for the SerialMaster this only contains convergence goal.
-        """
-        super().write_input()
-        self._input.write_file(file_name="input.inp", cwd=self.working_directory)
-
     def __len__(self):
         """
         Length of the SerialMaster equal the number of childs appended.
@@ -453,28 +334,6 @@ class SerialMasterBase(GenericMaster):
             int: length of the SerialMaster
         """
         return len(self.child_ids + self._job_name_lst)
-
-    def __getitem__(self, item):
-        """
-        Get/ read data from the GenericMaster
-
-        Args:
-            item (str, slice): path to the data or key of the data object
-
-        Returns:
-            dict, list, float, int: data or data object
-        """
-        child_id_lst = self.child_ids
-        child_name_lst = [
-            self.project.db.get_item_by_id(child_id)["job"]
-            for child_id in self.child_ids
-        ]
-        if isinstance(item, int):
-            total_lst = child_name_lst + self._job_name_lst
-            item = total_lst[item]
-        return self._get_item_when_str(
-            item=item, child_id_lst=child_id_lst, child_name_lst=child_name_lst
-        )
 
     def run_if_refresh(self):
         """

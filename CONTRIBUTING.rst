@@ -303,7 +303,7 @@ Build status
 
 The build status for pyiron and all sub packages are given below
 
-.. image:: https://coveralls.io/repos/github/pyiron/pyiron/badge.svg?branch=master
+.. image:: https://coveralls.io/repos/github/pyiron/pyiron/badge.svg?branch=main
     :target: https://coveralls.io/github/pyiron/pyiron?branch=master
     :alt: Coverage Status
 
@@ -315,11 +315,11 @@ The build status for pyiron and all sub packages are given below
     :target: https://anaconda.org/conda-forge/pyiron/
     :alt: Release_Date
 
-.. image:: https://travis-ci.org/pyiron/pyiron.svg?branch=master
+.. image:: https://travis-ci.org/pyiron/pyiron.svg?branch=main
     :target: https://travis-ci.org/pyiron/pyiron
     :alt: Build Status
 
-.. image:: https://ci.appveyor.com/api/projects/status/wfdgqkxca1i19xcq/branch/master?svg=true
+.. image:: https://ci.appveyor.com/api/projects/status/wfdgqkxca1i19xcq/branch/main?svg=true
     :target: https://ci.appveyor.com/project/pyiron-runner/pyiron/branch/master
     :alt: Build status
 
