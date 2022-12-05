@@ -2,7 +2,7 @@ pyiron
 ======
 
 .. image:: https://coveralls.io/repos/github/pyiron/pyiron_base/badge.svg?branch=main
-    :target: https://coveralls.io/github/pyiron/pyiron_base?branch=master
+    :target: https://coveralls.io/github/pyiron/pyiron_base?branch=main
     :alt: Coverage Status
 
 .. image:: https://anaconda.org/conda-forge/pyiron_base/badges/latest_release_date.svg
@@ -25,7 +25,7 @@ pyiron - an integrated development environment (IDE) for computational materials
 
 Installation
 ------------
-You can test pyiron on `Mybinder.org (beta) <https://mybinder.org/v2/gh/pyiron/pyiron_base/master?urlpath=lab>`_.
+You can test pyiron on `Mybinder.org (beta) <https://mybinder.org/v2/gh/pyiron/pyiron_base/main?urlpath=lab>`_.
 For a local installation we recommend to install pyiron inside an `anaconda <https://www.anaconda.com>`_  environment::
 
     conda install -c conda-forge pyiron_base
@@ -51,7 +51,7 @@ Getting started:
 Test pyiron with mybinder:
 
 .. image:: https://mybinder.org/badge_logo.svg
-     :target: https://mybinder.org/v2/gh/pyiron/pyiron_base/master
+     :target: https://mybinder.org/v2/gh/pyiron/pyiron_base/main
      :alt: mybinder
 
 
