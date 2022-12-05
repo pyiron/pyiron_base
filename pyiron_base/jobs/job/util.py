@@ -26,26 +26,23 @@ __status__ = "production"
 __date__ = "Nov 28, 2020"
 
 
-def _copy_database_entry(new_job_core, job_copied_id, new_database_entry=True):
+def _copy_database_entry(new_job_core, job_copied_id):
     """
     Copy database entry from previous job
 
     Args:
         new_job_core (GenericJob): Copy of the job object
         job_copied_id (int): Job id of the copied job
-        new_database_entry (bool): [True/False] to create a new database entry - default True
     """
-    if new_database_entry:
-        db_entry = new_job_core.project.db.get_item_by_id(job_copied_id)
-        if db_entry is not None:
-            db_entry["project"] = new_job_core.project_hdf5.project_path
-            db_entry["projectpath"] = new_job_core.project_hdf5.root_path
-            db_entry["subjob"] = new_job_core.project_hdf5.h5_path
-            del db_entry["id"]
-            job_id = new_job_core.project.db.add_item_dict(db_entry)
-            new_job_core.reset_job_id(job_id=job_id)
-    else:
-        new_job_core.reset_job_id(job_id=None)
+    db_entry = new_job_core.project.db.get_item_by_id(job_copied_id)
+    if db_entry is not None:
+        db_entry["job"] = new_job_core.job_name
+        db_entry["subjob"] = new_job_core.project_hdf5.h5_path
+        db_entry["project"] = new_job_core.project_hdf5.project_path
+        db_entry["projectpath"] = new_job_core.project_hdf5.root_path
+        del db_entry["id"]
+        job_id = new_job_core.project.db.add_item_dict(db_entry)
+        new_job_core.reset_job_id(job_id=job_id)
 
 
 def _copy_to_delete_existing(project_class, job_name, delete_job):

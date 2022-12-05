@@ -29,6 +29,7 @@ from sqlalchemy.exc import OperationalError, DatabaseError
 from threading import Thread, Lock
 from queue import SimpleQueue, Empty as QueueEmpty
 from pyiron_base.database.tables import HistoricalTable
+from pyiron_base.utils.error import retry
 
 __author__ = "Murat Han Celik"
 __copyright__ = (
@@ -357,41 +358,38 @@ class AutorestoredConnection:
         self._logger = logger
         self._timeout = timeout
 
+    def execute_once(self, *args, **kwargs):
+        with self._lock:
+            if self._conn is None or self._conn.closed:
+                self._conn = self.engine.connect()
+                if self._timeout > 0:
+                    # only log reconnections when we keep the connection alive between requests otherwise we'll spam
+                    # the log
+                    if self._conn is None:
+                        self._logger.info(
+                            "Reconnecting to DB; connection did not exist."
+                        )
+                    else:
+                        self._logger.info("Reconnecting to DB; connection was closed.")
+                    if self._watchdog is not None:
+                        # in case connection is dead, but watchdog is still up, something else killed the connection,
+                        # make the watchdog quit, then making a new one
+                        self._watchdog.kill()
+                    self._watchdog = ConnectionWatchDog(
+                        self._conn, self._lock, timeout=self._timeout
+                    )
+                    self._watchdog.start()
+            if self._timeout > 0:
+                self._watchdog.kick()
+            return self._conn.execute(*args, **kwargs)
+
     def execute(self, *args, **kwargs):
-        while True:
-            try:
-                with self._lock:
-                    if self._conn is None or self._conn.closed:
-                        self._conn = self.engine.connect()
-                        if self._timeout > 0:
-                            # only log reconnections when we keep the connection alive between requests otherwise we'll spam
-                            # the log
-                            if self._conn is None:
-                                self._logger.info(
-                                    "Reconnecting to DB; connection not existing."
-                                )
-                            else:
-                                self._logger.info(
-                                    "Reconnecting to DB; connection closed."
-                                )
-                            if self._watchdog is not None:
-                                # in case connection is dead, but watchdog is still up, something else killed the connection,
-                                # make the watchdog quit, then making a new one
-                                self._watchdog.kill()
-                            self._watchdog = ConnectionWatchDog(
-                                self._conn, self._lock, timeout=self._timeout
-                            )
-                            self._watchdog.start()
-                    if self._timeout > 0:
-                        self._watchdog.kick()
-                    result = self._conn.execute(*args, **kwargs)
-                    break
-            except OperationalError as e:
-                print(
-                    f"Database connection failed with operational error {e}, waiting 5s, then re-trying."
-                )
-                time.sleep(5)
-        return result
+        return retry(
+            lambda: self.execute_once(*args, **kwargs),
+            error=OperationalError,
+            msg="Database connection failed with operational error.",
+            delay=5,
+        )
 
     def close(self):
         if self._conn is not None:
@@ -445,9 +443,21 @@ class DatabaseAccess(IsDatabase):
             raise ValueError("Connection to database failed: " + str(except_msg))
 
         self._chem_formula_lim_length = 50
-        self.__reload_db()
-        self.simulation_table = HistoricalTable(str(table_name), self.metadata)
-        self.metadata.create_all()
+
+        def _create_table():
+            self.__reload_db()
+            self.simulation_table = HistoricalTable(str(table_name), self.metadata)
+            self.metadata.create_all()
+
+        # too many jobs trying to talk to the database can cause this too fail.
+        retry(
+            _create_table,
+            error=OperationalError,
+            msg="Database busy with too many connections.",
+            at_most=10,
+            delay=0.1,
+            delay_factor=2,
+        )
         self._view_mode = False
 
     def _get_view_mode(self):
