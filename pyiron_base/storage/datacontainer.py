@@ -790,16 +790,22 @@ class DataContainer(MutableMapping, HasGroups, HasHDF):
 
     def _to_hdf(self, hdf):
         hdf["READ_ONLY"] = self.read_only
+        written_keys = _internal_hdf_nodes.copy()
         for i, (k, v) in enumerate(self.items()):
             if isinstance(k, str) and "__index_" in k:
                 raise ValueError("Key {} clashes with internal use!".format(k))
 
             k = "{}__index_{}".format(k if isinstance(k, str) else "", i)
+            written_keys.append(k)
 
             # pandas objects also have a to_hdf method that is entirely unrelated to ours
             if hasattr(v, "to_hdf") and not isinstance(
                 v, (pandas.DataFrame, pandas.Series)
             ):
+                # if v will be written as a group, but a node of the same name k exists already in the file, h5py will
+                # complain, so delete it first
+                if k in hdf.list_nodes():
+                    del hdf[k]
                 v.to_hdf(hdf=hdf, group_name=k)
             else:
                 # if the value doesn't know how to serialize itself, assume
@@ -811,6 +817,12 @@ class DataContainer(MutableMapping, HasGroups, HasHDF):
                         "Error saving {} (key {}): DataContainer doesn't support saving elements "
                         'of type "{}" to HDF!'.format(v, k, type(v))
                     ) from None
+        for n in hdf.list_nodes():
+            if n not in written_keys:
+                del hdf[n]
+        for g in hdf.list_groups():
+            if g not in written_keys:
+                del hdf[g]
 
     def _from_hdf(self, hdf, version=None):
         self.clear()
@@ -916,7 +928,7 @@ class DataContainer(MutableMapping, HasGroups, HasHDF):
         if not self._lazy and not recursive:
             return
 
-        # values are loaded from HDF once they are accessed via __getitem__, which is implicetly called by values()
+        # values are loaded from HDF once they are accessed via __getitem__, which is implicitly called by values()
         for v in self.values():
             if recursive and isinstance(v, DataContainer):
                 v._force_load()

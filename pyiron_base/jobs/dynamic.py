@@ -40,6 +40,7 @@ def _init_constructor_script(class_name, script_path, input_dict):
 
 def _get_write_input(script):
     def write_input(self):
+        super().write_input()
         script.write_input(
             working_directory=self.working_directory, input_dict=self.input.to_builtin()
         )

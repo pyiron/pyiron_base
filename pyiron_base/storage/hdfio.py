@@ -15,9 +15,11 @@ import posixpath
 import h5io
 import numpy as np
 import sys
+import time
 from typing import Union
 
 from pyiron_base.utils.deprecate import deprecate
+from pyiron_base.utils.error import retry
 
 from pyiron_base.interfaces.has_groups import HasGroups
 from pyiron_base.state import state
@@ -149,11 +151,11 @@ class FileHDFio(HasGroups, MutableMapping):
                 # underlying file once, this reduces the number of file opens in the most-likely case from 2 to 1 (1 to
                 # check whether the data is there and 1 to read it) and increases in the worst case from 1 to 2 (1 to
                 # try to read it here and one more time to verify it's not a group below).
-                obj = h5io.read_hdf5(self.file_name, title=self._get_h5_path(item))
+                obj = read_hdf5(self.file_name, title=self._get_h5_path(item))
                 if self._is_convertable_dtype_object_array(obj):
                     obj = self._convert_dtype_obj_array(obj.copy())
                 return obj
-            except (ValueError, OSError):
+            except (ValueError, OSError, RuntimeError, NotImplementedError):
                 # h5io couldn't find a dataset with name item, but there still might be a group with that name, which we
                 # check in the rest of the method
                 pass
@@ -257,10 +259,10 @@ class FileHDFio(HasGroups, MutableMapping):
             use_json = False
         elif isinstance(value, tuple):
             value = list(value)
-        h5io.write_hdf5(
+        write_hdf5(
             self.file_name,
             value,
-            title=posixpath.join(self.h5_path, key),
+            title=self._get_h5_path(key),
             overwrite="update",
             use_json=use_json,
         )
@@ -275,7 +277,7 @@ class FileHDFio(HasGroups, MutableMapping):
         if self.file_exists:
             try:
                 with open_hdf5(self.file_name, mode="a") as store:
-                    del store[key]
+                    del store[self._get_h5_path(key)]
             except (AttributeError, KeyError):
                 pass
 
@@ -531,7 +533,7 @@ class FileHDFio(HasGroups, MutableMapping):
         Returns:
             FileHDFio: FileHDFio object pointing to the new group
         """
-        full_name = posixpath.join(self.h5_path, name)
+        full_name = self._get_h5_path(name)
         with open_hdf5(self.file_name, mode="a") as h:
             try:
                 h.create_group(full_name, track_order=track_order)
@@ -570,7 +572,7 @@ class FileHDFio(HasGroups, MutableMapping):
         if h5_rel_path.strip() == ".":
             h5_rel_path = ""
         if h5_rel_path.strip() != "":
-            new_h5_path.h5_path = posixpath.join(new_h5_path.h5_path, h5_rel_path)
+            new_h5_path.h5_path = self._get_h5_path(h5_rel_path)
         new_h5_path.history.append(h5_rel_path)
 
         return new_h5_path
@@ -901,7 +903,7 @@ class FileHDFio(HasGroups, MutableMapping):
         Returns:
             dict, list, float, int: data or data object
         """
-        return h5io.read_hdf5(self.file_name, title=self._get_h5_path(item))
+        return read_hdf5(self.file_name, title=self._get_h5_path(item))
 
     # def _open_store(self, mode="r"):
     #     """
@@ -1308,12 +1310,18 @@ class ProjectHDFio(FileHDFio):
             type: class object of the given name
         """
         internal_class_name = class_name.split(".")[-1][:-2]
+        class_path = class_name.split()[-1].split(".")[:-1]
+        class_path[0] = class_path[0][1:]
+        class_module_path = ".".join(class_path)
         if internal_class_name in self._project.job_type.job_class_dict:
             module_path = self._project.job_type.job_class_dict[internal_class_name]
+            if class_module_path != module_path:
+                state.logger.info(
+                    f'Using registered module "{module_path}" instead of custom/old module "{class_module_path}" to'
+                    f' import job type "{internal_class_name}"!'
+                )
         else:
-            class_path = class_name.split()[-1].split(".")[:-1]
-            class_path[0] = class_path[0][1:]
-            module_path = ".".join(class_path)
+            module_path = class_module_path
         return getattr(
             importlib.import_module(module_path),
             internal_class_name,
@@ -1369,6 +1377,7 @@ class ProjectHDFio(FileHDFio):
         class_convert_dict = {  # Fix backwards compatibility
             "pyiron_base.generic.datacontainer.DataContainer": "pyiron_base.storage.datacontainer.DataContainer",
             "pyiron_base.generic.inputlist.InputList": "pyiron_base.storage.inputlist.InputList",
+            "pyiron_base.generic.flattenedstorage.FlattenedStorage": "pyiron_base.storage.flattenedstorage.FlattenedStorage",
         }
         if class_path in class_convert_dict.keys():
             class_name_new = "<class '" + class_convert_dict[class_path] + "'>"
@@ -1464,3 +1473,43 @@ class ProjectHDFio(FileHDFio):
             Project: pyiron project object
         """
         return self._project.__class__(path=self.file_path)
+
+
+def read_hdf5(fname, title="h5io", slash="ignore"):
+    return retry(
+        lambda: h5io.read_hdf5(
+            fname=fname,
+            title=title,
+            slash=slash,
+        ),
+        error=BlockingIOError,
+        msg=f"Two or more processes tried to access the file {fname}.",
+        at_most=10,
+        delay=1,
+    )
+
+
+def write_hdf5(
+    fname,
+    data,
+    overwrite=False,
+    compression=4,
+    title="h5io",
+    slash="error",
+    use_json=False,
+):
+    retry(
+        lambda: h5io.write_hdf5(
+            fname=fname,
+            data=data,
+            overwrite=overwrite,
+            compression=compression,
+            title=title,
+            slash=slash,
+            use_json=use_json,
+        ),
+        error=BlockingIOError,
+        msg=f"Two or more processes tried to access the file {fname}.",
+        at_most=10,
+        delay=1,
+    )

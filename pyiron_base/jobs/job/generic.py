@@ -8,15 +8,17 @@ Generic Job class extends the JobCore class with all the functionality to run th
 from datetime import datetime
 import os
 import posixpath
-import h5io
-from pyiron_base.jobs.job.jobtype import JobType
 import signal
 import warnings
 
 from pyiron_base.state import state
 from pyiron_base.jobs.job.extension.executable import Executable
 from pyiron_base.jobs.job.extension.jobstatus import JobStatus
-from pyiron_base.jobs.job.core import JobCore
+from pyiron_base.jobs.job.core import (
+    JobCore,
+    _doc_str_job_core_args,
+    _doc_str_job_core_attr,
+)
 from pyiron_base.jobs.job.runfunction import (
     run_job_with_parameter_repair,
     run_job_with_status_initialized,
@@ -34,6 +36,7 @@ from pyiron_base.jobs.job.runfunction import (
     run_job_with_runmode_interactive,
     run_job_with_runmode_interactive_non_modal,
     run_job_with_runmode_queue,
+    run_job_with_runmode_srun,
     execute_job_with_external_executable,
 )
 from pyiron_base.jobs.job.util import (
@@ -46,6 +49,7 @@ from pyiron_base.utils.instance import static_isinstance
 from pyiron_base.utils.deprecate import deprecate
 from pyiron_base.jobs.job.extension.server.generic import Server
 from pyiron_base.database.filetable import FileTable
+from pyiron_base.storage.hdfio import write_hdf5, read_hdf5
 
 __author__ = "Joerg Neugebauer, Jan Janssen"
 __copyright__ = (
@@ -65,68 +69,11 @@ intercepted_signals = [
 ]  # , signal.SIGQUIT]
 
 
-class GenericJob(JobCore):
-    """
-    Generic Job class extends the JobCore class with all the functionality to run the job object. From this class
-    all specific Hamiltonians are derived. Therefore it should contain the properties/routines common to all jobs.
-    The functions in this module should be as generic as possible.
-
-    Sub classes that need to add special behavior after :method:`.copy_to()` can override
-    :method:`._after_generic_copy_to()`.
-
-    Args:
-        project (ProjectHDFio): ProjectHDFio instance which points to the HDF5 file the job is stored in
-        job_name (str): name of the job, which has to be unique within the project
-
-    Attributes:
-
-        .. attribute:: job_name
-
-            name of the job, which has to be unique within the project
-
-        .. attribute:: status
-
-            execution status of the job, can be one of the following [initialized, appended, created, submitted,
-                                                                      running, aborted, collect, suspended, refresh,
-                                                                      busy, finished]
-
-        .. attribute:: job_id
-
-            unique id to identify the job in the pyiron database
-
-        .. attribute:: parent_id
-
-            job id of the predecessor job - the job which was executed before the current one in the current job series
-
-        .. attribute:: master_id
-
-            job id of the master job - a meta job which groups a series of jobs, which are executed either in parallel
-            or in serial.
-
-        .. attribute:: child_ids
-
-            list of child job ids - only meta jobs have child jobs - jobs which list the meta job as their master
-
-        .. attribute:: project
-
-            Project instance the jobs is located in
-
-        .. attribute:: project_hdf5
-
-            ProjectHDFio instance which points to the HDF5 file the job is stored in
-
-        .. attribute:: job_info_str
-
-            short string to describe the job by it is job_name and job ID - mainly used for logging
-
-        .. attribute:: working_directory
-
-            working directory of the job is executed in - outside the HDF5 file
-
-        .. attribute:: path
-
-            path to the job as a combination of absolute file system path and path within the HDF5 file.
-
+# Modular Docstrings
+_doc_str_generic_job_attr = (
+    _doc_str_job_core_attr
+    + "\n"
+    + """\
         .. attribute:: version
 
             Version of the hamiltonian, which is also the version of the executable unless a custom executable is used.
@@ -168,7 +115,25 @@ class GenericJob(JobCore):
 
             Job type object with all the available job types: ['ExampleJob', 'SerialMaster', 'ParallelMaster',
                                                                'ScriptJob', 'ListMaster']
-    """
+"""
+)
+
+
+class GenericJob(JobCore):
+    __doc__ = (
+        """
+    Generic Job class extends the JobCore class with all the functionality to run the job object. From this class
+    all specific Hamiltonians are derived. Therefore it should contain the properties/routines common to all jobs.
+    The functions in this module should be as generic as possible.
+
+    Sub classes that need to add special behavior after :method:`.copy_to()` can override
+    :method:`._after_generic_copy_to()`.
+"""
+        + "\n"
+        + _doc_str_job_core_args
+        + "\n"
+        + _doc_str_generic_job_attr
+    )
 
     def __init__(self, project, job_name):
         super(GenericJob, self).__init__(project, job_name)
@@ -182,12 +147,12 @@ class GenericJob(JobCore):
             self._status = JobStatus(db=project.db, job_id=self.job_id)
             self.refresh_job_status()
         elif os.path.exists(self.project_hdf5.file_name):
-            initial_status = h5io.read_hdf5(
+            initial_status = read_hdf5(
                 self.project_hdf5.file_name, job_name + "/status"
             )
             self._status = JobStatus(initial_status=initial_status)
             if "job_id" in self.list_nodes():
-                self._job_id = h5io.read_hdf5(
+                self._job_id = read_hdf5(
                     self.project_hdf5.file_name, job_name + "/job_id"
                 )
         else:
@@ -422,9 +387,19 @@ class GenericJob(JobCore):
         Write the input files for the external executable. This method has to be implemented in the individual
         hamiltonians.
         """
-        raise NotImplementedError(
-            "write procedure must be defined for derived Hamilton!"
-        )
+        if state.settings.configuration["write_work_dir_warnings"]:
+            with open(
+                os.path.join(self.working_directory, "WARNING_pyiron_modified_content"),
+                "w",
+            ) as f:
+                f.write(
+                    "Files in this directory are intended to be written and read by pyiron. \n\n"
+                    "pyiron may transform user input to enhance performance, thus, use these files with care!\n"
+                    "Consult the log and/or the documentation to gain further information.\n\n"
+                    "To disable writing these warning files, specify \n"
+                    "WRITE_WORK_DIR_WARNINGS=False in the .pyiron configuration file (or set the "
+                    "PYIRONWRITEWORKDIRWARNINGS environment variable accordingly)."
+                )
 
     def collect_output(self):
         """
@@ -460,7 +435,7 @@ class GenericJob(JobCore):
             )
         elif state.database.database_is_disabled:
             self._status = JobStatus(
-                initial_status=h5io.read_hdf5(
+                initial_status=read_hdf5(
                     self.project_hdf5.file_name, self.job_name + "/status"
                 )
             )
@@ -882,6 +857,13 @@ class GenericJob(JobCore):
         """
         run_job_with_runmode_non_modal(job=self)
 
+    def run_if_srun(self):
+        """
+        The run if srun function is called by run to execute the simulation using srun, this allows distributing
+        calculation to separate nodes in a SLURM based HPC cluster.
+        """
+        run_job_with_runmode_srun(job=self)
+
     def run_if_manually(self, _manually_print=True):
         """
         The run if manually function is called by run if the user decides to execute the simulation manually - this
@@ -1115,7 +1097,7 @@ class GenericJob(JobCore):
         if not state.database.database_is_disabled:
             job_id = self.project.db.add_item_dict(self.db_entry())
             self._job_id = job_id
-            h5io.write_hdf5(
+            write_hdf5(
                 self.project_hdf5.file_name,
                 job_id,
                 title=self.job_name + "/job_id",
@@ -1289,7 +1271,7 @@ class GenericJob(JobCore):
 
     def set_input_to_read_only(self):
         """
-        This function enforces read-only mode for the input classes, but it has to be implement in the individual
+        This function enforces read-only mode for the input classes, but it has to be implemented in the individual
         classes.
         """
         pass
@@ -1490,11 +1472,6 @@ class GenericJob(JobCore):
             project.db.set_job_status(job_id=master_id, status="busy")
             self._logger.info("busy master: {} {}".format(master_id, self.get_job_id()))
             del self
-
-    def __init_subclass__(cls, **kwargs):
-        """Auto register all subclasses of GenericJob as available JobType."""
-        super().__init_subclass__(**kwargs)
-        JobType.register(cls, _autoregister=True)
 
 
 class GenericError(object):

@@ -6,6 +6,7 @@ InteractiveBase class extends the Generic Job class with all the functionality t
 """
 
 import numpy as np
+from pyiron_base.database.filetable import FileTable
 from pyiron_base.jobs.job.generic import GenericJob
 from pyiron_base.jobs.job.jobtype import JobType
 
@@ -21,7 +22,6 @@ __status__ = "production"
 __date__ = "Sep 1, 2018"
 
 
-@JobType.unregister
 class InteractiveBase(GenericJob):
     """
     InteractiveBase class extends the Generic Job class with all the functionality to run the job object interactively.
@@ -302,9 +302,12 @@ class InteractiveBase(GenericJob):
             and len(self.interactive_cache[list(self.interactive_cache.keys())[0]]) != 0
         ):
             self.interactive_flush(path="interactive", include_last_step=True)
-        self.project_hdf5.rewrite_hdf5(job_name=self.job_name, exclude_groups=[])
-        self.project.db.item_update(self._runtime(), self._job_id)
+        self.project_hdf5.rewrite_hdf5()
         self.status.finished = True
+        if not isinstance(self.project.db, FileTable):
+            self.project.db.item_update(self._runtime(), self._job_id)
+        else:
+            self._hdf5["status"] = self.status.string
         self._interactive_library = None
         for key in self.interactive_cache.keys():
             self.interactive_cache[key] = []

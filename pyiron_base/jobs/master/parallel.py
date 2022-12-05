@@ -13,7 +13,8 @@ import pandas
 import multiprocessing
 import importlib
 from pyiron_base.jobs.job.generic import GenericJob
-from pyiron_base.jobs.master.generic import GenericMaster
+from pyiron_base.jobs.job.core import _doc_str_job_core_args
+from pyiron_base.jobs.master.generic import GenericMaster, _doc_str_generic_master_attr
 from pyiron_base.jobs.master.submissionstatus import SubmissionStatus
 from pyiron_base.storage.parameters import GenericParameters
 from pyiron_base.jobs.job.extension.jobstatus import JobStatus
@@ -34,106 +35,11 @@ __status__ = "production"
 __date__ = "Sep 1, 2017"
 
 
-@JobType.unregister
-class ParallelMaster(GenericMaster):
-    """
-    MasterJob that handles the creation and analysis of several parallel jobs (including master and
-    continuation jobs), Examples are Murnaghan or Phonon calculations.
-
-    Subclasses *must* implement :meth:`.collect_output()`.  Additionally :attr:`._job_generator` must be
-    initialized with an instance of :class:`.JobGenerator` in the subclasses' `__init__`.
-
-    Args:
-        project (ProjectHDFio): ProjectHDFio instance which points to the HDF5 file the job is stored in
-        job_name (str): name of the job, which has to be unique within the project
-
-    Attributes:
-
-        .. attribute:: job_name
-
-            name of the job, which has to be unique within the project
-
-        .. attribute:: status
-
-            execution status of the job, can be one of the following [initialized, appended, created, submitted,
-                                                                      running, aborted, collect, suspended, refresh,
-                                                                      busy, finished]
-
-        .. attribute:: job_id
-
-            unique id to identify the job in the pyiron database
-
-        .. attribute:: parent_id
-
-            job id of the predecessor job - the job which was executed before the current one in the current job series
-
-        .. attribute:: master_id
-
-            job id of the master job - a meta job which groups a series of jobs, which are executed either in parallel
-            or in serial.
-
-        .. attribute:: child_ids
-
-            list of child job ids - only meta jobs have child jobs - jobs which list the meta job as their master
-
-        .. attribute:: project
-
-            Project instance the jobs is located in
-
-        .. attribute:: project_hdf5
-
-            ProjectHDFio instance which points to the HDF5 file the job is stored in
-
-        .. attribute:: job_info_str
-
-            short string to describe the job by it is job_name and job ID - mainly used for logging
-
-        .. attribute:: working_directory
-
-            working directory of the job is executed in - outside the HDF5 file
-
-        .. attribute:: path
-
-            path to the job as a combination of absolute file system path and path within the HDF5 file.
-
-        .. attribute:: version
-
-            Version of the hamiltonian, which is also the version of the executable unless a custom executable is used.
-
-        .. attribute:: executable
-
-            Executable used to run the job - usually the path to an external executable.
-
-        .. attribute:: library_activated
-
-            For job types which offer a Python library pyiron can use the python library instead of an external
-            executable.
-
-        .. attribute:: server
-
-            Server object to handle the execution environment for the job.
-
-        .. attribute:: queue_id
-
-            the ID returned from the queuing system - it is most likely not the same as the job ID.
-
-        .. attribute:: logger
-
-            logger object to monitor the external execution and internal pyiron warnings.
-
-        .. attribute:: restart_file_list
-
-            list of files which are used to restart the calculation from these files.
-
-        .. attribute:: job_type
-
-            Job type object with all the available job types: ['ExampleJob', 'SerialMaster', 'ParallelMaster',
-                                                               'ScriptJob', 'ListMaster']
-
-        .. attribute:: child_names
-
-            Dictionary matching the child ID to the child job name.
-
+# Modular Docstrings
+_doc_str_parallel_master_attr = (
+    _doc_str_generic_master_attr
+    + "\n"
+    + """\
         .. attribute:: ref_job
 
             Reference job template from which all jobs within the ParallelMaster are generated.
@@ -141,10 +47,26 @@ class ParallelMaster(GenericMaster):
         .. attribute:: number_jobs_total
 
             Total number of jobs
-    """
+"""
+)
+
+
+class ParallelMaster(GenericMaster):
+    __doc__ = (
+        """
+    MasterJob that handles the creation and analysis of several parallel jobs (including master and
+    continuation jobs), Examples are Murnaghan or Phonon calculations.
+
+    Subclasses *must* implement :meth:`.collect_output()`.  Additionally :attr:`._job_generator` must be
+    initialized with an instance of :class:`.JobGenerator` in the subclasses' `__init__`.
+"""
+        + "\n"
+        + _doc_str_job_core_args
+        + "\n"
+        + _doc_str_parallel_master_attr
+    )
 
     def __init__(self, project, job_name):
-        self.input = GenericParameters("parameters")
         super(ParallelMaster, self).__init__(project, job_name=job_name)
         self.__version__ = "0.3"
         self._ref_job = None
@@ -205,13 +127,6 @@ class ParallelMaster(GenericMaster):
         """
         self.submission_status.total_jobs = num_jobs
 
-    def set_input_to_read_only(self):
-        """
-        This function enforces read-only mode for the input classes, but it has to be implement in the individual
-        classes.
-        """
-        self.input.read_only = True
-
     def reset_job_id(self, job_id=None):
         """
         Reset the job id sets the job_id to None as well as all connected modules like JobStatus and SubmissionStatus.
@@ -223,38 +138,6 @@ class ParallelMaster(GenericMaster):
             self.submission_status = SubmissionStatus(
                 db=self.project.db, job_id=self.job_id
             )
-
-    def to_hdf(self, hdf=None, group_name=None):
-        """
-        Store the ParallelMaster in an HDF5 file
-
-        Args:
-            hdf (ProjectHDFio): HDF5 group object - optional
-            group_name (str): HDF5 subgroup name - optional
-        """
-        super(ParallelMaster, self).to_hdf(hdf=hdf, group_name=group_name)
-        with self.project_hdf5.open("input") as hdf5_input:
-            self.input.to_hdf(hdf5_input)
-
-    def from_hdf(self, hdf=None, group_name=None):
-        """
-        Restore the ParallelMaster from an HDF5 file
-
-        Args:
-            hdf (ProjectHDFio): HDF5 group object - optional
-            group_name (str): HDF5 subgroup name - optional
-        """
-        super(ParallelMaster, self).from_hdf(hdf=hdf, group_name=group_name)
-        with self.project_hdf5.open("input") as hdf5_input:
-            self.input.from_hdf(hdf5_input)
-
-    def write_input(self):
-        """
-        Write the input files - this contains the GenericInput of the ParallelMaster as well as reseting the submission
-        status.
-        """
-        self.submission_status.submitted_jobs = 0
-        self.input.write_file(file_name="input.inp", cwd=self.working_directory)
 
     def collect_output(self):
         """
@@ -406,28 +289,6 @@ class ParallelMaster(GenericMaster):
             if j in job_names
         ]
 
-    def __getitem__(self, item):
-        """
-        Get/ read data from the HDF5 file
-
-        Args:
-            item (str, slice): path to the data or key of the data object
-
-        Returns:
-            dict, list, float, int: data or data object
-        """
-        child_id_lst = self.child_ids
-        child_name_lst = [
-            self.project.db.get_item_by_id(child_id)["job"]
-            for child_id in self.child_ids
-        ]
-        if isinstance(item, int):
-            total_lst = self._job_name_lst + child_name_lst
-            item = total_lst[item]
-        return self._get_item_when_str(
-            item=item, child_id_lst=child_id_lst, child_name_lst=child_name_lst
-        )
-
     def __len__(self):
         """
         Length of the ListMaster equal the number of childs appended.
@@ -488,6 +349,17 @@ class ParallelMaster(GenericMaster):
         )
         self.update_master()
         # self.send_to_database()
+
+    def _run_if_new(self, debug=False):
+        """
+        Internal helper function the run if new function is called when the job status is 'initialized'. It prepares
+        the hdf5 file and the corresponding directory structure.
+
+        Args:
+            debug (bool): Debug Mode
+        """
+        self.submission_status.submitted_jobs = 0
+        super()._run_if_new(debug=debug)
 
     def convergence_check(self) -> bool:
         """

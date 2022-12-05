@@ -96,6 +96,7 @@ class ToyJob(PythonTemplateJob):
         self.input.data_in = 100
 
     def write_input(self):
+        super().write_input()
         self.input.write(os.path.join(self.working_directory, "input.yml"))
 
     # Allow writing of the input file

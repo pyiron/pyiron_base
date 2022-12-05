@@ -1,7 +1,7 @@
 pyiron
 ======
 
-.. image:: https://coveralls.io/repos/github/pyiron/pyiron_base/badge.svg?branch=master
+.. image:: https://coveralls.io/repos/github/pyiron/pyiron_base/badge.svg?branch=main
     :target: https://coveralls.io/github/pyiron/pyiron_base?branch=master
     :alt: Coverage Status
 
@@ -30,7 +30,7 @@ For a local installation we recommend to install pyiron inside an `anaconda <htt
 
     conda install -c conda-forge pyiron_base
 
-See the `Documentation-Installation <https://pyiron.github.io/source/installation.html>`_ page for more details.
+See the `Documentation-Installation <https://pyiron.readthedocs.io/en/latest/source/installation.html>`_ page for more details.
 
 Example
 -------

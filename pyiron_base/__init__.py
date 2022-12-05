@@ -9,6 +9,7 @@ from pyiron_base.interfaces.factory import PyironFactory
 from pyiron_base.storage.flattenedstorage import FlattenedStorage
 from pyiron_base.storage.hdfio import FileHDFio, ProjectHDFio
 from pyiron_base.storage.datacontainer import DataContainer
+from pyiron_base.storage.has_stored_traits import HasStoredTraits
 from pyiron_base.storage.inputlist import InputList
 from pyiron_base.storage.parameters import GenericParameters
 from pyiron_base.storage.filedata import load_file, FileDataTemplate, FileData

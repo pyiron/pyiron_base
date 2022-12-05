@@ -97,6 +97,8 @@ def run_job_with_status_created(job):
         job.run_if_manually(_manually_print=False)
     elif job.server.run_mode.modal:
         job.run_static()
+    elif job.server.run_mode.srun:
+        job.run_if_srun()
     elif (
         job.server.run_mode.non_modal
         or job.server.run_mode.thread
@@ -316,49 +318,37 @@ def run_job_with_runmode_non_modal(job):
     """
     if not state.database.database_is_disabled:
         if not state.database.using_local_database:
-            args = (job.job_id, job.project_hdf5.working_directory, False, None)
+            args = (job.project_hdf5.working_directory, job.job_id, None, False, None)
         else:
             args = (
-                job.job_id,
                 job.project_hdf5.working_directory,
+                job.job_id,
+                None,
                 False,
                 str(job.project.db.conn.engine.url),
             )
-
-        p = multiprocessing.Process(
-            target=multiprocess_wrapper,
-            args=args,
+    else:
+        args = (
+            job.project_hdf5.working_directory,
+            None,
+            job.project_hdf5.file_name + job.project_hdf5.h5_path,
+            False,
+            None,
         )
 
-        if job.master_id and job.server.run_mode.non_modal:
-            del job
+    p = multiprocessing.Process(
+        target=multiprocess_wrapper,
+        args=args,
+    )
+    if job.master_id and job.server.run_mode.non_modal:
+        del job
+        p.start()
+    else:
+        if job.server.run_mode.non_modal:
             p.start()
         else:
-            if job.server.run_mode.non_modal:
-                p.start()
-            else:
-                job._process = p
-                job._process.start()
-    else:
-        command = (
-            "python -m pyiron_base.cli wrapper -p "
-            + job.working_directory
-            + " -f "
-            + job.project_hdf5.file_name
-            + job.project_hdf5.h5_path
-        )
-        working_directory = job.project_hdf5.working_directory
-        if not os.path.exists(working_directory):
-            os.makedirs(working_directory)
-        del job
-        subprocess.Popen(
-            command,
-            cwd=working_directory,
-            shell=True,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-            universal_newlines=True,
-        )
+            job._process = p
+            job._process.start()
 
 
 def run_job_with_runmode_queue(job):
@@ -430,6 +420,39 @@ def run_job_with_runmode_queue(job):
         "{}, status: {}, submitted: queue id {}".format(
             job.job_info_str, job.status, que_id
         )
+    )
+
+
+def run_job_with_runmode_srun(job):
+    working_directory = job.project_hdf5.working_directory
+    if not state.database.database_is_disabled:
+        if not state.database.using_local_database:
+            command = (
+                "srun python -m pyiron_base.cli wrapper -p "
+                + working_directory
+                + "- j "
+                + job.job_id
+            )
+        else:
+            raise ValueError("run_if_srun() does not support local databases.")
+    else:
+        command = (
+            "srun python -m pyiron_base.cli wrapper -p "
+            + working_directory
+            + " -f "
+            + job.project_hdf5.file_name
+            + job.project_hdf5.h5_path
+        )
+    if not os.path.exists(working_directory):
+        os.makedirs(working_directory)
+    del job
+    subprocess.Popen(
+        command,
+        cwd=working_directory,
+        shell=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        universal_newlines=True,
     )
 
 
@@ -508,13 +531,34 @@ def execute_job_with_external_executable(job):
     job.run()
     if job_crashed:
         job.status.aborted = True
+        job._hdf5["status"] = job.status.string
 
 
-def multiprocess_wrapper(job_id, working_dir, debug=False, connection_string=None):
-    job_wrap = JobWrapper(
-        working_directory=str(working_dir),
-        job_id=int(job_id),
-        debug=debug,
-        connection_string=connection_string,
-    )
+def multiprocess_wrapper(
+    working_directory, job_id=None, file_path=None, debug=False, connection_string=None
+):
+    if job_id is not None:
+        job_wrap = JobWrapper(
+            working_directory=str(working_directory),
+            job_id=int(job_id),
+            debug=debug,
+            connection_string=connection_string,
+        )
+    elif file_path is not None:
+        hdf5_file = (
+            ".".join(file_path.split(".")[:-1])
+            + "."
+            + file_path.split(".")[-1].split("/")[0]
+        )
+        h5_path = "/".join(file_path.split(".")[-1].split("/")[1:])
+        job_wrap = JobWrapper(
+            working_directory,
+            job_id=None,
+            hdf5_file=hdf5_file,
+            h5_path="/" + h5_path,
+            debug=debug,
+            connection_string=connection_string,
+        )
+    else:
+        raise ValueError("Either job_id or file_path have to be not None.")
     job_wrap.job.run_static()

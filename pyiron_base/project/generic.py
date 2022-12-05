@@ -257,15 +257,17 @@ class Project(ProjectPath, HasGroups):
         if not self.view_mode:
             if not isinstance(destination, Project):
                 raise TypeError("A project can only be copied to another project.")
-            for sub_project_name in self.list_groups():
+            for sub_project_name in tqdm(
+                self.list_groups(), desc="Copying sub-projects"
+            ):
                 if "_hdf5" not in sub_project_name:
                     sub_project = self.open(sub_project_name)
                     destination_sub_project = destination.open(sub_project_name)
                     sub_project.copy_to(destination_sub_project)
-            for job_id in self.get_job_ids(recursive=False):
+            for job_id in tqdm(self.get_job_ids(recursive=False), desc="Copying jobs"):
                 ham = self.load(job_id)
                 ham.copy_to(project=destination)
-            for file in self.list_files():
+            for file in tqdm(self.list_files(), desc="Copying files"):
                 if ".h5" not in file:
                     shutil.copy(os.path.join(self.path, file), destination.path)
             return destination
@@ -562,16 +564,23 @@ class Project(ProjectPath, HasGroups):
         Iterate over the jobs within the current project and it is sub projects
 
         Args:
-            path (str): HDF5 path inside each job object
-            recursive (bool): search subprojects [True/False] - True by default
-            convert_to_object (bool): load the full GenericJob object (default) or just the HDF5 / JobCore object
-            progress (bool): if True (default), add an interactive progress bar to the iteration
+            path (str): HDF5 path inside each job object. (Default is None, which just uses the top level of the job's
+                HDF5 path.)
+            recursive (bool): search subprojects. (Default is True.)
+            convert_to_object (bool): load the full GenericJob object, else just return the HDF5 / JobCore object.
+                                     (Default is True, convert everything to the full python object.)
+            progress (bool): add an interactive progress bar to the iteration. (Default is True, show the bar.)
             **kwargs (dict): Optional arguments for filtering with keys matching the project database column name
                             (eg. status="finished"). Asterisk can be used to denote a wildcard, for zero or more
                             instances of any character
 
         Returns:
             yield: Yield of GenericJob or JobCore
+
+        Note:
+            The default behavior of converting to object can cause **significant** slowdown in larger projects. In this
+            case, you may seriously wish to consider setting `convert_to_object=False` and access only the HDF5/JobCore
+            representation of the jobs instead.
         """
         job_id_lst = self.job_table(recursive=recursive, **kwargs)["id"]
         if progress:
@@ -647,8 +656,14 @@ class Project(ProjectPath, HasGroups):
         full_table=False,
         element_lst=None,
         job_name_contains="",
+        auto_refresh_job_status=False,
         **kwargs: dict,
     ):
+        """
+        auto_refresh_job_status (bool): will automatically reload job status by calling refresh_job_status() upon calling job_table
+        """
+        if auto_refresh_job_status:
+            self.refresh_job_status()
         return self.db.job_table(
             sql_query=self.sql_query,
             user=self.user,
@@ -850,15 +865,17 @@ class Project(ProjectPath, HasGroups):
         if not self.view_mode:
             if not isinstance(destination, Project):
                 raise TypeError("A project can only be copied to another project.")
-            for sub_project_name in self.list_groups():
+            for sub_project_name in tqdm(
+                self.list_groups(), desc="Moving sub-projects"
+            ):
                 if "_hdf5" not in sub_project_name:
                     sub_project = self.open(sub_project_name)
                     destination_sub_project = destination.open(sub_project_name)
                     sub_project.move_to(destination_sub_project)
-            for job_id in self.get_job_ids(recursive=False):
+            for job_id in tqdm(self.get_job_ids(recursive=False), desc="Moving jobs"):
                 ham = self.load(job_id)
                 ham.move_to(destination)
-            for file in self.list_files():
+            for file in tqdm(self.list_files(), desc="Moving files"):
                 shutil.move(os.path.join(self.path, file), destination.path)
         else:
             raise EnvironmentError("move_to: is not available in Viewermode !")
@@ -886,11 +903,18 @@ class Project(ProjectPath, HasGroups):
         Returns:
             pandas.DataFrame: Output from the queuing system - optimized for the Sun grid engine
         """
-        return queue_table(
-            job_ids=self.get_job_ids(recursive=recursive),
-            project_only=project_only,
-            full_table=full_table,
-        )
+        if not isinstance(self.db, FileTable):
+            return queue_table(
+                job_ids=self.get_job_ids(recursive=recursive),
+                project_only=project_only,
+                full_table=full_table,
+            )
+        else:
+            return queue_table(
+                project_only=project_only,
+                full_table=full_table,
+                working_directory_lst=[self.path],
+            )
 
     def queue_table_global(self, full_table=False):
         """
@@ -904,15 +928,43 @@ class Project(ProjectPath, HasGroups):
         """
         df = queue_table(job_ids=[], project_only=False, full_table=full_table)
         if len(df) != 0 and self.db is not None:
-            return pandas.DataFrame(
-                [
-                    self.db.get_item_by_id(
-                        int(str(queue_ID).replace("pi_", "").replace(".sh", ""))
-                    )
-                    for queue_ID in df["jobname"]
-                    if str(queue_ID).startswith("pi_")
-                ]
-            )
+            if not isinstance(self.db, FileTable):
+                return pandas.DataFrame(
+                    [
+                        self.db.get_item_by_id(
+                            int(str(queue_ID).replace("pi_", "").replace(".sh", ""))
+                        )
+                        for queue_ID in df["jobname"]
+                        if str(queue_ID).startswith("pi_")
+                    ]
+                )
+            else:
+
+                def get_id_from_job_table(job_table, job_path):
+                    job_dir = "_hdf5".join(job_path.split("_hdf5")[:-1])
+                    job_name = os.path.basename(job_dir)
+                    project = os.path.dirname(job_dir) + "/"
+                    return job_table[
+                        (job_table.job == job_name) & (job_table.project == project)
+                    ].id.values[0]
+
+                job_table_df = self.job_table()
+
+                return pandas.DataFrame(
+                    [
+                        self.db.get_item_by_id(
+                            int(
+                                get_id_from_job_table(
+                                    job_table=job_table_df, job_path=working_directory
+                                )
+                            )
+                        )
+                        for queue_ID, working_directory in zip(
+                            df["jobname"], df["working_directory"]
+                        )
+                        if str(queue_ID).startswith("pi_")
+                    ]
+                )
         else:
             return None
 

@@ -23,6 +23,8 @@ class _WithHDF:
     __slots__ = ("_hdf", "_group_name")
 
     def __init__(self, hdf, group_name=None):
+        if group_name in hdf.list_nodes():
+            raise ValueError(f"{group_name} is a node and not a group!")
         self._hdf = hdf
         self._group_name = group_name
 
@@ -209,7 +211,10 @@ class HasHDF(ABC):
             group_name if group_name is not None else self._get_hdf_group_name()
         )
         with _WithHDF(hdf, group_name) as hdf:
-            if len(hdf.list_dirs()) > 0 and group_name is None:
+            if (
+                group_name is None
+                and (len(hdf.list_nodes()) > 0 or len(hdf.list_dirs())) > 0
+            ):
                 raise ValueError("HDF group must be empty when group_name is not set.")
             self._to_hdf(hdf)
             self._store_type_to_hdf(hdf)

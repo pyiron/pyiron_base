@@ -6,7 +6,8 @@ The Flexible master uses a list of functions to connect multiple jobs in a serie
 """
 
 import inspect
-from pyiron_base.jobs.master.generic import GenericMaster
+from pyiron_base.jobs.job.core import _doc_str_job_core_args
+from pyiron_base.jobs.master.generic import GenericMaster, _doc_str_generic_master_attr
 from pyiron_base.jobs.job.extension.jobstatus import job_status_finished_lst
 
 __author__ = "Jan Janssen, Liam Huber"
@@ -22,100 +23,15 @@ __date__ = "Mar 24, 2019"
 
 
 class FlexibleMaster(GenericMaster):
-    """
+    __doc__ = (
+        """
     The FlexibleMaster uses a list of functions to connect multiple jobs in a series.
-
-    Args:
-        project (ProjectHDFio): ProjectHDFio instance which points to the HDF5 file the job is stored in
-        job_name (str): name of the job, which has to be unique within the project
-
-    Attributes:
-
-        .. attribute:: job_name
-
-            name of the job, which has to be unique within the project
-
-        .. attribute:: status
-
-            execution status of the job, can be one of the following [initialized, appended, created, submitted,
-                                                                      running, aborted, collect, suspended, refresh,
-                                                                      busy, finished]
-
-        .. attribute:: job_id
-
-            unique id to identify the job in the pyiron database
-
-        .. attribute:: parent_id
-
-            job id of the predecessor job - the job which was executed before the current one in the current job series
-
-        .. attribute:: master_id
-
-            job id of the master job - a meta job which groups a series of jobs, which are executed either in parallel
-            or in serial.
-
-        .. attribute:: child_ids
-
-            list of child job ids - only meta jobs have child jobs - jobs which list the meta job as their master
-
-        .. attribute:: project
-
-            Project instance the jobs is located in
-
-        .. attribute:: project_hdf5
-
-            ProjectHDFio instance which points to the HDF5 file the job is stored in
-
-        .. attribute:: job_info_str
-
-            short string to describe the job by it is job_name and job ID - mainly used for logging
-
-        .. attribute:: working_directory
-
-            working directory of the job is executed in - outside the HDF5 file
-
-        .. attribute:: path
-
-            path to the job as a combination of absolute file system path and path within the HDF5 file.
-
-        .. attribute:: version
-
-            Version of the hamiltonian, which is also the version of the executable unless a custom executable is used.
-
-        .. attribute:: executable
-
-            Executable used to run the job - usually the path to an external executable.
-
-        .. attribute:: library_activated
-
-            For job types which offer a Python library pyiron can use the python library instead of an external
-            executable.
-
-        .. attribute:: server
-
-            Server object to handle the execution environment for the job.
-
-        .. attribute:: queue_id
-
-            the ID returned from the queuing system - it is most likely not the same as the job ID.
-
-        .. attribute:: logger
-
-            logger object to monitor the external execution and internal pyiron warnings.
-
-        .. attribute:: restart_file_list
-
-            list of files which are used to restart the calculation from these files.
-
-        .. attribute:: job_type
-
-            Job type object with all the available job types: ['ExampleJob', 'SerialMaster', 'ParallelMaster',
-                                                               'ScriptJob', 'ListMaster']
-
-        .. attribute:: child_names
-
-            Dictionary matching the child ID to the child job name.
-    """
+"""
+        + "\n"
+        + _doc_str_job_core_args
+        + "\n"
+        + _doc_str_generic_master_attr
+    )
 
     def __init__(self, project, job_name):
         super(FlexibleMaster, self).__init__(project, job_name=job_name)
@@ -214,12 +130,6 @@ class FlexibleMaster(GenericMaster):
                 self.status.refresh = True
                 self.run_if_refresh()
 
-    def write_input(self):
-        """
-        write_input is not implemented for FlexibleMaster jobs
-        """
-        pass
-
     def collect_output(self):
         """
         Collect output is not implemented for FlexibleMaster jobs
@@ -265,16 +175,3 @@ class FlexibleMaster(GenericMaster):
                 for funct_str in funct_str_lst:
                     exec(funct_str)
                     self._step_function_lst.append(eval(funct_str.split("(")[0][4:]))
-
-    def __getitem__(self, item):
-        child_id_lst = self.child_ids
-        child_name_lst = [
-            self.project.db.get_item_by_id(child_id)["job"]
-            for child_id in self.child_ids
-        ]
-        if isinstance(item, int):
-            total_lst = child_name_lst + self._job_name_lst
-            item = total_lst[item]
-        return self._get_item_when_str(
-            item=item, child_id_lst=child_id_lst, child_name_lst=child_name_lst
-        )
