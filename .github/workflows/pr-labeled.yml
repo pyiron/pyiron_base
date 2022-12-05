@@ -1,0 +1,12 @@
+# This runs jobs which pyiron modules should run when a PR is labeled
+
+name: PR labeled
+
+on:
+  pull_request:
+    types: [labeled]
+
+jobs:
+  pyiron:
+    uses: pyiron/actions/.github/workflows/pr-labeled.yml@main
+    secrets: inherit
