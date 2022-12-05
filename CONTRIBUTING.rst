@@ -304,7 +304,7 @@ Build status
 The build status for pyiron and all sub packages are given below
 
 .. image:: https://coveralls.io/repos/github/pyiron/pyiron/badge.svg?branch=main
-    :target: https://coveralls.io/github/pyiron/pyiron?branch=master
+    :target: https://coveralls.io/github/pyiron/pyiron?branch=main
     :alt: Coverage Status
 
 .. image:: https://api.codacy.com/project/badge/Grade/c513254f10004df5a1f5c76425c6584b
@@ -339,7 +339,7 @@ In order to use the pip distribution use::
 
    pip install pyiron-base
 
-Just like each other commit to the master branch the tagged releases are pushed to pypi.org (https://pypi.org/project/pyiron-base/#history)::
+Just like each other commit to the main branch the tagged releases are pushed to pypi.org (https://pypi.org/project/pyiron-base/#history)::
 
 The major difference for pypi (pip) is that installing pre-release versions is possible using the `--pre` flag::
 
@@ -366,7 +366,7 @@ The tag format consists of a tag_prefix (<package name>-) and the release versio
 2. Automatically create PyPi package
 
   After the tag is created, the `Deploy-Workflow`_ is triggered, which creates the PyPi Package.
-  The configuration of the release is included in the setup.ctg file (https://github.com/pyiron/pyiron_base/blob/master/setup.cfg).
+  The configuration of the release is included in the setup.ctg file (https://github.com/pyiron/pyiron_base/blob/main/setup.cfg).
   This Workflow first installs all dependencies, then allows for future versions of the dependencies and builds the package. After that the package is published to `pip`_.
 
 3. Automatically create conda-forge package
@@ -384,21 +384,21 @@ The tag format consists of a tag_prefix (<package name>-) and the release versio
 GitHub Workflows
 -----------------------------
 
-The `GitHub-Action-Workflows`_ are triggered at different occasions (eg. creating commit, push to master):
+The `GitHub-Action-Workflows`_ are triggered at different occasions (eg. creating commit, push to main):
 
-* UpdateDependabotPR.yml: https://github.com/pyiron/pyiron_base/blob/master/.github/workflows/UpdateDependabotPR.yml
-* atomistics-compat.yml: https://github.com/pyiron/pyiron_base/blob/master/.github/workflows/atomistics-compat.yml
-* backwards.yml: https://github.com/pyiron/pyiron_base/blob/master/.github/workflows/backwards.yml
-* benchmarks.yml: https://github.com/pyiron/pyiron_base/blob/master/.github/workflows/benchmarks.yml
-* black.yml: https://github.com/pyiron/pyiron_base/blob/master/.github/workflows/black.yml
-* codeql-analysis.yml: https://github.com/pyiron/pyiron_base/blob/master/.github/workflows/codeql-analysis.yml
-* contrib-compat.yml: https://github.com/pyiron/pyiron_base/blob/master/.github/workflows/contrib-compat.yml
-* coverage.yml: https://github.com/pyiron/pyiron_base/blob/master/.github/workflows/coverage.yml
-* deploy.yml: https://github.com/pyiron/pyiron_base/blob/master/.github/workflows/deploy.yml
-* docs.yml: https://github.com/pyiron/pyiron_base/blob/master/.github/workflows/docs.yml
-* notebooks.yml: https://github.com/pyiron/pyiron_base/blob/master/.github/workflows/notebooks.yml
-* pypicheck.yml: https://github.com/pyiron/pyiron_base/blob/master/.github/workflows/pypicheck.yml
-* unittests.yml: https://github.com/pyiron/pyiron_base/blob/master/.github/workflows/unittests.yml
+* UpdateDependabotPR.yml: https://github.com/pyiron/pyiron_base/blob/main/.github/workflows/UpdateDependabotPR.yml
+* atomistics-compat.yml: https://github.com/pyiron/pyiron_base/blob/main/.github/workflows/atomistics-compat.yml
+* backwards.yml: https://github.com/pyiron/pyiron_base/blob/main/.github/workflows/backwards.yml
+* benchmarks.yml: https://github.com/pyiron/pyiron_base/blob/main/.github/workflows/benchmarks.yml
+* black.yml: https://github.com/pyiron/pyiron_base/blob/main/.github/workflows/black.yml
+* codeql-analysis.yml: https://github.com/pyiron/pyiron_base/blob/main/.github/workflows/codeql-analysis.yml
+* contrib-compat.yml: https://github.com/pyiron/pyiron_base/blob/main/.github/workflows/contrib-compat.yml
+* coverage.yml: https://github.com/pyiron/pyiron_base/blob/main/.github/workflows/coverage.yml
+* deploy.yml: https://github.com/pyiron/pyiron_base/blob/main/.github/workflows/deploy.yml
+* docs.yml: https://github.com/pyiron/pyiron_base/blob/main/.github/workflows/docs.yml
+* notebooks.yml: https://github.com/pyiron/pyiron_base/blob/main/.github/workflows/notebooks.yml
+* pypicheck.yml: https://github.com/pyiron/pyiron_base/blob/main/.github/workflows/pypicheck.yml
+* unittests.yml: https://github.com/pyiron/pyiron_base/blob/main/.github/workflows/unittests.yml
 
 **UpdateDependabotPR**
 
@@ -411,7 +411,7 @@ If this is done successfully, the workflow saves the changes and pushes back to 
 **atomistic-compat.yml**
 
 This workflow is used to check the compatibility with the pyiron_atomistics. 
-It is only triggered if the integration label is set (and on merge with master).
+It is only triggered if the integration label is set (and on merge with main).
 First, the workflow installs PyYAML and clones pyiron_atomistics. 
 After that, the dependencies from pyiron_atomistics/.ci_support/environment.yml are copied into the pyiron_atomistics/environment.yml. 
 Then, the script condamerge.py (./ci_support/condamerge.py) is triggered, which merges the dependencies from pyiron_base/.ci_support/environment.yml into the pyiron_atomistics/environmnet.yml.
@@ -475,7 +475,7 @@ After that, the documentation folder is created and the documentation is build w
 
 **notebooks.yml**
 
-This workflow is used to test, if the code is compatible with jupyter notebooks found in in the [notebooks folder](https://github.com/pyiron/pyiron_base/tree/master/notebooks).
+This workflow is used to test, if the code is compatible with jupyter notebooks found in in the [notebooks folder](https://github.com/pyiron/pyiron_base/tree/main/notebooks).
 First, the environment is setup and a conda environment is created based on ./.ci_support/environment-notebooks.yml.
 After that, the script ./.ci_support/build_notebooks.sh is executed, which tests if the notebooks can be executed.
 
@@ -599,6 +599,6 @@ If the job loads and runs properly, the job should also run properly on the queu
 .. _conda-forge: https://anaconda.org/conda-forge/pyiron_base
 .. _pip: https://pypi.org/project/pyiron-base/
 .. _Git-Tag-Guide: https://git-scm.com/book/en/v2/Git-Basics-Tagging
-.. _Deploy-Workflow: https://github.com/pyiron/pyiron_base/blob/master/.github/workflows/deploy.yml
-.. _GitHub-Action-Workflows: https://github.com/pyiron/pyiron_base/tree/master/.github/workflows
+.. _Deploy-Workflow: https://github.com/pyiron/pyiron_base/blob/main/.github/workflows/deploy.yml
+.. _GitHub-Action-Workflows: https://github.com/pyiron/pyiron_base/tree/main/.github/workflows
 .. _Black style: https://black.readthedocs.io/en/stable/
