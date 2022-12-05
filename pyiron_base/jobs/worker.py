@@ -135,6 +135,7 @@ class WorkerJob(PythonTemplateJob):
         self.input.sleep_interval = 10
         self.input.child_runtime = 0
         self.input.queue_limit_factor = 2
+        self._python_only_job = True
 
     @property
     def project_to_watch(self):

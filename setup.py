@@ -22,7 +22,8 @@ setup(
                  'Operating System :: OS Independent',
                  'Programming Language :: Python :: 3.8',
                  'Programming Language :: Python :: 3.9',
-                 'Programming Language :: Python :: 3.10'
+                 'Programming Language :: Python :: 3.10',
+                 'Programming Language :: Python :: 3.11'
                 ],
 
     keywords='pyiron',
@@ -34,16 +35,16 @@ setup(
         'h5io==0.1.7',
         'h5py==3.7.0',
         'numpy==1.23.5',
-        'pandas==1.5.1',
+        'pandas==1.5.2',
         'pathlib2==2.3.7.post1',
-        'pint==0.19.2',
+        'pint==0.20.1',
         'psutil==5.9.4',
         'pyfileindex==0.0.7',
         'pysqa==0.0.17',
         'sqlalchemy==1.4.44',
         'tables==3.7.0',
         'tqdm==4.64.1',
-        'traitlets==5.5.0',
+        'traitlets==5.6.0',
     ],
     cmdclass=versioneer.get_cmdclass(),
 
