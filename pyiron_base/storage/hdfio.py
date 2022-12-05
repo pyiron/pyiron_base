@@ -1475,7 +1475,7 @@ class ProjectHDFio(FileHDFio):
         return self._project.__class__(path=self.file_path)
 
 
-def read_hdf5(fname, title="h5io", slash="ignore", _counter=0):
+def read_hdf5(fname, title="h5io", slash="ignore"):
     return retry(
         lambda: h5io.read_hdf5(
             fname=fname,
@@ -1484,7 +1484,8 @@ def read_hdf5(fname, title="h5io", slash="ignore", _counter=0):
         ),
         error=BlockingIOError,
         msg=f"Two or more processes tried to access the file {fname}.",
-        delay=1,
+        at_most=10,
+        delay=1
     )
 
 
@@ -1496,7 +1497,6 @@ def write_hdf5(
     title="h5io",
     slash="error",
     use_json=False,
-    _counter=0,
 ):
     retry(
         lambda: h5io.write_hdf5(
@@ -1510,5 +1510,6 @@ def write_hdf5(
         ),
         error=BlockingIOError,
         msg=f"Two or more processes tried to access the file {fname}.",
-        delay=1,
+        at_most=10,
+        delay=1
     )
