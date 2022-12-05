@@ -44,4 +44,4 @@ class TestRetry(unittest.TestCase):
                 ValueError,
                 msg="retry did re-raise exception after insufficient tries!"
         ):
-            retry(func, error=ValueError, msg="", atmost=2, delay=1e-6)
+            retry(func, error=ValueError, msg="", at_most=2, delay=1e-6)

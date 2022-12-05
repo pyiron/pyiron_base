@@ -454,7 +454,7 @@ class DatabaseAccess(IsDatabase):
             _create_table,
             error=OperationalError,
             msg="Database busy with too many connections.",
-            atmost=10,
+            at_most=10,
             delay=0.1,
             delay_factor=2,
         )

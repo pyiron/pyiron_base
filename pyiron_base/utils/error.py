@@ -111,7 +111,7 @@ def retry(
     func: Callable[[], T],
     error: Union[Type[Exception], Tuple[Type[Exception], ...]],
     msg: str,
-    atmost: Optional[int] = None,
+    at_most: Optional[int] = None,
     delay: float = 1.0,
     delay_factor: float = 1.0,
 ) -> T:
@@ -124,22 +124,22 @@ def retry(
         func (callable): function to call, should take no arguments
         error (Exception or tuple thereof): any exceptions to be caught
         msg (str): messing to be written to the log if `error` occurs.
-        atmost (int, optional): retry at most this many times, None means retry
+        at_most (int, optional): retry at most this many times, None means retry
                                 forever
         delay (float): time to wait between retries in seconds
         delay_factor (float): multiply `delay` between retries by this factor
 
     Raises:
-        `error`: if `atmost` is exceeded the last error is re-raised
+        `error`: if `at_most` is exceeded the last error is re-raised
         Exception: any exception raised by `func` that does not match `error`
 
     Returns:
         object: whatever is returned by `func`
     """
-    if atmost is None:
+    if at_most is None:
         tries = count()
     else:
-        tries = range(atmost)
+        tries = range(at_most)
     for i in tries:
         try:
             return func()
