@@ -422,7 +422,7 @@ When you import pyiron in any python shell or jupyter notebook it should load th
 
 .. code-block:: bash
 
-    git checkout -b master
+    git checkout -b main
 
 In this case we switch to the master branch.
 

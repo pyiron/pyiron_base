@@ -186,10 +186,6 @@ class TestGenericJob(TestWithFilledProject):
         # Completely new job name
         job_new = job.copy_to(new_job_name="template_new", input_only=False, new_database_entry=False)
         self.assertTrue(job_new.status.initialized)
-        # Check if new database entry implemented
-        _ = job.copy_to(new_job_name="template_last", input_only=False, new_database_entry=True)
-        df = self.project.job_table()
-        self.assertEqual(len(df[df.job == "template"]), 2)
         _ = job.copy_to(new_job_name="template_copy", input_only=False, new_database_entry=False,
                         delete_existing_job=True)
         df = self.project.job_table()
