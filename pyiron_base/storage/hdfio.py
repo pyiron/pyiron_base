@@ -1485,7 +1485,7 @@ def read_hdf5(fname, title="h5io", slash="ignore"):
         error=BlockingIOError,
         msg=f"Two or more processes tried to access the file {fname}.",
         at_most=10,
-        delay=1
+        delay=1,
     )
 
 
@@ -1511,5 +1511,5 @@ def write_hdf5(
         error=BlockingIOError,
         msg=f"Two or more processes tried to access the file {fname}.",
         at_most=10,
-        delay=1
+        delay=1,
     )
