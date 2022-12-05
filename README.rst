@@ -1,7 +1,7 @@
 pyiron
 ======
 
-.. image:: https://coveralls.io/repos/github/pyiron/pyiron_base/badge.svg?branch=master
+.. image:: https://coveralls.io/repos/github/pyiron/pyiron_base/badge.svg?branch=main
     :target: https://coveralls.io/github/pyiron/pyiron_base?branch=master
     :alt: Coverage Status
 
