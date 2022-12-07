@@ -362,7 +362,14 @@ def _job_read_file(job, file_name, tail=None):
             with open(file_name) as f:
                 return f.readlines()
         else:
-            lines = list(reversed([l + os.linesep for l in islice(monty.io.reverse_readfile(file_name), tail)]))
+            lines = list(
+                reversed(
+                    [
+                        l + os.linesep
+                        for l in islice(monty.io.reverse_readfile(file_name), tail)
+                    ]
+                )
+            )
             # compatibility with the other methods
             # monty strips all newlines, where as reading the other ways does
             # not.  So if a file does not end with a newline (as most text
