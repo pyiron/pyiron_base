@@ -452,13 +452,13 @@ class JobCore(HasGroups):
         enable (bool): Default is False. Attempt a job-kill regardless of status when set to True.
                        When False, will set the status to "aborted" no matter if the job was successfully killed or not!
                        Set to False if you don't know what you are doing (unlikely).
-                       When False, it checks that the job is actually in a queued/running state in the database 
+                       When False, it checks that the job is actually in a queued/running state in the database
                        before attempting to remove it from the queue and set the aborted status.
 
         Use case: A python-side equivalent method to call "scancel JOBID" (slurm) or "qdel JOBID" (PBSPro/torque) via pyiron
         This command can be "dumb", when enable = False, it will attempt to kill anything that it is called on, regardless of job-status.
         """
-        
+
         def base_kill():
             if "server" in self.project_hdf5.list_nodes():
                 server_hdf_dict = self.project_hdf5["server"]
