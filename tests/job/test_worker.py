@@ -3,7 +3,7 @@ import time
 from pyiron_base._tests import TestWithCleanProject
 
 
-class TestScriptJob(TestWithCleanProject):
+class TestWorker(TestWithCleanProject):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
