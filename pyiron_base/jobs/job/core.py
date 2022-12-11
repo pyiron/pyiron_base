@@ -444,12 +444,12 @@ class JobCore(HasGroups):
         # After all children are deleted, remove the job itself.
         self.remove_child()
 
-    def kill(self, enable=False):
+    def kill(self, force=False):
         """
         Kills a job via queueing system commands (e.g. scancel/qdel in terminal)
         It updates the status of the job to "aborted" in the database.
 
-        enable (bool): Default is False. Attempt a job-kill regardless of status when set to True.
+        force (bool): Default is False. Attempt a job-kill regardless of status when set to True.
                        When False, will set the status to "aborted" no matter if the job was successfully killed or not!
                        Set to False if you don't know what you are doing (unlikely).
                        When False, it checks that the job is actually in a queued/running state in the database
@@ -475,14 +475,14 @@ class JobCore(HasGroups):
             # elif hasattr(self, "_process"):
             # INSERT KILL CODE FOR SUBPROCESS HERE
 
-        if enable:
+        if force:
             base_kill()
         else:
             if self.status.running or self.status.submitted or self.status.collect:
                 base_kill()
             else:
                 raise ValueError(
-                    "The kill() function is only available during the execution of the job."
+                    "The kill() function is only available during the execution of the job. If you still want to kill this job, put force=True as a flag"
                 )
         self.logger.warn(
             "The job.kill() functionality has changed! It now kills the job via queueing system commands and preserves the files and directory"
