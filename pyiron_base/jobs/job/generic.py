@@ -618,17 +618,6 @@ class GenericJob(JobCore):
         _kill_child(job=self)
         super(GenericJob, self).remove_child()
 
-    def kill(self):
-        if self.status.running or self.status.submitted:
-            master_id, parent_id = self.master_id, self.parent_id
-            self.remove()
-            self.reset_job_id()
-            self.master_id, self.parent_id = master_id, parent_id
-        else:
-            raise ValueError(
-                "The kill() function is only available during the execution of the job."
-            )
-
     def validate_ready_to_run(self):
         """
         Validate that the calculation is ready to be executed. By default no generic checks are performed, but one could

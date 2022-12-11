@@ -30,6 +30,8 @@ from pyiron_base.jobs.job.util import (
     _job_delete_hdf,
     _job_remove_folder,
 )
+
+
 from pyiron_base.state import state
 
 __author__ = "Jan Janssen"
@@ -442,6 +444,50 @@ class JobCore(HasGroups):
         # After all children are deleted, remove the job itself.
         self.remove_child()
 
+    def kill(self, force=False):
+        """
+        Kills a job via queueing system commands (e.g. scancel/qdel in terminal)
+        It updates the status of the job to "aborted" in the database.
+
+        force (bool): Default is False. Attempt a job-kill regardless of status when set to True.
+                       When False, will set the status to "aborted" no matter if the job was successfully killed or not!
+                       Set to False if you don't know what you are doing (unlikely).
+                       When False, it checks that the job is actually in a queued/running state in the database
+                       before attempting to remove it from the queue and set the aborted status.
+
+        Use case: A python-side equivalent method to call "scancel JOBID" (slurm) or "qdel JOBID" (PBSPro/torque) via pyiron
+        This command can be "dumb", when enable = False, it will attempt to kill anything that it is called on, regardless of job-status.
+        """
+
+        def base_kill():
+            if "server" in self.project_hdf5.list_nodes():
+                server_hdf_dict = self.project_hdf5["server"]
+                if (
+                    "qid" in server_hdf_dict.keys()
+                    and server_hdf_dict["qid"] is not None
+                ):
+                    self.project.queue_delete_job(server_hdf_dict["qid"])
+                    self._status = "aborted"
+                    self.project.db.item_update({"status": "aborted"}, self._job_id)
+            # TODO: implement a branch which enables killing of subprocesses if job._process exists
+            # see subprocess /pyiron_base/pyiron_base/jobs/job/runfunction.py --> run_job_with_runmode_non_modal
+            # PSEUDOCODE:
+            # elif hasattr(self, "_process"):
+            # INSERT KILL CODE FOR SUBPROCESS HERE
+
+        if force:
+            base_kill()
+        else:
+            if self.status.running or self.status.submitted or self.status.collect:
+                base_kill()
+            else:
+                raise ValueError(
+                    "The kill() function is only available during the execution of the job. If you still want to kill this job, put force=True as a flag"
+                )
+        self.logger.warn(
+            "The job.kill() functionality has changed! It now kills the job via queueing system commands and preserves the files and directory"
+        )
+
     def remove_child(self):
         """
         internal function to remove command that removes also child jobs.
@@ -457,13 +503,8 @@ class JobCore(HasGroups):
 
         # Delete job from HPC-computing-queue if it is still running.
         job_status = str(self.status)
-        if (
-            job_status in ["submitted", "running", "collect"]
-            and "server" in self.project_hdf5.list_nodes()
-        ):
-            server_hdf_dict = self.project_hdf5["server"]
-            if "qid" in server_hdf_dict.keys() and server_hdf_dict["qid"] is not None:
-                self.project.queue_delete_job(server_hdf_dict["qid"])
+        if job_status in ["submitted", "running", "collect"]:
+            self.kill()
 
         # Delete working directory:
         _job_delete_files(job=self)
