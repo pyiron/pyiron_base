@@ -312,6 +312,7 @@ def run_job_with_runmode_non_modal(job):
     """
     The run if non modal function is called by run to execute the simulation in the background. For this we use
     multiprocessing.Process()
+
     Args:
         job (GenericJob): pyiron job object
     """
@@ -334,11 +335,11 @@ def run_job_with_runmode_non_modal(job):
             False,
             None,
         )
+
     p = multiprocessing.Process(
         target=multiprocess_wrapper,
         args=args,
     )
-    # TODO: job.kill() functionality needs to work on all three of these branches.. which requires understanding this logic
     if job.master_id and job.server.run_mode.non_modal:
         del job
         p.start()
