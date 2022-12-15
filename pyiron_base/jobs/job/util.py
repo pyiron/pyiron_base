@@ -121,6 +121,19 @@ def _get_safe_job_name(
         ndigits: Union[int, None] = 8,
         special_symbols: Union[dict, None] = None
 ):
+    """
+    Sanitize a job name, optionally appending numeric values.
+
+    Args:
+        name (str|tuple): The name to sanitize, or a tuple of the name and any number
+            of numeric values to append with '_' in between.
+        ndigits (int|None): How many digits to round any floating point values in a
+            `name` tuple to. (Default is 8; to not round at all use None.)
+        special_symbols:
+
+    Returns:
+        (str): The sanitized (and possibly rounded) name.
+    """
     d_special_symbols = _special_symbol_replacements.copy()
     if special_symbols is not None:
         d_special_symbols.update(special_symbols)
