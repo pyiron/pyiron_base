@@ -119,7 +119,7 @@ _special_symbol_replacements = {
 def _get_safe_job_name(
         name: Union[str, tuple],
         ndigits: Union[int, None] = 8,
-        special_symbols: Union[Dict, None] = None
+        special_symbols: Union[dict, None] = None
 ):
     d_special_symbols = _special_symbol_replacements.copy()
     if special_symbols is not None:
