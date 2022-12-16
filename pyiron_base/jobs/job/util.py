@@ -10,7 +10,7 @@ import psutil
 import tarfile
 import stat
 import shutil
-from typing import Union, Dict
+from typing import Optional, Union
 from pyiron_base.utils.instance import static_isinstance
 from pyiron_base.utils.safetar import safe_extract
 
@@ -118,8 +118,8 @@ _special_symbol_replacements = {
 
 def _get_safe_job_name(
         name: Union[str, tuple],
-        ndigits: Union[int, None] = 8,
-        special_symbols: Union[dict, None] = None
+        ndigits: Optional[int] = 8,
+        special_symbols: Optional[dict] = None
 ):
     """
     Sanitize a job name, optionally appending numeric values.
