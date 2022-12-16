@@ -153,9 +153,8 @@ class JobPath(JobCore):
                                             "status":} and optional entries are {"id":, "masterid":, "parentid":}
         """
         hdf5_file = db_entry["subjob"].split("/")[1] + ".h5"
-        if db_entry["projectpath"] is not None:
-            job_path = db_entry["projectpath"]
-        else:
+        job_path = db_entry["projectpath"]
+        if job_path is None:
             job_path = ""
         job_path += db_entry["project"] + hdf5_file + db_entry["subjob"]
         job = cls(job_path=job_path)
