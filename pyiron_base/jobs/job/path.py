@@ -129,21 +129,29 @@ class JobPath(JobCore):
         )
 
     @classmethod
-    def from_job_id(cls, db, job_id=None, db_entry=None):
+    def from_job_id(cls, db, job_id):
         """
         Load a job path from a database connection and the job id.
 
         Args:
-            db (DatabaseAccess): database object
-            job_id (int): Job ID - optional, but either a job ID or a database entry db_entry has to be provided.
+            db (DatabaseAccess): database connection
+            job_id (int): Job ID in the database
+        """
+        db_entry = db.get_item_by_id(job_id)
+        if db_entry is None:
+            raise ValueError("job ID {0} does not exist!".format(job_id))
+
+        return cls.from_db_entry(db_entry)
+
+    @classmethod
+    def from_db_entry(cls, db_entry):
+        """
+        Load a job path from a database entry.
+
+        Args:
             db_entry (dict): database entry {"job":, "subjob":, "projectpath":, "project":, "hamilton":, "hamversion":,
                                             "status":} and optional entries are {"id":, "masterid":, "parentid":}
         """
-        if db_entry is None and db is not None:
-            db_entry = db.get_item_by_id(job_id)
-
-        if db_entry is None:
-            raise ValueError("job ID {0} does not exist!".format(job_id))
         hdf5_file = db_entry["subjob"].split("/")[1] + ".h5"
         if db_entry["projectpath"] is not None:
             job_path = db_entry["projectpath"]

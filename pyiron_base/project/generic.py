@@ -842,7 +842,7 @@ class Project(ProjectPath, HasGroups):
                 job.set_input_to_read_only()
             return job
         elif db_entry is not None:
-            job = jobpath.from_job_id(db=self.db, db_entry=db_entry)
+            job = jobpath.from_db_entry(db_entry)
             if convert_to_object:
                 job = job.to_object()
                 job.set_input_to_read_only()
