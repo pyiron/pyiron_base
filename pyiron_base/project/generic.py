@@ -968,7 +968,7 @@ class Project(ProjectPath, HasGroups):
         else:
             return None
 
-    def refresh_job_status(self, *jobs):
+    def refresh_job_status(self, *jobs, by_status=["running", "submitted"]):
         """
         Check if job is still running or crashed on the cluster node.
 
@@ -976,9 +976,12 @@ class Project(ProjectPath, HasGroups):
 
         Args:
             *jobs (str, int): name of the job or job ID, any number of them
+            by_status (iterable of str): if not jobs are given, select all jobs
+                with the given status in this project
         """
         if len(jobs) == 0:
-            jobs = self.job_table(status="running").id
+            df = self.job_table()
+            jobs = df[df.status.isin(by_status)].id
         if self.db is not None:
             for job_specifier in jobs:
                 if isinstance(job_specifier, str):
@@ -1025,7 +1028,14 @@ class Project(ProjectPath, HasGroups):
                 que_mode
                 and self.db.get_item_by_id(job_id)["status"] in ["running", "submitted"]
             ):
-                if not self.queue_check_job_is_waiting_or_running(self.inspect(job_id)):
+                job = self.inspect(job_id)
+                # a job can be in status running or submitted without being on
+                # the queue, if the run mode is worker or non_modal.  In this
+                # case we do not want to check the queue status, so we just
+                # short circuit here.
+                if job["server"]["run_mode"] in ["worker", "non_modal"]:
+                    return
+                if not self.queue_check_job_is_waiting_or_running(job):
                     self.db.set_job_status(job_id=job_id, status="aborted")
 
     def remove_file(self, file_name):

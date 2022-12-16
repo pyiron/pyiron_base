@@ -41,10 +41,10 @@ setup(
         'psutil==5.9.4',
         'pyfileindex==0.0.7',
         'pysqa==0.0.17',
-        'sqlalchemy==1.4.44',
+        'sqlalchemy==1.4.45',
         'tables==3.7.0',
         'tqdm==4.64.1',
-        'traitlets==5.6.0',
+        'traitlets==5.7.1',
     ],
     cmdclass=versioneer.get_cmdclass(),
 
