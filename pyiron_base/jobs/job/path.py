@@ -129,7 +129,7 @@ class JobPath(JobCore):
         )
 
     @classmethod
-    def from_job_id(cls, db, job_id=None, db_entry=None, user=None):
+    def from_job_id(cls, db, job_id=None, db_entry=None):
         """
         Load a job path from a database connection and the job id.
 
@@ -138,10 +138,10 @@ class JobPath(JobCore):
             job_id (int): Job ID - optional, but either a job ID or a database entry db_entry has to be provided.
             db_entry (dict): database entry {"job":, "subjob":, "projectpath":, "project":, "hamilton":, "hamversion":,
                                             "status":} and optional entries are {"id":, "masterid":, "parentid":}
-            user (str): current unix/linux/windows user who is running pyiron
         """
         if db_entry is None and db is not None:
             db_entry = db.get_item_by_id(job_id)
+
         if db_entry is None:
             raise ValueError("job ID {0} does not exist!".format(job_id))
         hdf5_file = db_entry["subjob"].split("/")[1] + ".h5"

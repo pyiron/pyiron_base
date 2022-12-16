@@ -835,7 +835,7 @@ class Project(ProjectPath, HasGroups):
             importlib.import_module("pyiron_base.jobs.job.path"), "JobPath"
         )
         if job_id is not None:
-            job = jobpath.from_job_id(db=self.db, job_id=job_id, user=self.user)
+            job = jobpath.from_job_id(db=self.db, job_id=job_id)
             if convert_to_object:
                 job = job.to_object()
                 job.reset_job_id(job_id=job_id)
