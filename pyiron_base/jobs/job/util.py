@@ -117,9 +117,9 @@ _special_symbol_replacements = {
 
 
 def _get_safe_job_name(
-        name: Union[str, tuple],
-        ndigits: Optional[int] = 8,
-        special_symbols: Optional[dict] = None
+    name: Union[str, tuple],
+    ndigits: Optional[int] = 8,
+    special_symbols: Optional[dict] = None,
 ):
     """
     Sanitize a job name, optionally appending numeric values.
