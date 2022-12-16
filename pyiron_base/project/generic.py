@@ -11,7 +11,6 @@ import shutil
 from tqdm.auto import tqdm
 import pandas
 import pint
-import importlib
 import math
 import numpy as np
 
@@ -831,18 +830,16 @@ class Project(ProjectPath, HasGroups):
         Returns:
             GenericJob, JobCore: Either the full GenericJob object or just a reduced JobCore object
         """
-        jobpath = getattr(
-            importlib.import_module("pyiron_base.jobs.job.path"), "JobPath"
-        )
+        from pyiron_base.jobs.job.path import JobPath
         if job_id is not None:
-            job = jobpath.from_job_id(db=self.db, job_id=job_id)
+            job = JobPath.from_job_id(db=self.db, job_id=job_id)
             if convert_to_object:
                 job = job.to_object()
                 job.reset_job_id(job_id=job_id)
                 job.set_input_to_read_only()
             return job
         elif db_entry is not None:
-            job = jobpath.from_db_entry(db_entry)
+            job = JobPath.from_db_entry(db_entry)
             if convert_to_object:
                 job = job.to_object()
                 job.set_input_to_read_only()
@@ -1294,9 +1291,8 @@ class Project(ProjectPath, HasGroups):
         Returns:
             GenericJob, JobCore: Either the full GenericJob object or just a reduced JobCore object
         """
-        job = getattr(
-            importlib.import_module("pyiron_base.jobs.job.path"), "JobPathBase"
-        )(job_path=job_path)
+        from pyiron_base.jobs.job.path import JobPath
+        job = JobPath(job_path)
         if convert_to_object:
             job = job.to_object()
         job.set_input_to_read_only()
