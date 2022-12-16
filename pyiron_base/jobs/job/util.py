@@ -129,7 +129,9 @@ def _get_safe_job_name(
             of numeric values to append with '_' in between.
         ndigits (int|None): How many digits to round any floating point values in a
             `name` tuple to. (Default is 8; to not round at all use None.)
-        special_symbols (dict|None): Conversions of special symbols to apply. This will be applied to the default conversion dict, which contains: DEFAULT_CONVERSION
+        special_symbols (dict|None): Conversions of special symbols to apply. This will
+            be applied to the default conversion dict, which contains:
+            DEFAULT_CONV_DICT
 
     Returns:
         (str): The sanitized (and possibly rounded) name.
@@ -152,6 +154,11 @@ def _get_safe_job_name(
         job_name = job_name.replace(k, v)
     _is_valid_job_name(job_name=job_name)
     return job_name
+
+
+_get_safe_job_name.__doc__ = _get_safe_job_name.__doc__.replace(
+    "DEFAULT_CONV_DICT", f"{_special_symbol_replacements}"
+)
 
 
 def _rename_job(job, new_job_name):
