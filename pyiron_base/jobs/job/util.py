@@ -129,7 +129,7 @@ def _get_safe_job_name(
             of numeric values to append with '_' in between.
         ndigits (int|None): How many digits to round any floating point values in a
             `name` tuple to. (Default is 8; to not round at all use None.)
-        special_symbols:
+        special_symbols (dict|None): Conversions of special symbols to apply. This will be applied to the default conversion dict, which contains: DEFAULT_CONVERSION
 
     Returns:
         (str): The sanitized (and possibly rounded) name.
