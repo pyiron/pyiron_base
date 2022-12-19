@@ -81,13 +81,15 @@ dump(output_dict)
                 """
             )
 
-        input_dict = {"a": 1, "b": [1,2,3]}
+        with self.subTest("Use the written script"):
+            input_dict = {"a": 1, "b": [1,2,3]}
 
-        self.job.script_path = os.path.abspath(file_name)
-        self.job.input.update(input_dict)
-        self.job.run()
+            self.job.script_path = os.path.abspath(file_name)
+            self.job.input.update(input_dict)
+            self.job.run()
 
-        data_dict = self.job["output"]
-        for k, v in input_dict.items():
-            self.assertTrue(data_dict[k], v)
+            data_dict = self.job["output"]
+            for k, v in input_dict.items():
+                self.assertTrue(data_dict[k], v)
+
         os.remove(file_name)
