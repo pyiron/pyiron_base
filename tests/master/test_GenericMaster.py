@@ -3,6 +3,7 @@
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
 import os
+import unittest
 from pyiron_base.project.generic import Project
 from pyiron_base.jobs.job.generic import GenericJob
 from pyiron_base.jobs.master.generic import GenericMaster
@@ -42,3 +43,7 @@ class TestGenericJob(PyironTestCase):
         )
         self.assertTrue(isinstance(master[0], GenericJob))
         self.assertTrue(isinstance(master_copy[0], GenericJob))
+
+
+if __name__ == "__main__":
+    unittest.main()

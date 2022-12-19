@@ -210,7 +210,7 @@ another subfolder in the resource directory to configure the queuing system usin
 the idea of using shell script based templates to configure the different queues as modern queuing sytem provide a wide
 range of settings but most users commonly submit their jobs with very similar settings. We discuss a sample
 configuration for `SLURM <https://slurm.schedmd.com/documentation.html>`_ sample configurations for other queuing
-systems are available on `Github <https://github.com/pyiron/pysqa/tree/master/tests/config>`_.
+systems are available on `Github <https://github.com/pyiron/pysqa/tree/main/tests/config>`_.
 
 .. code-block:: bash
 
@@ -271,7 +271,7 @@ for their simulation. The :code:`queue_type` defines the type of the queuing sys
 the primary queue and finally :code:`queues` defines the available queues. Typically each queue is associated with a
 shell script template, like in this case :code:`queue_one` is associated with :code:`queue_1.sh` and :code:`queue_two`
 is associated with :code:`queue_2.sh`. Additional queue configuration templates are available on `Github
-<https://github.com/pyiron/pysqa/tree/master/tests/config>`_.
+<https://github.com/pyiron/pysqa/tree/main/tests/config>`_.
 
 Submit to Remote HPC
 --------------------
@@ -365,7 +365,7 @@ Install from Source
 
 For development, it is recommended to first create a conda environment containing all of pyiron's dependencies. The
 dependencies are available in pyiron's `environment.yml
-<https://github.com/pyiron/pyiron/blob/master/.ci_support/environment.yml>`_ file.
+<https://github.com/pyiron/pyiron/blob/main/.ci_support/environment.yml>`_ file.
 
 .. code-block:: bash
     git clone https://github.com/pyiron/pyiron.git
@@ -384,7 +384,7 @@ your remote HPC cluster as described above.
 
     pip install pyiron
 
-For those who want to test the nightly releases of pyiron which include the latest status of the master branch you can
+For those who want to test the nightly releases of pyiron which include the latest status of the main branch you can
 install those via pip as well: 
 
 .. code-block:: bash
@@ -422,9 +422,9 @@ When you import pyiron in any python shell or jupyter notebook it should load th
 
 .. code-block:: bash
 
-    git checkout -b master
+    git checkout -b main
 
-In this case we switch to the master branch.
+In this case we switch to the main branch.
 
 Download pyiron Parameter Files
 ===============================
@@ -461,7 +461,7 @@ provides setup instructions for demonstration and training environments.
 Cloud Solutions
 ===============
 
-You can test pyiron on `Mybinder.org (beta) <https://mybinder.org/v2/gh/pyiron/pyiron/master?urlpath=lab>`_, without the
+You can test pyiron on `Mybinder.org (beta) <https://mybinder.org/v2/gh/pyiron/pyiron/main?urlpath=lab>`_, without the
 need for a local installation. It is a flexible way to get a first impression of pyiron but it does not provide any
 permanent storage by default. Loading the pyiron environment on mybinder can take 5 to 15 minutes in case a new docker
 container needs to be built. Mybinder is a free service, so sessions on its servers are limited in duration and memory
