@@ -8,14 +8,6 @@ from os import remove
 from pyiron_base._tests import TestWithCleanProject
 
 
-script_py = """\
-from pyiron_base import load, dump
-input_dict = load()
-output_dict = input_dict.copy()
-dump(output_dict)
-"""
-
-
 class TestScriptJob(TestWithCleanProject):
     @classmethod
     def setUpClass(cls):
@@ -81,7 +73,14 @@ class TestScriptJob(TestWithCleanProject):
     def test_python_input(self):
         file_name = "test.py"
         with open(file_name, "w") as f:
-            f.writelines(script_py)
+            f.writelines(
+                """
+from pyiron_base import load, dump
+input_dict = load()
+output_dict = input_dict.copy()
+dump(output_dict)
+                """
+            )
 
         input_dict = {"a": 1, "b": [1,2,3]}
 
