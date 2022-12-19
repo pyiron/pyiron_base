@@ -93,7 +93,3 @@ class TestScriptJob(TestWithCleanProject):
         for k, v in input_dict.items():
             self.assertTrue(data_dict[k], v)
         os.remove(file_name)
-
-
-if __name__ == "__main__":
-    unittest.main()
