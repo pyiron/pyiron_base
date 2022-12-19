@@ -141,6 +141,7 @@ class Settings(metaclass=Singleton):
 
         if (
             self._configuration["config_file_permissions_warning"]
+            and self._configuration["credentials_file"] is not None
             and os.path.exists(self._configuration["credentials_file"])
             and oct(os.stat(self._configuration["credentials_file"]).st_mode)[-2:] != "00"
         ):
