@@ -783,7 +783,7 @@ class DatabaseAccess(IsDatabase):
             result = self.conn.execute(text(sql_statement))
         else:
             result = self.conn.execute(text("select * from " + self.table_name))
-        row = result.fetchall()
+        row = result.mappings().all()
         if not self._keep_connection:
             self.conn.close()
 
@@ -793,10 +793,8 @@ class DatabaseAccess(IsDatabase):
             # ensures working with db entries, which are camel case
             timestop_index = [item.lower() for item in col.keys()].index("timestop")
             timestart_index = [item.lower() for item in col.keys()].index("timestart")
-            tmp_values = col.values()
-            if (
-                col.values()[timestop_index] and col.values()[timestart_index]
-            ) is not None:
+            tmp_values = list(col.values())
+            if (tmp_values[timestop_index] and tmp_values[timestart_index]) is not None:
                 # changes values
                 try:
                     tmp_values[timestop_index] = datetime.strptime(
