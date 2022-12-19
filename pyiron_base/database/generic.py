@@ -794,9 +794,7 @@ class DatabaseAccess(IsDatabase):
             timestop_index = [item.lower() for item in col.keys()].index("timestop")
             timestart_index = [item.lower() for item in col.keys()].index("timestart")
             tmp_values = list(col.values())
-            if (
-                tmp_values[timestop_index] and tmp_values[timestart_index]
-            ) is not None:
+            if (tmp_values[timestop_index] and tmp_values[timestart_index]) is not None:
                 # changes values
                 try:
                     tmp_values[timestop_index] = datetime.strptime(
