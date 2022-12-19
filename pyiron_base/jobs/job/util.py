@@ -10,7 +10,7 @@ import psutil
 import tarfile
 import stat
 import shutil
-from typing import Union, Dict
+from typing import Optional, Union
 from pyiron_base.utils.instance import static_isinstance
 from pyiron_base.utils.safetar import safe_extract
 
@@ -117,8 +117,25 @@ _special_symbol_replacements = {
 
 
 def _get_safe_job_name(
-    name: str, ndigits: Union[int, None] = 8, special_symbols: Union[Dict, None] = None
+    name: Union[str, tuple],
+    ndigits: Optional[int] = 8,
+    special_symbols: Optional[dict] = None,
 ):
+    """
+    Sanitize a job name, optionally appending numeric values.
+
+    Args:
+        name (str|tuple): The name to sanitize, or a tuple of the name and any number
+            of numeric values to append with '_' in between.
+        ndigits (int|None): How many digits to round any floating point values in a
+            `name` tuple to. (Default is 8; to not round at all use None.)
+        special_symbols (dict|None): Conversions of special symbols to apply. This will
+            be applied to the default conversion dict, which contains:
+            DEFAULT_CONV_DICT
+
+    Returns:
+        (str): The sanitized (and possibly rounded) name.
+    """
     d_special_symbols = _special_symbol_replacements.copy()
     if special_symbols is not None:
         d_special_symbols.update(special_symbols)
@@ -137,6 +154,11 @@ def _get_safe_job_name(
         job_name = job_name.replace(k, v)
     _is_valid_job_name(job_name=job_name)
     return job_name
+
+
+_get_safe_job_name.__doc__ = _get_safe_job_name.__doc__.replace(
+    "DEFAULT_CONV_DICT", f"{_special_symbol_replacements}"
+)
 
 
 def _rename_job(job, new_job_name):
