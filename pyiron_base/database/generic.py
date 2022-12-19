@@ -790,13 +790,12 @@ class DatabaseAccess(IsDatabase):
         # change the date of str datatype back into datetime object
         output_list = []
         for col_mapping in row:
-            col = dict(col_mapping)
             # ensures working with db entries, which are camel case
             timestop_index = [item.lower() for item in col.keys()].index("timestop")
             timestart_index = [item.lower() for item in col.keys()].index("timestart")
-            tmp_values = col.values()
+            tmp_values = list(col.values())
             if (
-                col.values()[timestop_index] and col.values()[timestart_index]
+                tmp_values[timestop_index] and tmp_values[timestart_index]
             ) is not None:
                 # changes values
                 try:
