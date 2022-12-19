@@ -49,8 +49,8 @@ class TestScriptJob(TestWithCleanProject):
             f.write(f"pr = Project('{self.project_path}')\n")
             f.write("pr.data.out = pr.data.in_ * 7\n")
             f.write("pr.data.write()\n")
-        # WARNING: If a user parallelizes this with multiple ScriptJobs, it would be possible to get a log jam with
-        #          multiple simultaneous write-calls.
+        # WARNING: If a user parallelizes this with multiple ScriptJobs, it would be
+        #          possible to get a log jam with multiple simultaneous write-calls.
         self.job.script_path = self.complex_script
         self.job.run()
         self.project.data.read()
