@@ -795,7 +795,8 @@ class DatabaseAccess(IsDatabase):
             timestart_index = [item.lower() for item in col.keys()].index("timestart")
             tmp_values = col._mapping.values()
             if (
-                col._mapping.values()[timestop_index] and col._mapping.values()[timestart_index]
+                col._mapping.values()[timestop_index]
+                and col._mapping.values()[timestart_index]
             ) is not None:
                 # changes values
                 try:
