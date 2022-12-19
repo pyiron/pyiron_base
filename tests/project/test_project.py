@@ -133,7 +133,12 @@ class TestProjectOperations(TestWithFilledProject):
         loaded = self.project.load("toy_1")
         self.assertIsInstance(loaded, ToyJob, msg="Expected to load the full object")
 
-    def test_inspect(self):
+        self.assertEqual(
+            len(self.project.job_table(recursive=False)),
+            len(self.project.load.__dir__()),
+            msg="Tab completion (`__dir__`) should see both jobs at this project level"
+        )
+
         inspected = self.project.inspect("toy_1")
         self.assertIsInstance(
             inspected,

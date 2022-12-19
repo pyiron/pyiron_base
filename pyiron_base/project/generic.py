@@ -5,9 +5,12 @@
 The project object is the central import point of pyiron - all other objects can be created from this one
 """
 
+from __future__ import annotations
+
 import os
 import posixpath
 import shutil
+from abc import ABC, abstractmethod
 from tqdm.auto import tqdm
 import pandas
 import pint
@@ -47,7 +50,12 @@ from pyiron_base.jobs.job.extension.server.queuestatus import (
 from pyiron_base.project.external import Notebook
 from pyiron_base.project.data import ProjectData
 from pyiron_base.project.archiving import export_archive, import_archive
-from typing import Generator, Union, Dict
+from typing import Callable, Generator, Union, Dict, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from pyiron_base.database.generic import IsDatabase
+    from pyiron_base.jobs.job.generic import GenericJob
+    from pyiron_base.jobs.job.path import JobPath
 
 __author__ = "Joerg Neugebauer, Jan Janssen"
 __copyright__ = (
@@ -122,6 +130,12 @@ class Project(ProjectPath, HasGroups):
         self._inspect_mode = False
         self._data = None
         self._creator = Creator(project=self)
+        reader_args = (
+            self.db, self.user, self.project_path, self.sql_query,
+            self.load_from_jobpath
+        )
+        self._loader = JobLoader(*reader_args)
+        self._inspector = JobInspector(*reader_args)
 
         self.job_type = JobTypeChoice()
 
@@ -539,17 +553,9 @@ class Project(ProjectPath, HasGroups):
         new._filter = ["groups"]
         return new
 
-    def inspect(self, job_specifier):
-        """
-        Inspect an existing pyiron object - most commonly a job - from the database
-
-        Args:
-            job_specifier (str, int): name of the job or job ID
-
-        Returns:
-            JobCore: Access to the HDF5 object - not a GenericJob object - use load() instead.
-        """
-        return self.load(job_specifier=job_specifier, convert_to_object=False)
+    @property
+    def inspect(self):
+        return self._inspector
 
     def iter_jobs(
         self,
@@ -788,34 +794,9 @@ class Project(ProjectPath, HasGroups):
             return []
         return self.get_jobs(recursive=recursive, columns=["job"])["job"]
 
-    def load(self, job_specifier, convert_to_object=True):
-        """
-        Load an existing pyiron object - most commonly a job - from the database
-
-        Args:
-            job_specifier (str, int): name of the job or job ID
-            convert_to_object (bool): convert the object to an pyiron object or only access the HDF5 file - default=True
-                                      accessing only the HDF5 file is about an order of magnitude faster, but only
-                                      provides limited functionality. Compare the GenericJob object to JobCore object.
-
-        Returns:
-            GenericJob, JobCore: Either the full GenericJob object or just a reduced JobCore object
-        """
-        if self.sql_query is not None:
-            state.logger.warning(
-                "SQL filter '%s' is active (may exclude job) ", self.sql_query
-            )
-        if not isinstance(job_specifier, (int, np.integer)):
-            job_specifier = _get_safe_job_name(name=job_specifier)
-        job_id = self.get_job_id(job_specifier=job_specifier)
-        if job_id is None:
-            state.logger.warning(
-                "Job '%s' does not exist and cannot be loaded", job_specifier
-            )
-            return None
-        return self.load_from_jobpath(
-            job_id=job_id, convert_to_object=convert_to_object
-        )
+    @property
+    def load(self):
+        return self._loader
 
     def load_from_jobpath(self, job_id=None, db_entry=None, convert_to_object=True):
         """
@@ -1730,3 +1711,117 @@ class Creator:
         )
         table.analysis_project = self._project
         return table
+
+
+class _JobByAttribute(ABC):
+    """
+    A parent class for accessing project jobs by a call and a job specifier, or by tab
+    completion.
+    """
+
+    def __init__(
+            self,
+            db: IsDatabase,
+            user: Union[str, None],
+            project_path: str,
+            sql_query: Union[str, None],
+            load_from_jobpath: Callable,
+    ):
+        self._db = db
+        self._user = user
+        self._project_path = project_path
+        self._sql_query = sql_query
+        self._load_from_jobpath = load_from_jobpath
+
+    @property
+    def _job_table(self):
+        return self._db.job_table(
+            None, self._user, self._project_path, recursive=False, columns=['job']
+        )
+
+    @property
+    def _job_names(self):
+        return self._job_table['job'].values
+
+    def __dir__(self):
+        return self._job_names
+
+    def _id_from_name(self, name):
+        return self._job_table.loc[self._job_names == name, 'id'].values[0]
+
+    def __getattr__(self, item):
+        return self._load_from_jobpath(
+            job_id=self._id_from_name(item),
+            convert_to_object=self.convert_to_object
+        )
+
+    def __getitem__(self, item):
+        return self.__getattr__(item)
+
+    def __call__(self, job_specifier, deprecated=None):
+        if self._sql_query is not None:
+            state.logger.warning(
+                f"SQL filter '{self._sql_query}' is active (may exclude job)")
+        if not isinstance(job_specifier, (int, np.integer)):
+            job_specifier = _get_safe_job_name(name=job_specifier)
+        job_id = get_job_id(
+            database=self._db,
+            sql_query=self._sql_query,
+            user=self._user,
+            project_path=self._project_path,
+            job_specifier=job_specifier,
+        )
+        if job_id is None:
+            state.logger.warning(
+                f"Job '{job_specifier}' does not exist and cannot be loaded")
+            return None
+        convert = deprecated if deprecated is not None else self.convert_to_object
+        return self._load_from_jobpath(job_id=job_id, convert_to_object=convert)
+
+    @property
+    @abstractmethod
+    def convert_to_object(self):
+        pass
+
+
+class JobLoader(_JobByAttribute):
+    """
+    Load an existing pyiron object - most commonly a job - from the database
+
+    Args:
+        job_specifier (str, int): name of the job or job ID
+
+    Returns:
+        GenericJob, JobCore: Either the full GenericJob object or just a reduced JobCore object
+    """
+
+    convert_to_object = True
+
+    # Deprecate convert_to_object
+    @deprecate(
+        arguments={
+            "convert_to_object": "Converting to object is not necessary with load; if "
+                                 "you don't want to convert to object, use inspect "
+                                 "instead of load."
+        }
+    )
+    def __call__(self, job_specifier, convert_to_object=None) -> GenericJob:
+        return super().__call__(job_specifier, deprecated=convert_to_object)
+
+
+class JobInspector(_JobByAttribute):
+    """
+    Inspect an existing pyiron object - most commonly a job - from the database
+
+    Args:
+        job_specifier (str, int): name of the job or job ID
+
+    Returns:
+        JobCore: Access to the HDF5 object - not a GenericJob object - use load()
+            instead.
+    """
+
+    convert_to_object = False
+
+    def __call__(self, job_specifier) -> JobPath:
+        return super().__call__(job_specifier)
