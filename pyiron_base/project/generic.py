@@ -592,7 +592,7 @@ class Project(ProjectPath, HasGroups):
             job_id_lst = tqdm(job_id_lst)
         for job_id in job_id_lst:
             if path is not None:
-                yield self.load(job_id, convert_to_object=False)[path]
+                yield self.inspect(job_id)[path]
             else:  # Backwards compatibility - in future the option convert_to_object should be removed
                 yield self.load(job_id, convert_to_object=convert_to_object)
 
@@ -1050,9 +1050,7 @@ class Project(ProjectPath, HasGroups):
         else:
             if not self.db.view_mode:
                 try:
-                    job = self.load(
-                        job_specifier=job_specifier, convert_to_object=False
-                    )
+                    job = self.inspect(job_specifier=job_specifier)
                     if job is None:
                         state.logger.warning(
                             "Job '%s' does not exist and could not be removed",

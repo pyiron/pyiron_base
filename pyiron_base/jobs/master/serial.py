@@ -124,7 +124,7 @@ class SerialMasterBase(GenericMaster):
             raise ValueError("No job available in job list, please append a job first.")
         if len(self._job_name_lst) > len(self.child_ids):
             return self.pop(-1)
-        ham_old = self.project.load(self.child_ids[-1], convert_to_object=True)
+        ham_old = self.project.load(self.child_ids[-1])
 
         if ham_old.status.aborted:
             ham_old.status.created = True
@@ -207,7 +207,7 @@ class SerialMasterBase(GenericMaster):
         """
         var_lst = []
         for child_id in self.child_ids:
-            ham = self.project.load(child_id, convert_to_object=False)
+            ham = self.project.inspect(child_id)
             var = ham.__getitem__(path)
             var_lst.append(var)
         return np.array(var_lst)

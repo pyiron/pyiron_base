@@ -433,7 +433,7 @@ class JobCore(HasGroups):
                     )
                     raise ValueError("Child jobs are protected and cannot be deleted!")
             for job_id in self.child_ids:
-                job = self.project.load(job_id, convert_to_object=False)
+                job = self.project.inspect(job_id)
                 if len(job.child_ids) > 0:
                     job.remove(_protect_childs=False)
                 else:
@@ -558,7 +558,7 @@ class JobCore(HasGroups):
         Returns:
             JobCore: Access to the HDF5 object - not a GenericJob object - use load() instead.
         """
-        return self.project.load(job_specifier=job_specifier, convert_to_object=False)
+        return self.project.inspect(job_specifier=job_specifier)
 
     def is_master_id(self, job_id):
         """
@@ -632,7 +632,7 @@ class JobCore(HasGroups):
             list: list of child jobs
         """
         return [
-            self.project.load(child_id, convert_to_object=False).job_name
+            self.project.inspect(child_id).job_name
             for child_id in self.child_ids
         ]
 
