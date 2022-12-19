@@ -3,17 +3,25 @@
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
 import unittest
-from os.path import join
+import os
 from os import remove
 from pyiron_base._tests import TestWithCleanProject
+
+
+script_py = """\
+from pyiron_base import load, dump
+input_dict = load()
+output_dict = input_dict.copy()
+dump(output_dict)
+"""
 
 
 class TestScriptJob(TestWithCleanProject):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        cls.simple_script = join(cls.file_location, 'simple.py')
-        cls.complex_script = join(cls.file_location, 'complex.py')
+        cls.simple_script = os.path.join(cls.file_location, 'simple.py')
+        cls.complex_script = os.path.join(cls.file_location, 'complex.py')
 
     @classmethod
     def tearDownClass(cls):
@@ -56,6 +64,39 @@ class TestScriptJob(TestWithCleanProject):
         self.job.run()
         self.project.data.read()
         self.assertEqual(42, self.project.data.out)
+
+    def test_notebook_input(self):
+        """
+        Makes sure that the ScriptJob saves its input class in
+        hdf["input/custom_group"] as this is needed when running external
+        Notebook jobs c.f. `Notebook.get_custom_dict()`.
+        """
+        job = self.project.create.job.ScriptJob("test_notebook")
+        job.input['value'] = 300
+        job.save()
+        self.assertTrue(
+            "custom_dict" in job["input"].list_groups(),
+            msg="Input not saved in the 'custom_dict' group in HDF"
+        )
+        self.project.remove_job("test_notebook")
+
+    def test_python_input(self):
+        file_name = "test.py"
+        with open(file_name, "w") as f:
+            f.writelines(script_py)
+
+        input_dict = {"a": 1, "b": [1,2,3]}
+
+        job = self.project.create.job.ScriptJob("test_input")
+        job.script_path = os.path.abspath(file_name)
+        job.input.update(input_dict)
+        job.run()
+
+        data_dict = job["output"]
+        for k, v in input_dict.items():
+            self.assertTrue(data_dict[k], v)
+        self.project.remove_job("test_input")
+        os.remove(file_name)
 
 
 if __name__ == "__main__":
