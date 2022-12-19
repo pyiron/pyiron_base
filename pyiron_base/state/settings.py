@@ -143,7 +143,8 @@ class Settings(metaclass=Singleton):
             self._configuration["config_file_permissions_warning"]
             and self._configuration["credentials_file"] is not None
             and os.path.exists(self._configuration["credentials_file"])
-            and oct(os.stat(self._configuration["credentials_file"]).st_mode)[-2:] != "00"
+            and oct(os.stat(self._configuration["credentials_file"]).st_mode)[-2:]
+            != "00"
         ):
             logger.warning(
                 "Credentials file can be read by other users - check permissions."
