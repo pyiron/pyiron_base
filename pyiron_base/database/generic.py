@@ -783,7 +783,7 @@ class DatabaseAccess(IsDatabase):
             result = self.conn.execute(text(sql_statement))
         else:
             result = self.conn.execute(text("select * from " + self.table_name))
-        row = result.fetchall()
+        row = result.mappings().all()
         if not self._keep_connection:
             self.conn.close()
 
