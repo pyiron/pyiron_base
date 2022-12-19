@@ -139,6 +139,15 @@ class Settings(metaclass=Singleton):
         elif file_dict is not None:
             self._update_from_dict(file_dict)
 
+        if (
+            self._configuration["config_file_permissions_warning"]
+            and os.path.exists(self._configuration["credentials_file"])
+            and oct(os.stat(self._configuration["credentials_file"]).st_mode)[-2:] != "00"
+        ):
+            logger.warning(
+                "Credentials file can be read by other users - check permissions."
+            )
+
         for k in ["CONDA_PREFIX", "CONDA_DIR"]:
             if k in os.environ.keys():
                 res_path = os.path.join(os.environ[k], "share", "pyiron")
@@ -378,13 +387,6 @@ class Settings(metaclass=Singleton):
             self._parse_config_file(credential_file, self.file_credential_map) or {}
         )
         config.update(credentials)
-        if (
-            config["config_file_permissions_warning"]
-            and oct(os.stat(credential_file).st_mode)[-2:] != "00"
-        ):
-            logger.warning(
-                "Credentials file can be read by other users - check permissions."
-            )
         return config
 
     def _get_config_from_file(self) -> Union[Dict, None]:
@@ -404,11 +406,6 @@ class Settings(metaclass=Singleton):
     @staticmethod
     def _parse_config_file(config_file, map_dict):
         if os.path.isfile(config_file):
-            if oct(os.stat(config_file).st_mode)[-2:] != "00":
-                logger.warning(
-                    "Configuration file may be read by others - check permissions to secure "
-                    "credential information!"
-                )
             parser = ConfigParser(inline_comment_prefixes=(";",), interpolation=None)
             parser.read(config_file)
             config = {}
