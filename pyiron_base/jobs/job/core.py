@@ -631,10 +631,7 @@ class JobCore(HasGroups):
         Returns:
             list: list of child jobs
         """
-        return [
-            self.project.inspect(child_id).job_name
-            for child_id in self.child_ids
-        ]
+        return [self.project.inspect(child_id).job_name for child_id in self.child_ids]
 
     def _list_groups(self):
         return self.project_hdf5.list_groups() + self._list_ext_childs()

@@ -131,8 +131,11 @@ class Project(ProjectPath, HasGroups):
         self._data = None
         self._creator = Creator(project=self)
         reader_args = (
-            self.db, self.user, self.project_path, self.sql_query,
-            self.load_from_jobpath
+            self.db,
+            self.user,
+            self.project_path,
+            self.sql_query,
+            self.load_from_jobpath,
         )
         self._loader = JobLoader(*reader_args)
         self._inspector = JobInspector(*reader_args)
@@ -1718,12 +1721,12 @@ class _JobByAttribute(ABC):
     """
 
     def __init__(
-            self,
-            db: IsDatabase,
-            user: Union[str, None],
-            project_path: str,
-            sql_query: Union[str, None],
-            load_from_jobpath: Callable,
+        self,
+        db: IsDatabase,
+        user: Union[str, None],
+        project_path: str,
+        sql_query: Union[str, None],
+        load_from_jobpath: Callable,
     ):
         self._db = db
         self._user = user
@@ -1734,23 +1737,22 @@ class _JobByAttribute(ABC):
     @property
     def _job_table(self):
         return self._db.job_table(
-            None, self._user, self._project_path, recursive=False, columns=['job']
+            None, self._user, self._project_path, recursive=False, columns=["job"]
         )
 
     @property
     def _job_names(self):
-        return self._job_table['job'].values
+        return self._job_table["job"].values
 
     def __dir__(self):
         return self._job_names
 
     def _id_from_name(self, name):
-        return self._job_table.loc[self._job_names == name, 'id'].values[0]
+        return self._job_table.loc[self._job_names == name, "id"].values[0]
 
     def __getattr__(self, item):
         return self._load_from_jobpath(
-            job_id=self._id_from_name(item),
-            convert_to_object=self.convert_to_object
+            job_id=self._id_from_name(item), convert_to_object=self.convert_to_object
         )
 
     def __getitem__(self, item):
@@ -1759,7 +1761,8 @@ class _JobByAttribute(ABC):
     def __call__(self, job_specifier, convert_to_object=None):
         if self._sql_query is not None:
             state.logger.warning(
-                f"SQL filter '{self._sql_query}' is active (may exclude job)")
+                f"SQL filter '{self._sql_query}' is active (may exclude job)"
+            )
         if not isinstance(job_specifier, (int, np.integer)):
             job_specifier = _get_safe_job_name(name=job_specifier)
         job_id = get_job_id(
@@ -1771,12 +1774,14 @@ class _JobByAttribute(ABC):
         )
         if job_id is None:
             state.logger.warning(
-                f"Job '{job_specifier}' does not exist and cannot be loaded")
+                f"Job '{job_specifier}' does not exist and cannot be loaded"
+            )
             return None
         return self._load_from_jobpath(
             job_id=job_id,
-            convert_to_object=convert_to_object if convert_to_object is not None
-                                else self.convert_to_object
+            convert_to_object=convert_to_object
+            if convert_to_object is not None
+            else self.convert_to_object,
         )
 
     @property
