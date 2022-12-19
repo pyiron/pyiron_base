@@ -11,6 +11,7 @@ from pyiron_base._tests import (
     PyironTestCase, TestWithProject, TestWithFilledProject, ToyJob
 )
 from pyiron_base.jobs.job.toolkit import BaseTools
+from pyiron_base.jobs.job.path import JobPath
 
 
 class TestProjectData(PyironTestCase):
@@ -127,6 +128,18 @@ class TestProjectOperations(TestWithFilledProject):
     def test_maintenance_get_repository_status(self):
         df = self.project.maintenance.get_repository_status()
         self.assertIn('pyiron_base', df.Module.values)
+
+    def test_load(self):
+        loaded = self.project.load("toy_1")
+        self.assertIsInstance(loaded, ToyJob, msg="Expected to load the full object")
+
+    def test_inspect(self):
+        inspected = self.project.inspect("toy_1")
+        self.assertIsInstance(
+            inspected,
+            JobPath,
+            msg="Expected to load only an HDF interface"
+        )
 
 
 class TestToolRegistration(TestWithProject):
