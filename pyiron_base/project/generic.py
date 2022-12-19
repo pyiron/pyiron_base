@@ -1758,7 +1758,7 @@ class _JobByAttribute(ABC):
     def __getitem__(self, item):
         return self.__getattr__(item)
 
-    def __call__(self, job_specifier, deprecated=None):
+    def __call__(self, job_specifier, convert_to_object=None):
         if self._sql_query is not None:
             state.logger.warning(
                 f"SQL filter '{self._sql_query}' is active (may exclude job)")
@@ -1775,8 +1775,11 @@ class _JobByAttribute(ABC):
             state.logger.warning(
                 f"Job '{job_specifier}' does not exist and cannot be loaded")
             return None
-        convert = deprecated if deprecated is not None else self.convert_to_object
-        return self._load_from_jobpath(job_id=job_id, convert_to_object=convert)
+        return self._load_from_jobpath(
+            job_id=job_id,
+            convert_to_object=convert_to_object if convert_to_object is not None
+                                else self.convert_to_object
+        )
 
     @property
     @abstractmethod
@@ -1797,16 +1800,8 @@ class JobLoader(_JobByAttribute):
 
     convert_to_object = True
 
-    # Deprecate convert_to_object
-    @deprecate(
-        arguments={
-            "convert_to_object": "Converting to object is not necessary with load; if "
-                                 "you don't want to convert to object, use inspect "
-                                 "instead of load."
-        }
-    )
     def __call__(self, job_specifier, convert_to_object=None) -> GenericJob:
-        return super().__call__(job_specifier, deprecated=convert_to_object)
+        return super().__call__(job_specifier, convert_to_object=convert_to_object)
 
 
 class JobInspector(_JobByAttribute):
