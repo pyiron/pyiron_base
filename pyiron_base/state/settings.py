@@ -89,6 +89,8 @@ class Settings(metaclass=Singleton):
             sources.
         write_work_dir_warnings / WRITE_WORK_DIR_WARNINGS / PYIRONWRITEWORKDIRWARNINGS (bool): Whether to write
             the working directory warning files to inform users about possibly modified content. (Default is True).
+        config_file_permissions_warning / CONFIG_FILE_PERMISSIONS_WARNING / PYIRONCONFIGFILEPERMISSIONSWARNING (bool):
+            Whether to print a warning message, when the permission of the .pyiron config file, let others access it.
 
 
     Properties:
@@ -169,6 +171,7 @@ class Settings(metaclass=Singleton):
                 "disable_database": False,
                 "credentials_file": None,
                 "write_work_dir_warnings": True,
+                "config_file_permissions_warning": True,
             }
         )
 
@@ -194,6 +197,7 @@ class Settings(metaclass=Singleton):
             "PYIRONDISABLE": "disable_database",
             "PYIRONCREDENTIALSFILE": "credentials_file",
             "PYIRONWRITEWORKDIRWARNINGS": "write_work_dir_warnings",
+            "PYIRONCONFIGFILEPERMISSIONSWARNING": "config_file_permissions_warning",
         }
 
     @property
@@ -220,6 +224,7 @@ class Settings(metaclass=Singleton):
             "DISABLE_DATABASE": "disable_database",
             "CREDENTIALS_FILE": "credentials_file",
             "WRITE_WORK_DIR_WARNINGS": "write_work_dir_warnings",
+            "CONFIG_FILE_PERMISSIONS_WARNING": "config_file_permissions_warning",
         }
 
     @property
@@ -369,7 +374,7 @@ class Settings(metaclass=Singleton):
 
         if not os.path.isfile(credential_file):
             raise FileNotFoundError(credential_file)
-        elif oct(os.stat(credential_file).st_mode)[-2:] != "00":
+        if config["config_file_permissions_warning"] and oct(os.stat(credential_file).st_mode)[-2:] != "00":
             logger.warning(
                 "Credentials file can be read by other users - check permissions."
             )

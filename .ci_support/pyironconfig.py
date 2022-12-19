@@ -9,7 +9,7 @@ def main():
     if not os.path.exists(pyiron_config):
         with open(pyiron_config, 'w') as f:
             f.writelines(['[DEFAULT]\n',
-                          'WRITE_WORK_DIR_WARNINGS = False\n',
+                          'CONFIG_FILE_PERMISSIONS_WARNING = False\n',
                           'TOP_LEVEL_DIRS = ' + top_level_path + '\n',
                           'RESOURCE_PATHS = ' + resource_path + '\n'])
     else:
