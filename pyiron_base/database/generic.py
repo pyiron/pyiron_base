@@ -789,7 +789,8 @@ class DatabaseAccess(IsDatabase):
 
         # change the date of str datatype back into datetime object
         output_list = []
-        for col in row:
+        for col_mapping in row:
+            col = dict(col_mapping)
             # ensures working with db entries, which are camel case
             timestop_index = [item.lower() for item in col.keys()].index("timestop")
             timestart_index = [item.lower() for item in col.keys()].index("timestart")
