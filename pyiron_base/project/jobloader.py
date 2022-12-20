@@ -22,7 +22,6 @@ if TYPE_CHECKING:
     from pyiron_base.jobs.job.path import JobPath
 
 
-
 class _JobByAttribute(ABC):
     """
     A parent class for accessing project jobs by a call and a job specifier, or by tab
