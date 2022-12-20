@@ -12,12 +12,12 @@ from typing import Union, Callable, TYPE_CHECKING
 
 import numpy as np
 
-from pyiron_base import state
+from pyiron_base.state import state
 from pyiron_base.database.jobtable import get_job_id
 from pyiron_base.jobs.job.util import _get_safe_job_name
 
 if TYPE_CHECKING:
-    from pyiron_base import GenericJob
+    from pyiron_base.jobs.job.generic import GenericJob
     from pyiron_base.database.generic import IsDatabase
     from pyiron_base.jobs.job.path import JobPath
 
