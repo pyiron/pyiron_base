@@ -130,28 +130,33 @@ class TestProjectOperations(TestWithFilledProject):
         self.assertIn('pyiron_base', df.Module.values)
 
     def test_load(self):
-        loaded = self.project.load("toy_1")
-        self.assertIsInstance(loaded, ToyJob, msg="Expected to load the full object")
+        with self.subTest("Basic functionality"):
+            loaded = self.project.load("toy_1")
+            self.assertIsInstance(
+                loaded, ToyJob, msg="Expected to load the full object"
+            )
 
-        self.assertEqual(
-            len(self.project.job_table(recursive=False)),
-            len(self.project.load.__dir__()),
-            msg="Tab completion (`__dir__`) should see both jobs at this project level"
-        )
+            self.assertEqual(
+                len(self.project.job_table(recursive=False)),
+                len(self.project.load.__dir__()),
+                msg="Tab completion (`__dir__`) should see both jobs at this project "
+                    "level"
+            )
 
-        not_fully_loaded = self.project.load("toy_1", convert_to_object=False)
-        self.assertIsInstance(
-            not_fully_loaded,
-            JobPath,
-            msg="Expected to load only an HDF interface"
-        )
+        with self.subTest("Without converting to object"):
+            not_fully_loaded = self.project.load("toy_1", convert_to_object=False)
+            self.assertIsInstance(
+                not_fully_loaded,
+                JobPath,
+                msg="Expected to load only an HDF interface"
+            )
 
-        inspected = self.project.inspect("toy_1")
-        self.assertIsInstance(
-            inspected,
-            JobPath,
-            msg="Expected to load only an HDF interface"
-        )
+            inspected = self.project.inspect("toy_1")
+            self.assertIsInstance(
+                inspected,
+                JobPath,
+                msg="Expected to load only an HDF interface"
+            )
 
 
 class TestToolRegistration(TestWithProject):
