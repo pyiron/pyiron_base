@@ -67,7 +67,7 @@ class TestProjectPath(PyironTestCase):
         )
 
     def test_root_path(self):
-        root_paths = self.settings_configuration["project_paths"]
+        root_paths = state.settings.configuration["project_paths"]
         self.assertIn(
             self.project_path.root_path,
             root_paths,
@@ -75,7 +75,7 @@ class TestProjectPath(PyironTestCase):
         )
 
     def test_project_path(self):
-        root_paths = self.settings_configuration["project_paths"]
+        root_paths = state.settings.configuration["project_paths"]
         self.assertIn(
             self.current_dir + "/test_project_path/",
             [root_path + self.project_path.project_path for root_path in root_paths],
