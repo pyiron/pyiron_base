@@ -128,14 +128,8 @@ class Project(ProjectPath, HasGroups):
         self._inspect_mode = False
         self._data = None
         self._creator = Creator(project=self)
-        reader_args = (
-            self.user,
-            self.project_path,
-            self.sql_query,
-            self.load_from_jobpath,
-        )
-        self._loader = JobLoader(*reader_args)
-        self._inspector = JobInspector(*reader_args)
+        self._loader = JobLoader(project=self)
+        self._inspector = JobInspector(project=self)
 
         self.job_type = JobTypeChoice()
 

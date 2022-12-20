@@ -18,9 +18,10 @@ from pyiron_base.database.jobtable import get_job_id
 from pyiron_base.jobs.job.util import _get_safe_job_name
 
 if TYPE_CHECKING:
-    from pyiron_base.jobs.job.generic import GenericJob
     from pyiron_base.database.generic import IsDatabase
+    from pyiron_base.jobs.job.generic import GenericJob
     from pyiron_base.jobs.job.path import JobPath
+    from pyiron_base.project.generic import Project
 
 
 class _JobByAttribute(ABC):
@@ -29,30 +30,12 @@ class _JobByAttribute(ABC):
     completion.
     """
 
-    def __init__(
-        self,
-        user: Union[str, None],
-        project_path: str,
-        sql_query: Union[str, None],
-        load_from_jobpath: Callable,
-    ):
-        self._user = user
-        self._project_path = project_path
-        self._sql_query = sql_query
-        self._load_from_jobpath = load_from_jobpath
-
-    @property
-    def db(self) -> IsDatabase:
-        if not state.database.database_is_disabled:
-            return state.database.database
-        else:
-            return FileTable(project=self._project_path)
+    def __init__(self, project: Project):
+        self._project = project
 
     @property
     def _job_table(self):
-        return self.db.job_table(
-            None, self._user, self._project_path, recursive=False, columns=["job"]
-        )
+        return self._project.job_table(recursive=False, columns=["job"])
 
     @property
     def _job_names(self):
@@ -65,7 +48,7 @@ class _JobByAttribute(ABC):
         return self._job_table.loc[self._job_names == name, "id"].values[0]
 
     def __getattr__(self, item):
-        return self._load_from_jobpath(
+        return self._project.load_from_jobpath(
             job_id=self._id_from_name(item), convert_to_object=self.convert_to_object
         )
 
@@ -73,17 +56,17 @@ class _JobByAttribute(ABC):
         return self.__getattr__(item)
 
     def __call__(self, job_specifier, convert_to_object=None):
-        if self._sql_query is not None:
+        if self._project.sql_query is not None:
             state.logger.warning(
-                f"SQL filter '{self._sql_query}' is active (may exclude job)"
+                f"SQL filter '{self._project.sql_query}' is active (may exclude job)"
             )
         if not isinstance(job_specifier, (int, np.integer)):
             job_specifier = _get_safe_job_name(name=job_specifier)
         job_id = get_job_id(
-            database=self.db,
-            sql_query=self._sql_query,
-            user=self._user,
-            project_path=self._project_path,
+            database=self._project.db,
+            sql_query=self._project.sql_query,
+            user=self._project.user,
+            project_path=self._project.project_path,
             job_specifier=job_specifier,
         )
         if job_id is None:
@@ -91,7 +74,7 @@ class _JobByAttribute(ABC):
                 f"Job '{job_specifier}' does not exist and cannot be loaded"
             )
             return None
-        return self._load_from_jobpath(
+        return self._project.load_from_jobpath(
             job_id=job_id,
             convert_to_object=convert_to_object
             if convert_to_object is not None
