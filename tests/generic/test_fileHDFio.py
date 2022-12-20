@@ -320,7 +320,7 @@ class TestFileHDFio(PyironTestCase):
             ),
             "default value returned when value does exist.",
         )
-        with self.assertRaises(ValueError):
+        with self.assertRaises(KeyError):
             self.empty_hdf5.get("non_existing_key")
 
     def test_hd_copy(self):
