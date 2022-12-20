@@ -1815,7 +1815,7 @@ class JobInspector(_JobByAttribute):
         job_specifier (str, int): name of the job or job ID
 
     Returns:
-        JobCore: Access to the HDF5 object - not a GenericJob object - use load()
+        JobCore: Access to the HDF5 object - not a GenericJob object - use :meth:`~.Project.load()`
             instead.
     """
 
