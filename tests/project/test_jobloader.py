@@ -43,3 +43,24 @@ class TestLoaders(TestWithFilledProject):
             JobPath,
             msg="Expected to load only an HDF interface"
         )
+
+    def test_without_database(self):
+        self.project.state.update({'disable_database': True})
+
+        with self.subTest("Works without the database"):
+            self.assertIsInstance(
+                self.project.load.toy_1, ToyJob, msg="Expected to load the full object"
+            )
+            self.assertIsInstance(
+                self.project.inspect.toy_2, JobPath, msg="Expected just the HDF object"
+            )
+
+        self.project.state.update({'disable_database': False})
+
+        with self.subTest("Doesn't cause any trouble turning the database back on"):
+            self.assertIsInstance(
+                self.project.load.toy_1, ToyJob, msg="Expected to load the full object"
+            )
+            self.assertIsInstance(
+                self.project.inspect.toy_2, JobPath, msg="Expected just the HDF object"
+            )

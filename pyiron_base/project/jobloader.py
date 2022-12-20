@@ -13,6 +13,7 @@ from typing import Union, Callable, TYPE_CHECKING
 import numpy as np
 
 from pyiron_base.state import state
+from pyiron_base.database.filetable import FileTable
 from pyiron_base.database.jobtable import get_job_id
 from pyiron_base.jobs.job.util import _get_safe_job_name
 
@@ -30,21 +31,26 @@ class _JobByAttribute(ABC):
 
     def __init__(
         self,
-        db: IsDatabase,
         user: Union[str, None],
         project_path: str,
         sql_query: Union[str, None],
         load_from_jobpath: Callable,
     ):
-        self._db = db
         self._user = user
         self._project_path = project_path
         self._sql_query = sql_query
         self._load_from_jobpath = load_from_jobpath
 
     @property
+    def db(self) -> IsDatabase:
+        if not state.database.database_is_disabled:
+            return state.database.database
+        else:
+            return FileTable(project=self._project_path)
+
+    @property
     def _job_table(self):
-        return self._db.job_table(
+        return self.db.job_table(
             None, self._user, self._project_path, recursive=False, columns=["job"]
         )
 
@@ -74,7 +80,7 @@ class _JobByAttribute(ABC):
         if not isinstance(job_specifier, (int, np.integer)):
             job_specifier = _get_safe_job_name(name=job_specifier)
         job_id = get_job_id(
-            database=self._db,
+            database=self.db,
             sql_query=self._sql_query,
             user=self._user,
             project_path=self._project_path,

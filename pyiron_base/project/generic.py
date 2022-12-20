@@ -129,7 +129,6 @@ class Project(ProjectPath, HasGroups):
         self._data = None
         self._creator = Creator(project=self)
         reader_args = (
-            self.db,
             self.user,
             self.project_path,
             self.sql_query,
