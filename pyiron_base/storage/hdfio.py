@@ -168,7 +168,7 @@ class FileHDFio(HasGroups, MutableMapping):
                         if self._is_convertable_dtype_object_array(obj):
                             obj = self._convert_dtype_obj_array(obj)
                         return obj
-                raise ValueError(
+                raise KeyError(
                     "Unknown item: {} {} {}".format(item, self.file_name, self.h5_path)
                 )
             else:
