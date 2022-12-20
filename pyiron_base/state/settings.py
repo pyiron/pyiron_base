@@ -378,7 +378,7 @@ class Settings(metaclass=Singleton):
         return config if len(config) > 0 else None
 
     def _add_credentials_from_file(self, config: dict) -> Dict:
-        if "credentials_file" not in config:
+        if "credentials_file" not in config or config["credentials_file"] is None:
             return config
         else:
             credential_file = config["credentials_file"]
