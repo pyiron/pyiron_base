@@ -337,7 +337,7 @@ class Settings(metaclass=Singleton):
     @staticmethod
     def _validate_viewer_configuration(config: Dict) -> None:
         key_group = ["sql_view_table_name", "sql_view_user", "sql_view_user_key"]
-        present = [k in config.keys() for k in key_group]
+        present = [k in config.keys() and config[k] is not None for k in key_group]
         if any(present):
             if not all(present):
                 raise ValueError(
