@@ -648,7 +648,7 @@ class FileHDFio(HasGroups, MutableMapping):
         """
         try:
             return self.__getitem__(key)
-        except ValueError:
+        except KeyError:
             if default is not None:
                 return default
             else:

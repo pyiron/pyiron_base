@@ -929,7 +929,7 @@ class JobCore(HasGroups):
                 return group.to_object(lazy=True)
             else:
                 return group
-        except ValueError:
+        except KeyError:
             pass
 
         name_lst = item.split("/")
