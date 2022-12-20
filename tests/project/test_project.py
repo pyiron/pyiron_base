@@ -137,6 +137,14 @@ class TestProjectOperations(TestWithFilledProject):
             )
 
             self.assertEqual(
+                loaded.name,
+                self.project.load.toy_1.name,
+                # TODO: we'd rather compare the jobs directly, but equality comparison
+                #       for jobs is not implemented
+                msg="Attribute access should function the same as explicit calls"
+            )
+
+            self.assertEqual(
                 len(self.project.job_table(recursive=False)),
                 len(self.project.load.__dir__()),
                 msg="Tab completion (`__dir__`) should see both jobs at this project "
