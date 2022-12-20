@@ -10,7 +10,6 @@ from __future__ import annotations
 import os
 import posixpath
 import shutil
-from abc import ABC, abstractmethod
 from tqdm.auto import tqdm
 import pandas
 import pint
@@ -18,6 +17,7 @@ import importlib
 import math
 import numpy as np
 
+from pyiron_base.project.jobloader import JobLoader, JobInspector
 from pyiron_base.project.maintenance import Maintenance
 from pyiron_base.project.path import ProjectPath
 from pyiron_base.database.filetable import FileTable
@@ -50,12 +50,10 @@ from pyiron_base.jobs.job.extension.server.queuestatus import (
 from pyiron_base.project.external import Notebook
 from pyiron_base.project.data import ProjectData
 from pyiron_base.project.archiving import export_archive, import_archive
-from typing import Callable, Generator, Union, Dict, TYPE_CHECKING
+from typing import Generator, Union, Dict, TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from pyiron_base.database.generic import IsDatabase
     from pyiron_base.jobs.job.generic import GenericJob
-    from pyiron_base.jobs.job.path import JobPath
 
 __author__ = "Joerg Neugebauer, Jan Janssen"
 __copyright__ = (
@@ -1712,114 +1710,3 @@ class Creator:
         )
         table.analysis_project = self._project
         return table
-
-
-class _JobByAttribute(ABC):
-    """
-    A parent class for accessing project jobs by a call and a job specifier, or by tab
-    completion.
-    """
-
-    def __init__(
-        self,
-        db: IsDatabase,
-        user: Union[str, None],
-        project_path: str,
-        sql_query: Union[str, None],
-        load_from_jobpath: Callable,
-    ):
-        self._db = db
-        self._user = user
-        self._project_path = project_path
-        self._sql_query = sql_query
-        self._load_from_jobpath = load_from_jobpath
-
-    @property
-    def _job_table(self):
-        return self._db.job_table(
-            None, self._user, self._project_path, recursive=False, columns=["job"]
-        )
-
-    @property
-    def _job_names(self):
-        return self._job_table["job"].values
-
-    def __dir__(self):
-        return self._job_names
-
-    def _id_from_name(self, name):
-        return self._job_table.loc[self._job_names == name, "id"].values[0]
-
-    def __getattr__(self, item):
-        return self._load_from_jobpath(
-            job_id=self._id_from_name(item), convert_to_object=self.convert_to_object
-        )
-
-    def __getitem__(self, item):
-        return self.__getattr__(item)
-
-    def __call__(self, job_specifier, convert_to_object=None):
-        if self._sql_query is not None:
-            state.logger.warning(
-                f"SQL filter '{self._sql_query}' is active (may exclude job)"
-            )
-        if not isinstance(job_specifier, (int, np.integer)):
-            job_specifier = _get_safe_job_name(name=job_specifier)
-        job_id = get_job_id(
-            database=self._db,
-            sql_query=self._sql_query,
-            user=self._user,
-            project_path=self._project_path,
-            job_specifier=job_specifier,
-        )
-        if job_id is None:
-            state.logger.warning(
-                f"Job '{job_specifier}' does not exist and cannot be loaded"
-            )
-            return None
-        return self._load_from_jobpath(
-            job_id=job_id,
-            convert_to_object=convert_to_object
-            if convert_to_object is not None
-            else self.convert_to_object,
-        )
-
-    @property
-    @abstractmethod
-    def convert_to_object(self):
-        pass
-
-
-class JobLoader(_JobByAttribute):
-    """
-    Load an existing pyiron object - most commonly a job - from the database
-
-    Args:
-        job_specifier (str, int): name of the job or job ID
-
-    Returns:
-        GenericJob, JobCore: Either the full GenericJob object or just a reduced JobCore object
-    """
-
-    convert_to_object = True
-
-    def __call__(self, job_specifier, convert_to_object=None) -> GenericJob:
-        return super().__call__(job_specifier, convert_to_object=convert_to_object)
-
-
-class JobInspector(_JobByAttribute):
-    """
-    Inspect an existing pyiron object - most commonly a job - from the database
-
-    Args:
-        job_specifier (str, int): name of the job or job ID
-
-    Returns:
-        JobCore: Access to the HDF5 object - not a GenericJob object - use :meth:`~.Project.load()`
-            instead.
-    """
-
-    convert_to_object = False
-
-    def __call__(self, job_specifier) -> JobPath:
-        return super().__call__(job_specifier)
