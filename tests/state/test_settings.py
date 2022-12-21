@@ -44,7 +44,8 @@ class TestSettings(TestCase):
             if "PYIRON" in k:
                 self.env.pop(k)
 
-    def test_default_works(self):
+    @staticmethod
+    def test_default_works():
         s.update(s.default_configuration)
 
     def test_validate_sql_configuration_completeness(self):
