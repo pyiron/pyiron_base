@@ -1185,7 +1185,13 @@ class Project(ProjectPath, HasGroups):
                     # dirs and files return values of the iterator are not updated when removing files, so we need to
                     # manually call listdir
                     if len(os.listdir(root)) == 0:
-                        os.rmdir(root)
+                        root = root.rstrip(os.sep)
+                        # the project was symlinked before being deleted
+                        if os.path.islink(root):
+                            os.rmdir(os.readlink(root))
+                            os.remove(root)
+                        else:
+                            os.rmdir(root)
         else:
             raise EnvironmentError("remove() is not available in view_mode!")
 
