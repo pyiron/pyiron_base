@@ -38,7 +38,7 @@ class HistoricalTable(Table):
             Column("masterid", Integer),
             Column("projectpath", String(50)),
             Column("project", String(255)),
-            Column("job", String(50)),
+            Column("job", String(250)),
             Column("subjob", String(255)),
             Column("chemicalformula", String(50)),
             Column("status", String(20)),
