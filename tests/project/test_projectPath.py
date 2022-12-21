@@ -79,7 +79,7 @@ class TestProjectPath(PyironTestCase):
         root_paths = state.settings.configuration["project_paths"]
         self.assertIn(
             self.current_dir + "/test_project_path/",
-            [root_path + "/" + self.project_path.project_path for root_path in root_paths],
+            [root_path + self.project_path.project_path for root_path in root_paths],
             msg="project.project_path not properly set by default. Check if `project_check_enabled`.",
         )
 
