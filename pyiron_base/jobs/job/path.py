@@ -124,9 +124,7 @@ class JobPath(JobCore):
             h5_path=h5_path,
             mode="r",
         )
-        super().__init__(
-            project=hdf_project, job_name=job_path_lst[1].split("/")[-1]
-        )
+        super().__init__(project=hdf_project, job_name=job_path_lst[1].split("/")[-1])
 
     @classmethod
     def from_job_id(cls, db, job_id):

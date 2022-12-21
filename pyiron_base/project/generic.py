@@ -831,6 +831,7 @@ class Project(ProjectPath, HasGroups):
             GenericJob, JobCore: Either the full GenericJob object or just a reduced JobCore object
         """
         from pyiron_base.jobs.job.path import JobPath
+
         if job_id is not None:
             job = JobPath.from_job_id(db=self.db, job_id=job_id)
             if convert_to_object:
@@ -1292,6 +1293,7 @@ class Project(ProjectPath, HasGroups):
             GenericJob, JobCore: Either the full GenericJob object or just a reduced JobCore object
         """
         from pyiron_base.jobs.job.path import JobPath
+
         job = JobPath(job_path)
         if convert_to_object:
             job = job.to_object()
