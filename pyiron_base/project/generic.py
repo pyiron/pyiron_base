@@ -1729,12 +1729,13 @@ class Project(ProjectPath, HasGroups):
 
         If it is not symlinked, silently return.
         """
-        if not stat.S_ISLNK(os.lstat(self.path).st_mode):
+        path = self.path.rstrip(os.sep)
+        if not stat.S_ISLNK(os.lstat(path).st_mode):
             return
 
-        target = os.readlink(self.path)
-        os.unlink(self.path)
-        shutil.move(target, self.path)
+        target = os.readlink(path)
+        os.unlink(path)
+        shutil.move(target, path)
 
 
 class Creator:
