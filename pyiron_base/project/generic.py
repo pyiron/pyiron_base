@@ -8,6 +8,7 @@ The project object is the central import point of pyiron - all other objects can
 import os
 import posixpath
 import shutil
+import stat
 from tqdm.auto import tqdm
 import pandas
 import pint
@@ -1182,7 +1183,13 @@ class Project(ProjectPath, HasGroups):
                     # dirs and files return values of the iterator are not updated when removing files, so we need to
                     # manually call listdir
                     if len(os.listdir(root)) == 0:
-                        os.rmdir(root)
+                        root = root.rstrip(os.sep)
+                        # the project was symlinked before being deleted
+                        if os.path.islink(root):
+                            os.rmdir(os.readlink(root))
+                            os.remove(root)
+                        else:
+                            os.rmdir(root)
         else:
             raise EnvironmentError("remove() is not available in view_mode!")
 
@@ -1673,6 +1680,66 @@ class Project(ProjectPath, HasGroups):
                 f"{cls.__name__} already has an attribute {name}. Please use a new name for registration."
             )
         setattr(cls, name, property(lambda self: tools(self)))
+
+    def symlink(self, target_dir):
+        """
+        Move underlying project folder to target and create a symlink to it.
+
+        The project itself does not change and is not updated in the database.  Instead the project folder is moved into
+        a subdirectory of target_dir with the same name as the project and a symlink is placed in the previous project path
+        pointing to the newly created one.
+
+        If self.path is already a symlink pointing inside target_dir, this method will silently return.
+
+        Args:
+            target_dir (str): new parent folder for the project
+
+        Raises:
+            OSError: when calling this method on non-unix systems
+            RuntimeError: the project path is already a symlink to somewhere else
+            RuntimeError: the project path has submitted or running jobs inside it, wait until after they are finished
+            RuntimeError: target already contains a subdirectory with the project name and it is not empty
+        """
+        target = os.path.join(target_dir, self.name)
+        destination = self.path
+        if destination[-1] == "/":
+            destination = destination[:-1]
+        if stat.S_ISLNK(os.lstat(destination).st_mode):
+            if os.readlink(destination) == target:
+                return
+            raise RuntimeError(
+                "Refusing to symlink and move a project that is already symlinked!"
+            )
+        if os.name != "posix":
+            raise OSError("Symlinking projects is only supported on unix systems!")
+        if len(self.job_table().query('status.isin(["submitted", "running"])')) > 0:
+            raise RuntimeError(
+                "Refusing to symlink and move a project that has submitted or running jobs!"
+            )
+        os.makedirs(target_dir, exist_ok=True)
+        if os.path.exists(target):
+            if len(os.listdir(target)) > 0:
+                raise RuntimeError(
+                    "Refusing to symlink and move a project to non-empty directory!"
+                )
+            else:
+                os.rmdir(target)
+        shutil.move(self.path, target_dir)
+        os.symlink(target, destination)
+
+    def unlink(self):
+        """
+        If the project folder is symlinked somewhere else remove the link and restore the original folder.
+
+        If it is not symlinked, silently return.
+        """
+        path = self.path.rstrip(os.sep)
+        if not stat.S_ISLNK(os.lstat(path).st_mode):
+            return
+
+        target = os.readlink(path)
+        os.unlink(path)
+        shutil.move(target, path)
 
 
 class Creator:
