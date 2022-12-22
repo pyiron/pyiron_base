@@ -3,8 +3,9 @@
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
 import unittest
-from os.path import dirname, join, abspath
-from os import remove
+from os.path import dirname, join, abspath, exists, islink
+import os
+import tempfile
 import pint
 from pyiron_base.project.generic import Project
 from pyiron_base._tests import (
@@ -22,7 +23,7 @@ class TestProjectData(PyironTestCase):
     @classmethod
     def tearDownClass(cls):
         try:
-            remove(join(cls.file_location, "pyiron.log"))
+            os.remove(join(cls.file_location, "pyiron.log"))
         except FileNotFoundError:
             pass
 
@@ -127,6 +128,59 @@ class TestProjectOperations(TestWithFilledProject):
     def test_maintenance_get_repository_status(self):
         df = self.project.maintenance.get_repository_status()
         self.assertIn('pyiron_base', df.Module.values)
+
+
+@unittest.skipUnless(os.name=="posix", "symlinking is only available on posix platforms")
+class TestProjectSymlink(TestWithFilledProject):
+    """
+    Test that Project.symlink creates a symlink and unlink removes it again.
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls.temp = tempfile.TemporaryDirectory()
+
+    @classmethod
+    def tearDownClass(cls):
+        super().tearDownClass()
+        cls.temp.cleanup()
+
+    def test_symlink(self):
+
+        nodes = self.project.list_nodes()
+        groups = self.project.list_groups()
+
+        self.project.symlink(self.temp.name)
+
+        try:
+            self.project.symlink(self.temp.name)
+        except Exception as e:
+            self.fail(f"symlinking twice should have no effect, but raised {e}!")
+
+        with self.assertRaises(RuntimeError, msg="symlinking to another folder should raise an error"):
+            self.project.symlink("asdf")
+
+        path = self.project.path.rstrip(os.sep)
+        self.assertTrue(islink(path), "symlink() did not create a symlink!")
+        self.assertEqual(os.readlink(path), join(self.temp.name, self.project.name),
+                        "symlink() created a wrong symlink!")
+
+        self.assertCountEqual(nodes, self.project.list_nodes(), "not all nodes present after symlink!")
+        self.assertCountEqual(groups, self.project.list_groups(), "not all groups present after symlink!")
+
+        self.project.unlink()
+
+        self.assertTrue(exists(self.project.path), "unlink() did not restore original directory!")
+        self.assertFalse(islink(path), "unlink() did not remove symlink!")
+
+        self.assertCountEqual(nodes, self.project.list_nodes(), "not all nodes present after unlink!")
+        self.assertCountEqual(groups, self.project.list_groups(), "not all groups present after unlink!")
+
+        try:
+            self.project.unlink()
+        except Exception as e:
+            self.fail(f"unlinking twice should have no effect, but raised {e}!")
 
 
 class TestToolRegistration(TestWithProject):
