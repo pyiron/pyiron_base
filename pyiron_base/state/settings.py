@@ -337,7 +337,7 @@ class Settings(metaclass=Singleton):
     @staticmethod
     def _validate_viewer_configuration(config: Dict) -> None:
         key_group = ["sql_view_table_name", "sql_view_user", "sql_view_user_key"]
-        present = [k in config.keys() for k in key_group]
+        present = [k in config.keys() and config[k] is not None for k in key_group]
         if any(present):
             if not all(present):
                 raise ValueError(
@@ -378,17 +378,15 @@ class Settings(metaclass=Singleton):
         return config if len(config) > 0 else None
 
     def _add_credentials_from_file(self, config: dict) -> Dict:
-        if "credentials_file" not in config:
-            return config
-        else:
+        if "credentials_file" in config and config["credentials_file"] is not None:
             credential_file = config["credentials_file"]
 
-        if not os.path.isfile(credential_file):
-            raise FileNotFoundError(credential_file)
-        credentials = (
-            self._parse_config_file(credential_file, self.file_credential_map) or {}
-        )
-        config.update(credentials)
+            if not os.path.isfile(credential_file):
+                raise FileNotFoundError(credential_file)
+            credentials = (
+                self._parse_config_file(credential_file, self.file_credential_map) or {}
+            )
+            config.update(credentials)
         return config
 
     def _get_config_from_file(self) -> Union[Dict, None]:
