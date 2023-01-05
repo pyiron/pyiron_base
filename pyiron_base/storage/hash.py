@@ -27,10 +27,7 @@ def digest(h, sort_keys=True):
 
 def get_hash(h, sort_keys=True):
     if hasattr(h, "items"):
-        return digest(
-            {k: get_hash(v) for k, v in h.items()},
-            sort_keys=sort_keys
-        )
+        return digest({k: get_hash(v) for k, v in h.items()}, sort_keys=sort_keys)
     elif isinstance(h, list) or isinstance(h, np.ndarray):
         if isinstance(h, np.ndarray):
             h = h.tolist()
