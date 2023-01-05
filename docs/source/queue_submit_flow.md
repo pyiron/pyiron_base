@@ -23,7 +23,7 @@ The job submission is handled by the queue adapter which populates the slurm run
 {%- endif %}
 #SBATCH --cpus-per-task={{cores}}
 ```
-(copied from [here](https://github.com/pyiron/pysqa/tree/master/tests/config/slurm/slurm.sh))
+(copied from [here](https://github.com/pyiron/pysqa/tree/main/tests/config/slurm/slurm.sh))
 
 and submits this into the queue. I.e. the command running will be        
 
@@ -50,4 +50,4 @@ e.g. run multi core LAMMPS 2020.03.03 (run_lammps_2020.03.03_mpi.sh):
 mpiexec -n $1 --oversubscribe lmp_mpi -in control.inp;
 ```
 
-(copied from [here](https://github.com/pyiron/pyiron-resources/blob/master/lammps/bin/run_lammps_2020.03.03_mpi.sh))
+(copied from [here](https://github.com/pyiron/pyiron-resources/blob/main/lammps/bin/run_lammps_2020.03.03_mpi.sh))

@@ -22,18 +22,11 @@ __status__ = "production"
 __date__ = "Sep 1, 2017"
 
 
-class JobPathBase(JobCore):
+class JobPath(JobCore):
     """
     The JobPath class is derived from the JobCore and is used as a lean version of the GenericJob class. Instead of
     loading the full pyiron object the JobPath class only provides access to the HDF5 file, which should be enough
     for most analysis.
-
-    Args:
-        db (DatabaseAccess): database object
-        job_id (int): Job ID - optional, but either a job ID or a database entry db_entry has to be provided.
-        db_entry (dict): database entry {"job":, "subjob":, "projectpath":, "project":, "hamilton":, "hamversion":,
-                                         "status":} and optional entries are {"id":, "masterid":, "parentid":}
-        user (str): current unix/linux/windows user who is running pyiron
 
     Attributes:
 
@@ -109,6 +102,12 @@ class JobPathBase(JobCore):
     """
 
     def __init__(self, job_path):
+        """
+        Load a job from the given path.
+
+        Args:
+            job_path (str): path to the job, must be of the form /path/to/file.h5/job_name
+        """
         job_path_lst = job_path.replace("\\", "/").split(".h5")
         if len(job_path_lst) != 2:
             raise ValueError
@@ -125,9 +124,53 @@ class JobPathBase(JobCore):
             h5_path=h5_path,
             mode="r",
         )
-        super(JobPathBase, self).__init__(
-            project=hdf_project, job_name=job_path_lst[1].split("/")[-1]
-        )
+        super().__init__(project=hdf_project, job_name=job_path_lst[1].split("/")[-1])
+
+    @classmethod
+    def from_job_id(cls, db, job_id):
+        """
+        Load a job path from a database connection and the job id.
+
+        Args:
+            db (DatabaseAccess): database connection
+            job_id (int): Job ID in the database
+        """
+        db_entry = db.get_item_by_id(job_id)
+        if db_entry is None:
+            raise ValueError("job ID {0} does not exist!".format(job_id))
+
+        return cls.from_db_entry(db_entry)
+
+    @classmethod
+    def from_db_entry(cls, db_entry):
+        """
+        Load a job path from a database entry.
+
+        Args:
+            db_entry (dict): database entry {"job":, "subjob":, "projectpath":, "project":, "hamilton":, "hamversion":,
+                                            "status":} and optional entries are {"id":, "masterid":, "parentid":}
+        """
+        hdf5_file = db_entry["subjob"].split("/")[1] + ".h5"
+        job_path = db_entry["projectpath"]
+        if job_path is None:
+            job_path = ""
+        job_path += db_entry["project"] + hdf5_file + db_entry["subjob"]
+        job = cls(job_path=job_path)
+
+        if "hamilton" in db_entry.keys():
+            job.__name__ = db_entry["hamilton"]
+        if "hamversion" in db_entry.keys():
+            job.__version__ = db_entry["hamversion"]
+
+        if "id" in db_entry.keys():
+            job._job_id = db_entry["id"]
+        if "status" in db_entry.keys():
+            job._status = db_entry["status"]
+        if "masterid" in db_entry.keys():
+            job._master_id = db_entry["masterid"]
+        if "parentid" in db_entry.keys():
+            job._parent_id = db_entry["parentid"]
+        return job
 
     @property
     def is_root(self):
@@ -358,117 +401,3 @@ class JobPathBase(JobCore):
             self.project_hdf5._store.close()
         except AttributeError:
             pass
-
-
-class JobPath(JobPathBase):
-    """
-    The JobPath class is derived from the JobCore and is used as a lean version of the GenericJob class. Instead of
-    loading the full pyiron object the JobPath class only provides access to the HDF5 file, which should be enough
-    for most analysis.
-
-    Args:
-        db (DatabaseAccess): database object
-        job_id (int): Job ID - optional, but either a job ID or a database entry db_entry has to be provided.
-        db_entry (dict): database entry {"job":, "subjob":, "projectpath":, "project":, "hamilton":, "hamversion":,
-                                         "status":} and optional entries are {"id":, "masterid":, "parentid":}
-        user (str): current unix/linux/windows user who is running pyiron
-
-    Attributes:
-
-        .. attribute:: job_name
-
-            name of the job, which has to be unique within the project
-
-        .. attribute:: status
-
-            execution status of the job, can be one of the following [initialized, appended, created, submitted, running,
-                                                                      aborted, collect, suspended, refresh, busy, finished]
-
-        .. attribute:: job_id
-
-            unique id to identify the job in the pyiron database
-
-        .. attribute:: parent_id
-
-            job id of the predecessor job - the job which was executed before the current one in the current job series
-
-        .. attribute:: master_id
-
-            job id of the master job - a meta job which groups a series of jobs, which are executed either in parallel or in
-            serial.
-
-        .. attribute:: child_ids
-
-            list of child job ids - only meta jobs have child jobs - jobs which list the meta job as their master
-
-        .. attribute:: project
-
-            Project instance the jobs is located in
-
-        .. attribute:: project_hdf5
-
-            ProjectHDFio instance which points to the HDF5 file the job is stored in
-
-        .. attribute:: job_info_str
-
-            short string to describe the job by it is job_name and job ID - mainly used for logging
-
-        .. attribute:: working_directory
-
-            working directory of the job is executed in - outside the HDF5 file
-
-        .. attribute:: path
-
-            path to the job as a combination of absolute file system path and path within the HDF5 file.
-
-        .. attribute:: is_root
-
-            boolean if the HDF5 object is located at the root level of the HDF5 file
-
-        .. attribute:: is_open
-
-            boolean if the HDF5 file is currently opened - if an active file handler exists
-
-        .. attribute:: is_empty
-
-            boolean if the HDF5 file is empty
-
-        .. attribute:: base_name
-
-            name of the HDF5 file but without any file extension
-
-        .. attribute:: file_path
-
-            directory where the HDF5 file is located
-
-        .. attribute:: h5_path
-
-            path inside the HDF5 file - also stored as absolute path
-    """
-
-    def __init__(self, db, job_id=None, db_entry=None, user=None):
-        if db_entry is None and db is not None:
-            db_entry = db.get_item_by_id(job_id)
-        if db_entry is None:
-            raise ValueError("job ID {0} does not exist!".format(job_id))
-        hdf5_file = db_entry["subjob"].split("/")[1] + ".h5"
-        if db_entry["projectpath"] is not None:
-            job_path = db_entry["projectpath"]
-        else:
-            job_path = ""
-        job_path += db_entry["project"] + hdf5_file + db_entry["subjob"]
-        super(JobPath, self).__init__(job_path=job_path)
-
-        if "hamilton" in db_entry.keys():
-            self.__name__ = db_entry["hamilton"]
-        if "hamversion" in db_entry.keys():
-            self.__version__ = db_entry["hamversion"]
-
-        if "id" in db_entry.keys():
-            self._job_id = db_entry["id"]
-        if "status" in db_entry.keys():
-            self._status = db_entry["status"]
-        if "masterid" in db_entry.keys():
-            self._master_id = db_entry["masterid"]
-        if "parentid" in db_entry.keys():
-            self._parent_id = db_entry["parentid"]

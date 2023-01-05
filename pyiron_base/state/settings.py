@@ -89,6 +89,8 @@ class Settings(metaclass=Singleton):
             sources.
         write_work_dir_warnings / WRITE_WORK_DIR_WARNINGS / PYIRONWRITEWORKDIRWARNINGS (bool): Whether to write
             the working directory warning files to inform users about possibly modified content. (Default is True).
+        config_file_permissions_warning / CONFIG_FILE_PERMISSIONS_WARNING / PYIRONCONFIGFILEPERMISSIONSWARNING (bool):
+            Whether to print a warning message, when the permission of the .pyiron config file, let others access it.
 
 
     Properties:
@@ -137,6 +139,17 @@ class Settings(metaclass=Singleton):
         elif file_dict is not None:
             self._update_from_dict(file_dict)
 
+        if (
+            self._configuration["config_file_permissions_warning"]
+            and self._configuration["credentials_file"] is not None
+            and os.path.exists(self._configuration["credentials_file"])
+            and oct(os.stat(self._configuration["credentials_file"]).st_mode)[-2:]
+            != "00"
+        ):
+            logger.warning(
+                "Credentials file can be read by other users - check permissions."
+            )
+
         for k in ["CONDA_PREFIX", "CONDA_DIR"]:
             if k in os.environ.keys():
                 res_path = os.path.join(os.environ[k], "share", "pyiron")
@@ -169,6 +182,7 @@ class Settings(metaclass=Singleton):
                 "disable_database": False,
                 "credentials_file": None,
                 "write_work_dir_warnings": True,
+                "config_file_permissions_warning": True,
             }
         )
 
@@ -194,6 +208,7 @@ class Settings(metaclass=Singleton):
             "PYIRONDISABLE": "disable_database",
             "PYIRONCREDENTIALSFILE": "credentials_file",
             "PYIRONWRITEWORKDIRWARNINGS": "write_work_dir_warnings",
+            "PYIRONCONFIGFILEPERMISSIONSWARNING": "config_file_permissions_warning",
         }
 
     @property
@@ -220,6 +235,7 @@ class Settings(metaclass=Singleton):
             "DISABLE_DATABASE": "disable_database",
             "CREDENTIALS_FILE": "credentials_file",
             "WRITE_WORK_DIR_WARNINGS": "write_work_dir_warnings",
+            "CONFIG_FILE_PERMISSIONS_WARNING": "config_file_permissions_warning",
         }
 
     @property
@@ -321,7 +337,7 @@ class Settings(metaclass=Singleton):
     @staticmethod
     def _validate_viewer_configuration(config: Dict) -> None:
         key_group = ["sql_view_table_name", "sql_view_user", "sql_view_user_key"]
-        present = [k in config.keys() for k in key_group]
+        present = [k in config.keys() and config[k] is not None for k in key_group]
         if any(present):
             if not all(present):
                 raise ValueError(
@@ -362,21 +378,15 @@ class Settings(metaclass=Singleton):
         return config if len(config) > 0 else None
 
     def _add_credentials_from_file(self, config: dict) -> Dict:
-        if "credentials_file" not in config:
-            return config
-        else:
+        if "credentials_file" in config and config["credentials_file"] is not None:
             credential_file = config["credentials_file"]
 
-        if not os.path.isfile(credential_file):
-            raise FileNotFoundError(credential_file)
-        elif oct(os.stat(credential_file).st_mode)[-2:] != "00":
-            logger.warning(
-                "Credentials file can be read by other users - check permissions."
+            if not os.path.isfile(credential_file):
+                raise FileNotFoundError(credential_file)
+            credentials = (
+                self._parse_config_file(credential_file, self.file_credential_map) or {}
             )
-        credentials = (
-            self._parse_config_file(credential_file, self.file_credential_map) or {}
-        )
-        config.update(credentials)
+            config.update(credentials)
         return config
 
     def _get_config_from_file(self) -> Union[Dict, None]:
@@ -396,11 +406,6 @@ class Settings(metaclass=Singleton):
     @staticmethod
     def _parse_config_file(config_file, map_dict):
         if os.path.isfile(config_file):
-            if oct(os.stat(config_file).st_mode)[-2:] != "00":
-                logger.warning(
-                    "Configuration file may be read by others - check permissions to secure "
-                    "credential information!"
-                )
             parser = ConfigParser(inline_comment_prefixes=(";",), interpolation=None)
             parser.read(config_file)
             config = {}

@@ -8,10 +8,10 @@ The project object is the central import point of pyiron - all other objects can
 import os
 import posixpath
 import shutil
+import stat
 from tqdm.auto import tqdm
 import pandas
 import pint
-import importlib
 import math
 import numpy as np
 
@@ -831,18 +831,17 @@ class Project(ProjectPath, HasGroups):
         Returns:
             GenericJob, JobCore: Either the full GenericJob object or just a reduced JobCore object
         """
-        jobpath = getattr(
-            importlib.import_module("pyiron_base.jobs.job.path"), "JobPath"
-        )
+        from pyiron_base.jobs.job.path import JobPath
+
         if job_id is not None:
-            job = jobpath(db=self.db, job_id=job_id, user=self.user)
+            job = JobPath.from_job_id(db=self.db, job_id=job_id)
             if convert_to_object:
                 job = job.to_object()
                 job.reset_job_id(job_id=job_id)
                 job.set_input_to_read_only()
             return job
         elif db_entry is not None:
-            job = jobpath(db=self.db, db_entry=db_entry)
+            job = JobPath.from_db_entry(db_entry)
             if convert_to_object:
                 job = job.to_object()
                 job.set_input_to_read_only()
@@ -967,7 +966,7 @@ class Project(ProjectPath, HasGroups):
         else:
             return None
 
-    def refresh_job_status(self, *jobs):
+    def refresh_job_status(self, *jobs, by_status=["running", "submitted"]):
         """
         Check if job is still running or crashed on the cluster node.
 
@@ -975,9 +974,12 @@ class Project(ProjectPath, HasGroups):
 
         Args:
             *jobs (str, int): name of the job or job ID, any number of them
+            by_status (iterable of str): if not jobs are given, select all jobs
+                with the given status in this project
         """
         if len(jobs) == 0:
-            jobs = self.job_table(status="running").id
+            df = self.job_table()
+            jobs = df[df.status.isin(by_status)].id
         if self.db is not None:
             for job_specifier in jobs:
                 if isinstance(job_specifier, str):
@@ -1024,7 +1026,14 @@ class Project(ProjectPath, HasGroups):
                 que_mode
                 and self.db.get_item_by_id(job_id)["status"] in ["running", "submitted"]
             ):
-                if not self.queue_check_job_is_waiting_or_running(self.inspect(job_id)):
+                job = self.inspect(job_id)
+                # a job can be in status running or submitted without being on
+                # the queue, if the run mode is worker or non_modal.  In this
+                # case we do not want to check the queue status, so we just
+                # short circuit here.
+                if job["server"]["run_mode"] in ["worker", "non_modal"]:
+                    return
+                if not self.queue_check_job_is_waiting_or_running(job):
                     self.db.set_job_status(job_id=job_id, status="aborted")
 
     def remove_file(self, file_name):
@@ -1174,7 +1183,13 @@ class Project(ProjectPath, HasGroups):
                     # dirs and files return values of the iterator are not updated when removing files, so we need to
                     # manually call listdir
                     if len(os.listdir(root)) == 0:
-                        os.rmdir(root)
+                        root = root.rstrip(os.sep)
+                        # the project was symlinked before being deleted
+                        if os.path.islink(root):
+                            os.rmdir(os.readlink(root))
+                            os.remove(root)
+                        else:
+                            os.rmdir(root)
         else:
             raise EnvironmentError("remove() is not available in view_mode!")
 
@@ -1284,9 +1299,9 @@ class Project(ProjectPath, HasGroups):
         Returns:
             GenericJob, JobCore: Either the full GenericJob object or just a reduced JobCore object
         """
-        job = getattr(
-            importlib.import_module("pyiron_base.jobs.job.path"), "JobPathBase"
-        )(job_path=job_path)
+        from pyiron_base.jobs.job.path import JobPath
+
+        job = JobPath(job_path)
         if convert_to_object:
             job = job.to_object()
         job.set_input_to_read_only()
@@ -1665,6 +1680,66 @@ class Project(ProjectPath, HasGroups):
                 f"{cls.__name__} already has an attribute {name}. Please use a new name for registration."
             )
         setattr(cls, name, property(lambda self: tools(self)))
+
+    def symlink(self, target_dir):
+        """
+        Move underlying project folder to target and create a symlink to it.
+
+        The project itself does not change and is not updated in the database.  Instead the project folder is moved into
+        a subdirectory of target_dir with the same name as the project and a symlink is placed in the previous project path
+        pointing to the newly created one.
+
+        If self.path is already a symlink pointing inside target_dir, this method will silently return.
+
+        Args:
+            target_dir (str): new parent folder for the project
+
+        Raises:
+            OSError: when calling this method on non-unix systems
+            RuntimeError: the project path is already a symlink to somewhere else
+            RuntimeError: the project path has submitted or running jobs inside it, wait until after they are finished
+            RuntimeError: target already contains a subdirectory with the project name and it is not empty
+        """
+        target = os.path.join(target_dir, self.name)
+        destination = self.path
+        if destination[-1] == "/":
+            destination = destination[:-1]
+        if stat.S_ISLNK(os.lstat(destination).st_mode):
+            if os.readlink(destination) == target:
+                return
+            raise RuntimeError(
+                "Refusing to symlink and move a project that is already symlinked!"
+            )
+        if os.name != "posix":
+            raise OSError("Symlinking projects is only supported on unix systems!")
+        if len(self.job_table().query('status.isin(["submitted", "running"])')) > 0:
+            raise RuntimeError(
+                "Refusing to symlink and move a project that has submitted or running jobs!"
+            )
+        os.makedirs(target_dir, exist_ok=True)
+        if os.path.exists(target):
+            if len(os.listdir(target)) > 0:
+                raise RuntimeError(
+                    "Refusing to symlink and move a project to non-empty directory!"
+                )
+            else:
+                os.rmdir(target)
+        shutil.move(self.path, target_dir)
+        os.symlink(target, destination)
+
+    def unlink(self):
+        """
+        If the project folder is symlinked somewhere else remove the link and restore the original folder.
+
+        If it is not symlinked, silently return.
+        """
+        path = self.path.rstrip(os.sep)
+        if not stat.S_ISLNK(os.lstat(path).st_mode):
+            return
+
+        target = os.readlink(path)
+        os.unlink(path)
+        shutil.move(target, path)
 
 
 class Creator:
