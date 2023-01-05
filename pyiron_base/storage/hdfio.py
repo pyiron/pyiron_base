@@ -218,7 +218,7 @@ class FileHDFio(HasGroups, MutableMapping):
     # TODO: remove this function upon 1.0.0 release
     @staticmethod
     def _convert_dtype_obj_array(obj: np.ndarray):
-        result = np.array(obj.tolist())
+        result = np.array(obj.tolist(), dtype=object)
         if result.dtype != np.dtype(object):
             state.logger.warning(
                 f"Deprecated data structure! "
