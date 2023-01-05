@@ -22,11 +22,11 @@ __date__ = "Sep 1, 2017"
 
 
 def digest(h, sort_keys=True):
-    return hashlib.md5(json.dumps(h, sort_keys=sort_keys).encode('utf-8')).hexdigest()
+    return hashlib.md5(json.dumps(h, sort_keys=sort_keys).encode("utf-8")).hexdigest()
 
 
 def get_hash(h, sort_keys=True):
-    if hasattr(h, 'items'):
+    if hasattr(h, "items"):
         return digest(
             {k: get_hash(v) for k, v in h.items()},
             sort_keys=sort_keys
