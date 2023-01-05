@@ -24,7 +24,6 @@ from pyiron_base.utils.error import retry
 from pyiron_base.interfaces.has_groups import HasGroups
 from pyiron_base.state import state
 from pyiron_base.jobs.dynamic import JOB_DYN_DICT, class_constructor
-from pyiron_base.storage.hash import dict_hash
 import warnings
 
 __author__ = "Joerg Neugebauer, Jan Janssen"
@@ -1005,33 +1004,6 @@ class FileHDFio(HasGroups, MutableMapping):
             print(indent + "group: ", group)
             with self.open(group) as hdf_group:
                 hdf_group._walk(level=level + 1)
-
-    def to_dict(self, ndarray_to_list=True):
-        """
-        Transform file content into dictionary
-
-        Args:
-            ndarray_to_list (bool): Whether or not to transform ndarray into list
-
-        Returns:
-            (dict): dict containing hdf file content
-        """
-        return self._convert_to_dict(self, ndarray_to_list=ndarray_to_list)
-
-    def _convert_to_dict(self, s, ndarray_to_list=True):
-        def to_list(v):
-            if isinstance(v, np.ndarray) and ndarray_to_list:
-                return v.tolist()
-            return v
-
-        results = {k: to_list(s[k]) for k in s.list_nodes()}
-        for k in s.list_groups():
-            results[k] = self._convert_to_dict(s[k])
-        return results
-
-    def hexdigest(self):
-        """Hash in hexdecimal digits"""
-        return dict_hash(self.to_dict())
 
 
 class ProjectHDFio(FileHDFio):
