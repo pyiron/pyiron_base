@@ -161,9 +161,6 @@ class GenericJob(JobCore):
         self.interactive_cache = None
         self.error = GenericError(job=self)
 
-        for sig in intercepted_signals:
-            signal.signal(sig, self.signal_intercept)
-
     @property
     def version(self):
         """
