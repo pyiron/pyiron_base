@@ -10,6 +10,7 @@ import math
 import os
 import posixpath
 import shutil
+from typing import List
 import warnings
 
 from pyiron_base.interfaces.has_groups import HasGroups
@@ -33,6 +34,7 @@ from pyiron_base.jobs.job.util import (
     _job_remove_folder,
 )
 from pyiron_base.state import state
+from pyiron_base.utils.deprecate import deprecate
 
 __author__ = "Jan Janssen"
 __copyright__ = (
@@ -135,6 +137,11 @@ class JobCore(HasGroups):
     @property
     def content(self):
         return self._hdf5_content
+
+    @property
+    def files(self):
+        return FileBrowser(self)
+    files.__doc__ = FileBrowser.__doc__
 
     @property
     def job_name(self):
@@ -612,6 +619,7 @@ class JobCore(HasGroups):
             else:
                 return None
 
+    @deprecate("use job.files.list()")
     def list_files(self):
         """
         List files inside the working directory
@@ -914,6 +922,10 @@ class JobCore(HasGroups):
         """
 
         if item in self.list_files():
+            warnings.warn(
+                    "Using __getitem__ on a job to access files in deprecated: use job.files instead!",
+                    category=DeprecationWarning
+            )
             return _job_read_file(self, item)
 
         # first try to access HDF5 directly to make the common case fast
@@ -996,6 +1008,7 @@ class JobCore(HasGroups):
         """
         del self.project_hdf5[posixpath.join(self.project_hdf5.h5_path, key)]
 
+    @deprecate("use job.files.tail() instead!")
     def tail(self, file_name, lines=100):
         """
         Print the last lines of the given file in the job folder.
@@ -1126,3 +1139,80 @@ class HDF5Content(object):
 
     def __repr__(self):
         return self._project_hdf5.__repr__()
+
+
+class FileBrowser:
+    """
+    Allows to browse the files in a job directory.
+
+    By default this object prints itself as a listing of the job directory and
+    the files inside.
+
+    >>> job.files
+    /path/to/my/job:
+    \tpyiron.log
+    \terror.out
+
+    Access to the names of files is provided with :meth:`.list`
+
+    >>> job.files.list()
+    ['pyiron.log', 'error.out', 'INCAR']
+
+    Access to the contents of files is provided by indexing into this object,
+    which returns a list of lines in the file
+
+    >>> job.files['error.out']
+    ["Oh no\n", "Something went wrong!\n"]
+
+    The :meth:`.tail` method prints the last lines of a file to stdout
+
+    >>> job.files.tail('error.out', lines=1)
+    Something went wrong!
+
+    For files that have valid python variable names can also be accessed by
+    attribute notation
+
+    >>> job.files.INCAR
+    ["SYSTEM=pyiron\n", "ENCUT=270\n", ...]
+    """
+
+    __slots__ = ("_job",)
+
+    def __init__(self, job):
+        self._job = job
+
+    def list(self) -> List[str]:
+        """
+        List all files in the working directory of the job.
+        """
+        return _job_list_files(job)
+
+    def _ipython_display_(self):
+        path = job.working_directory + ":"
+        files = ["\t" + f for f in _job_list_files(job)]
+        print(os.linesep.join([path, *files]))
+
+    def tail(self, file: str, lines: int = 100):
+        """
+        Print the last lines of a file.
+
+        Args:
+            file (str): filename
+            lines (int): number of lines to print
+
+        Raises:
+            FileNotFoundError: if the given file does not exist
+        """
+        print(*_job_read_file(self, file_name, tail=lines), sep="")
+
+    def __getitem__(self, item):
+        if item not _job_list_files(self._job):
+            raise KeyError(item)
+
+        return _job_read_file(self._job, item)
+
+    def __getattr__(self, item):
+        try:
+            return self[name]
+        except KeyError:
+            raise AttributeError(name) from None
