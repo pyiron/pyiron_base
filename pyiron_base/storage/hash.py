@@ -59,3 +59,12 @@ class PseudoHDF(dict):
     def open(self, group_name):
         self[group_name] = PseudoHDF()
         return self[group_name]
+
+    def list_nodes(self):
+        return [k for k, v in self.items() if not isinstance(v, PseudoHDF)]
+
+    def list_groups(self):
+        return [k for k, v in self.items() if isinstance(v, PseudoHDF)]
+
+    def close(self):
+        pass
