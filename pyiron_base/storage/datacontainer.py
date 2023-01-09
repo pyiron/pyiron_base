@@ -15,7 +15,6 @@ import pandas
 
 from pyiron_base.storage.fileio import read, write
 from pyiron_base.storage.hdfstub import HDFStub
-from pyiron_base.storage.hash import get_hash
 from pyiron_base.interfaces.has_groups import HasGroups
 from pyiron_base.interfaces.has_hdf import HasHDF
 
@@ -938,9 +937,6 @@ class DataContainer(MutableMapping, HasGroups, HasHDF):
         # called whenever a subclass of DataContainer is defined, then register all subclasses with the same function
         # that the DataContainer is registered
         HDFStub.register(cls, lambda h, g: h[g].to_object(lazy=True))
-
-    def get_hash(self, sort_keys=True):
-        return get_hash(self, sort_keys=sort_keys)
 
 
 HDFStub.register(DataContainer, lambda h, g: h[g].to_object(lazy=True))

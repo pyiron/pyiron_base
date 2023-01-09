@@ -53,6 +53,9 @@ class PseudoHDF(dict):
     def __exit__(self, *args):
         pass
 
+    def create_group(self, group_name):
+        return self.open(group_name=group_name)
+
     def open(self, group_name):
         self[group_name] = PseudoHDF()
         return self[group_name]

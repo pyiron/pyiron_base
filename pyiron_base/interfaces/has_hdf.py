@@ -6,6 +6,7 @@
 from pyiron_base.storage.hdfio import ProjectHDFio
 
 from abc import ABC, abstractmethod
+from pyiron_base.storage.hash import get_hash
 
 __author__ = "Marvin Poul"
 __copyright__ = (
@@ -233,3 +234,6 @@ class HasHDF(ABC):
             obj = hdf.to_object()
             hdf.remove_group()
             obj.to_hdf(hdf)
+
+    def get_hash(self, sort_keys=True):
+        return get_hash(self, sort_keys=sort_keys)

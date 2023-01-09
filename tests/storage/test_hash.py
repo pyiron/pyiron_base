@@ -3,7 +3,6 @@
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
 from pyiron_base.storage.datacontainer import DataContainer
-import os
 import unittest
 
 
