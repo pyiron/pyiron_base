@@ -141,7 +141,9 @@ def install_pyiron(
         zip_file (str): name of the compressed file
         project_path (str): the location where pyiron is going to store the pyiron projects
         resource_directory (str): the location where the resouces (executables, potentials, ...) for pyiron are stored.
-        giturl_for_zip_file (str): url for the zipped resources file on github
+        giturl_for_zip_file (str/None): url for the zipped resources file on github.
+            (Default points to pyiron's github resource repository. If None, leaves the
+            resources directory *empty*.)
         git_folder_name (str): name of the extracted folder
     """
     _write_config_file(
@@ -149,9 +151,12 @@ def install_pyiron(
         project_path=project_path,
         resource_path=resource_directory,
     )
-    _download_resources(
-        zip_file=zip_file,
-        resource_directory=resource_directory,
-        giturl_for_zip_file=giturl_for_zip_file,
-        git_folder_name=git_folder_name,
-    )
+    if giturl_for_zip_file is not None:
+        _download_resources(
+            zip_file=zip_file,
+            resource_directory=resource_directory,
+            giturl_for_zip_file=giturl_for_zip_file,
+            git_folder_name=git_folder_name,
+        )
+    else:
+        os.mkdir(resource_directory)
