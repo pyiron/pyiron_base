@@ -68,3 +68,6 @@ class PseudoHDF(dict):
 
     def close(self):
         pass
+
+    def list_all(self):
+        return {'groups': self.list_groups(), 'nodes': self.list_nodes()}
