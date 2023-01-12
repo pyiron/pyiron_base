@@ -7,6 +7,7 @@ Set of functions to interact with the queuing system directly from within pyiron
 
 import pandas
 import time
+import numpy as np
 from pyiron_base.state import state
 from pyiron_base.utils.instance import static_isinstance
 from pyiron_base.jobs.job.extension.jobstatus import job_status_finished_lst
@@ -301,7 +302,7 @@ def update_from_remote(
             jobs_now_running_lst = []
         failed_jobs = []
         fetch_ids = df_combined.id.values[
-            ~df_combined.id.values.isin(df_queue.jobid.values)
+            ~np.isin(df_combined.id.values(df_queue.jobid.values))
         ]
         for job_id in fetch_ids:
             try:
