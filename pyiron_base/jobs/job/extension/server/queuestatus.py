@@ -231,6 +231,7 @@ def wait_for_jobs(
     max_iterations=100,
     recursive=True,
     ignore_exceptions=False,
+    try_collecting=False,
 ):
     """
     Wait for the calculation in the project to be finished
@@ -241,6 +242,7 @@ def wait_for_jobs(
         max_iterations (int): maximum number of iterations - default 100
         recursive (bool): search subprojects [True/False] - default=True
         ignore_exceptions (bool): ignore eventual exceptions when retrieving jobs - default=False
+        try_collecting (bool): try to run collect for fetched jobs that don't have a status counting as finished - default=False
 
     Raises:
         ValueError: max_iterations reached, but jobs still running
@@ -268,6 +270,7 @@ def update_from_remote(
         project: Project instance the jobs is located in
         recursive (bool): search subprojects [True/False] - default=True
         ignore_exceptions (bool): ignore eventual exceptions when retrieving jobs - default=False
+        try_collecting (bool): try to collect jobs that don't have a status counting as finished - default=False
 
     Returns:
         returns None if ignore_exceptions is False or when no error occured.
