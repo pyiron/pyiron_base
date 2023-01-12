@@ -201,7 +201,7 @@ def run_job_with_status_collect(job):
             if job._compress_by_default:
                 job.compress()
             job.status.finished = True
-        job._hdf5["status"] = job.status.string
+    job._hdf5["status"] = job.status.string
     if job.job_id is not None:
         job._calculate_successor()
     job.send_to_database()
