@@ -1075,6 +1075,7 @@ class Project(ProjectPath, HasGroups):
         Returns:
             pandas.DataFrame: updated job table with status from the queuing system
         """
+
         def convert_queue_status(queue_status):
             convert_status_dict = {"pending": "submitted"}
             if queue_status in convert_status_dict.keys():
@@ -1087,7 +1088,7 @@ class Project(ProjectPath, HasGroups):
         status_lst = df.status.values.tolist()
         working_dir_lst = df.project + df.job + "_hdf5/" + df.job
         for i, [working_dir, status] in enumerate(
-                zip(working_dir_lst, status_lst.copy())
+            zip(working_dir_lst, status_lst.copy())
         ):
             if status == "initialized":
                 df_tmp = df_queue[df_queue.working_directory == working_dir]
