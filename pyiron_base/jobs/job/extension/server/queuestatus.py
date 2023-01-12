@@ -302,7 +302,7 @@ def update_from_remote(
             jobs_now_running_lst = []
         failed_jobs = []
         fetch_ids = df_combined.id.values[
-            ~np.isin(df_combined.id.values(df_queue.jobid.values))
+            ~np.isin(df_combined.id.values, df_queue.jobid.values)
         ]
         for job_id in fetch_ids:
             try:
