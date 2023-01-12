@@ -258,7 +258,9 @@ def wait_for_jobs(
         raise ValueError("Maximum iterations reached, but the job was not finished.")
 
 
-def update_from_remote(project, recursive=True, ignore_exceptions=False):
+def update_from_remote(
+    project, recursive=True, ignore_exceptions=False, try_collecting=False
+):
     """
     Update jobs from the remote server
 
@@ -295,29 +297,36 @@ def update_from_remote(project, recursive=True, ignore_exceptions=False):
         else:
             jobs_now_running_lst = []
         failed_jobs = []
-        for job_id in df_combined.id.values:
-            if job_id not in jobs_now_running_lst:
-                try:
-                    job = project.inspect(job_id)
-                    state.queue_adapter.transfer_file_to_remote(
-                        file=job.project_hdf5.file_name,
-                        transfer_back=True,
-                        delete_remote=False,
-                    )
-                    status_hdf5 = job.project_hdf5["status"]
-                    project.set_job_status(job_specifier=job.job_id, status=status_hdf5)
-                    if status_hdf5 in job_status_finished_lst:
-                        job_object = job.to_object()
-                        job_object.transfer_from_remote()
-                except Exception as e:
-                    if ignore_exceptions:
+        fetch_ids = df_combined.id.values[
+            ~df_combined.id.values.isin(df_queue.jobid.values)
+        ]
+        for job_id in fetch_ids:
+            try:
+                job = project.load(job_id)
+                job.transfer_from_remote()
+                if job.status in job_status_finished_lst:
+                    continue
+
+                if try_collecting:
+                    try:
+                        job.status.collect = True
+                        job.run()
+                    except Exception as e:
                         state.logger.warning(
-                            f"An error occured while trying to retrieve job {job_id}\n"
+                            f"An error occured while trying to collect job {job_id}\n"
                             f"Error message: \n{e}"
                         )
-                        failed_jobs.append(job_id)
-                    else:
-                        raise e
+                    failed_jobs.append(job_id)
+
+            except Exception as e:
+                if ignore_exceptions:
+                    state.logger.warning(
+                        f"An error occured while trying to retrieve job {job_id}\n"
+                        f"Error message: \n{e}"
+                    )
+                    failed_jobs.append(job_id)
+                else:
+                    raise e
         if len(failed_jobs) > 0:
             return failed_jobs
 
