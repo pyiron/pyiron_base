@@ -690,10 +690,9 @@ class Project(ProjectPath, HasGroups):
                 **kwargs,
             )
         else:
+
             def convert_queue_status(queue_status):
-                convert_status_dict = {
-                    "pending": "submitted"
-                }
+                convert_status_dict = {"pending": "submitted"}
                 if queue_status in convert_status_dict.keys():
                     return convert_status_dict[queue_status]
                 else:
@@ -715,11 +714,15 @@ class Project(ProjectPath, HasGroups):
 
             status_lst = df.status.values.tolist()
             working_dir_lst = df.project + df.job + "_hdf5/" + df.job
-            for i, [working_dir, status] in enumerate(zip(working_dir_lst, status_lst.copy())):
+            for i, [working_dir, status] in enumerate(
+                zip(working_dir_lst, status_lst.copy())
+            ):
                 if status == "initialized":
                     df_tmp = df_queue[df_queue.working_directory == working_dir]
                     if len(df_tmp) > 0:
-                        status_lst[i] = convert_queue_status(queue_status=df_tmp.status.values[0])
+                        status_lst[i] = convert_queue_status(
+                            queue_status=df_tmp.status.values[0]
+                        )
             df["status"] = status_lst
 
             return df
