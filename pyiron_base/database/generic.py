@@ -260,10 +260,14 @@ class IsDatabase(ABC):
             item_id=job_id,
         )
         db_entry = self.get_item_by_id(item_id=job_id)
+        pr_str = db_entry["project"]
+        subjob_str = db_entry["subjob"]
+        if pr_str is None:
+            pr_str = ""
         write_hdf5(
-            db_entry["project"] + db_entry["subjob"] + ".h5",
+            pr_str + subjob_str + ".h5",
             status,
-            title=db_entry["subjob"][1:] + "/status",
+            title=subjob_str[1:] + "/status",
             overwrite="update",
         )
 
