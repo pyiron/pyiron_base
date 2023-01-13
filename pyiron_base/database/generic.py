@@ -228,10 +228,10 @@ class IsDatabase(ABC):
     @abstractmethod
     def _item_update(self, par_dict, item_id):
         pass
-    
+
     def items_update(self, par_dict, item_ids):
         return self._items_update()
-    
+
     def _items_update(self, par_dict, item_ids):
         """
         For now simply loops over all item_ids to call item_update,
@@ -241,10 +241,9 @@ class IsDatabase(ABC):
         Args:
             par_dict (_type_): _description_
             item_ids (_type_): _description_
-        """        
+        """
         for i_id in item_ids:
             self.item_update(par_dict=par_dict, item_id=i_id)
-    
 
     def set_job_status(self, status, job_id):
         """
@@ -253,7 +252,7 @@ class IsDatabase(ABC):
         Args:
             status (str): status
             job_id (int): job id
-        """        
+        """
         self._set_job_status(status=status, job_id=job_id)
 
     @abstractmethod
@@ -267,7 +266,7 @@ class IsDatabase(ABC):
         Args:
             status (str): status
             job_id (int)): job id
-        """        
+        """
         pass
 
     def set_jobs_status(self, status, job_ids):
@@ -277,10 +276,9 @@ class IsDatabase(ABC):
         Args:
             status (_type_): _description_
             job_ids (_type_): _description_
-        """        
+        """
         for j_id in job_ids:
             self.set_job_status(status=status, job_id=j_id)
-
 
     def get_table_headings(self, table_name=None):
         """
