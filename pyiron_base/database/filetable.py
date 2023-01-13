@@ -5,7 +5,7 @@ import datetime
 from pyfileindex import PyFileIndex
 from pyiron_base.interfaces.singleton import Singleton
 from pyiron_base.database.generic import IsDatabase
-from pyiron_base.storage.hdfio import read_hdf5
+from pyiron_base.storage.helper_functions import read_hdf5
 
 table_columns = {
     "id": None,
