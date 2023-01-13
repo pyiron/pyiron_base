@@ -230,7 +230,7 @@ class IsDatabase(ABC):
         pass
 
     def items_update(self, par_dict, item_ids):
-        return self._items_update()
+        return self._items_update(par_dict=par_dict, item_ids=item_ids)
 
     def _items_update(self, par_dict, item_ids):
         """
@@ -256,7 +256,7 @@ class IsDatabase(ABC):
         self._set_job_status(status=status, job_id=job_id)
 
     @abstractmethod
-    def _set_job_status(self, status, job_id):
+    def _set_job_status(self, job_id, status):
         """
         For DatabaseAcces this is just a convenience wrapper
         around self.item_update(),
