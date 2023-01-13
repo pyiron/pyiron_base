@@ -1077,11 +1077,7 @@ class Project(ProjectPath, HasGroups):
         """
 
         def convert_queue_status(queue_status):
-            convert_status_dict = {"pending": "submitted"}
-            if queue_status in convert_status_dict.keys():
-                return convert_status_dict[queue_status]
-            else:
-                return queue_status
+            return {"pending": "submitted"}.get(queue_status, default=queue_status)
 
         df_queue = state.queue_adapter.get_status_of_my_jobs()
 
