@@ -988,6 +988,8 @@ class DatabaseAccess(IsDatabase):
 
         """
         if not self._view_mode:
+            if type(item_id) is list:
+                item_id = item_id[-1]
             if np.issubdtype(type(item_id), np.integer):
                 item_id = int(item_id)
             # all items must be lower case, ensured here

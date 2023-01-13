@@ -99,6 +99,8 @@ class FileTable(IsDatabase, metaclass=Singleton):
         return int(par_dict_merged["id"])
 
     def _item_update(self, par_dict, item_id):
+        if type(item_id) is list:
+            item_id = item_id[-1]
         if isinstance(item_id, str):
             item_id = float(item_id)
         for k, v in par_dict.items():
