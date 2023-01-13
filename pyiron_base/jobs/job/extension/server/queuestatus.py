@@ -320,7 +320,19 @@ def update_from_remote(
         if len(failed_jobs) > 0:
             return failed_jobs
 
+
 def retrieve_job(job, try_collecting=False):
+    """
+    Retrieve a job from remote server and check if it has a "finished status".
+    Optionally try to collect its output.
+
+    Args:
+        job: pyiron job
+        try_collecting (bool): whether to run collect if not finished - default=False
+
+    Returns:
+        returns None
+    """
     job.transfer_from_remote()
     if job.status in job_status_finished_lst:
         return
