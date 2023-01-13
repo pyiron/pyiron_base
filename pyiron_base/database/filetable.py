@@ -326,7 +326,7 @@ class FileTable(IsDatabase, metaclass=Singleton):
         write_hdf5(
             db_entry["project"] + db_entry["subjob"] + ".h5",
             status,
-            title="status",
+            title="/status",
             overwrite="update",
         )
 
