@@ -5,7 +5,7 @@ import datetime
 from pyfileindex import PyFileIndex
 from pyiron_base.interfaces.singleton import Singleton
 from pyiron_base.database.generic import IsDatabase
-from pyiron_base.storage.hdfio import write_hdf5, read_hdf5
+from pyiron_base.storage.hdfio import read_hdf5
 
 table_columns = {
     "id": None,
@@ -318,7 +318,6 @@ class FileTable(IsDatabase, metaclass=Singleton):
 
     def get_job_status(self, job_id):
         return self._job_table[self._job_table.id == job_id].status.values[0]
-        
 
     @staticmethod
     def get_extract(path, mtime):
