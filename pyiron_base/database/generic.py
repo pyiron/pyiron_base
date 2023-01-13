@@ -259,26 +259,6 @@ class IsDatabase(ABC):
             par_dict={"status": status},
             item_id=job_id,
         )
-        db_entry = self.get_item_by_id(item_id=job_id)
-        pr_str = db_entry["project"]
-        subjob_str = db_entry["subjob"]
-        if pr_str is None:
-            pr_str = ""
-        if subjob_str is None:
-            write_hdf5(
-                pr_str + ".h5",
-                status,
-                title="status",
-                overwrite="update",
-            )
-        else:
-            print(pr_str, subjob_str)
-            write_hdf5(
-                pr_str + subjob_str + ".h5",
-                status,
-                title=subjob_str[1:] + "/status",
-                overwrite="update",
-            )
 
     def set_jobs_status(self, status, job_ids):
         """

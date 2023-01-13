@@ -6,7 +6,7 @@ from collections.abc import Iterable
 from pyfileindex import PyFileIndex
 from pyiron_base.interfaces.singleton import Singleton
 from pyiron_base.database.generic import IsDatabase
-from pyiron_base.storage.helper_functions import read_hdf5
+from pyiron_base.storage.helper_functions import read_hdf5, write_hdf5
 
 table_columns = {
     "id": None,
@@ -319,6 +319,16 @@ class FileTable(IsDatabase, metaclass=Singleton):
 
     def get_job_status(self, job_id):
         return self._job_table[self._job_table.id == job_id].status.values[0]
+
+    def set_job_status(self, job_id, status):
+        super().set_job_status(job_id=job_id, status=status)
+        db_entry = self.get_item_by_id(item_id=job_id)
+        write_hdf5(
+            db_entry["project"] + db_entry["subjob"] + ".h5",
+            status,
+            title="status",
+            overwrite="update",
+        )
 
     @staticmethod
     def get_extract(path, mtime):
