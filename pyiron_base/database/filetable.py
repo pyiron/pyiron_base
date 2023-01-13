@@ -318,16 +318,7 @@ class FileTable(IsDatabase, metaclass=Singleton):
 
     def get_job_status(self, job_id):
         return self._job_table[self._job_table.id == job_id].status.values[0]
-
-    def _set_job_status(self, job_id, status):
-        db_entry = self.get_item_by_id(item_id=job_id)
-        self._job_table.loc[self._job_table.id == job_id, "status"] = status
-        write_hdf5(
-            db_entry["project"] + db_entry["subjob"] + ".h5",
-            status,
-            title=db_entry["subjob"][1:] + "/status",
-            overwrite="update",
-        )
+        
 
     @staticmethod
     def get_extract(path, mtime):

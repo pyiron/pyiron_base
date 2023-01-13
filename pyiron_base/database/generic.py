@@ -30,6 +30,7 @@ from threading import Thread, Lock
 from queue import SimpleQueue, Empty as QueueEmpty
 from pyiron_base.database.tables import HistoricalTable
 from pyiron_base.utils.error import retry
+from pyiron_base.storage.hdfio import write_hdf5
 
 __author__ = "Murat Han Celik"
 __copyright__ = (
@@ -253,21 +254,17 @@ class IsDatabase(ABC):
             status (str): status
             job_id (int): job id
         """
-        self._set_job_status(status=status, job_id=job_id)
-
-    @abstractmethod
-    def _set_job_status(self, job_id, status):
-        """
-        For DatabaseAcces this is just a convenience wrapper
-        around self.item_update(),
-        but for FileTable it also writes in the hdf5 file,
-        so it can't be generic at least for now
-
-        Args:
-            status (str): status
-            job_id (int)): job id
-        """
-        pass
+        self.item_update(
+            par_dict={"status": status},
+            item_id=job_id,
+        )
+        db_entry = self.get_item_by_id(item_id=job_id)
+        write_hdf5(
+            db_entry["project"] + db_entry["subjob"] + ".h5",
+            status,
+            title=db_entry["subjob"][1:] + "/status",
+            overwrite="update",
+        )
 
     def set_jobs_status(self, status, job_ids):
         """
@@ -1201,12 +1198,6 @@ class DatabaseAccess(IsDatabase):
             return self.get_item_by_id(item_id=job_id)["status"]
         except KeyError:
             return None
-
-    def _set_job_status(self, job_id, status):
-        self.item_update(
-            {"status": str(status)},
-            job_id,
-        )
 
     def get_job_working_directory(self, job_id):
         try:
