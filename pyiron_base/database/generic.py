@@ -272,6 +272,7 @@ class IsDatabase(ABC):
                 overwrite="update",
             )
         else:
+            print(pr_str, subjob_str)
             write_hdf5(
                 pr_str + subjob_str + ".h5",
                 status,
