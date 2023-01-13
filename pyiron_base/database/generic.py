@@ -7,6 +7,7 @@ DatabaseAccess class deals with accessing the database
 
 from pyiron_base.state.logger import logger
 from abc import ABC, abstractmethod
+from collections.abc import Iterable
 import warnings
 import numpy as np
 import re
@@ -30,7 +31,7 @@ from threading import Thread, Lock
 from queue import SimpleQueue, Empty as QueueEmpty
 from pyiron_base.database.tables import HistoricalTable
 from pyiron_base.utils.error import retry
-from pyiron_base.storage.hdfio import write_hdf5
+import pyiron_base.storage.hdfio
 
 __author__ = "Murat Han Celik"
 __copyright__ = (
@@ -259,7 +260,7 @@ class IsDatabase(ABC):
             item_id=job_id,
         )
         db_entry = self.get_item_by_id(item_id=job_id)
-        write_hdf5(
+        pyiron_base.storage.hdfio.write_hdf5(
             db_entry["project"] + db_entry["subjob"] + ".h5",
             status,
             title=db_entry["subjob"][1:] + "/status",
@@ -987,8 +988,6 @@ class DatabaseAccess(IsDatabase):
 
         """
         if not self._view_mode:
-            if type(item_id) is list:
-                item_id = item_id[-1]  # sometimes a list is given, make it int
             if np.issubdtype(type(item_id), np.integer):
                 item_id = int(item_id)
             # all items must be lower case, ensured here
