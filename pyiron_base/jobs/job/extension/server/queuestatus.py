@@ -298,41 +298,36 @@ def update_from_remote(
                 for job_id in df_submitted.id.values
                 if job_id in jobs_now_running_lst
             ]
-        else:
-            jobs_now_running_lst = []
+
         failed_jobs = []
         fetch_ids = df_combined.id.values[
-            ~np.isin(df_combined.id.values, df_queue.jobid.values)
+            np.isin(df_combined.id.values, df_queue.jobid.values, invert=True)
         ]
         for job_id in fetch_ids:
             try:
                 job = project.load(job_id)
-                job.transfer_from_remote()
-                if job.status in job_status_finished_lst:
-                    continue
-
-                if try_collecting:
-                    try:
-                        job.status.collect = True
-                        job.run()
-                    except Exception as e:
-                        state.logger.warning(
-                            f"An error occured while trying to collect job {job_id}\n"
-                            f"Error message: \n{e}"
-                        )
-                    failed_jobs.append(job_id)
-
+                retrieve_job(job, try_collecting=try_collecting)
             except Exception as e:
                 if ignore_exceptions:
                     state.logger.warning(
-                        f"An error occured while trying to retrieve job {job_id}\n"
+                        f"An error occurred while trying to retrieve job {job_id}\n"
                         f"Error message: \n{e}"
                     )
                     failed_jobs.append(job_id)
                 else:
                     raise e
+
         if len(failed_jobs) > 0:
             return failed_jobs
+
+def retrieve_job(job, try_collecting=False):
+    job.transfer_from_remote()
+    if job.status in job_status_finished_lst:
+        return
+
+    if try_collecting:
+        job.status.collect = True
+        job.run()
 
 
 def validate_que_request(item):
