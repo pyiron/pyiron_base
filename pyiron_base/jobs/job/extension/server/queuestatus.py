@@ -293,11 +293,7 @@ def update_from_remote(
             jobs_now_running_lst = df_queue[
                 df_queue.status == "running"
             ].pyiron_id.values
-            _ = [
-                project.set_job_status(job_specifier=job_id, status="running")
-                for job_id in df_submitted.id.values
-                if job_id in jobs_now_running_lst
-            ]
+            project.db.set_jobs_status(status="running", job_ids=jobs_now_running_lst)
 
         failed_jobs = []
         fetch_ids = df_combined.id.values[

@@ -222,6 +222,66 @@ class IsDatabase(ABC):
     def _get_table_headings(self, table_name=None):
         pass
 
+    def item_update(self, par_dict, item_id):
+        return self._item_update(par_dict=par_dict, item_id=item_id)
+
+    @abstractmethod
+    def _item_update(self, par_dict, item_id):
+        pass
+    
+    def items_update(self, par_dict, item_ids):
+        return self._items_update()
+    
+    def _items_update(self, par_dict, item_ids):
+        """
+        For now simply loops over all item_ids to call item_update,
+        but can be made more efficient.
+        Should be made an asbtract method when defined in inheriting classes
+
+        Args:
+            par_dict (_type_): _description_
+            item_ids (_type_): _description_
+        """        
+        for i_id in item_ids:
+            self.item_update(par_dict=par_dict, item_id=i_id)
+    
+
+    def set_job_status(self, status, job_id):
+        """
+        Set status of a job.
+
+        Args:
+            status (str): status
+            job_id (int): job id
+        """        
+        self._set_job_status(status=status, job_id=job_id)
+
+    @abstractmethod
+    def _set_job_status(self, status, job_id):
+        """
+        For DatabaseAcces this is just a convenience wrapper
+        around self.item_update(),
+        but for FileTable it also writes in the hdf5 file,
+        so it can't be generic at least for now
+
+        Args:
+            status (str): status
+            job_id (int)): job id
+        """        
+        pass
+
+    def set_jobs_status(self, status, job_ids):
+        """
+        Set status of multiple jobs
+
+        Args:
+            status (_type_): _description_
+            job_ids (_type_): _description_
+        """        
+        for j_id in job_ids:
+            self.set_job_status(status=status, job_id=j_id)
+
+
     def get_table_headings(self, table_name=None):
         """
         Get column names; if given table_name can select one of multiple tables defined in the database, but subclasses
@@ -917,7 +977,7 @@ class DatabaseAccess(IsDatabase):
             self.conn.close()
         return [dict(zip(col.keys(), col._mapping.values())) for col in row]
 
-    def item_update(self, par_dict, item_id):
+    def _item_update(self, par_dict, item_id):
         """
         Modify Item in database
 
@@ -1144,7 +1204,7 @@ class DatabaseAccess(IsDatabase):
         except KeyError:
             return None
 
-    def set_job_status(self, job_id, status):
+    def _set_job_status(self, job_id, status):
         self.item_update(
             {"status": str(status)},
             job_id,

@@ -98,7 +98,7 @@ class FileTable(IsDatabase, metaclass=Singleton):
         ).reset_index(drop=True)
         return int(par_dict_merged["id"])
 
-    def item_update(self, par_dict, item_id):
+    def _item_update(self, par_dict, item_id):
         if isinstance(item_id, list):
             item_id = item_id[0]
         if isinstance(item_id, str):
@@ -319,7 +319,7 @@ class FileTable(IsDatabase, metaclass=Singleton):
     def get_job_status(self, job_id):
         return self._job_table[self._job_table.id == job_id].status.values[0]
 
-    def set_job_status(self, job_id, status):
+    def _set_job_status(self, job_id, status):
         db_entry = self.get_item_by_id(item_id=job_id)
         self._job_table.loc[self._job_table.id == job_id, "status"] = status
         write_hdf5(
