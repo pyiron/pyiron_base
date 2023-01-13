@@ -2,6 +2,7 @@ import numpy as np
 import os
 import pandas
 import datetime
+from collections.abc import Iterable
 from pyfileindex import PyFileIndex
 from pyiron_base.interfaces.singleton import Singleton
 from pyiron_base.database.generic import IsDatabase
@@ -99,7 +100,7 @@ class FileTable(IsDatabase, metaclass=Singleton):
         return int(par_dict_merged["id"])
 
     def _item_update(self, par_dict, item_id):
-        if type(item_id) is list:
+        if isinstance(item_id, Iterable):
             item_id = item_id[-1]
         if isinstance(item_id, str):
             item_id = float(item_id)
