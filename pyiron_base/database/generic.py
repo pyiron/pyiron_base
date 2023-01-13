@@ -31,7 +31,7 @@ from threading import Thread, Lock
 from queue import SimpleQueue, Empty as QueueEmpty
 from pyiron_base.database.tables import HistoricalTable
 from pyiron_base.utils.error import retry
-import pyiron_base.storage.hdfio
+from pyiron_base.storage.helper_functions import write_hdf5
 
 __author__ = "Murat Han Celik"
 __copyright__ = (
@@ -260,7 +260,7 @@ class IsDatabase(ABC):
             item_id=job_id,
         )
         db_entry = self.get_item_by_id(item_id=job_id)
-        pyiron_base.storage.hdfio.write_hdf5(
+        write_hdf5(
             db_entry["project"] + db_entry["subjob"] + ".h5",
             status,
             title=db_entry["subjob"][1:] + "/status",
