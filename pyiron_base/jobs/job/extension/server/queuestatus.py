@@ -300,7 +300,7 @@ def update_from_remote(
                 np.isin(df_combined.id.values, df_queue.pyiron_id.values, invert=True)
             ]
         else:  # handle empty pyiron queue case for fetching
-            df_combined.id.values
+            fetch_ids = df_combined.id.values
 
         failed_jobs = []
         for job_id in fetch_ids:
