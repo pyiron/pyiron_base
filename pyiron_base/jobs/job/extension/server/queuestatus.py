@@ -295,10 +295,12 @@ def update_from_remote(
                 np.isin(df_submitted.id.values, queue_running)
             ]
             project.db.set_jobs_status(status="running", job_ids=jobs_now_running_lst)
+        else:  # handle empty pyiron queue case for fetching
+            df_queue["pyiron_id"] = -1
 
         failed_jobs = []
         fetch_ids = df_combined.id.values[
-            np.isin(df_combined.id.values, df_queue.jobid.values, invert=True)
+            np.isin(df_combined.id.values, df_queue.pyiron_id.values, invert=True)
         ]
         for job_id in fetch_ids:
             try:
