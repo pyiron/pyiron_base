@@ -629,7 +629,9 @@ class Project(ProjectPath, HasGroups):
         """
         return [(key, self[key]) for key in self.keys()]
 
-    def update_from_remote(self, recursive=True, ignore_exceptions=False):
+    def update_from_remote(
+        self, recursive=True, ignore_exceptions=False, try_collecting=False
+    ):
         """
         Update jobs from the remote server
 
@@ -643,7 +645,10 @@ class Project(ProjectPath, HasGroups):
 
         """
         return update_from_remote(
-            project=self, recursive=recursive, ignore_exceptions=ignore_exceptions
+            project=self,
+            recursive=recursive,
+            ignore_exceptions=ignore_exceptions,
+            try_collecting=try_collecting,
         )
 
     def job_table(
