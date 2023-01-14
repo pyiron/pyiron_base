@@ -290,9 +290,10 @@ def update_from_remote(
             df_queue["pyiron_id"] = df_queue.apply(
                 lambda x: int(x["jobname"].split(QUEUE_SCRIPT_PREFIX)[-1]), axis=1
             )
-            jobs_now_running_lst = df_queue[
-                df_queue.status == "running"
-            ].pyiron_id.values
+            queue_running = df_queue[df_queue.status == "running"].pyiron_id.values
+            jobs_now_running_lst = df_submitted.id.values[
+                np.isin(df_submitted.id.values, queue_running)
+            ]
             project.db.set_jobs_status(status="running", job_ids=jobs_now_running_lst)
 
         failed_jobs = []
