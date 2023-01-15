@@ -1,7 +1,7 @@
 The purpose of this document is to lay out the high-level view of pyiron's purposes, capabilities, and structure.
 Some what's written here represents our ambitions for 2023 and does not necessarily represent the current state of the code base; these ambitional aspects should be clearly indicated as such.
 
-# Why pyiron
+# Why pyiron -- philosophy for prospective users
 
 pyiron exists to facilitate and accelerate computational research.
 
@@ -12,7 +12,7 @@ In particular, pyiron...
 - abstracts away all (or at least most) of the nitty-gritty to let scientists focus on the science
 
 
-# What pyiron
+# What pyiron -- promises for actual users
 
 Pyiron provides a python framework for designing and managing research calculations.
 It is structured into a network of repositories: `pyiron_base`, which provides the core pyiron infrastructure, and then a variety of `pyiron_X` modules which build all the domain-specific tools for particular fields of research.
@@ -44,7 +44,7 @@ Other customization, e.g. whether to run with or without a database, is handled 
 Pyiron also supports a variety of working environments, including local (e.g. your laptop), HPC clusters, and even accessing a variety of remote systems, doing calculations there, and collecting results back to another central system.
 
 
-# How pyiron
+# How pyiron -- guidance for developers
 
 Database interaction (TODO. Is totally deeply embedded in the pyiron library. It's even mangled so atomistics content lives in base. I am not sure how we want to abstract this. We also don't even serialize what code was used (pyiron versions, called executable versions(this maybe we do store?) to produce the output, much less store it nicely in the database.)
 
