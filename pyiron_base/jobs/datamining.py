@@ -772,8 +772,7 @@ class TableJob(GenericJob):
             os.path.join(self.working_directory, "pyirontable.csv"), index=False
         )
         self._save_output()
-        if self.job_id is not None:
-            self.project.db.item_update(self._runtime(), self.job_id)
+        self.run_time_to_db()
 
     def get_dataframe(self):
         """

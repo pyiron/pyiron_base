@@ -305,7 +305,7 @@ class InteractiveBase(GenericJob):
         self.project_hdf5.rewrite_hdf5()
         self.status.finished = True
         if not isinstance(self.project.db, FileTable):
-            self.project.db.item_update(self._runtime(), self._job_id)
+            self.run_time_to_db()
         else:
             self._hdf5["status"] = self.status.string
         self._interactive_library = None
