@@ -473,8 +473,7 @@ def execute_job_with_external_executable(job):
     if job.job_id is not None:
         job.project.db.item_update({"timestart": datetime.now()}, job.job_id)
     executable, shell = job.executable.get_input_for_subprocess_call(
-        cores=job.server.cores,
-        threads=job.server.threads
+        cores=job.server.cores, threads=job.server.threads
     )
     job_crashed, out = False, None
     try:
