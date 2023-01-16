@@ -494,7 +494,7 @@ def execute_job_with_external_executable(job):
         posixpath.join(job.project_hdf5.working_directory, "error.out"), mode="w"
     ) as f_err:
         f_err.write(out)
-    handle_finished_job(job=job, job_crashed=job_crashed, collect_output=True, out=out)
+    handle_finished_job(job=job, job_crashed=job_crashed, collect_output=True)
 
 
 def get_executable_for_job(job):
