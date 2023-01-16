@@ -8,6 +8,7 @@ Create hash for a given dictionary
 import hashlib
 import json
 import numpy as np
+import base64
 
 __author__ = "Joerg Neugebauer, Jan Janssen"
 __copyright__ = (
@@ -22,7 +23,11 @@ __date__ = "Sep 1, 2017"
 
 
 def digest(h, sort_keys=True):
-    return hashlib.md5(json.dumps(h, sort_keys=sort_keys).encode("utf-8")).hexdigest()
+    return base64.b32encode(
+        hashlib.sha1(
+            json.dumps(h, sort_keys=sort_keys).encode("utf-8")
+        ).digest()
+    ).decode("utf-8")
 
 
 def get_hash(h, sort_keys=True):
