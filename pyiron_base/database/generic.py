@@ -31,7 +31,6 @@ from threading import Thread, Lock
 from queue import SimpleQueue, Empty as QueueEmpty
 from pyiron_base.database.tables import HistoricalTable
 from pyiron_base.utils.error import retry
-from pyiron_base.storage.helper_functions import write_hdf5
 
 __author__ = "Murat Han Celik"
 __copyright__ = (
