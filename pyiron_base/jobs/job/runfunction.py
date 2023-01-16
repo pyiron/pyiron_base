@@ -488,7 +488,7 @@ def execute_job_with_external_executable(job):
         out, job_crashed = handle_failed_job(job=job, error=e)
 
     job._logger.info(
-        "{}, status: {}, output: {}".format(self.job_info_str, self.status, out)
+        "{}, status: {}, output: {}".format(job.job_info_str, job.status, out)
     )
     with open(
         posixpath.join(job.project_hdf5.working_directory, "error.out"), mode="w"
