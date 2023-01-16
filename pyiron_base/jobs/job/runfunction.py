@@ -560,7 +560,7 @@ def handle_failed_job(job, error):
         return False, out
     elif not job.server.accept_crash:
         job._logger.warning("Job aborted")
-        job._logger.warning(e.output)
+        job._logger.warning(error.output)
         job.status.aborted = True
         if job.job_id is not None:
             job.project.db.item_update(job._runtime(), job.job_id)
