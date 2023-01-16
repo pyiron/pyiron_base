@@ -8,7 +8,6 @@ InteractiveBase class extends the Generic Job class with all the functionality t
 import numpy as np
 from pyiron_base.database.filetable import FileTable
 from pyiron_base.jobs.job.generic import GenericJob
-from pyiron_base.jobs.job.jobtype import JobType
 
 __author__ = "Osamu Waseda, Jan Janssen"
 __copyright__ = (
