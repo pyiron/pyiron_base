@@ -472,7 +472,10 @@ def execute_job_with_external_executable(job):
     job.status.running = True
     if job.job_id is not None:
         job.project.db.item_update({"timestart": datetime.now()}, job.job_id)
-    executable, shell = get_executable_for_job(job=job)
+    executable, shell = job.executable.get_input_for_subprocess_call(
+        cores=job.server.cores,
+        threads=job.server.threads
+    )
     job_crashed, out = False, None
     try:
         out = subprocess.run(
@@ -495,35 +498,6 @@ def execute_job_with_external_executable(job):
     ) as f_err:
         f_err.write(out)
     handle_finished_job(job=job, job_crashed=job_crashed, collect_output=True)
-
-
-def get_executable_for_job(job):
-    """
-    Get the input parameters for the subprocess call to execute the job
-
-    Args:
-        job (GenericJob): pyiron job object
-
-    Returns:
-        str/ list, boolean:  executable and shell variables
-    """
-    if job.server.cores == 1 or not job.executable.mpi:
-        executable = str(job.executable)
-        shell = True
-    elif isinstance(job.executable.executable_path, list):
-        executable = job.executable.executable_path[:] + [
-            str(job.server.cores),
-            str(job.server.threads),
-        ]
-        shell = False
-    else:
-        executable = [
-            job.executable.executable_path,
-            str(job.server.cores),
-            str(job.server.threads),
-        ]
-        shell = False
-    return executable, shell
 
 
 def handle_finished_job(job, job_crashed=False, collect_output=True):
