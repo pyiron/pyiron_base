@@ -192,8 +192,6 @@ def run_job_with_status_collect(job):
     """
     job.collect_output()
     job.collect_logfiles()
-    if job.job_id is not None:
-        job.project.db.item_update(job._runtime(), job.job_id)
     if job.status.collect:
         if not job.convergence_check():
             job.status.not_converged = True
@@ -497,6 +495,8 @@ def execute_job_with_external_executable(job):
     ) as f_err:
         f_err.write(out)
     handle_finished_job(job=job, job_crashed=job_crashed, collect_output=True)
+    if job.job_id is not None:
+        job.project.db.item_update(job._runtime(), job.job_id)
 
 
 def handle_finished_job(job, job_crashed=False, collect_output=True):
@@ -510,8 +510,7 @@ def handle_finished_job(job, job_crashed=False, collect_output=True):
     """
     job.set_input_to_read_only()
     if collect_output:
-        job.status.collect = True
-        job.run()
+        run_job_with_status_collect(job=job)
     if job_crashed:
         job.status.aborted = True
         job._hdf5["status"] = job.status.string
