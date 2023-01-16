@@ -75,4 +75,4 @@ class PseudoHDF(dict):
         pass
 
     def list_all(self):
-        return {'groups': self.list_groups(), 'nodes': self.list_nodes()}
+        return {"groups": self.list_groups(), "nodes": self.list_nodes()}
