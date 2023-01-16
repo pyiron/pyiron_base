@@ -485,10 +485,7 @@ def execute_job_with_external_executable(job):
             check=True,
         ).stdout
     except subprocess.CalledProcessError as e:
-        out, job_crashed = handle_failed_job(
-            job=job,
-            error=e
-        )
+        out, job_crashed = handle_failed_job(job=job, error=e)
 
     job._logger.info(
         "{}, status: {}, output: {}".format(self.job_info_str, self.status, out)
@@ -497,12 +494,7 @@ def execute_job_with_external_executable(job):
         posixpath.join(job.project_hdf5.working_directory, "error.out"), mode="w"
     ) as f_err:
         f_err.write(out)
-    handle_finished_job(
-        job=job,
-        job_crashed=job_crashed,
-        collect_output=True,
-        out=out
-    )
+    handle_finished_job(job=job, job_crashed=job_crashed, collect_output=True, out=out)
 
 
 def get_executable_for_job(job):
