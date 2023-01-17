@@ -518,7 +518,8 @@ def handle_finished_job(job, job_crashed=False, collect_output=True):
     """
     job.set_input_to_read_only()
     if collect_output:
-        run_job_with_status_collect(job=job)
+        job.status.collect = True
+        job.run()
     if job_crashed:
         job.status.aborted = True
         job._hdf5["status"] = job.status.string
