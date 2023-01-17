@@ -458,9 +458,10 @@ def run_static_decorator(func):
     def wrapper(job):
         if job.job_id is not None:
             job.project.db.item_update({"timestart": datetime.now()}, job.job_id)
-        func(job)
-        if job.job_id is not None:
+            func(job)
             job.project.db.item_update(job._runtime(), job.job_id)
+        else:
+            func(job)
 
     return wrapper
 
