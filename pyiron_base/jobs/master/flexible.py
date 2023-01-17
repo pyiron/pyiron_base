@@ -88,7 +88,9 @@ class FlexibleMaster(GenericMaster):
                 job = self.pop(0)
                 job._master_id = self.job_id
                 if ind != 0:
-                    prev_job = self[ind - 1]
+                    prev_job = self[
+                        self.project.db.get_item_by_id(self.child_ids[-1])["job"]
+                    ]
                     if ind < max_steps:
                         mod_funct = self._step_function_lst[ind - 1]
                         mod_funct(prev_job, job)

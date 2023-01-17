@@ -30,6 +30,7 @@ class TestInstall(PyironTestCase):
                 config_file_name=os.path.join(self.execution_path, "config"),
                 resource_directory=os.path.join(self.execution_path, "resources"),
                 project_path=os.path.join(self.execution_path, "project"),
+                giturl_for_zip_file=None,
         )
 
         with open(os.path.join(self.execution_path, "config"), "r") as f:
