@@ -8,6 +8,7 @@ intercepted_signals = [
     signal.SIGABRT,
 ]  # , signal.SIGQUIT]
 
+
 @contextlib.contextmanager
 def catch_signals(cleanup):
     def handler(sig, frame):
