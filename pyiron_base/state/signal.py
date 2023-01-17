@@ -23,4 +23,5 @@ def catch_signals(cleanup):
     try:
         yield
     finally:
-        signal.signal(sig, signal.SIG_DFL)
+        for sig in intercepted_signals:
+            signal.signal(sig, signal.SIG_DFL)
