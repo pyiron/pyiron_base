@@ -454,6 +454,17 @@ def run_job_with_runmode_srun(job):
     )
 
 
+def run_static_decorator(func):
+    def wrapper(job):
+        if job.job_id is not None:
+            job.project.db.item_update({"timestart": datetime.now()}, job.job_id)
+        func(job)
+        if job.job_id is not None:
+            job.project.db.item_update(job._runtime(), job.job_id)
+    return wrapper
+
+
+@run_static_decorator
 def execute_job_with_external_executable(job):
     """
     The run static function is called by run to execute the simulation.
@@ -468,8 +479,6 @@ def execute_job_with_external_executable(job):
         job.status.aborted = True
         raise ValueError("No executable set!")
     job.status.running = True
-    if job.job_id is not None:
-        job.project.db.item_update({"timestart": datetime.now()}, job.job_id)
     executable, shell = job.executable.get_input_for_subprocess_call(
         cores=job.server.cores, threads=job.server.threads
     )
@@ -495,8 +504,6 @@ def execute_job_with_external_executable(job):
     ) as f_err:
         f_err.write(out)
     handle_finished_job(job=job, job_crashed=job_crashed, collect_output=True)
-    if job.job_id is not None:
-        job.project.db.item_update(job._runtime(), job.job_id)
 
 
 def handle_finished_job(job, job_crashed=False, collect_output=True):
