@@ -461,6 +461,7 @@ def run_static_decorator(func):
         func(job)
         if job.job_id is not None:
             job.project.db.item_update(job._runtime(), job.job_id)
+
     return wrapper
 
 
