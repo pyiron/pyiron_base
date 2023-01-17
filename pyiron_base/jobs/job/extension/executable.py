@@ -217,6 +217,35 @@ class Executable(HasStorage):
         else:
             self.storage.mpi = False
 
+    def get_input_for_subprocess_call(self, cores, threads):
+        """
+        Get the input parameters for the subprocess call to execute the job
+
+        Args:
+            cores (int): number of cores
+            threads (int): number of threads
+
+        Returns:
+            str/ list, boolean:  executable and shell variables
+        """
+        if cores == 1 or not self.mpi:
+            executable = self.__str__()
+            shell = True
+        elif isinstance(self.executable_path, list):
+            executable = self.executable_path[:] + [
+                str(cores),
+                str(threads),
+            ]
+            shell = False
+        else:
+            executable = [
+                self.executable_path,
+                str(cores),
+                str(threads),
+            ]
+            shell = False
+        return executable, shell
+
     def __repr__(self):
         """
         Executable path
