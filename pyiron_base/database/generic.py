@@ -231,9 +231,6 @@ class IsDatabase(ABC):
     def _item_update(self, par_dict, item_id):
         pass
 
-    def items_update(self, par_dict, item_ids):
-        return self._items_update(par_dict=par_dict, item_ids=item_ids)
-
     def _items_update(self, par_dict, item_ids):
         """
         For now simply loops over all item_ids to call item_update,
@@ -258,7 +255,7 @@ class IsDatabase(ABC):
         if isinstance(job_id, Iterable):
             return self._items_update(
                 par_dict={"status": status},
-                item_id=job_id,
+                item_ids=job_id,
             )
         return self._item_update(
             par_dict={"status": status},
