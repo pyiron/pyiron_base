@@ -137,7 +137,7 @@ class DatabaseManager(metaclass=Singleton):
             cwd (str/None): directory where the SQLite database file is located in
         """
         if self.using_local_database:
-            logger.log("Database is already in local mode or disabled!")
+            logger.info("Database is already in local mode or disabled!")
         else:
             if cwd is None and not os.path.isabs(file_name):
                 file_name = os.path.join(os.path.abspath(os.path.curdir), file_name)
@@ -160,7 +160,7 @@ class DatabaseManager(metaclass=Singleton):
         if self.using_local_database:
             self.update()
         else:
-            logger.log("Database is already in central mode or disabled!")
+            logger.info("Database is already in central mode or disabled!")
 
     def switch_to_viewer_mode(self):
         """
@@ -171,7 +171,7 @@ class DatabaseManager(metaclass=Singleton):
             and not self.database_is_disabled
         ):
             if self._database.view_mode:
-                logger.log("Database is already in viewer mode!")
+                logger.info("Database is already in viewer mode!")
             else:
                 self.close_connection()
                 self._database = DatabaseAccess(
@@ -198,7 +198,7 @@ class DatabaseManager(metaclass=Singleton):
                 )
                 self._database.view_mode = False
             else:
-                logger.log("Database is already in user mode!")
+                logger.info("Database is already in user mode!")
         else:
             print("Viewer Mode is not available on this pyiron installation.")
 

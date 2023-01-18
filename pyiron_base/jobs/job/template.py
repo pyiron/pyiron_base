@@ -7,7 +7,6 @@ Template class to define jobs
 
 from pyiron_base.jobs.job.generic import GenericJob
 from pyiron_base.interfaces.object import HasStorage
-from pyiron_base.jobs.job.jobtype import JobType
 
 __author__ = "Jan Janssen"
 __copyright__ = (
@@ -49,6 +48,3 @@ class PythonTemplateJob(TemplateJob):
     def __init__(self, project, job_name):
         super().__init__(project, job_name)
         self._python_only_job = True
-
-    def _check_if_input_should_be_written(self):
-        return False

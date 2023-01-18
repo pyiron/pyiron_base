@@ -30,7 +30,7 @@ setup(
     packages=find_packages(exclude=["*tests*", "*docs*", "*binder*", "*conda*", "*notebooks*", "*.ci_support*"]),
     install_requires=[
         'dill==0.3.6',
-        'future==0.18.2',
+        'future==0.18.3',
         'gitpython==3.1.30',
         'h5io==0.1.7',
         'h5py==3.7.0',
@@ -40,11 +40,11 @@ setup(
         'pint==0.20.1',
         'psutil==5.9.4',
         'pyfileindex==0.0.7',
-        'pysqa==0.0.17',
+        'pysqa==0.0.18',
         'sqlalchemy==1.4.46',
         'tables==3.7.0',
         'tqdm==4.64.1',
-        'traitlets==5.8.0',
+        'traitlets==5.8.1',
     ],
     cmdclass=versioneer.get_cmdclass(),
 

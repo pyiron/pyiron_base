@@ -3,7 +3,6 @@
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
 import codecs
-from collections import OrderedDict
 from datetime import datetime
 import dill as pickle
 import json

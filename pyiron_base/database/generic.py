@@ -11,7 +11,6 @@ from collections.abc import Iterable
 import warnings
 import numpy as np
 import re
-import time
 import os
 from datetime import datetime
 from pyiron_base.utils.deprecate import deprecate

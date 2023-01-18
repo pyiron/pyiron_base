@@ -14,7 +14,6 @@ import pandas
 import posixpath
 import numpy as np
 import sys
-import time
 from typing import Union
 
 from pyiron_base.utils.deprecate import deprecate
