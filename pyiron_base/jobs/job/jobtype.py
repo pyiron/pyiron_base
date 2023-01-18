@@ -14,7 +14,6 @@ from pyiron_base.interfaces.singleton import Singleton
 from pyiron_base.interfaces.factory import PyironFactory
 from pyiron_base.jobs.job.extension.jobstatus import job_status_finished_lst
 from pyiron_base.jobs.dynamic import JOB_DYN_DICT, class_constructor
-from pyiron_base.state import state
 from typing import Type, Union
 
 __author__ = "Joerg Neugebauer, Jan Janssen"

@@ -15,7 +15,6 @@ from pyiron_base.jobs.master.generic import (
     get_function_from_string,
     _doc_str_generic_master_attr,
 )
-from pyiron_base.storage.parameters import GenericParameters
 
 __author__ = "Jan Janssen"
 __copyright__ = (

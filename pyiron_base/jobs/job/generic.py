@@ -1353,6 +1353,13 @@ class GenericJob(JobCore):
         if self._executable is None:
             self.__obj_version__ = self._hdf5["VERSION"]
 
+    def run_time_to_db(self):
+        """
+        Internal helper function to store the run_time in the database
+        """
+        if self.job_id is not None:
+            self.project.db.item_update(self._runtime(), self.job_id)
+
     def _runtime(self):
         """
         Internal helper function to calculate runtime by substracting the starttime, from the stoptime.
