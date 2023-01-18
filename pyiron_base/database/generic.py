@@ -223,6 +223,8 @@ class IsDatabase(ABC):
         pass
 
     def item_update(self, par_dict, item_id):
+        if isinstance(item_id, Iterable):
+            return self._items_update(par_dict=par_dict, item_ids=item_id)
         return self._item_update(par_dict=par_dict, item_id=item_id)
 
     @abstractmethod
@@ -243,31 +245,25 @@ class IsDatabase(ABC):
             item_ids (_type_): _description_
         """
         for i_id in item_ids:
-            self.item_update(par_dict=par_dict, item_id=i_id)
+            self._item_update(par_dict=par_dict, item_id=i_id)
 
     def set_job_status(self, status, job_id):
         """
-        Set status of a job.
+        Set status of a job or multiple jobs if job_id is iterable.
 
         Args:
             status (str): status
-            job_id (int): job id
+            job_id (int, Iterable): job id
         """
-        self.item_update(
+        if isinstance(job_id, Iterable):
+            return self._items_update(
+                par_dict={"status": status},
+                item_id=job_id,
+            )
+        return self._item_update(
             par_dict={"status": status},
             item_id=job_id,
         )
-
-    def set_jobs_status(self, status, job_ids):
-        """
-        Set status of multiple jobs
-
-        Args:
-            status (_type_): _description_
-            job_ids (_type_): _description_
-        """
-        for j_id in job_ids:
-            self.set_job_status(status=status, job_id=j_id)
 
     def get_table_headings(self, table_name=None):
         """

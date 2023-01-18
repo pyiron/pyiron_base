@@ -6,6 +6,7 @@ File based database interface
 """
 
 import datetime
+from collections.abc import Iterable
 import numpy as np
 import os
 import pandas
@@ -429,8 +430,6 @@ class FileTable(IsDatabase, metaclass=Singleton):
                              ........}
             item_id (int, list): Database Item ID (Integer) - '38'  can also be [38]
         """
-        if isinstance(item_id, list):
-            item_id = item_id[-1]
         if isinstance(item_id, str):
             item_id = float(item_id)
         for k, v in par_dict.items():
@@ -444,14 +443,27 @@ class FileTable(IsDatabase, metaclass=Singleton):
             job_id (int): job ID as integer
             status (str): job status
         """
-        db_entry = self.get_item_by_id(item_id=job_id)
-        self._job_table.loc[self._job_table.id == job_id, "status"] = status
-        write_hdf5(
-            db_entry["project"] + db_entry["subjob"] + ".h5",
-            status,
-            title=db_entry["subjob"][1:] + "/status",
-            overwrite="update",
-        )
+        super().set_job_status(job_id=job_id, status=status)
+        self._update_hdf5_status( job_id=job_id, status=status)
+    
+    def _update_hdf5_status(self, job_id, status):
+        if isinstance(job_id, Iterable):
+            for j_id in job_id:
+                db_entry = self.get_item_by_id(item_id=j_id)
+                write_hdf5(
+                    db_entry["project"] + db_entry["subjob"] + ".h5",
+                    status,
+                    title=db_entry["subjob"][1:] + "/status",
+                    overwrite="update",
+                )
+        else:
+            db_entry = self.get_item_by_id(item_id=job_id)
+            write_hdf5(
+                db_entry["project"] + db_entry["subjob"] + ".h5",
+                status,
+                title=db_entry["subjob"][1:] + "/status",
+                overwrite="update",
+            )
 
     def update(self):
         """
