@@ -444,8 +444,8 @@ class FileTable(IsDatabase, metaclass=Singleton):
             status (str): job status
         """
         super().set_job_status(job_id=job_id, status=status)
-        self._update_hdf5_status( job_id=job_id, status=status)
-    
+        self._update_hdf5_status(job_id=job_id, status=status)
+
     def _update_hdf5_status(self, job_id, status):
         if isinstance(job_id, Iterable):
             for j_id in job_id:
