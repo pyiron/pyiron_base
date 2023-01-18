@@ -114,7 +114,7 @@ class ListMaster(GenericMaster):
                     self.submission_status.submit_next()
                     if len(self._job_name_lst) == 0:
                         self.status.finished = True
-                        self.project.db.item_update(self._runtime(), self.job_id)
+                        self.run_time_to_db()
                 else:
                     raise ValueError(
                         "This job ",

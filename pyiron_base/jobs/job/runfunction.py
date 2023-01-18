@@ -192,8 +192,7 @@ def run_job_with_status_collect(job):
     """
     job.collect_output()
     job.collect_logfiles()
-    if job.job_id is not None:
-        job.project.db.item_update(job._runtime(), job.job_id)
+    job.run_time_to_db()
     if job.status.collect:
         if not job.convergence_check():
             job.status.not_converged = True
@@ -535,8 +534,7 @@ def handle_failed_job(job, error):
         job._logger.warning("Job aborted")
         job._logger.warning(error.output)
         job.status.aborted = True
-        if job.job_id is not None:
-            job.project.db.item_update(job._runtime(), job.job_id)
+        job.run_time_to_db()
         error_file = posixpath.join(job.project_hdf5.working_directory, "error.msg")
         with open(error_file, "w") as f:
             f.write(error.output)
