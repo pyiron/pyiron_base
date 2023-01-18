@@ -9,8 +9,6 @@ import datetime
 import numpy as np
 import os
 import pandas
-import datetime
-from collections.abc import Iterable
 from pyfileindex import PyFileIndex
 from pyiron_base.interfaces.singleton import Singleton
 from pyiron_base.database.generic import IsDatabase
