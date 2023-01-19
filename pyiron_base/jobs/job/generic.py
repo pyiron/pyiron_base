@@ -49,7 +49,7 @@ from pyiron_base.utils.instance import static_isinstance
 from pyiron_base.utils.deprecate import deprecate
 from pyiron_base.jobs.job.extension.server.generic import Server
 from pyiron_base.database.filetable import FileTable
-from pyiron_base.storage.hdfio import write_hdf5, read_hdf5
+from pyiron_base.storage.hdfio import write_hdf5, read_hdf5, ProjectHDFio
 
 __author__ = "Joerg Neugebauer, Jan Janssen"
 __copyright__ = (
@@ -1016,9 +1016,9 @@ class GenericJob(JobCore):
             hdf (ProjectHDFio): HDF5 group object - optional
             group_name (str): HDF5 subgroup name - optional
         """
-        if hdf is not None:
+        if hdf is not None is isinstance(hdf, ProjectHDFio):
             self._hdf5 = hdf
-        if group_name is not None:
+        if group_name is not None and self._hdf5 is not None:
             self._hdf5 = self._hdf5.open(group_name)
         self._executable_activate_mpi()
         self._type_to_hdf()
