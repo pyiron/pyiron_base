@@ -106,7 +106,7 @@ class FlexibleMaster(GenericMaster):
                     break
         if ind == max_steps - 1 and self.is_finished():
             self.status.finished = True
-            self.project.db.item_update(self._runtime(), self.job_id)
+            self.run_time_to_db()
         else:
             self.status.suspended = True
 
