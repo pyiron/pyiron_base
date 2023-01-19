@@ -15,7 +15,6 @@ import posixpath
 import h5io
 import numpy as np
 import sys
-import time
 from typing import Union
 
 from pyiron_base.utils.deprecate import deprecate
@@ -218,7 +217,10 @@ class FileHDFio(HasGroups, MutableMapping):
     # TODO: remove this function upon 1.0.0 release
     @staticmethod
     def _convert_dtype_obj_array(obj: np.ndarray):
-        result = np.array(obj.tolist())
+        try:
+            result = np.array(obj.tolist())
+        except ValueError:
+            result = np.array(obj.tolist(), dtype=object)
         if result.dtype != np.dtype(object):
             state.logger.warning(
                 f"Deprecated data structure! "
