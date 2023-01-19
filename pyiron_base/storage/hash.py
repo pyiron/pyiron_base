@@ -9,6 +9,7 @@ import hashlib
 import json
 import numpy as np
 import base64
+import collections
 
 __author__ = "Joerg Neugebauer, Jan Janssen"
 __copyright__ = (
