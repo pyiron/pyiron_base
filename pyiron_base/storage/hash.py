@@ -17,10 +17,10 @@ __copyright__ = (
     "Computational Materials Design (CM) Department"
 )
 __version__ = "1.0"
-__maintainer__ = "Jan Janssen"
-__email__ = "janssen@mpie.de"
+__maintainer__ = "Sam Waseda"
+__email__ = "waseda@mpie.de"
 __status__ = "production"
-__date__ = "Sep 1, 2017"
+__date__ = "Nov 17, 2022"
 
 
 def digest(h, sort_keys=True):
