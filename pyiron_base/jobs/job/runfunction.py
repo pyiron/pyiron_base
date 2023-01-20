@@ -442,8 +442,7 @@ def run_job_with_runmode_srun(job):
             + job.project_hdf5.file_name
             + job.project_hdf5.h5_path
         )
-    if not os.path.exists(working_directory):
-        os.makedirs(working_directory)
+    os.makedirs(working_directory, exist_ok=True)
     del job
     subprocess.Popen(
         command,
