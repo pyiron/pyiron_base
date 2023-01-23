@@ -35,6 +35,7 @@ class TestNoDatabaseProject(TestWithProject):
         self.project.db.force_reset()
         df = self.project.job_table()
         self.assertEqual(len(df), 0)
+        job.remove()  # Clean up the orphaned job HDF
 
 
 if __name__ == "__main__":
