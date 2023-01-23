@@ -6,13 +6,14 @@ File based database interface
 """
 
 import datetime
+from collections.abc import Iterable
 import numpy as np
 import os
 import pandas
 from pyfileindex import PyFileIndex
 from pyiron_base.interfaces.singleton import Singleton
 from pyiron_base.database.generic import IsDatabase
-from pyiron_base.storage.hdfio import write_hdf5, read_hdf5
+from pyiron_base.storage.helper_functions import read_hdf5, write_hdf5
 
 __author__ = "Jan Janssen"
 __copyright__ = (
@@ -418,7 +419,7 @@ class FileTable(IsDatabase, metaclass=Singleton):
                 job_lst.append(job_dict)
         return job_lst
 
-    def item_update(self, par_dict, item_id):
+    def _item_update(self, par_dict, item_id):
         """
         Modify Item in database
 
@@ -429,8 +430,6 @@ class FileTable(IsDatabase, metaclass=Singleton):
                              ........}
             item_id (int, list): Database Item ID (Integer) - '38'  can also be [38]
         """
-        if isinstance(item_id, list):
-            item_id = item_id[0]
         if isinstance(item_id, str):
             item_id = float(item_id)
         for k, v in par_dict.items():
@@ -444,14 +443,27 @@ class FileTable(IsDatabase, metaclass=Singleton):
             job_id (int): job ID as integer
             status (str): job status
         """
-        db_entry = self.get_item_by_id(item_id=job_id)
-        self._job_table.loc[self._job_table.id == job_id, "status"] = status
-        write_hdf5(
-            db_entry["project"] + db_entry["subjob"] + ".h5",
-            status,
-            title=db_entry["subjob"][1:] + "/status",
-            overwrite="update",
-        )
+        super().set_job_status(job_id=job_id, status=status)
+        self._update_hdf5_status(job_id=job_id, status=status)
+
+    def _update_hdf5_status(self, job_id, status):
+        if isinstance(job_id, Iterable):
+            for j_id in job_id:
+                db_entry = self.get_item_by_id(item_id=j_id)
+                write_hdf5(
+                    db_entry["project"] + db_entry["subjob"] + ".h5",
+                    status,
+                    title=db_entry["subjob"][1:] + "/status",
+                    overwrite="update",
+                )
+        else:
+            db_entry = self.get_item_by_id(item_id=job_id)
+            write_hdf5(
+                db_entry["project"] + db_entry["subjob"] + ".h5",
+                status,
+                title=db_entry["subjob"][1:] + "/status",
+                overwrite="update",
+            )
 
     def update(self):
         """

@@ -7,6 +7,7 @@ DatabaseAccess class deals with accessing the database
 
 from pyiron_base.state.logger import logger
 from abc import ABC, abstractmethod
+from collections.abc import Iterable
 import warnings
 import numpy as np
 import re
@@ -220,6 +221,46 @@ class IsDatabase(ABC):
     @abstractmethod
     def _get_table_headings(self, table_name=None):
         pass
+
+    def item_update(self, par_dict, item_id):
+        if isinstance(item_id, Iterable):
+            return self._items_update(par_dict=par_dict, item_ids=item_id)
+        return self._item_update(par_dict=par_dict, item_id=item_id)
+
+    @abstractmethod
+    def _item_update(self, par_dict, item_id):
+        pass
+
+    def _items_update(self, par_dict, item_ids):
+        """
+        For now simply loops over all item_ids to call item_update,
+        but can be made more efficient.
+        Should be made an asbtract method when defined in inheriting classes
+
+        Args:
+            par_dict (_type_): _description_
+            item_ids (_type_): _description_
+        """
+        for i_id in item_ids:
+            self._item_update(par_dict=par_dict, item_id=i_id)
+
+    def set_job_status(self, status, job_id):
+        """
+        Set status of a job or multiple jobs if job_id is iterable.
+
+        Args:
+            status (str): status
+            job_id (int, Iterable): job id
+        """
+        if isinstance(job_id, Iterable):
+            return self._items_update(
+                par_dict={"status": status},
+                item_ids=job_id,
+            )
+        return self._item_update(
+            par_dict={"status": status},
+            item_id=job_id,
+        )
 
     def get_table_headings(self, table_name=None):
         """
@@ -916,7 +957,7 @@ class DatabaseAccess(IsDatabase):
             self.conn.close()
         return [dict(zip(col.keys(), col._mapping.values())) for col in row]
 
-    def item_update(self, par_dict, item_id):
+    def _item_update(self, par_dict, item_id):
         """
         Modify Item in database
 
@@ -931,8 +972,6 @@ class DatabaseAccess(IsDatabase):
 
         """
         if not self._view_mode:
-            if type(item_id) is list:
-                item_id = item_id[-1]  # sometimes a list is given, make it int
             if np.issubdtype(type(item_id), np.integer):
                 item_id = int(item_id)
             # all items must be lower case, ensured here
@@ -1142,12 +1181,6 @@ class DatabaseAccess(IsDatabase):
             return self.get_item_by_id(item_id=job_id)["status"]
         except KeyError:
             return None
-
-    def set_job_status(self, job_id, status):
-        self.item_update(
-            {"status": str(status)},
-            job_id,
-        )
 
     def get_job_working_directory(self, job_id):
         try:

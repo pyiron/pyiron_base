@@ -49,7 +49,7 @@ from pyiron_base.utils.instance import static_isinstance
 from pyiron_base.utils.deprecate import deprecate
 from pyiron_base.jobs.job.extension.server.generic import Server
 from pyiron_base.database.filetable import FileTable
-from pyiron_base.storage.hdfio import write_hdf5, read_hdf5
+from pyiron_base.storage.helper_functions import write_hdf5, read_hdf5
 
 __author__ = "Joerg Neugebauer, Jan Janssen"
 __copyright__ = (

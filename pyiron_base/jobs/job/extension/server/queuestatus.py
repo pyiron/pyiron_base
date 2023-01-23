@@ -7,6 +7,7 @@ Set of functions to interact with the queuing system directly from within pyiron
 
 import pandas
 import time
+import numpy as np
 from pyiron_base.state import state
 from pyiron_base.utils.instance import static_isinstance
 from pyiron_base.jobs.job.extension.jobstatus import job_status_finished_lst
@@ -231,6 +232,7 @@ def wait_for_jobs(
     max_iterations=100,
     recursive=True,
     ignore_exceptions=False,
+    try_collecting=False,
 ):
     """
     Wait for the calculation in the project to be finished
@@ -241,6 +243,7 @@ def wait_for_jobs(
         max_iterations (int): maximum number of iterations - default 100
         recursive (bool): search subprojects [True/False] - default=True
         ignore_exceptions (bool): ignore eventual exceptions when retrieving jobs - default=False
+        try_collecting (bool): try to run collect for fetched jobs that don't have a status counting as finished - default=False
 
     Raises:
         ValueError: max_iterations reached, but jobs still running
@@ -258,7 +261,9 @@ def wait_for_jobs(
         raise ValueError("Maximum iterations reached, but the job was not finished.")
 
 
-def update_from_remote(project, recursive=True, ignore_exceptions=False):
+def update_from_remote(
+    project, recursive=True, ignore_exceptions=False, try_collecting=False
+):
     """
     Update jobs from the remote server
 
@@ -266,6 +271,7 @@ def update_from_remote(project, recursive=True, ignore_exceptions=False):
         project: Project instance the jobs is located in
         recursive (bool): search subprojects [True/False] - default=True
         ignore_exceptions (bool): ignore eventual exceptions when retrieving jobs - default=False
+        try_collecting (bool): try to collect jobs that don't have a status counting as finished - default=False
 
     Returns:
         returns None if ignore_exceptions is False or when no error occured.
@@ -284,42 +290,56 @@ def update_from_remote(project, recursive=True, ignore_exceptions=False):
             df_queue["pyiron_id"] = df_queue.apply(
                 lambda x: int(x["jobname"].split(QUEUE_SCRIPT_PREFIX)[-1]), axis=1
             )
-            jobs_now_running_lst = df_queue[
-                df_queue.status == "running"
-            ].pyiron_id.values
-            _ = [
-                project.set_job_status(job_specifier=job_id, status="running")
-                for job_id in df_submitted.id.values
-                if job_id in jobs_now_running_lst
+            queue_running = df_queue[df_queue.status == "running"].pyiron_id.values
+            jobs_now_running_lst = df_submitted.id.values[
+                np.isin(df_submitted.id.values, queue_running)
             ]
-        else:
-            jobs_now_running_lst = []
+            project.db.set_job_status(status="running", job_id=jobs_now_running_lst)
+
+            fetch_ids = df_combined.id.values[
+                np.isin(df_combined.id.values, df_queue.pyiron_id.values, invert=True)
+            ]
+        else:  # handle empty pyiron queue case for fetching
+            fetch_ids = df_combined.id.values
+
         failed_jobs = []
-        for job_id in df_combined.id.values:
-            if job_id not in jobs_now_running_lst:
-                try:
-                    job = project.inspect(job_id)
-                    state.queue_adapter.transfer_file_to_remote(
-                        file=job.project_hdf5.file_name,
-                        transfer_back=True,
-                        delete_remote=False,
+        for job_id in fetch_ids:
+            try:
+                job = project.load(job_id)
+                retrieve_job(job, try_collecting=try_collecting)
+            except Exception as e:
+                if ignore_exceptions:
+                    state.logger.warning(
+                        f"An error occurred while trying to retrieve job {job_id}\n"
+                        f"Error message: \n{e}"
                     )
-                    status_hdf5 = job.project_hdf5["status"]
-                    project.set_job_status(job_specifier=job.job_id, status=status_hdf5)
-                    if status_hdf5 in job_status_finished_lst:
-                        job_object = job.to_object()
-                        job_object.transfer_from_remote()
-                except Exception as e:
-                    if ignore_exceptions:
-                        state.logger.warning(
-                            f"An error occured while trying to retrieve job {job_id}\n"
-                            f"Error message: \n{e}"
-                        )
-                        failed_jobs.append(job_id)
-                    else:
-                        raise e
+                    failed_jobs.append(job_id)
+                else:
+                    raise e
+
         if len(failed_jobs) > 0:
             return failed_jobs
+
+
+def retrieve_job(job, try_collecting=False):
+    """
+    Retrieve a job from remote server and check if it has a "finished status".
+    Optionally try to collect its output.
+
+    Args:
+        job: pyiron job
+        try_collecting (bool): whether to run collect if not finished - default=False
+
+    Returns:
+        returns None
+    """
+    job.transfer_from_remote()
+    if job.status in job_status_finished_lst:
+        return
+
+    if try_collecting:
+        job.status.collect = True
+        job.run()
 
 
 def validate_que_request(item):
