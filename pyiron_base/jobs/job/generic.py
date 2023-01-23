@@ -1016,7 +1016,7 @@ class GenericJob(JobCore):
             hdf (ProjectHDFio): HDF5 group object - optional
             group_name (str): HDF5 subgroup name - optional
         """
-        if isinstance(hdf, ProjectHDFio):
+        if hdf is not None:
             self._hdf5 = hdf
         if group_name is not None and self._hdf5 is not None:
             self._hdf5 = self._hdf5.open(group_name)
