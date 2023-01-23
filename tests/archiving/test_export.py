@@ -13,6 +13,7 @@ class TestPack(PyironTestCase):
 
     @classmethod
     def setUpClass(cls):
+        super().setUpClass()
         # this is used to create a folder/a compressed file, are not path
         cls.arch_dir = 'archive_folder'
         # this is used to create a folder/a compressed file, are not path

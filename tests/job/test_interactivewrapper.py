@@ -11,6 +11,7 @@ class TestInteractiveWrapper(PyironTestCase):
 
     @classmethod
     def setUpClass(cls):
+        super().setUpClass()
         cls.file_location = os.path.dirname(os.path.abspath(__file__)).replace(
             "\\", "/"
         )

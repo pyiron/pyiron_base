@@ -78,6 +78,7 @@ class TestWithProject(PyironTestCase, ABC):
 
     @classmethod
     def tearDownClass(cls):
+        super().tearDownClass()
         cls.project.remove(enable=True)
         try:
             os.remove(os.path.join(cls.file_location, "pyiron.log"))
@@ -91,6 +92,7 @@ class TestWithCleanProject(TestWithProject, ABC):
     """
 
     def tearDown(self):
+        super().tearDown()
         self.project.remove_jobs(recursive=True, progress=False, silently=True)
 
 
