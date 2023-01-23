@@ -11,7 +11,7 @@ import numpy as np
 import base64
 import collections
 
-__author__ = "Joerg Neugebauer, Jan Janssen"
+__author__ = "Sam Waseda"
 __copyright__ = (
     "Copyright 2020, Max-Planck-Institut für Eisenforschung GmbH - "
     "Computational Materials Design (CM) Department"
