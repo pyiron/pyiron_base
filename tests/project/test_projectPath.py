@@ -31,6 +31,7 @@ class TestProjectPath(PyironTestCase):
     def tearDown(self) -> None:
         super().tearDown()
         state.settings.configuration.update(self.settings_configuration)
+        self.project_path.removedirs()
 
     def test_open(self):
         with self.project_path.open("test_open") as test_open:
