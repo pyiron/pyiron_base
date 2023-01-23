@@ -24,13 +24,26 @@ class TestUnpacking(PyironTestCase):
         cls.file_location = os.path.dirname(os.path.abspath(__file__)).replace(
             "\\", "/"
         )
+        cls.imp_pr = Project('imported')
+
+
+    @classmethod
+    def tearDownClass(cls) -> None:
+        super().tearDownClass()
+        cls.pr.remove(enable=True)
+        uncompressed_pr = Project(cls.arch_dir)
+        uncompressed_pr.remove(enable=True, enforce=True)
+        os.remove('export.csv')
+        os.remove(cls.arch_dir_comp + ".tar.gz")
+        cls.imp_pr.remove(enable=True)
 
     def setUp(self):
-        self.imp_pr = Project('imported')
+        super().setUp()
         self.imp_pr.remove_jobs(recursive=True, silently=True)
         self.imp_pr.unpack(origin_path=self.arch_dir_comp, compress=True)
 
     def tearDown(self):
+        super().tearDown()
         self.imp_pr.remove_jobs(recursive=True, silently=True)
 
     def test_import_csv(self):

@@ -27,6 +27,15 @@ class TestPack(PyironTestCase):
             "\\", "/"
         )
 
+    @classmethod
+    def tearDownClass(cls) -> None:
+        super().tearDownClass()
+        cls.pr.remove(enable=True)
+        uncompressed_pr = Project(cls.arch_dir)
+        uncompressed_pr.remove(enable=True, enforce=True)
+        os.remove('export.csv')
+
+
     def test_exportedCSV(self):
         # in the first test, the csv file from the packing function is read
         # and is compared with the return dataframe from export_database
@@ -56,6 +65,7 @@ class TestPack(PyironTestCase):
         self.pr.pack(destination_path=self.arch_dir_comp, compress=True)
         file_path = self.arch_dir_comp + ".tar.gz"
         self.assertTrue(os.path.exists(file_path))
+        os.remove(file_path)
 
     def test_content(self):
         # here we test the content of the archive_folder and
