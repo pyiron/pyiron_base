@@ -952,10 +952,10 @@ class DatabaseAccess(IsDatabase):
                 self.conn = self._engine.connect()
                 self.conn.connection.create_function("like", 2, self.regexp)
             result = self.conn.execute(query)
-        row = result.fetchall()
+        rows = result.mappings().all()
         if not self._keep_connection:
             self.conn.close()
-        return [dict(zip(col.keys(), col._mapping.values())) for col in row]
+        return rows
 
     def _item_update(self, par_dict, item_id):
         """
@@ -1171,10 +1171,10 @@ class DatabaseAccess(IsDatabase):
                 self.conn.connection.create_function("like", 2, self.regexp)
 
             result = self.conn.execute(query)
-        row = result.fetchall()
+        rows = result.mappings().all()
         if not self._keep_connection:
             self.conn.close()
-        return [dict(zip(col.keys(), col._mapping.values())) for col in row]
+        return rows
 
     def get_job_status(self, job_id):
         try:
