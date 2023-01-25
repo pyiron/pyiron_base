@@ -158,4 +158,4 @@ def install_pyiron(
             git_folder_name=git_folder_name,
         )
     else:
-        os.mkdir(resource_directory)
+        os.makedirs(resource_directory)

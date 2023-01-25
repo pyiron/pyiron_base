@@ -68,7 +68,7 @@ class TestUnpacking(PyironTestCase):
     def test_unpack_from_other_dir_uncompress(self):
         cwd = os.getcwd()
         pack_path = os.path.join(cwd, 'exported')
-        os.mkdir(path=pack_path)
+        os.makedirs(name=pack_path)
         pack_path_comp = os.path.join(pack_path, self.arch_dir_comp)
         pack_path_csv = os.path.join(pack_path, 'export.csv')
         self.pr.pack(destination_path=pack_path_comp, csv_file_name=pack_path_csv, compress=False)
@@ -130,7 +130,7 @@ class TestUnpacking(PyironTestCase):
     def test_import_with_targz_extension(self):
         cwd = os.getcwd()
         pack_path = os.path.join(cwd, 'exported_withTar')
-        os.mkdir(path=pack_path)
+        os.makedirs(name=pack_path)
         tar_arch = self.arch_dir_comp + '.tar.gz'
         pack_path_comp = os.path.join(pack_path, tar_arch)
         pack_path_csv = os.path.join(pack_path, 'export.csv')
