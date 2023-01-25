@@ -392,8 +392,6 @@ class ProjectPath(GenericPath):
             rel_path = self._windows_path_to_unix_path(rel_path)
             path = posixpath.join(path, rel_path)
         os.makedirs(path, exist_ok=True)
-        if not os.path.exists(path):
-            raise os.error("pyiron cannot create directory.")
 
     @staticmethod
     def _get_project_from_path(full_path):
