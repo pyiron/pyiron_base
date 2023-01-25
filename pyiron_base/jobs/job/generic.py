@@ -12,6 +12,7 @@ import signal
 import warnings
 
 from pyiron_base.state import state
+from pyiron_base.state.signal import catch_signals
 from pyiron_base.jobs.job.extension.executable import Executable
 from pyiron_base.jobs.job.extension.jobstatus import JobStatus
 from pyiron_base.jobs.job.core import (
@@ -61,13 +62,6 @@ __maintainer__ = "Jan Janssen"
 __email__ = "janssen@mpie.de"
 __status__ = "production"
 __date__ = "Sep 1, 2017"
-
-intercepted_signals = [
-    signal.SIGINT,
-    signal.SIGTERM,
-    signal.SIGABRT,
-]  # , signal.SIGQUIT]
-
 
 # Modular Docstrings
 _doc_str_generic_job_attr = (
@@ -166,9 +160,6 @@ class GenericJob(JobCore):
         self._python_only_job = False
         self.interactive_cache = None
         self.error = GenericError(job=self)
-
-        for sig in intercepted_signals:
-            signal.signal(sig, self.signal_intercept)
 
     @property
     def version(self):
@@ -679,62 +670,57 @@ class GenericJob(JobCore):
             run_mode (str): ['modal', 'non_modal', 'queue', 'manual'] overwrites self.server.run_mode
             run_again (bool): Same as delete_existing_job (deprecated)
         """
-        if run_again:
-            delete_existing_job = True
-        try:
-            self._logger.info(
-                "run {}, status: {}".format(self.job_info_str, self.status)
-            )
-            status = self.status.string
-            if run_mode is not None:
-                self.server.run_mode = run_mode
-            if delete_existing_job:
-                status = "initialized"
-                if self.job_id:
-                    self._logger.info("run repair " + str(self.job_id))
-                    master_id, parent_id = self.master_id, self.parent_id
-                    self.remove(_protect_childs=False)
-                    self.reset_job_id()
-                    self.master_id, self.parent_id = master_id, parent_id
-                else:
-                    self.remove(_protect_childs=False)
-            if repair and self.job_id and not self.status.finished:
-                self._run_if_repair()
-            elif status == "initialized":
-                self._run_if_new(debug=debug)
-            elif status == "created":
-                self._run_if_created()
-            elif status == "submitted":
-                run_job_with_status_submitted(job=self)
-            elif status == "running":
-                self._run_if_running()
-            elif status == "collect":
-                self._run_if_collect()
-            elif status == "suspend":
-                self._run_if_suspended()
-            elif status == "refresh":
-                self.run_if_refresh()
-            elif status == "busy":
-                self._run_if_busy()
-            elif status == "finished":
-                run_job_with_status_finished(
-                    job=self,
-                    delete_existing_job=delete_existing_job,
-                    run_again=run_again,
+        with catch_signals(self.signal_intercept):
+            if run_again:
+                delete_existing_job = True
+            try:
+                self._logger.info(
+                    "run {}, status: {}".format(self.job_info_str, self.status)
                 )
-            elif status == "aborted":
-                raise ValueError(
-                    "Running an aborted job with `delete_existing_job=False` is meaningless."
-                )
-        except Exception:
-            self.drop_status_to_aborted()
-            raise
-        except KeyboardInterrupt:
-            self.drop_status_to_aborted()
-            raise
-        except SystemExit:
-            self.drop_status_to_aborted()
-            raise
+                status = self.status.string
+                if run_mode is not None:
+                    self.server.run_mode = run_mode
+                if delete_existing_job:
+                    status = "initialized"
+                    if self.job_id:
+                        self._logger.info("run repair " + str(self.job_id))
+                        master_id, parent_id = self.master_id, self.parent_id
+                        self.remove(_protect_childs=False)
+                        self.reset_job_id()
+                        self.master_id, self.parent_id = master_id, parent_id
+                    else:
+                        self.remove(_protect_childs=False)
+                if repair and self.job_id and not self.status.finished:
+                    self._run_if_repair()
+                elif status == "initialized":
+                    self._run_if_new(debug=debug)
+                elif status == "created":
+                    self._run_if_created()
+                elif status == "submitted":
+                    run_job_with_status_submitted(job=self)
+                elif status == "running":
+                    self._run_if_running()
+                elif status == "collect":
+                    self._run_if_collect()
+                elif status == "suspend":
+                    self._run_if_suspended()
+                elif status == "refresh":
+                    self.run_if_refresh()
+                elif status == "busy":
+                    self._run_if_busy()
+                elif status == "finished":
+                    run_job_with_status_finished(
+                        job=self,
+                        delete_existing_job=delete_existing_job,
+                        run_again=run_again,
+                    )
+                elif status == "aborted":
+                    raise ValueError(
+                        "Running an aborted job with `delete_existing_job=False` is meaningless."
+                    )
+            except Exception:
+                self.drop_status_to_aborted()
+                raise
 
     def run_if_modal(self):
         """
@@ -1199,15 +1185,15 @@ class GenericJob(JobCore):
             h5_dict["groups"] += self._list_ext_childs()
         return h5_dict
 
-    def signal_intercept(self, sig, frame):
+    def signal_intercept(self, sig):
         """
+        Abort the job and log signal that caused it.
+
+        Expected to be called from
+        :func:`pyiron_base.state.signal.catch_signals`.
 
         Args:
-            sig:
-            frame:
-
-        Returns:
-
+            sig (int): the signal that triggered the abort
         """
         try:
             self._logger.info(
