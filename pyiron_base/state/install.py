@@ -91,8 +91,7 @@ def _write_config_file(
         project_path = os.path.normpath(
             os.path.abspath(os.path.expanduser(project_path))
         )
-        if not os.path.exists(project_path):
-            os.makedirs(project_path)
+        os.makedirs(project_path, exist_ok=True)
 
 
 def install_dialog(silently=False):
@@ -159,4 +158,4 @@ def install_pyiron(
             git_folder_name=git_folder_name,
         )
     else:
-        os.mkdir(resource_directory)
+        os.makedirs(resource_directory)

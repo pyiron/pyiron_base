@@ -316,10 +316,8 @@ class Settings(metaclass=Singleton):
                     raise ValueError(
                         "For sql_type SQLite, the sql_file must not be None"
                     )
-                elif os.path.dirname(sql_file) != "" and not os.path.exists(
-                    os.path.dirname(sql_file)
-                ):
-                    os.makedirs(os.path.dirname(sql_file))
+                elif os.path.dirname(sql_file) != "":
+                    os.makedirs(os.path.dirname(sql_file), exist_ok=True)
             elif (
                 sql_type == "SQLalchemy"
                 and "sql_connection_string" not in config.keys()

@@ -1296,8 +1296,7 @@ class ProjectHDFio(FileHDFio):
         """
         Create the working directory on the file system if it does not exist already.
         """
-        if not os.path.isdir(self.working_directory):
-            os.makedirs(self.working_directory)
+        os.makedirs(self.working_directory, exist_ok=True)
 
     def import_class(self, class_name):
         """
