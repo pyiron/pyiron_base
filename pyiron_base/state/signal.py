@@ -24,6 +24,7 @@ def catch_signals(cleanup):
         KeyboardInterrupt: received SIGINT
         SystemExit: received SIGTERM or SIGABRT
     """
+
     def handler(sig, frame):
         cleanup(sig)
         if sig == signal.SIGINT:
