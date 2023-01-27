@@ -195,7 +195,9 @@ class WorkerJob(PythonTemplateJob):
         active_job_ids, res_lst = [], []
         process = psutil.Process(os.getpid())
         number_tasks = int(self.server.cores / self.cores_per_job)
-        with Pool(processes=number_tasks, maxtasksperchild=self.input.maxtasksperchild) as pool:
+        with Pool(
+            processes=number_tasks, maxtasksperchild=self.input.maxtasksperchild
+        ) as pool:
             while True:
                 # Check the database if there are more calculation to execute
                 df = pr.job_table()
