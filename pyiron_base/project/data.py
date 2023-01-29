@@ -44,6 +44,8 @@ class ProjectData(DataContainer):
             project (pyiron_base.Project): The project instance the storage is attached to.
         """
         super().__init__(*args, **kwargs)
+        # Projectdata should be lazy by default.
+        self._lazy = True
         self._project = project
 
     def read(self):
