@@ -36,7 +36,7 @@ class ProjectData(DataContainer):
         object.__setattr__(instance, "_project", None)
         return instance
 
-    def __init__(self, *args, project=None, **kwargs):
+    def __init__(self, *args, project=None, lazy=True, **kwargs):
         """
         A data storage container which can store itself to/retrieve itself from file at the project level.
 
@@ -45,7 +45,7 @@ class ProjectData(DataContainer):
         """
         super().__init__(*args, **kwargs)
         # Projectdata should be lazy by default.
-        self._lazy = True
+        self._lazy = lazy
         self._project = project
 
     def read(self):
