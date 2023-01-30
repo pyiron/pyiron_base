@@ -282,8 +282,7 @@ class JobCore(HasGroups):
             list: list of child job ids
         """
         return self.project.get_child_ids(
-            job_specifier=self.job_name,
-            project=self.project.project_path
+            job_specifier=self.job_name, project=self.project.project_path
         )
 
     @property
