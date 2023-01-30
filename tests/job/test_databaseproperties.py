@@ -13,6 +13,7 @@ from pyiron_base._tests import PyironTestCase
 class TestDatabaseProperties(PyironTestCase):
     @classmethod
     def setUpClass(cls):
+        super().setUpClass()
         cls.database_entry = {
             "id": 150,
             "parentid": None,

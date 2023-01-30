@@ -11,6 +11,7 @@ class TestJobTypeChoice(PyironTestCase):
 
     @classmethod
     def setUpClass(cls):
+        super().setUpClass()
         cls.jobtypechoice = JobTypeChoice()
 
     def test_dir(self):
@@ -54,6 +55,7 @@ class TestJobCreator(PyironTestCase):
 
     @classmethod
     def setUpClass(cls):
+        super().setUpClass()
         cls.job_factory = JobFactory(project=None)
 
     def test_dir(self):
