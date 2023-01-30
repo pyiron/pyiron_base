@@ -33,7 +33,7 @@ setup(
         'future==0.18.3',
         'gitpython==3.1.30',
         'h5io==0.1.7',
-        'h5py==3.7.0',
+        'h5py==3.8.0',
         'numpy==1.24.1',
         'pandas==1.5.3',
         'pathlib2==2.3.7.post1',
