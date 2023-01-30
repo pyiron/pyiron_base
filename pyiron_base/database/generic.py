@@ -646,8 +646,8 @@ class DatabaseAccess(IsDatabase):
         Returns:
 
         """
-        self.metadata = MetaData(bind=self._engine)
-        self.metadata.reflect(self._engine)
+        self.metadata = MetaData()
+        self.metadata.reflect(bind=self._engine)
 
     @staticmethod
     def regexp(expr, item):
