@@ -487,7 +487,7 @@ class DatabaseAccess(IsDatabase):
         def _create_table():
             self.__reload_db()
             self.simulation_table = HistoricalTable(str(table_name), self.metadata)
-            self.metadata.create_all()
+            self.metadata.create_all(bind=self._engine)
 
         # too many jobs trying to talk to the database can cause this too fail.
         retry(
