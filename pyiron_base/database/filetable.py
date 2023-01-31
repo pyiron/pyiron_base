@@ -142,18 +142,21 @@ class FileTable(IsDatabase, metaclass=Singleton):
         """
         if project is None:
             project = self._project
+        self.update()
         id_master = self.get_job_id(project=project, job_specifier=job_specifier)
         if id_master is None:
             return []
         else:
+            df_tmp = self._job_table[self._job_table.id == id_master]
+            working_directory = (df_tmp["project"] + df_tmp["job"] + "_hdf5/").values[0]
             if status is not None:
                 id_lst = self._job_table[
-                    (self._job_table.masterid == id_master)
+                    (self._job_table.project == working_directory)
                     & (self._job_table.status == status)
                 ].id.values
             else:
                 id_lst = self._job_table[
-                    (self._job_table.masterid == id_master)
+                    (self._job_table.project == working_directory)
                 ].id.values
             return sorted(id_lst)
 
