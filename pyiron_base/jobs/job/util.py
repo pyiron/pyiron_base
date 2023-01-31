@@ -380,9 +380,15 @@ def _job_read_file(job, file_name, tail=None):
                 return lines[-tail:]
     else:
         file_name = posixpath.join(job.working_directory, file_name)
-        if tail is None:
+        # FIXME: work around for bug in monty, where windows new lines are not
+        # correctly handled leaving bare \r at the end of lines
+        # we could fudge this after calling monty below, but given the low
+        # install base on windows, let's just call the naive version on windows
+        if tail is None or os.name == "nt":
+            if tail is None:
+                tail = 0
             with open(file_name) as f:
-                return f.readlines()
+                return f.readlines()[-tail:]
         else:
             lines = list(
                 reversed(
