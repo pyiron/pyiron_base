@@ -1,0 +1,16 @@
+# This runs jobs which pyiron modules should run on pushes or PRs to main
+
+name: Push-Pull-main
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  pyiron:
+    uses: pyiron/actions/.github/workflows/push-pull-main.yml@main
+    secrets: inherit
+    with:
+      notebooks-env-files: .ci_support/environment.yml .ci_support/environment-notebooks.yml
