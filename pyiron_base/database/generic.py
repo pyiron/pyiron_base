@@ -981,7 +981,7 @@ class DatabaseAccess(IsDatabase):
                 item_id = int(item_id)
             # all items must be lower case, ensured here
             par_dict = dict((key.lower(), value) for key, value in par_dict.items())
-            query = self.simulation_table.update(
+            query = self.simulation_table.update().where(
                 self.simulation_table.c["id"] == item_id
             ).values()
             try:
