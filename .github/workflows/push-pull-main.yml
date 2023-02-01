@@ -105,7 +105,7 @@ jobs:
         env-prefix: ${{ matrix.prefix }}
         env-label: ${{ matrix.label }}
         env-files: ${{ inputs.tests-env-files }}
-        test-dir: tests
+        test-dir: tests/unit
 
   benchmark-tests:
     runs-on: ubuntu-latest
@@ -117,7 +117,7 @@ jobs:
         env-prefix: /usr/share/miniconda3/envs/my-env
         env-label: linux-64-py-3-10
         env-files: ${{ inputs.tests-env-files }}
-        test-dir: tests/benchmark
+        test-dir: test_benchmarks
       timeout-minutes: ${{ inputs.benchmark-timeout-minutes }}
 
   pip-check:
