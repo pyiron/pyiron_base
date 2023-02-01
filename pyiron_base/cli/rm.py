@@ -32,7 +32,6 @@ def register(parser):
 
 
 def main(args):
-
     pr = Project(args.project)
     if args.jobs_only:
         pr.remove_jobs(recursive=args.recursive, silently=True)
