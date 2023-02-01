@@ -735,6 +735,7 @@ class DatabaseAccess(IsDatabase):
                     % (self.simulation_table.name, col_name, col_type)
                 )
             )
+            self.conn.commit()
         else:
             raise PermissionError("Not avilable in viewer mode.")
 
@@ -760,6 +761,7 @@ class DatabaseAccess(IsDatabase):
                     % (self.simulation_table.name, col_name, col_type)
                 )
             )
+            self.conn.commit()
         else:
             raise PermissionError("Not avilable in viewer mode.")
 
@@ -906,6 +908,7 @@ class DatabaseAccess(IsDatabase):
                 result = self.conn.execute(
                     self.simulation_table.insert().values(**par_dict)
                 ).inserted_primary_key[-1]
+                self.conn.commit()
                 if not self._keep_connection:
                     self.conn.close()
                 return result
@@ -990,6 +993,7 @@ class DatabaseAccess(IsDatabase):
             )
             try:
                 self.conn.execute(query, par_dict)
+                self.conn.commit()
             except (OperationalError, DatabaseError):
                 if not self._sql_lite:
                     self.conn = AutorestoredConnection(self._engine)
@@ -998,6 +1002,7 @@ class DatabaseAccess(IsDatabase):
                     self.conn.connection.create_function("like", 2, self.regexp)
 
                 self.conn.execute(query, par_dict)
+                self.conn.commit()
             if not self._keep_connection:
                 self.conn.close()
         else:
@@ -1019,6 +1024,7 @@ class DatabaseAccess(IsDatabase):
                     self.simulation_table.c["id"] == int(item_id)
                 )
             )
+            self.conn.commit()
             if not self._keep_connection:
                 self.conn.close()
         else:
