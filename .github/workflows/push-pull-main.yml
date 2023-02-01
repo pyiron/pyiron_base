@@ -1,16 +1,169 @@
 # This runs jobs which pyiron modules should run on pushes or PRs to main
+# Usage:
+#   on:
+#     push:
+#       branches: [ main ]
+#     pull_request:
+#       branches: [ main ]
 
-name: Push-Pull-main
+name: Push or Pull to main
 
 on:
-  push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
+  workflow_call:
+    inputs:
+      docs-env-files:
+        type: string
+        description: 'Paths to an arbitrary number of (space-separated) conda environment yaml files'
+        default: .ci_support/environment.yml
+        required: false
+      notebooks-env-files:
+        type: string
+        description: 'Paths to an arbitrary number of (space-separated) conda environment yaml files'
+        default: .ci_support/environment.yml
+        required: false
+      notebooks-exclusion-file:
+        type: string
+        description: 'An optional path to a file containing the names of notebooks to NOT build'
+        default: .ci_support/exclude
+        required: false
+      tests-env-files:
+        type: string
+        description: 'Paths to an arbitrary number of (space-separated) conda environment yaml files'
+        default: .ci_support/environment.yml
+        required: false
+      benchmark-timeout-minutes:
+        type: number
+        description: 'How many minutes to allow tests in units/benchmark to run for'
+        default: 30
+        required: false
 
 jobs:
-  pyiron:
-    uses: pyiron/actions/.github/workflows/push-pull-main.yml@main
-    secrets: inherit
-    with:
-      notebooks-env-files: .ci_support/environment.yml .ci_support/environment-notebooks.yml
+  commit-updated-env:  # Keep envs read by external sources (binder and readthedocs) up-to-date
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.DEPENDABOT_WORKFLOW_TOKEN }}
+          ref: ${{ github.event.pull_request.head.ref }} # Check out the head of the actual branch, not the PR
+          fetch-depth: 0 # otherwise, you will fail to push refs to dest repo
+      - uses: pyiron/actions/write-docs-env@main
+      - uses: pyiron/actions/write-environment@main
+        with:
+          env-files: ${{ inputs.notebooks-env-files }}
+          output-env-file: .binder/environment.yml
+      - name: commit
+        id: commit-docs-env
+        continue-on-error: true  # Allow "failure" when there are no changes (the working tree is clean)
+        run: |
+          git config --local user.email "pyiron@mpie.de"
+          git config --local user.name "pyiron-runner"
+          git add docs/environment.yml .binder/environment.yml
+          git commit -m "Update env file" -a
+      - name: push
+        if: steps.commit-docs-env.outcome == 'success'  # But only push if we made it here without continue-on-error
+        uses: ad-m/github-push-action@master
+        with:
+          github_token: ${{ secrets.DEPENDABOT_WORKFLOW_TOKEN }}
+          branch: ${{ github.event.pull_request.head.ref }}
+
+  build-docs:
+    needs: commit-updated-env
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: pyiron/actions/build-docs@main
+        with:
+          python-version: '3.10'
+          env-prefix: /usr/share/miniconda3/envs/my-env
+          env-label: linux-64-py-3-10
+          env-files: ${{ inputs.docs-env-files }}
+
+  build-notebooks:
+    needs: commit-updated-env
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: pyiron/actions/build-notebooks@main
+        with:
+          python-version: '3.10'
+          env-prefix: /usr/share/miniconda3/envs/my-env
+          env-label: linux-64-py-3-10
+          env-files: ${{ inputs.notebooks-env-files }}
+          exclusion-file: ${{ inputs.notebooks-exclusion-file }}
+
+
+  unit-tests:
+    needs: commit-updated-env
+    runs-on: ${{ matrix.operating-system }}
+    strategy:
+      matrix:
+        include:
+          - operating-system: macos-latest
+            python-version: '3.10'
+            label: osx-64-py-3-10
+            prefix: /Users/runner/miniconda3/envs/my-env
+
+          - operating-system: windows-latest
+            python-version: '3.10'
+            label: win-64-py-3-10
+            prefix: C:\Miniconda3\envs\my-env
+
+          - operating-system: ubuntu-latest
+            python-version: '3.10'
+            label: linux-64-py-3-10
+            prefix: /usr/share/miniconda3/envs/my-env
+
+          - operating-system: ubuntu-latest
+            python-version: 3.9
+            label: linux-64-py-3-9
+            prefix: /usr/share/miniconda3/envs/my-env
+
+          - operating-system: ubuntu-latest
+            python-version: 3.8
+            label: linux-64-py-3-8
+            prefix: /usr/share/miniconda3/envs/my-env
+
+    steps:
+    - uses: actions/checkout@v3
+    - uses: pyiron/actions/unit-tests@main
+      with:
+        python-version: ${{ matrix.python-version }}
+        env-prefix: ${{ matrix.prefix }}
+        env-label: ${{ matrix.label }}
+        env-files: ${{ inputs.tests-env-files }}
+        test-dir: tests/unit
+
+  benchmark-tests:
+    needs: commit-updated-env
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - uses: pyiron/actions/unit-tests@main
+      with:
+        python-version: '3.10'
+        env-prefix: /usr/share/miniconda3/envs/my-env
+        env-label: linux-64-py-3-10
+        env-files: ${{ inputs.tests-env-files }}
+        test-dir: tests/benchmark
+      timeout-minutes: ${{ inputs.benchmark-timeout-minutes }}
+
+  pip-check:
+    needs: commit-updated-env
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: pyiron/actions/pip-check@main
+        with:
+          python-version: '3.10'
+          env-prefix: /usr/share/miniconda3/envs/my-env
+          env-label: linux-64-py-3-10
+
+  black:
+    needs: commit-updated-env
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: psf/black@stable
+        with:
+          options: "--check --diff"
+          src: ./${{ github.event.repository.name }}
