@@ -435,6 +435,10 @@ class AutorestoredConnection:
         if self._conn is not None:
             self._conn.close()
 
+    def commit(self):
+        if self._conn is not None:
+            self._conn.commit()
+
 
 class DatabaseAccess(IsDatabase):
     """
