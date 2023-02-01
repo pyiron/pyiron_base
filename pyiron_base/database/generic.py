@@ -943,7 +943,7 @@ class DatabaseAccess(IsDatabase):
         try:
             if type(var) is list:
                 var = var[-1]
-            query = select(self.simulation_table.where(self.simulation_table.c[str(col_name)] == var)
+            query = select(self.simulation_table).where(self.simulation_table.c[str(col_name)] == var)
         except Exception:
             raise ValueError("There is no Column named: " + col_name)
         try:
