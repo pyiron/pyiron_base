@@ -726,12 +726,13 @@ class DatabaseAccess(IsDatabase):
                 col_name = col_name[-1]
             if isinstance(col_type, list):
                 col_type = col_type[-1]
-            self.conn.execute(
-                text(
-                    "ALTER TABLE %s ADD COLUMN %s %s"
-                    % (self.simulation_table.name, col_name, col_type)
+            with self.conn.begin():
+                self.conn.execute(
+                    text(
+                        "ALTER TABLE %s ADD COLUMN %s %s"
+                        % (self.simulation_table.name, col_name, col_type)
+                    )
                 )
-            )
         else:
             raise PermissionError("Not avilable in viewer mode.")
 
@@ -751,12 +752,13 @@ class DatabaseAccess(IsDatabase):
                 col_name = col_name[-1]
             if isinstance(col_type, list):
                 col_type = col_type[-1]
-            self.conn.execute(
-                text(
-                    "ALTER TABLE %s ALTER COLUMN %s TYPE %s"
-                    % (self.simulation_table.name, col_name, col_type)
+            with self.conn.begin():
+                self.conn.execute(
+                    text(
+                        "ALTER TABLE %s ALTER COLUMN %s TYPE %s"
+                        % (self.simulation_table.name, col_name, col_type)
+                    )
                 )
-            )
         else:
             raise PermissionError("Not avilable in viewer mode.")
 
@@ -900,9 +902,10 @@ class DatabaseAccess(IsDatabase):
                 par_dict = dict(
                     (key.lower(), value) for key, value in par_dict.items()
                 )  # make keys lowercase
-                result = self.conn.execute(
-                    self.simulation_table.insert().values(**par_dict)
-                ).inserted_primary_key[-1]
+                with self.conn.begin():
+                    result = self.conn.execute(
+                        self.simulation_table.insert().values(**par_dict)
+                    ).inserted_primary_key[-1]
                 if not self._keep_connection:
                     self.conn.close()
                 return result
@@ -994,7 +997,8 @@ class DatabaseAccess(IsDatabase):
                     self.conn = self._engine.connect()
                     self.conn.connection.create_function("like", 2, self.regexp)
 
-                self.conn.execute(query, par_dict)
+                with self.conn.begin():
+                    self.conn.execute(query, par_dict)
             if not self._keep_connection:
                 self.conn.close()
         else:
@@ -1011,11 +1015,12 @@ class DatabaseAccess(IsDatabase):
 
         """
         if not self._view_mode:
-            self.conn.execute(
-                self.simulation_table.delete().where(
-                    self.simulation_table.c["id"] == int(item_id)
+            with self.conn.begin():
+                self.conn.execute(
+                    self.simulation_table.delete().where(
+                        self.simulation_table.c["id"] == int(item_id)
+                    )
                 )
-            )
             if not self._keep_connection:
                 self.conn.close()
         else:
