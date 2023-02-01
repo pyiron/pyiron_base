@@ -989,7 +989,8 @@ class DatabaseAccess(IsDatabase):
                 .values()
             )
             try:
-                self.conn.execute(query, par_dict)
+                with self.conn.begin():
+                    self.conn.execute(query, par_dict)
             except (OperationalError, DatabaseError):
                 if not self._sql_lite:
                     self.conn = AutorestoredConnection(self._engine)
