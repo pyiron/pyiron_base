@@ -748,7 +748,7 @@ class DatabaseAccess(IsDatabase):
                 col_name = col_name[-1]
             if isinstance(col_type, list):
                 col_type = col_type[-1]
-            self._engine.execute(text(
+            self.conn.execute(text(
                 "ALTER TABLE %s ALTER COLUMN %s TYPE %s"
                 % (self.simulation_table.name, col_name, col_type)
             ))
