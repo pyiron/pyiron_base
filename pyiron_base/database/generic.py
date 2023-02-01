@@ -28,7 +28,7 @@ from sqlalchemy.sql import select
 from sqlalchemy.exc import OperationalError, DatabaseError
 from threading import Thread, Lock
 from queue import SimpleQueue, Empty as QueueEmpty
-from pyiron_base.database.tables import HistoricalTable
+from pyiron_base.database.tables import get_historical_table
 from pyiron_base.utils.error import retry
 
 __author__ = "Murat Han Celik"
@@ -486,7 +486,11 @@ class DatabaseAccess(IsDatabase):
 
         def _create_table():
             self.__reload_db()
-            self.simulation_table = HistoricalTable(str(table_name), self.metadata)
+            self.simulation_table = get_historical_table(
+                table_name=str(table_name),
+                metadata=self.metadata,
+                extend_existing=True
+            )
             self.metadata.create_all(bind=self._engine)
 
         # too many jobs trying to talk to the database can cause this too fail.
