@@ -938,7 +938,9 @@ class DatabaseAccess(IsDatabase):
         try:
             if type(var) is list:
                 var = var[-1]
-            query = select(self.simulation_table).where(self.simulation_table.c[str(col_name)] == var)
+            query = select(self.simulation_table).where(
+                self.simulation_table.c[str(col_name)] == var
+            )
         except Exception:
             raise ValueError("There is no Column named: " + col_name)
         try:
@@ -974,9 +976,11 @@ class DatabaseAccess(IsDatabase):
                 item_id = int(item_id)
             # all items must be lower case, ensured here
             par_dict = dict((key.lower(), value) for key, value in par_dict.items())
-            query = self.simulation_table.update().where(
-                self.simulation_table.c["id"] == item_id
-            ).values()
+            query = (
+                self.simulation_table.update()
+                .where(self.simulation_table.c["id"] == item_id)
+                .values()
+            )
             try:
                 self.conn.execute(query, par_dict)
             except (OperationalError, DatabaseError):
@@ -1158,7 +1162,9 @@ class DatabaseAccess(IsDatabase):
         if return_all_columns:
             query = select(self.simulation_table).where(and_(*and_statement))
         else:
-            query = select(self.simulation_table.columns["id"]).where(and_(*and_statement))
+            query = select(self.simulation_table.columns["id"]).where(
+                and_(*and_statement)
+            )
         try:
             result = self.conn.execute(query)
         except (OperationalError, DatabaseError):
