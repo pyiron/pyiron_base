@@ -487,9 +487,7 @@ class DatabaseAccess(IsDatabase):
         def _create_table():
             self.__reload_db()
             self.simulation_table = get_historical_table(
-                table_name=str(table_name),
-                metadata=self.metadata,
-                extend_existing=True
+                table_name=str(table_name), metadata=self.metadata, extend_existing=True
             )
             self.metadata.create_all(bind=self._engine)
 
