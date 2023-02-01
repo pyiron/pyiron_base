@@ -42,7 +42,6 @@ examples:
 
 
 def register(parser):
-
     parser.add_argument(
         "project", default=".", nargs="?", help="path to pyiron project"
     )
@@ -123,7 +122,6 @@ def register(parser):
 
 
 def main(args):
-
     if args.status:
         if "status" not in args.columns:
             args.columns = args.columns + ["status"]

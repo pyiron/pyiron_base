@@ -42,7 +42,6 @@ class Maintenance:
 
     @staticmethod
     def get_repository_status():
-
         """
         Finds the hashes and versions for every `pyiron` module available.
 
