@@ -902,7 +902,7 @@ class DatabaseAccess(IsDatabase):
                     (key.lower(), value) for key, value in par_dict.items()
                 )  # make keys lowercase
                 result = self.conn.execute(
-                    self.simulation_table.insert().values(*par_dict)
+                    self.simulation_table.insert().values(**par_dict)
                 ).inserted_primary_key[-1]
                 if not self._keep_connection:
                     self.conn.close()
