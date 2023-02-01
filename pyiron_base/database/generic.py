@@ -487,7 +487,7 @@ class DatabaseAccess(IsDatabase):
         def _create_table():
             self.__reload_db()
             self.simulation_table = HistoricalTable(str(table_name), self.metadata)
-            self.metadata.create_all()
+            self.metadata.create_all(bind=self._engine)
 
         # too many jobs trying to talk to the database can cause this too fail.
         retry(
@@ -646,8 +646,8 @@ class DatabaseAccess(IsDatabase):
         Returns:
 
         """
-        self.metadata = MetaData(bind=self._engine)
-        self.metadata.reflect(self._engine)
+        self.metadata = MetaData()
+        self.metadata.reflect(bind=self._engine)
 
     @staticmethod
     def regexp(expr, item):
@@ -703,7 +703,6 @@ class DatabaseAccess(IsDatabase):
             simulation_list = Table(
                 str(table_name),
                 self.metadata,
-                autoload=True,
                 autoload_with=self._engine,
             )
         except Exception:
@@ -726,9 +725,11 @@ class DatabaseAccess(IsDatabase):
                 col_name = col_name[-1]
             if isinstance(col_type, list):
                 col_type = col_type[-1]
-            self._engine.execute(
-                "ALTER TABLE %s ADD COLUMN %s %s"
-                % (self.simulation_table.name, col_name, col_type)
+            self.conn.execute(
+                text(
+                    "ALTER TABLE %s ADD COLUMN %s %s"
+                    % (self.simulation_table.name, col_name, col_type)
+                )
             )
         else:
             raise PermissionError("Not avilable in viewer mode.")
@@ -749,9 +750,11 @@ class DatabaseAccess(IsDatabase):
                 col_name = col_name[-1]
             if isinstance(col_type, list):
                 col_type = col_type[-1]
-            self._engine.execute(
-                "ALTER TABLE %s ALTER COLUMN %s TYPE %s"
-                % (self.simulation_table.name, col_name, col_type)
+            self.conn.execute(
+                text(
+                    "ALTER TABLE %s ALTER COLUMN %s TYPE %s"
+                    % (self.simulation_table.name, col_name, col_type)
+                )
             )
         else:
             raise PermissionError("Not avilable in viewer mode.")
@@ -897,7 +900,7 @@ class DatabaseAccess(IsDatabase):
                     (key.lower(), value) for key, value in par_dict.items()
                 )  # make keys lowercase
                 result = self.conn.execute(
-                    self.simulation_table.insert(par_dict)
+                    self.simulation_table.insert().values(**par_dict)
                 ).inserted_primary_key[-1]
                 if not self._keep_connection:
                     self.conn.close()
@@ -938,8 +941,8 @@ class DatabaseAccess(IsDatabase):
         try:
             if type(var) is list:
                 var = var[-1]
-            query = select(
-                [self.simulation_table], self.simulation_table.c[str(col_name)] == var
+            query = select(self.simulation_table).where(
+                self.simulation_table.c[str(col_name)] == var
             )
         except Exception:
             raise ValueError("There is no Column named: " + col_name)
@@ -955,7 +958,7 @@ class DatabaseAccess(IsDatabase):
         row = result.fetchall()
         if not self._keep_connection:
             self.conn.close()
-        return [dict(zip(col.keys(), col._mapping.values())) for col in row]
+        return [dict(zip(col._mapping.keys(), col._mapping.values())) for col in row]
 
     def _item_update(self, par_dict, item_id):
         """
@@ -976,9 +979,11 @@ class DatabaseAccess(IsDatabase):
                 item_id = int(item_id)
             # all items must be lower case, ensured here
             par_dict = dict((key.lower(), value) for key, value in par_dict.items())
-            query = self.simulation_table.update(
-                self.simulation_table.c["id"] == item_id
-            ).values()
+            query = (
+                self.simulation_table.update()
+                .where(self.simulation_table.c["id"] == item_id)
+                .values()
+            )
             try:
                 self.conn.execute(query, par_dict)
             except (OperationalError, DatabaseError):
@@ -1006,7 +1011,7 @@ class DatabaseAccess(IsDatabase):
         """
         if not self._view_mode:
             self.conn.execute(
-                self.simulation_table.delete(
+                self.simulation_table.delete().where(
                     self.simulation_table.c["id"] == int(item_id)
                 )
             )
@@ -1158,9 +1163,11 @@ class DatabaseAccess(IsDatabase):
             # here all statements are wrapped together for the and statement
             and_statement += part_of_statement
         if return_all_columns:
-            query = select([self.simulation_table], and_(*and_statement))
+            query = select(self.simulation_table).where(and_(*and_statement))
         else:
-            query = select([self.simulation_table.columns["id"]], and_(*and_statement))
+            query = select(self.simulation_table.columns["id"]).where(
+                and_(*and_statement)
+            )
         try:
             result = self.conn.execute(query)
         except (OperationalError, DatabaseError):
@@ -1174,7 +1181,7 @@ class DatabaseAccess(IsDatabase):
         row = result.fetchall()
         if not self._keep_connection:
             self.conn.close()
-        return [dict(zip(col.keys(), col._mapping.values())) for col in row]
+        return [dict(zip(col._mapping.keys(), col._mapping.values())) for col in row]
 
     def get_job_status(self, job_id):
         try:

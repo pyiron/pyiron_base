@@ -17,6 +17,7 @@ from random import choice
 from string import ascii_uppercase
 from pyiron_base.database.generic import DatabaseAccess
 from pyiron_base._tests import PyironTestCase
+from sqlalchemy import text
 
 
 class TestDatabaseAccess(PyironTestCase):
@@ -47,7 +48,7 @@ class TestDatabaseAccess(PyironTestCase):
         Deletes all entries after every tested function
         Returns:
         """
-        self.database.conn.execute("delete from simulation")
+        self.database.conn.execute(text("delete from simulation"))
 
     def test_get_table_headings(self):
         """
