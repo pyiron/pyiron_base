@@ -703,7 +703,6 @@ class DatabaseAccess(IsDatabase):
             simulation_list = Table(
                 str(table_name),
                 self.metadata,
-                autoload=True,
                 autoload_with=self._engine,
             )
         except Exception:
