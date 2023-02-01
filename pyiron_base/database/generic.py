@@ -494,14 +494,15 @@ class DatabaseAccess(IsDatabase):
             self.metadata.create_all(bind=self._engine)
 
         # too many jobs trying to talk to the database can cause this too fail.
-        retry(
-            _create_table,
-            error=OperationalError,
-            msg="Database busy with too many connections.",
-            at_most=10,
-            delay=0.1,
-            delay_factor=2,
-        )
+        _create_table()
+        # retry(
+        #     _create_table,
+        #     error=OperationalError,
+        #     msg="Database busy with too many connections.",
+        #     at_most=10,
+        #     delay=0.1,
+        #     delay_factor=2,
+        # )
         self._view_mode = False
 
     def _get_view_mode(self):
