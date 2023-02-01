@@ -1,0 +1,11 @@
+# This runs jobs which pyiron modules should run on release
+name: Release
+
+on:
+  release:
+    types: [ published ]
+
+jobs:
+  pyiron:
+    uses: pyiron/actions/.github/workflows/release.yml@main
+    secrets: inherit
