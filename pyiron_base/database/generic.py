@@ -28,7 +28,7 @@ from sqlalchemy.sql import select
 from sqlalchemy.exc import OperationalError, DatabaseError
 from threading import Thread, Lock
 from queue import SimpleQueue, Empty as QueueEmpty
-from pyiron_base.database.tables import HistoricalTable
+from pyiron_base.database.tables import get_historical_table
 from pyiron_base.utils.error import retry
 
 __author__ = "Murat Han Celik"
@@ -435,6 +435,10 @@ class AutorestoredConnection:
         if self._conn is not None:
             self._conn.close()
 
+    def commit(self):
+        if self._conn is not None:
+            self._conn.commit()
+
 
 class DatabaseAccess(IsDatabase):
     """
@@ -471,11 +475,12 @@ class DatabaseAccess(IsDatabase):
                     connection_string,
                     connect_args={"connect_timeout": 15},
                     poolclass=NullPool,
+                    future=True,
                 )
                 self.conn = AutorestoredConnection(self._engine, timeout=self._timeout)
                 self._keep_connection = self._timeout > 0
             else:
-                self._engine = create_engine(connection_string)
+                self._engine = create_engine(connection_string, future=True)
                 self.conn = self._engine.connect()
                 self.conn.connection.create_function("like", 2, self.regexp)
                 self._keep_connection = True
@@ -486,10 +491,12 @@ class DatabaseAccess(IsDatabase):
 
         def _create_table():
             self.__reload_db()
-            self.simulation_table = HistoricalTable(str(table_name), self.metadata)
+            self.simulation_table = get_historical_table(
+                table_name=str(table_name), metadata=self.metadata, extend_existing=True
+            )
             self.metadata.create_all(bind=self._engine)
 
-        # too many jobs trying to talk to the database can cause this too fail.
+        # too many jobs trying to talk to the database can cause this to fail.
         retry(
             _create_table,
             error=OperationalError,
@@ -731,6 +738,7 @@ class DatabaseAccess(IsDatabase):
                     % (self.simulation_table.name, col_name, col_type)
                 )
             )
+            self.conn.commit()
         else:
             raise PermissionError("Not avilable in viewer mode.")
 
@@ -756,6 +764,7 @@ class DatabaseAccess(IsDatabase):
                     % (self.simulation_table.name, col_name, col_type)
                 )
             )
+            self.conn.commit()
         else:
             raise PermissionError("Not avilable in viewer mode.")
 
@@ -902,6 +911,7 @@ class DatabaseAccess(IsDatabase):
                 result = self.conn.execute(
                     self.simulation_table.insert().values(**par_dict)
                 ).inserted_primary_key[-1]
+                self.conn.commit()
                 if not self._keep_connection:
                     self.conn.close()
                 return result
@@ -986,6 +996,7 @@ class DatabaseAccess(IsDatabase):
             )
             try:
                 self.conn.execute(query, par_dict)
+                self.conn.commit()
             except (OperationalError, DatabaseError):
                 if not self._sql_lite:
                     self.conn = AutorestoredConnection(self._engine)
@@ -994,6 +1005,7 @@ class DatabaseAccess(IsDatabase):
                     self.conn.connection.create_function("like", 2, self.regexp)
 
                 self.conn.execute(query, par_dict)
+                self.conn.commit()
             if not self._keep_connection:
                 self.conn.close()
         else:
@@ -1015,6 +1027,7 @@ class DatabaseAccess(IsDatabase):
                     self.simulation_table.c["id"] == int(item_id)
                 )
             )
+            self.conn.commit()
             if not self._keep_connection:
                 self.conn.close()
         else:
