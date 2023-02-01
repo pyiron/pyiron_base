@@ -281,14 +281,9 @@ class JobCore(HasGroups):
         Returns:
             list: list of child job ids
         """
-        id_master = self.job_id
-        if id_master is None:
-            return []
-        else:
-            id_l = self.project.db.get_items_dict(
-                {"masterid": str(id_master)}, return_all_columns=False
-            )
-            return sorted([job["id"] for job in id_l])
+        return self.project.get_child_ids(
+            job_specifier=self.job_name, project=self.project.project_path
+        )
 
     @property
     def project_hdf5(self):
