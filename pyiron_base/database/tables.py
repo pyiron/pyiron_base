@@ -30,7 +30,7 @@ class HistoricalTable(Table):
     """The historical table."""
 
     def _init(self, table_name, metadata, *args, extend_existing=True, **kwargs):
-        super()._init(
+        super().__init__(
             table_name,
             metadata,
             Column("id", Integer, primary_key=True, autoincrement=True),
