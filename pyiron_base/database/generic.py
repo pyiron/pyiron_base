@@ -1163,9 +1163,9 @@ class DatabaseAccess(IsDatabase):
             # here all statements are wrapped together for the and statement
             and_statement += part_of_statement
         if return_all_columns:
-            query = select([self.simulation_table]).where(and_(*and_statement))
+            query = select(self.simulation_table).where(and_(*and_statement))
         else:
-            query = select([self.simulation_table.columns["id"]]).where(and_(*and_statement))
+            query = select(self.simulation_table.columns["id"]).where(and_(*and_statement))
         try:
             result = self.conn.execute(query)
         except (OperationalError, DatabaseError):
