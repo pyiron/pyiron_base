@@ -16,6 +16,7 @@ class TestGenericParameters(PyironTestCase):
 
     @classmethod
     def setUpClass(cls):
+        super().setUpClass()
         cls.generic_parameters_empty = GenericParameters(table_name="empty")
         cls.generic_parameters_str = GenericParameters(table_name="str")
         my_str = """\

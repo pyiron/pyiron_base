@@ -11,6 +11,7 @@ from pyiron_base.state import state
 class TestProjectPath(PyironTestCase):
     @classmethod
     def setUpClass(cls):
+        super().setUpClass()
         if os.name == "nt":
             cls.current_dir = os.path.dirname(os.path.abspath(__file__)).replace(
                 "\\", "/"
@@ -20,6 +21,7 @@ class TestProjectPath(PyironTestCase):
         cls.settings_configuration = state.settings.configuration.copy()
 
     def setUp(self) -> None:
+        super().setUp()
         state.settings.configuration["project_paths"] = [self.current_dir + "/"]
         state.settings.configuration["project_check_enabled"] = True
 
@@ -27,7 +29,9 @@ class TestProjectPath(PyironTestCase):
         self.project_path = self.project_path.open("test_project_path")
 
     def tearDown(self) -> None:
+        super().tearDown()
         state.settings.configuration.update(self.settings_configuration)
+        self.project_path.removedirs()
 
     def test_open(self):
         with self.project_path.open("test_open") as test_open:
