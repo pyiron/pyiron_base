@@ -955,7 +955,7 @@ class DatabaseAccess(IsDatabase):
         row = result.fetchall()
         if not self._keep_connection:
             self.conn.close()
-        return [dict(zip(col.keys(), col._mapping.values())) for col in row]
+        return [dict(zip(col._mapping.keys(), col._mapping.values())) for col in row]
 
     def _item_update(self, par_dict, item_id):
         """
@@ -1178,7 +1178,7 @@ class DatabaseAccess(IsDatabase):
         row = result.fetchall()
         if not self._keep_connection:
             self.conn.close()
-        return [dict(zip(col.keys(), col._mapping.values())) for col in row]
+        return [dict(zip(col._mapping.keys(), col._mapping.values())) for col in row]
 
     def get_job_status(self, job_id):
         try:
