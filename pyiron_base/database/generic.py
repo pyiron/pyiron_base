@@ -725,10 +725,12 @@ class DatabaseAccess(IsDatabase):
                 col_name = col_name[-1]
             if isinstance(col_type, list):
                 col_type = col_type[-1]
-            self.conn.execute(text(
-                "ALTER TABLE %s ADD COLUMN %s %s"
-                % (self.simulation_table.name, col_name, col_type)
-            ))
+            self.conn.execute(
+                text(
+                    "ALTER TABLE %s ADD COLUMN %s %s"
+                    % (self.simulation_table.name, col_name, col_type)
+                )
+            )
         else:
             raise PermissionError("Not avilable in viewer mode.")
 
@@ -748,10 +750,12 @@ class DatabaseAccess(IsDatabase):
                 col_name = col_name[-1]
             if isinstance(col_type, list):
                 col_type = col_type[-1]
-            self.conn.execute(text(
-                "ALTER TABLE %s ALTER COLUMN %s TYPE %s"
-                % (self.simulation_table.name, col_name, col_type)
-            ))
+            self.conn.execute(
+                text(
+                    "ALTER TABLE %s ALTER COLUMN %s TYPE %s"
+                    % (self.simulation_table.name, col_name, col_type)
+                )
+            )
         else:
             raise PermissionError("Not avilable in viewer mode.")
 
