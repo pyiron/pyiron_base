@@ -726,10 +726,10 @@ class DatabaseAccess(IsDatabase):
                 col_name = col_name[-1]
             if isinstance(col_type, list):
                 col_type = col_type[-1]
-            self._engine.execute(
+            self._engine.execute(text(
                 "ALTER TABLE %s ADD COLUMN %s %s"
                 % (self.simulation_table.name, col_name, col_type)
-            )
+            )).execution_options(autocommit=True)
         else:
             raise PermissionError("Not avilable in viewer mode.")
 
@@ -749,10 +749,10 @@ class DatabaseAccess(IsDatabase):
                 col_name = col_name[-1]
             if isinstance(col_type, list):
                 col_type = col_type[-1]
-            self._engine.execute(
+            self._engine.execute(text(
                 "ALTER TABLE %s ALTER COLUMN %s TYPE %s"
                 % (self.simulation_table.name, col_name, col_type)
-            )
+            )).execution_options(autocommit=True)
         else:
             raise PermissionError("Not avilable in viewer mode.")
 
@@ -898,7 +898,7 @@ class DatabaseAccess(IsDatabase):
                 )  # make keys lowercase
                 result = self.conn.execute(
                     self.simulation_table.insert().values(**par_dict)
-                ).inserted_primary_key[-1]
+                ).execution_options(autocommit=True).inserted_primary_key[-1]
                 if not self._keep_connection:
                     self.conn.close()
                 return result
@@ -982,7 +982,7 @@ class DatabaseAccess(IsDatabase):
                 .values()
             )
             try:
-                self.conn.execute(query, par_dict)
+                self.conn.execute(query, par_dict).execution_options(autocommit=True)
             except (OperationalError, DatabaseError):
                 if not self._sql_lite:
                     self.conn = AutorestoredConnection(self._engine)
@@ -990,7 +990,7 @@ class DatabaseAccess(IsDatabase):
                     self.conn = self._engine.connect()
                     self.conn.connection.create_function("like", 2, self.regexp)
 
-                self.conn.execute(query, par_dict)
+                self.conn.execute(query, par_dict).execution_options(autocommit=True)
             if not self._keep_connection:
                 self.conn.close()
         else:
@@ -1011,7 +1011,7 @@ class DatabaseAccess(IsDatabase):
                 self.simulation_table.delete().where(
                     self.simulation_table.c["id"] == int(item_id)
                 )
-            )
+            ).execution_options(autocommit=True)
             if not self._keep_connection:
                 self.conn.close()
         else:
