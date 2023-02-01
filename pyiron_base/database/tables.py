@@ -29,9 +29,9 @@ __date__ = "Sep, 2021"
 class HistoricalTable(Table):
     """The historical table."""
 
-    def __init__(self, table_name, metadata, *args, extend_existing=True, **kwargs):
+    def __init__(self, name, metadata, *args, extend_existing=True, **kwargs):
         super().__init__(
-            table_name,
+            name,
             metadata,
             Column("id", Integer, primary_key=True, autoincrement=True),
             Column("parentid", Integer),
