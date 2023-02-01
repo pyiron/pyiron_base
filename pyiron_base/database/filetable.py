@@ -331,7 +331,8 @@ class FileTable(IsDatabase, metaclass=Singleton):
             project = self._project
         if isinstance(job_specifier, (int, np.integer)):
             return job_specifier  # is id
-
+        if len(self._job_table) == 0:
+            return None
         job_specifier.replace(".", "_")
         job_id_lst = self._job_table[
             (self._job_table.project == project)
