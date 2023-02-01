@@ -646,8 +646,8 @@ class DatabaseAccess(IsDatabase):
         Returns:
 
         """
-        self.metadata = MetaData(bind=self._engine)
-        self.metadata.reflect(self._engine)
+        self.metadata = MetaData()
+        self.metadata.reflect(bind=self._engine)
 
     @staticmethod
     def regexp(expr, item):
@@ -897,7 +897,7 @@ class DatabaseAccess(IsDatabase):
                     (key.lower(), value) for key, value in par_dict.items()
                 )  # make keys lowercase
                 result = self.conn.execute(
-                    self.simulation_table.insert(par_dict)
+                    self.simulation_table.insert().values(**par_dict)
                 ).inserted_primary_key[-1]
                 if not self._keep_connection:
                     self.conn.close()
@@ -938,9 +938,7 @@ class DatabaseAccess(IsDatabase):
         try:
             if type(var) is list:
                 var = var[-1]
-            query = select(
-                [self.simulation_table], self.simulation_table.c[str(col_name)] == var
-            )
+            query = select(self.simulation_table).where(self.simulation_table.c[str(col_name)] == var)
         except Exception:
             raise ValueError("There is no Column named: " + col_name)
         try:
@@ -976,7 +974,7 @@ class DatabaseAccess(IsDatabase):
                 item_id = int(item_id)
             # all items must be lower case, ensured here
             par_dict = dict((key.lower(), value) for key, value in par_dict.items())
-            query = self.simulation_table.update(
+            query = self.simulation_table.update().where(
                 self.simulation_table.c["id"] == item_id
             ).values()
             try:
@@ -1006,7 +1004,7 @@ class DatabaseAccess(IsDatabase):
         """
         if not self._view_mode:
             self.conn.execute(
-                self.simulation_table.delete(
+                self.simulation_table.delete().where(
                     self.simulation_table.c["id"] == int(item_id)
                 )
             )
@@ -1158,9 +1156,9 @@ class DatabaseAccess(IsDatabase):
             # here all statements are wrapped together for the and statement
             and_statement += part_of_statement
         if return_all_columns:
-            query = select([self.simulation_table], and_(*and_statement))
+            query = select(self.simulation_table).where(and_(*and_statement))
         else:
-            query = select([self.simulation_table.columns["id"]], and_(*and_statement))
+            query = select(self.simulation_table.columns["id"]).where(and_(*and_statement))
         try:
             result = self.conn.execute(query)
         except (OperationalError, DatabaseError):
