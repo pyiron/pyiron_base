@@ -26,28 +26,26 @@ __status__ = "development"
 __date__ = "Sep, 2021"
 
 
-class HistoricalTable(Table):
+def get_historical_table(table_name, metadata, extend_existing=True):
     """The historical table."""
-
-    def _init(self, table_name, metadata, *args, extend_existing=True, **kwargs):
-        super()._init(
-            table_name,
-            metadata,
-            Column("id", Integer, primary_key=True, autoincrement=True),
-            Column("parentid", Integer),
-            Column("masterid", Integer),
-            Column("projectpath", String(50)),
-            Column("project", String(255)),
-            Column("job", String(50)),
-            Column("subjob", String(255)),
-            Column("chemicalformula", String(50)),
-            Column("status", String(20)),
-            Column("hamilton", String(20)),
-            Column("hamversion", String(50)),
-            Column("username", String(20)),
-            Column("computer", String(100)),
-            Column("timestart", DateTime),
-            Column("timestop", DateTime),
-            Column("totalcputime", Float),
-            extend_existing=extend_existing,
-        )
+    return Table(
+        table_name,
+        metadata,
+        Column("id", Integer, primary_key=True, autoincrement=True),
+        Column("parentid", Integer),
+        Column("masterid", Integer),
+        Column("projectpath", String(50)),
+        Column("project", String(255)),
+        Column("job", String(50)),
+        Column("subjob", String(255)),
+        Column("chemicalformula", String(50)),
+        Column("status", String(20)),
+        Column("hamilton", String(20)),
+        Column("hamversion", String(50)),
+        Column("username", String(20)),
+        Column("computer", String(100)),
+        Column("timestart", DateTime),
+        Column("timestop", DateTime),
+        Column("totalcputime", Float),
+        extend_existing=extend_existing,
+    )
