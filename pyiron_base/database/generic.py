@@ -818,7 +818,8 @@ class DatabaseAccess(IsDatabase):
             try:
                 query = "select * from " + self.table_name + " where " + where_condition
                 query.replace("%", "%%")
-                result = self.conn.execute(text(query))
+                with self.conn.begin():
+                    result = self.conn.execute(text(query))
             except Exception as except_msg:
                 print("EXCEPTION in get_items_sql: ", except_msg)
                 raise ValueError("EXCEPTION in get_items_sql: ", except_msg)
@@ -829,9 +830,11 @@ class DatabaseAccess(IsDatabase):
                 else sql_statement
             )
             # TODO: make it save against SQL injection
-            result = self.conn.execute(text(sql_statement))
+            with self.conn.begin():
+                result = self.conn.execute(text(sql_statement))
         else:
-            result = self.conn.execute(text("select * from " + self.table_name))
+            with self.conn.begin():
+                result = self.conn.execute(text("select * from " + self.table_name))
         row = result.mappings().all()
         if not self._keep_connection:
             self.conn.close()
@@ -954,14 +957,16 @@ class DatabaseAccess(IsDatabase):
         except Exception:
             raise ValueError("There is no Column named: " + col_name)
         try:
-            result = self.conn.execute(query)
+            with self.conn.begin():
+                result = self.conn.execute(query)
         except (OperationalError, DatabaseError):
             if not self._sql_lite:
                 self.conn = AutorestoredConnection(self._engine)
             else:
                 self.conn = self._engine.connect()
                 self.conn.connection.create_function("like", 2, self.regexp)
-            result = self.conn.execute(query)
+            with self.conn.begin():
+                result = self.conn.execute(query)
         row = result.fetchall()
         if not self._keep_connection:
             self.conn.close()
@@ -1179,7 +1184,8 @@ class DatabaseAccess(IsDatabase):
                 and_(*and_statement)
             )
         try:
-            result = self.conn.execute(query)
+            with self.conn.begin():
+                result = self.conn.execute(query)
         except (OperationalError, DatabaseError):
             if not self._sql_lite:
                 self.conn = AutorestoredConnection(self._engine)
@@ -1187,7 +1193,8 @@ class DatabaseAccess(IsDatabase):
                 self.conn = self._engine.connect()
                 self.conn.connection.create_function("like", 2, self.regexp)
 
-            result = self.conn.execute(query)
+            with self.conn.begin():
+                result = self.conn.execute(query)
         row = result.fetchall()
         if not self._keep_connection:
             self.conn.close()
