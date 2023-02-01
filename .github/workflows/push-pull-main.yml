@@ -105,7 +105,7 @@ jobs:
         env-prefix: ${{ matrix.prefix }}
         env-label: ${{ matrix.label }}
         env-files: ${{ inputs.tests-env-files }}
-        test-dir: tests/unit
+        test-dir: tests
 
   benchmark-tests:
     runs-on: ubuntu-latest
