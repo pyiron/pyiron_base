@@ -491,7 +491,8 @@ class DatabaseAccess(IsDatabase):
                 metadata=self.metadata,
                 extend_existing=True
             )
-            self.metadata.create_all(bind=self._engine)
+            with self.conn.begin():
+                self.metadata.create_all(bind=self._engine)
 
         # too many jobs trying to talk to the database can cause this to fail.
         retry(
