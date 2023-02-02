@@ -26,7 +26,19 @@ class ReturnCodeJob(GenericJob):
     def collect_output(self):
         pass
 
+
 class TestGenericJob(TestWithFilledProject):
+
+    @staticmethod
+    def _manually_remove_jobs(*args):
+        """
+        Jobs that get copied but not saved or who manually `_create_working_directory`
+        create HDF content that is otherwise not caught during project cleanup, so
+        manually remove these.
+        """
+        for job in args:
+            job.remove()
+
     def test_db_entry(self):
         ham = self.project.create.job.ScriptJob("job_single_debug")
         db_entry = ham.db_entry()
@@ -186,7 +198,7 @@ class TestGenericJob(TestWithFilledProject):
         # Completely new job name
         job_new = job.copy_to(new_job_name="template_new", input_only=False, new_database_entry=False)
         self.assertTrue(job_new.status.initialized)
-        _ = job.copy_to(new_job_name="template_copy", input_only=False, new_database_entry=False,
+        job_orphan = job.copy_to(new_job_name="template_copy", input_only=False, new_database_entry=False,
                         delete_existing_job=True)
         df = self.project.job_table()
         self.assertTrue("template_copy" not in df.job.values)
@@ -196,6 +208,8 @@ class TestGenericJob(TestWithFilledProject):
         job_copy = job.copy_template(project=parent_job._hdf5, new_job_name=new_job_name)
         self.assertEqual(job_copy.project_hdf5.path.split('/')[-2], parent_job.job_name)
         self.assertEqual(job_copy.job_name, new_job_name)
+
+        self._manually_remove_jobs(job_new, job_orphan, job_copy)
 
     # def test_sub_job_name(self):
     #     pass
@@ -238,12 +252,14 @@ class TestGenericJob(TestWithFilledProject):
                 self.assertCountEqual(
                     os.listdir(job.working_directory), ["input.yml", "WARNING_pyiron_modified_content"]
                 )
+                self._manually_remove_jobs(job)
             with self.subTest("Suppress writing of warning file"):
                 job = self.project.create_job(ToyJob, "test_not_write_warning_file")
                 job._create_working_directory()
                 self.project.state.settings.configuration[wd_warn_key] = False
                 job.write_input()
                 self.assertEqual(os.listdir(job.working_directory), ['input.yml'])
+                self._manually_remove_jobs(job)
         finally:
             self.project.state.settings.configuration[
                 wd_warn_key

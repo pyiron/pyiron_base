@@ -245,7 +245,6 @@ class DataContainer(MutableMapping, HasGroups, HasHDF):
     __hdf_version__ = "0.2.0"
 
     def __new__(cls, *args, **kwargs):
-
         instance = super().__new__(cls)
         # setting these immediately after object creation ensures that they are
         # always defined and attribute access works even before __init__ is
@@ -279,14 +278,12 @@ class DataContainer(MutableMapping, HasGroups, HasHDF):
         return len(self._store)
 
     def __iter__(self):
-
         reverse_indices = {i: k for k, i in self._indices.items()}
 
         for i in range(len(self)):
             yield reverse_indices.get(i, i)
 
     def __getitem__(self, key):
-
         key = _normalize(key)
 
         if isinstance(key, tuple):
@@ -321,7 +318,6 @@ class DataContainer(MutableMapping, HasGroups, HasHDF):
             raise ValueError("{} is not a valid key, must be str or int".format(key))
 
     def __setitem__(self, key, val):
-
         if self.read_only:
             self._read_only_error()
 
@@ -352,7 +348,6 @@ class DataContainer(MutableMapping, HasGroups, HasHDF):
             raise ValueError("{} is not a valid key, must be str or int".format(key))
 
     def __delitem__(self, key):
-
         if self.read_only:
             self._read_only_error()
 

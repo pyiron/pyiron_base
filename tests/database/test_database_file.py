@@ -28,6 +28,7 @@ class TestDatabaseAccess(PyironTestCase):
         Set up whole class for testing
         Returns:
         """
+        super().setUpClass()
         # we assume everything working on sqlite, should also work on postgres in sqlalchemy
         cls.database = FileTable(os.path.dirname(os.path.abspath(__file__)))
 

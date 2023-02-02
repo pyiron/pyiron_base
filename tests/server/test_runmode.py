@@ -10,6 +10,7 @@ from pyiron_base._tests import PyironTestCase
 class TestRunmode(PyironTestCase):
     @classmethod
     def setUpClass(cls):
+        super().setUpClass()
         cls.run_mode_default = Runmode()
         cls.run_mode_modal = Runmode()
         cls.run_mode_modal.mode = "modal"

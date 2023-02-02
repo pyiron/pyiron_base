@@ -391,10 +391,7 @@ class ProjectPath(GenericPath):
         if rel_path:
             rel_path = self._windows_path_to_unix_path(rel_path)
             path = posixpath.join(path, rel_path)
-        try:
-            os.makedirs(path)
-        except os.error:
-            pass
+        os.makedirs(path, exist_ok=True)
 
     @staticmethod
     def _get_project_from_path(full_path):

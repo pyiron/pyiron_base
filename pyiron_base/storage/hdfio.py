@@ -12,15 +12,12 @@ from collections.abc import MutableMapping
 import importlib
 import pandas
 import posixpath
-import h5io
 import numpy as np
 import sys
-import time
 from typing import Union
 
 from pyiron_base.utils.deprecate import deprecate
-from pyiron_base.utils.error import retry
-
+from pyiron_base.storage.helper_functions import read_hdf5, write_hdf5
 from pyiron_base.interfaces.has_groups import HasGroups
 from pyiron_base.state import state
 from pyiron_base.jobs.dynamic import JOB_DYN_DICT, class_constructor
@@ -1299,8 +1296,7 @@ class ProjectHDFio(FileHDFio):
         """
         Create the working directory on the file system if it does not exist already.
         """
-        if not os.path.isdir(self.working_directory):
-            os.makedirs(self.working_directory)
+        os.makedirs(self.working_directory, exist_ok=True)
 
     def import_class(self, class_name):
         """
@@ -1476,43 +1472,3 @@ class ProjectHDFio(FileHDFio):
             Project: pyiron project object
         """
         return self._project.__class__(path=self.file_path)
-
-
-def read_hdf5(fname, title="h5io", slash="ignore"):
-    return retry(
-        lambda: h5io.read_hdf5(
-            fname=fname,
-            title=title,
-            slash=slash,
-        ),
-        error=BlockingIOError,
-        msg=f"Two or more processes tried to access the file {fname}.",
-        at_most=10,
-        delay=1,
-    )
-
-
-def write_hdf5(
-    fname,
-    data,
-    overwrite=False,
-    compression=4,
-    title="h5io",
-    slash="error",
-    use_json=False,
-):
-    retry(
-        lambda: h5io.write_hdf5(
-            fname=fname,
-            data=data,
-            overwrite=overwrite,
-            compression=compression,
-            title=title,
-            slash=slash,
-            use_json=use_json,
-        ),
-        error=BlockingIOError,
-        msg=f"Two or more processes tried to access the file {fname}.",
-        at_most=10,
-        delay=1,
-    )

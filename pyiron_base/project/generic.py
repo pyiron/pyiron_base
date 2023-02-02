@@ -629,7 +629,9 @@ class Project(ProjectPath, HasGroups):
         """
         return [(key, self[key]) for key in self.keys()]
 
-    def update_from_remote(self, recursive=True, ignore_exceptions=False):
+    def update_from_remote(
+        self, recursive=True, ignore_exceptions=False, try_collecting=False
+    ):
         """
         Update jobs from the remote server
 
@@ -643,7 +645,10 @@ class Project(ProjectPath, HasGroups):
 
         """
         return update_from_remote(
-            project=self, recursive=recursive, ignore_exceptions=ignore_exceptions
+            project=self,
+            recursive=recursive,
+            ignore_exceptions=ignore_exceptions,
+            try_collecting=try_collecting,
         )
 
     def job_table(
@@ -661,20 +666,49 @@ class Project(ProjectPath, HasGroups):
         """
         auto_refresh_job_status (bool): will automatically reload job status by calling refresh_job_status() upon calling job_table
         """
-        if auto_refresh_job_status:
-            self.refresh_job_status()
-        return self.db.job_table(
-            sql_query=self.sql_query,
-            user=self.user,
-            project_path=self.project_path,
-            recursive=recursive,
-            columns=columns,
-            all_columns=all_columns,
-            sort_by=sort_by,
-            full_table=full_table,
-            element_lst=element_lst,
-            **kwargs,
-        )
+        if not isinstance(self.db, FileTable):
+            if auto_refresh_job_status:
+                self.refresh_job_status()
+            return self.db.job_table(
+                sql_query=self.sql_query,
+                user=self.user,
+                project_path=self.project_path,
+                recursive=recursive,
+                columns=columns,
+                all_columns=all_columns,
+                sort_by=sort_by,
+                full_table=full_table,
+                element_lst=element_lst,
+                **kwargs,
+            )
+        elif not auto_refresh_job_status:
+            return self.db.job_table(
+                sql_query=self.sql_query,
+                user=self.user,
+                project_path=self.project_path,
+                recursive=recursive,
+                columns=columns,
+                all_columns=all_columns,
+                sort_by=sort_by,
+                full_table=full_table,
+                element_lst=element_lst,
+                **kwargs,
+            )
+        else:
+            return self._refresh_job_status_file_table(
+                df=self.db.job_table(
+                    sql_query=self.sql_query,
+                    user=self.user,
+                    project_path=self.project_path,
+                    recursive=recursive,
+                    columns=columns,
+                    all_columns=all_columns,
+                    sort_by=sort_by,
+                    full_table=full_table,
+                    element_lst=element_lst,
+                    **kwargs,
+                )
+            )
 
     job_table.__doc__ = "\n".join(
         [
@@ -1035,6 +1069,37 @@ class Project(ProjectPath, HasGroups):
                     return
                 if not self.queue_check_job_is_waiting_or_running(job):
                     self.db.set_job_status(job_id=job_id, status="aborted")
+
+    def _refresh_job_status_file_table(self, df):
+        """
+        Internal function to refresh the job table and update the job table with the status from the queuing system.
+
+        Args:
+            df (pandas.DataFrame): job table from the file based database
+
+        Returns:
+            pandas.DataFrame: updated job table with status from the queuing system
+        """
+
+        def convert_queue_status(queue_status):
+            return {"pending": "submitted"}.get(queue_status, default=queue_status)
+
+        df_queue = state.queue_adapter.get_status_of_my_jobs()
+
+        status_lst = df.status.values.tolist()
+        working_dir_lst = df.project + df.job + "_hdf5/" + df.job
+        for i, [working_dir, status] in enumerate(
+            zip(working_dir_lst, status_lst.copy())
+        ):
+            if status == "initialized":
+                df_tmp = df_queue[df_queue.working_directory == working_dir]
+                if len(df_tmp) > 0:
+                    status_lst[i] = convert_queue_status(
+                        queue_status=df_tmp.status.values[0]
+                    )
+        df["status"] = status_lst
+
+        return df
 
     def remove_file(self, file_name):
         """

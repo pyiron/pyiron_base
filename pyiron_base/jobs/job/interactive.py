@@ -8,7 +8,6 @@ InteractiveBase class extends the Generic Job class with all the functionality t
 import numpy as np
 from pyiron_base.database.filetable import FileTable
 from pyiron_base.jobs.job.generic import GenericJob
-from pyiron_base.jobs.job.jobtype import JobType
 
 __author__ = "Osamu Waseda, Jan Janssen"
 __copyright__ = (
@@ -305,7 +304,7 @@ class InteractiveBase(GenericJob):
         self.project_hdf5.rewrite_hdf5()
         self.status.finished = True
         if not isinstance(self.project.db, FileTable):
-            self.project.db.item_update(self._runtime(), self._job_id)
+            self.run_time_to_db()
         else:
             self._hdf5["status"] = self.status.string
         self._interactive_library = None

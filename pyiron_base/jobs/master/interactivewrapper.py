@@ -7,7 +7,6 @@ import warnings
 
 from pyiron_base.storage.parameters import GenericParameters
 from pyiron_base.jobs.job.generic import GenericJob
-from pyiron_base.jobs.job.jobtype import JobType
 from pyiron_base.jobs.master.generic import GenericMaster
 
 __author__ = "Jan Janssen"

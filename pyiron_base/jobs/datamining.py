@@ -3,7 +3,6 @@
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
 import codecs
-from collections import OrderedDict
 from datetime import datetime
 import dill as pickle
 import json
@@ -424,7 +423,9 @@ class PyironTable:
         for job_id in tqdm(job_id_lst, desc="Loading and filtering jobs"):
             try:
                 job = self._project.inspect(job_id)
-            except IndexError:  # In case the job was deleted while the pyiron table is running
+            except (
+                IndexError
+            ):  # In case the job was deleted while the pyiron table is running
                 job = None
             if (
                 job is not None
@@ -772,8 +773,7 @@ class TableJob(GenericJob):
             os.path.join(self.working_directory, "pyirontable.csv"), index=False
         )
         self._save_output()
-        if self.job_id is not None:
-            self.project.db.item_update(self._runtime(), self.job_id)
+        self.run_time_to_db()
 
     def get_dataframe(self):
         """
