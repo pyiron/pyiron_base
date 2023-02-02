@@ -424,7 +424,9 @@ class PyironTable:
         for job_id in tqdm(job_id_lst, desc="Loading and filtering jobs"):
             try:
                 job = self._project.inspect(job_id)
-            except IndexError:  # In case the job was deleted while the pyiron table is running
+            except (
+                IndexError
+            ):  # In case the job was deleted while the pyiron table is running
                 job = None
             if (
                 job is not None

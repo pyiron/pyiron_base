@@ -51,7 +51,6 @@ def generate_list_of_directories(df_files, directory_to_transfer, archive_direct
 
 
 def compress_dir(archive_directory):
-
     arch_comp_name = archive_directory + ".tar.gz"
     tar = tarfile.open(arch_comp_name, "w:gz")
     tar.add(os.path.relpath(archive_directory, os.getcwd()))
