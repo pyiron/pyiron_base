@@ -44,7 +44,7 @@ setup(
         'sqlalchemy==2.0.0',
         'tables==3.7.0',
         'tqdm==4.64.1',
-        'traitlets==5.8.1',
+        'traitlets==5.9.0',
     ],
     cmdclass=versioneer.get_cmdclass(),
 
