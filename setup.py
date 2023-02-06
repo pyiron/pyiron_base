@@ -34,7 +34,7 @@ setup(
         'gitpython==3.1.30',
         'h5io==0.1.7',
         'h5py==3.8.0',
-        'numpy==1.24.1',
+        'numpy==1.24.2',
         'pandas==1.5.3',
         'pathlib2==2.3.7.post1',
         'pint==0.20.1',
