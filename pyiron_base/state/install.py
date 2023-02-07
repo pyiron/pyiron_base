@@ -118,7 +118,9 @@ def install_dialog(silently=False):
                 giturl_for_zip_file="https://github.com/pyiron/pyiron-resources/releases/latest/download/resources.tar.gz",
                 git_folder_name="resources",
             )
-            print('pyiron resources installed - restart your server for the changes to be in effect')
+            print(
+                "pyiron resources installed - restart your server for the changes to be in effect"
+            )
         else:
             raise ValueError("pyiron was not installed!")
     else:
