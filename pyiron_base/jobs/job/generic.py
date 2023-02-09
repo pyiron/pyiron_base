@@ -142,12 +142,12 @@ class GenericJob(JobCore):
             self.refresh_job_status()
         elif os.path.exists(self.project_hdf5.file_name):
             initial_status = read_hdf5(
-                self.project_hdf5.file_name, job_name + "/status"
+                self.project_hdf5.file_name, self.job_name + "/status"
             )
             self._status = JobStatus(initial_status=initial_status)
             if "job_id" in self.list_nodes():
                 self._job_id = read_hdf5(
-                    self.project_hdf5.file_name, job_name + "/job_id"
+                    self.project_hdf5.file_name, self.job_name + "/job_id"
                 )
         else:
             self._status = JobStatus()
