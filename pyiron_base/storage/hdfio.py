@@ -1478,6 +1478,8 @@ def _get_safe_filename(file_name):
     file_path_no_ext, file_ext = os.path.splitext(file_name)
     file_path = os.path.dirname(file_path_no_ext)
     file_name_no_ext = os.path.basename(file_path_no_ext)
-    file_name = os.path.join(file_path, _get_safe_job_name(name=file_name_no_ext) + file_ext)
+    file_name = os.path.join(
+        file_path, _get_safe_job_name(name=file_name_no_ext) + file_ext
+    )
     file_name += ".h5" if not file_name.endswith(".h5") else ""
     return file_name.replace("\\", "/")
