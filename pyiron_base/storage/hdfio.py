@@ -21,6 +21,7 @@ from pyiron_base.storage.helper_functions import read_hdf5, write_hdf5
 from pyiron_base.interfaces.has_groups import HasGroups
 from pyiron_base.state import state
 from pyiron_base.jobs.dynamic import JOB_DYN_DICT, class_constructor
+from pyiron_base.jobs.job.util import _get_safe_job_name
 import warnings
 
 __author__ = "Joerg Neugebauer, Jan Janssen"
@@ -1093,8 +1094,7 @@ class ProjectHDFio(FileHDFio):
     """
 
     def __init__(self, project, file_name, h5_path=None, mode=None):
-        file_name += ".h5" if not file_name.endswith(".h5") else ""
-        self._file_name = file_name.replace("\\", "/")
+        self._file_name = _get_safe_filename(file_name)
         if h5_path is None:
             h5_path = "/"
         self._project = project.copy()
@@ -1472,3 +1472,14 @@ class ProjectHDFio(FileHDFio):
             Project: pyiron project object
         """
         return self._project.__class__(path=self.file_path)
+
+
+def _get_safe_filename(file_name):
+    file_path_no_ext, file_ext = os.path.splitext(file_name)
+    file_path = os.path.dirname(file_path_no_ext)
+    file_name_no_ext = os.path.basename(file_path_no_ext)
+    file_name = os.path.join(
+        file_path, _get_safe_job_name(name=file_name_no_ext) + file_ext
+    )
+    file_name += ".h5" if not file_name.endswith(".h5") else ""
+    return file_name.replace("\\", "/")
