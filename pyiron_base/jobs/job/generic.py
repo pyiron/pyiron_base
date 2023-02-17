@@ -992,6 +992,12 @@ class GenericJob(JobCore):
             cwd = self.project_hdf5.working_directory
         return posixpath.join(cwd, file_name)
 
+    def _set_hdf(self, hdf=None, group_name=None)
+        if hdf is not None:
+            self._hdf5 = hdf
+        if group_name is not None and self._hdf5 is not None:
+            self._hdf5 = self._hdf5.open(group_name)
+
     def to_hdf(self, hdf=None, group_name=None):
         """
         Store the GenericJob in an HDF5 file
@@ -1000,10 +1006,7 @@ class GenericJob(JobCore):
             hdf (ProjectHDFio): HDF5 group object - optional
             group_name (str): HDF5 subgroup name - optional
         """
-        if hdf is not None:
-            self._hdf5 = hdf
-        if group_name is not None and self._hdf5 is not None:
-            self._hdf5 = self._hdf5.open(group_name)
+        self._set_hdf(hdf=hdf, group_name=group_name)
         self._executable_activate_mpi()
         self._type_to_hdf()
         self._hdf5["status"] = self.status.string
@@ -1043,10 +1046,7 @@ class GenericJob(JobCore):
             hdf (ProjectHDFio): HDF5 group object - optional
             group_name (str): HDF5 subgroup name - optional
         """
-        if hdf is not None:
-            self._hdf5 = hdf
-        if group_name is not None:
-            self._hdf5 = self._hdf5.open(group_name)
+        self._set_hdf(hdf=hdf, group_name=group_name)
         self._type_from_hdf()
         if "import_directory" in self._hdf5.list_nodes():
             self._import_directory = self._hdf5["import_directory"]
