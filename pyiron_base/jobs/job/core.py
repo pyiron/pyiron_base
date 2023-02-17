@@ -477,7 +477,7 @@ class JobCore(HasGroups):
         _job_remove_folder(job=self)
 
         # Delete database entry
-        if self.job_id:
+        if self.job_id is not None:
             self.project.db.delete_item(self.job_id)
 
     def to_object(self, object_type=None, **qwargs):
