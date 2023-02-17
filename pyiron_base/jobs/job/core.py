@@ -225,12 +225,9 @@ class JobCore(HasGroups):
         Returns:
             int: parent id
         """
-        if self._parent_id:
-            return self._parent_id
-        elif self.job_id:
+        if self._parent_id is None and self.job_id is not None:
             return self.project.db.get_item_by_id(self.job_id)["parentid"]
-        else:
-            return None
+        return self._parent_id
 
     @parent_id.setter
     def parent_id(self, parent_id):
@@ -240,7 +237,7 @@ class JobCore(HasGroups):
         Args:
             parent_id (int): parent id
         """
-        if self.job_id:
+        if self.job_id is not None:
             self.project.db.item_update({"parentid": parent_id}, self.job_id)
         self._parent_id = parent_id
 
@@ -253,12 +250,9 @@ class JobCore(HasGroups):
         Returns:
             int: master id
         """
-        if self._master_id:
-            return self._master_id
-        elif self.job_id:
+        if self._master_id is None and self.job_id is not None:
             return self.project.db.get_item_by_id(self.job_id)["masterid"]
-        else:
-            return None
+        return self._master_id
 
     @master_id.setter
     def master_id(self, master_id):
@@ -269,7 +263,7 @@ class JobCore(HasGroups):
         Args:
             master_id (int): master id
         """
-        if self.job_id:
+        if self.job_id is not None:
             self.project.db.item_update({"masterid": master_id}, self.job_id)
         self._master_id = master_id
 
