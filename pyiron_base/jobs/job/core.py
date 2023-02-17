@@ -581,23 +581,21 @@ class JobCore(HasGroups):
         Returns:
             int: job ID of the job
         """
-        if job_specifier:
+        if job_specifier is not None:
             return self.project.get_job_id(
                 job_specifier
             )  # , sub_job_name=self.project_hdf5.h5_path)
-        else:
-            where_dict = {
-                "job": str(self._name),
-                "project": str(self.project_hdf5.project_path),
-                "subjob": str(self.project_hdf5.h5_path),
-            }
-            response = self.project.db.get_items_dict(
-                where_dict, return_all_columns=False
-            )
-            if len(response) > 0:
-                return response[-1]["id"]
-            else:
-                return None
+        where_dict = {
+            "job": str(self._name),
+            "project": str(self.project_hdf5.project_path),
+            "subjob": str(self.project_hdf5.h5_path),
+        }
+        response = self.project.db.get_items_dict(
+            where_dict, return_all_columns=False
+        )
+        if len(response) > 0:
+            return response[-1]["id"]
+        return None
 
     def list_files(self):
         """
