@@ -992,7 +992,7 @@ class GenericJob(JobCore):
             cwd = self.project_hdf5.working_directory
         return posixpath.join(cwd, file_name)
 
-    def _set_hdf(self, hdf=None, group_name=None)
+    def _set_hdf(self, hdf=None, group_name=None):
         if hdf is not None:
             self._hdf5 = hdf
         if group_name is not None and self._hdf5 is not None:
