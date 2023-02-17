@@ -988,7 +988,7 @@ class GenericJob(JobCore):
         Returns:
             str: absolute path to the file in the current working directory
         """
-        if not cwd:
+        if cwd is None:
             cwd = self.project_hdf5.working_directory
         return posixpath.join(cwd, file_name)
 

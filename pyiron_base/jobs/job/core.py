@@ -710,7 +710,7 @@ class JobCore(HasGroups):
             self.project_hdf5.copy_to(destination=hdf5_project, maintain_name=False)
 
         # Update the database entry
-        if self.job_id:
+        if self.job_id is not None:
             if new_database_entry:
                 _copy_database_entry(
                     new_job_core=new_job_core,
@@ -801,7 +801,7 @@ class JobCore(HasGroups):
             else:
                 self.project_hdf5.remove_group()
         self.project_hdf5 = new_job.project_hdf5.copy()
-        if self._job_id:
+        if self._job_id is not None:
             self.project.db.item_update(
                 {
                     "subjob": self.project_hdf5.h5_path,
