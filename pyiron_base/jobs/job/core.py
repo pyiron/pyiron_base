@@ -844,6 +844,8 @@ class JobCore(HasGroups):
             job_id (int/ None):
 
         """
+        if job_id is not None:
+            job_id = int(job_id)
         self._job_id = job_id
 
     def save(self):

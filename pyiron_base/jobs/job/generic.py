@@ -642,9 +642,7 @@ class GenericJob(JobCore):
         """
         Reset the job id sets the job_id to None in the GenericJob as well as all connected modules like JobStatus.
         """
-        if job_id is not None:
-            job_id = int(job_id)
-        self._job_id = job_id
+        super().reset_job_id(job_id=job_id)
         self._status = JobStatus(db=self.project.db, job_id=self._job_id)
 
     @deprecate(
