@@ -363,9 +363,9 @@ class JobCore(HasGroups):
         Returns:
             (bool): True / False
         """
-        if not job_name:
+        if job_name is None:
             job_name = self.job_name
-        if not project:
+        if project is None:
             project = self._hdf5
 
         where_dict = {
