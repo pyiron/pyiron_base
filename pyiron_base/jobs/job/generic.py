@@ -609,17 +609,12 @@ class GenericJob(JobCore):
         _kill_child(job=self)
         super(GenericJob, self).remove_child()
 
-    def remove_and_reset_id(self, _protect_childs=True, reset_master=False, initialize=False):
+    def remove_and_reset_id(self, _protect_childs=True):
         if self.job_id is not None:
-            parent_id = self.parent_id
-            if reset_master:
-                master_id = self.master_id
-                self.parent_id = None
+            parent_id, master_id = self.parent_id, self.master_id
             self.remove(_protect_childs=_protect_childs)
             self.reset_job_id(initialize=initialize)
-            self.parent_id = parent_id
-            if reset_master:
-                self.master_id = master_id
+            self.parent_id, self.master_id = parent_id, master_id
         else:
             self.remove(_protect_childs=_protect_childs)
 
@@ -714,11 +709,7 @@ class GenericJob(JobCore):
                 elif status == "busy":
                     self._run_if_busy()
                 elif status == "finished":
-                    run_job_with_status_finished(
-                        job=self,
-                        delete_existing_job=delete_existing_job,
-                        run_again=run_again,
-                    )
+                    run_job_with_status_finished(job=self)
                 elif status == "aborted":
                     raise ValueError(
                         "Running an aborted job with `delete_existing_job=False` is meaningless."
