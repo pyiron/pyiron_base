@@ -609,12 +609,17 @@ class GenericJob(JobCore):
         _kill_child(job=self)
         super(GenericJob, self).remove_child()
 
-    def remove_and_reset_id(self, _protect_childs=True):
+    def remove_and_reset_id(self, _protect_childs=True, reset_master=False, initialize=False):
         if self.job_id is not None:
-            master_id, parent_id = self.master_id, self.parent_id
+            parent_id = self.parent_id
+            if reset_master:
+                master_id = self.master_id
+                self.parent_id = None
             self.remove(_protect_childs=_protect_childs)
-            self.reset_job_id()
-            self.master_id, self.parent_id = master_id, parent_id
+            self.reset_job_id(initialize=initialize)
+            self.parent_id = parent_id
+            if reset_master:
+                self.master_id = master_id
         else:
             self.remove(_protect_childs=_protect_childs)
 
@@ -644,12 +649,15 @@ class GenericJob(JobCore):
         """
         pass
 
-    def reset_job_id(self, job_id=None):
+    def reset_job_id(self, job_id=None, initialize=False):
         """
         Reset the job id sets the job_id to None in the GenericJob as well as all connected modules like JobStatus.
         """
         super().reset_job_id(job_id=job_id)
-        self._status = JobStatus(db=self.project.db, job_id=self._job_id)
+        if initialize:
+            self.status.initialized = True
+        else:
+            self._status = JobStatus(db=self.project.db, job_id=self._job_id)
 
     @deprecate(
         run_again="Either delete the job via job.remove() or use delete_existing_job=True.",

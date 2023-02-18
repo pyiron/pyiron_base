@@ -236,12 +236,7 @@ def run_job_with_status_finished(job, delete_existing_job=False, run_again=False
     if run_again:
         delete_existing_job = True
     if delete_existing_job:
-        parent_id = job.parent_id
-        job.parent_id = None
-        job.remove()
-        job._job_id = None
-        job.status.initialized = True
-        job.parent_id = parent_id
+        job.remove_and_reset_id(reset_master=True, initialize=True)
         job.run()
     else:
         job.logger.warning(
