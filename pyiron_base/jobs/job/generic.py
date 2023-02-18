@@ -117,7 +117,7 @@ class GenericJob(JobCore):
     __doc__ = (
         """
     Generic Job class extends the JobCore class with all the functionality to run the job object. From this class
-    all specific Hamiltonians are derived. Therefore it should contain the properties/routines common to all jobs.
+    all specific job types are derived. Therefore it should contain the properties/routines common to all jobs.
     The functions in this module should be as generic as possible.
 
     Sub classes that need to add special behavior after :method:`.copy_to()` can override
@@ -609,12 +609,18 @@ class GenericJob(JobCore):
         _kill_child(job=self)
         super(GenericJob, self).remove_child()
 
-    def kill(self):
-        if self.status.running or self.status.submitted:
+    def remove_and_reset_id(self, _protect_childs=True):
+        if self.job_id is not None:
             master_id, parent_id = self.master_id, self.parent_id
-            self.remove()
+            self.remove(_protect_childs=_protect_childs)
             self.reset_job_id()
             self.master_id, self.parent_id = master_id, parent_id
+        else:
+            self.remove(_protect_childs=_protect_childs)
+
+    def kill(self):
+        if self.status.running or self.status.submitted:
+            self.remove_and_reset_id()
         else:
             raise ValueError(
                 "The kill() function is only available during the execution of the job."
@@ -680,14 +686,7 @@ class GenericJob(JobCore):
                     self.server.run_mode = run_mode
                 if delete_existing_job:
                     status = "initialized"
-                    if self.job_id:
-                        self._logger.info("run repair " + str(self.job_id))
-                        master_id, parent_id = self.master_id, self.parent_id
-                        self.remove(_protect_childs=False)
-                        self.reset_job_id()
-                        self.master_id, self.parent_id = master_id, parent_id
-                    else:
-                        self.remove(_protect_childs=False)
+                    self.remove_and_reset_id(_protect_childs=False)
                 if repair and self.job_id and not self.status.finished:
                     self._run_if_repair()
                 elif status == "initialized":
