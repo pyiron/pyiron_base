@@ -644,12 +644,15 @@ class GenericJob(JobCore):
         """
         pass
 
-    def reset_job_id(self, job_id=None):
+    def reset_job_id(self, job_id=None, initialize=False):
         """
         Reset the job id sets the job_id to None in the GenericJob as well as all connected modules like JobStatus.
         """
         super().reset_job_id(job_id=job_id)
-        self._status = JobStatus(db=self.project.db, job_id=self._job_id)
+        if initialize:
+            self.status.initialized = True
+        else:
+            self._status = JobStatus(db=self.project.db, job_id=self._job_id)
 
     @deprecate(
         run_again="Either delete the job via job.remove() or use delete_existing_job=True.",
