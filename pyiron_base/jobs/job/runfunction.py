@@ -223,32 +223,19 @@ def run_job_with_status_suspended(job):
     run_again="Either delete the job via job.remove() or use delete_existing_job=True.",
     version="0.4.0",
 )
-def run_job_with_status_finished(job, delete_existing_job=False, run_again=False):
+def run_job_with_status_finished(job):
     """
     Internal helper function the run if finished function is called when the job status is 'finished'. It loads
     the existing job.
 
     Args:
         job (GenericJob): pyiron job object
-        delete_existing_job (bool): Delete the existing job and run the simulation again.
-        run_again (bool): Same as delete_existing_job (deprecated)
     """
-    if run_again:
-        delete_existing_job = True
-    if delete_existing_job:
-        parent_id = job.parent_id
-        job.parent_id = None
-        job.remove()
-        job._job_id = None
-        job.status.initialized = True
-        job.parent_id = parent_id
-        job.run()
-    else:
-        job.logger.warning(
-            "The job {} is being loaded instead of running. To re-run use the argument "
-            "'delete_existing_job=True in create_job'".format(job.job_name)
-        )
-        job.from_hdf()
+    job.logger.warning(
+        "The job {} is being loaded instead of running. To re-run use the argument "
+        "'delete_existing_job=True in create_job'".format(job.job_name)
+    )
+    job.from_hdf()
 
 
 # Run Modes
