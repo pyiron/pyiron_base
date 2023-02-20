@@ -11,6 +11,7 @@ import tarfile
 import stat
 import shutil
 from typing import Optional, Union
+import warnings
 from pyiron_base.utils.instance import static_isinstance
 from pyiron_base.utils.safetar import safe_extract
 
@@ -153,6 +154,8 @@ def _get_safe_job_name(
     for k, v in d_special_symbols.items():
         job_name = job_name.replace(k, v)
     _is_valid_job_name(job_name=job_name)
+    if job_name != name:
+        warnings.warn("The job_name was changed from " + name + " to " + job_name)
     return job_name
 
 
