@@ -1548,7 +1548,7 @@ class Project(ProjectPath, HasGroups):
             print("slice: ", item)
             raise NotImplementedError("Implement if needed, e.g. for [:]")
         else:
-            item_lst = [sub_item.replace(" ", "") for sub_item in item.split("/")]
+            item_lst = item.split("/")
             if len(item_lst) > 1:
                 try:
                     return self._get_item_helper(
@@ -1586,7 +1586,11 @@ class Project(ProjectPath, HasGroups):
         """
         if item == "..":
             return self.parent_group
-        if item in self.list_nodes():
+        try:
+            item_save = _get_safe_job_name(name=item)
+        except ValueError:
+            item_save = None
+        if item in self.list_nodes() or item_save in self.list_nodes():
             if self._inspect_mode or not convert_to_object:
                 return self.inspect(item)
             return self.load(item)
