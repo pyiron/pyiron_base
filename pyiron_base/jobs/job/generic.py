@@ -45,7 +45,7 @@ from pyiron_base.jobs.job.util import (
     _kill_child,
     _job_store_before_copy,
     _job_reload_after_copy,
-    to_hdf_decorator
+    to_hdf_decorator,
 )
 from pyiron_base.utils.instance import static_isinstance
 from pyiron_base.utils.deprecate import deprecate
@@ -135,9 +135,19 @@ class GenericJob(JobCore):
         self.__name__ = type(self).__name__
         self.__version__ = "0.4"
         self.__hdf_version__ = "0.1.0"
+        self._executable = None
+        self._restart_file_list = list()
+        self._restart_file_dict = dict()
+        self._exclude_nodes_hdf = list()
+        self._exclude_groups_hdf = list()
+        self._process = None
+        self._compress_by_default = False
+        self._python_only_job = False
+        self._data_storage_enabled = True
+        self._data_storage_disabled_implemented = False
+        self.interactive_cache = None
         self._server = Server()
         self._logger = state.logger
-        self._executable = None
         if not state.database.database_is_disabled:
             self._status = JobStatus(db=project.db, job_id=self.job_id)
             self.refresh_job_status()
@@ -152,16 +162,6 @@ class GenericJob(JobCore):
                 )
         else:
             self._status = JobStatus()
-        self._restart_file_list = list()
-        self._restart_file_dict = dict()
-        self._exclude_nodes_hdf = list()
-        self._exclude_groups_hdf = list()
-        self._process = None
-        self._compress_by_default = False
-        self._python_only_job = False
-        self._data_storage_enabled = True
-        self._data_storage_disabled_implemented = False
-        self.interactive_cache = None
         self.error = GenericError(job=self)
 
     @property
@@ -173,7 +173,9 @@ class GenericJob(JobCore):
         if self._data_storage_disabled_implemented:
             self._data_storage_enabled = enabled
         else:
-            raise NotImplementedError("This JobType does not support disabling the data storage.")
+            raise NotImplementedError(
+                "This JobType does not support disabling the data storage."
+            )
 
     @property
     def version(self):
