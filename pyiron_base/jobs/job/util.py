@@ -455,3 +455,11 @@ def _job_reload_after_copy(job, delete_file_after_copy):
     job.from_hdf()
     if delete_file_after_copy:
         job.project_hdf5.remove_file()
+
+
+def to_hdf_decorator(to_hdf_function):
+    def to_hdf(self, hdf=None, group_name=None):
+        if self.data_storage_enabled:
+            to_hdf_function(self=self, hdf=hdf, group_name=group_name)
+
+    return to_hdf

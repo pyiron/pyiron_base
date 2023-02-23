@@ -6,6 +6,7 @@ Template class to define jobs
 """
 
 from pyiron_base.jobs.job.generic import GenericJob
+from pyiron_base.jobs.job.util import to_hdf_decorator
 from pyiron_base.interfaces.object import HasStorage
 
 __author__ = "Jan Janssen"
@@ -35,6 +36,7 @@ class TemplateJob(GenericJob, HasStorage):
     def output(self):
         return self.storage.output
 
+    @to_hdf_decorator
     def to_hdf(self, hdf=None, group_name=None):
         GenericJob.to_hdf(self, hdf=hdf, group_name=group_name)
         HasStorage.to_hdf(self, hdf=self.project_hdf5)

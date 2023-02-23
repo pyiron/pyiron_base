@@ -10,6 +10,7 @@ import inspect
 import time
 import numpy as np
 from pyiron_base.jobs.job.core import _doc_str_job_core_args
+from pyiron_base.jobs.job.util import to_hdf_decorator
 from pyiron_base.jobs.master.generic import (
     GenericMaster,
     get_function_from_string,
@@ -303,6 +304,7 @@ class SerialMasterBase(GenericMaster):
         """
         return [["job", str(i), str(job)] for i, job in enumerate(self)]
 
+    @to_hdf_decorator
     def to_hdf(self, hdf=None, group_name=None):
         """
         Store the SerialMaster in an HDF5 file

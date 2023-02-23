@@ -17,6 +17,7 @@ from typing import List, Tuple
 from pyiron_base.utils.deprecate import deprecate
 from pyiron_base.jobs.job.generic import GenericJob
 from pyiron_base.jobs.job.extension import jobstatus
+from pyiron_base.jobs.job.util import to_hdf_decorator
 from pyiron_base.storage.hdfio import FileHDFio
 from pyiron_base.jobs.master.generic import get_function_from_string
 
@@ -637,6 +638,7 @@ class TableJob(GenericJob):
                 hdf5_output.file_name, hdf5_output.h5_path + "/table"
             )
 
+    @to_hdf_decorator
     def to_hdf(self, hdf=None, group_name=None):
         """
         Store pyiron table job in HDF5

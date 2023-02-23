@@ -8,6 +8,7 @@ Jobclass to execute python scripts and jupyter notebooks
 import os
 import shutil
 from pyiron_base.jobs.job.generic import GenericJob
+from pyiron_base.jobs.job.util import to_hdf_decorator
 from pyiron_base.storage.parameters import GenericParameters
 from pyiron_base.storage.datacontainer import DataContainer
 
@@ -273,6 +274,7 @@ class ScriptJob(GenericJob):
         """
         self.input.read_only = True
 
+    @to_hdf_decorator
     def to_hdf(self, hdf=None, group_name=None):
         """
         Store the ScriptJob in an HDF5 file

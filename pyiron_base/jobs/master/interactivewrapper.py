@@ -7,6 +7,7 @@ import warnings
 
 from pyiron_base.storage.parameters import GenericParameters
 from pyiron_base.jobs.job.generic import GenericJob
+from pyiron_base.jobs.job.util import to_hdf_decorator
 from pyiron_base.jobs.master.generic import GenericMaster
 
 __author__ = "Jan Janssen"
@@ -83,6 +84,7 @@ class InteractiveWrapper(GenericMaster):
                 self._ref_job.master_id = self.job_id
                 self._ref_job.server.cores = self.server.cores
 
+    @to_hdf_decorator
     def to_hdf(self, hdf=None, group_name=None):
         if self._ref_job is not None and self._ref_job.job_id is None:
             self.append(self._ref_job)

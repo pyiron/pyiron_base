@@ -45,6 +45,7 @@ from pyiron_base.jobs.job.util import (
     _kill_child,
     _job_store_before_copy,
     _job_reload_after_copy,
+    to_hdf_decorator
 )
 from pyiron_base.utils.instance import static_isinstance
 from pyiron_base.utils.deprecate import deprecate
@@ -158,8 +159,21 @@ class GenericJob(JobCore):
         self._process = None
         self._compress_by_default = False
         self._python_only_job = False
+        self._data_storage_enabled = True
+        self._data_storage_disabled_implemented = False
         self.interactive_cache = None
         self.error = GenericError(job=self)
+
+    @property
+    def data_storage_enabled(self):
+        return self._data_storage_enabled
+
+    @data_storage_enabled.setter
+    def data_storage_enabled(self, enabled):
+        if self._data_storage_disabled_implemented:
+            self._data_storage_enabled = enabled
+        else:
+            raise NotImplementedError("This JobType does not support disabling the data storage.")
 
     @property
     def version(self):
@@ -418,13 +432,13 @@ class GenericJob(JobCore):
         """
         Refresh job status by updating the job status with the status from the database if a job ID is available.
         """
-        if self.job_id:
+        if self.data_storage_enabled and self.job_id:
             self._status = JobStatus(
                 initial_status=self.project.db.get_job_status(self.job_id),
                 db=self.project.db,
                 job_id=self.job_id,
             )
-        elif state.database.database_is_disabled:
+        elif self.data_storage_enabled and state.database.database_is_disabled:
             self._status = JobStatus(
                 initial_status=read_hdf5(
                     self.project_hdf5.file_name, self.job_name + "/status"
@@ -993,6 +1007,7 @@ class GenericJob(JobCore):
         if group_name is not None and self._hdf5 is not None:
             self._hdf5 = self._hdf5.open(group_name)
 
+    @to_hdf_decorator
     def to_hdf(self, hdf=None, group_name=None):
         """
         Store the GenericJob in an HDF5 file

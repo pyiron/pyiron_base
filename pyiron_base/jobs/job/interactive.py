@@ -8,6 +8,7 @@ InteractiveBase class extends the Generic Job class with all the functionality t
 import numpy as np
 from pyiron_base.database.filetable import FileTable
 from pyiron_base.jobs.job.generic import GenericJob
+from pyiron_base.jobs.job.util import to_hdf_decorator
 
 __author__ = "Osamu Waseda, Jan Janssen"
 __copyright__ = (
@@ -332,6 +333,7 @@ class InteractiveBase(GenericJob):
     def run_if_interactive_non_modal(self):
         raise NotImplementedError("run_if_interactive_non_modal() is not implemented!")
 
+    @to_hdf_decorator
     def to_hdf(self, hdf=None, group_name=None):
         """
         Store the InteractiveBase object in the HDF5 File

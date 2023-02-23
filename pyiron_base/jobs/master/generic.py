@@ -16,6 +16,7 @@ from pyiron_base.interfaces.object import HasStorage
 from pyiron_base.jobs.job.core import _doc_str_job_core_args
 from pyiron_base.jobs.job.generic import GenericJob, _doc_str_generic_job_attr
 from pyiron_base.jobs.job.extension.jobstatus import job_status_finished_lst
+from pyiron_base.jobs.job.util import to_hdf_decorator
 
 __author__ = "Jan Janssen"
 __copyright__ = (
@@ -237,6 +238,7 @@ class GenericMaster(GenericJob):
 
     update_master.__doc__ = GenericJob.update_master.__doc__
 
+    @to_hdf_decorator
     def to_hdf(self, hdf=None, group_name=None):
         """
         Store the GenericMaster in an HDF5 file

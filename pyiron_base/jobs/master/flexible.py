@@ -7,6 +7,7 @@ The Flexible master uses a list of functions to connect multiple jobs in a serie
 
 import inspect
 from pyiron_base.jobs.job.core import _doc_str_job_core_args
+from pyiron_base.jobs.job.util import to_hdf_decorator
 from pyiron_base.jobs.master.generic import GenericMaster, _doc_str_generic_master_attr
 from pyiron_base.jobs.job.extension.jobstatus import job_status_finished_lst
 
@@ -144,6 +145,7 @@ class FlexibleMaster(GenericMaster):
         """
         pass
 
+    @to_hdf_decorator
     def to_hdf(self, hdf=None, group_name=None):
         """
         Store the FlexibleMaster in an HDF5 file

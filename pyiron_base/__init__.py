@@ -28,6 +28,7 @@ from pyiron_base.jobs.job.extension.jobstatus import (
 )
 from pyiron_base.jobs.job.jobtype import JOB_CLASS_DICT, JobType, JobTypeChoice
 from pyiron_base.jobs.job.template import TemplateJob, PythonTemplateJob
+from pyiron_base.jobs.job.util import to_hdf_decorator
 from pyiron_base.jobs.job.factory import JobFactoryCore
 from pyiron_base.jobs.master.generic import GenericMaster, get_function_from_string
 from pyiron_base.jobs.master.list import ListMaster
