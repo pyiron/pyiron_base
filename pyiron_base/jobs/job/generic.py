@@ -135,9 +135,19 @@ class GenericJob(JobCore):
         self.__name__ = type(self).__name__
         self.__version__ = "0.4"
         self.__hdf_version__ = "0.1.0"
+        self._executable = None
+        self._restart_file_list = list()
+        self._restart_file_dict = dict()
+        self._exclude_nodes_hdf = list()
+        self._exclude_groups_hdf = list()
+        self._process = None
+        self._compress_by_default = False
+        self._python_only_job = False
+        self._data_storage_enabled = True
+        self._data_storage_disabled_implemented = False
+        self.interactive_cache = None
         self._server = Server()
         self._logger = state.logger
-        self._executable = None
         if not state.database.database_is_disabled:
             self._status = JobStatus(db=project.db, job_id=self.job_id)
             self.refresh_job_status()
@@ -152,16 +162,6 @@ class GenericJob(JobCore):
                 )
         else:
             self._status = JobStatus()
-        self._restart_file_list = list()
-        self._restart_file_dict = dict()
-        self._exclude_nodes_hdf = list()
-        self._exclude_groups_hdf = list()
-        self._process = None
-        self._compress_by_default = False
-        self._python_only_job = False
-        self._data_storage_enabled = True
-        self._data_storage_disabled_implemented = False
-        self.interactive_cache = None
         self.error = GenericError(job=self)
 
     @property
