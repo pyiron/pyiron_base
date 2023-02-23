@@ -434,7 +434,7 @@ class GenericJob(JobCore):
         """
         Refresh job status by updating the job status with the status from the database if a job ID is available.
         """
-        if self.data_storage_enabled and self.job_id:
+        if self.data_storage_enabled and self.job_id is not None:
             self._status = JobStatus(
                 initial_status=self.project.db.get_job_status(self.job_id),
                 db=self.project.db,
