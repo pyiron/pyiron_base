@@ -45,7 +45,7 @@ from pyiron_base.jobs.job.util import (
     _kill_child,
     _job_store_before_copy,
     _job_reload_after_copy,
-    to_hdf_decorator
+    to_hdf_decorator,
 )
 from pyiron_base.utils.instance import static_isinstance
 from pyiron_base.utils.deprecate import deprecate
@@ -173,7 +173,9 @@ class GenericJob(JobCore):
         if self._data_storage_disabled_implemented:
             self._data_storage_enabled = enabled
         else:
-            raise NotImplementedError("This JobType does not support disabling the data storage.")
+            raise NotImplementedError(
+                "This JobType does not support disabling the data storage."
+            )
 
     @property
     def version(self):
