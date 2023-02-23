@@ -95,7 +95,7 @@ class GenericMaster(GenericJob):
         """
         :class:`.Project`: project which holds the created child jobs
         """
-        if not self.server.new_hdf:
+        if not self.server.new_hdf or not self.data_storage_enabled:
             return self.project
         else:
             return self.project.open(self.job_name + "_hdf5")
