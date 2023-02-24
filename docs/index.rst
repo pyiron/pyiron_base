@@ -7,6 +7,8 @@
 pyiron_base
 ===========
 
+Let's do this!
+
 .. image:: https://github.com/pyiron/pyiron/workflows/Python%20package/badge.svg
     :target: https://github.com/pyiron//pyiron/actions
     :alt: Build Status
