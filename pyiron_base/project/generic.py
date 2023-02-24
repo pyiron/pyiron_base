@@ -1691,7 +1691,9 @@ class Project(ProjectPath, HasGroups):
         """
         directory_to_transfer = os.path.basename(self.path[:-1])
         if destination_path == directory_to_transfer:
-            raise ValueError("The destination_path cannot have the same name as the project to compress.")
+            raise ValueError(
+                "The destination_path cannot have the same name as the project to compress."
+            )
         export_archive.copy_files_to_archive(
             directory_to_transfer,
             destination_path,
