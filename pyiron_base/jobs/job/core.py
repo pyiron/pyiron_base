@@ -225,12 +225,9 @@ class JobCore(HasGroups):
         Returns:
             int: parent id
         """
-        if self._parent_id:
-            return self._parent_id
-        elif self.job_id:
+        if self._parent_id is None and self.job_id is not None:
             return self.project.db.get_item_by_id(self.job_id)["parentid"]
-        else:
-            return None
+        return self._parent_id
 
     @parent_id.setter
     def parent_id(self, parent_id):
@@ -240,7 +237,7 @@ class JobCore(HasGroups):
         Args:
             parent_id (int): parent id
         """
-        if self.job_id:
+        if self.job_id is not None:
             self.project.db.item_update({"parentid": parent_id}, self.job_id)
         self._parent_id = parent_id
 
@@ -253,12 +250,9 @@ class JobCore(HasGroups):
         Returns:
             int: master id
         """
-        if self._master_id:
-            return self._master_id
-        elif self.job_id:
+        if self._master_id is None and self.job_id is not None:
             return self.project.db.get_item_by_id(self.job_id)["masterid"]
-        else:
-            return None
+        return self._master_id
 
     @master_id.setter
     def master_id(self, master_id):
@@ -269,7 +263,7 @@ class JobCore(HasGroups):
         Args:
             master_id (int): master id
         """
-        if self.job_id:
+        if self.job_id is not None:
             self.project.db.item_update({"masterid": master_id}, self.job_id)
         self._master_id = master_id
 
@@ -281,14 +275,9 @@ class JobCore(HasGroups):
         Returns:
             list: list of child job ids
         """
-        id_master = self.job_id
-        if id_master is None:
-            return []
-        else:
-            id_l = self.project.db.get_items_dict(
-                {"masterid": str(id_master)}, return_all_columns=False
-            )
-            return sorted([job["id"] for job in id_l])
+        return self.project.get_child_ids(
+            job_specifier=self.job_name, project=self.project.project_path
+        )
 
     @property
     def project_hdf5(self):
@@ -374,9 +363,9 @@ class JobCore(HasGroups):
         Returns:
             (bool): True / False
         """
-        if not job_name:
+        if job_name is None:
             job_name = self.job_name
-        if not project:
+        if project is None:
             project = self._hdf5
 
         where_dict = {
@@ -488,7 +477,7 @@ class JobCore(HasGroups):
         _job_remove_folder(job=self)
 
         # Delete database entry
-        if self.job_id:
+        if self.job_id is not None:
             self.project.db.delete_item(self.job_id)
 
     def to_object(self, object_type=None, **qwargs):
@@ -592,23 +581,19 @@ class JobCore(HasGroups):
         Returns:
             int: job ID of the job
         """
-        if job_specifier:
+        if job_specifier is not None:
             return self.project.get_job_id(
                 job_specifier
             )  # , sub_job_name=self.project_hdf5.h5_path)
-        else:
-            where_dict = {
-                "job": str(self._name),
-                "project": str(self.project_hdf5.project_path),
-                "subjob": str(self.project_hdf5.h5_path),
-            }
-            response = self.project.db.get_items_dict(
-                where_dict, return_all_columns=False
-            )
-            if len(response) > 0:
-                return response[-1]["id"]
-            else:
-                return None
+        where_dict = {
+            "job": str(self._name),
+            "project": str(self.project_hdf5.project_path),
+            "subjob": str(self.project_hdf5.h5_path),
+        }
+        response = self.project.db.get_items_dict(where_dict, return_all_columns=False)
+        if len(response) > 0:
+            return response[-1]["id"]
+        return None
 
     def list_files(self):
         """
@@ -720,7 +705,7 @@ class JobCore(HasGroups):
             self.project_hdf5.copy_to(destination=hdf5_project, maintain_name=False)
 
         # Update the database entry
-        if self.job_id:
+        if self.job_id is not None:
             if new_database_entry:
                 _copy_database_entry(
                     new_job_core=new_job_core,
@@ -811,7 +796,7 @@ class JobCore(HasGroups):
             else:
                 self.project_hdf5.remove_group()
         self.project_hdf5 = new_job.project_hdf5.copy()
-        if self._job_id:
+        if self._job_id is not None:
             self.project.db.item_update(
                 {
                     "subjob": self.project_hdf5.h5_path,
@@ -846,6 +831,8 @@ class JobCore(HasGroups):
             job_id (int/ None):
 
         """
+        if job_id is not None:
+            job_id = int(job_id)
         self._job_id = job_id
 
     def save(self):

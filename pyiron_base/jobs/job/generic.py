@@ -12,6 +12,7 @@ import signal
 import warnings
 
 from pyiron_base.state import state
+from pyiron_base.state.signal import catch_signals
 from pyiron_base.jobs.job.extension.executable import Executable
 from pyiron_base.jobs.job.extension.jobstatus import JobStatus
 from pyiron_base.jobs.job.core import (
@@ -49,7 +50,7 @@ from pyiron_base.utils.instance import static_isinstance
 from pyiron_base.utils.deprecate import deprecate
 from pyiron_base.jobs.job.extension.server.generic import Server
 from pyiron_base.database.filetable import FileTable
-from pyiron_base.storage.hdfio import write_hdf5, read_hdf5
+from pyiron_base.storage.helper_functions import write_hdf5, read_hdf5
 
 __author__ = "Joerg Neugebauer, Jan Janssen"
 __copyright__ = (
@@ -61,13 +62,6 @@ __maintainer__ = "Jan Janssen"
 __email__ = "janssen@mpie.de"
 __status__ = "production"
 __date__ = "Sep 1, 2017"
-
-intercepted_signals = [
-    signal.SIGINT,
-    signal.SIGTERM,
-    signal.SIGABRT,
-]  # , signal.SIGQUIT]
-
 
 # Modular Docstrings
 _doc_str_generic_job_attr = (
@@ -123,7 +117,7 @@ class GenericJob(JobCore):
     __doc__ = (
         """
     Generic Job class extends the JobCore class with all the functionality to run the job object. From this class
-    all specific Hamiltonians are derived. Therefore it should contain the properties/routines common to all jobs.
+    all specific job types are derived. Therefore it should contain the properties/routines common to all jobs.
     The functions in this module should be as generic as possible.
 
     Sub classes that need to add special behavior after :method:`.copy_to()` can override
@@ -148,12 +142,12 @@ class GenericJob(JobCore):
             self.refresh_job_status()
         elif os.path.exists(self.project_hdf5.file_name):
             initial_status = read_hdf5(
-                self.project_hdf5.file_name, job_name + "/status"
+                self.project_hdf5.file_name, self.job_name + "/status"
             )
             self._status = JobStatus(initial_status=initial_status)
             if "job_id" in self.list_nodes():
                 self._job_id = read_hdf5(
-                    self.project_hdf5.file_name, job_name + "/job_id"
+                    self.project_hdf5.file_name, self.job_name + "/job_id"
                 )
         else:
             self._status = JobStatus()
@@ -166,9 +160,6 @@ class GenericJob(JobCore):
         self._python_only_job = False
         self.interactive_cache = None
         self.error = GenericError(job=self)
-
-        for sig in intercepted_signals:
-            signal.signal(sig, self.signal_intercept)
 
     @property
     def version(self):
@@ -618,12 +609,18 @@ class GenericJob(JobCore):
         _kill_child(job=self)
         super(GenericJob, self).remove_child()
 
-    def kill(self):
-        if self.status.running or self.status.submitted:
+    def remove_and_reset_id(self, _protect_childs=True):
+        if self.job_id is not None:
             master_id, parent_id = self.master_id, self.parent_id
-            self.remove()
+            self.remove(_protect_childs=_protect_childs)
             self.reset_job_id()
             self.master_id, self.parent_id = master_id, parent_id
+        else:
+            self.remove(_protect_childs=_protect_childs)
+
+    def kill(self):
+        if self.status.running or self.status.submitted:
+            self.remove_and_reset_id()
         else:
             raise ValueError(
                 "The kill() function is only available during the execution of the job."
@@ -651,9 +648,7 @@ class GenericJob(JobCore):
         """
         Reset the job id sets the job_id to None in the GenericJob as well as all connected modules like JobStatus.
         """
-        if job_id is not None:
-            job_id = int(job_id)
-        self._job_id = job_id
+        super().reset_job_id(job_id=job_id)
         self._status = JobStatus(db=self.project.db, job_id=self._job_id)
 
     @deprecate(
@@ -679,62 +674,46 @@ class GenericJob(JobCore):
             run_mode (str): ['modal', 'non_modal', 'queue', 'manual'] overwrites self.server.run_mode
             run_again (bool): Same as delete_existing_job (deprecated)
         """
-        if run_again:
-            delete_existing_job = True
-        try:
-            self._logger.info(
-                "run {}, status: {}".format(self.job_info_str, self.status)
-            )
-            status = self.status.string
-            if run_mode is not None:
-                self.server.run_mode = run_mode
-            if delete_existing_job:
-                status = "initialized"
-                if self.job_id:
-                    self._logger.info("run repair " + str(self.job_id))
-                    master_id, parent_id = self.master_id, self.parent_id
-                    self.remove(_protect_childs=False)
-                    self.reset_job_id()
-                    self.master_id, self.parent_id = master_id, parent_id
-                else:
-                    self.remove(_protect_childs=False)
-            if repair and self.job_id and not self.status.finished:
-                self._run_if_repair()
-            elif status == "initialized":
-                self._run_if_new(debug=debug)
-            elif status == "created":
-                self._run_if_created()
-            elif status == "submitted":
-                run_job_with_status_submitted(job=self)
-            elif status == "running":
-                self._run_if_running()
-            elif status == "collect":
-                self._run_if_collect()
-            elif status == "suspend":
-                self._run_if_suspended()
-            elif status == "refresh":
-                self.run_if_refresh()
-            elif status == "busy":
-                self._run_if_busy()
-            elif status == "finished":
-                run_job_with_status_finished(
-                    job=self,
-                    delete_existing_job=delete_existing_job,
-                    run_again=run_again,
+        with catch_signals(self.signal_intercept):
+            if run_again:
+                delete_existing_job = True
+            try:
+                self._logger.info(
+                    "run {}, status: {}".format(self.job_info_str, self.status)
                 )
-            elif status == "aborted":
-                raise ValueError(
-                    "Running an aborted job with `delete_existing_job=False` is meaningless."
-                )
-        except Exception:
-            self.drop_status_to_aborted()
-            raise
-        except KeyboardInterrupt:
-            self.drop_status_to_aborted()
-            raise
-        except SystemExit:
-            self.drop_status_to_aborted()
-            raise
+                status = self.status.string
+                if run_mode is not None:
+                    self.server.run_mode = run_mode
+                if delete_existing_job:
+                    status = "initialized"
+                    self.remove_and_reset_id(_protect_childs=False)
+                if repair and self.job_id and not self.status.finished:
+                    self._run_if_repair()
+                elif status == "initialized":
+                    self._run_if_new(debug=debug)
+                elif status == "created":
+                    self._run_if_created()
+                elif status == "submitted":
+                    run_job_with_status_submitted(job=self)
+                elif status == "running":
+                    self._run_if_running()
+                elif status == "collect":
+                    self._run_if_collect()
+                elif status == "suspend":
+                    self._run_if_suspended()
+                elif status == "refresh":
+                    self.run_if_refresh()
+                elif status == "busy":
+                    self._run_if_busy()
+                elif status == "finished":
+                    run_job_with_status_finished(job=self)
+                elif status == "aborted":
+                    raise ValueError(
+                        "Running an aborted job with `delete_existing_job=False` is meaningless."
+                    )
+            except Exception:
+                self.drop_status_to_aborted()
+                raise
 
     def run_if_modal(self):
         """
@@ -1004,9 +983,15 @@ class GenericJob(JobCore):
         Returns:
             str: absolute path to the file in the current working directory
         """
-        if not cwd:
+        if cwd is None:
             cwd = self.project_hdf5.working_directory
         return posixpath.join(cwd, file_name)
+
+    def _set_hdf(self, hdf=None, group_name=None):
+        if hdf is not None:
+            self._hdf5 = hdf
+        if group_name is not None and self._hdf5 is not None:
+            self._hdf5 = self._hdf5.open(group_name)
 
     def to_hdf(self, hdf=None, group_name=None):
         """
@@ -1016,10 +1001,7 @@ class GenericJob(JobCore):
             hdf (ProjectHDFio): HDF5 group object - optional
             group_name (str): HDF5 subgroup name - optional
         """
-        if hdf is not None:
-            self._hdf5 = hdf
-        if group_name is not None:
-            self._hdf5 = self._hdf5.open(group_name)
+        self._set_hdf(hdf=hdf, group_name=group_name)
         self._executable_activate_mpi()
         self._type_to_hdf()
         self._hdf5["status"] = self.status.string
@@ -1059,10 +1041,7 @@ class GenericJob(JobCore):
             hdf (ProjectHDFio): HDF5 group object - optional
             group_name (str): HDF5 subgroup name - optional
         """
-        if hdf is not None:
-            self._hdf5 = hdf
-        if group_name is not None:
-            self._hdf5 = self._hdf5.open(group_name)
+        self._set_hdf(hdf=hdf, group_name=group_name)
         self._type_from_hdf()
         if "import_directory" in self._hdf5.list_nodes():
             self._import_directory = self._hdf5["import_directory"]
@@ -1199,15 +1178,15 @@ class GenericJob(JobCore):
             h5_dict["groups"] += self._list_ext_childs()
         return h5_dict
 
-    def signal_intercept(self, sig, frame):
+    def signal_intercept(self, sig):
         """
+        Abort the job and log signal that caused it.
+
+        Expected to be called from
+        :func:`pyiron_base.state.signal.catch_signals`.
 
         Args:
-            sig:
-            frame:
-
-        Returns:
-
+            sig (int): the signal that triggered the abort
         """
         try:
             self._logger.info(
@@ -1352,6 +1331,13 @@ class GenericJob(JobCore):
         self.__obj_type__ = self._hdf5["TYPE"]
         if self._executable is None:
             self.__obj_version__ = self._hdf5["VERSION"]
+
+    def run_time_to_db(self):
+        """
+        Internal helper function to store the run_time in the database
+        """
+        if self.job_id is not None:
+            self.project.db.item_update(self._runtime(), self.job_id)
 
     def _runtime(self):
         """

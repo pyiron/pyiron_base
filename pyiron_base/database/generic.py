@@ -7,10 +7,10 @@ DatabaseAccess class deals with accessing the database
 
 from pyiron_base.state.logger import logger
 from abc import ABC, abstractmethod
+from collections.abc import Iterable
 import warnings
 import numpy as np
 import re
-import time
 import os
 from datetime import datetime
 from pyiron_base.utils.deprecate import deprecate
@@ -28,7 +28,7 @@ from sqlalchemy.sql import select
 from sqlalchemy.exc import OperationalError, DatabaseError
 from threading import Thread, Lock
 from queue import SimpleQueue, Empty as QueueEmpty
-from pyiron_base.database.tables import HistoricalTable
+from pyiron_base.database.tables import get_historical_table
 from pyiron_base.utils.error import retry
 
 __author__ = "Murat Han Celik"
@@ -114,7 +114,7 @@ class IsDatabase(ABC):
                 )
         for key, val in kwargs.items():
             invert = False
-            if val is not None and val[0] == "!":
+            if isinstance(val, str) and val[0] == "!":
                 invert = True
                 val = val[1:]
             if val is None:
@@ -221,6 +221,46 @@ class IsDatabase(ABC):
     @abstractmethod
     def _get_table_headings(self, table_name=None):
         pass
+
+    def item_update(self, par_dict, item_id):
+        if isinstance(item_id, Iterable):
+            return self._items_update(par_dict=par_dict, item_ids=item_id)
+        return self._item_update(par_dict=par_dict, item_id=item_id)
+
+    @abstractmethod
+    def _item_update(self, par_dict, item_id):
+        pass
+
+    def _items_update(self, par_dict, item_ids):
+        """
+        For now simply loops over all item_ids to call item_update,
+        but can be made more efficient.
+        Should be made an asbtract method when defined in inheriting classes
+
+        Args:
+            par_dict (_type_): _description_
+            item_ids (_type_): _description_
+        """
+        for i_id in item_ids:
+            self._item_update(par_dict=par_dict, item_id=i_id)
+
+    def set_job_status(self, status, job_id):
+        """
+        Set status of a job or multiple jobs if job_id is iterable.
+
+        Args:
+            status (str): status
+            job_id (int, Iterable): job id
+        """
+        if isinstance(job_id, Iterable):
+            return self._items_update(
+                par_dict={"status": status},
+                item_ids=job_id,
+            )
+        return self._item_update(
+            par_dict={"status": status},
+            item_id=job_id,
+        )
 
     def get_table_headings(self, table_name=None):
         """
@@ -395,6 +435,10 @@ class AutorestoredConnection:
         if self._conn is not None:
             self._conn.close()
 
+    def commit(self):
+        if self._conn is not None:
+            self._conn.commit()
+
 
 class DatabaseAccess(IsDatabase):
     """
@@ -431,11 +475,12 @@ class DatabaseAccess(IsDatabase):
                     connection_string,
                     connect_args={"connect_timeout": 15},
                     poolclass=NullPool,
+                    future=True,
                 )
                 self.conn = AutorestoredConnection(self._engine, timeout=self._timeout)
                 self._keep_connection = self._timeout > 0
             else:
-                self._engine = create_engine(connection_string)
+                self._engine = create_engine(connection_string, future=True)
                 self.conn = self._engine.connect()
                 self.conn.connection.create_function("like", 2, self.regexp)
                 self._keep_connection = True
@@ -446,10 +491,12 @@ class DatabaseAccess(IsDatabase):
 
         def _create_table():
             self.__reload_db()
-            self.simulation_table = HistoricalTable(str(table_name), self.metadata)
-            self.metadata.create_all()
+            self.simulation_table = get_historical_table(
+                table_name=str(table_name), metadata=self.metadata, extend_existing=True
+            )
+            self.metadata.create_all(bind=self._engine)
 
-        # too many jobs trying to talk to the database can cause this too fail.
+        # too many jobs trying to talk to the database can cause this to fail.
         retry(
             _create_table,
             error=OperationalError,
@@ -606,8 +653,8 @@ class DatabaseAccess(IsDatabase):
         Returns:
 
         """
-        self.metadata = MetaData(bind=self._engine)
-        self.metadata.reflect(self._engine)
+        self.metadata = MetaData()
+        self.metadata.reflect(bind=self._engine)
 
     @staticmethod
     def regexp(expr, item):
@@ -663,7 +710,6 @@ class DatabaseAccess(IsDatabase):
             simulation_list = Table(
                 str(table_name),
                 self.metadata,
-                autoload=True,
                 autoload_with=self._engine,
             )
         except Exception:
@@ -686,10 +732,13 @@ class DatabaseAccess(IsDatabase):
                 col_name = col_name[-1]
             if isinstance(col_type, list):
                 col_type = col_type[-1]
-            self._engine.execute(
-                "ALTER TABLE %s ADD COLUMN %s %s"
-                % (self.simulation_table.name, col_name, col_type)
+            self.conn.execute(
+                text(
+                    "ALTER TABLE %s ADD COLUMN %s %s"
+                    % (self.simulation_table.name, col_name, col_type)
+                )
             )
+            self.conn.commit()
         else:
             raise PermissionError("Not avilable in viewer mode.")
 
@@ -709,10 +758,13 @@ class DatabaseAccess(IsDatabase):
                 col_name = col_name[-1]
             if isinstance(col_type, list):
                 col_type = col_type[-1]
-            self._engine.execute(
-                "ALTER TABLE %s ALTER COLUMN %s TYPE %s"
-                % (self.simulation_table.name, col_name, col_type)
+            self.conn.execute(
+                text(
+                    "ALTER TABLE %s ALTER COLUMN %s TYPE %s"
+                    % (self.simulation_table.name, col_name, col_type)
+                )
             )
+            self.conn.commit()
         else:
             raise PermissionError("Not avilable in viewer mode.")
 
@@ -857,8 +909,9 @@ class DatabaseAccess(IsDatabase):
                     (key.lower(), value) for key, value in par_dict.items()
                 )  # make keys lowercase
                 result = self.conn.execute(
-                    self.simulation_table.insert(par_dict)
+                    self.simulation_table.insert().values(**par_dict)
                 ).inserted_primary_key[-1]
+                self.conn.commit()
                 if not self._keep_connection:
                     self.conn.close()
                 return result
@@ -898,8 +951,8 @@ class DatabaseAccess(IsDatabase):
         try:
             if type(var) is list:
                 var = var[-1]
-            query = select(
-                [self.simulation_table], self.simulation_table.c[str(col_name)] == var
+            query = select(self.simulation_table).where(
+                self.simulation_table.c[str(col_name)] == var
             )
         except Exception:
             raise ValueError("There is no Column named: " + col_name)
@@ -915,9 +968,9 @@ class DatabaseAccess(IsDatabase):
         row = result.fetchall()
         if not self._keep_connection:
             self.conn.close()
-        return [dict(zip(col.keys(), col._mapping.values())) for col in row]
+        return [dict(zip(col._mapping.keys(), col._mapping.values())) for col in row]
 
-    def item_update(self, par_dict, item_id):
+    def _item_update(self, par_dict, item_id):
         """
         Modify Item in database
 
@@ -932,17 +985,18 @@ class DatabaseAccess(IsDatabase):
 
         """
         if not self._view_mode:
-            if type(item_id) is list:
-                item_id = item_id[-1]  # sometimes a list is given, make it int
             if np.issubdtype(type(item_id), np.integer):
                 item_id = int(item_id)
             # all items must be lower case, ensured here
             par_dict = dict((key.lower(), value) for key, value in par_dict.items())
-            query = self.simulation_table.update(
-                self.simulation_table.c["id"] == item_id
-            ).values()
+            query = (
+                self.simulation_table.update()
+                .where(self.simulation_table.c["id"] == item_id)
+                .values()
+            )
             try:
                 self.conn.execute(query, par_dict)
+                self.conn.commit()
             except (OperationalError, DatabaseError):
                 if not self._sql_lite:
                     self.conn = AutorestoredConnection(self._engine)
@@ -951,6 +1005,7 @@ class DatabaseAccess(IsDatabase):
                     self.conn.connection.create_function("like", 2, self.regexp)
 
                 self.conn.execute(query, par_dict)
+                self.conn.commit()
             if not self._keep_connection:
                 self.conn.close()
         else:
@@ -968,10 +1023,11 @@ class DatabaseAccess(IsDatabase):
         """
         if not self._view_mode:
             self.conn.execute(
-                self.simulation_table.delete(
+                self.simulation_table.delete().where(
                     self.simulation_table.c["id"] == int(item_id)
                 )
             )
+            self.conn.commit()
             if not self._keep_connection:
                 self.conn.close()
         else:
@@ -1120,9 +1176,11 @@ class DatabaseAccess(IsDatabase):
             # here all statements are wrapped together for the and statement
             and_statement += part_of_statement
         if return_all_columns:
-            query = select([self.simulation_table], and_(*and_statement))
+            query = select(self.simulation_table).where(and_(*and_statement))
         else:
-            query = select([self.simulation_table.columns["id"]], and_(*and_statement))
+            query = select(self.simulation_table.columns["id"]).where(
+                and_(*and_statement)
+            )
         try:
             result = self.conn.execute(query)
         except (OperationalError, DatabaseError):
@@ -1136,19 +1194,13 @@ class DatabaseAccess(IsDatabase):
         row = result.fetchall()
         if not self._keep_connection:
             self.conn.close()
-        return [dict(zip(col.keys(), col._mapping.values())) for col in row]
+        return [dict(zip(col._mapping.keys(), col._mapping.values())) for col in row]
 
     def get_job_status(self, job_id):
         try:
             return self.get_item_by_id(item_id=job_id)["status"]
         except KeyError:
             return None
-
-    def set_job_status(self, job_id, status):
-        self.item_update(
-            {"status": str(status)},
-            job_id,
-        )
 
     def get_job_working_directory(self, job_id):
         try:

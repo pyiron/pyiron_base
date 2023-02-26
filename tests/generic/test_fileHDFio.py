@@ -82,6 +82,7 @@ def _check_full_hdf_values(self, hdf, group="content"):
 class TestFileHDFio(PyironTestCase):
     @classmethod
     def setUpClass(cls):
+        super().setUpClass()
         cls.current_dir = os.path.dirname(os.path.abspath(__file__)).replace("\\", "/")
         cls.empty_hdf5 = FileHDFio(file_name=cls.current_dir + "/filehdfio_empty.h5")
         cls.full_hdf5 = FileHDFio(file_name=cls.current_dir + "/filehdfio_full.h5")
@@ -102,6 +103,7 @@ class TestFileHDFio(PyironTestCase):
 
     @classmethod
     def tearDownClass(cls):
+        super().tearDownClass()
         cls.current_dir = os.path.dirname(os.path.abspath(__file__)).replace("\\", "/")
         os.remove(cls.current_dir + "/filehdfio_full.h5")
         os.remove(cls.current_dir + "/filehdfio_io.h5")

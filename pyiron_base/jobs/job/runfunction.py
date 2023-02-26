@@ -192,8 +192,7 @@ def run_job_with_status_collect(job):
     """
     job.collect_output()
     job.collect_logfiles()
-    if job.job_id is not None:
-        job.project.db.item_update(job._runtime(), job.job_id)
+    job.run_time_to_db()
     if job.status.collect:
         if not job.convergence_check():
             job.status.not_converged = True
@@ -224,32 +223,19 @@ def run_job_with_status_suspended(job):
     run_again="Either delete the job via job.remove() or use delete_existing_job=True.",
     version="0.4.0",
 )
-def run_job_with_status_finished(job, delete_existing_job=False, run_again=False):
+def run_job_with_status_finished(job):
     """
     Internal helper function the run if finished function is called when the job status is 'finished'. It loads
     the existing job.
 
     Args:
         job (GenericJob): pyiron job object
-        delete_existing_job (bool): Delete the existing job and run the simulation again.
-        run_again (bool): Same as delete_existing_job (deprecated)
     """
-    if run_again:
-        delete_existing_job = True
-    if delete_existing_job:
-        parent_id = job.parent_id
-        job.parent_id = None
-        job.remove()
-        job._job_id = None
-        job.status.initialized = True
-        job.parent_id = parent_id
-        job.run()
-    else:
-        job.logger.warning(
-            "The job {} is being loaded instead of running. To re-run use the argument "
-            "'delete_existing_job=True in create_job'".format(job.job_name)
-        )
-        job.from_hdf()
+    job.logger.warning(
+        "The job {} is being loaded instead of running. To re-run use the argument "
+        "'delete_existing_job=True in create_job'".format(job.job_name)
+    )
+    job.from_hdf()
 
 
 # Run Modes
@@ -443,8 +429,7 @@ def run_job_with_runmode_srun(job):
             + job.project_hdf5.file_name
             + job.project_hdf5.h5_path
         )
-    if not os.path.exists(working_directory):
-        os.makedirs(working_directory)
+    os.makedirs(working_directory, exist_ok=True)
     del job
     subprocess.Popen(
         command,
@@ -456,6 +441,19 @@ def run_job_with_runmode_srun(job):
     )
 
 
+def run_time_decorator(func):
+    def wrapper(job):
+        if job.job_id is not None:
+            job.project.db.item_update({"timestart": datetime.now()}, job.job_id)
+            func(job)
+            job.project.db.item_update(job._runtime(), job.job_id)
+        else:
+            func(job)
+
+    return wrapper
+
+
+@run_time_decorator
 def execute_job_with_external_executable(job):
     """
     The run static function is called by run to execute the simulation.
@@ -470,25 +468,10 @@ def execute_job_with_external_executable(job):
         job.status.aborted = True
         raise ValueError("No executable set!")
     job.status.running = True
-    if job.job_id is not None:
-        job.project.db.item_update({"timestart": datetime.now()}, job.job_id)
+    executable, shell = job.executable.get_input_for_subprocess_call(
+        cores=job.server.cores, threads=job.server.threads
+    )
     job_crashed, out = False, None
-    if job.server.cores == 1 or not job.executable.mpi:
-        executable = str(job.executable)
-        shell = True
-    elif isinstance(job.executable.executable_path, list):
-        executable = job.executable.executable_path[:] + [
-            str(job.server.cores),
-            str(job.server.threads),
-        ]
-        shell = False
-    else:
-        executable = [
-            job.executable.executable_path,
-            str(job.server.cores),
-            str(job.server.threads),
-        ]
-        shell = False
     try:
         out = subprocess.run(
             executable,
@@ -500,38 +483,63 @@ def execute_job_with_external_executable(job):
             check=True,
         ).stdout
     except subprocess.CalledProcessError as e:
-        out = e.output
-        if e.returncode in job.executable.accepted_return_codes:
-            pass
-        elif not job.server.accept_crash:
-            job._logger.warning("Job aborted")
-            job._logger.warning(e.output)
-            job.status.aborted = True
-            if job.job_id is not None:
-                job.project.db.item_update(job._runtime(), job.job_id)
-            error_file = posixpath.join(job.project_hdf5.working_directory, "error.msg")
-            with open(error_file, "w") as f:
-                f.write(e.output)
-            if job.server.run_mode.non_modal:
-                state.database.close_connection()
-            raise RuntimeError("Job aborted")
-        else:
-            job_crashed = True
+        out, job_crashed = handle_failed_job(job=job, error=e)
 
+    job._logger.info(
+        "{}, status: {}, output: {}".format(job.job_info_str, job.status, out)
+    )
     with open(
         posixpath.join(job.project_hdf5.working_directory, "error.out"), mode="w"
     ) as f_err:
         f_err.write(out)
+    handle_finished_job(job=job, job_crashed=job_crashed, collect_output=True)
 
+
+def handle_finished_job(job, job_crashed=False, collect_output=True):
+    """
+    Handle finished jobs, collect the calculation output and set the status to aborted if the job crashed
+
+    Args:
+        job (GenericJob): pyiron job object
+        job_crashed (boolean): flag to indicate failed jobs
+        collect_output (boolean): flag to indicate if the collect_output() function should be called
+    """
     job.set_input_to_read_only()
-    job.status.collect = True
-    job._logger.info(
-        "{}, status: {}, output: {}".format(job.job_info_str, job.status, out)
-    )
-    job.run()
+    if collect_output:
+        job.status.collect = True
+        job.run()
     if job_crashed:
         job.status.aborted = True
         job._hdf5["status"] = job.status.string
+
+
+def handle_failed_job(job, error):
+    """
+    Handle failed jobs write error message to text file and update database
+
+    Args:
+        job (GenericJob): pyiron job object
+        error (subprocess.SubprocessError): error of the subprocess executing the job
+
+    Returns:
+        boolean, str: job crashed and error message
+    """
+    out = error.output
+    if error.returncode in job.executable.accepted_return_codes:
+        return False, out
+    elif not job.server.accept_crash:
+        job._logger.warning("Job aborted")
+        job._logger.warning(error.output)
+        job.status.aborted = True
+        job.run_time_to_db()
+        error_file = posixpath.join(job.project_hdf5.working_directory, "error.msg")
+        with open(error_file, "w") as f:
+            f.write(error.output)
+        if job.server.run_mode.non_modal:
+            state.database.close_connection()
+        raise RuntimeError("Job aborted")
+    else:
+        return True, out
 
 
 def multiprocess_wrapper(

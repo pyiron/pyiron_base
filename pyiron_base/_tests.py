@@ -9,7 +9,7 @@ import doctest
 from io import StringIO
 import unittest
 import os
-from pyiron_base import PythonTemplateJob
+from pyiron_base import PythonTemplateJob, state
 from pyiron_base.project.generic import Project
 from abc import ABC
 from inspect import getfile
@@ -35,9 +35,14 @@ class PyironTestCase(unittest.TestCase, ABC):
 
     @classmethod
     def setUpClass(cls):
+        cls._initial_settings_configuration = state.settings.configuration.copy()
         if any([cls is c for c in _TO_SKIP]):
             raise unittest.SkipTest(f"{cls.__name__} tests, it's a base class")
         super().setUpClass()
+
+    @classmethod
+    def tearDownClass(cls) -> None:
+        state.update(cls._initial_settings_configuration)
 
     @property
     def docstring_module(self):
@@ -73,6 +78,7 @@ class TestWithProject(PyironTestCase, ABC):
 
     @classmethod
     def tearDownClass(cls):
+        super().tearDownClass()
         cls.project.remove(enable=True)
         try:
             os.remove(os.path.join(cls.file_location, "pyiron.log"))
@@ -86,6 +92,7 @@ class TestWithCleanProject(TestWithProject, ABC):
     """
 
     def tearDown(self):
+        super().tearDown()
         self.project.remove_jobs(recursive=True, progress=False, silently=True)
 
 

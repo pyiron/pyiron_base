@@ -12,18 +12,16 @@ from collections.abc import MutableMapping
 import importlib
 import pandas
 import posixpath
-import h5io
 import numpy as np
 import sys
-import time
 from typing import Union
 
 from pyiron_base.utils.deprecate import deprecate
-from pyiron_base.utils.error import retry
-
+from pyiron_base.storage.helper_functions import read_hdf5, write_hdf5
 from pyiron_base.interfaces.has_groups import HasGroups
 from pyiron_base.state import state
 from pyiron_base.jobs.dynamic import JOB_DYN_DICT, class_constructor
+from pyiron_base.jobs.job.util import _get_safe_job_name
 import warnings
 
 __author__ = "Joerg Neugebauer, Jan Janssen"
@@ -1096,8 +1094,7 @@ class ProjectHDFio(FileHDFio):
     """
 
     def __init__(self, project, file_name, h5_path=None, mode=None):
-        file_name += ".h5" if not file_name.endswith(".h5") else ""
-        self._file_name = file_name.replace("\\", "/")
+        self._file_name = _get_safe_filename(file_name)
         if h5_path is None:
             h5_path = "/"
         self._project = project.copy()
@@ -1299,8 +1296,7 @@ class ProjectHDFio(FileHDFio):
         """
         Create the working directory on the file system if it does not exist already.
         """
-        if not os.path.isdir(self.working_directory):
-            os.makedirs(self.working_directory)
+        os.makedirs(self.working_directory, exist_ok=True)
 
     def import_class(self, class_name):
         """
@@ -1478,41 +1474,12 @@ class ProjectHDFio(FileHDFio):
         return self._project.__class__(path=self.file_path)
 
 
-def read_hdf5(fname, title="h5io", slash="ignore"):
-    return retry(
-        lambda: h5io.read_hdf5(
-            fname=fname,
-            title=title,
-            slash=slash,
-        ),
-        error=BlockingIOError,
-        msg=f"Two or more processes tried to access the file {fname}.",
-        at_most=10,
-        delay=1,
+def _get_safe_filename(file_name):
+    file_path_no_ext, file_ext = os.path.splitext(file_name)
+    file_path = os.path.dirname(file_path_no_ext)
+    file_name_no_ext = os.path.basename(file_path_no_ext)
+    file_name = os.path.join(
+        file_path, _get_safe_job_name(name=file_name_no_ext) + file_ext
     )
-
-
-def write_hdf5(
-    fname,
-    data,
-    overwrite=False,
-    compression=4,
-    title="h5io",
-    slash="error",
-    use_json=False,
-):
-    retry(
-        lambda: h5io.write_hdf5(
-            fname=fname,
-            data=data,
-            overwrite=overwrite,
-            compression=compression,
-            title=title,
-            slash=slash,
-            use_json=use_json,
-        ),
-        error=BlockingIOError,
-        msg=f"Two or more processes tried to access the file {fname}.",
-        at_most=10,
-        delay=1,
-    )
+    file_name += ".h5" if not file_name.endswith(".h5") else ""
+    return file_name.replace("\\", "/")
