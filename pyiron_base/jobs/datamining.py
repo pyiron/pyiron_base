@@ -280,7 +280,9 @@ class PyironTable:
         )
         if len(new_jobs) > 0:
             df_new_ids = self._iterate_over_job_lst(
-                job_id_lst=new_jobs, function_lst=self.add._function_lst, processes=processes
+                job_id_lst=new_jobs,
+                function_lst=self.add._function_lst,
+                processes=processes,
             )
             if len(df_new_ids) > 0:
                 self._df = pandas.concat([self._df, df_new_ids], ignore_index=True)
@@ -336,7 +338,9 @@ class PyironTable:
         filter_funct = self.db_filter_function
         return project_table[filter_funct(project_table)]["id"].tolist()
 
-    def _iterate_over_job_lst(self, job_id_lst: List, function_lst: List, processes: int) -> List[dict]:
+    def _iterate_over_job_lst(
+        self, job_id_lst: List, function_lst: List, processes: int
+    ) -> List[dict]:
         """
         Apply functions to job.
 
@@ -351,14 +355,20 @@ class PyironTable:
             list of dict: a list of the merged dicts from all functions for each job
         """
         job_to_analyse_lst = [
-            [self._project.db.get_item_by_id(job_id), function_lst, self.convert_to_object]
+            [
+                self._project.db.get_item_by_id(job_id),
+                function_lst,
+                self.convert_to_object,
+            ]
             for job_id in job_id_lst
         ]
         with Pool(processes) as p:
-            diff_dict_lst = list(tqdm(p.imap(
-                _apply_list_of_functions_on_job,
-                job_to_analyse_lst
-            ), total=len(job_to_analyse_lst)))
+            diff_dict_lst = list(
+                tqdm(
+                    p.imap(_apply_list_of_functions_on_job, job_to_analyse_lst),
+                    total=len(job_to_analyse_lst),
+                )
+            )
         self.refill_dict(diff_dict_lst)
         return pandas.DataFrame(diff_dict_lst)
 
@@ -755,7 +765,7 @@ class TableJob(GenericJob):
                 file=hdf5_input,
                 job_status_list=job_status_list,
                 enforce_update=self._enforce_update,
-                processes=self.server.cores
+                processes=self.server.cores,
             )
         self.to_hdf()
         self._pyiron_table._df.to_csv(
@@ -809,6 +819,7 @@ def _apply_function_on_job(funct, job):
 
 def _apply_list_of_functions_on_job(input_parameters):
     from pyiron_base.jobs.job.path import JobPath
+
     db_entry, function_lst, convert_to_object = input_parameters
     job = JobPath.from_db_entry(db_entry)
     if convert_to_object:
