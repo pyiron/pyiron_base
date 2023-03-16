@@ -12,6 +12,7 @@ from collections.abc import Sequence, Set, Mapping, MutableMapping
 
 import numpy as np
 import pandas
+from pprint import pformat
 
 from pyiron_base.storage.fileio import read, write
 from pyiron_base.storage.hdfstub import HDFStub
@@ -414,20 +415,9 @@ class DataContainer(MutableMapping, HasGroups, HasHDF):
 
     def __repr__(self):
         name = self.__class__.__name__
-        if self.has_keys():
-            # access _store and _indices directly to avoid forcing HDFStubs
-            index2key = {v: k for k, v in self._indices.items()}
-            return (
-                name
-                + "({"
-                + ", ".join(
-                    "{!r}: {!r}".format(index2key.get(i, i), self._store[i])
-                    for i in range(len(self))
-                )
-                + "})"
-            )
-        else:
-            return name + "([" + ", ".join("{!r}".format(v) for v in self._store) + "])"
+        return (
+            f"{name}({pformat(self.to_builtin(load_stubs=False), indent=2, depth=2)})"
+        )
 
     @property
     def read_only(self):
@@ -451,50 +441,52 @@ class DataContainer(MutableMapping, HasGroups, HasHDF):
             "finished.".format(cls.__name__)
         )
 
-    def to_builtin(self, stringify=False):
+    def to_builtin(self, stringify=False, load_stubs=True):
         """
         Convert the container back to builtin dict's and list's recursively.
 
         Args:
             stringify (bool, optional): convert all non-recursive elements to str
+            load_stubs (bool, optional):
         """
 
         if self.has_keys():
             dd = {}
-            for k, v in self.items():
+            if load_stubs:
+                items = self
+            else:
+                index2key = {v: k for k, v in self._indices.items()}
+                items = {index2key.get(i, i): self._store[i] for i in range(len(self))}
+            for k, v in items.items():
                 # force all string keys in output to work with h5io (it
                 # requires all string keys when storing as json), since
                 # _normalize calls int() on all digit string keys this is
                 # transparent for the rest of the module
                 k = str(k)
                 if isinstance(v, DataContainer):
-                    dd[k] = v.to_builtin(stringify=stringify)
+                    dd[k] = v.to_builtin(stringify=stringify, load_stubs=load_stubs)
                 else:
                     dd[k] = repr(v) if stringify else v
 
             return dd
         elif stringify:
+            values = self.values() if load_stubs else self._store
             return list(
-                v.to_builtin(stringify=stringify)
+                v.to_builtin(stringify=stringify, load_stubs=load_stubs)
                 if isinstance(v, DataContainer)
                 else repr(v)
-                for v in self.values()
+                for v in values
             )
         else:
+            values = self.values() if load_stubs else self._store
             return list(
                 v.to_builtin(stringify=stringify) if isinstance(v, DataContainer) else v
-                for v in self.values()
+                for v in values
             )
 
     # allows "nice" displays in jupyter lab
     def _repr_json_(self):
-        return self.to_builtin(stringify=True)
-
-    # allows 'nice' display in notebooks
-    def _repr_html_(self):
-        name = self.__class__.__name__
-        plain = f"{name}({json.dumps(self.to_builtin(stringify=True), indent=2, default=str)})"
-        return "<pre>" + plain + "</pre>"
+        return self.to_builtin(stringify=True, load_stubs=False)
 
     def get(self, key, default=None, create=False):
         """
