@@ -1,0 +1,30 @@
+name: pyiron
+
+headline: A workflow manager for scientific computing on high performance computing infrastructures
+
+description: "Originally developed for atomistic simulation in computational materials science, pyiron is more recently
+  used as general purpose workflow manager for high performance computing (HPC) infrastructures. The core features of
+  pyiron are (1) the data storage interface based on the hierarchical data format (HDF5), (2) support for python codes 
+  as well as codes written in other programming languages like C, C++ and Fortran and finally (3) advanced utility 
+  like map-reduce to efficiently prototype and upscale complex simulation protocols."
+
+language: python
+
+documentation:
+  general: https://pyiron.readthedocs.io/
+  installation: https://pyiron.readthedocs.io/en/latest/source/installation.html
+  tutorial: https://pyiron.readthedocs.io/en/latest/source/examples.html
+
+social:
+  twitter: https://twitter.com/pyiron
+  youtube: https://www.youtube.com/@pyironIDE
+
+execution_environment:
+  resource_managers:
+    - slurm
+    - lsf
+    - moab
+    - sge
+    - torque
+  transfer_protocols:
+    - SSH
