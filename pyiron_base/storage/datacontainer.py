@@ -218,7 +218,7 @@ class DataContainer(MutableMapping, HasGroups, HasHDF):
     >>> g.my_fancy_field
     42
     >>> e
-    ExtendedContainer({'foo': 1, 'bar': 5, 'sub': ExtendedContainer({'fnord': 23})})
+    ExtendedContainer({'foo': 1, 'bar': 5, 'sub': {'fnord': 23}})
 
     For that reason most of time you'll actually want a class that uses a DataContainer for storage, but doesn't derive
     from it.
@@ -415,9 +415,7 @@ class DataContainer(MutableMapping, HasGroups, HasHDF):
 
     def __repr__(self):
         name = self.__class__.__name__
-        return (
-            f"{name}({pformat(self.to_builtin(load_stubs=False), indent=2, depth=2)})"
-        )
+        return f"{name}({pformat(self.to_builtin(load_stubs=False, _no_str_keys=True), indent=2, depth=2, sort_dicts=False)})"
 
     @property
     def read_only(self):
@@ -441,7 +439,7 @@ class DataContainer(MutableMapping, HasGroups, HasHDF):
             "finished.".format(cls.__name__)
         )
 
-    def to_builtin(self, stringify=False, load_stubs=True):
+    def to_builtin(self, stringify=False, load_stubs=True, _no_str_keys=False):
         """
         Convert the container back to builtin dict's and list's recursively.
 
@@ -462,7 +460,8 @@ class DataContainer(MutableMapping, HasGroups, HasHDF):
                 # requires all string keys when storing as json), since
                 # _normalize calls int() on all digit string keys this is
                 # transparent for the rest of the module
-                k = str(k)
+                if not _no_str_keys:
+                    k = str(k)
                 if isinstance(v, DataContainer):
                     dd[k] = v.to_builtin(stringify=stringify, load_stubs=load_stubs)
                 else:
