@@ -3,10 +3,12 @@ channels:
 dependencies:
 - nbsphinx
 - dill
+- furo
 - future
 - gitpython
 - h5io
 - h5py
+- myst-parser
 - numpy
 - pandas
 - pathlib2
@@ -15,6 +17,10 @@ dependencies:
 - pyfileindex
 - pysqa
 - pytables
+- sphinx-copybutton
+- sphinx-design
+- sphinx-inline-tabs
+- sphinx_rtd_theme
 - sqlalchemy
 - tqdm
 - traitlets
