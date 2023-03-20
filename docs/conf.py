@@ -51,6 +51,8 @@ extensions = [
     'sphinx_inline_tabs',
 ]
 
+myst_enable_extensions = ["dollarmath", "amsmath"]
+
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
 
