@@ -34,8 +34,14 @@ from sphinx.ext.apidoc import main
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-extensions = ['nbsphinx', 'sphinx.ext.mathjax', 'sphinx.ext.autodoc', 'sphinx.ext.viewcode',
-              'sphinx.ext.autosummary', 'sphinx.ext.napoleon']
+extensions = [
+    'nbsphinx',
+    'sphinx.ext.mathjax',
+    'sphinx.ext.autodoc',
+    'sphinx.ext.viewcode',
+    'sphinx.ext.autosummary',
+    'sphinx.ext.napoleon'
+]
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
