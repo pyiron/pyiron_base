@@ -140,11 +140,7 @@ modindex_common_prefix = []
 #    raise ImportError("You need to install bootstrap: pip install sphinx_bootstrap_theme")
 #    html_theme = 'default'
 
-try:
-   import sphinx_rtd_theme
-   html_theme = 'sphinx_rtd_theme'
-except ImportError:
-   html_theme = 'default'
+html_theme = 'furo'
 
 
 # Theme options are theme-specific and customize the look and feel of a theme
