@@ -110,11 +110,16 @@ class Settings(metaclass=Singleton):
 
     def __init__(self):
         self._configuration = None
+        self._credentials = None
         self.update()
 
     @property
     def configuration(self) -> Dict:
         return self._configuration
+
+    @property
+    def credentials(self) -> Dict:
+        return self._credentials
 
     def update(self, user_dict: Union[Dict, None] = None) -> None:
         """
@@ -138,6 +143,8 @@ class Settings(metaclass=Singleton):
             self._update_from_dict(env_dict)
         elif file_dict is not None:
             self._update_from_dict(file_dict)
+
+        self._update_credentials_from_std_pyiron_config()
 
         if (
             self._configuration["config_file_permissions_warning"]
@@ -375,16 +382,48 @@ class Settings(metaclass=Singleton):
         config = self._add_credentials_from_file(config)
         return config if len(config) > 0 else None
 
+    def _update_credentials_from_std_pyiron_config(self):
+        update_dict = {}
+        for key in self.file_credential_map.values():
+            if key in self._configuration:
+                update_dict[key] = self._configuration[key]
+
+        if len(update_dict) > 0:
+            if self._credentials is None:
+                self._credentials = {"DEFAULT": update_dict}
+            elif "DEFAULT" in self._credentials:
+                self._credentials["DEFAULT"].update(update_dict)
+            else:
+                self._credentials["DEFAULT"] = update_dict
+
     def _add_credentials_from_file(self, config: dict) -> Dict:
         if "credentials_file" in config and config["credentials_file"] is not None:
             credential_file = config["credentials_file"]
 
+            # This gets all the entries in the credential file with the headers
+            parser = ConfigParser(inline_comment_prefixes=(";",), interpolation=None)
+            parser.read(credential_file)
+            credentials = {}
+            for sec_name, section in parser.items():
+                credentials_w = {}
+
+                for k, v in section.items():
+                    if k.upper() in self.file_credential_map:
+                        credentials_w[self.file_configuration_map[k.upper()]] = v
+                    else:
+                        credentials_w[k.upper()] = v
+                if len(credentials_w) > 0:
+                    credentials[sec_name] = credentials_w
+            self._credentials = credentials
+
+            # This ignores unknown credentials, i.e. the approach we usually use for parsing the config
             if not os.path.isfile(credential_file):
                 raise FileNotFoundError(credential_file)
             credentials = (
                 self._parse_config_file(credential_file, self.file_credential_map) or {}
             )
             config.update(credentials)
+
         return config
 
     def _get_config_from_file(self) -> Union[Dict, None]:
