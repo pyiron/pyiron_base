@@ -44,9 +44,9 @@ class TestSettings(TestCase):
             if "PYIRON" in k:
                 self.env.pop(k)
 
-    @staticmethod
-    def test_default_works():
+    def test_default_works(self):
         s.update(s.default_configuration)
+        self.assertDictEqual(s.configuration, s.default_configuration)
 
     def test_validate_sql_configuration_completeness(self):
         s._validate_sql_configuration(
@@ -166,6 +166,11 @@ class TestSettings(TestCase):
                 }
             )
 
+    def _test_config_and_credential_synchronization(self):
+        if s.credentials is not None and 'DEFAULT' in s.credentials:
+            for key in s.credentials['DEFAULT']:
+                self.assertEqual(s.credentials['DEFAULT'][key], s.configuration[key])
+
     def test_get_config_from_environment(self):
         self.env["PYIRONFOO"] = "foo"
         self.env["PYIRONSQLFILE"] = "bar"
@@ -198,7 +203,7 @@ class TestSettings(TestCase):
             )
 
         local_loc = Path(self.cwd + "/.pyiron_credentials")
-        local_loc.write_text(f"[DEFAULT]\nPASSWD = something_else\n")
+        local_loc.write_text(f"[DEFAULT]\nPASSWD = something_else\n[OTHER]\nNoPyironKey = token")
         local_loc_str = s.convert_path_to_abs_posix(str(local_loc))
         self.env["PYIRONCREDENTIALSFILE"] = local_loc_str
         with self.subTest("Should read credentials file if specified"):
@@ -214,7 +219,13 @@ class TestSettings(TestCase):
                 "credentials_file": local_loc_str,
                 "sql_user_key": "something_else",
             }
-            self.assertEqual(ref_dict, env_dict)
+            self.assertDictEqual(ref_dict, env_dict)
+        with self.subTest('Credentials should contain other information'):
+            self.assertIn('OTHER', s.credentials)
+            self.assertEqual(s.credentials['OTHER']['nopyironkey'], 'token')
+        with self.subTest('credentials and config should be in sync'):
+            s._update_credentials_from_std_pyiron_config()
+            self._test_config_and_credential_synchronization()
         local_loc.unlink()
 
     def test__parse_config_file(self):
@@ -223,10 +234,10 @@ class TestSettings(TestCase):
             f"[DEFAULT]\nPASSWD = something_else\nNoValidKey = None\n[OTHER]\nKey = Value"
         )
         config = s._parse_config_file(
-            local_loc, {"PASSWD": "sql_user_key", "KEY": "key"}
+            local_loc, map_dict={"PASSWD": "sql_user_key", "KEY": "key"}
         )
         ref_dict = {"sql_user_key": "something_else", "key": "Value"}
-        self.assertEqual(ref_dict, config)
+        self.assertDictEqual(ref_dict, config)
         local_loc.unlink()
 
     def test_get_config_from_file(self):
@@ -238,6 +249,7 @@ class TestSettings(TestCase):
             "PROJECT_PATHS = baz\n"
             ";USER = boa\n"
         )
+
         file_dict = s._get_config_from_file()
 
         self.assertNotIn("foo", file_dict.values(), msg="It needs to be a real key")
@@ -247,7 +259,7 @@ class TestSettings(TestCase):
             msg="This was commented out and shouldn't be read",
         )
         ref_dict = {"sql_file": "bar", "project_paths": "baz"}
-        self.assertEqual(ref_dict, file_dict, msg="Valid item failed to read from file")
+        self.assertDictEqual(ref_dict, file_dict, msg="Valid item failed to read from file")
 
     def test_update(self):
         # System environment variables

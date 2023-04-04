@@ -137,13 +137,13 @@ class Settings(metaclass=Singleton):
         env_dict = self._get_config_from_environment()
         file_dict = self._get_config_from_file()
         if user_dict is not None:
-            user_dict = self._add_credentials_from_file(user_dict)
             self._update_from_dict(user_dict)
         elif env_dict is not None:
             self._update_from_dict(env_dict)
         elif file_dict is not None:
             self._update_from_dict(file_dict)
 
+        self._add_credentials_from_file()
         self._update_credentials_from_std_pyiron_config()
 
         if (
@@ -379,8 +379,30 @@ class Settings(metaclass=Singleton):
             elif k in self.environment_credential_map:
                 config[self.environment_credential_map[k]] = v
         config = self._fix_boolean_var_in_config(config=config)
-        config = self._add_credentials_from_file(config)
         return config if len(config) > 0 else None
+
+    def _add_credentials_from_file(self) -> None:
+        if (
+            "credentials_file" in self._configuration
+            and self._configuration["credentials_file"] is not None
+        ):
+            credential_file = self._configuration["credentials_file"]
+
+            # This gets all the entries in the credential file with the headers
+            parser = ConfigParser(inline_comment_prefixes=(";",), interpolation=None)
+            parser.read(credential_file)
+            credentials = {}
+            for sec_name, section in parser.items():
+                credentials_w = {}
+
+                for k, v in section.items():
+                    if k.upper() in self.file_credential_map:
+                        credentials_w[self.file_configuration_map[k.upper()]] = v
+                    else:
+                        credentials_w[k.lower()] = v
+                if len(credentials_w) > 0:
+                    credentials[sec_name.upper()] = credentials_w
+            self._credentials = credentials
 
     def _update_credentials_from_std_pyiron_config(self):
         update_dict = {}
@@ -396,27 +418,10 @@ class Settings(metaclass=Singleton):
             else:
                 self._credentials["DEFAULT"] = update_dict
 
-    def _add_credentials_from_file(self, config: dict) -> Dict:
+    def _get_credentials_from_file(self, config: dict) -> Dict:
         if "credentials_file" in config and config["credentials_file"] is not None:
             credential_file = config["credentials_file"]
 
-            # This gets all the entries in the credential file with the headers
-            parser = ConfigParser(inline_comment_prefixes=(";",), interpolation=None)
-            parser.read(credential_file)
-            credentials = {}
-            for sec_name, section in parser.items():
-                credentials_w = {}
-
-                for k, v in section.items():
-                    if k.upper() in self.file_credential_map:
-                        credentials_w[self.file_configuration_map[k.upper()]] = v
-                    else:
-                        credentials_w[k.upper()] = v
-                if len(credentials_w) > 0:
-                    credentials[sec_name] = credentials_w
-            self._credentials = credentials
-
-            # This ignores unknown credentials, i.e. the approach we usually use for parsing the config
             if not os.path.isfile(credential_file):
                 raise FileNotFoundError(credential_file)
             credentials = (
@@ -436,7 +441,6 @@ class Settings(metaclass=Singleton):
 
         if config is not None:
             config = self._fix_boolean_var_in_config(config=config)
-            config = self._add_credentials_from_file(config)
 
         return config
 
@@ -460,6 +464,7 @@ class Settings(metaclass=Singleton):
 
         Non-string non-None items are converted to the expected type and paths are converted to absolute POSIX paths.
         """
+        config = self._get_credentials_from_file(config)
         self._validate_sql_configuration(config=config)
         self._validate_viewer_configuration(config=config)
         self._validate_no_database_configuration(config=config)
