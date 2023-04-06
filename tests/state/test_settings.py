@@ -43,8 +43,10 @@ class TestSettings(TestCase):
         for k, _ in self.env.items():
             if "PYIRON" in k:
                 self.env.pop(k)
+        s.update()
 
     def test_default_works(self):
+        s._configuration = {}
         s.update(s.default_configuration)
         self.assertDictEqual(s.configuration, s.default_configuration)
 
@@ -167,9 +169,10 @@ class TestSettings(TestCase):
             )
 
     def _test_config_and_credential_synchronization(self):
-        if s.credentials is not None and "DEFAULT" in s.credentials:
-            for key in s.credentials["DEFAULT"]:
-                self.assertEqual(s.credentials["DEFAULT"][key], s.configuration[key])
+        pyiron_key = "PYIRON"
+        if s.credentials is not None and pyiron_key in s.credentials:
+            for key in s.credentials[pyiron_key]:
+                self.assertEqual(s.credentials[pyiron_key][key], s.configuration[key])
 
     def test_get_config_from_environment(self):
         self.env["PYIRONFOO"] = "foo"
@@ -208,7 +211,7 @@ class TestSettings(TestCase):
         )
         local_loc_str = s.convert_path_to_abs_posix(str(local_loc))
         self.env["PYIRONCREDENTIALSFILE"] = local_loc_str
-        with self.subTest("Should read credentials file if specified"):
+        with self.subTest("Should be aware of credentials file if specified"):
             env_dict = s._get_config_from_environment()
             self.assertNotIn(
                 "foo",
@@ -219,13 +222,64 @@ class TestSettings(TestCase):
                 "sql_file": "bar",
                 "project_paths": "baz",
                 "credentials_file": local_loc_str,
-                "sql_user_key": "something_else",
             }
             self.assertEqual(ref_dict, env_dict)
-        with self.subTest("credentials and config should be in sync"):
-            s._update_credentials_from_std_pyiron_config()
-            self._test_config_and_credential_synchronization()
+        with self.subTest("Credential file should be read at full update"):
+            s._update_from_dict(env_dict)
+            self.assertEqual(s.configuration["sql_user_key"], "something_else")
         local_loc.unlink()
+
+    def test_standard_credentials(self):
+        self.assertEqual(
+            s.credentials, {"PYIRON": {"sql_user_key": None, "sql_view_user_key": None}}
+        )
+
+    def test_update_from_env_with_credential_check(self):
+        self.env["PYIRONSQLFILE"] = "bar"
+        self.env["PYIRONPROJECTPATHS"] = "baz"
+        local_loc = Path(self.cwd + "/.pyiron_credentials")
+        local_loc.write_text(
+            f"[PYIRON]\nPASSWD = something_else\n[OTHER]\nNoPyironKey = token"
+        )
+        local_loc_str = s.convert_path_to_abs_posix(str(local_loc))
+        self.env["PYIRONCREDENTIALSFILE"] = local_loc_str
+        env_dict = s._get_config_from_environment()
+        ref_dict = {
+            "sql_file": "bar",
+            "project_paths": "baz",
+            "credentials_file": local_loc_str,
+        }
+        self.assertEqual(ref_dict, env_dict)
+        with self.subTest("credentials dict to update the config"):
+            new_env_dict = s._get_credentials_from_file(env_dict)
+            ref_dict["sql_user_key"] = "something_else"
+            self.assertEqual(new_env_dict, ref_dict)
+            self.assertEqual(s.configuration, s.default_configuration)
+
+        with self.subTest("Check for updated config from credentials file"):
+            s._update_from_dict(
+                env_dict
+            )  # updating only the configuration from credential file!
+            self.test_standard_credentials()
+
+        with self.subTest("Full population of credentials"):
+            credentials_dict = s._add_credentials_from_file()
+            cred_ref_dict = {
+                "OTHER": {"nopyironkey": "token"},
+                "PYIRON": {"sql_user_key": "something_else"},
+            }
+            self.assertEqual(credentials_dict, cred_ref_dict)
+            self.test_standard_credentials()
+
+        with self.subTest("full update"):
+            cred_ref_dict["PYIRON"][
+                "sql_view_user_key"
+            ] = None  # from standard configuration
+            s.update(env_dict)
+            self.assertEqual(s.credentials, cred_ref_dict)
+
+        with self.subTest("credentials and config should be in sync"):
+            self._test_config_and_credential_synchronization()
 
     def test__parse_config_file(self):
         local_loc = Path(self.cwd + "/.pyiron_credentials")
