@@ -1,7 +1,7 @@
 # coding: utf-8
 # Copyright (c) Max-Planck-Institut für Eisenforschung GmbH - Computational Materials Design (CM) Department
 # Distributed under the terms of "New BSD License", see the LICENSE file.
-
+from copy import copy
 from unittest import TestCase
 from pyiron_base.state.settings import settings as s
 import os
@@ -167,9 +167,9 @@ class TestSettings(TestCase):
             )
 
     def _test_config_and_credential_synchronization(self):
-        if s.credentials is not None and 'DEFAULT' in s.credentials:
-            for key in s.credentials['DEFAULT']:
-                self.assertEqual(s.credentials['DEFAULT'][key], s.configuration[key])
+        if s.credentials is not None and "DEFAULT" in s.credentials:
+            for key in s.credentials["DEFAULT"]:
+                self.assertEqual(s.credentials["DEFAULT"][key], s.configuration[key])
 
     def test_get_config_from_environment(self):
         self.env["PYIRONFOO"] = "foo"
@@ -183,7 +183,7 @@ class TestSettings(TestCase):
                 msg="Just having PYIRON in the key isn't enough, it needs to be a real key",
             )
             ref_dict = {"sql_file": "bar", "project_paths": "baz"}
-            self.assertEqual(
+            self.assertDictEqual(
                 ref_dict, env_dict, msg="Valid item failed to read from environment"
             )
 
@@ -203,7 +203,9 @@ class TestSettings(TestCase):
             )
 
         local_loc = Path(self.cwd + "/.pyiron_credentials")
-        local_loc.write_text(f"[DEFAULT]\nPASSWD = something_else\n[OTHER]\nNoPyironKey = token")
+        local_loc.write_text(
+            f"[DEFAULT]\nPASSWD = something_else\n[OTHER]\nNoPyironKey = token"
+        )
         local_loc_str = s.convert_path_to_abs_posix(str(local_loc))
         self.env["PYIRONCREDENTIALSFILE"] = local_loc_str
         with self.subTest("Should read credentials file if specified"):
@@ -219,11 +221,8 @@ class TestSettings(TestCase):
                 "credentials_file": local_loc_str,
                 "sql_user_key": "something_else",
             }
-            self.assertDictEqual(ref_dict, env_dict)
-        with self.subTest('Credentials should contain other information'):
-            self.assertIn('OTHER', s.credentials)
-            self.assertEqual(s.credentials['OTHER']['nopyironkey'], 'token')
-        with self.subTest('credentials and config should be in sync'):
+            self.assertEqual(ref_dict, env_dict)
+        with self.subTest("credentials and config should be in sync"):
             s._update_credentials_from_std_pyiron_config()
             self._test_config_and_credential_synchronization()
         local_loc.unlink()
@@ -236,6 +235,23 @@ class TestSettings(TestCase):
         config = s._parse_config_file(
             local_loc, map_dict={"PASSWD": "sql_user_key", "KEY": "key"}
         )
+        ref_dict = {"sql_user_key": "something_else", "key": "Value"}
+        self.assertDictEqual(ref_dict, config)
+        local_loc.unlink()
+
+    def test__add_credentials_from_file(self):
+        local_loc = Path(self.cwd + "/.pyiron_credentials")
+        local_loc.write_text(
+            f"[DEFAULT]\nPASSWD = something_else\nNoValidKey = None\n[OTHER]\nKey = Value"
+        )
+        local_loc_str = s.convert_path_to_abs_posix(str(local_loc))
+        bak = copy(s._configuration)
+        s._configuration["credentials_file"] = local_loc_str
+
+        config = s._add_credentials_from_file(
+            local_loc, map_dict={"PASSWD": "sql_user_key", "KEY": "key"}
+        )
+        s._configuration = bak
         ref_dict = {"sql_user_key": "something_else", "key": "Value"}
         self.assertDictEqual(ref_dict, config)
         local_loc.unlink()
@@ -259,7 +275,9 @@ class TestSettings(TestCase):
             msg="This was commented out and shouldn't be read",
         )
         ref_dict = {"sql_file": "bar", "project_paths": "baz"}
-        self.assertDictEqual(ref_dict, file_dict, msg="Valid item failed to read from file")
+        self.assertDictEqual(
+            ref_dict, file_dict, msg="Valid item failed to read from file"
+        )
 
     def test_update(self):
         # System environment variables
