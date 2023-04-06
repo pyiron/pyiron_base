@@ -406,7 +406,7 @@ class Settings(metaclass=Singleton):
             return credentials
 
     def _update_credentials_from_std_pyiron_config(self):
-        pyiron_dict_name = 'PYIRON'
+        pyiron_dict_name = "PYIRON"
         update_dict = {}
         for key in self.file_credential_map.values():
             if key in self._configuration:
