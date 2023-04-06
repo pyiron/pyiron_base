@@ -143,7 +143,7 @@ class Settings(metaclass=Singleton):
         elif file_dict is not None:
             self._update_from_dict(file_dict)
 
-        self._add_credentials_from_file()
+        self._credentials = self._add_credentials_from_file()
         self._update_credentials_from_std_pyiron_config()
 
         if (
@@ -381,7 +381,7 @@ class Settings(metaclass=Singleton):
         config = self._fix_boolean_var_in_config(config=config)
         return config if len(config) > 0 else None
 
-    def _add_credentials_from_file(self) -> None:
+    def _add_credentials_from_file(self) -> Dict:
         if (
             "credentials_file" in self._configuration
             and self._configuration["credentials_file"] is not None
@@ -389,6 +389,7 @@ class Settings(metaclass=Singleton):
             credential_file = self._configuration["credentials_file"]
 
             # This gets all the entries in the credential file with the headers
+            # The key-value pairs in the [DEFAULT] section are added everywhere!
             parser = ConfigParser(inline_comment_prefixes=(";",), interpolation=None)
             parser.read(credential_file)
             credentials = {}
@@ -402,9 +403,10 @@ class Settings(metaclass=Singleton):
                         credentials_w[k.lower()] = v
                 if len(credentials_w) > 0:
                     credentials[sec_name.upper()] = credentials_w
-            self._credentials = credentials
+            return credentials
 
     def _update_credentials_from_std_pyiron_config(self):
+        pyiron_dict_name = 'PYIRON'
         update_dict = {}
         for key in self.file_credential_map.values():
             if key in self._configuration:
@@ -412,11 +414,11 @@ class Settings(metaclass=Singleton):
 
         if len(update_dict) > 0:
             if self._credentials is None:
-                self._credentials = {"DEFAULT": update_dict}
-            elif "DEFAULT" in self._credentials:
-                self._credentials["DEFAULT"].update(update_dict)
+                self._credentials = {pyiron_dict_name: update_dict}
+            elif pyiron_dict_name in self._credentials:
+                self._credentials[pyiron_dict_name].update(update_dict)
             else:
-                self._credentials["DEFAULT"] = update_dict
+                self._credentials[pyiron_dict_name] = update_dict
 
     def _get_credentials_from_file(self, config: dict) -> Dict:
         if "credentials_file" in config and config["credentials_file"] is not None:

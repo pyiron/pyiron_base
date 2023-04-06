@@ -242,17 +242,19 @@ class TestSettings(TestCase):
     def test__add_credentials_from_file(self):
         local_loc = Path(self.cwd + "/.pyiron_credentials")
         local_loc.write_text(
-            f"[DEFAULT]\nPASSWD = something_else\nNoValidKey = None\n[OTHER]\nKey = Value"
+            f"[PYIRON]\nPASSWD = something_else\nNoValidKey = None\n[OTHER]\nKey = Value\n[SOME]\nN=W"
         )
         local_loc_str = s.convert_path_to_abs_posix(str(local_loc))
         bak = copy(s._configuration)
         s._configuration["credentials_file"] = local_loc_str
 
-        config = s._add_credentials_from_file(
-            local_loc, map_dict={"PASSWD": "sql_user_key", "KEY": "key"}
-        )
+        config = s._add_credentials_from_file()
         s._configuration = bak
-        ref_dict = {"sql_user_key": "something_else", "key": "Value"}
+        ref_dict = {
+            "PYIRON": {"sql_user_key": "something_else", "novalidkey": "None"},
+            "OTHER": {"key": "Value"},
+            "SOME": {"n": "W"},
+        }
         self.assertDictEqual(ref_dict, config)
         local_loc.unlink()
 
