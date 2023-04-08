@@ -42,7 +42,7 @@ setup(
         'pyfileindex==0.0.7',
         'pysqa==0.0.19',
         'sqlalchemy==2.0.8',
-        'tables==3.7.0',
+        'tables==3.8.0',
         'tqdm==4.65.0',
         'traitlets==5.9.0',
     ],
