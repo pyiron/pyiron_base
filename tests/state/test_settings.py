@@ -281,6 +281,7 @@ class TestSettings(TestCase):
 
         with self.subTest("credentials and config should be in sync"):
             self._test_config_and_credential_synchronization()
+        local_loc.unlink()
 
     def test__parse_config_file(self):
         local_loc = Path(self.cwd + "/.pyiron_credentials")
