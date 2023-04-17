@@ -34,6 +34,7 @@ cleaning and consistency checks.
 
 import ast
 import os
+import warnings
 from configparser import ConfigParser
 from pyiron_base.state.logger import logger
 from pyiron_base.state.publications import publications
@@ -392,8 +393,13 @@ class Settings(metaclass=Singleton):
         """
         if k.upper() in self.file_credential_map:
             return self.file_credential_map[k.upper()]
-        else:
-            return k.lower()
+        elif k.upper() in self.file_configuration_map:
+            warnings.warn(
+                f"pyiron configuration key {k.upper()} used in the credentials file. "
+                "This does not take effect in the pyiron configuration!"
+            )
+
+        return k.lower()
 
     def _add_credentials_from_file(self) -> Dict:
         if (
