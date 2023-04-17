@@ -3,11 +3,12 @@
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 from copy import copy
 from unittest import TestCase
-from pyiron_base.state.settings import settings as s
+from pyiron_base.state.settings import settings as s, PYIRON_DICT_NAME
 import os
 from pathlib import Path
 from configparser import ConfigParser
 from shutil import rmtree
+
 
 
 class TestSettings(TestCase):
@@ -231,7 +232,7 @@ class TestSettings(TestCase):
 
     def test_standard_credentials(self):
         self.assertEqual(
-            s.credentials, {"PYIRON": {"sql_user_key": None, "sql_view_user_key": None}}
+            s.credentials, {PYIRON_DICT_NAME: {"sql_user_key": None, "sql_view_user_key": None}}
         )
 
     def test_update_from_env_with_credential_check(self):
@@ -239,7 +240,7 @@ class TestSettings(TestCase):
         self.env["PYIRONPROJECTPATHS"] = "baz"
         local_loc = Path(self.cwd + "/.pyiron_credentials")
         local_loc.write_text(
-            f"[PYIRON]\nPASSWD = something_else\n[OTHER]\nNoPyironKey = token"
+            f"[{PYIRON_DICT_NAME}]\nPASSWD = something_else\n[OTHER]\nNoPyironKey = token"
         )
         local_loc_str = s.convert_path_to_abs_posix(str(local_loc))
         self.env["PYIRONCREDENTIALSFILE"] = local_loc_str
@@ -266,13 +267,13 @@ class TestSettings(TestCase):
             credentials_dict = s._add_credentials_from_file()
             cred_ref_dict = {
                 "OTHER": {"nopyironkey": "token"},
-                "PYIRON": {"sql_user_key": "something_else"},
+                PYIRON_DICT_NAME: {"sql_user_key": "something_else"},
             }
             self.assertEqual(credentials_dict, cred_ref_dict)
             self.test_standard_credentials()
 
         with self.subTest("full update"):
-            cred_ref_dict["PYIRON"][
+            cred_ref_dict[PYIRON_DICT_NAME][
                 "sql_view_user_key"
             ] = None  # from standard configuration
             s.update(env_dict)
@@ -296,7 +297,7 @@ class TestSettings(TestCase):
     def test__add_credentials_from_file(self):
         local_loc = Path(self.cwd + "/.pyiron_credentials")
         local_loc.write_text(
-            f"[PYIRON]\nPASSWD = something_else\nNoValidKey = None\n[OTHER]\nKey = Value\n[SOME]\nN=W"
+            f"[{PYIRON_DICT_NAME}]\nPASSWD = something_else\nNoValidKey = None\n[OTHER]\nKey = Value\n[SOME]\nN=W"
         )
         local_loc_str = s.convert_path_to_abs_posix(str(local_loc))
         bak = copy(s._configuration)
@@ -305,7 +306,7 @@ class TestSettings(TestCase):
         config = s._add_credentials_from_file()
         s._configuration = bak
         ref_dict = {
-            "PYIRON": {"sql_user_key": "something_else", "novalidkey": "None"},
+            PYIRON_DICT_NAME: {"sql_user_key": "something_else", "novalidkey": "None"},
             "OTHER": {"key": "Value"},
             "SOME": {"n": "W"},
         }
