@@ -34,6 +34,7 @@ cleaning and consistency checks.
 
 import ast
 import os
+import warnings
 from configparser import ConfigParser
 from pyiron_base.state.logger import logger
 from pyiron_base.state.publications import publications
@@ -53,6 +54,9 @@ __maintainer__ = "Liam Huber"
 __email__ = "huber@mpie.de"
 __status__ = "production"
 __date__ = "Sep 1, 2017"
+
+
+PYIRON_DICT_NAME = "PYIRON"
 
 
 class Settings(metaclass=Singleton):
@@ -110,11 +114,16 @@ class Settings(metaclass=Singleton):
 
     def __init__(self):
         self._configuration = None
+        self._credentials = None
         self.update()
 
     @property
     def configuration(self) -> Dict:
         return self._configuration
+
+    @property
+    def credentials(self) -> Dict:
+        return self._credentials
 
     def update(self, user_dict: Union[Dict, None] = None) -> None:
         """
@@ -132,12 +141,14 @@ class Settings(metaclass=Singleton):
         env_dict = self._get_config_from_environment()
         file_dict = self._get_config_from_file()
         if user_dict is not None:
-            user_dict = self._add_credentials_from_file(user_dict)
             self._update_from_dict(user_dict)
         elif env_dict is not None:
             self._update_from_dict(env_dict)
         elif file_dict is not None:
             self._update_from_dict(file_dict)
+
+        self._credentials = self._add_credentials_from_file()
+        self._update_credentials_from_std_pyiron_config()
 
         if (
             self._configuration["config_file_permissions_warning"]
@@ -372,10 +383,60 @@ class Settings(metaclass=Singleton):
             elif k in self.environment_credential_map:
                 config[self.environment_credential_map[k]] = v
         config = self._fix_boolean_var_in_config(config=config)
-        config = self._add_credentials_from_file(config)
         return config if len(config) > 0 else None
 
-    def _add_credentials_from_file(self, config: dict) -> Dict:
+    def _get_remapped_credential_key(self, k):
+        """
+        Converts a key to the known key from the file_credential map or returns a .lower() variant of the unknown key.
+        This allows to stay consistent with the behavior of our current credentials and adds the possibility to add
+        additional credentials to the credentials file without the need to change pyiron_base.
+        """
+        if k.upper() in self.file_credential_map:
+            return self.file_credential_map[k.upper()]
+        elif k.upper() in self.file_configuration_map:
+            warnings.warn(
+                f"pyiron configuration key {k.upper()} used in the credentials file. "
+                "This does not take effect in the pyiron configuration!"
+            )
+
+        return k.lower()
+
+    def _add_credentials_from_file(self) -> Dict:
+        if (
+            "credentials_file" in self._configuration
+            and self._configuration["credentials_file"] is not None
+        ):
+            credential_file = self._configuration["credentials_file"]
+
+            # This gets all the entries in the credential file with the headers
+            # The key-value pairs in the [DEFAULT] section are added everywhere!
+            parser = ConfigParser(inline_comment_prefixes=(";",), interpolation=None)
+            parser.read(credential_file)
+            credentials = {}
+            for sec_name, section in parser.items():
+                credentials_w = {}
+
+                for k, v in section.items():
+                    credentials_w[self._get_remapped_credential_key(k)] = v
+                if len(credentials_w) > 0:
+                    credentials[sec_name.upper()] = credentials_w
+            return credentials
+
+    def _update_credentials_from_std_pyiron_config(self):
+        update_dict = {}
+        for key in self.file_credential_map.values():
+            if key in self._configuration:
+                update_dict[key] = self._configuration[key]
+
+        if len(update_dict) > 0:
+            if self._credentials is None:
+                self._credentials = {PYIRON_DICT_NAME: update_dict}
+            elif PYIRON_DICT_NAME in self._credentials:
+                self._credentials[PYIRON_DICT_NAME].update(update_dict)
+            else:
+                self._credentials[PYIRON_DICT_NAME] = update_dict
+
+    def _get_credentials_from_file(self, config: dict) -> Dict:
         if "credentials_file" in config and config["credentials_file"] is not None:
             credential_file = config["credentials_file"]
 
@@ -385,6 +446,7 @@ class Settings(metaclass=Singleton):
                 self._parse_config_file(credential_file, self.file_credential_map) or {}
             )
             config.update(credentials)
+
         return config
 
     def _get_config_from_file(self) -> Union[Dict, None]:
@@ -397,7 +459,6 @@ class Settings(metaclass=Singleton):
 
         if config is not None:
             config = self._fix_boolean_var_in_config(config=config)
-            config = self._add_credentials_from_file(config)
 
         return config
 
@@ -421,6 +482,7 @@ class Settings(metaclass=Singleton):
 
         Non-string non-None items are converted to the expected type and paths are converted to absolute POSIX paths.
         """
+        config = self._get_credentials_from_file(config)
         self._validate_sql_configuration(config=config)
         self._validate_viewer_configuration(config=config)
         self._validate_no_database_configuration(config=config)
