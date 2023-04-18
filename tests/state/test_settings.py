@@ -208,7 +208,7 @@ class TestSettings(TestCase):
 
         local_loc = Path(self.cwd + "/.pyiron_credentials")
         local_loc.write_text(
-            f"[DEFAULT]\nPASSWD = something_else\n[OTHER]\nNoPyironKey = token"
+            "[DEFAULT]\nPASSWD = something_else\n[OTHER]\nNoPyironKey = token"
         )
         local_loc_str = s.convert_path_to_abs_posix(str(local_loc))
         self.env["PYIRONCREDENTIALSFILE"] = local_loc_str
