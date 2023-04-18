@@ -10,7 +10,6 @@ from configparser import ConfigParser
 from shutil import rmtree
 
 
-
 class TestSettings(TestCase):
     @classmethod
     def setUpClass(cls) -> None:
@@ -170,10 +169,11 @@ class TestSettings(TestCase):
             )
 
     def _test_config_and_credential_synchronization(self):
-        pyiron_key = "PYIRON"
-        if s.credentials is not None and pyiron_key in s.credentials:
-            for key in s.credentials[pyiron_key]:
-                self.assertEqual(s.credentials[pyiron_key][key], s.configuration[key])
+        if s.credentials is not None and PYIRON_DICT_NAME in s.credentials:
+            for key in s.credentials[PYIRON_DICT_NAME]:
+                self.assertEqual(
+                    s.credentials[PYIRON_DICT_NAME][key], s.configuration[key]
+                )
 
     def test_get_config_from_environment(self):
         self.env["PYIRONFOO"] = "foo"
@@ -232,7 +232,8 @@ class TestSettings(TestCase):
 
     def test_standard_credentials(self):
         self.assertEqual(
-            s.credentials, {PYIRON_DICT_NAME: {"sql_user_key": None, "sql_view_user_key": None}}
+            s.credentials,
+            {PYIRON_DICT_NAME: {"sql_user_key": None, "sql_view_user_key": None}},
         )
 
     def test_update_from_env_with_credential_check(self):
