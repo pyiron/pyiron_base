@@ -1336,7 +1336,7 @@ class GenericJob(JobCore):
         """
         Internal helper function to store the run_time in the database
         """
-        if self.job_id is not None:
+        if not state.database.database_is_disabled and self.job_id is not None:
             self.project.db.item_update(self._runtime(), self.job_id)
 
     def _runtime(self):
