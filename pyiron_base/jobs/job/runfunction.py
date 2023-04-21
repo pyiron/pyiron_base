@@ -443,7 +443,7 @@ def run_job_with_runmode_srun(job):
 
 def run_time_decorator(func):
     def wrapper(job):
-        if job.job_id is not None:
+        if not state.database.database_is_disabled and job.job_id is not None:
             job.project.db.item_update({"timestart": datetime.now()}, job.job_id)
             func(job)
             job.project.db.item_update(job._runtime(), job.job_id)
