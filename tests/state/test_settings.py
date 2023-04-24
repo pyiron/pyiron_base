@@ -1,9 +1,9 @@
 # coding: utf-8
 # Copyright (c) Max-Planck-Institut für Eisenforschung GmbH - Computational Materials Design (CM) Department
 # Distributed under the terms of "New BSD License", see the LICENSE file.
-
+from copy import copy
 from unittest import TestCase
-from pyiron_base.state.settings import settings as s
+from pyiron_base.state.settings import settings as s, PYIRON_DICT_NAME
 import os
 from pathlib import Path
 from configparser import ConfigParser
@@ -43,10 +43,12 @@ class TestSettings(TestCase):
         for k, _ in self.env.items():
             if "PYIRON" in k:
                 self.env.pop(k)
+        s.update()
 
-    @staticmethod
-    def test_default_works():
+    def test_default_works(self):
+        s._configuration = {}
         s.update(s.default_configuration)
+        self.assertDictEqual(s.configuration, s.default_configuration)
 
     def test_validate_sql_configuration_completeness(self):
         s._validate_sql_configuration(
@@ -166,6 +168,13 @@ class TestSettings(TestCase):
                 }
             )
 
+    def _test_config_and_credential_synchronization(self):
+        if s.credentials is not None and PYIRON_DICT_NAME in s.credentials:
+            for key in s.credentials[PYIRON_DICT_NAME]:
+                self.assertEqual(
+                    s.credentials[PYIRON_DICT_NAME][key], s.configuration[key]
+                )
+
     def test_get_config_from_environment(self):
         self.env["PYIRONFOO"] = "foo"
         self.env["PYIRONSQLFILE"] = "bar"
@@ -178,7 +187,7 @@ class TestSettings(TestCase):
                 msg="Just having PYIRON in the key isn't enough, it needs to be a real key",
             )
             ref_dict = {"sql_file": "bar", "project_paths": "baz"}
-            self.assertEqual(
+            self.assertDictEqual(
                 ref_dict, env_dict, msg="Valid item failed to read from environment"
             )
 
@@ -198,10 +207,12 @@ class TestSettings(TestCase):
             )
 
         local_loc = Path(self.cwd + "/.pyiron_credentials")
-        local_loc.write_text(f"[DEFAULT]\nPASSWD = something_else\n")
+        local_loc.write_text(
+            "[DEFAULT]\nPASSWD = something_else\n[OTHER]\nNoPyironKey = token"
+        )
         local_loc_str = s.convert_path_to_abs_posix(str(local_loc))
         self.env["PYIRONCREDENTIALSFILE"] = local_loc_str
-        with self.subTest("Should read credentials file if specified"):
+        with self.subTest("Should be aware of credentials file if specified"):
             env_dict = s._get_config_from_environment()
             self.assertNotIn(
                 "foo",
@@ -212,9 +223,65 @@ class TestSettings(TestCase):
                 "sql_file": "bar",
                 "project_paths": "baz",
                 "credentials_file": local_loc_str,
-                "sql_user_key": "something_else",
             }
             self.assertEqual(ref_dict, env_dict)
+        with self.subTest("Credential file should be read at full update"):
+            s._update_from_dict(env_dict)
+            self.assertEqual(s.configuration["sql_user_key"], "something_else")
+        local_loc.unlink()
+
+    def test_standard_credentials(self):
+        self.assertEqual(
+            s.credentials,
+            {PYIRON_DICT_NAME: {"sql_user_key": None, "sql_view_user_key": None}},
+        )
+
+    def test_update_from_env_with_credential_check(self):
+        self.env["PYIRONSQLFILE"] = "bar"
+        self.env["PYIRONPROJECTPATHS"] = "baz"
+        local_loc = Path(self.cwd + "/.pyiron_credentials")
+        local_loc.write_text(
+            f"[{PYIRON_DICT_NAME}]\nPASSWD = something_else\n[OTHER]\nNoPyironKey = token"
+        )
+        local_loc_str = s.convert_path_to_abs_posix(str(local_loc))
+        self.env["PYIRONCREDENTIALSFILE"] = local_loc_str
+        env_dict = s._get_config_from_environment()
+        ref_dict = {
+            "sql_file": "bar",
+            "project_paths": "baz",
+            "credentials_file": local_loc_str,
+        }
+        self.assertEqual(ref_dict, env_dict)
+        with self.subTest("credentials dict to update the config"):
+            new_env_dict = s._get_credentials_from_file(env_dict)
+            ref_dict["sql_user_key"] = "something_else"
+            self.assertEqual(new_env_dict, ref_dict)
+            self.assertEqual(s.configuration, s.default_configuration)
+
+        with self.subTest("Check for updated config from credentials file"):
+            s._update_from_dict(
+                env_dict
+            )  # updating only the configuration from credential file!
+            self.test_standard_credentials()
+
+        with self.subTest("Full population of credentials"):
+            credentials_dict = s._add_credentials_from_file()
+            cred_ref_dict = {
+                "OTHER": {"nopyironkey": "token"},
+                PYIRON_DICT_NAME: {"sql_user_key": "something_else"},
+            }
+            self.assertEqual(credentials_dict, cred_ref_dict)
+            self.test_standard_credentials()
+
+        with self.subTest("full update"):
+            cred_ref_dict[PYIRON_DICT_NAME][
+                "sql_view_user_key"
+            ] = None  # from standard configuration
+            s.update(env_dict)
+            self.assertEqual(s.credentials, cred_ref_dict)
+
+        with self.subTest("credentials and config should be in sync"):
+            self._test_config_and_credential_synchronization()
         local_loc.unlink()
 
     def test__parse_config_file(self):
@@ -223,10 +290,29 @@ class TestSettings(TestCase):
             f"[DEFAULT]\nPASSWD = something_else\nNoValidKey = None\n[OTHER]\nKey = Value"
         )
         config = s._parse_config_file(
-            local_loc, {"PASSWD": "sql_user_key", "KEY": "key"}
+            local_loc, map_dict={"PASSWD": "sql_user_key", "KEY": "key"}
         )
         ref_dict = {"sql_user_key": "something_else", "key": "Value"}
-        self.assertEqual(ref_dict, config)
+        self.assertDictEqual(ref_dict, config)
+        local_loc.unlink()
+
+    def test__add_credentials_from_file(self):
+        local_loc = Path(self.cwd + "/.pyiron_credentials")
+        local_loc.write_text(
+            f"[{PYIRON_DICT_NAME}]\nPASSWD = something_else\nNoValidKey = None\n[OTHER]\nKey = Value\n[SOME]\nN=W"
+        )
+        local_loc_str = s.convert_path_to_abs_posix(str(local_loc))
+        bak = copy(s._configuration)
+        s._configuration["credentials_file"] = local_loc_str
+
+        config = s._add_credentials_from_file()
+        s._configuration = bak
+        ref_dict = {
+            PYIRON_DICT_NAME: {"sql_user_key": "something_else", "novalidkey": "None"},
+            "OTHER": {"key": "Value"},
+            "SOME": {"n": "W"},
+        }
+        self.assertDictEqual(ref_dict, config)
         local_loc.unlink()
 
     def test_get_config_from_file(self):
@@ -238,6 +324,7 @@ class TestSettings(TestCase):
             "PROJECT_PATHS = baz\n"
             ";USER = boa\n"
         )
+
         file_dict = s._get_config_from_file()
 
         self.assertNotIn("foo", file_dict.values(), msg="It needs to be a real key")
@@ -247,7 +334,9 @@ class TestSettings(TestCase):
             msg="This was commented out and shouldn't be read",
         )
         ref_dict = {"sql_file": "bar", "project_paths": "baz"}
-        self.assertEqual(ref_dict, file_dict, msg="Valid item failed to read from file")
+        self.assertDictEqual(
+            ref_dict, file_dict, msg="Valid item failed to read from file"
+        )
 
     def test_update(self):
         # System environment variables
