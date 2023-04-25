@@ -48,16 +48,16 @@ table_columns = {
 
 
 class FileTable(IsDatabase, metaclass=UpdatableSingleton):
-    def __init__(self, project=None):
+    def __init__(self, path=None):
         try:
-            if project is not None and os.path.abspath(project) != self._project:
+            if path is not None and os.path.abspath(path) != self._project:
                 # Only re-index if you receive a new location
-                self._project = os.path.abspath(project)
+                self._project = os.path.abspath(path)
                 self.force_reset()
         except AttributeError:
             # On the first instantiation, self._project (and other attributes) don't
             # exist yet! So run this:
-            if project is None:
+            if path is None:
                 raise TypeError(
                     "On first instantiation of FileTable, the project argument cannot "
                     "be None"
@@ -65,7 +65,7 @@ class FileTable(IsDatabase, metaclass=UpdatableSingleton):
             self._fileindex = None
             self._job_table = None
             self._columns = list(table_columns.keys())
-            self._project = os.path.abspath(project)
+            self._project = os.path.abspath(path)
             self.force_reset()
 
     def add_item_dict(self, par_dict):
