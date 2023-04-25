@@ -75,7 +75,9 @@ class UpdatableSingleton(ABCMeta):
 
     def __call__(cls, *args, **kwargs):
         if cls not in cls._instances:
-            cls._instances[cls] = super(UpdatableSingleton, cls).__call__(*args, **kwargs)
+            cls._instances[cls] = super(UpdatableSingleton, cls).__call__(
+                *args, **kwargs
+            )
         else:
             cls._instances[cls].__init__(*args, **kwargs)
         return cls._instances[cls]
