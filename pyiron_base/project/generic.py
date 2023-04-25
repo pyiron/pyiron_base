@@ -122,6 +122,7 @@ class Project(ProjectPath, HasGroups):
         self._inspect_mode = False
         self._data = None
         self._creator = Creator(project=self)
+        self._file_table = None
 
         self.job_type = JobTypeChoice()
 
@@ -136,7 +137,16 @@ class Project(ProjectPath, HasGroups):
         if not state.database.database_is_disabled:
             return state.database.database
         else:
-            return FileTable(project=self.path)
+            return self.file_table
+
+    @property
+    def file_table(self):
+        if not state.database.database_is_disabled:
+            return None
+        else:
+            if self._file_table is None:
+                self._file_table = FileTable(project=self.path)
+            return self._file_table
 
     @property
     def maintenance(self):
