@@ -7,6 +7,7 @@ File based database interface
 
 import datetime
 from collections.abc import Iterable
+from typing import Optional
 import numpy as np
 import os
 import pandas
@@ -48,7 +49,7 @@ table_columns = {
 
 
 class FileTable(IsDatabase, metaclass=UpdatableSingleton):
-    def __init__(self, path=None):
+    def __init__(self, path: Optional[str] = None):
         try:
             if path is not None and os.path.abspath(path) != self._project:
                 # Only re-index if you receive a new location
