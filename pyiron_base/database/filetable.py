@@ -11,7 +11,6 @@ import numpy as np
 import os
 import pandas
 from pyfileindex import PyFileIndex
-from pyiron_base.interfaces.singleton import Singleton
 from pyiron_base.database.generic import IsDatabase
 from pyiron_base.storage.helper_functions import read_hdf5, write_hdf5
 
@@ -47,7 +46,7 @@ table_columns = {
 }
 
 
-class FileTable(IsDatabase, metaclass=Singleton):
+class FileTable(IsDatabase):
     def __init__(self, project):
         self._fileindex = None
         self._job_table = None
