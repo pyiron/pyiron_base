@@ -11,7 +11,7 @@ import numpy as np
 import os
 import pandas
 from pyfileindex import PyFileIndex
-from pyiron_base.interfaces.singleton import Singleton
+from pyiron_base.interfaces.singleton import UpdatableSingleton
 from pyiron_base.database.generic import IsDatabase
 from pyiron_base.storage.helper_functions import read_hdf5, write_hdf5
 
@@ -47,13 +47,21 @@ table_columns = {
 }
 
 
-class FileTable(IsDatabase, metaclass=Singleton):
-    def __init__(self, project):
-        self._fileindex = None
-        self._job_table = None
-        self._project = os.path.abspath(project)
-        self._columns = list(table_columns.keys())
-        self.force_reset()
+class FileTable(IsDatabase, metaclass=UpdatableSingleton):
+    def __init__(self, project=None):
+        try:
+            if project is not None and os.path.abspath(project) != self._project:
+                # Only re-index if you receive a new location
+                self._project = os.path.abspath(project)
+                self.force_reset()
+        except AttributeError:
+            # On the first instantiation, self._project (and other attributes) don't
+            # exist yet! So run this:
+            self._fileindex = None
+            self._job_table = None
+            self._columns = list(table_columns.keys())
+            self._project = os.path.abspath(project)
+            self.force_reset()
 
     def add_item_dict(self, par_dict):
         """
