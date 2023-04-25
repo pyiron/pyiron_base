@@ -57,6 +57,11 @@ class FileTable(IsDatabase, metaclass=UpdatableSingleton):
         except AttributeError:
             # On the first instantiation, self._project (and other attributes) don't
             # exist yet! So run this:
+            if project is None:
+                raise TypeError(
+                    "On first instantiation of FileTable, the project argument cannot "
+                    "be None"
+                )
             self._fileindex = None
             self._job_table = None
             self._columns = list(table_columns.keys())
