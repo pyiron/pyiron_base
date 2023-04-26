@@ -145,7 +145,7 @@ class Project(ProjectPath, HasGroups):
             return None
         else:
             if self._file_table is None:
-                self._file_table = FileTable(project=self.path)
+                self._file_table = FileTable(path=self.path)
             return self._file_table
 
     @property

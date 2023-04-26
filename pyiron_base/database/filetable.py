@@ -47,10 +47,10 @@ table_columns = {
 
 
 class FileTable(IsDatabase):
-    def __init__(self, project):
+    def __init__(self, path):
         self._fileindex = None
         self._job_table = None
-        self._project = os.path.abspath(project)
+        self._project = os.path.abspath(path)
         self._columns = list(table_columns.keys())
         self.force_reset()
 

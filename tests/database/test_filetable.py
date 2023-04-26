@@ -15,14 +15,14 @@ class TestFileTable(TestWithFilledProject):
         pr = self.project
         sub_pr = self.project.open(self.project.list_groups()[0])
 
-        ft0 = FileTable(project=pr.path)
+        ft0 = FileTable(path=pr.path)
         self.assertEqual(
             ft0._project,
             abspath(pr.path),
             msg="Path should be collected on instantiation"
         )
 
-        ft1 = FileTable(project=sub_pr.path)
+        ft1 = FileTable(path=sub_pr.path)
         self.assertEqual(
             ft1._project,
             abspath(sub_pr.path),
