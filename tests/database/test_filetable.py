@@ -11,7 +11,7 @@ from pyiron_base.database.filetable import FileTable
 
 class TestFileTable(TestWithFilledProject):
 
-    def test_re_instantiation(self):
+    def test_instantiation(self):
         pr = self.project
         sub_pr = self.project.open(self.project.list_groups()[0])
 
