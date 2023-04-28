@@ -64,6 +64,17 @@ class FileTableSingleton(ABCMeta):
 
 
 class FileTable(IsDatabase, metaclass=FileTableSingleton):
+    """
+    File table should behave to the user like a database, but it infers project
+    hierarchy directly from the file system hierarchy.
+
+    Because indexing the file system can be expensive, and projects sometimes get
+    re-initialized, it is important to keep the (re)instantiation cost for this class
+    as minimal as possible.
+
+    Args:
+         project (str): The file path to start indexing at, i.e. the project path.
+    """
     def __init__(self, project):
         self._fileindex = None
         self._job_table = None
