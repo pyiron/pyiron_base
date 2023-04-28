@@ -78,7 +78,7 @@ class FileTable(IsDatabase, metaclass=FileTableSingleton):
     def __init__(self, index_from: str):
         self._fileindex = None
         self._job_table = None
-        self._project = os.path.abspath(index_from)
+        self._path = os.path.abspath(index_from)
         self._columns = list(table_columns.keys())
         self.force_reset()
 
@@ -146,7 +146,7 @@ class FileTable(IsDatabase, metaclass=FileTableSingleton):
         Reset cache of the FileTable object
         """
         self._fileindex = PyFileIndex(
-            path=self._project, filter_function=filter_function
+            path=self._path, filter_function=filter_function
         )
         df = pandas.DataFrame(self.init_table(fileindex=self._fileindex.dataframe))
         if len(df) != 0:
@@ -168,7 +168,7 @@ class FileTable(IsDatabase, metaclass=FileTableSingleton):
             list: list of child IDs
         """
         if project is None:
-            project = self._project
+            project = self._path
         self.update()
         id_master = self.get_job_id(project=project, job_specifier=job_specifier)
         if id_master is None:
@@ -307,7 +307,7 @@ class FileTable(IsDatabase, metaclass=FileTableSingleton):
             dict: job entries as dictionary
         """
         if project is None:
-            project = self._project
+            project = self._path
         if columns is None:
             columns = ["id", "project"]
         df = self.job_table(
@@ -355,7 +355,7 @@ class FileTable(IsDatabase, metaclass=FileTableSingleton):
             int/ None: job ID
         """
         if project is None:
-            project = self._project
+            project = self._path
         if isinstance(job_specifier, (int, np.integer)):
             return job_specifier  # is id
         if len(self._job_table) == 0:
@@ -578,7 +578,7 @@ class FileTable(IsDatabase, metaclass=FileTableSingleton):
     ):
         self.update()
         if project_path is None:
-            project_path = self._project
+            project_path = self._path
         if len(self._job_table) != 0:
             if recursive:
                 return self._job_table[
