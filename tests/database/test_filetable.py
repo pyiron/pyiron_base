@@ -2,8 +2,8 @@
 # Copyright (c) Max-Planck-Institut für Eisenforschung GmbH - Computational Materials Design (CM) Department
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
-from inspect import getfile
-from os.path import abspath, dirname
+from os import mkdir, rmdir
+from os.path import abspath, dirname, join
 from time import time
 
 from pyiron_base._tests import PyironTestCase
@@ -18,16 +18,23 @@ class TestFileTable(PyironTestCase):
 
     def test_re_initialization(self):
         here = dirname(abspath(__file__))
-        there = dirname(getfile(FileTable))
-        assert(here != there)  # Sanity check for the rest of the test to be valid
+        loc1 = join(here, "ft_test_loc1")
+        loc2 = join(here, "ft_test_loc2")
+        mkdir(loc1)
+        mkdir(loc2)
 
         start = time()
-        ft = FileTable(here)
+        ft = FileTable(loc1)
         first_initialization = time() - start
 
         start = time()
-        ft_reinitialized = FileTable(here)
+        ft_reinitialized = FileTable(loc1)
         second_initialization = time() - start
+
+        print([f"{t:.2e}" for t in [
+            # master_init, m2,
+            first_initialization, second_initialization
+        ]])
 
         self.assertTrue(
             ft is ft_reinitialized,
@@ -42,9 +49,11 @@ class TestFileTable(PyironTestCase):
                 f"{second_initialization:.2e} for the second"
         )
 
-        another_ft = FileTable(there)
+        another_ft = FileTable(loc2)
         self.assertFalse(
             ft is another_ft,
             msg="New paths should create new FileTable instances"
         )
 
+        rmdir(loc1)
+        rmdir(loc2)
