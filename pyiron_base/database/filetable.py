@@ -6,12 +6,12 @@ File based database interface
 """
 
 import datetime
+from abc import ABCMeta
 from collections.abc import Iterable
 import numpy as np
 import os
 import pandas
 from pyfileindex import PyFileIndex
-from pyiron_base.interfaces.singleton import Singleton
 from pyiron_base.database.generic import IsDatabase
 from pyiron_base.storage.helper_functions import read_hdf5, write_hdf5
 
@@ -47,7 +47,23 @@ table_columns = {
 }
 
 
-class FileTable(IsDatabase, metaclass=Singleton):
+class FileTableSingleton(ABCMeta):
+    """
+    Indexing the file system for each `FileTable` can be expensive, so we use a
+    singleton system that does this once for each path instead.
+    """
+    _instances = {}
+
+    def __call__(cls, path):
+        _path = os.path.abspath(path)
+        if _path not in cls._instances:
+            cls._instances[_path ] = super(FileTableSingleton, cls).__call__(
+                path
+            )
+        return cls._instances[_path]
+
+
+class FileTable(IsDatabase, metaclass=FileTableSingleton):
     def __init__(self, project):
         self._fileindex = None
         self._job_table = None
