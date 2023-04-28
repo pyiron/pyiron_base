@@ -52,14 +52,13 @@ class FileTableSingleton(ABCMeta):
     Indexing the file system for each `FileTable` can be expensive, so we use a
     singleton system that does this once for each path instead.
     """
+
     _instances = {}
 
     def __call__(cls, index_from):
         _path = os.path.abspath(index_from)
         if _path not in cls._instances:
-            cls._instances[_path] = super(FileTableSingleton, cls).__call__(
-                index_from
-            )
+            cls._instances[_path] = super(FileTableSingleton, cls).__call__(index_from)
         return cls._instances[_path]
 
 
@@ -75,6 +74,7 @@ class FileTable(IsDatabase, metaclass=FileTableSingleton):
     Args:
          index_from (str): The file path to start indexing at, i.e. the project path.
     """
+
     def __init__(self, index_from: str):
         self._fileindex = None
         self._job_table = None
@@ -145,9 +145,7 @@ class FileTable(IsDatabase, metaclass=FileTableSingleton):
         """
         Reset cache of the FileTable object
         """
-        self._fileindex = PyFileIndex(
-            path=self._path, filter_function=filter_function
-        )
+        self._fileindex = PyFileIndex(path=self._path, filter_function=filter_function)
         df = pandas.DataFrame(self.init_table(fileindex=self._fileindex.dataframe))
         if len(df) != 0:
             df.id = df.id.astype(int)
