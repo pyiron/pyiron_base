@@ -54,11 +54,11 @@ class FileTableSingleton(ABCMeta):
     """
     _instances = {}
 
-    def __call__(cls, path):
-        _path = os.path.abspath(path)
+    def __call__(cls, index_from):
+        _path = os.path.abspath(index_from)
         if _path not in cls._instances:
             cls._instances[_path ] = super(FileTableSingleton, cls).__call__(
-                path
+                index_from
             )
         return cls._instances[_path]
 
