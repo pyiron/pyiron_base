@@ -741,7 +741,7 @@ class GenericJob(JobCore):
         if state.database.database_is_disabled:
             self.project.db.update()
         else:
-            ft = FileTable(project=self.project_hdf5.path + "_hdf5/")
+            ft = FileTable(index_from=self.project_hdf5.path + "_hdf5/")
             df = ft.job_table(
                 sql_query=None,
                 user=state.settings.login_user,

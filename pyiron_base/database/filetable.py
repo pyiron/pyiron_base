@@ -73,12 +73,12 @@ class FileTable(IsDatabase, metaclass=FileTableSingleton):
     as minimal as possible.
 
     Args:
-         project (str): The file path to start indexing at, i.e. the project path.
+         index_from (str): The file path to start indexing at, i.e. the project path.
     """
-    def __init__(self, project):
+    def __init__(self, index_from: str):
         self._fileindex = None
         self._job_table = None
-        self._project = os.path.abspath(project)
+        self._project = os.path.abspath(index_from)
         self._columns = list(table_columns.keys())
         self.force_reset()
 
