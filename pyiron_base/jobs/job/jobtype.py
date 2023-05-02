@@ -34,7 +34,7 @@ JOB_CLASS_DICT = {
     "SerialMasterBase": "pyiron_base.jobs.master.serial",
     "TableJob": "pyiron_base.jobs.datamining",
     "WorkerJob": "pyiron_base.jobs.worker",
-    "FunctionContainer": "pyiron_base.jobs.functioncontainer"
+    "FunctionContainer": "pyiron_base.jobs.functioncontainer",
 }
 
 
