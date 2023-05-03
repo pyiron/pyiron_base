@@ -494,8 +494,18 @@ class Server:  # add the option to return the job id and the hold id to the serv
             self._threads = hdf_dict["threads"]
         self._new_hdf = hdf_dict["new_h5"] == 1
         options_used = [
-            "user", "host", "run_mode", "queue", "qid", "structure_id", "cores",
-            "run_time", "memory_limit", "accept_crash", "threads", "new_h5"
+            "user",
+            "host",
+            "run_mode",
+            "queue",
+            "qid",
+            "structure_id",
+            "cores",
+            "run_time",
+            "memory_limit",
+            "accept_crash",
+            "threads",
+            "new_h5",
         ]
         for k, v in hdf_dict.items():
             if k not in options_used:
