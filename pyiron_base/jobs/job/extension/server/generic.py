@@ -449,8 +449,7 @@ class Server:  # add the option to return the job id and the hold id to the serv
         hdf_dict["run_time"] = self.run_time
         hdf_dict["memory_limit"] = self.memory_limit
         hdf_dict["accept_crash"] = self.accept_crash
-        for k, v in self._additional_arguments.items():
-            hdf_dict[k] = v
+        hdf_dict.update(self._additional_arguments)
 
         if group_name is not None:
             with hdf.open(group_name) as hdf_group:
