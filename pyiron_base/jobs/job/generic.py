@@ -731,12 +731,10 @@ class GenericJob(JobCore):
     def transfer_from_remote(self):
         state.queue_adapter.get_job_from_remote(
             working_directory="/".join(self.working_directory.split("/")[:-1]),
-            delete_remote=state.queue_adapter.ssh_delete_file_on_remote,
         )
         state.queue_adapter.transfer_file_to_remote(
             file=self.project_hdf5.file_name,
             transfer_back=True,
-            delete_remote=state.queue_adapter.ssh_delete_file_on_remote,
         )
         if state.database.database_is_disabled:
             self.project.db.update()
