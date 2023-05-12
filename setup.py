@@ -40,7 +40,7 @@ setup(
         'pint==0.21',
         'psutil==5.9.5',
         'pyfileindex==0.0.7',
-        'pysqa==0.0.23',
+        'pysqa==0.0.24',
         'sqlalchemy==2.0.12',
         'tables==3.8.0',
         'tqdm==4.65.0',
