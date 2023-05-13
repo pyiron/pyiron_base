@@ -94,6 +94,7 @@ class Server:  # add the option to return the job id and the hold id to the serv
         self._send_to_db = False
         self._structure_id = None
         self._accept_crash = False
+        self.additional_arguments = {}
 
     @property
     def send_to_db(self):
@@ -444,6 +445,8 @@ class Server:  # add the option to return the job id and the hold id to the serv
         hdf_dict["run_time"] = self.run_time
         hdf_dict["memory_limit"] = self.memory_limit
         hdf_dict["accept_crash"] = self.accept_crash
+        if len(self.additional_arguments) > 0:
+            hdf_dict["additional_arguments"] = self.additional_arguments
 
         if group_name is not None:
             with hdf.open(group_name) as hdf_group:
@@ -485,6 +488,8 @@ class Server:  # add the option to return the job id and the hold id to the serv
             self._accept_crash = hdf_dict["accept_crash"] == 1
         if "threads" in hdf_dict.keys():
             self._threads = hdf_dict["threads"]
+        if "additional_arguments" in hdf_dict.keys():
+            self.additional_arguments = hdf_dict["additional_arguments"]
         self._new_hdf = hdf_dict["new_h5"] == 1
 
     def db_entry(self):
