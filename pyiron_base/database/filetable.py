@@ -56,8 +56,22 @@ class FileTableSingleton(ABCMeta):
     _instances = {}
 
     def __call__(cls, index_from):
-        _path = os.path.abspath(index_from)
+        _path = os.path.abspath(os.path.expanduser(index_from))
         if _path not in cls._instances:
+            path_match_lst = [
+                p for p in cls._instances.keys() if os.path.commonpath([_path, p]) == p
+            ]
+            if len(path_match_lst) > 0:
+                cls._instances[_path] = super(FileTableSingleton, cls).__call__(
+                    index_from=index_from,
+                    fileindex=cls._instances[
+                        max(path_match_lst, key=len)
+                    ]._fileindex.open(_path),
+                )
+            else:
+                cls._instances[_path] = super(FileTableSingleton, cls).__call__(
+                    index_from=index_from
+                )
             cls._instances[_path] = super(FileTableSingleton, cls).__call__(index_from)
         return cls._instances[_path]
 
@@ -73,14 +87,16 @@ class FileTable(IsDatabase, metaclass=FileTableSingleton):
 
     Args:
          index_from (str): The file path to start indexing at, i.e. the project path.
+         fileindex (PyFileIndex): In case the file path in index_from is already indexed,
+                                  then the index can be provided as additional input parameter.
     """
 
-    def __init__(self, index_from: str):
+    def __init__(self, index_from: str, fileindex: PyFileIndex = None):
         self._fileindex = None
         self._job_table = None
         self._path = os.path.abspath(index_from)
         self._columns = list(table_columns.keys())
-        self.force_reset()
+        self.force_reset(fileindex=fileindex)
 
     def add_item_dict(self, par_dict):
         """
@@ -141,11 +157,19 @@ class FileTable(IsDatabase, metaclass=FileTableSingleton):
         else:
             raise ValueError
 
-    def force_reset(self):
+    def force_reset(self, fileindex=None):
         """
         Reset cache of the FileTable object
+
+        Args:
+            fileindex (PyFileIndex): File index for the current directory
         """
-        self._fileindex = PyFileIndex(path=self._path, filter_function=filter_function)
+        if fileindex is not None:
+            self._fileindex = fileindex
+        else:
+            self._fileindex = PyFileIndex(
+                path=self._path, filter_function=filter_function
+            )
         df = pandas.DataFrame(self.init_table(fileindex=self._fileindex.dataframe))
         if len(df) != 0:
             df.id = df.id.astype(int)
