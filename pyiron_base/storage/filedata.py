@@ -91,13 +91,15 @@ class FileLoader:
 
     def load(self, file_type, file, *args, **kwargs):
         if file_type in self._file_types:
-            self._file_types[file_type](file, *args, **kwargs)
+            return self._file_types[file_type](file, *args, **kwargs)
         else:
-            self._load_default(file, *args, **kwargs)
+            return self._load_default(file, *args, **kwargs)
 
     def _load_default(self, file, *args, **kwargs):
         try:
-            self._file_types[self.default_assumed_file_type](file, *args, **kwargs)
+            return self._file_types[self.default_assumed_file_type](
+                file, *args, **kwargs
+            )
         except Exception as e:
             raise IOError("File could not be loaded.") from e
 
