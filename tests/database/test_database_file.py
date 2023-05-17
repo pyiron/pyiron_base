@@ -13,7 +13,7 @@ Murat Han Celik
 import unittest
 import os
 from datetime import datetime
-from pyiron_base.database.filetable import FileTable
+from pyiron_base.database.filetable import FileTable, _get_most_common_path
 from pyiron_base._tests import PyironTestCase
 
 
@@ -197,6 +197,13 @@ class TestDatabaseAccess(PyironTestCase):
         }
         par_dict["id"] = self.database.add_item_dict(par_dict)
         return par_dict
+
+
+class MostCommonPathTest(unittest.TestCase):
+    def test_most_common_path(self):
+        self.assertEqual(_get_most_common_path(path=os.path.join("a", "b"), reference_paths=[os.path.join("a", "b", "c"), os.path.join("a", "d"), os.path.join("a", "b"), os.path.join("a")]), os.path.join("a", "b"))
+        self.assertEqual(_get_most_common_path(path=os.path.join("a", "b", "f"), reference_paths=[os.path.join("a", "b", "c"), os.path.join("a", "d"), os.path.join("a", "b"), os.path.join("a")]), os.path.join("a", "b"))
+        self.assertIsNone(_get_most_common_path(path=os.path.join("e", "f"), reference_paths=[os.path.join("a", "b", "c"), os.path.join("a", "d"), os.path.join("a", "b"), os.path.join("a")]))
 
 
 if __name__ == "__main__":
