@@ -201,9 +201,10 @@ class TestDatabaseAccess(PyironTestCase):
 
 class MostCommonPathTest(unittest.TestCase):
     def test_most_common_path(self):
-        self.assertEqual(get_most_common_path(path="/a/b", reference_paths=["/a/b/c", "/a/d", "/a/b", "/a"]), "/a/b")
-        self.assertEqual(get_most_common_path(path="/a/b/f", reference_paths=["/a/b/c", "/a/d", "/a/b", "/a"]), "/a/b")
-        self.assertIsNone(get_most_common_path(path="/e/f", reference_paths=["/a/b/c", "/a/d", "/a/b", "/a"]))
+        self.assertEqual(get_most_common_path(path=os.path.join("a", "b"), reference_paths=[os.path.join("a", "b", "c"), os.path.join("a", "d"), os.path.join("a", "b"), os.path.join("a")]), os.path.join("a", "b"))
+        self.assertEqual(get_most_common_path(path=os.path.join("a", "b", "f"), reference_paths=[os.path.join("a", "b", "c"), os.path.join("a", "d"), os.path.join("a", "b"), os.path.join("a")]), os.path.join("a", "b"))
+        self.assertIsNone(get_most_common_path(path=os.path.join("e", "f"), reference_paths=[os.path.join("a", "b", "c"), os.path.join("a", "d"), os.path.join("a", "b"), os.path.join("a")]))
+
 
 if __name__ == "__main__":
     unittest.main()
