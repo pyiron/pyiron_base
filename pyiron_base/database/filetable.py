@@ -58,8 +58,7 @@ class FileTableSingleton(ABCMeta):
     @classmethod
     def _get_common_fileindex(cls, path):
         common_path = get_most_common_path(
-            path=path,
-            reference_paths=cls._instances.keys()
+            path=path, reference_paths=cls._instances.keys()
         )
         if common_path is not None:
             return super(FileTableSingleton, cls).__call__(
@@ -67,9 +66,7 @@ class FileTableSingleton(ABCMeta):
                 fileindex=cls._instances[common_path]._fileindex.open(path),
             )
         else:
-            return super(FileTableSingleton, cls).__call__(
-                index_from=path
-            )
+            return super(FileTableSingleton, cls).__call__(index_from=path)
 
     def __call__(cls, index_from):
         _path = os.path.abspath(os.path.expanduser(index_from))
@@ -665,9 +662,7 @@ def get_job_status_from_file(hdf5_file, job_name):
 
 
 def get_most_common_path(path, reference_paths):
-    path_match_lst = [
-        p for p in reference_paths if os.path.commonpath([path, p]) == p
-    ]
+    path_match_lst = [p for p in reference_paths if os.path.commonpath([path, p]) == p]
     if len(path_match_lst) > 0:
         return max(path_match_lst, key=len)
     else:
