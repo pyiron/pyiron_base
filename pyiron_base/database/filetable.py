@@ -55,24 +55,26 @@ class FileTableSingleton(ABCMeta):
 
     _instances = {}
 
+    @classmethod
+    def _get_common_fileindex(cls, path):
+        common_path = get_most_common_path(
+            path=path,
+            reference_paths=cls._instances.keys()
+        )
+        if common_path is not None:
+            return super(FileTableSingleton, cls).__call__(
+                index_from=path,
+                fileindex=cls._instances[common_path]._fileindex.open(path),
+            )
+        else:
+            return super(FileTableSingleton, cls).__call__(
+                index_from=path
+            )
+
     def __call__(cls, index_from):
         _path = os.path.abspath(os.path.expanduser(index_from))
         if _path not in cls._instances:
-            path_match_lst = [
-                p for p in cls._instances.keys() if os.path.commonpath([_path, p]) == p
-            ]
-            if len(path_match_lst) > 0:
-                cls._instances[_path] = super(FileTableSingleton, cls).__call__(
-                    index_from=index_from,
-                    fileindex=cls._instances[
-                        max(path_match_lst, key=len)
-                    ]._fileindex.open(_path),
-                )
-            else:
-                cls._instances[_path] = super(FileTableSingleton, cls).__call__(
-                    index_from=index_from
-                )
-            cls._instances[_path] = super(FileTableSingleton, cls).__call__(index_from)
+            cls._instances[_path] = cls._get_common_fileindex(path=_path)
         return cls._instances[_path]
 
 
@@ -658,5 +660,15 @@ def get_hamilton_version_from_file(hdf5_file, job_name):
 def get_job_status_from_file(hdf5_file, job_name):
     if os.path.exists(hdf5_file):
         return read_hdf5(hdf5_file, job_name + "/status")
+    else:
+        return None
+
+
+def get_most_common_path(path, reference_paths):
+    path_match_lst = [
+        p for p in reference_paths if os.path.commonpath([path, p]) == p
+    ]
+    if len(path_match_lst) > 0:
+        return max(path_match_lst, key=len)
     else:
         return None
