@@ -55,26 +55,22 @@ class FileTableSingleton(ABCMeta):
 
     _instances = {}
 
-    @classmethod
-    def _get_common_fileindex(cls, path):
-        common_path = get_most_common_path(
-            path=path,
-            reference_paths=cls._instances.keys()
-        )
-        if common_path is not None:
-            return super(FileTableSingleton, cls).__call__(
-                index_from=path,
-                fileindex=cls._instances[common_path]._fileindex.open(path),
-            )
-        else:
-            return super(FileTableSingleton, cls).__call__(
-                index_from=path
-            )
-
     def __call__(cls, index_from):
         _path = os.path.abspath(os.path.expanduser(index_from))
         if _path not in cls._instances:
-            cls._instances[_path] = cls._get_common_fileindex(path=_path)
+            common_path = get_most_common_path(
+                path=_path,
+                reference_paths=cls._instances.keys()
+            )
+            if common_path is not None:
+                cls._instances[_path] = super(FileTableSingleton, cls).__call__(
+                    index_from=_path,
+                    fileindex=cls._instances[common_path]._fileindex.open(_path),
+                )
+            else:
+                cls._instances[_path] = super(FileTableSingleton, cls).__call__(
+                    index_from=_path
+                )
         return cls._instances[_path]
 
 
