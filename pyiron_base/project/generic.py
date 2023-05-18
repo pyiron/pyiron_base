@@ -144,7 +144,7 @@ class Project(ProjectPath, HasGroups):
         if not state.database.database_is_disabled:
             return state.database.database
         else:
-            return FileTable(project=self.path)
+            return FileTable(index_from=self.path)
 
     @property
     def maintenance(self):

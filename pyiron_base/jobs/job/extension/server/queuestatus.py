@@ -195,7 +195,6 @@ def wait_for_job(job, interval_in_s=5, max_iterations=100):
                     state.queue_adapter.transfer_file_to_remote(
                         file=job.project_hdf5.file_name,
                         transfer_back=True,
-                        delete_remote=False,
                     )
                     status_hdf5 = job.project_hdf5["status"]
                     job.status.string = status_hdf5
