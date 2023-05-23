@@ -52,6 +52,10 @@ class TestLoaders(TestWithFilledProject):
         self.project.state.update({'disable_database': True})
         logging.warning("Without database: " + str(self.project.job_table().loc[:, cols]))
         logging.warning("At path" + str(self.project.path))
+        logging.warning("Loader job table: " + str(self.project.load._job_table))
+        logging.warning("Loader job name: " + str(self.project.load._job_names))
+        logging.warning("Map filter: " + str(self._job_names == "toy_1"))
+        # logging.warning("Index for toy_1: " + str(self.project.load._id_from_name("toy_1")))
         with self.subTest("Works without the database"):
             self.assertIsInstance(
                 self.project.load.toy_1, ToyJob, msg="Expected to load the full object"
