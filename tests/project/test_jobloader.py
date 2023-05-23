@@ -51,6 +51,7 @@ class TestLoaders(TestWithFilledProject):
         logging.warning("With database: " + str(self.project.job_table().loc[:, cols]))
         self.project.state.update({'disable_database': True})
         logging.warning("Without database: " + str(self.project.job_table().loc[:, cols]))
+        logging.warning("At path" + str(self.project.path))
         with self.subTest("Works without the database"):
             self.assertIsInstance(
                 self.project.load.toy_1, ToyJob, msg="Expected to load the full object"
