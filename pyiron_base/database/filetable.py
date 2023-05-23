@@ -604,7 +604,9 @@ class FileTable(IsDatabase, metaclass=FileTableSingleton):
                     self._job_table.project.str.contains(project_path)
                 ]
             else:
-                return self._job_table[self._job_table.project == project_path]
+                return self._job_table[
+                    self._job_table.project.str.endswith(project_path)
+                ]
         else:
             return self._job_table
 
