@@ -46,25 +46,23 @@ class TestLoaders(TestWithFilledProject):
 
     def test_without_database(self):
         settings_configuration = self.project.state.settings.configuration.copy()
-        import logging
-        cols = ["id", "job", "status"]
-        logging.warning("With database: " + str(self.project.job_table().loc[:, cols]))
-        logging.warning(f"Loader project (path) with database: {self.project.load._project} ({self.project.load._project.path})")
         self.project.state.update({'disable_database': True})
-        logging.warning("Without database: " + str(self.project.job_table().loc[:, cols]))
-        logging.warning(f"Loader project (path) with database: {self.project.load._project} ({self.project.load._project.path})")
-        logging.warning("At path" + str(self.project.path))
-        logging.warning("Loader job table: " + str(self.project.load._job_table.loc[:, cols]))
-        logging.warning(f"Loader raw project job table: {self.project.load._project.job_table().loc[:, cols]}")
-        logging.warning(f"Raw non-recursive: + {self.project.load._project.job_table(recursive=False).loc[:, cols]}")
-        logging.warning(f"Raw non-recursive and job colum: + {self.project.load._project.job_table(recursive=False, columns=['job']).loc[:, cols]}")
-        logging.warning(f"self.project.load._project.db._path: {self.project.load._project.db._path}")
-        from os import listdir
-        logging.warning(f"Project contents: {listdir(self.project.load._project.db._path)}")
-        logging.warning(f"Sub-project contents: {listdir(self.project.load._project.db._path + '/sub_project')}")
-        logging.warning("Loader job name: " + str(self.project.load._job_names))
-        logging.warning("Map filter: " + str(self.project.load._job_names == "toy_1"))
-        # logging.warning("Index for toy_1: " + str(self.project.load._id_from_name("toy_1")))
+        import logging
+        logging.warning(f"JOB LOADER: self.project.project_path = {self.project.project_path}")
+        logging.warning(f"JOB LOADER: type(self.project.db) = {type(self.project.db)}")
+
+        logging.warning(f"JOB LOADER: self.project.job_table() = {self.project.job_table()}")
+        logging.warning(f"JOB LOADER: self.project.job_table(recursive=False) = {self.project.job_table(recursive=False)}")
+
+        logging.warning(f"JOB LOADER: self.project.db.job_table(sql_query=self.project.sql_query, user=self.project.user, project_path=self.project.project_path) = {self.project.db.job_table(sql_query=self.project.sql_query, user=self.project.user, project_path=self.project.project_path)}")
+        logging.warning(f"JOB LOADER: self.project.db.job_table(sql_query=self.project.sql_query, user=self.project.user, project_path=self.project.project_path, recursive=False) = {self.project.db.job_table(sql_query=self.project.sql_query, user=self.project.user, project_path=self.project.project_path, recursive=False)}")
+
+        logging.warning(f"JOB LOADER: self.project.db._get_job_table(sql_query=self.project.sql_query, user=self.project.user, project_path=self.project.project_path) = {self.project.db._get_job_table(sql_query=self.project.sql_query, user=self.project.user, project_path=self.project.project_path)}")
+        logging.warning(f"JOB LOADER: self.project.db._get_job_table(sql_query=self.project.sql_query, user=self.project.user, project_path=self.project.project_path, recursive=False) = {self.project.db._get_job_table(sql_query=self.project.sql_query, user=self.project.user, project_path=self.project.project_path, recursive=False)}")
+
+        logging.warning(f"JOB LOADER: self.project.db._get_job_table(sql_query=self.project.sql_query, user=self.project.user, project_path=None, recursive=False) = {self.project.db._get_job_table(sql_query=self.project.sql_query, user=self.project.user, project_path=None, recursive=False)}")
+        logging.warning(f"JOB LOADER: self.project.db._get_job_table(sql_query=self.project.sql_query, user=self.project.user, project_path=None, recursive=False) = {self.project.db._get_job_table(sql_query=self.project.sql_query, user=self.project.user, project_path=None, recursive=False)}")
+
         with self.subTest("Works without the database"):
             self.assertIsInstance(
                 self.project.load.toy_1, ToyJob, msg="Expected to load the full object"
