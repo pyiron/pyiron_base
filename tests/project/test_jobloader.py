@@ -59,6 +59,9 @@ class TestLoaders(TestWithFilledProject):
         logging.warning(f"Raw non-recursive: + {self.project.load._project.job_table(recursive=False).loc[:, cols]}")
         logging.warning(f"Raw non-recursive and job colum: + {self.project.load._project.job_table(recursive=False, columns=['job']).loc[:, cols]}")
         logging.warning(f"self.project.load._project.db._path: {self.project.load._project.db._path}")
+        from os import listdir
+        logging.warning(f"Project contents: {listdir(self.project.load._project.db._path)}")
+        logging.warning(f"Sub-project contents: {listdir(self.project.load._project.db._path + '/sub_project')}")
         logging.warning("Loader job name: " + str(self.project.load._job_names))
         logging.warning("Map filter: " + str(self.project.load._job_names == "toy_1"))
         # logging.warning("Index for toy_1: " + str(self.project.load._id_from_name("toy_1")))
