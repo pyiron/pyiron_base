@@ -599,11 +599,14 @@ class FileTable(IsDatabase, metaclass=FileTableSingleton):
         if project_path is None:
             project_path = self._path
         if len(self._job_table) != 0:
+            import logging
             if recursive:
+                logging.warning(f"With recursion vs {project_path}:\n {self._job_table.project}\n{self._job_table.project.str.contains(project_path)}")
                 return self._job_table[
                     self._job_table.project.str.contains(project_path)
                 ]
             else:
+                logging.warning(f"Without recursion vs {project_path}:\n {self._job_table.project}\n{self._job_table.project == project_path}")
                 return self._job_table[self._job_table.project == project_path]
         else:
             return self._job_table
