@@ -46,22 +46,28 @@ class TestLoaders(TestWithFilledProject):
 
     def test_without_database(self):
         settings_configuration = self.project.state.settings.configuration.copy()
-        self.project.state.update({'disable_database': True})
+
+
         import logging
-        logging.warning(f"JOB LOADER: self.project.project_path = {self.project.project_path}")
         logging.warning(f"JOB LOADER: type(self.project.db) = {type(self.project.db)}")
+        logging.warning(f"JOB LOADER: len(self.project.job_table()) = {len(self.project.job_table())}")
+        logging.warning(f"JOB LOADER: len(self.project.job_table(recursive=False)) = {len(self.project.job_table(recursive=False))}")
 
-        logging.warning(f"JOB LOADER: self.project.job_table() = {self.project.job_table()}")
-        logging.warning(f"JOB LOADER: self.project.job_table(recursive=False) = {self.project.job_table(recursive=False)}")
+        self.project.state.update({'disable_database': True})
+        logging.warning(f"JOB LOADER: type(self.project.db) = {type(self.project.db)}")
+        logging.warning(f"JOB LOADER: self.project.project_path = {self.project.project_path}")
 
-        logging.warning(f"JOB LOADER: self.project.db.job_table(sql_query=self.project.sql_query, user=self.project.user, project_path=self.project.project_path) = {self.project.db.job_table(sql_query=self.project.sql_query, user=self.project.user, project_path=self.project.project_path)}")
-        logging.warning(f"JOB LOADER: self.project.db.job_table(sql_query=self.project.sql_query, user=self.project.user, project_path=self.project.project_path, recursive=False) = {self.project.db.job_table(sql_query=self.project.sql_query, user=self.project.user, project_path=self.project.project_path, recursive=False)}")
+        logging.warning(f"JOB LOADER: len(self.project.job_table()) = {len(self.project.job_table())}")
+        logging.warning(f"JOB LOADER: len(self.project.job_table(recursive=False)) = {len(self.project.job_table(recursive=False))}")
 
-        logging.warning(f"JOB LOADER: self.project.db._get_job_table(sql_query=self.project.sql_query, user=self.project.user, project_path=self.project.project_path) = {self.project.db._get_job_table(sql_query=self.project.sql_query, user=self.project.user, project_path=self.project.project_path)}")
-        logging.warning(f"JOB LOADER: self.project.db._get_job_table(sql_query=self.project.sql_query, user=self.project.user, project_path=self.project.project_path, recursive=False) = {self.project.db._get_job_table(sql_query=self.project.sql_query, user=self.project.user, project_path=self.project.project_path, recursive=False)}")
+        logging.warning(f"JOB LOADER: len(self.project.db.job_table(sql_query=self.project.sql_query, user=self.project.user, project_path=self.project.project_path)) = {len(self.project.db.job_table(sql_query=self.project.sql_query, user=self.project.user, project_path=self.project.project_path))}")
+        logging.warning(f"JOB LOADER: len(self.project.db.job_table(sql_query=self.project.sql_query, user=self.project.user, project_path=self.project.project_path, recursive=False)) = {len(self.project.db.job_table(sql_query=self.project.sql_query, user=self.project.user, project_path=self.project.project_path, recursive=False))}")
 
-        logging.warning(f"JOB LOADER: self.project.db._get_job_table(sql_query=self.project.sql_query, user=self.project.user, project_path=None, recursive=False) = {self.project.db._get_job_table(sql_query=self.project.sql_query, user=self.project.user, project_path=None, recursive=False)}")
-        logging.warning(f"JOB LOADER: self.project.db._get_job_table(sql_query=self.project.sql_query, user=self.project.user, project_path=None, recursive=False) = {self.project.db._get_job_table(sql_query=self.project.sql_query, user=self.project.user, project_path=None, recursive=False)}")
+        logging.warning(f"JOB LOADER: len(self.project.db._get_job_table(sql_query=self.project.sql_query, user=self.project.user, project_path=self.project.project_path)) = {len(self.project.db._get_job_table(sql_query=self.project.sql_query, user=self.project.user, project_path=self.project.project_path))}")
+        logging.warning(f"JOB LOADER: len(self.project.db._get_job_table(sql_query=self.project.sql_query, user=self.project.user, project_path=self.project.project_path, recursive=False)) = {len(self.project.db._get_job_table(sql_query=self.project.sql_query, user=self.project.user, project_path=self.project.project_path, recursive=False))}")
+
+        logging.warning(f"JOB LOADER: len(self.project.db._get_job_table(sql_query=self.project.sql_query, user=self.project.user, project_path=None, recursive=False)) = {len(self.project.db._get_job_table(sql_query=self.project.sql_query, user=self.project.user, project_path=None, recursive=False))}")
+        logging.warning(f"JOB LOADER: len(self.project.db._get_job_table(sql_query=self.project.sql_query, user=self.project.user, project_path=None, recursive=False)) = {len(self.project.db._get_job_table(sql_query=self.project.sql_query, user=self.project.user, project_path=None, recursive=False))}")
 
         with self.subTest("Works without the database"):
             self.assertIsInstance(
