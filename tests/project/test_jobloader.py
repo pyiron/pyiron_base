@@ -47,12 +47,15 @@ class TestLoaders(TestWithFilledProject):
     def test_without_database(self):
         settings_configuration = self.project.state.settings.configuration.copy()
         import logging
-        cols = ["id", "job"]
+        cols = ["id", "job", "status"]
         logging.warning("With database: " + str(self.project.job_table().loc[:, cols]))
+        logging.warning(f"Loader project (path) with database: {self.project.load._project} ({self.project.load._project.path})")
         self.project.state.update({'disable_database': True})
         logging.warning("Without database: " + str(self.project.job_table().loc[:, cols]))
+        logging.warning(f"Loader project (path) with database: {self.project.load._project} ({self.project.load._project.path})")
         logging.warning("At path" + str(self.project.path))
-        logging.warning("Loader job table: " + str(self.project.load._job_table))
+        logging.warning("Loader job table: " + str(self.project.load._job_table.loc[:, cols]))
+        logging.warning(f"Loader raw project job table: {self.project.load._project.job_table().loc[:, cols]}")
         logging.warning("Loader job name: " + str(self.project.load._job_names))
         logging.warning("Map filter: " + str(self.project.load._job_names == "toy_1"))
         # logging.warning("Index for toy_1: " + str(self.project.load._id_from_name("toy_1")))
