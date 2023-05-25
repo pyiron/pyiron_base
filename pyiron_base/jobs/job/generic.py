@@ -379,7 +379,11 @@ class GenericJob(JobCore):
         Write the input files for the external executable. This method has to be implemented in the individual
         hamiltonians.
         """
-        if state.settings.configuration["write_work_dir_warnings"] and self._write_work_dir_warnings and not self._python_only_job:
+        if (
+            state.settings.configuration["write_work_dir_warnings"]
+            and self._write_work_dir_warnings
+            and not self._python_only_job
+        ):
             with open(
                 os.path.join(self.working_directory, "WARNING_pyiron_modified_content"),
                 "w",
