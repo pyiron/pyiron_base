@@ -158,6 +158,7 @@ class GenericJob(JobCore):
         self._process = None
         self._compress_by_default = False
         self._python_only_job = False
+        self._enforce_lower_case = True
         self.interactive_cache = None
         self.error = GenericError(job=self)
 
@@ -1288,12 +1289,14 @@ class GenericJob(JobCore):
                     codename=codename,
                     module=codename,
                     path_binary_codes=None,
+                    enforce_lower_case=self._enforce_lower_case
                 )
             elif len(self.__module__.split(".")) > 1:
                 self._executable = Executable(
                     codename=self.__name__,
                     module=self.__module__.split(".")[-2],
                     path_binary_codes=None,
+                    enforce_lower_case=self._enforce_lower_case
                 )
             elif self.__module__ == "__main__":
                 # Special case when the job classes defined in Jupyter notebooks
@@ -1302,11 +1305,13 @@ class GenericJob(JobCore):
                     codename=parent_class.__name__,
                     module=parent_class.__module__.split(".")[-2],
                     path_binary_codes=None,
+                    enforce_lower_case=self._enforce_lower_case
                 )
             else:
                 self._executable = Executable(
                     codename=self.__name__,
                     path_binary_codes=None,
+                    enforce_lower_case=self._enforce_lower_case
                 )
 
     def _type_to_hdf(self):

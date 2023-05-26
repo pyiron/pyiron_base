@@ -30,6 +30,7 @@ class Executable(HasStorage):
         module=None,
         code=None,
         overwrite_nt_flag=False,
+        enforce_lower_case=True
     ):
         """
         Handle the path to the executable, as well as the version selection.
@@ -51,7 +52,10 @@ class Executable(HasStorage):
             codename = code.__name__
             module = code.__module__.split(".")[1]
         if codename is not None and module is not None:
-            self.storage.name = codename.lower()
+            if enforce_lower_case:
+                self.storage.name = codename.lower()
+            else:
+                self.storage.name = codename
             code_path_lst = [
                 os.path.join(path, module, "bin") for path in path_binary_codes
             ]
@@ -64,7 +68,10 @@ class Executable(HasStorage):
                 if os.path.exists(exe_path)
             ]
         else:  # Backwards compatibility
-            self.storage.name = codename.lower()
+            if enforce_lower_case:
+                self.storage.name = codename.lower()
+            else:
+                self.storage.name = codename
             self.path_bin = [
                 os.path.join(path, self.storage.name)
                 for path in path_binary_codes
