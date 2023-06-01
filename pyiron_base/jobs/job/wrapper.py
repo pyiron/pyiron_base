@@ -130,7 +130,12 @@ class JobWrapper(object):
 
 
 def job_wrapper_function(
-    working_directory, job_id=None, file_path=None, submit_on_remote=False, debug=False, collect=False
+    working_directory,
+    job_id=None,
+    file_path=None,
+    submit_on_remote=False,
+    debug=False,
+    collect=False,
 ):
     """
     Job Wrapper function - creates a JobWrapper object and calls run() on that object
