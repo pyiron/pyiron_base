@@ -240,12 +240,14 @@ class FileHDFio(HasGroups, MutableMapping):
             key (str): key to store the data
             value (pandas.DataFrame, pandas.Series, dict, list, float, int): basically any kind of data is supported
         """
-        use_json = True
         if hasattr(value, "to_hdf") & (
             not isinstance(value, (pandas.DataFrame, pandas.Series))
         ):
             value.to_hdf(self, key)
-        elif (
+            return
+
+        use_json = True
+        if (
             isinstance(value, (list, np.ndarray))
             and len(value) > 0
             and isinstance(value[0], (list, np.ndarray))
