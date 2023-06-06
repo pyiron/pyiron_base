@@ -10,18 +10,14 @@ import subprocess
 from jinja2 import Template
 
 from pyiron_base.utils.deprecate import deprecate
-from pyiron_base.utils.error import ImportAlarm
 from pyiron_base.jobs.job.wrapper import JobWrapper
 from pyiron_base.state import state
 
 try:
     import flux.job
-
-    import_alarm = ImportAlarm()
+    flux_available = True
 except ImportError:
-    import_alarm = ImportAlarm(
-        message="job.server.run_mode.flux requires the flux-framework with python bindings."
-    )
+    flux_available = False
 
 
 """
@@ -460,8 +456,12 @@ def run_job_with_runmode_srun(job):
     )
 
 
-@import_alarm
 def run_job_with_runmode_flux(job):
+    if not flux_available:
+        raise ModuleNotFoundError(
+            "No module named 'flux'. No linux you can install flux via conda." +
+            "'conda install -c conda-forge flux'"
+        )
     if not state.database.database_is_disabled:
         executable_template = Template(
             """\
