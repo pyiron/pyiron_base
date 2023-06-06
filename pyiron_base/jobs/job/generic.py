@@ -38,6 +38,7 @@ from pyiron_base.jobs.job.runfunction import (
     run_job_with_runmode_interactive_non_modal,
     run_job_with_runmode_queue,
     run_job_with_runmode_srun,
+    run_job_with_runmode_flux,
     execute_job_with_external_executable,
 )
 from pyiron_base.jobs.job.util import (
@@ -840,6 +841,13 @@ class GenericJob(JobCore):
         calculation to separate nodes in a SLURM based HPC cluster.
         """
         run_job_with_runmode_srun(job=self)
+
+    def run_if_flux(self):
+        """
+        The run if flux function is called by run to execute the simulation using flux, this allows distributing
+        calculation to separate nodes in a flux based HPC cluster.
+        """
+        return run_job_with_runmode_flux(job=self)
 
     def run_if_manually(self, _manually_print=True):
         """

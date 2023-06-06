@@ -7,9 +7,20 @@ import os
 import posixpath
 import subprocess
 
+from jinja2 import Template
+
 from pyiron_base.utils.deprecate import deprecate
+from pyiron_base.utils.error import ImportAlarm
 from pyiron_base.jobs.job.wrapper import JobWrapper
 from pyiron_base.state import state
+
+try:
+    import flux.job
+    flux_installed = True
+    import_alarm = ImportAlarm()
+except ImportError:
+    flux_installed = False
+    import_alarm = ImportAlarm("job.server.run_mode.flux requires the flux-framework with python bindings.")
 
 
 """
@@ -32,12 +43,16 @@ If no explicit parameter is provided the first implicit parameter is the job.sta
     
 Afterwards inside the run_job_with_status_created() function the job is executed differently depending on the run mode 
 of the server object attached to the job object: job.server.run_mode
-    manually: run_job_with_runmode_manually
+    manual: run_job_with_runmode_manually
     modal: run_job_with_runmode_modal
     non_modal: run_job_with_runmode_non_modal
     interactive: run_job_with_runmode_interactive
     interactive_non_modal: run_job_with_runmode_interactive_non_modal
     queue: run_job_with_runmode_queue
+    srun: run_job_with_runmode_srun
+    flux: run_job_with_runmode_flux
+    thread: only affects children of a GenericMaster 
+    worker: only affects children of a GenericMaster 
     
 Finally for jobs which call an external executable the execution is implemented in an function as well: 
     execute_job_with_external_executable
@@ -99,6 +114,8 @@ def run_job_with_status_created(job):
         job.run_static()
     elif job.server.run_mode.srun:
         job.run_if_srun()
+    elif job.server.run_mode.flux:
+        return job.run_if_flux()
     elif (
         job.server.run_mode.non_modal
         or job.server.run_mode.thread
@@ -440,6 +457,45 @@ def run_job_with_runmode_srun(job):
         stderr=subprocess.STDOUT,
         universal_newlines=True,
     )
+
+
+@import_alarm
+def run_job_with_runmode_flux(job):
+    if not state.database.database_is_disabled:
+        executable_template = Template("""\
+#!/bin/bash
+python -m pyiron_base.cli wrapper -p {{working_directory}} -j {{job_id}}
+"""
+        )
+        exeuctable_str = executable_template.render(
+            working_directory=job.working_directory,
+            job_id=str(job.job_id),
+        )
+        job_name = "pi_" + str(job.job_id)
+    else:
+        executable_template = Template("""\
+#!/bin/bash
+python -m pyiron_base.cli wrapper -p {{working_directory}} -f {{file_name}}{{h5_path}}
+"""
+        )
+        exeuctable_str = executable_template.render(
+            working_directory=job.working_directory,
+            file_name=job.project_hdf5.file_name,
+            h5_path=job.project_hdf5.h5_path
+        )
+        job_name = job.job_name
+
+    jobspec = flux.job.JobspecV1.from_batch_command(
+        jobname=job_name,
+        script=exeuctable_str,
+        num_nodes=1,
+        cores_per_slot=1,
+        num_slots=job.server.cores,
+    )
+    jobspec.cwd = job.project_hdf5.working_directory
+    jobspec.environment = dict(os.environ)
+    exe = flux.job.FluxExecutor()
+    return exe.submit(jobspec)
 
 
 def run_time_decorator(func):
