@@ -457,7 +457,7 @@ def run_job_with_runmode_srun(job):
     )
 
 
-def run_job_with_runmode_flux(job):
+def run_job_with_runmode_flux(job, executor):
     if not flux_available:
         raise ModuleNotFoundError(
             "No module named 'flux'. No linux you can install flux via conda."
@@ -498,8 +498,7 @@ python -m pyiron_base.cli wrapper -p {{working_directory}} -f {{file_name}}{{h5_
     )
     jobspec.cwd = job.project_hdf5.working_directory
     jobspec.environment = dict(os.environ)
-    exe = flux.job.FluxExecutor()
-    return exe.submit(jobspec)
+    return executor.submit(jobspec)
 
 
 def run_time_decorator(func):

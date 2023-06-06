@@ -159,6 +159,7 @@ class GenericJob(JobCore):
         self._process = None
         self._compress_by_default = False
         self._python_only_job = False
+        self._flux_executor = None
         self.interactive_cache = None
         self.error = GenericError(job=self)
 
@@ -213,6 +214,15 @@ class GenericJob(JobCore):
         """
         self._executable_activate()
         self._executable.executable_path = exe
+
+    @property
+    def flux_executor(self):
+        return self._flux_executor
+
+    @flux_executor.setter
+    def flux_executor(self, exe):
+        self.server.run_mode.flux = True
+        self._flux_executor = exe
 
     @property
     def server(self):
@@ -847,7 +857,7 @@ class GenericJob(JobCore):
         The run if flux function is called by run to execute the simulation using flux, this allows distributing
         calculation to separate nodes in a flux based HPC cluster.
         """
-        return run_job_with_runmode_flux(job=self)
+        return run_job_with_runmode_flux(job=self, executor=self._flux_executor)
 
     def run_if_manually(self, _manually_print=True):
         """
