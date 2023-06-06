@@ -15,6 +15,7 @@ from pyiron_base.state import state
 
 try:
     import flux.job
+
     flux_available = True
 except ImportError:
     flux_available = False
@@ -459,8 +460,8 @@ def run_job_with_runmode_srun(job):
 def run_job_with_runmode_flux(job):
     if not flux_available:
         raise ModuleNotFoundError(
-            "No module named 'flux'. No linux you can install flux via conda." +
-            "'conda install -c conda-forge flux'"
+            "No module named 'flux'. No linux you can install flux via conda."
+            + "'conda install -c conda-forge flux'"
         )
     if not state.database.database_is_disabled:
         executable_template = Template(
