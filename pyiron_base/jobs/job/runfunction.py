@@ -395,7 +395,9 @@ def run_job_with_runmode_srun(job):
                 + job.job_id
             )
         else:
-            raise ValueError("run_job_with_runmode_srun() does not support local databases.")
+            raise ValueError(
+                "run_job_with_runmode_srun() does not support local databases."
+            )
     else:
         command = (
             "srun python -m pyiron_base.cli wrapper -p "
