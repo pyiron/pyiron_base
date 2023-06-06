@@ -17,12 +17,10 @@ from pyiron_base.state import state
 try:
     import flux.job
 
-    flux_installed = True
     import_alarm = ImportAlarm()
 except ImportError:
-    flux_installed = False
     import_alarm = ImportAlarm(
-        "job.server.run_mode.flux requires the flux-framework with python bindings."
+        message="job.server.run_mode.flux requires the flux-framework with python bindings."
     )
 
 
