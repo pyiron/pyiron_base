@@ -693,7 +693,7 @@ class GenericJob(JobCore):
                 elif status == "initialized":
                     self._run_if_new(debug=debug)
                 elif status == "created":
-                    self._run_if_created()
+                    return self._run_if_created()
                 elif status == "submitted":
                     run_job_with_status_submitted(job=self)
                 elif status == "running":
