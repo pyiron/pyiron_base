@@ -32,6 +32,7 @@ from pyiron_base.jobs.job.runfunction import (
     run_job_with_status_suspended,
     run_job_with_status_finished,
     run_job_with_runmode_modal,
+    run_job_with_runmode_queue,
     execute_job_with_external_executable,
 )
 from pyiron_base.jobs.job.util import (
@@ -721,6 +722,15 @@ class GenericJob(JobCore):
         The run static function is called by run to execute the simulation.
         """
         execute_job_with_external_executable(job=self)
+
+    def run_if_scheduler(self):
+        """
+        The run if queue function is called by run if the user decides to submit the job to and queing system. The job
+        is submitted to the queuing system using subprocess.Popen()
+        Returns:
+            int: Returns the queue ID for the job.
+        """
+        return run_job_with_runmode_queue(job=self)
 
     def transfer_from_remote(self):
         state.queue_adapter.get_job_from_remote(

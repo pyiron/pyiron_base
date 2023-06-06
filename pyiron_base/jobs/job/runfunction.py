@@ -106,7 +106,7 @@ def run_job_with_status_created(job):
     ):
         run_job_with_runmode_non_modal(job=job)
     elif job.server.run_mode.queue:
-        run_job_with_runmode_queue(job=job)
+        job.run_if_scheduler()
     elif job.server.run_mode.interactive:
         job.run_if_interactive()
     elif job.server.run_mode.interactive_non_modal:
@@ -395,7 +395,7 @@ def run_job_with_runmode_srun(job):
                 + job.job_id
             )
         else:
-            raise ValueError("run_if_srun() does not support local databases.")
+            raise ValueError("run_job_with_runmode_srun() does not support local databases.")
     else:
         command = (
             "srun python -m pyiron_base.cli wrapper -p "
