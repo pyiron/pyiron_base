@@ -294,7 +294,7 @@ class HasStoredTraits(HasTraits, HasStorage, ABC, metaclass=ABCTraitsMeta):
             self._read_only
         )  # read_only and _read_only are already used on DataContainer
         for k in self.traits().keys():
-            setattr(self.storage, k, getattr(self, k))
+            self.storage[k] = getattr(self, k)
         super()._to_hdf(hdf)
 
     def _from_hdf(self, hdf: ProjectHDFio, version: Optional[str] = None):
