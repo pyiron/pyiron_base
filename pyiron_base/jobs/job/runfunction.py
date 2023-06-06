@@ -92,21 +92,21 @@ def run_job_with_status_created(job):
 
     # Different run modes
     if job.server.run_mode.manual:
-        job.run_if_manually()
+        run_job_with_runmode_manually(job=job, _manually_print=True)
     elif job.server.run_mode.worker:
-        job.run_if_manually(_manually_print=False)
+        run_job_with_runmode_manually(job=job, _manually_print=True)
     elif job.server.run_mode.modal:
         job.run_static()
     elif job.server.run_mode.srun:
-        job.run_if_srun()
+        run_job_with_runmode_srun(job=job)
     elif (
         job.server.run_mode.non_modal
         or job.server.run_mode.thread
         or job.server.run_mode.worker
     ):
-        job.run_if_non_modal()
+        run_job_with_runmode_non_modal(job=job)
     elif job.server.run_mode.queue:
-        job.run_if_scheduler()
+        run_job_with_runmode_queue(job=job)
     elif job.server.run_mode.interactive:
         job.run_if_interactive()
     elif job.server.run_mode.interactive_non_modal:
@@ -266,32 +266,6 @@ def run_job_with_runmode_modal(job):
         job (GenericJob): pyiron job object
     """
     job.run_static()
-
-
-def run_job_with_runmode_interactive(job):
-    """
-    For jobs which executables are available as Python library, those can also be executed with a library call
-    instead of calling an external executable. This is usually faster than a single core python job.
-
-    Args:
-        job (GenericJob): pyiron job object
-    """
-    raise NotImplementedError(
-        "This function needs to be implemented in the specific class."
-    )
-
-
-def run_job_with_runmode_interactive_non_modal(job):
-    """
-    For jobs which executables are available as Python library, those can also be executed with a library call
-    instead of calling an external executable. This is usually faster than a single core python job.
-
-    Args:
-        job (GenericJob): pyiron job object
-    """
-    raise NotImplementedError(
-        "This function needs to be implemented in the specific class."
-    )
 
 
 def run_job_with_runmode_non_modal(job):
