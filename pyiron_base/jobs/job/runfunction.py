@@ -16,11 +16,14 @@ from pyiron_base.state import state
 
 try:
     import flux.job
+
     flux_installed = True
     import_alarm = ImportAlarm()
 except ImportError:
     flux_installed = False
-    import_alarm = ImportAlarm("job.server.run_mode.flux requires the flux-framework with python bindings.")
+    import_alarm = ImportAlarm(
+        "job.server.run_mode.flux requires the flux-framework with python bindings."
+    )
 
 
 """
@@ -462,7 +465,8 @@ def run_job_with_runmode_srun(job):
 @import_alarm
 def run_job_with_runmode_flux(job):
     if not state.database.database_is_disabled:
-        executable_template = Template("""\
+        executable_template = Template(
+            """\
 #!/bin/bash
 python -m pyiron_base.cli wrapper -p {{working_directory}} -j {{job_id}}
 """
@@ -473,7 +477,8 @@ python -m pyiron_base.cli wrapper -p {{working_directory}} -j {{job_id}}
         )
         job_name = "pi_" + str(job.job_id)
     else:
-        executable_template = Template("""\
+        executable_template = Template(
+            """\
 #!/bin/bash
 python -m pyiron_base.cli wrapper -p {{working_directory}} -f {{file_name}}{{h5_path}}
 """
@@ -481,7 +486,7 @@ python -m pyiron_base.cli wrapper -p {{working_directory}} -f {{file_name}}{{h5_
         exeuctable_str = executable_template.render(
             working_directory=job.working_directory,
             file_name=job.project_hdf5.file_name,
-            h5_path=job.project_hdf5.h5_path
+            h5_path=job.project_hdf5.h5_path,
         )
         job_name = job.job_name
 
