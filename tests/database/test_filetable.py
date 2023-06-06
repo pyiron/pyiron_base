@@ -16,19 +16,24 @@ class TestFileTable(PyironTestCase):
     #       sibling file `test_database_file.py`. These are ancient magic and I'm not
     #       touching them right now. -Liam Huber
 
-    def test_re_initialization(self):
+    def setUp(self) -> None:
         here = dirname(abspath(__file__))
-        loc1 = join(here, "ft_test_loc1")
-        loc2 = join(here, "ft_test_loc2")
-        mkdir(loc1)
-        mkdir(loc2)
+        self.loc1 = join(here, "ft_test_loc1")
+        self.loc2 = join(here, "ft_test_loc2")
+        mkdir(self.loc1)
+        mkdir(self.loc2)
 
+    def tearDown(self) -> None:
+        rmdir(self.loc1)
+        rmdir(self.loc2)
+
+    def test_re_initialization(self):
         start = time()
-        ft = FileTable(loc1)
+        ft = FileTable(self.loc1)
         first_initialization = time() - start
 
         start = time()
-        ft_reinitialized = FileTable(loc1)
+        ft_reinitialized = FileTable(self.loc1)
         second_initialization = time() - start
 
         print([f"{t:.2e}" for t in [
@@ -49,11 +54,8 @@ class TestFileTable(PyironTestCase):
                 f"{second_initialization:.2e} for the second"
         )
 
-        another_ft = FileTable(loc2)
+        another_ft = FileTable(self.loc2)
         self.assertFalse(
             ft is another_ft,
             msg="New paths should create new FileTable instances"
         )
-
-        rmdir(loc1)
-        rmdir(loc2)
