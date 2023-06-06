@@ -261,7 +261,9 @@ def run_job_with_runmode_manually(job, _manually_print=True):
                 "You have selected to start the job manually. "
                 + "To run it, go into the working directory {} and ".format(abs_working)
                 + "call 'python -m pyiron_base.cli wrapper -p {}".format(abs_working)
-                + " -f {} ' ".format(job.project_hdf5.file_name + job.project_hdf5.h5_path)
+                + " -f {} ' ".format(
+                    job.project_hdf5.file_name + job.project_hdf5.h5_path
+                )
             )
 
 
