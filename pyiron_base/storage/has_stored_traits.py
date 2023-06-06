@@ -309,19 +309,15 @@ class HasStoredTraits(HasTraits, HasStorage, ABC, metaclass=ABCTraitsMeta):
         """Recursively make all traits read-only."""
         self._read_only = True
         for sub in self.trait_values().values():
-            try:
+            if isinstance(sub, HasStoredTraits):
                 sub.lock()
-            except AttributeError:
-                pass
 
     def unlock(self):
         """Recursively make all traits both readable and writeable"""
         self._read_only = False
         for sub in self.trait_values().values():
-            try:
+            if isinstance(sub, HasStoredTraits):
                 sub.unlock()
-            except AttributeError:
-                pass
 
     def __setattr__(self, key, value):
         if key == "_read_only":
