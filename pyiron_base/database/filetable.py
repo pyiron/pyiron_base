@@ -56,21 +56,22 @@ class FileTableSingleton(ABCMeta):
     _instances = {}
 
     def __call__(cls, index_from):
-        _path = os.path.abspath(os.path.expanduser(index_from))
-        if _path not in cls._instances:
-            common_path = _get_most_common_path(
-                path=_path, reference_paths=cls._instances.keys()
+        path = os.path.abspath(os.path.expanduser(index_from))
+        if path not in cls._instances:
+            cls._instances[path] = super().__call__(
+                index_from=path,
+                fileindex=cls._get_fileindex_if_theres_a_common_path(path),
             )
-            if common_path is not None:
-                cls._instances[_path] = super(FileTableSingleton, cls).__call__(
-                    index_from=_path,
-                    fileindex=cls._instances[common_path]._fileindex.open(_path),
-                )
-            else:
-                cls._instances[_path] = super(FileTableSingleton, cls).__call__(
-                    index_from=_path
-                )
-        return cls._instances[_path]
+        return cls._instances[path]
+
+    def _get_fileindex_if_theres_a_common_path(cls, path):
+        common_path = _get_most_common_path(
+            path=path, reference_paths=cls._instances.keys()
+        )
+        if common_path is not None:
+            return cls._instances[common_path]._fileindex.open(path)
+        else:
+            return None
 
 
 class FileTable(IsDatabase, metaclass=FileTableSingleton):
@@ -599,15 +600,14 @@ class FileTable(IsDatabase, metaclass=FileTableSingleton):
         if project_path is None:
             project_path = self._path
         if len(self._job_table) != 0:
-            import logging
             if recursive:
-                logging.warning(f"With recursion vs {project_path}:\n {self._job_table.project}\n{self._job_table.project.str.contains(project_path)}")
                 return self._job_table[
                     self._job_table.project.str.contains(project_path)
                 ]
             else:
-                logging.warning(f"Without recursion vs {project_path}:\n {self._job_table.project}\n{self._job_table.project == project_path}")
-                return self._job_table[self._job_table.project == project_path]
+                return self._job_table[
+                    self._job_table.project.str.endswith(project_path)
+                ]
         else:
             return self._job_table
 

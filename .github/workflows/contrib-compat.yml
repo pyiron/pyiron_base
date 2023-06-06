@@ -50,7 +50,7 @@ jobs:
       shell: bash -l {0}
       run: |
         cd ../pyiron_contrib
-        python .ci_support/pyironconfig.py
+        python ../pyiron_base/.ci_support/pyironconfig.py
         cd ../pyiron_base
     - name: Install pyiron_contrib
       shell: bash -l {0}
