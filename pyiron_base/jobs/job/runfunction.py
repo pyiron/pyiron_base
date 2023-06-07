@@ -473,7 +473,7 @@ python -m pyiron_base.cli wrapper -p {{working_directory}} -f {{file_name}}{{h5_
             file_name=job.project_hdf5.file_name,
             h5_path=job.project_hdf5.h5_path,
         )
-        job_name = job.job_name
+        job_name = "pi_" + job.job_name
 
     jobspec = flux.job.JobspecV1.from_batch_command(
         jobname=job_name,
