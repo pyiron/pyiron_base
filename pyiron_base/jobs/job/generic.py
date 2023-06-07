@@ -38,6 +38,7 @@ from pyiron_base.jobs.job.runfunction import (
     run_job_with_runmode_interactive_non_modal,
     run_job_with_runmode_queue,
     run_job_with_runmode_srun,
+    run_job_with_runmode_flux,
     execute_job_with_external_executable,
 )
 from pyiron_base.jobs.job.util import (
@@ -158,6 +159,7 @@ class GenericJob(JobCore):
         self._process = None
         self._compress_by_default = False
         self._python_only_job = False
+        self._flux_executor = None
         self.interactive_cache = None
         self.error = GenericError(job=self)
 
@@ -212,6 +214,15 @@ class GenericJob(JobCore):
         """
         self._executable_activate()
         self._executable.executable_path = exe
+
+    @property
+    def flux_executor(self):
+        return self._flux_executor
+
+    @flux_executor.setter
+    def flux_executor(self, exe):
+        self.server.run_mode.flux = True
+        self._flux_executor = exe
 
     @property
     def server(self):
@@ -690,9 +701,9 @@ class GenericJob(JobCore):
                 if repair and self.job_id and not self.status.finished:
                     self._run_if_repair()
                 elif status == "initialized":
-                    self._run_if_new(debug=debug)
+                    return self._run_if_new(debug=debug)
                 elif status == "created":
-                    self._run_if_created()
+                    return self._run_if_created()
                 elif status == "submitted":
                     run_job_with_status_submitted(job=self)
                 elif status == "running":
@@ -840,6 +851,13 @@ class GenericJob(JobCore):
         calculation to separate nodes in a SLURM based HPC cluster.
         """
         run_job_with_runmode_srun(job=self)
+
+    def run_if_flux(self):
+        """
+        The run if flux function is called by run to execute the simulation using flux, this allows distributing
+        calculation to separate nodes in a flux based HPC cluster.
+        """
+        return run_job_with_runmode_flux(job=self, executor=self._flux_executor)
 
     def run_if_manually(self, _manually_print=True):
         """
@@ -1212,7 +1230,7 @@ class GenericJob(JobCore):
         Args:
             debug (bool): Debug Mode
         """
-        run_job_with_status_initialized(job=self, debug=debug)
+        return run_job_with_status_initialized(job=self, debug=debug)
 
     def _run_if_created(self):
         """
