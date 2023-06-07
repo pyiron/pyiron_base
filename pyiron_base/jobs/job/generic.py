@@ -31,14 +31,8 @@ from pyiron_base.jobs.job.runfunction import (
     run_job_with_status_collect,
     run_job_with_status_suspended,
     run_job_with_status_finished,
-    run_job_with_runmode_manually,
     run_job_with_runmode_modal,
-    run_job_with_runmode_non_modal,
-    run_job_with_runmode_interactive,
-    run_job_with_runmode_interactive_non_modal,
     run_job_with_runmode_queue,
-    run_job_with_runmode_srun,
-    run_job_with_runmode_flux,
     execute_job_with_external_executable,
 )
 from pyiron_base.jobs.job.util import (
@@ -739,6 +733,15 @@ class GenericJob(JobCore):
         """
         execute_job_with_external_executable(job=self)
 
+    def run_if_scheduler(self):
+        """
+        The run if queue function is called by run if the user decides to submit the job to and queing system. The job
+        is submitted to the queuing system using subprocess.Popen()
+        Returns:
+            int: Returns the queue ID for the job.
+        """
+        return run_job_with_runmode_queue(job=self)
+
     def transfer_from_remote(self):
         state.queue_adapter.get_job_from_remote(
             working_directory="/".join(self.working_directory.split("/")[:-1]),
@@ -799,7 +802,18 @@ class GenericJob(JobCore):
         For jobs which executables are available as Python library, those can also be executed with a library call
         instead of calling an external executable. This is usually faster than a single core python job.
         """
-        run_job_with_runmode_interactive(job=self)
+        raise NotImplementedError(
+            "This function needs to be implemented in the specific class."
+        )
+
+    def run_if_interactive_non_modal(self):
+        """
+        For jobs which executables are available as Python library, those can also be executed with a library call
+        instead of calling an external executable. This is usually faster than a single core python job.
+        """
+        raise NotImplementedError(
+            "This function needs to be implemented in the specific class."
+        )
 
     def interactive_close(self):
         """
@@ -830,54 +844,6 @@ class GenericJob(JobCore):
         raise NotImplementedError(
             "This function needs to be implemented in the specific class."
         )
-
-    def run_if_interactive_non_modal(self):
-        """
-        For jobs which executables are available as Python library, those can also be executed with a library call
-        instead of calling an external executable. This is usually faster than a single core python job.
-        """
-        run_job_with_runmode_interactive_non_modal(job=self)
-
-    def run_if_non_modal(self):
-        """
-        The run if non modal function is called by run to execute the simulation in the background. For this we use
-        multiprocessing.Process()
-        """
-        run_job_with_runmode_non_modal(job=self)
-
-    def run_if_srun(self):
-        """
-        The run if srun function is called by run to execute the simulation using srun, this allows distributing
-        calculation to separate nodes in a SLURM based HPC cluster.
-        """
-        run_job_with_runmode_srun(job=self)
-
-    def run_if_flux(self):
-        """
-        The run if flux function is called by run to execute the simulation using flux, this allows distributing
-        calculation to separate nodes in a flux based HPC cluster.
-        """
-        return run_job_with_runmode_flux(job=self, executor=self._flux_executor)
-
-    def run_if_manually(self, _manually_print=True):
-        """
-        The run if manually function is called by run if the user decides to execute the simulation manually - this
-        might be helpful to debug a new job type or test updated executables.
-
-        Args:
-            _manually_print (bool): Print explanation how to run the simulation manually - default=True.
-        """
-        run_job_with_runmode_manually(job=self, _manually_print=_manually_print)
-
-    def run_if_scheduler(self):
-        """
-        The run if queue function is called by run if the user decides to submit the job to and queing system. The job
-        is submitted to the queuing system using subprocess.Popen()
-
-        Returns:
-            int: Returns the queue ID for the job.
-        """
-        return run_job_with_runmode_queue(job=self)
 
     def send_to_database(self):
         """
