@@ -26,6 +26,7 @@ run_mode_lst = [
     "thread",
     "worker",
     "srun",
+    "flux",
     "interactive",
     "interactive_non_modal",
 ]

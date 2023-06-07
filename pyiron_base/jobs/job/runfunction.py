@@ -7,9 +7,18 @@ import os
 import posixpath
 import subprocess
 
+from jinja2 import Template
+
 from pyiron_base.utils.deprecate import deprecate
 from pyiron_base.jobs.job.wrapper import JobWrapper
 from pyiron_base.state import state
+
+try:
+    import flux.job
+
+    flux_available = True
+except ImportError:
+    flux_available = False
 
 
 """
@@ -32,12 +41,16 @@ If no explicit parameter is provided the first implicit parameter is the job.sta
     
 Afterwards inside the run_job_with_status_created() function the job is executed differently depending on the run mode 
 of the server object attached to the job object: job.server.run_mode
-    manually: run_job_with_runmode_manually
+    manual: run_job_with_runmode_manually
     modal: run_job_with_runmode_modal
     non_modal: run_job_with_runmode_non_modal
     interactive: run_job_with_runmode_interactive
     interactive_non_modal: run_job_with_runmode_interactive_non_modal
     queue: run_job_with_runmode_queue
+    srun: run_job_with_runmode_srun
+    flux: run_job_with_runmode_flux
+    thread: only affects children of a GenericMaster 
+    worker: only affects children of a GenericMaster 
     
 Finally for jobs which call an external executable the execution is implemented in an function as well: 
     execute_job_with_external_executable
@@ -73,7 +86,7 @@ def run_job_with_status_initialized(job, debug=False):
         print("job exists already and therefore was not created!")
     else:
         job.save()
-        job.run()
+        return job.run()
 
 
 def run_job_with_status_created(job):
@@ -99,6 +112,8 @@ def run_job_with_status_created(job):
         job.run_static()
     elif job.server.run_mode.srun:
         run_job_with_runmode_srun(job=job)
+    elif job.server.run_mode.flux:
+        return run_job_with_runmode_flux(job=job, executor=job.flux_executor)
     elif (
         job.server.run_mode.non_modal
         or job.server.run_mode.thread
@@ -249,12 +264,22 @@ def run_job_with_runmode_manually(job, _manually_print=True):
     """
     if _manually_print:
         abs_working = posixpath.abspath(job.project_hdf5.working_directory)
-        print(
-            "You have selected to start the job manually. "
-            + "To run it, go into the working directory {} and ".format(abs_working)
-            + "call 'python -m pyiron_base.cli wrapper -p {}".format(abs_working)
-            + " -j {} ' ".format(job.job_id)
-        )
+        if not state.database.database_is_disabled:
+            print(
+                "You have selected to start the job manually. "
+                + "To run it, go into the working directory {} and ".format(abs_working)
+                + "call 'python -m pyiron_base.cli wrapper -p {}".format(abs_working)
+                + " -j {} ' ".format(job.job_id)
+            )
+        else:
+            print(
+                "You have selected to start the job manually. "
+                + "To run it, go into the working directory {} and ".format(abs_working)
+                + "call 'python -m pyiron_base.cli wrapper -p {}".format(abs_working)
+                + " -f {} ' ".format(
+                    job.project_hdf5.file_name + job.project_hdf5.h5_path
+                )
+            )
 
 
 def run_job_with_runmode_modal(job):
@@ -416,6 +441,50 @@ def run_job_with_runmode_srun(job):
         stderr=subprocess.STDOUT,
         universal_newlines=True,
     )
+
+
+def run_job_with_runmode_flux(job, executor):
+    if not flux_available:
+        raise ModuleNotFoundError(
+            "No module named 'flux'. No linux you can install flux via conda."
+            + "'conda install -c conda-forge flux'"
+        )
+    if not state.database.database_is_disabled:
+        executable_template = Template(
+            """\
+#!/bin/bash
+python -m pyiron_base.cli wrapper -p {{working_directory}} -j {{job_id}}
+"""
+        )
+        exeuctable_str = executable_template.render(
+            working_directory=job.working_directory,
+            job_id=str(job.job_id),
+        )
+        job_name = "pi_" + str(job.job_id)
+    else:
+        executable_template = Template(
+            """\
+#!/bin/bash
+python -m pyiron_base.cli wrapper -p {{working_directory}} -f {{file_name}}{{h5_path}}
+"""
+        )
+        exeuctable_str = executable_template.render(
+            working_directory=job.working_directory,
+            file_name=job.project_hdf5.file_name,
+            h5_path=job.project_hdf5.h5_path,
+        )
+        job_name = job.job_name
+
+    jobspec = flux.job.JobspecV1.from_batch_command(
+        jobname=job_name,
+        script=exeuctable_str,
+        num_nodes=1,
+        cores_per_slot=1,
+        num_slots=job.server.cores,
+    )
+    jobspec.cwd = job.project_hdf5.working_directory
+    jobspec.environment = dict(os.environ)
+    return executor.submit(jobspec)
 
 
 def run_time_decorator(func):
