@@ -264,12 +264,22 @@ def run_job_with_runmode_manually(job, _manually_print=True):
     """
     if _manually_print:
         abs_working = posixpath.abspath(job.project_hdf5.working_directory)
-        print(
-            "You have selected to start the job manually. "
-            + "To run it, go into the working directory {} and ".format(abs_working)
-            + "call 'python -m pyiron_base.cli wrapper -p {}".format(abs_working)
-            + " -j {} ' ".format(job.job_id)
-        )
+        if not state.database.database_is_disabled:
+            print(
+                "You have selected to start the job manually. "
+                + "To run it, go into the working directory {} and ".format(abs_working)
+                + "call 'python -m pyiron_base.cli wrapper -p {}".format(abs_working)
+                + " -j {} ' ".format(job.job_id)
+            )
+        else:
+            print(
+                "You have selected to start the job manually. "
+                + "To run it, go into the working directory {} and ".format(abs_working)
+                + "call 'python -m pyiron_base.cli wrapper -p {}".format(abs_working)
+                + " -f {} ' ".format(
+                    job.project_hdf5.file_name + job.project_hdf5.h5_path
+                )
+            )
 
 
 def run_job_with_runmode_modal(job):
