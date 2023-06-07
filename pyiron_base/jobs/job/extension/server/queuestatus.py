@@ -72,15 +72,15 @@ def queue_table(
                     ]
                 ]
             else:
-                if len(df) == 0:
-                    return df
-                else:
+                if len(df) > 0 and "working_directory" in df.columns:
                     return df[
                         [
                             any([working_dir.startswith(p) for p in working_directory_lst])
                             for working_dir in list(df.working_directory)
                         ]
                     ]
+                else:
+                    return df
     else:
         return None
 
