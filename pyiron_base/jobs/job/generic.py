@@ -31,13 +31,8 @@ from pyiron_base.jobs.job.runfunction import (
     run_job_with_status_collect,
     run_job_with_status_suspended,
     run_job_with_status_finished,
-    run_job_with_runmode_manually,
     run_job_with_runmode_modal,
-    run_job_with_runmode_non_modal,
-    run_job_with_runmode_interactive,
-    run_job_with_runmode_interactive_non_modal,
     run_job_with_runmode_queue,
-    run_job_with_runmode_srun,
     execute_job_with_external_executable,
 )
 from pyiron_base.jobs.job.util import (
@@ -159,6 +154,8 @@ class GenericJob(JobCore):
         self._compress_by_default = False
         self._python_only_job = False
         self._enforce_lower_case = True
+        self._write_work_dir_warnings = True
+        self._flux_executor = None
         self.interactive_cache = None
         self.error = GenericError(job=self)
 
@@ -213,6 +210,15 @@ class GenericJob(JobCore):
         """
         self._executable_activate()
         self._executable.executable_path = exe
+
+    @property
+    def flux_executor(self):
+        return self._flux_executor
+
+    @flux_executor.setter
+    def flux_executor(self, exe):
+        self.server.run_mode.flux = True
+        self._flux_executor = exe
 
     @property
     def server(self):
@@ -379,7 +385,11 @@ class GenericJob(JobCore):
         Write the input files for the external executable. This method has to be implemented in the individual
         hamiltonians.
         """
-        if state.settings.configuration["write_work_dir_warnings"]:
+        if (
+            state.settings.configuration["write_work_dir_warnings"]
+            and self._write_work_dir_warnings
+            and not self._python_only_job
+        ):
             with open(
                 os.path.join(self.working_directory, "WARNING_pyiron_modified_content"),
                 "w",
@@ -691,9 +701,9 @@ class GenericJob(JobCore):
                 if repair and self.job_id and not self.status.finished:
                     self._run_if_repair()
                 elif status == "initialized":
-                    self._run_if_new(debug=debug)
+                    return self._run_if_new(debug=debug)
                 elif status == "created":
-                    self._run_if_created()
+                    return self._run_if_created()
                 elif status == "submitted":
                     run_job_with_status_submitted(job=self)
                 elif status == "running":
@@ -728,6 +738,15 @@ class GenericJob(JobCore):
         The run static function is called by run to execute the simulation.
         """
         execute_job_with_external_executable(job=self)
+
+    def run_if_scheduler(self):
+        """
+        The run if queue function is called by run if the user decides to submit the job to and queing system. The job
+        is submitted to the queuing system using subprocess.Popen()
+        Returns:
+            int: Returns the queue ID for the job.
+        """
+        return run_job_with_runmode_queue(job=self)
 
     def transfer_from_remote(self):
         state.queue_adapter.get_job_from_remote(
@@ -789,7 +808,18 @@ class GenericJob(JobCore):
         For jobs which executables are available as Python library, those can also be executed with a library call
         instead of calling an external executable. This is usually faster than a single core python job.
         """
-        run_job_with_runmode_interactive(job=self)
+        raise NotImplementedError(
+            "This function needs to be implemented in the specific class."
+        )
+
+    def run_if_interactive_non_modal(self):
+        """
+        For jobs which executables are available as Python library, those can also be executed with a library call
+        instead of calling an external executable. This is usually faster than a single core python job.
+        """
+        raise NotImplementedError(
+            "This function needs to be implemented in the specific class."
+        )
 
     def interactive_close(self):
         """
@@ -820,47 +850,6 @@ class GenericJob(JobCore):
         raise NotImplementedError(
             "This function needs to be implemented in the specific class."
         )
-
-    def run_if_interactive_non_modal(self):
-        """
-        For jobs which executables are available as Python library, those can also be executed with a library call
-        instead of calling an external executable. This is usually faster than a single core python job.
-        """
-        run_job_with_runmode_interactive_non_modal(job=self)
-
-    def run_if_non_modal(self):
-        """
-        The run if non modal function is called by run to execute the simulation in the background. For this we use
-        multiprocessing.Process()
-        """
-        run_job_with_runmode_non_modal(job=self)
-
-    def run_if_srun(self):
-        """
-        The run if srun function is called by run to execute the simulation using srun, this allows distributing
-        calculation to separate nodes in a SLURM based HPC cluster.
-        """
-        run_job_with_runmode_srun(job=self)
-
-    def run_if_manually(self, _manually_print=True):
-        """
-        The run if manually function is called by run if the user decides to execute the simulation manually - this
-        might be helpful to debug a new job type or test updated executables.
-
-        Args:
-            _manually_print (bool): Print explanation how to run the simulation manually - default=True.
-        """
-        run_job_with_runmode_manually(job=self, _manually_print=_manually_print)
-
-    def run_if_scheduler(self):
-        """
-        The run if queue function is called by run if the user decides to submit the job to and queing system. The job
-        is submitted to the queuing system using subprocess.Popen()
-
-        Returns:
-            int: Returns the queue ID for the job.
-        """
-        return run_job_with_runmode_queue(job=self)
 
     def send_to_database(self):
         """
@@ -1213,7 +1202,7 @@ class GenericJob(JobCore):
         Args:
             debug (bool): Debug Mode
         """
-        run_job_with_status_initialized(job=self, debug=debug)
+        return run_job_with_status_initialized(job=self, debug=debug)
 
     def _run_if_created(self):
         """

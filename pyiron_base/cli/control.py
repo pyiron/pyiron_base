@@ -58,5 +58,5 @@ def main():
     args = parser.parse_args()
     args.cli(args)
 
-    if not args.dirty:
+    if not args.dirty and os.path.exists("pyiron.log"):
         os.remove("pyiron.log")
