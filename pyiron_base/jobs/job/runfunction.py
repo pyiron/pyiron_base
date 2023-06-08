@@ -114,7 +114,7 @@ def run_job_with_status_created(job):
         run_job_with_runmode_srun(job=job)
     elif job.server.run_mode.flux:
         if job.server.gpus is not None:
-            gpus_per_slot = int(job.server.gpus/job.server.cores)
+            gpus_per_slot = int(job.server.gpus / job.server.cores)
         else:
             gpus_per_slot = None
         return run_job_with_runmode_flux(
