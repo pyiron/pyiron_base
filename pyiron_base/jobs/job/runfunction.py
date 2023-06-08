@@ -113,7 +113,15 @@ def run_job_with_status_created(job):
     elif job.server.run_mode.srun:
         run_job_with_runmode_srun(job=job)
     elif job.server.run_mode.flux:
-        return run_job_with_runmode_flux(job=job, executor=job.flux_executor)
+        if job.server.gpus is not None:
+            gpus_per_slot = int(job.server.gpus/job.server.cores)
+        else:
+            gpus_per_slot = None
+        return run_job_with_runmode_flux(
+            job=job,
+            executor=job.flux_executor,
+            gpus_per_slot=gpus_per_slot,
+        )
     elif (
         job.server.run_mode.non_modal
         or job.server.run_mode.thread
@@ -443,7 +451,7 @@ def run_job_with_runmode_srun(job):
     )
 
 
-def run_job_with_runmode_flux(job, executor):
+def run_job_with_runmode_flux(job, executor, gpus_per_slot=None):
     if not flux_available:
         raise ModuleNotFoundError(
             "No module named 'flux'. No linux you can install flux via conda."
@@ -480,6 +488,7 @@ python -m pyiron_base.cli wrapper -p {{working_directory}} -f {{file_name}}{{h5_
         script=exeuctable_str,
         num_nodes=1,
         cores_per_slot=1,
+        gpus_per_slot=gpus_per_slot,
         num_slots=job.server.cores,
     )
     jobspec.cwd = job.project_hdf5.working_directory
