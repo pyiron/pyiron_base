@@ -74,7 +74,14 @@ class Server:  # add the option to return the job id and the hold id to the serv
     """
 
     def __init__(
-        self, host=None, queue=None, cores=1, threads=1, gpus=None, run_mode="modal", new_hdf=True
+        self,
+        host=None,
+        queue=None,
+        cores=1,
+        threads=1,
+        gpus=None,
+        run_mode="modal",
+        new_hdf=True,
     ):
         self._cores = cores
         self._threads = threads
