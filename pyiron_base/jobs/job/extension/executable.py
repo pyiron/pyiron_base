@@ -217,13 +217,14 @@ class Executable(HasStorage):
         else:
             self.storage.mpi = False
 
-    def get_input_for_subprocess_call(self, cores, threads):
+    def get_input_for_subprocess_call(self, cores, threads, gpus=None):
         """
         Get the input parameters for the subprocess call to execute the job
 
         Args:
             cores (int): number of cores
             threads (int): number of threads
+            gpus (int/None): number of gpus
 
         Returns:
             str/ list, boolean:  executable and shell variables
@@ -231,18 +232,14 @@ class Executable(HasStorage):
         if cores == 1 or not self.mpi:
             executable = self.__str__()
             shell = True
-        elif isinstance(self.executable_path, list):
-            executable = self.executable_path[:] + [
-                str(cores),
-                str(threads),
-            ]
-            shell = False
         else:
-            executable = [
-                self.executable_path,
-                str(cores),
-                str(threads),
-            ]
+            if isinstance(self.executable_path, list):
+                executable = self.executable_path[:]
+            else:
+                executable = [self.executable_path]
+            executable += [str(cores), str(threads)]
+            if gpus is not None:
+                executable += [str(gpus)]
             shell = False
         return executable, shell
 

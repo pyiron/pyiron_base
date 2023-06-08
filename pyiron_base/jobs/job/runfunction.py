@@ -524,7 +524,7 @@ def execute_job_with_external_executable(job):
         raise ValueError("No executable set!")
     job.status.running = True
     executable, shell = job.executable.get_input_for_subprocess_call(
-        cores=job.server.cores, threads=job.server.threads
+        cores=job.server.cores, threads=job.server.threads, gpus=job.server.gpus
     )
     job_crashed, out = False, None
     try:
