@@ -464,7 +464,7 @@ class Server:  # add the option to return the job id and the hold id to the serv
         if len(self.additional_arguments) > 0:
             hdf_dict["additional_arguments"] = self.additional_arguments
         if self._gpus is not None:
-            hdf_dict["accept_crash"] = self._gpus
+            hdf_dict["gpus"] = self._gpus
 
         if group_name is not None:
             with hdf.open(group_name) as hdf_group:
@@ -509,7 +509,7 @@ class Server:  # add the option to return the job id and the hold id to the serv
         if "additional_arguments" in hdf_dict.keys():
             self.additional_arguments = hdf_dict["additional_arguments"]
         if "gpus" in hdf_dict.keys():
-            self._gpus = hdf_dict["accept_crash"]
+            self._gpus = hdf_dict["gpus"]
         self._new_hdf = hdf_dict["new_h5"] == 1
 
     def db_entry(self):
