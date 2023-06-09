@@ -289,5 +289,34 @@ class TestRunmode(PyironTestCase):
             )
 
 
+class TestServerHDF(unittest.TestCase):
+    def test_to_and_from_hdf(self):
+        server_empty = Server()
+        server_full = Server()
+        server_full.gpus = 10
+        server_full.cores = 10
+        server_full.threads = 2
+        server_full.new_hdf = False
+        hdf_dict_empty = {"server": {}}
+        hdf_dict_full = {"server": {}}
+        self.assertTrue(server_empty.new_hdf)
+        self.assertFalse(server_full.new_hdf)
+        self.assertIsNone(server_empty.gpus)
+        self.assertEqual(server_full.gpus, 10)
+        self.assertEqual(server_full.cores, 10)
+        self.assertEqual(server_full.threads, 2)
+        self.assertFalse(server_full.new_hdf)
+        server_empty.to_hdf(hdf=hdf_dict_empty)
+        server_full.to_hdf(hdf=hdf_dict_full)
+        server_from_hdf = Server()
+        server_from_hdf.from_hdf(hdf=hdf_dict_full)
+        self.assertEqual(hdf_dict_full["server"]["gpus"], 10)
+        self.assertTrue("gpus" not in hdf_dict_empty["server"].keys())
+        self.assertEqual(server_from_hdf.gpus, 10)
+        self.assertEqual(server_from_hdf.cores, 10)
+        self.assertEqual(server_from_hdf.threads, 2)
+        self.assertFalse(server_from_hdf.new_hdf)
+
+
 if __name__ == "__main__":
     unittest.main()
