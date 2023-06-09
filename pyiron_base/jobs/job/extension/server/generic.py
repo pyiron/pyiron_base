@@ -85,7 +85,7 @@ class Server:  # add the option to return the job id and the hold id to the serv
     ):
         self._cores = cores
         self._threads = threads
-        self._gpus = None
+        self._gpus = gpus
         self._run_time = None
         self._memory_limit = None
         self._host = self._init_host(host=host)
