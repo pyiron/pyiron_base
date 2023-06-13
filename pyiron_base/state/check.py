@@ -13,13 +13,15 @@ except ImportError:
 from pyiron_base import state
 
 conda_package_dict = {
-    "mlip": "mlip",
     "atomicrex": "atomicrex",
+    "cp2k": "cp2k",
     "damask": "damask",
-    "runner": "runner",
-    "randspg": "randspg",
-    "sphinx": "sphinxdft",
+    "mlip": "mlip",
     "lammps": "lammps",
+    "quantumespresso": "qe",
+    "randspg": "randspg",
+    "runner": "runner",
+    "sphinx": "sphinxdft",
 }
 
 
