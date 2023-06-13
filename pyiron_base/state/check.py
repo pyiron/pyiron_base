@@ -5,6 +5,7 @@ import pandas
 
 try:
     from conda.cli import python_api
+
     conda_imported_successful = True
 except ImportError:
     conda_imported_successful = False
@@ -18,7 +19,7 @@ conda_package_dict = {
     "runner": "runner",
     "randspg": "randspg",
     "sphinx": "sphinxdft",
-    "lammps": "lammps"
+    "lammps": "lammps",
 }
 
 
@@ -33,7 +34,11 @@ def check_for_conda_package(name):
 def check_executable_bit(resource_paths):
     def check_bit(script_path):
         filemode = os.stat(script_path).st_mode
-        return bool(filemode & stat.S_IXUSR or filemode & stat.S_IXGRP or filemode & stat.S_IXOTH)
+        return bool(
+            filemode & stat.S_IXUSR
+            or filemode & stat.S_IXGRP
+            or filemode & stat.S_IXOTH
+        )
 
     path_lst = []
     for res_path in resource_paths:
@@ -43,7 +48,7 @@ def check_executable_bit(resource_paths):
 
 def check_executables_status():
     executables_dict = check_executable_bit(
-        resource_paths=state.settings.configuration['resource_paths']
+        resource_paths=state.settings.configuration["resource_paths"]
     )
     if conda_imported_successful:
         conda_lst = [
@@ -51,20 +56,23 @@ def check_executables_status():
             if f is not None and f in conda_package_dict.keys()
             else False
             for f in [
-                p.split("/")[-3]
-                if "/share/pyiron/" in p else None
+                p.split("/")[-3] if "/share/pyiron/" in p else None
                 for p in executables_dict.keys()
             ]
         ]
-        return pandas.DataFrame({
-            "name": [p.split("/")[-3] for p in executables_dict.keys()],
-            "path": list(executables_dict.keys()),
-            "executable_bit": list(executables_dict.values()),
-            "conda_package_installed": conda_lst,
-        })
+        return pandas.DataFrame(
+            {
+                "name": [p.split("/")[-3] for p in executables_dict.keys()],
+                "path": list(executables_dict.keys()),
+                "executable_bit": list(executables_dict.values()),
+                "conda_package_installed": conda_lst,
+            }
+        )
     else:
-        return pandas.DataFrame({
-            "name": [p.split("/")[-3] for p in executables_dict.keys()],
-            "path": list(executables_dict.keys()),
-            "executable_bit": list(executables_dict.values()),
-        })
+        return pandas.DataFrame(
+            {
+                "name": [p.split("/")[-3] for p in executables_dict.keys()],
+                "path": list(executables_dict.keys()),
+                "executable_bit": list(executables_dict.values()),
+            }
+        )
