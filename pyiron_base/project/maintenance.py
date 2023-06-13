@@ -99,7 +99,7 @@ class LocalMaintenance:
             recursive=recursive, progress=progress, convert_to_object=False, **kwargs
         ):
             hdf = job.project_hdf5
-            hdf.rewrite_hdf(job.name)
+            hdf.rewrite_hdf5(job.name)
 
 
 class UpdateMaintenance:
@@ -119,9 +119,9 @@ class UpdateMaintenance:
                 configuration.
         """
         mayor, minor = start_version.split(".")[0:2]
-        if mayor != 0:
+        if int(mayor) != 0:
             raise ValueError("Updates to version >0.x.y is not possible.")
-        if minor < 4:
+        if int(minor) < 4:
             self.base_v0_3_to_v0_4(project)
 
     def base_v0_3_to_v0_4(self, project=None):
