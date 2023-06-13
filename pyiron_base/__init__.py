@@ -39,6 +39,7 @@ from pyiron_base.utils.parser import Logstatus, extract_data_from_file
 from pyiron_base.jobs.job.extension.server.queuestatus import validate_que_request
 from pyiron_base.state.settings import Settings
 from pyiron_base.state.install import install_dialog
+from pyiron_base.state.check import check_executables_status
 from pyiron_base.jobs.datamining import PyironTable, TableJob
 from pyiron_base.interfaces.object import HasDatabase, HasStorage, PyironObject
 from pyiron_base.database.performance import get_database_statistics
