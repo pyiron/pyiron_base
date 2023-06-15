@@ -13,6 +13,7 @@ from pyiron_base import PythonTemplateJob, state
 from pyiron_base.project.generic import Project
 from abc import ABC
 from inspect import getfile
+import numpy as np
 
 
 __author__ = "Liam Huber"
@@ -30,8 +31,28 @@ __date__ = "Mar 23, 2021"
 class PyironTestCase(unittest.TestCase, ABC):
 
     """
-    Tests that also include testing the docstrings in the specified modules
+    Base class for all pyiron unit tets.
+
+    Registers utility type equality functions:
+        - np.testing.assert_array_equal
+
+    Optionally includes testing the docstrings in the specified module by
+    overloading :attr:`~.docstring_module`.
     """
+
+    def setUp(self):
+        self.addTypeEqualityFunc(
+            np.ndarray,
+            self._assert_equal_numpy
+        )
+
+    def _assert_equal_numpy(self, a, b, msg=None):
+        try:
+            np.testing.assert_array_equal(
+                a, b, err_msg=msg
+            )
+        except AssertionError as e:
+            raise self.failureException(*e.args) from None
 
     @classmethod
     def setUpClass(cls):
