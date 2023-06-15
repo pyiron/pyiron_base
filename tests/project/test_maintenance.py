@@ -41,7 +41,7 @@ class TestMaintenance(TestWithFilledProject):
 
     def test_repository_status(self):
         df = self.project.maintenance.get_repository_status()
-        self.assertIn('pyiron_base', df, 'Environment dependent, but pyiron_base should be in there!')
+        self.assertIn('pyiron_base', df.Module.values, 'Environment dependent, but pyiron_base should be in there!')
 
     def test_local_defragment_storage(self):
         self._assert_setup()
