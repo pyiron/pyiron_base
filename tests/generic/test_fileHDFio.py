@@ -31,31 +31,29 @@ def _write_full_hdf_content(hdf):
 def _check_full_hdf_values(self, hdf, group="content"):
     with self.subTest(group + "/array"):
         array = hdf[group + "/array"]
-        self.assertTrue(np.array_equal(array, np.array([1, 2, 3, 4, 5, 6])))
+        self.assertEqual(array, np.array([1, 2, 3, 4, 5, 6]))
         self.assertIsInstance(array, np.ndarray)
         self.assertEqual(array.dtype, np.dtype(int))
 
     with self.subTest(group + "/array_3d"):
         array = hdf[group]["array_3d"]
-        self.assertTrue(
-            np.array_equal(
+        self.assertEqual(
                 array,
                 np.array([[1, 2, 3], [4, 5, 6]]),
-            )
         )
         self.assertIsInstance(array, np.ndarray)
         self.assertEqual(array.dtype, np.dtype(int))
 
     with self.subTest(group + "/indices"):
         array = hdf[group + "/indices"]
-        self.assertTrue(np.array_equal(array, np.array([1, 1, 1, 1, 6])))
+        self.assertEqual(array, np.array([1, 1, 1, 1, 6]))
         self.assertIsInstance(array, np.ndarray)
         self.assertEqual(array.dtype, np.dtype(int))
 
     with self.subTest(group + "/traj"):
         array = hdf[group + "/traj"]
-        self.assertTrue(np.array_equal(array[0], np.array([[1, 2, 3], [4, 5, 6]])))
-        self.assertTrue(np.array_equal(array[1], np.array([[7, 8, 9]])))
+        self.assertEqual(array[0], np.array([[1, 2, 3], [4, 5, 6]]))
+        self.assertEqual(array[1], np.array([[7, 8, 9]]))
         self.assertIsInstance(array, np.ndarray)
         self.assertEqual(array.dtype, np.dtype(object))
 
@@ -68,11 +66,9 @@ def _check_full_hdf_values(self, hdf, group="content"):
     with self.subTest(group + "/dict_numpy"):
         content_dict = hdf[group + "/dict_numpy"]
         self.assertEqual(content_dict["key_1"], 1)
-        self.assertTrue(
-            np.array_equal(
-                content_dict["key_2"],
-                np.array([1, 2, 3, 4, 5, 6]),
-            )
+        self.assertEqual(
+            content_dict["key_2"],
+            np.array([1, 2, 3, 4, 5, 6]),
         )
 
     with self.subTest(group + "/group/some_entry"):
@@ -159,12 +155,12 @@ class TestFileHDFio(PyironTestCase):
 
         with self.assertLogs(state.logger):
             array = self.i_o_hdf5._convert_dtype_obj_array(int_array_as_objects_array)
-        self.assertTrue(np.array_equal(array, int_array_as_objects_array))
+        self.assertEqual(array, int_array_as_objects_array)
         self.assertEqual(array.dtype, np.dtype(int))
 
         with self.assertLogs(state.logger):
             array = self.i_o_hdf5._convert_dtype_obj_array(float_array_as_objects_array)
-        self.assertTrue(np.array_equal(array, float_array_as_objects_array))
+        self.assertEqual(array, float_array_as_objects_array)
         self.assertEqual(array.dtype, np.dtype(float))
 
     def test_array_type_conversion(self):
@@ -315,12 +311,10 @@ class TestFileHDFio(PyironTestCase):
             42,
             "default value not returned when value doesn't exist.",
         )
-        self.assertTrue(
-            np.array_equal(
+        self.assertEqual(
                 self.full_hdf5.get("content/array", default=42),
                 np.array([1, 2, 3, 4, 5, 6]),
-            ),
-            "default value returned when value does exist.",
+                "default value returned when value does exist.",
         )
         with self.assertRaises(ValueError):
             self.empty_hdf5.get("non_existing_key")

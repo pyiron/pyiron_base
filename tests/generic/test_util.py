@@ -124,6 +124,7 @@ class TestDeprecator(PyironTestCase):
 class TestImportAlarm(PyironTestCase):
 
     def setUp(self):
+        super().setUp()
         self.import_alarm = ImportAlarm()
 
         @self.import_alarm

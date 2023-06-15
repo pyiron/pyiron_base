@@ -47,6 +47,7 @@ class TestRunmode(PyironTestCase):
         queue_adapters.construct_adapters()
 
     def setUp(self) -> None:
+        super().setUp()
         self.server = Server()
         self.server_main = Server(queue="main")
 

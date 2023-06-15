@@ -36,6 +36,7 @@ class TestSettings(TestCase):
         s.update()
 
     def setUp(self) -> None:
+        super().setUp()
         try:
             self.default_loc.unlink()
         except FileNotFoundError:

@@ -13,6 +13,7 @@ from pyiron_base._tests import PyironTestCase
 class TestProjectData(PyironTestCase):
     @classmethod
     def setUpClass(cls):
+        super().setUpClass()
         cls.file_location = dirname(abspath(__file__)).replace("\\", "/")
         cls.project_name = join(cls.file_location, "test_data")
 
@@ -27,6 +28,7 @@ class TestProjectData(PyironTestCase):
         self.project.remove(enable=True)
 
     def setUp(self):
+        super().setUp()
         self.project = Project(self.project_name)
         self.data = ProjectData(project=self.project, table_name="data")
         self.data.foo = "foo"
