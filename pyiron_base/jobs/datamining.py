@@ -683,14 +683,15 @@ class TableJob(GenericJob):
         with self.project_hdf5.open("input") as hdf5_input:
             if "project" in hdf5_input.list_nodes():
                 project_dict = hdf5_input["project"]
-                project = self.project.__class__(
-                    path=project_dict["path"],
-                    user=project_dict["user"],
-                    sql_query=project_dict["sql_query"],
-                )
-                project._filter = project_dict["filter"]
-                project._inspect_mode = project_dict["inspect_mode"]
-                self.analysis_project = project
+                if os.path.exists(project_dict['path']):
+                    project = self.project.__class__(
+                        path=project_dict["path"],
+                        user=project_dict["user"],
+                        sql_query=project_dict["sql_query"],
+                    )
+                    project._filter = project_dict["filter"]
+                    project._inspect_mode = project_dict["inspect_mode"]
+                    self.analysis_project = project
             if "filter" in hdf5_input.list_nodes():
                 if hdf_version == "0.1.0":
                     self.pyiron_table._filter_function_str = hdf5_input["filter"]
