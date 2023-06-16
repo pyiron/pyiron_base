@@ -15,17 +15,6 @@ class TestMaintenance(TestWithFilledProject):
         job['user/some'] = _test_array(5)
         job['user/some'] = _test_array()
         self.initial_toy_1_hdf_file_size = job.project_hdf5.file_size(job.project_hdf5)
-        self.addTypeEqualityFunc(np.ndarray, self.assertArrayEqual)
-
-    def assertArrayEqual(self, first, second, msg=None):
-        self.assertIsInstance(first, np.ndarray, 'First argument is not a numpy array')
-        self.assertIsInstance(second, np.ndarray, 'Second argument is not a numpy array')
-
-        if not np.array_equal(first, second):
-            if msg is None:
-                self.fail(f'Arrays differ in shape or value {first} and {second}.')
-            else:
-                self.fail(msg)
 
     def _assert_setup(self):
         job_hdf = self.project['toy_1'].project_hdf5
