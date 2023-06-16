@@ -63,7 +63,7 @@ class TestFileTable(PyironTestCase):
         )
 
     def test_job_table(self):
-        pr = Project(dirname(__file__))
+        pr = Project(dirname(__file__) + "test_filetable_test_job_table")
         job = pr.create_job(job_type=ToyJob, job_name="toy_1")
         job.run()
         self.assertEqual(len(pr.job_table()), 1)
