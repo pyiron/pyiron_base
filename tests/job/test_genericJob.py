@@ -246,6 +246,8 @@ class TestGenericJob(TestWithFilledProject):
                 self.project.state.settings.configuration[wd_warn_key] = True
                 job = self.project.create_job(ToyJob, "test_write_warning_file")
                 job._create_working_directory()
+                job._python_only_job = False
+                job._write_work_dir_warnings = True
                 job.write_input()
                 self.assertCountEqual(
                     os.listdir(job.working_directory), ["input.yml", "WARNING_pyiron_modified_content"]
@@ -460,12 +462,11 @@ class TestGenericJob(TestWithFilledProject):
             wd_files = job_restart.list_files()
             self.assertEqual(
                 len(wd_files),
-                2,
-                "Only one input and the WARNING_pyiron_modified_content file should "
-                "be present in the working directory",
+                1,
+                "Only one input file should be present in the working directory",
             )
             self.assertCountEqual(
-                wd_files, ["input.yml", "WARNING_pyiron_modified_content"]
+                wd_files, ["input.yml"]
             )
         finally:
             self.project.state.settings.configuration[

@@ -17,6 +17,7 @@ class TestFileTable(PyironTestCase):
     #       touching them right now. -Liam Huber
 
     def setUp(self) -> None:
+        super().setUp()
         here = dirname(abspath(__file__))
         self.loc1 = join(here, "ft_test_loc1")
         self.loc2 = join(here, "ft_test_loc2")

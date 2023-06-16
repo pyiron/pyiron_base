@@ -74,10 +74,19 @@ class Server:  # add the option to return the job id and the hold id to the serv
     """
 
     def __init__(
-        self, host=None, queue=None, cores=1, threads=1, run_mode="modal", new_hdf=True
+        self,
+        host=None,
+        queue=None,
+        cores=1,
+        threads=1,
+        gpus=None,
+        run_mode="modal",
+        new_hdf=True,
     ):
         self._cores = cores
         self._threads = threads
+        self._active_queue = None
+        self._gpus = gpus
         self._run_time = None
         self._memory_limit = None
         self._host = self._init_host(host=host)
@@ -229,6 +238,14 @@ class Server:  # add the option to return the job id and the hold id to the serv
     @threads.setter
     def threads(self, number_of_threads):
         self._threads = number_of_threads
+
+    @property
+    def gpus(self):
+        return self._gpus
+
+    @gpus.setter
+    def gpus(self, number_of_gpus):
+        self._gpus = number_of_gpus
 
     @property
     def cores(self):
@@ -447,6 +464,8 @@ class Server:  # add the option to return the job id and the hold id to the serv
         hdf_dict["accept_crash"] = self.accept_crash
         if len(self.additional_arguments) > 0:
             hdf_dict["additional_arguments"] = self.additional_arguments
+        if self._gpus is not None:
+            hdf_dict["gpus"] = self._gpus
 
         if group_name is not None:
             with hdf.open(group_name) as hdf_group:
@@ -490,6 +509,8 @@ class Server:  # add the option to return the job id and the hold id to the serv
             self._threads = hdf_dict["threads"]
         if "additional_arguments" in hdf_dict.keys():
             self.additional_arguments = hdf_dict["additional_arguments"]
+        if "gpus" in hdf_dict.keys():
+            self._gpus = hdf_dict["gpus"]
         self._new_hdf = hdf_dict["new_h5"] == 1
 
     def db_entry(self):

@@ -20,6 +20,7 @@ class TestProjectData(TestWithProject):
             j.run()
 
     def setUp(self):
+        super().setUp()
         self.table = self.project.create.table('test_table')
         self.table.filter_function = lambda j: j.name in ["test_a", "test_b"]
         self.table.add['name'] = lambda j: j.name
