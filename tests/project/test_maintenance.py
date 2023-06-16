@@ -4,33 +4,38 @@ from pyiron_base import GenericJob
 
 
 def _test_array(start=0):
-    return np.arange(start, start+100, dtype=object).reshape(5, 20)
+    return np.arange(start, start + 100, dtype=object).reshape(5, 20)
 
 
 class TestMaintenance(TestWithFilledProject):
-
     def setUp(self) -> None:
         super().setUp()
-        job: GenericJob = self.project['toy_1']
-        job['user/some'] = _test_array(5)
-        job['user/some'] = _test_array()
+        job: GenericJob = self.project["toy_1"]
+        job["user/some"] = _test_array(5)
+        job["user/some"] = _test_array()
         self.initial_toy_1_hdf_file_size = job.project_hdf5.file_size(job.project_hdf5)
 
     def _assert_setup(self):
-        job_hdf = self.project['toy_1'].project_hdf5
-        array = self.project['toy_1/user/some']
+        job_hdf = self.project["toy_1"].project_hdf5
+        array = self.project["toy_1/user/some"]
         self.assertEqual(array, _test_array())
-        self.assertAlmostEqual(job_hdf.file_size(job_hdf), self.initial_toy_1_hdf_file_size)
+        self.assertAlmostEqual(
+            job_hdf.file_size(job_hdf), self.initial_toy_1_hdf_file_size
+        )
 
     def _assert_hdf_rewrite(self):
-        job_hdf = self.project['toy_1'].project_hdf5
-        array = self.project['toy_1/user/some']
+        job_hdf = self.project["toy_1"].project_hdf5
+        array = self.project["toy_1/user/some"]
         self.assertEqual(array, _test_array())
         self.assertLess(job_hdf.file_size(job_hdf), self.initial_toy_1_hdf_file_size)
 
     def test_repository_status(self):
         df = self.project.maintenance.get_repository_status()
-        self.assertIn('pyiron_base', df.Module.values, 'Environment dependent, but pyiron_base should be in there!')
+        self.assertIn(
+            "pyiron_base",
+            df.Module.values,
+            "Environment dependent, but pyiron_base should be in there!",
+        )
 
     def test_local_defragment_storage(self):
         self._assert_setup()
@@ -40,18 +45,17 @@ class TestMaintenance(TestWithFilledProject):
     def test_update_base_to_current(self):
         self._assert_setup()
 
-        with self.subTest('Version bigger 0'):
+        with self.subTest("Version bigger 0"):
             with self.assertRaises(ValueError):
-                self.project.maintenance.update.base_to_current('1.0.2')
+                self.project.maintenance.update.base_to_current("1.0.2")
                 self._assert_setup()
 
-        with self.subTest(msg='Version not smaller 4, no action expected!'
-        ):
-            self.project.maintenance.update.base_to_current('0.4.3')
+        with self.subTest(msg="Version not smaller 4, no action expected!"):
+            self.project.maintenance.update.base_to_current("0.4.3")
             self._assert_setup()
 
-        with self.subTest(msg='Version < 0.4: should run'):
-            self.project.maintenance.update.base_to_current('0.3.999')
+        with self.subTest(msg="Version < 0.4: should run"):
+            self.project.maintenance.update.base_to_current("0.3.999")
             self._assert_hdf_rewrite()
 
     def test_update_v03_to_v04_None(self):
