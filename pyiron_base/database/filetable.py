@@ -571,7 +571,11 @@ class FileTable(IsDatabase, metaclass=FileTableSingleton):
                 "status": get_job_status_from_file(hdf5_file=path, job_name=job),
                 "job": job,
                 "subjob": "/" + job,
-                "project": os.path.dirname(path) + "/",
+                "project": os.path.dirname(path).replace("\\", "/") + "/",
+                # pyiron Project paths are forced to be posix-like with / instead of \
+                # in order for the contains and endswith tests down in _get_job_table
+                # to work on windows, we need to make sure that the file table obeys
+                # this conversion
                 "timestart": time,
                 "timestop": time,
                 "totalcputime": 0.0,
