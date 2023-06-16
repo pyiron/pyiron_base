@@ -683,7 +683,7 @@ class TableJob(GenericJob):
         with self.project_hdf5.open("input") as hdf5_input:
             if "project" in hdf5_input.list_nodes():
                 project_dict = hdf5_input["project"]
-                if os.path.exists(project_dict['path']):
+                if os.path.exists(project_dict["path"]):
                     project = self.project.__class__(
                         path=project_dict["path"],
                         user=project_dict["user"],
