@@ -454,8 +454,10 @@ def run_job_with_runmode_srun(job):
 def run_job_with_runmode_flux(job, executor, gpus_per_slot=None):
     if not flux_available:
         raise ModuleNotFoundError(
-            "No module named 'flux'. No linux you can install flux via conda."
-            + "'conda install -c conda-forge flux'"
+            "No module named 'flux'. Running in flux mode is only available on Linux;"
+            "For CPU jobs, please use `conda install -c conda-forge flux-core`; for "
+            "GPU support you will additionally need "
+            "`conda install -c conda-forge flux-sched`"
         )
     if not state.database.database_is_disabled:
         executable_template = Template(
