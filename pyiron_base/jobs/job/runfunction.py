@@ -7,9 +7,18 @@ import os
 import posixpath
 import subprocess
 
+from jinja2 import Template
+
 from pyiron_base.utils.deprecate import deprecate
 from pyiron_base.jobs.job.wrapper import JobWrapper
 from pyiron_base.state import state
+
+try:
+    import flux.job
+
+    flux_available = True
+except ImportError:
+    flux_available = False
 
 
 """
@@ -39,6 +48,7 @@ of the server object attached to the job object: job.server.run_mode
     interactive_non_modal: run_job_with_runmode_interactive_non_modal
     queue: run_job_with_runmode_queue
     srun: run_job_with_runmode_srun
+    flux: run_job_with_runmode_flux
     thread: only affects children of a GenericMaster 
     worker: only affects children of a GenericMaster 
     
@@ -76,7 +86,7 @@ def run_job_with_status_initialized(job, debug=False):
         print("job exists already and therefore was not created!")
     else:
         job.save()
-        job.run()
+        return job.run()
 
 
 def run_job_with_status_created(job):
@@ -102,6 +112,16 @@ def run_job_with_status_created(job):
         job.run_static()
     elif job.server.run_mode.srun:
         run_job_with_runmode_srun(job=job)
+    elif job.server.run_mode.flux:
+        if job.server.gpus is not None:
+            gpus_per_slot = int(job.server.gpus / job.server.cores)
+        else:
+            gpus_per_slot = None
+        return run_job_with_runmode_flux(
+            job=job,
+            executor=job.flux_executor,
+            gpus_per_slot=gpus_per_slot,
+        )
     elif (
         job.server.run_mode.non_modal
         or job.server.run_mode.thread
@@ -429,6 +449,53 @@ def run_job_with_runmode_srun(job):
         stderr=subprocess.STDOUT,
         universal_newlines=True,
     )
+
+
+def run_job_with_runmode_flux(job, executor, gpus_per_slot=None):
+    if not flux_available:
+        raise ModuleNotFoundError(
+            "No module named 'flux'. Running in flux mode is only available on Linux;"
+            "For CPU jobs, please use `conda install -c conda-forge flux-core`; for "
+            "GPU support you will additionally need "
+            "`conda install -c conda-forge flux-sched libhwloc=*=cuda*`"
+        )
+    if not state.database.database_is_disabled:
+        executable_template = Template(
+            """\
+#!/bin/bash
+python -m pyiron_base.cli wrapper -p {{working_directory}} -j {{job_id}}
+"""
+        )
+        exeuctable_str = executable_template.render(
+            working_directory=job.working_directory,
+            job_id=str(job.job_id),
+        )
+        job_name = "pi_" + str(job.job_id)
+    else:
+        executable_template = Template(
+            """\
+#!/bin/bash
+python -m pyiron_base.cli wrapper -p {{working_directory}} -f {{file_name}}{{h5_path}}
+"""
+        )
+        exeuctable_str = executable_template.render(
+            working_directory=job.working_directory,
+            file_name=job.project_hdf5.file_name,
+            h5_path=job.project_hdf5.h5_path,
+        )
+        job_name = "pi_" + job.job_name
+
+    jobspec = flux.job.JobspecV1.from_batch_command(
+        jobname=job_name,
+        script=exeuctable_str,
+        num_nodes=1,
+        cores_per_slot=1,
+        gpus_per_slot=gpus_per_slot,
+        num_slots=job.server.cores,
+    )
+    jobspec.cwd = job.project_hdf5.working_directory
+    jobspec.environment = dict(os.environ)
+    return executor.submit(jobspec)
 
 
 def run_time_decorator(func):
