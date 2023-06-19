@@ -154,7 +154,6 @@ class GenericJob(JobCore):
         self._compress_by_default = False
         self._python_only_job = False
         self._write_work_dir_warnings = True
-        self._flux_executor = None
         self.interactive_cache = None
         self.error = GenericError(job=self)
 
@@ -209,15 +208,6 @@ class GenericJob(JobCore):
         """
         self._executable_activate()
         self._executable.executable_path = exe
-
-    @property
-    def flux_executor(self):
-        return self._flux_executor
-
-    @flux_executor.setter
-    def flux_executor(self, exe):
-        self.server.run_mode.flux = True
-        self._flux_executor = exe
 
     @property
     def server(self):
@@ -700,9 +690,9 @@ class GenericJob(JobCore):
                 if repair and self.job_id and not self.status.finished:
                     self._run_if_repair()
                 elif status == "initialized":
-                    return self._run_if_new(debug=debug)
+                    self._run_if_new(debug=debug)
                 elif status == "created":
-                    return self._run_if_created()
+                    self._run_if_created()
                 elif status == "submitted":
                     run_job_with_status_submitted(job=self)
                 elif status == "running":
@@ -1201,7 +1191,7 @@ class GenericJob(JobCore):
         Args:
             debug (bool): Debug Mode
         """
-        return run_job_with_status_initialized(job=self, debug=debug)
+        run_job_with_status_initialized(job=self, debug=debug)
 
     def _run_if_created(self):
         """
