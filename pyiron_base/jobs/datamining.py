@@ -692,6 +692,10 @@ class TableJob(GenericJob):
                     project._filter = project_dict["filter"]
                     project._inspect_mode = project_dict["inspect_mode"]
                     self.analysis_project = project
+                else:
+                    self._logger.warning(
+                        f"Could not instantiate analysis_project, no such path {project_dict['path']}."
+                    )
             if "filter" in hdf5_input.list_nodes():
                 if hdf_version == "0.1.0":
                     self.pyiron_table._filter_function_str = hdf5_input["filter"]
