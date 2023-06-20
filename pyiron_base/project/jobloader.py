@@ -8,17 +8,15 @@ loading jobs.
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import Union, Callable, TYPE_CHECKING
+from typing import TYPE_CHECKING
 
 import numpy as np
 
 from pyiron_base.state import state
-from pyiron_base.database.filetable import FileTable
 from pyiron_base.database.jobtable import get_job_id
 from pyiron_base.jobs.job.util import _get_safe_job_name
 
 if TYPE_CHECKING:
-    from pyiron_base.database.generic import IsDatabase
     from pyiron_base.jobs.job.generic import GenericJob
     from pyiron_base.jobs.job.path import JobPath
     from pyiron_base.project.generic import Project
