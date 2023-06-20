@@ -534,9 +534,15 @@ class FileTable(IsDatabase, metaclass=FileTableSingleton):
                     )
                 ]
             )
+            sanitized_paths = self._fileindex.dataframe.path.str.replace("\\", "/")
+            # The files_list is generated using project path values
+            # In pyiron, these are all forced to be posix-like with /
+            # But _fileindex is of type PyFileIndex, which does _not_ modify paths
+            # so to get the two compatible for an isin check, we need to sanitize the
+            # _fileindex.dataframe.path results
             df_new = self._fileindex.dataframe[
                 ~self._fileindex.dataframe.is_directory
-                & ~self._fileindex.dataframe.path.isin(files_lst)
+                & ~sanitized_paths.isin(files_lst)
             ]
         else:
             files_lst, working_dir_lst = [], []
@@ -565,7 +571,11 @@ class FileTable(IsDatabase, metaclass=FileTableSingleton):
                 "status": get_job_status_from_file(hdf5_file=path, job_name=job),
                 "job": job,
                 "subjob": "/" + job,
-                "project": os.path.dirname(path) + "/",
+                "project": os.path.dirname(path).replace("\\", "/") + "/",
+                # pyiron Project paths are forced to be posix-like with / instead of \
+                # in order for the contains and endswith tests down in _get_job_table
+                # to work on windows, we need to make sure that the file table obeys
+                # this conversion
                 "timestart": time,
                 "timestop": time,
                 "totalcputime": 0.0,
