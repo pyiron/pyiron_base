@@ -6,9 +6,10 @@ from os import mkdir, rmdir
 from os.path import abspath, dirname, join
 from time import time
 
-from pyiron_base._tests import PyironTestCase
+from pyiron_base._tests import PyironTestCase, ToyJob
 
 from pyiron_base.database.filetable import FileTable
+from pyiron_base.project.generic import Project
 
 
 class TestFileTable(PyironTestCase):
@@ -60,3 +61,30 @@ class TestFileTable(PyironTestCase):
             ft is another_ft,
             msg="New paths should create new FileTable instances"
         )
+
+    def test_job_table(self):
+        pr = Project(dirname(__file__) + "test_filetable_test_job_table")
+        job = pr.create_job(job_type=ToyJob, job_name="toy_1")
+        job.run()
+        self.assertEqual(len(pr.job_table()), 1)
+
+        with self.subTest("Check if the file table can see the job and see it once"):
+            ft = FileTable(index_from=pr.path)
+            self.assertEqual(
+                len(pr.job_table()),
+                len(ft._job_table),
+                msg="We expect to see exactly the same job(s) that is in the project's "
+                    "database job table"
+            )
+
+            ft.update()
+            self.assertEqual(
+                len(pr.job_table()),
+                len(ft._job_table),
+                msg="update is called in each _get_job_table call, and if path "
+                    "comparisons fail -- e.g. because you're on windows but pyiron "
+                    "Projects force all the paths to use \\ instead of /, then the "
+                    "update can (and was before the PR where this test got added) "
+                    "duplicate jobs in the job table."
+            )
+        pr.remove_jobs(recursive=True, progress=False, silently=True)
