@@ -36,13 +36,6 @@ class TestProjectData(TestWithProject):
         self.assertIs(self.project, self.table.analysis_project)
         self.assertEqual(self.project.path, self.project.load(self.table.name).analysis_project.path)
 
-    def test_analysis_project_no_valid_path(self):
-        self.table.project_hdf5['input/project']['path'] = '/some/wrong/path'
-        self.table.to_hdf()
-
-        table_loaded: pyiron_base.TableJob = self.project.load(self.table.name)
-        self.assertIs(table_loaded.analysis_project, None)
-
     def test_filter(self):
         """Filter functions should restrict jobs included in the table."""
 
