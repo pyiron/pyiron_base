@@ -8,7 +8,6 @@ dependencies:
 - h5py
 - numpy
 - pandas
-- pathlib2
 - pint
 - psutil
 - pyfileindex
