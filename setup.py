@@ -32,7 +32,7 @@ setup(
         'dill==0.3.6',
         'gitpython==3.1.31',
         'h5io==0.1.7',
-        'h5py==3.8.0',
+        'h5py==3.9.0',
         'numpy==1.24.3',
         'pandas==2.0.2',
         'pathlib2==2.3.7.post1',
