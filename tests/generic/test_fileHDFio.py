@@ -182,7 +182,9 @@ class TestFileHDFio(PyironTestCase):
 
         with self.subTest("object_array_with_lists"):
             array = hdf["object_array_with_lists"]
-            np.array_equal(array, object_array_with_lists)
+            # HDF layer implicitely converts sub lists to array, so enforce
+            # that here as well
+            self.assertEqual(array, np.array([np.asarray(a) for a in object_array_with_lists]))
             self.assertIsInstance(array, np.ndarray)
             self.assertEqual(
                 array.dtype,
@@ -205,7 +207,7 @@ class TestFileHDFio(PyironTestCase):
                 array = hdf["int_array_as_objects_array"]
                 self.assertEqual(len(w.output), 1)
                 self.assertTrue(w.output[0].startswith(warn_msg_start))
-            np.array_equal(array, int_array_as_objects_array)
+            self.assertEqual(array, int_array_as_objects_array)
             self.assertIsInstance(array, np.ndarray)
             self.assertEqual(
                 array.dtype,
@@ -219,7 +221,7 @@ class TestFileHDFio(PyironTestCase):
                 array = hdf["float_array_as_objects_array"]
                 self.assertEqual(len(w.output), 1)
                 self.assertTrue(w.output[0].startswith(warn_msg_start))
-            np.array_equal(array, float_array_as_objects_array)
+            self.assertEqual(array, float_array_as_objects_array)
             self.assertIsInstance(array, np.ndarray)
             self.assertEqual(
                 array.dtype,
