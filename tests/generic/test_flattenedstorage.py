@@ -561,3 +561,38 @@ class TestFlattenedStorage(TestWithProject):
         self.assertTrue(np.all(bar==store.get_array("bar")))
         self.assertTrue(np.all(foobar[3:5]==store.get_array("foobar")[3:5]))
         self.assertTrue(np.all(barfoo[3:10]==store.get_array("barfoo")[3:10]))
+
+    def test_del_array(self):
+
+        store = FlattenedStorage(
+                elem1=[ [1], [2, 3], [4, 5, 6] ],
+                elem2=[ [1], [2, 3], [4, 5, 6] ],
+                chunk1=[-1, -2, -3],
+                chunk2=[-1, -2, -3],
+        )
+        with self.subTest("ignore_missing"):
+            with self.assertRaises(KeyError, msg="del_array doesn't raise an error on missing key"):
+                store.del_array("foobar")
+            with self.assertRaises(KeyError, msg="__delitem__ doesn't raise an error on missing key"):
+                del store["foobar"]
+            try:
+                store.del_array("foobar", ignore_missing=True)
+            except KeyError:
+                self.fail("del_array raises error with ignore_missing present")
+
+        with self.subTest("per chunk"):
+            del store["chunk1"]
+            self.assertTrue("chunk1" not in store.list_arrays(),
+                            "Per chunk array still present after __delitem__")
+            store.del_array("chunk2")
+            self.assertTrue("chunk2" not in store.list_arrays(),
+                            "Per chunk array still present after del_array")
+
+
+        with self.subTest("per element"):
+            del store["elem1"]
+            self.assertTrue("elem1" not in store.list_arrays(),
+                            "Per element array still present after __delitem__")
+            store.del_array("elem2")
+            self.assertTrue("elem2" not in store.list_arrays(),
+                            "Per element array still present after del_array")
