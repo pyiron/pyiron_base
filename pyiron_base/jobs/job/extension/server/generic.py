@@ -5,6 +5,7 @@
 Server object class which is connected to each job containing the technical details how the job is executed.
 """
 
+from concurrent.futures import Executor
 from collections import OrderedDict
 import numbers
 from pyiron_base.state import state
@@ -71,6 +72,10 @@ class Server:  # add the option to return the job id and the hold id to the serv
         .. attribute:: new_hdf
 
             defines whether a subjob should be stored in the same HDF5 file or in a new one.
+
+        .. attribute:: executor
+
+            the executor can be used to execute the job object
     """
 
     def __init__(
@@ -91,6 +96,7 @@ class Server:  # add the option to return the job id and the hold id to the serv
         self._memory_limit = None
         self._host = self._init_host(host=host)
         self._run_mode = Runmode()
+        self._executor = None
 
         self.queue = queue
 
@@ -440,6 +446,17 @@ class Server:  # add the option to return the job id and the hold id to the serv
             return state.queue_adapter.queue_view
         else:
             return None
+
+    @property
+    def executor(self):
+        return self._executor
+
+    @executor.setter
+    def executor(self, exe):
+        if isinstance(exe, Executor):
+            self._executor = exe
+        else:
+            raise TypeError("The executor has to be derived from the concurrent.futures.Executor class.")
 
     def to_hdf(self, hdf, group_name=None):
         """
