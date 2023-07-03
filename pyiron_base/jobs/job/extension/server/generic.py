@@ -456,7 +456,9 @@ class Server:  # add the option to return the job id and the hold id to the serv
         if isinstance(exe, Executor):
             self._executor = exe
         else:
-            raise TypeError("The executor has to be derived from the concurrent.futures.Executor class.")
+            raise TypeError(
+                "The executor has to be derived from the concurrent.futures.Executor class."
+            )
 
     def to_hdf(self, hdf, group_name=None):
         """
