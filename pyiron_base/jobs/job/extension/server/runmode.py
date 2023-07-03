@@ -39,9 +39,13 @@ class Runmode(object):
     - queue: submit the job to the queuing system
     - manual: let the user manually execute the job
     - thread: internal job mode, which is selected when the master job is send to the queue.
+    - worker: submit the job to the worker job for execution
     - interactive: the interactive run mode
+    - interactive_non_modal: the combination of the interactive and the non_modal mode
+    - srun: call SLURM to start the subprocess rather than starting it directly
+
     Args:
-        mode (str): ['modal', 'non_modal', 'queue', 'manual', 'thread', 'interactive']
+        mode (str): ['modal', 'non_modal', 'queue', 'manual', 'thread', 'worker', 'interactive', 'interactive_non_modal', 'srun']
     """
 
     def __init__(self, mode="modal"):
