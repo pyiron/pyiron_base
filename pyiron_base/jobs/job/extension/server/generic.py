@@ -8,9 +8,11 @@ Server object class which is connected to each job containing the technical deta
 from concurrent.futures import Executor
 from collections import OrderedDict
 import numbers
+import socket
+from typing import Union
+
 from pyiron_base.state import state
 from pyiron_base.jobs.job.extension.server.runmode import Runmode
-import socket
 
 __author__ = "Jan Janssen"
 __copyright__ = (
@@ -76,6 +78,10 @@ class Server:  # add the option to return the job id and the hold id to the serv
         .. attribute:: executor
 
             the executor can be used to execute the job object
+
+        .. attribute:: future
+
+            the concurrent.futures.Future object for monitoring the execution of the job object
     """
 
     def __init__(
@@ -108,6 +114,7 @@ class Server:  # add the option to return the job id and the hold id to the serv
         self._new_hdf = new_hdf
         self._send_to_db = False
         self._structure_id = None
+        self._future = None
         self._accept_crash = False
         self.additional_arguments = {}
 
@@ -448,18 +455,29 @@ class Server:  # add the option to return the job id and the hold id to the serv
             return None
 
     @property
-    def executor(self):
+    def executor(self) -> Union[Executor, None]:
         return self._executor
 
     @executor.setter
-    def executor(self, exe):
+    def executor(self, exe: Union[Executor, None]):
         if isinstance(exe, Executor):
             self._executor = exe
             self.run_mode.executor = True
+        elif exe is None:
+            self._executor = None
+            self.run_mode.executor = False
         else:
             raise TypeError(
                 "The executor has to be derived from the concurrent.futures.Executor class."
             )
+
+    @property
+    def future(self):
+        return self._future
+
+    @future.setter
+    def future(self, future_obj):
+        self._future = future_obj
 
     def to_hdf(self, hdf, group_name=None):
         """

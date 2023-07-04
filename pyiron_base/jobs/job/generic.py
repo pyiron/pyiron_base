@@ -694,9 +694,9 @@ class GenericJob(JobCore):
                 if repair and self.job_id and not self.status.finished:
                     self._run_if_repair()
                 elif status == "initialized":
-                    return self._run_if_new(debug=debug)
+                    self._run_if_new(debug=debug)
                 elif status == "created":
-                    return self._run_if_created()
+                    self._run_if_created()
                 elif status == "submitted":
                     run_job_with_status_submitted(job=self)
                 elif status == "running":
@@ -1195,7 +1195,7 @@ class GenericJob(JobCore):
         Args:
             debug (bool): Debug Mode
         """
-        return run_job_with_status_initialized(job=self, debug=debug)
+        run_job_with_status_initialized(job=self, debug=debug)
 
     def _run_if_created(self):
         """

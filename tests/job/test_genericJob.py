@@ -508,19 +508,20 @@ class TestGenericJob(TestWithFilledProject):
         j.input["accepted_codes"] = [1]
         j.server.executor = ProcessPoolExecutor()
         self.assertTrue(j.server.run_mode.executor)
-        fs = j.run()
-        fs.result()
-        self.assertTrue(fs.done())
+        j.run()
+        j.server.future.result()
+        self.assertTrue(j.server.future.done())
 
     def test_job_executor_copy(self):
         j1 = self.project.create_job(ReturnCodeJob, "job_with_executor_copy")
         j1.input["accepted_codes"] = [1]
         j1.server.executor = ProcessPoolExecutor()
         j2 = j1.copy()
+        self.assertIs(j2.server.executor, j1.server.executor)
         self.assertTrue(j2.server.run_mode.executor)
-        fs = j2.run()
-        fs.result()
-        self.assertTrue(fs.done())
+        j2.run()
+        j2.server.future.result()
+        self.assertTrue(j2.server.future.done())
 
 
 if __name__ == "__main__":
