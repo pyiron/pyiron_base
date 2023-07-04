@@ -8,6 +8,8 @@ import os
 import posixpath
 import subprocess
 
+from jinja2 import Template
+
 from pyiron_base.utils.deprecate import deprecate
 from pyiron_base.jobs.job.wrapper import JobWrapper
 from pyiron_base.state import state
@@ -495,7 +497,7 @@ def run_job_with_runmode_executor(job, executor, gpus_per_slot=None):
         return run_job_with_runmode_executor_futures(job=job, executor=executor)
     else:
         raise NotImplementedError(
-            "Currently only concurrent.futures.ProcessPoolExecutor is supported."
+            "Currently only flux.job.FluxExecutor and concurrent.futures.ProcessPoolExecutor are supported."
         )
 
 
@@ -551,7 +553,12 @@ def run_job_with_runmode_executor_flux(job, executor, gpus_per_slot=None):
 
     >>> from flux.job import FluxExecutor
     >>> job.server.executor = FluxExecutor()
-    >>> fs = job.run()
+    >>> job.run()
+    >>> job.server.future.done()
+    False
+    >>> job.server.future.result()
+    >>> job.server.future.done()
+    True
 
     A word of caution - flux is currently only available on Linux, for all other operation systems the ProcessPoolExecutor
     from the python standard library concurrent.futures is recommended. The advantage of flux over the ProcessPoolExecutor

@@ -6,6 +6,7 @@ dependencies:
 - gitpython
 - h5io
 - h5py
+- jinja2
 - numpy
 - pandas
 - pint
