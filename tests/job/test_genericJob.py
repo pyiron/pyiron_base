@@ -517,7 +517,7 @@ class TestGenericJob(TestWithFilledProject):
         j1.input["accepted_codes"] = [1]
         j1.server.executor = ProcessPoolExecutor()
         j2 = j1.copy()
-        self.assertIs(j2.server.executor, j.server.executor)
+        self.assertIs(j2.server.executor, j1.server.executor)
         self.assertTrue(j2.server.run_mode.executor)
         j2.run()
         j2.server.future.result()
