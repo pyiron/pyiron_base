@@ -16,7 +16,6 @@ from pyiron_base.state import state
 from pyiron_base.utils.instance import static_isinstance
 
 
-
 """
 The function job.run() inside pyiron is executed differently depending on the status of the job object. This module 
 introduces the most general run functions and how they are selected. 
