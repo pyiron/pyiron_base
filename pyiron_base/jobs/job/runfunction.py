@@ -8,8 +8,6 @@ import os
 import posixpath
 import subprocess
 
-from jinja2 import Template
-
 from pyiron_base.utils.deprecate import deprecate
 from pyiron_base.jobs.job.wrapper import JobWrapper
 from pyiron_base.state import state
@@ -81,7 +79,7 @@ def run_job_with_status_initialized(job, debug=False):
         print("job exists already and therefore was not created!")
     else:
         job.save()
-        return job.run()
+        job.run()
 
 
 def run_job_with_status_created(job):
@@ -112,7 +110,7 @@ def run_job_with_status_created(job):
             gpus_per_slot = int(job.server.gpus / job.server.cores)
         else:
             gpus_per_slot = None
-        return run_job_with_runmode_executor(
+        run_job_with_runmode_executor(
             job=job,
             executor=job.server.executor,
             gpus_per_slot=gpus_per_slot,
@@ -454,7 +452,12 @@ def run_job_with_runmode_executor(job, executor, gpus_per_slot=None):
     functionality for pyiron jobs. An executor is set as an attribute to the server object:
 
     >>> job.server.executor = concurrent.futures.Executor()
-    >>> fs = job.run()
+    >>> job.run()
+    >>> job.server.future.done()
+    False
+    >>> job.server.future.result()
+    >>> job.server.future.done()
+    True
 
     When the job is executed by calling the run() function a future object is returned. The job is then executed in the
     background and the user can use the future object to check the status of the job.
@@ -464,13 +467,15 @@ def run_job_with_runmode_executor(job, executor, gpus_per_slot=None):
         executor (concurrent.futures.Executor): executor class which implements the executor interface defined in the
                                                 python concurrent.futures.Executor class.
         gpus_per_slot (int): number of GPUs per MPI rank, typically 1
-
-     Returns:
-         concurrent.futures.Future: future object to develop asynchronous simulation protocols
     """
 
     if static_isinstance(
-        obj=job, obj_type="pyiron_base.jobs.master.generic.GenericMaster"
+        obj=job,
+        obj_type="pyiron_base.jobs.master.generic.GenericMaster"
+        # The static check is used to avoid a circular import:
+        # runfunction -> GenericJob -> GenericMaster -> runfunction
+        # This smells a bit, so if a better architecture is found in the future, use it
+        # to avoid string-based specifications
     ):
         raise NotImplementedError(
             "Currently job.server.run_mode.executor does not support GenericMaster jobs."
@@ -479,7 +484,7 @@ def run_job_with_runmode_executor(job, executor, gpus_per_slot=None):
         return run_job_with_runmode_executor_futures(job=job, executor=executor)
     else:
         raise NotImplementedError(
-            "Currently only flux.job.FluxExecutor and concurrent.futures.ProcessPoolExecutor are supported."
+            "Currently only concurrent.futures.ProcessPoolExecutor is supported."
         )
 
 
@@ -489,46 +494,39 @@ def run_job_with_runmode_executor_futures(job, executor):
     module. The ProcessPoolExecutor does not provide any resource management, so the user is responsible to keep track of
     the number of compute cores in use, as over-subscription can lead to low performance.
 
+    The [ProcessPoolExecutor docs](https://docs.python.org/3/library/concurrent.futures.html#processpoolexecutor) state: "The __main__ module must be importable by worker subprocesses. This means that ProcessPoolExecutor will not work in the interactive interpreter." (i.e. Jupyter notebooks). For standard usage this is a non-issue, but for the edge case of job classes defined in-notebook (e.g. children of `PythonTemplateJob`), the using the ProcessPoolExecutor will result in errors. To resolve this, relocate such classes to an importable .py file.
+
     >>> from concurrent.futures import ProcessPoolExecutor
     >>> job.server.executor = ProcessPoolExecutor()
-    >>> fs = job.run()
+    >>> job.server.future.done()
+    False
+    >>> job.server.future.result()
+    >>> job.server.future.done()
+    True
 
     Args:
         job (GenericJob): pyiron job object
         executor (concurrent.futures.Executor): executor class which implements the executor interface defined in the
                                                 python concurrent.futures.Executor class.
-
-     Returns:
-         concurrent.futures.Future: future object to develop asynchronous simulation protocols
     """
-    if not state.database.database_is_disabled:
-        if not state.database.using_local_database:
-            return executor.submit(
-                multiprocess_wrapper,
-                working_directory=job.project_hdf5.working_directory,
-                job_id=job.job_id,
-                file_path=None,
-                debug=False,
-                connection_string=None,
-            )
-        else:
-            return executor.submit(
-                multiprocess_wrapper,
-                working_directory=job.project_hdf5.working_directory,
-                job_id=job.job_id,
-                file_path=None,
-                debug=False,
-                connection_string=str(job.project.db.conn.engine.url),
-            )
+    if state.database.database_is_disabled:
+        file_path = job.project_hdf5.file_name + job.project_hdf5.h5_path
+        connection_string = None
     else:
-        return executor.submit(
-            multiprocess_wrapper,
-            working_directory=job.project_hdf5.working_directory,
-            job_id=None,
-            file_path=job.project_hdf5.file_name + job.project_hdf5.h5_path,
-            debug=False,
-            connection_string=None,
-        )
+        file_path = None
+        if state.database.using_local_database:
+            connection_string = str(job.project.db.conn.engine.url)
+        else:
+            connection_string = None
+
+    job.server.future = executor.submit(
+        multiprocess_wrapper,
+        working_directory=job.project_hdf5.working_directory,
+        job_id=job.job_id,
+        file_path=file_path,
+        debug=False,
+        connection_string=connection_string,
+    )
 
 
 def run_time_decorator(func):
