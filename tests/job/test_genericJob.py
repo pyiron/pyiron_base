@@ -4,6 +4,7 @@
 
 import unittest
 import os
+from concurrent.futures import ProcessPoolExecutor
 from pyiron_base.storage.parameters import GenericParameters
 from pyiron_base.jobs.job.generic import GenericJob
 from pyiron_base._tests import TestWithFilledProject, ToyJob
@@ -501,6 +502,26 @@ class TestGenericJob(TestWithFilledProject):
         except RuntimeError:
             pass
         self.assertTrue(j.status.aborted, "Job did not abort even though return code is 2!")
+
+    def test_job_executor(self):
+        j = self.project.create_job(ReturnCodeJob, "job_with_executor")
+        j.input["accepted_codes"] = [1]
+        j.server.executor = ProcessPoolExecutor()
+        self.assertTrue(j.server.run_mode.executor)
+        fs = j.run()
+        fs.result()
+        self.assertTrue(fs.done())
+
+    def test_job_executor_copy(self):
+        j1 = self.project.create_job(ReturnCodeJob, "job_with_executor_copy")
+        j1.input["accepted_codes"] = [1]
+        j1.server.executor = ProcessPoolExecutor()
+        j2 = j1.copy()
+        self.assertTrue(j2.server.run_mode.executor)
+        fs = j2.run()
+        fs.result()
+        self.assertTrue(fs.done())
+
 
 if __name__ == "__main__":
     unittest.main()

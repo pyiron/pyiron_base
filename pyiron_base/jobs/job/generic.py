@@ -466,6 +466,10 @@ class GenericJob(JobCore):
         _job_reload_after_copy(
             job=copied_self, delete_file_after_copy=delete_file_after_copy
         )
+
+        # Copy executor - it cannot be copied and is just linked instead
+        if self.server.executor is not None:
+            copied_self.server.executor = self.server.executor
         return copied_self
 
     def _internal_copy_to(
@@ -690,9 +694,9 @@ class GenericJob(JobCore):
                 if repair and self.job_id and not self.status.finished:
                     self._run_if_repair()
                 elif status == "initialized":
-                    self._run_if_new(debug=debug)
+                    return self._run_if_new(debug=debug)
                 elif status == "created":
-                    self._run_if_created()
+                    return self._run_if_created()
                 elif status == "submitted":
                     run_job_with_status_submitted(job=self)
                 elif status == "running":
@@ -1191,7 +1195,7 @@ class GenericJob(JobCore):
         Args:
             debug (bool): Debug Mode
         """
-        run_job_with_status_initialized(job=self, debug=debug)
+        return run_job_with_status_initialized(job=self, debug=debug)
 
     def _run_if_created(self):
         """

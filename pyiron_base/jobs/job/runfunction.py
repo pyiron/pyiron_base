@@ -1,15 +1,20 @@
 # coding: utf-8
 # Copyright (c) Max-Planck-Institut für Eisenforschung GmbH - Computational Materials Design (CM) Department
 # Distributed under the terms of "New BSD License", see the LICENSE file.
+from concurrent.futures import ProcessPoolExecutor
 from datetime import datetime
 import multiprocessing
 import os
 import posixpath
 import subprocess
 
+from jinja2 import Template
+
 from pyiron_base.utils.deprecate import deprecate
 from pyiron_base.jobs.job.wrapper import JobWrapper
 from pyiron_base.state import state
+from pyiron_base.utils.instance import static_isinstance
+
 
 
 """
@@ -39,6 +44,7 @@ of the server object attached to the job object: job.server.run_mode
     interactive_non_modal: run_job_with_runmode_interactive_non_modal
     queue: run_job_with_runmode_queue
     srun: run_job_with_runmode_srun
+    executor: run_job_with_runmode_executor
     thread: only affects children of a GenericMaster 
     worker: only affects children of a GenericMaster 
     
@@ -76,7 +82,7 @@ def run_job_with_status_initialized(job, debug=False):
         print("job exists already and therefore was not created!")
     else:
         job.save()
-        job.run()
+        return job.run()
 
 
 def run_job_with_status_created(job):
@@ -102,6 +108,16 @@ def run_job_with_status_created(job):
         job.run_static()
     elif job.server.run_mode.srun:
         run_job_with_runmode_srun(job=job)
+    elif job.server.run_mode.executor:
+        if job.server.gpus is not None:
+            gpus_per_slot = int(job.server.gpus / job.server.cores)
+        else:
+            gpus_per_slot = None
+        return run_job_with_runmode_executor(
+            job=job,
+            executor=job.server.executor,
+            gpus_per_slot=gpus_per_slot,
+        )
     elif (
         job.server.run_mode.non_modal
         or job.server.run_mode.thread
@@ -429,6 +445,91 @@ def run_job_with_runmode_srun(job):
         stderr=subprocess.STDOUT,
         universal_newlines=True,
     )
+
+
+def run_job_with_runmode_executor(job, executor, gpus_per_slot=None):
+    """
+    Introduced in Python 3.2 the concurrent.futures interface enables the asynchronous execution of python programs.
+    A function is submitted to the executor and a future object is returned. The future object is updated in the
+    background once the executor finished executing the function. The job.server.run_mode.executor implements the same
+    functionality for pyiron jobs. An executor is set as an attribute to the server object:
+
+    >>> job.server.executor = concurrent.futures.Executor()
+    >>> fs = job.run()
+
+    When the job is executed by calling the run() function a future object is returned. The job is then executed in the
+    background and the user can use the future object to check the status of the job.
+
+    Args:
+        job (GenericJob): pyiron job object
+        executor (concurrent.futures.Executor): executor class which implements the executor interface defined in the
+                                                python concurrent.futures.Executor class.
+        gpus_per_slot (int): number of GPUs per MPI rank, typically 1
+
+     Returns:
+         concurrent.futures.Future: future object to develop asynchronous simulation protocols
+    """
+
+    if static_isinstance(
+        obj=job, obj_type="pyiron_base.jobs.master.generic.GenericMaster"
+    ):
+        raise NotImplementedError(
+            "Currently job.server.run_mode.executor does not support GenericMaster jobs."
+        )
+    if isinstance(executor, ProcessPoolExecutor):
+        return run_job_with_runmode_executor_futures(job=job, executor=executor)
+    else:
+        raise NotImplementedError(
+            "Currently only flux.job.FluxExecutor and concurrent.futures.ProcessPoolExecutor are supported."
+        )
+
+
+def run_job_with_runmode_executor_futures(job, executor):
+    """
+    Interface for the ProcessPoolExecutor implemented in the python standard library as part of the concurrent.futures
+    module. The ProcessPoolExecutor does not provide any resource management, so the user is responsible to keep track of
+    the number of compute cores in use, as over-subscription can lead to low performance.
+
+    >>> from concurrent.futures import ProcessPoolExecutor
+    >>> job.server.executor = ProcessPoolExecutor()
+    >>> fs = job.run()
+
+    Args:
+        job (GenericJob): pyiron job object
+        executor (concurrent.futures.Executor): executor class which implements the executor interface defined in the
+                                                python concurrent.futures.Executor class.
+
+     Returns:
+         concurrent.futures.Future: future object to develop asynchronous simulation protocols
+    """
+    if not state.database.database_is_disabled:
+        if not state.database.using_local_database:
+            return executor.submit(
+                multiprocess_wrapper,
+                working_directory=job.project_hdf5.working_directory,
+                job_id=job.job_id,
+                file_path=None,
+                debug=False,
+                connection_string=None,
+            )
+        else:
+            return executor.submit(
+                multiprocess_wrapper,
+                working_directory=job.project_hdf5.working_directory,
+                job_id=job.job_id,
+                file_path=None,
+                debug=False,
+                connection_string=str(job.project.db.conn.engine.url),
+            )
+    else:
+        return executor.submit(
+            multiprocess_wrapper,
+            working_directory=job.project_hdf5.working_directory,
+            job_id=None,
+            file_path=job.project_hdf5.file_name + job.project_hdf5.h5_path,
+            debug=False,
+            connection_string=None,
+        )
 
 
 def run_time_decorator(func):
