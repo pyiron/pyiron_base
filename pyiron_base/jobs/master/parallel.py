@@ -528,7 +528,7 @@ class ParallelMaster(GenericMaster):
         self.status.running = True
         self.submission_status.total_jobs = len(self._job_generator)
         self.submission_status.submitted_jobs = 0
-        if self.job_id and not self.is_finished():
+        if (self.job_id or state.database.database_is_disabled) and not self.is_finished():
             self._logger.debug(
                 "{} child project {}".format(self.job_name, self.project.__str__())
             )
