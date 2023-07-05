@@ -33,6 +33,21 @@ class TestLoaders(TestWithFilledProject):
             # job, just like traditional loading by string)
         )
 
+        loaded = self.project.load.toy_3
+        self.assertEqual(
+            loaded.project.name,
+            self.pr_sub.name,
+            msg="Expected to be able to load uniquely-named jobs from sub-project"
+        )
+
+        loaded = self.project.load.toy_1
+        self.assertEqual(
+            loaded.project.name,
+            self.project.name,
+            msg="Expected jobs with duplicate names to be loaded from the top-most "
+                "project"
+        )
+
     def test_inspect(self):
         not_fully_loaded = self.project.load("toy_1", convert_to_object=False)
         self.assertIsInstance(

@@ -158,12 +158,14 @@ class TestWithFilledProject(TestWithProject, ABC):
         job.run()
         job.status.aborted = True
 
-        with cls.project.open("sub_project") as pr_sub:
-            job = pr_sub.create_job(job_type=ToyJob, job_name="toy_1")
-            job.run()
-            job = pr_sub.create_job(job_type=ToyJob, job_name="toy_2")
-            job.run()
-            job.status.suspended = True
+        cls.pr_sub = cls.project.open("sub_project")
+        job = cls.pr_sub.create_job(job_type=ToyJob, job_name="toy_1")
+        job.run()
+        job = cls.pr_sub.create_job(job_type=ToyJob, job_name="toy_2")
+        job.run()
+        job.status.suspended = True
+        job = cls.pr_sub.create_job(job_type=ToyJob, job_name="toy_3")
+        job.run()
 
 
 _TO_SKIP = [
