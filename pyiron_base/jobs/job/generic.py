@@ -137,11 +137,13 @@ class GenericJob(JobCore):
             self.refresh_job_status()
         elif os.path.exists(self.project_hdf5.file_name):
             initial_status = read_hdf5(
+                # in most cases self.project_hdf5.h5_path == / + self.job_name but not for child jobs of GenericMasters
                 self.project_hdf5.file_name, self.project_hdf5.h5_path + "/status"
             )
             self._status = JobStatus(initial_status=initial_status)
             if "job_id" in self.list_nodes():
                 self._job_id = read_hdf5(
+                    # in most cases self.project_hdf5.h5_path == / + self.job_name but not for child jobs of GenericMasters
                     self.project_hdf5.file_name, self.project_hdf5.h5_path + "/job_id"
                 )
         else:
