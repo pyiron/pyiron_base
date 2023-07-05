@@ -456,11 +456,9 @@ class Server:  # add the option to return the job id and the hold id to the serv
 
     @property
     def executor(self) -> Union[Executor, None]:
-        if self.run_mode.executor:
-            return self._executor
-        else:
+        if not self.run_mode.executor and self._executor is not None:
             self._executor = None
-            return self._executor
+        return self._executor
 
     @executor.setter
     def executor(self, exe: Union[Executor, None]):
