@@ -273,6 +273,7 @@ class ParallelMaster(GenericMaster):
             yield: Yield of GenericJob or JobCore
         """
         project_working_directory = self.project.open(self.job_name + "_hdf5")
+        project_working_directory.db.update()
         for job_id in self._get_jobs_sorted():
             yield project_working_directory.load(
                 job_id, convert_to_object=convert_to_object

@@ -1635,6 +1635,8 @@ class Project(ProjectPath, HasGroups):
                         state.logger.debug(
                             "Could not remove job with ID {0} ".format(job_id)
                         )
+            if state.database.database_is_disabled:
+                self.db.update()
         else:
             raise EnvironmentError("copy_to: is not available in Viewermode !")
 
