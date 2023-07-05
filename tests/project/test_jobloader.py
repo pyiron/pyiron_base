@@ -23,10 +23,14 @@ class TestLoaders(TestWithFilledProject):
         )
 
         self.assertEqual(
-            len(self.project.job_table(recursive=False)),
+            len(self.project.job_table()),
             len(self.project.load.__dir__()),
             msg="Tab completion (`__dir__`) should see both jobs at this project "
                 "level"
+            # Note: When job names are duplicated at different sub-project levels, the
+            # job name occurs in the __dir__ multiple times, even though it will only
+            # show up in the tab-completion menu once (where it accesses the top-most
+            # job, just like traditional loading by string)
         )
 
     def test_inspect(self):

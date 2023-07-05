@@ -33,7 +33,7 @@ class _JobByAttribute(ABC):
 
     @property
     def _job_table(self):
-        return self._project.job_table(recursive=False, columns=["job"])
+        return self._project.job_table(columns=["job"])
 
     @property
     def _job_names(self):
