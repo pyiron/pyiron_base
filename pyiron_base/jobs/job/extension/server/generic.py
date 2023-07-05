@@ -465,7 +465,7 @@ class Server:  # add the option to return the job id and the hold id to the serv
             self.run_mode.executor = True
         elif exe is None:
             self._executor = None
-            self.run_mode.executor = False
+            self.run_mode.modal = True
         else:
             raise TypeError(
                 "The executor has to be derived from the concurrent.futures.Executor class."
