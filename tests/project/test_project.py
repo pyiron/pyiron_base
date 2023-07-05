@@ -95,33 +95,114 @@ class TestProjectOperations(TestWithFilledProject):
 
     def test_job_table(self):
         df = self.project.job_table()
-        self.assertEqual(len(df), 4)
+        self.assertEqual(len(df), self.n_jobs_filled_with)
         self.assertEqual(" ".join(df.status.sort_values().unique()), "aborted finished suspended")
 
     def test_filtered_job_table(self):
-        self.assertEqual(len(self.project.job_table(recursive=False)), 2)
-        self.assertEqual(len(self.project.job_table(recursive=True)), 4)
-        self.assertEqual(len(self.project.job_table(recursive=True, status="finished")), 2)
-        self.assertEqual(len(self.project.job_table(recursive=False, status="finished")), 1)
-        self.assertEqual(len(self.project.job_table(recursive=True, status="suspended")), 1)
-        self.assertEqual(len(self.project.job_table(recursive=True, status="aborted")), 1)
-        self.assertEqual(len(self.project.job_table(recursive=False, status="suspended")), 0)
-        self.assertEqual(len(self.project.job_table(recursive=False, hamilton="ToyJob")), 2)
-        self.assertEqual(len(self.project.job_table(recursive=True, parentid=None)), 4)
-        self.assertEqual(len(self.project.job_table(recursive=True, status="finished", job="toy_1")), 2)
-        self.assertEqual(len(self.project.job_table(recursive=True, job="toy*")), 4)
-        self.assertEqual(len(self.project.job_table(recursive=True, job="*_1*")), 2)
-        self.assertEqual(len(self.project.job_table(recursive=True, job="*_*")), 4)
-        self.assertEqual(len(self.project.job_table(recursive=False, status="finished", job="toy_1")), 1)
-        self.assertEqual(len(self.project.job_table(recursive=True, status="!finished")), 2)
-        self.assertEqual(len(self.project.job_table(recursive=True, status="!aborted")), 3)
-        self.assertEqual(len(self.project.job_table(recursive=True, job="!toy_1")), 2)
-        self.assertEqual(len(self.project.job_table(recursive=True, job="!toy_*")), 0)
+        # Here we test against the filled project
+        # Counts should match values there, but since we're testing our ability to count
+        # we can't just dynamically fill these values.
+        # Thus, these are read an inferred (mostly) by hand from TestWithFilledProject
+        n_jobs = self.n_jobs_filled_with
+        n_finished_jobs = 3
+        n_aborted_jobs = 1
+        n_suspended_jobs = 1
+        # n_ToyJobs = 5
+        n_jobs_named_toy_1 = 2
+        # And for when recursive=False:
+        n_top_jobs = 2
+        n_top_finished_jobs = 1
+        # n_top_aborted_jobs = 1
+        n_top_suspended_jobs = 0
+        # n_top_ToyJobs = 2
+        n_top_jobs_named_toy_1 = 1
+
+        self.assertEqual(
+            len(self.project.job_table(recursive=False)),
+            n_top_jobs,
+        )
+        self.assertEqual(
+            len(self.project.job_table(recursive=True)),
+            n_jobs,
+            msg="Expected to find all the jobs the project was filled with"
+        )
+        self.assertEqual(
+            len(self.project.job_table(recursive=True, status="finished")),
+            n_finished_jobs
+        )
+        self.assertEqual(
+            len(self.project.job_table(recursive=False, status="finished")),
+            n_top_finished_jobs
+        )
+        self.assertEqual(
+            len(self.project.job_table(recursive=True, status="suspended")),
+            n_suspended_jobs
+        )
+        self.assertEqual(
+            len(self.project.job_table(recursive=True, status="aborted")),
+            n_aborted_jobs
+        )
+        self.assertEqual(
+            len(self.project.job_table(recursive=False, status="suspended")),
+            n_top_suspended_jobs
+        )
+        self.assertEqual(
+            len(self.project.job_table(recursive=False, hamilton="ToyJob")),
+            n_top_jobs
+        )
+        self.assertEqual(
+            len(self.project.job_table(recursive=True, parentid=None)),
+            n_jobs
+        )
+        self.assertEqual(
+            len(self.project.job_table(recursive=True, status="finished", job="toy_1")),
+            n_jobs_named_toy_1
+        )
+        self.assertEqual(
+            len(self.project.job_table(recursive=True, job="toy*")),
+            n_jobs
+        )
+        self.assertEqual(
+            len(self.project.job_table(recursive=True, job="*_1*")),
+            n_jobs_named_toy_1
+        )
+        self.assertEqual(
+            len(self.project.job_table(recursive=True, job="*_*")),
+            n_jobs
+        )
+        self.assertEqual(
+            len(
+                self.project.job_table(recursive=False, status="finished", job="toy_1")
+            ),
+            n_top_jobs_named_toy_1
+        )
+        self.assertEqual(
+            len(self.project.job_table(recursive=True, status="!finished")),
+            n_suspended_jobs + n_aborted_jobs,
+        )
+        self.assertEqual(
+            len(self.project.job_table(recursive=True, status="!aborted")),
+            n_jobs - n_aborted_jobs
+        )
+        self.assertEqual(
+            len(self.project.job_table(recursive=True, job="!toy_1")),
+            n_jobs - n_jobs_named_toy_1
+        )
+        self.assertEqual(
+            len(self.project.job_table(recursive=True, job="!toy_*")),
+            0
+        )
         self.assertRaises(ValueError, self.project.job_table, gibberish=True)
 
     def test_get_iter_jobs(self):
-        self.assertEqual([job.output.data_out for job in self.project.iter_jobs(recursive=True,
-                                                                                convert_to_object=True)], [101] * 4)
+        self.assertEqual(
+            [
+                job.output.data_out for job in self.project.iter_jobs(
+                    recursive=True, convert_to_object=True
+                )
+            ],
+            [101] * self.n_jobs_filled_with
+        )
         self.assertEqual([val for val in self.project.iter_jobs(recursive=False, status="suspended")], [])
         self.assertIsInstance([val for val in self.project.iter_jobs(recursive=True, status="suspended",
                                                                      convert_to_object=True)][0], ToyJob)

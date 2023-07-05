@@ -167,6 +167,11 @@ class TestWithFilledProject(TestWithProject, ABC):
         job = cls.pr_sub.create_job(job_type=ToyJob, job_name="toy_3")
         job.run()
 
+        cls.n_jobs_filled_with = 5
+        # In a number of tests we compare the found jobs to an expected number of jobs
+        # Let's code that number once here instead of magic-numbering it throughout
+        # the tests
+
 
 _TO_SKIP = [
     PyironTestCase,
