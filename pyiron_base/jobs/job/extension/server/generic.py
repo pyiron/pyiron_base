@@ -114,7 +114,6 @@ class Server:  # add the option to return the job id and the hold id to the serv
         self._new_hdf = new_hdf
         self._send_to_db = False
         self._structure_id = None
-        self._future = None
         self._accept_crash = False
         self.additional_arguments = {}
 
