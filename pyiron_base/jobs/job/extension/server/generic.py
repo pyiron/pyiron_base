@@ -463,15 +463,14 @@ class Server:  # add the option to return the job id and the hold id to the serv
     @executor.setter
     def executor(self, exe: Union[Executor, None]):
         if isinstance(exe, Executor):
-            self._executor = exe
             self.run_mode.executor = True
         elif exe is None:
-            self._executor = None
             self.run_mode.modal = True
         else:
             raise TypeError(
                 "The executor has to be derived from the concurrent.futures.Executor class."
             )
+        self._executor = exe
 
     @property
     def future(self):
