@@ -246,10 +246,22 @@ class Server:  # add the option to return the job id and the hold id to the serv
 
     @property
     def threads(self):
+        """
+        The number of threads selected for the current simulation
+
+        Returns:
+            (int): number of threads
+        """
         return self._threads
 
     @threads.setter
     def threads(self, number_of_threads):
+        """
+        The number of threads selected for the current simulation
+
+        Args:
+            number_of_threads (int): number of threads
+        """
         self._threads = number_of_threads
 
     @property
@@ -375,7 +387,8 @@ class Server:  # add the option to return the job id and the hold id to the serv
         Get the run mode of the job
 
         Returns:
-            (str/pyiron_base.server.runmode.Runmode): ['modal', 'non_modal', 'queue', 'manual']
+            (str/pyiron_base.server.runmode.Runmode): ['modal', 'non_modal', 'queue', 'manual', 'thread', 'worker',
+                        'interactive', 'interactive_non_modal', 'srun', 'executor']
         """
         return self._run_mode
 
@@ -385,7 +398,8 @@ class Server:  # add the option to return the job id and the hold id to the serv
         Set the run mode of the job
 
         Args:
-            new_mode (str): ['modal', 'non_modal', 'queue', 'manual']
+            new_mode (str): ['modal', 'non_modal', 'queue', 'manual', 'thread', 'worker', 'interactive',
+                        'interactive_non_modal', 'srun', 'executor']
         """
         self._run_mode.mode = new_mode
         if new_mode == "queue":
@@ -442,12 +456,24 @@ class Server:  # add the option to return the job id and the hold id to the serv
 
     @property
     def executor(self) -> Union[Executor, None]:
+        """
+        Executor to execute the job object this server object is attached to in the background.
+
+        Returns:
+            concurrent.futures.Executor:
+        """
         if not self.run_mode.executor and self._executor is not None:
             self._executor = None
         return self._executor
 
     @executor.setter
     def executor(self, exe: Union[Executor, None]):
+        """
+        Executor to execute the job object this server object is attached to in the background.
+
+        Args:
+            exe (concurrent.futures.Executor):
+        """
         if isinstance(exe, Executor):
             self.run_mode.executor = True
         elif exe is None:
