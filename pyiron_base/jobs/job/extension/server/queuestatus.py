@@ -229,7 +229,7 @@ def wait_for_job(job, interval_in_s=5, max_iterations=100):
                     break
                 elif isinstance(job.server.future, Future):
                     finished = True
-                    job.server.future.result()
+                    job.server.future.result(timeout=interval_in_s)
                     break
                 else:
                     time.sleep(interval_in_s)
