@@ -228,6 +228,7 @@ def wait_for_job(job, interval_in_s=5, max_iterations=100):
                     finished = True
                     break
                 elif isinstance(job.server.future, Future):
+                    finished = True
                     job.server.future.result()
                     break
                 else:

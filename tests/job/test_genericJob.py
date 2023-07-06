@@ -4,6 +4,7 @@
 
 import unittest
 import os
+from time import sleep
 from concurrent.futures import ProcessPoolExecutor
 from pyiron_base.storage.parameters import GenericParameters
 from pyiron_base.jobs.job.generic import GenericJob
@@ -511,6 +512,29 @@ class TestGenericJob(TestWithFilledProject):
         j.run()
         j.server.future.result()
         self.assertTrue(j.server.future.done())
+        self.assertTrue(j.status.finished)
+
+    def test_job_executor_cancel(self):
+        j = self.project.create_job(ReturnCodeJob, "job_with_executor_cancel")
+        j.input["accepted_codes"] = [1]
+        exe = ProcessPoolExecutor()
+        j.server.executor = exe
+        self.assertTrue(j.server.run_mode.executor)
+        exe.submit(sleep, 1)  # This part is a bit hacky, but it basically simulates other jobs on the same executor
+        j.run()
+        j.server.future.cancel()
+        j.refresh_job_status()
+        self.assertTrue(j.status.aborted)
+
+    def test_job_executor_wait(self):
+        j = self.project.create_job(ReturnCodeJob, "job_with_executor_wait")
+        j.input["accepted_codes"] = [1]
+        j.server.executor = ProcessPoolExecutor()
+        self.assertTrue(j.server.run_mode.executor)
+        j.run()
+        self.project.wait_for_job(job=j)
+        self.assertTrue(j.server.future.done())
+        self.assertTrue(j.status.finished)
 
     def test_job_executor_copy(self):
         j1 = self.project.create_job(ReturnCodeJob, "job_with_executor_copy")
