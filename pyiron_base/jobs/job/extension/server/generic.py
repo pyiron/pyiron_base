@@ -476,7 +476,7 @@ class Server:  # add the option to return the job id and the hold id to the serv
         """
         if isinstance(exe, Executor):
             self.run_mode.executor = True
-        elif exe is None:
+        elif exe is None and self.run_mode.executor:
             self.run_mode.modal = True
         else:
             raise TypeError(
