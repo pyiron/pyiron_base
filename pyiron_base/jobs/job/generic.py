@@ -433,7 +433,7 @@ class GenericJob(JobCore):
             )
         if (
             isinstance(self.server.future, Future)
-            and not self._status.finished
+            and not self.status.finished
             and self.server.future.done()
         ):
             if self.server.future.cancelled():
