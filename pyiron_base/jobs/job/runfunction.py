@@ -110,6 +110,8 @@ def run_job_with_status_created(job):
             gpus_per_slot = int(job.server.gpus / job.server.cores)
         else:
             gpus_per_slot = None
+        if gpus_per_slot < 0:
+            raise ValueError("Both job.server.gpus and job.server.cores have to be greater than zero.")
         run_job_with_runmode_executor(
             job=job,
             executor=job.server.executor,
