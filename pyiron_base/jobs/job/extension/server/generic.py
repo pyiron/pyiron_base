@@ -485,7 +485,7 @@ class Server:  # add the option to return the job id and the hold id to the serv
         self._executor = exe
 
     @property
-    def future(self):
+    def future(self) -> Union[Future, None]:
         """
         Python concurrent.futures.Future object to track the status of the execution of the job this server object is
         attached to. This is an internal pyiron feature and most users never have to interact with the future object
