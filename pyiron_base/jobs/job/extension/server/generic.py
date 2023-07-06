@@ -102,7 +102,8 @@ class Server:  # add the option to return the job id and the hold id to the serv
         self._memory_limit = None
         self._host = self._init_host(host=host)
         self._run_mode = Runmode()
-        self._executor = None
+        self._executor: Union[Executor, None] = None
+        self._future: Union[Future, None] = None
 
         self.queue = queue
 
