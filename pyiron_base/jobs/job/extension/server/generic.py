@@ -5,7 +5,7 @@
 Server object class which is connected to each job containing the technical details how the job is executed.
 """
 
-from concurrent.futures import Executor
+from concurrent.futures import Executor, Future
 from collections import OrderedDict
 import numbers
 import socket
@@ -428,6 +428,49 @@ class Server:  # add the option to return the job id and the hold id to the serv
         """
         return self.view_queues()
 
+    @property
+    def executor(self) -> Union[Executor, None]:
+        if not self.run_mode.executor and self._executor is not None:
+            self._executor = None
+        return self._executor
+
+    @executor.setter
+    def executor(self, exe: Union[Executor, None]):
+        if isinstance(exe, Executor):
+            self._executor = exe
+            self.run_mode.executor = True
+        elif exe is None:
+            self._executor = None
+            self.run_mode.modal = True
+        else:
+            raise TypeError(
+                "The executor has to be derived from the concurrent.futures.Executor class."
+            )
+
+    @property
+    def future(self):
+        """
+        Python concurrent.futures.Future object to track the status of the execution of the job this server object is
+        attached to. This is an internal pyiron feature and most users never have to interact with the future object
+        directly.
+
+        Returns:
+             concurrent.futures.Future: future object to track the status of the execution
+        """
+        return self._future
+
+    @future.setter
+    def future(self, future_obj: Future):
+        """
+        Set a python concurrent.futures.Future object to track the status of the execution of the job this server object
+        is attached to. This is an internal pyiron feature and most users never have to interact with the future object
+        directly.
+
+        Args:
+            future_obj (concurrent.futures.Future): future object to track the status of the execution
+        """
+        self._future = future_obj
+
     @staticmethod
     def list_queues():
         """
@@ -453,33 +496,6 @@ class Server:  # add the option to return the job id and the hold id to the serv
             return state.queue_adapter.queue_view
         else:
             return None
-
-    @property
-    def executor(self) -> Union[Executor, None]:
-        if not self.run_mode.executor and self._executor is not None:
-            self._executor = None
-        return self._executor
-
-    @executor.setter
-    def executor(self, exe: Union[Executor, None]):
-        if isinstance(exe, Executor):
-            self._executor = exe
-            self.run_mode.executor = True
-        elif exe is None:
-            self._executor = None
-            self.run_mode.modal = True
-        else:
-            raise TypeError(
-                "The executor has to be derived from the concurrent.futures.Executor class."
-            )
-
-    @property
-    def future(self):
-        return self._future
-
-    @future.setter
-    def future(self, future_obj):
-        self._future = future_obj
 
     def to_hdf(self, hdf, group_name=None):
         """
