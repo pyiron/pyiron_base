@@ -5,6 +5,7 @@
 Set of functions to interact with the queuing system directly from within pyiron - optimized for the Sun grid engine.
 """
 
+from concurrent.futures import Future
 import pandas
 import time
 import numpy as np
@@ -226,7 +227,11 @@ def wait_for_job(job, interval_in_s=5, max_iterations=100):
                 if job.status.string in job_status_finished_lst:
                     finished = True
                     break
-                time.sleep(interval_in_s)
+                elif isinstance(job.server.future, Future):
+                    job.server.future.result()
+                    break
+                else:
+                    time.sleep(interval_in_s)
             if not finished:
                 raise ValueError(
                     "Maximum iterations reached, but the job was not finished."
