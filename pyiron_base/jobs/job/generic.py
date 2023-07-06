@@ -437,7 +437,7 @@ class GenericJob(JobCore):
             and self.server.future.done()
         ):
             if self.server.future.cancelled():
-                self._status.aborted = True
+                self.status.aborted = True
             else:
                 self._status.finished = True
 
