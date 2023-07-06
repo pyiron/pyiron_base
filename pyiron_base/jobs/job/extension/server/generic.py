@@ -254,10 +254,22 @@ class Server:  # add the option to return the job id and the hold id to the serv
 
     @property
     def gpus(self):
+        """
+        Total number of GPUs to use for this calculation.
+
+        Returns:
+            int: Total number of GPUs to use for this calculation.
+        """
         return self._gpus
 
     @gpus.setter
     def gpus(self, number_of_gpus):
+        """
+        Total number of GPUs to use for this calculation.
+
+        Args:
+            number_of_gpus (int): Total number of GPUs to use for this calculation.
+        """
         self._gpus = number_of_gpus
 
     @property
