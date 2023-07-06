@@ -5,6 +5,7 @@
 Generic Job class extends the JobCore class with all the functionality to run the job object.
 """
 
+from concurrent.futures import Future
 from datetime import datetime
 import os
 import posixpath
@@ -430,6 +431,15 @@ class GenericJob(JobCore):
                     self.project_hdf5.file_name, self.job_name + "/status"
                 )
             )
+        if (
+            isinstance(self.server.future, Future)
+            and not self._status.finished
+            and self.server.future.done()
+        ):
+            if self.server.future.cancelled():
+                self._status.aborted = True
+            else:
+                self._status.finished = True
 
     def clear_job(self):
         """
@@ -604,6 +614,18 @@ class GenericJob(JobCore):
             input_only=True,
             new_database_entry=False,
         )
+
+    def remove(self, _protect_childs=True):
+        """
+        Remove the job - this removes the HDF5 file, all data stored in the HDF5 file an the corresponding database entry.
+
+        Args:
+            _protect_childs (bool): [True/False] by default child jobs can not be deleted, to maintain the consistency
+                                    - default=True
+        """
+        if isinstance(self.server.future, Future) and not self.server.future.done():
+            self.server.future.cancel()
+        super().remove(_protect_childs=_protect_childs)
 
     def remove_child(self):
         """
