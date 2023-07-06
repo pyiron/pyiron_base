@@ -504,8 +504,15 @@ class TestGenericJob(TestWithFilledProject):
             pass
         self.assertTrue(j.status.aborted, "Job did not abort even though return code is 2!")
 
-    def test_job_executor(self):
-        j = self.project.create_job(ReturnCodeJob, "job_with_executor")
+    def test_job_executor_set(self):
+        j = self.project.create_job(ReturnCodeJob, "job_with_executor_set")
+        j.server.executor = ProcessPoolExecutor()
+        self.assertTrue(j.server.run_mode.executor)
+        j.server.run_mode.modal = True
+        self.assertFalse(j.server.run_mode.executor)
+
+    def test_job_executor_run(self):
+        j = self.project.create_job(ReturnCodeJob, "job_with_executor_run")
         j.input["accepted_codes"] = [1]
         j.server.executor = ProcessPoolExecutor()
         self.assertTrue(j.server.run_mode.executor)
