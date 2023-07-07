@@ -3,6 +3,7 @@
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
 import unittest
+from concurrent.futures import ProcessPoolExecutor
 from pyiron_base.jobs.job.extension.server.generic import Server
 from pyiron_base._tests import PyironTestCase
 from pyiron_base.state.queue_adapter import queue_adapters
@@ -258,6 +259,13 @@ class TestRunmode(PyironTestCase):
                 None,
                 "setting run_time should not set a memory_limit",
             )
+
+    def test_server_executor_set(self):
+        self.server.executor = ProcessPoolExecutor()
+        self.assertTrue(self.server.run_mode.executor)
+        self.server.run_mode.modal = True
+        self.assertFalse(self.server.run_mode.executor)
+        self.assertIsNone(self.server.executor)
 
     def test_set_memory_limit(self):
         with self.subTest("None queue"):

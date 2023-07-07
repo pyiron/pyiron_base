@@ -504,14 +504,6 @@ class TestGenericJob(TestWithFilledProject):
             pass
         self.assertTrue(j.status.aborted, "Job did not abort even though return code is 2!")
 
-    def test_job_executor_set(self):
-        j = self.project.create_job(ReturnCodeJob, "job_with_executor_set")
-        j.server.executor = ProcessPoolExecutor()
-        self.assertTrue(j.server.run_mode.executor)
-        j.server.run_mode.modal = True
-        self.assertFalse(j.server.run_mode.executor)
-        self.assertIsNone(j.server.executor)
-
     def test_job_executor_run(self):
         j = self.project.create_job(ReturnCodeJob, "job_with_executor_run")
         j.input["accepted_codes"] = [1]
@@ -559,6 +551,7 @@ class TestGenericJob(TestWithFilledProject):
         # No copying jobs with futures that aren't done
         with self.assertRaises(RuntimeError):
             j2.copy()
+
 
 if __name__ == "__main__":
     unittest.main()
