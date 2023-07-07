@@ -554,7 +554,11 @@ class TestGenericJob(TestWithFilledProject):
         j2.run()
         j2.server.future.result()
         self.assertTrue(j2.server.future.done())
-
+        j2.server.future = Future()
+        # Manually override the future with one that isn't done() to test copy spec:
+        # No copying jobs with futures that aren't done
+        with self.assertRaises(RuntimeError):
+            j2.copy()
 
 if __name__ == "__main__":
     unittest.main()
