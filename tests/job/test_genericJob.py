@@ -5,7 +5,7 @@
 import unittest
 import os
 from time import sleep
-from concurrent.futures import ProcessPoolExecutor
+from concurrent.futures import Future, ProcessPoolExecutor
 from pyiron_base.storage.parameters import GenericParameters
 from pyiron_base.jobs.job.generic import GenericJob
 from pyiron_base._tests import TestWithFilledProject, ToyJob
