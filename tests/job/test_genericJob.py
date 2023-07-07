@@ -510,6 +510,7 @@ class TestGenericJob(TestWithFilledProject):
         self.assertTrue(j.server.run_mode.executor)
         j.server.run_mode.modal = True
         self.assertFalse(j.server.run_mode.executor)
+        self.assertIsNone(j.server.executor)
 
     def test_job_executor_run(self):
         j = self.project.create_job(ReturnCodeJob, "job_with_executor_run")
