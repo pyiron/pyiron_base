@@ -481,7 +481,9 @@ class GenericJob(JobCore):
         if self.server.executor is not None:
             copied_self.server.executor = self.server.executor
         if self.server.future is not None and not self.sever.future.done():
-            raise RuntimeError("Jobs whose server has executor and future attributes cannot be copied unless the future is `done()`")
+            raise RuntimeError(
+                "Jobs whose server has executor and future attributes cannot be copied unless the future is `done()`"
+            )
         return copied_self
 
     def _internal_copy_to(
