@@ -5,11 +5,14 @@
 Server object class which is connected to each job containing the technical details how the job is executed.
 """
 
+from concurrent.futures import Executor, Future
 from collections import OrderedDict
 import numbers
+import socket
+from typing import Union
+
 from pyiron_base.state import state
 from pyiron_base.jobs.job.extension.server.runmode import Runmode
-import socket
 
 __author__ = "Jan Janssen"
 __copyright__ = (
@@ -71,6 +74,14 @@ class Server:  # add the option to return the job id and the hold id to the serv
         .. attribute:: new_hdf
 
             defines whether a subjob should be stored in the same HDF5 file or in a new one.
+
+        .. attribute:: executor
+
+            the executor can be used to execute the job object
+
+        .. attribute:: future
+
+            the concurrent.futures.Future object for monitoring the execution of the job object
     """
 
     def __init__(
@@ -91,6 +102,8 @@ class Server:  # add the option to return the job id and the hold id to the serv
         self._memory_limit = None
         self._host = self._init_host(host=host)
         self._run_mode = Runmode()
+        self._executor: Union[Executor, None] = None
+        self._future: Union[Future, None] = None
 
         self.queue = queue
 
@@ -233,18 +246,42 @@ class Server:  # add the option to return the job id and the hold id to the serv
 
     @property
     def threads(self):
+        """
+        The number of threads selected for the current simulation
+
+        Returns:
+            (int): number of threads
+        """
         return self._threads
 
     @threads.setter
     def threads(self, number_of_threads):
+        """
+        The number of threads selected for the current simulation
+
+        Args:
+            number_of_threads (int): number of threads
+        """
         self._threads = number_of_threads
 
     @property
     def gpus(self):
+        """
+        Total number of GPUs to use for this calculation.
+
+        Returns:
+            int: Total number of GPUs to use for this calculation.
+        """
         return self._gpus
 
     @gpus.setter
     def gpus(self, number_of_gpus):
+        """
+        Total number of GPUs to use for this calculation.
+
+        Args:
+            number_of_gpus (int): Total number of GPUs to use for this calculation.
+        """
         self._gpus = number_of_gpus
 
     @property
@@ -350,7 +387,8 @@ class Server:  # add the option to return the job id and the hold id to the serv
         Get the run mode of the job
 
         Returns:
-            (str/pyiron_base.server.runmode.Runmode): ['modal', 'non_modal', 'queue', 'manual']
+            (str/pyiron_base.server.runmode.Runmode): ['modal', 'non_modal', 'queue', 'manual', 'thread', 'worker',
+                        'interactive', 'interactive_non_modal', 'srun', 'executor']
         """
         return self._run_mode
 
@@ -360,7 +398,8 @@ class Server:  # add the option to return the job id and the hold id to the serv
         Set the run mode of the job
 
         Args:
-            new_mode (str): ['modal', 'non_modal', 'queue', 'manual']
+            new_mode (str): ['modal', 'non_modal', 'queue', 'manual', 'thread', 'worker', 'interactive',
+                        'interactive_non_modal', 'srun', 'executor']
         """
         self._run_mode.mode = new_mode
         if new_mode == "queue":
@@ -414,6 +453,60 @@ class Server:  # add the option to return the job id and the hold id to the serv
             (pandas.DataFrame)
         """
         return self.view_queues()
+
+    @property
+    def executor(self) -> Union[Executor, None]:
+        """
+        Executor to execute the job object this server object is attached to in the background.
+
+        Returns:
+            concurrent.futures.Executor:
+        """
+        if not self.run_mode.executor and self._executor is not None:
+            self._executor = None
+        return self._executor
+
+    @executor.setter
+    def executor(self, exe: Union[Executor, None]):
+        """
+        Executor to execute the job object this server object is attached to in the background.
+
+        Args:
+            exe (concurrent.futures.Executor):
+        """
+        if isinstance(exe, Executor):
+            self.run_mode.executor = True
+        elif exe is None and self.run_mode.executor:
+            self.run_mode.modal = True
+        elif exe is not None:
+            raise TypeError(
+                "The executor has to be derived from the concurrent.futures.Executor class."
+            )
+        self._executor = exe
+
+    @property
+    def future(self) -> Union[Future, None]:
+        """
+        Python concurrent.futures.Future object to track the status of the execution of the job this server object is
+        attached to. This is an internal pyiron feature and most users never have to interact with the future object
+        directly.
+
+        Returns:
+             concurrent.futures.Future: future object to track the status of the execution
+        """
+        return self._future
+
+    @future.setter
+    def future(self, future_obj: Future):
+        """
+        Set a python concurrent.futures.Future object to track the status of the execution of the job this server object
+        is attached to. This is an internal pyiron feature and most users never have to interact with the future object
+        directly.
+
+        Args:
+            future_obj (concurrent.futures.Future): future object to track the status of the execution
+        """
+        self._future = future_obj
 
     @staticmethod
     def list_queues():

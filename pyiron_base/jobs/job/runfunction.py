@@ -1,6 +1,7 @@
 # coding: utf-8
 # Copyright (c) Max-Planck-Institut für Eisenforschung GmbH - Computational Materials Design (CM) Department
 # Distributed under the terms of "New BSD License", see the LICENSE file.
+from concurrent.futures import ProcessPoolExecutor
 from datetime import datetime
 import multiprocessing
 import os
@@ -10,6 +11,7 @@ import subprocess
 from pyiron_base.utils.deprecate import deprecate
 from pyiron_base.jobs.job.wrapper import JobWrapper
 from pyiron_base.state import state
+from pyiron_base.utils.instance import static_isinstance
 
 
 """
@@ -39,6 +41,7 @@ of the server object attached to the job object: job.server.run_mode
     interactive_non_modal: run_job_with_runmode_interactive_non_modal
     queue: run_job_with_runmode_queue
     srun: run_job_with_runmode_srun
+    executor: run_job_with_runmode_executor
     thread: only affects children of a GenericMaster 
     worker: only affects children of a GenericMaster 
     
@@ -102,6 +105,20 @@ def run_job_with_status_created(job):
         job.run_static()
     elif job.server.run_mode.srun:
         run_job_with_runmode_srun(job=job)
+    elif job.server.run_mode.executor:
+        if job.server.gpus is not None:
+            gpus_per_slot = int(job.server.gpus / job.server.cores)
+            if gpus_per_slot < 0:
+                raise ValueError(
+                    "Both job.server.gpus and job.server.cores have to be greater than zero."
+                )
+        else:
+            gpus_per_slot = None
+        run_job_with_runmode_executor(
+            job=job,
+            executor=job.server.executor,
+            gpus_per_slot=gpus_per_slot,
+        )
     elif (
         job.server.run_mode.non_modal
         or job.server.run_mode.thread
@@ -428,6 +445,91 @@ def run_job_with_runmode_srun(job):
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         universal_newlines=True,
+    )
+
+
+def run_job_with_runmode_executor(job, executor, gpus_per_slot=None):
+    """
+    Introduced in Python 3.2 the concurrent.futures interface enables the asynchronous execution of python programs.
+    A function is submitted to the executor and a future object is returned. The future object is updated in the
+    background once the executor finished executing the function. The job.server.run_mode.executor implements the same
+    functionality for pyiron jobs. An executor is set as an attribute to the server object:
+
+    >>> job.server.executor = concurrent.futures.Executor()
+    >>> job.run()
+    >>> job.server.future.done()
+    False
+    >>> job.server.future.result()
+    >>> job.server.future.done()
+    True
+
+    When the job is executed by calling the run() function a future object is returned. The job is then executed in the
+    background and the user can use the future object to check the status of the job.
+
+    Args:
+        job (GenericJob): pyiron job object
+        executor (concurrent.futures.Executor): executor class which implements the executor interface defined in the
+                                                python concurrent.futures.Executor class.
+        gpus_per_slot (int): number of GPUs per MPI rank, typically 1
+    """
+
+    if static_isinstance(
+        obj=job,
+        obj_type="pyiron_base.jobs.master.generic.GenericMaster"
+        # The static check is used to avoid a circular import:
+        # runfunction -> GenericJob -> GenericMaster -> runfunction
+        # This smells a bit, so if a better architecture is found in the future, use it
+        # to avoid string-based specifications
+    ):
+        raise NotImplementedError(
+            "Currently job.server.run_mode.executor does not support GenericMaster jobs."
+        )
+    if isinstance(executor, ProcessPoolExecutor):
+        return run_job_with_runmode_executor_futures(job=job, executor=executor)
+    else:
+        raise NotImplementedError(
+            "Currently only concurrent.futures.ProcessPoolExecutor is supported."
+        )
+
+
+def run_job_with_runmode_executor_futures(job, executor):
+    """
+    Interface for the ProcessPoolExecutor implemented in the python standard library as part of the concurrent.futures
+    module. The ProcessPoolExecutor does not provide any resource management, so the user is responsible to keep track of
+    the number of compute cores in use, as over-subscription can lead to low performance.
+
+    The [ProcessPoolExecutor docs](https://docs.python.org/3/library/concurrent.futures.html#processpoolexecutor) state: "The __main__ module must be importable by worker subprocesses. This means that ProcessPoolExecutor will not work in the interactive interpreter." (i.e. Jupyter notebooks). For standard usage this is a non-issue, but for the edge case of job classes defined in-notebook (e.g. children of `PythonTemplateJob`), the using the ProcessPoolExecutor will result in errors. To resolve this, relocate such classes to an importable .py file.
+
+    >>> from concurrent.futures import ProcessPoolExecutor
+    >>> job.server.executor = ProcessPoolExecutor()
+    >>> job.server.future.done()
+    False
+    >>> job.server.future.result()
+    >>> job.server.future.done()
+    True
+
+    Args:
+        job (GenericJob): pyiron job object
+        executor (concurrent.futures.Executor): executor class which implements the executor interface defined in the
+                                                python concurrent.futures.Executor class.
+    """
+    if state.database.database_is_disabled:
+        file_path = job.project_hdf5.file_name + job.project_hdf5.h5_path
+        connection_string = None
+    else:
+        file_path = None
+        if state.database.using_local_database:
+            connection_string = str(job.project.db.conn.engine.url)
+        else:
+            connection_string = None
+
+    job.server.future = executor.submit(
+        multiprocess_wrapper,
+        working_directory=job.project_hdf5.working_directory,
+        job_id=job.job_id,
+        file_path=file_path,
+        debug=False,
+        connection_string=connection_string,
     )
 
 
