@@ -11,7 +11,6 @@ The context manager functionality is implemented in a separate class rather than
 name space real estate and let subclasses be context managers on their own.
 """
 
-from abc import ABC
 from functools import wraps
 
 from pyiron_base.interfaces.has_groups import HasGroups
