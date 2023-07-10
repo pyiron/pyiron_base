@@ -95,6 +95,7 @@ class Server(Lockable):  # add the option to return the job id and the hold id t
         run_mode="modal",
         new_hdf=True,
     ):
+        super().__init__()
         self._cores = cores
         self._threads = threads
         self._active_queue = None
@@ -118,7 +119,6 @@ class Server(Lockable):  # add the option to return the job id and the hold id t
         self._structure_id = None
         self._accept_crash = False
         self.additional_arguments = {}
-        super().__init__()
 
     @property
     def send_to_db(self):

@@ -93,7 +93,8 @@ class Lockable:
 
     Subclasses need to initialize this class by calling the inherited `__init__`, if explicitely overriding it.  When
     not explicitely overriding it (as in the examples below), take care that either the other super classes call
-    `super().__init__` or place this class before them in the inheritance order.
+    `super().__init__` or place this class before them in the inheritance order.  Also be sure to initialize it before
+    using methods and properties decorated with :func:`.sentinel`.
 
     Let's start with a simple example; a list that can be locked
 
@@ -150,7 +151,7 @@ class Lockable:
         ...
     lockable.Locked: Object is currently locked!  Use unlocked() if you know what you are doing.
     >>> with l.unlocked():
-    >>>    l.clear()
+    ...   l.clear()
     >>> l
     []
 
@@ -171,7 +172,7 @@ class Lockable:
     Since the first item is a plain dict, it can still be mutated.
 
     >>> type(d['a'])
-    dict
+    <class 'dict'>
     >>> d['a']['c'] = 23
     >>> d['a']['c']
     23
@@ -179,11 +180,11 @@ class Lockable:
     Where as the second will be locked from now on
 
     >>> type(d['b'])
-    LockGroupDict
+    <class 'lockable.LockGroupDict'>
     >>> d['b']['c'] = 23
     Traceback (most recent call last):
         ...
-    lockable.Locked: Object is currently locked!  Call unlock() if you know what you are doing.
+    lockable.Locked: Object is currently locked!  Use unlocked() if you know what you are doing.
     >>> d['b']['c']
     1
 
@@ -193,6 +194,29 @@ class Lockable:
     ...   dopen['b']['d'] = 23
     >>> d['b']['d']
     23
+
+    To use this class with properties, simply decorate the setter
+
+    >>> class MyLock(Lockable):
+    ...   def __init__(self, foo):
+    ...     super().__init__()
+    ...     self._foo = foo
+    ...   @property
+    ...   def foo(self):
+    ...     return self._foo
+    ...   @foo.setter
+    ...   @sentinel
+    ...   def foo(self, value):
+    ...     self._foo = value
+    >>> ml = MyLock(42)
+    >>> ml.foo
+    42
+    >>> ml.foo = 23
+    >>> ml.lock()
+    >>> ml.foo = 42
+    Traceback (most recent call last):
+        ...
+    lockable.Locked: Object is currently locked!  Use unlocked() if you know what you are doing.
     """
 
     def __init__(self, *args, **kwargs):
