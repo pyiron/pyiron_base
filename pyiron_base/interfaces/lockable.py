@@ -20,6 +20,17 @@ class Locked(Exception):
     pass
 
 def sentinel(meth):
+    """
+    Wrap a method to fail if `read_only` is `True` on the owning object.
+
+    Use together with :class:`Lockable`.
+
+    Args:
+        meth (method): method to call if `read_only` is `False`.
+
+    Returns:
+        wrapped method
+    """
     @wraps(meth)
     def f(self, *args, **kwargs):
         if self.read_only:
@@ -29,6 +40,11 @@ def sentinel(meth):
     return f
 
 class _UnlockContext:
+    """
+    Context manager that unlocks and relocks a :class:`Lockable`.
+
+    This is an implementation detail of :class:`Lockable`.
+    """
     __slots__ = ("owner",)
 
     def __init__(self, owner):
@@ -43,6 +59,11 @@ class _UnlockContext:
         return False # never handle exceptions
 
 def _iterate_lockable_subs(lockable_groups):
+    """
+    Yield sub nodes and groups that are lockable.  Recurse into groups.
+
+    If the given object is not a :class:`HasGroups` yield nothing.
+    """
     if not isinstance(lockable_groups, HasGroups):
         return
 
@@ -199,9 +220,8 @@ class Lockable:
                 self._on_unlock()
 
     def _on_lock(self):
-        if isinstance(self, HasGroups):
-            for it in _iterate_lockable_subs(self):
-                it.lock()
+        for it in _iterate_lockable_subs(self):
+            it.lock()
 
     def _on_unlock(self):
         for it in _iterate_lockable_subs(self):
