@@ -5,7 +5,9 @@
 import unittest
 import numpy as np
 
+import pyiron_base
 from pyiron_base._tests import TestWithProject, ToyJob
+
 
 class TestProjectData(TestWithProject):
 
@@ -21,7 +23,7 @@ class TestProjectData(TestWithProject):
 
     def setUp(self):
         super().setUp()
-        self.table = self.project.create.table('test_table')
+        self.table: pyiron_base.TableJob = self.project.create.table('test_table')
         self.table.filter_function = lambda j: j.name in ["test_a", "test_b"]
         self.table.add['name'] = lambda j: j.name
         self.table.add['array'] = lambda j: np.arange(8)
@@ -29,6 +31,10 @@ class TestProjectData(TestWithProject):
 
     def tearDown(self):
         self.project.remove_job(self.table.name)
+
+    def test_analysis_project(self):
+        self.assertIs(self.project, self.table.analysis_project)
+        self.assertEqual(self.project.path, self.project.load(self.table.name).analysis_project.path)
 
     def test_filter(self):
         """Filter functions should restrict jobs included in the table."""
