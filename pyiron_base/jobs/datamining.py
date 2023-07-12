@@ -4,7 +4,7 @@
 
 import codecs
 from datetime import datetime
-import dill as pickle
+import cloudpickle
 import json
 import numpy as np
 import os
@@ -34,11 +34,11 @@ __date__ = "Sep 1, 2018"
 
 
 def _to_pickle(hdf, key, value):
-    hdf[key] = codecs.encode(pickle.dumps(value), "base64").decode()
+    hdf[key] = codecs.encode(cloudpickle.dumps(value), "base64").decode()
 
 
 def _from_pickle(hdf, key):
-    return pickle.loads(codecs.decode(hdf[key].encode(), "base64"))
+    return cloudpickle.loads(codecs.decode(hdf[key].encode(), "base64"))
 
 
 def get_job_id(job):
