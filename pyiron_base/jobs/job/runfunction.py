@@ -494,11 +494,11 @@ def run_job_with_runmode_executor(job, executor, gpus_per_slot=None):
             "Currently job.server.run_mode.executor does not support GenericMaster jobs."
         )
     if flux_available and isinstance(executor, flux.job.FluxExecutor):
-        return run_job_with_runmode_executor_flux(
+        run_job_with_runmode_executor_flux(
             job=job, executor=executor, gpus_per_slot=gpus_per_slot
         )
     elif isinstance(executor, ProcessPoolExecutor):
-        return run_job_with_runmode_executor_futures(job=job, executor=executor)
+        run_job_with_runmode_executor_futures(job=job, executor=executor)
     else:
         raise NotImplementedError(
             "Currently only flux.job.FluxExecutor and concurrent.futures.ProcessPoolExecutor are supported."
@@ -617,7 +617,7 @@ def run_job_with_runmode_executor_flux(job, executor, gpus_per_slot=None):
     )
     jobspec.cwd = job.project_hdf5.working_directory
     jobspec.environment = dict(os.environ)
-    return executor.submit(jobspec)
+    job.server.future = executor.submit(jobspec)
 
 
 def run_time_decorator(func):
