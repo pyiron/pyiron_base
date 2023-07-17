@@ -30,7 +30,7 @@ setup(
     packages=find_packages(exclude=["*tests*", "*docs*", "*binder*", "*conda*", "*notebooks*", "*.ci_support*"]),
     install_requires=[
         'cloudpickle==2.2.1',
-        'gitpython==3.1.31',
+        'gitpython==3.1.32',
         'h5io==0.1.8',
         'h5py==3.9.0',
         'jinja2==3.1.2',
@@ -40,7 +40,7 @@ setup(
         'psutil==5.9.5',
         'pyfileindex==0.0.11',
         'pysqa==0.0.25',
-        'sqlalchemy==2.0.18',
+        'sqlalchemy==2.0.19',
         'tables==3.8.0',
         'tqdm==4.65.0',
         'traitlets==5.9.0',
