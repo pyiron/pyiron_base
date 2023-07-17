@@ -460,7 +460,7 @@ class GenericMaster(GenericJob):
             if len(name_lst) > 1:
                 return self.project.inspect(child_id)["/".join(name_lst[1:])]
             else:
-                return self.project.load(child_id, convert_to_object=True)
+                return self.project.load(child_id)
         elif item_obj in self._job_name_lst:
             child = self._load_job_from_cache(job_name=item_obj)
             if len(name_lst) == 1:

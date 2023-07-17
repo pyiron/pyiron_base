@@ -5,6 +5,8 @@
 The project object is the central import point of pyiron - all other objects can be created from this one
 """
 
+from __future__ import annotations
+
 import os
 import posixpath
 import shutil
@@ -15,6 +17,7 @@ import pint
 import math
 import numpy as np
 
+from pyiron_base.project.jobloader import JobLoader, JobInspector
 from pyiron_base.project.maintenance import Maintenance
 from pyiron_base.project.path import ProjectPath
 from pyiron_base.database.filetable import FileTable
@@ -47,7 +50,10 @@ from pyiron_base.jobs.job.extension.server.queuestatus import (
 from pyiron_base.project.external import Notebook
 from pyiron_base.project.data import ProjectData
 from pyiron_base.project.archiving import export_archive, import_archive
-from typing import Generator, Union, Dict
+from typing import Generator, Union, Dict, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from pyiron_base.jobs.job.generic import GenericJob
 
 __author__ = "Joerg Neugebauer, Jan Janssen"
 __copyright__ = (
@@ -122,6 +128,8 @@ class Project(ProjectPath, HasGroups):
         self._inspect_mode = False
         self._data = None
         self._creator = Creator(project=self)
+        self._loader = JobLoader(project=self)
+        self._inspector = JobInspector(project=self)
 
         self.job_type = JobTypeChoice()
 
@@ -539,17 +547,9 @@ class Project(ProjectPath, HasGroups):
         new._filter = ["groups"]
         return new
 
-    def inspect(self, job_specifier):
-        """
-        Inspect an existing pyiron object - most commonly a job - from the database
-
-        Args:
-            job_specifier (str, int): name of the job or job ID
-
-        Returns:
-            JobCore: Access to the HDF5 object - not a GenericJob object - use load() instead.
-        """
-        return self.load(job_specifier=job_specifier, convert_to_object=False)
+    @property
+    def inspect(self):
+        return self._inspector
 
     def iter_jobs(
         self,
@@ -586,7 +586,7 @@ class Project(ProjectPath, HasGroups):
             job_id_lst = tqdm(job_id_lst)
         for job_id in job_id_lst:
             if path is not None:
-                yield self.load(job_id, convert_to_object=False)[path]
+                yield self.inspect(job_id)[path]
             else:  # Backwards compatibility - in future the option convert_to_object should be removed
                 yield self.load(job_id, convert_to_object=convert_to_object)
 
@@ -822,34 +822,9 @@ class Project(ProjectPath, HasGroups):
             return []
         return self.get_jobs(recursive=recursive, columns=["job"])["job"]
 
-    def load(self, job_specifier, convert_to_object=True):
-        """
-        Load an existing pyiron object - most commonly a job - from the database
-
-        Args:
-            job_specifier (str, int): name of the job or job ID
-            convert_to_object (bool): convert the object to an pyiron object or only access the HDF5 file - default=True
-                                      accessing only the HDF5 file is about an order of magnitude faster, but only
-                                      provides limited functionality. Compare the GenericJob object to JobCore object.
-
-        Returns:
-            GenericJob, JobCore: Either the full GenericJob object or just a reduced JobCore object
-        """
-        if self.sql_query is not None:
-            state.logger.warning(
-                "SQL filter '%s' is active (may exclude job) ", self.sql_query
-            )
-        if not isinstance(job_specifier, (int, np.integer)):
-            job_specifier = _get_safe_job_name(name=job_specifier)
-        job_id = self.get_job_id(job_specifier=job_specifier)
-        if job_id is None:
-            state.logger.warning(
-                "Job '%s' does not exist and cannot be loaded", job_specifier
-            )
-            return None
-        return self.load_from_jobpath(
-            job_id=job_id, convert_to_object=convert_to_object
-        )
+    @property
+    def load(self):
+        return self._loader
 
     def load_from_jobpath(self, job_id=None, db_entry=None, convert_to_object=True):
         """
@@ -1133,9 +1108,7 @@ class Project(ProjectPath, HasGroups):
         else:
             if not self.db.view_mode:
                 try:
-                    job = self.load(
-                        job_specifier=job_specifier, convert_to_object=False
-                    )
+                    job = self.inspect(job_specifier=job_specifier)
                     if job is None:
                         state.logger.warning(
                             "Job '%s' does not exist and could not be removed",
