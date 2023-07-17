@@ -13,7 +13,7 @@ from pandas.errors import EmptyDataError
 from tqdm.auto import tqdm
 import types
 from typing import List, Tuple
-from multiprocessing import Pool
+from pympipool import Pool
 
 from pyiron_base.utils.deprecate import deprecate
 from pyiron_base.jobs.job.generic import GenericJob
