@@ -45,6 +45,7 @@ setup(
         'tables==3.7.0',
         'tqdm==4.64.1',
         'traitlets==5.9.0',
+        'pympipool==0.5.4',
     ],
     cmdclass=versioneer.get_cmdclass(),
 
