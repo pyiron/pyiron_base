@@ -26,6 +26,7 @@ class TestProjectData(PyironTestCase):
             pass
 
     def setUp(self):
+        super().setUp()
         self.project = Project(self.project_name)
 
     def tearDown(self):
@@ -183,6 +184,7 @@ class TestProjectSymlink(TestWithFilledProject):
 
 class TestToolRegistration(TestWithProject):
     def setUp(self) -> None:
+        super().setUp()
         self.tools = BaseTools(self.project)
 
     def test_registration(self):

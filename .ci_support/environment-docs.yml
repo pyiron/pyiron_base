@@ -3,13 +3,12 @@ channels:
 dependencies:
 - nbsphinx
 - dill
-- future
 - gitpython
 - h5io
 - h5py
+- jinja2
 - numpy
 - pandas
-- pathlib2
 - pint
 - psutil
 - pyfileindex

@@ -5,6 +5,7 @@
 Set of functions to interact with the queuing system directly from within pyiron - optimized for the Sun grid engine.
 """
 
+from concurrent.futures import Future
 import pandas
 import time
 import numpy as np
@@ -72,12 +73,20 @@ def queue_table(
                     ]
                 ]
             else:
-                return df[
-                    [
-                        any([working_dir.startswith(p) for p in working_directory_lst])
-                        for working_dir in list(df.working_directory)
+                if len(df) > 0 and "working_directory" in df.columns:
+                    return df[
+                        [
+                            any(
+                                [
+                                    working_dir.startswith(p)
+                                    for p in working_directory_lst
+                                ]
+                            )
+                            for working_dir in list(df.working_directory)
+                        ]
                     ]
-                ]
+                else:
+                    return df
     else:
         return None
 
@@ -195,7 +204,6 @@ def wait_for_job(job, interval_in_s=5, max_iterations=100):
                     state.queue_adapter.transfer_file_to_remote(
                         file=job.project_hdf5.file_name,
                         transfer_back=True,
-                        delete_remote=False,
                     )
                     status_hdf5 = job.project_hdf5["status"]
                     job.status.string = status_hdf5
@@ -219,7 +227,12 @@ def wait_for_job(job, interval_in_s=5, max_iterations=100):
                 if job.status.string in job_status_finished_lst:
                     finished = True
                     break
-                time.sleep(interval_in_s)
+                elif isinstance(job.server.future, Future):
+                    job.server.future.result(timeout=interval_in_s)
+                    finished = job.server.future.done()
+                    break
+                else:
+                    time.sleep(interval_in_s)
             if not finished:
                 raise ValueError(
                     "Maximum iterations reached, but the job was not finished."

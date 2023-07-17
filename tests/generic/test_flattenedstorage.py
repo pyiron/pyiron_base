@@ -157,11 +157,11 @@ class TestFlattenedStorage(TestWithProject):
         except ValueError:
             # both checks below are regression tests for https://github.com/pyiron/pyiron_contrib/pull/197
             self.fail("add_chunk should not raise an exception when passed a value for an existing per-chunk array.")
-        self.assertTrue(np.array_equal(val, cont.get_array("perchunk", 0)),
+        self.assertEqual(val, cont.get_array("perchunk", 0),
                         "add_chunk did not remove first axis on a per chunk array!")
         # test the same, but now let the array be created by add_chunk, instead of doing it on our own
         cont.add_chunk(2, perelem=[1,1], perchunk2=val[np.newaxis, :])
-        self.assertTrue(np.array_equal(val, cont.get_array("perchunk2", 1)),
+        self.assertEqual(val, cont.get_array("perchunk2", 1),
                         "add_chunk did not remove first axis on a per chunk array!")
 
 
@@ -173,22 +173,22 @@ class TestFlattenedStorage(TestWithProject):
         for n, e, o in zip( ("first", None, "third"), self.even, self.odd):
             store.add_chunk(len(e), identifier=n, even=e, odd=o, sum=sum(e + o))
 
-        self.assertTrue(np.array_equal(store.get_array("even", 0), self.even[0]),
+        self.assertEqual(store.get_array("even", 0), np.array(self.even[0]),
                         "get_array returns wrong array for numeric index!")
 
-        self.assertTrue(np.array_equal(store.get_array("even", "first"), self.even[0]),
+        self.assertEqual(store.get_array("even", "first"), np.array(self.even[0]),
                         "get_array returns wrong array for string identifier!")
 
-        self.assertTrue(np.array_equal(store.get_array("even", "1"), self.even[1]),
+        self.assertEqual(store.get_array("even", "1"), np.array(self.even[1]),
                         "get_array returns wrong array for automatic identifier!")
 
-        self.assertTrue(np.array_equal(store.get_array("sum", 0), sum(self.even[0] + self.odd[0])),
+        self.assertEqual(store.get_array("sum", 0), sum(self.even[0] + self.odd[0]),
                         "get_array returns wrong array for numeric index!")
 
-        self.assertTrue(np.array_equal(store.get_array("sum", "first"), sum(self.even[0] + self.odd[0])),
+        self.assertEqual(store.get_array("sum", "first"), sum(self.even[0] + self.odd[0]),
                         "get_array returns wrong array for string identifier!")
 
-        self.assertTrue(np.array_equal(store.get_array("sum", "1"), sum(self.even[1] + self.odd[1])),
+        self.assertEqual(store.get_array("sum", "1"), sum(self.even[1] + self.odd[1]),
                         "get_array returns wrong array for automatic identifier!")
 
         with self.assertRaises(KeyError, msg="Non-existing identifier!"):
@@ -199,10 +199,10 @@ class TestFlattenedStorage(TestWithProject):
 
         store = FlattenedStorage(elem=[ [1], [2, 3], [4, 5, 6] ], chunk=[-1, -2, -3])
         elem = store.get_array("elem")
-        self.assertTrue(np.array_equal(elem, [1, 2, 3, 4, 5, 6]),
+        self.assertEqual(elem, np.array([1, 2, 3, 4, 5, 6]),
                         f"get_array return did not return correct flat array, but {elem}.")
         chunk = store.get_array("chunk")
-        self.assertTrue(np.array_equal(chunk, [-1, -2, -3]),
+        self.assertEqual(chunk, np.array([-1, -2, -3]),
                         f"get_array return did not return correct flat array, but {chunk}.")
 
     def test_get_array_filled(self):
@@ -224,16 +224,17 @@ class TestFlattenedStorage(TestWithProject):
                                       ])
         val = store.get_array_filled("elem")
         self.assertEqual(val.shape, (3, 3), "shape not correct!")
-        self.assertTrue(np.array_equal(val, [[1, -1, -1], [2, 3, -1], [4, 5, 6]]),
+        self.assertEqual(val, np.array([[1, -1, -1], [2, 3, -1], [4, 5, 6]]),
                                        "values in returned array not the same as in original array!")
         self.assertEqual(store.get_array_filled("fill")[0, 1], 23.42,
                          "incorrect fill value!")
         val = store.get_array_filled("complex")
         self.assertEqual(val.shape, (3, 3, 3), "shape not correct!")
-        self.assertTrue(np.array_equal(
-                           store.get_array("chunk"),
-                           store.get_array_filled("chunk"),
-                        ), "get_array_filled does not give same result as get_array for per chunk array")
+        self.assertEqual(
+                        store.get_array("chunk"),
+                        store.get_array_filled("chunk"),
+                        "get_array_filled does not give same result as get_array for per chunk array"
+        )
 
     def test_get_array_ragged(self):
         """get_array_ragged should return a raggend array of all elements in the storage."""
@@ -244,12 +245,12 @@ class TestFlattenedStorage(TestWithProject):
         for i, v in enumerate(val):
             self.assertEqual(len(v), store._per_chunk_arrays["length"][i],
                              f"array {i} has incorrect length!")
-            self.assertTrue(np.array_equal(v, [[1], [2, 3], [4, 5, 6]][i]),
+            self.assertEqual(v, np.array([[1], [2, 3], [4, 5, 6]][i]),
                             f"array {i} has incorrect values, {v}!")
-        self.assertTrue(np.array_equal(
+        self.assertEqual(
                            store.get_array("chunk"),
                            store.get_array_ragged("chunk"),
-                        ), "get_array_ragged does not give same result as get_array for per chunk array")
+                        ), "get_array_ragged does not give same result as get_array for per chunk array"
 
     def test_get_array_ragged_dtype_stability(self):
         """get_array_ragged should (only!) convert top-most dimension to dtype=object and be of shape (n,) """
@@ -402,22 +403,22 @@ class TestFlattenedStorage(TestWithProject):
         """Using __getitem__/__setitem__ should be equivalent to using get_array/set_array."""
         store = FlattenedStorage(even=self.even, odd=self.odd, mylen=[1, 2, 3])
         for i in range(len(store)):
-            self.assertTrue(np.array_equal(
+            self.assertEqual(
                     store["even", i], store.get_array("even", i),
-                ), f"getitem returned different value ({store['even', i]}) than get_array ({store.get_array('even', i)}) for chunk {i}"
+                f"getitem returned different value ({store['even', i]}) than get_array ({store.get_array('even', i)}) for chunk {i}"
             )
             self.assertEqual(store["mylen", i], store.get_array("mylen", i),
                              f"getitem returned different value ({store['mylen', i]}) than get_array ({store.get_array('mylen', i)}) for chunk {i}")
-        self.assertTrue(np.array_equal(store["even"], store.get_array("even")),
+        self.assertEqual(store["even"], store.get_array("even"),
                         f"getitem returned different value ({store['even']}) than get_array ({store.get_array('even')})")
-        self.assertTrue(np.array_equal(store["mylen"], store.get_array("mylen")),
+        self.assertEqual(store["mylen"], store.get_array("mylen"),
                         f"getitem returned different value ({store['mylen']}) than get_array ({store.get_array('mylen')})")
         store["even", 0] = [4]
         store["even", 1] = [2, 0]
         store["mylen", 0] = 4
         self.assertEqual(store.get_array("mylen", 0), 4, "setitem did not set item correctly.")
-        self.assertTrue(np.array_equal(store.get_array("even", 0), [4]), "setitem did not set item correctly.")
-        self.assertTrue(np.array_equal(store.get_array("even", 1), [2, 0]), "setitem did not set item correctly.")
+        self.assertEqual(store.get_array("even", 0), [4], "setitem did not set item correctly.")
+        self.assertEqual(store.get_array("even", 1), np.array([2, 0]), "setitem did not set item correctly.")
 
         with self.assertRaises(IndexError, msg="Calling setitem with out index doesn't raise Error!"):
             store["mylen"] = [1,2,3]
@@ -443,7 +444,7 @@ class TestFlattenedStorage(TestWithProject):
         for i in range(5):
             store_foo = store.get_array("foo", i)
             read_foo = read.get_array("foo", i)
-            self.assertTrue(np.array_equal(store_foo, read_foo),
+            self.assertEqual(store_foo, read_foo,
                             f"per element values not equal after reading from HDF! {store_foo} != {read_foo}")
             self.assertEqual(store.get_array("bar", i), read.get_array("bar", i),
                              "per chunk values not equal after reading from HDF!")
@@ -560,3 +561,38 @@ class TestFlattenedStorage(TestWithProject):
         self.assertTrue(np.all(bar==store.get_array("bar")))
         self.assertTrue(np.all(foobar[3:5]==store.get_array("foobar")[3:5]))
         self.assertTrue(np.all(barfoo[3:10]==store.get_array("barfoo")[3:10]))
+
+    def test_del_array(self):
+
+        store = FlattenedStorage(
+                elem1=[ [1], [2, 3], [4, 5, 6] ],
+                elem2=[ [1], [2, 3], [4, 5, 6] ],
+                chunk1=[-1, -2, -3],
+                chunk2=[-1, -2, -3],
+        )
+        with self.subTest("ignore_missing"):
+            with self.assertRaises(KeyError, msg="del_array doesn't raise an error on missing key"):
+                store.del_array("foobar")
+            with self.assertRaises(KeyError, msg="__delitem__ doesn't raise an error on missing key"):
+                del store["foobar"]
+            try:
+                store.del_array("foobar", ignore_missing=True)
+            except KeyError:
+                self.fail("del_array raises error with ignore_missing present")
+
+        with self.subTest("per chunk"):
+            del store["chunk1"]
+            self.assertTrue("chunk1" not in store.list_arrays(),
+                            "Per chunk array still present after __delitem__")
+            store.del_array("chunk2")
+            self.assertTrue("chunk2" not in store.list_arrays(),
+                            "Per chunk array still present after del_array")
+
+
+        with self.subTest("per element"):
+            del store["elem1"]
+            self.assertTrue("elem1" not in store.list_arrays(),
+                            "Per element array still present after __delitem__")
+            store.del_array("elem2")
+            self.assertTrue("elem2" not in store.list_arrays(),
+                            "Per element array still present after del_array")

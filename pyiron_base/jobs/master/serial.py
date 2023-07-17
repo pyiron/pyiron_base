@@ -273,6 +273,10 @@ class SerialMasterBase(GenericMaster):
                 self._run_if_master_modal_child_modal(job)
             elif self.server.run_mode.modal and job.server.run_mode.non_modal:
                 self._run_if_master_modal_child_non_modal(job)
+            elif job.server.run_mode.executor:
+                raise NotImplementedError(
+                    "Currently SerialMasterBase jobs do not support child jobs with job.server.run_mode.executor."
+                )
             else:
                 raise TypeError()
         else:

@@ -273,6 +273,8 @@ class ParallelMaster(GenericMaster):
             yield: Yield of GenericJob or JobCore
         """
         project_working_directory = self.project.open(self.job_name + "_hdf5")
+        if state.database.database_is_disabled:
+            project_working_directory.db.update()
         for job_id in self._get_jobs_sorted():
             yield project_working_directory.load(
                 job_id, convert_to_object=convert_to_object
@@ -528,7 +530,9 @@ class ParallelMaster(GenericMaster):
         self.status.running = True
         self.submission_status.total_jobs = len(self._job_generator)
         self.submission_status.submitted_jobs = 0
-        if self.job_id and not self.is_finished():
+        if (
+            self.job_id or state.database.database_is_disabled
+        ) and not self.is_finished():
             self._logger.debug(
                 "{} child project {}".format(self.job_name, self.project.__str__())
             )
@@ -552,6 +556,10 @@ class ParallelMaster(GenericMaster):
                     self._run_if_master_modal_child_modal(job)
                 elif self.server.run_mode.modal and job.server.run_mode.non_modal:
                     self._run_if_master_modal_child_non_modal(job)
+                elif job.server.run_mode.executor:
+                    raise NotImplementedError(
+                        "Currently ParallelMaster jobs do not support child jobs with job.server.run_mode.executor."
+                    )
                 else:
                     raise TypeError()
         else:

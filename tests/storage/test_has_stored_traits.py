@@ -166,9 +166,6 @@ class NestedBreakfast(Omelette):
 
 
 class TestInput(TestWithProject):
-    @classmethod
-    def setUpClass(cls):
-        super().setUpClass()
 
     def setUp(self) -> None:
         super().setUp()

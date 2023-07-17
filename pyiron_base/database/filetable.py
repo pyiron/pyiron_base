@@ -6,12 +6,12 @@ File based database interface
 """
 
 import datetime
+from abc import ABCMeta
 from collections.abc import Iterable
 import numpy as np
 import os
 import pandas
 from pyfileindex import PyFileIndex
-from pyiron_base.interfaces.singleton import Singleton
 from pyiron_base.database.generic import IsDatabase
 from pyiron_base.storage.helper_functions import read_hdf5, write_hdf5
 
@@ -47,13 +47,54 @@ table_columns = {
 }
 
 
-class FileTable(IsDatabase, metaclass=Singleton):
-    def __init__(self, project):
+class FileTableSingleton(ABCMeta):
+    """
+    Indexing the file system for each `FileTable` can be expensive, so we use a
+    singleton system that does this once for each path instead.
+    """
+
+    _instances = {}
+
+    def __call__(cls, index_from):
+        path = os.path.abspath(os.path.expanduser(index_from))
+        if path not in cls._instances:
+            cls._instances[path] = super().__call__(
+                index_from=path,
+                fileindex=cls._get_fileindex_if_theres_a_common_path(path),
+            )
+        return cls._instances[path]
+
+    def _get_fileindex_if_theres_a_common_path(cls, path):
+        common_path = _get_most_common_path(
+            path=path, reference_paths=cls._instances.keys()
+        )
+        if common_path is not None:
+            return cls._instances[common_path]._fileindex.open(path)
+        else:
+            return None
+
+
+class FileTable(IsDatabase, metaclass=FileTableSingleton):
+    """
+    File table should behave to the user like a database, but it infers project
+    hierarchy directly from the file system hierarchy.
+
+    Because indexing the file system can be expensive, and projects sometimes get
+    re-initialized, it is important to keep the (re)instantiation cost for this class
+    as minimal as possible.
+
+    Args:
+         index_from (str): The file path to start indexing at, i.e. the project path.
+         fileindex (PyFileIndex): In case the file path in index_from is already indexed,
+                                  then the index can be provided as additional input parameter.
+    """
+
+    def __init__(self, index_from: str, fileindex: PyFileIndex = None):
         self._fileindex = None
         self._job_table = None
-        self._project = os.path.abspath(project)
+        self._path = os.path.abspath(index_from)
         self._columns = list(table_columns.keys())
-        self.force_reset()
+        self.force_reset(fileindex=fileindex)
 
     def add_item_dict(self, par_dict):
         """
@@ -114,13 +155,19 @@ class FileTable(IsDatabase, metaclass=Singleton):
         else:
             raise ValueError
 
-    def force_reset(self):
+    def force_reset(self, fileindex=None):
         """
         Reset cache of the FileTable object
+
+        Args:
+            fileindex (PyFileIndex): File index for the current directory
         """
-        self._fileindex = PyFileIndex(
-            path=self._project, filter_function=filter_function
-        )
+        if fileindex is not None:
+            self._fileindex = fileindex
+        else:
+            self._fileindex = PyFileIndex(
+                path=self._path, filter_function=filter_function
+            )
         df = pandas.DataFrame(self.init_table(fileindex=self._fileindex.dataframe))
         if len(df) != 0:
             df.id = df.id.astype(int)
@@ -141,7 +188,7 @@ class FileTable(IsDatabase, metaclass=Singleton):
             list: list of child IDs
         """
         if project is None:
-            project = self._project
+            project = self._path
         self.update()
         id_master = self.get_job_id(project=project, job_specifier=job_specifier)
         if id_master is None:
@@ -280,7 +327,7 @@ class FileTable(IsDatabase, metaclass=Singleton):
             dict: job entries as dictionary
         """
         if project is None:
-            project = self._project
+            project = self._path
         if columns is None:
             columns = ["id", "project"]
         df = self.job_table(
@@ -328,7 +375,7 @@ class FileTable(IsDatabase, metaclass=Singleton):
             int/ None: job ID
         """
         if project is None:
-            project = self._project
+            project = self._path
         if isinstance(job_specifier, (int, np.integer)):
             return job_specifier  # is id
         if len(self._job_table) == 0:
@@ -487,9 +534,15 @@ class FileTable(IsDatabase, metaclass=Singleton):
                     )
                 ]
             )
+            sanitized_paths = self._fileindex.dataframe.path.str.replace("\\", "/")
+            # The files_list is generated using project path values
+            # In pyiron, these are all forced to be posix-like with /
+            # But _fileindex is of type PyFileIndex, which does _not_ modify paths
+            # so to get the two compatible for an isin check, we need to sanitize the
+            # _fileindex.dataframe.path results
             df_new = self._fileindex.dataframe[
                 ~self._fileindex.dataframe.is_directory
-                & ~self._fileindex.dataframe.path.isin(files_lst)
+                & ~sanitized_paths.isin(files_lst)
             ]
         else:
             files_lst, working_dir_lst = [], []
@@ -518,7 +571,11 @@ class FileTable(IsDatabase, metaclass=Singleton):
                 "status": get_job_status_from_file(hdf5_file=path, job_name=job),
                 "job": job,
                 "subjob": "/" + job,
-                "project": os.path.dirname(path) + "/",
+                "project": os.path.dirname(path).replace("\\", "/") + "/",
+                # pyiron Project paths are forced to be posix-like with / instead of \
+                # in order for the contains and endswith tests down in _get_job_table
+                # to work on windows, we need to make sure that the file table obeys
+                # this conversion
                 "timestart": time,
                 "timestop": time,
                 "totalcputime": 0.0,
@@ -551,14 +608,16 @@ class FileTable(IsDatabase, metaclass=Singleton):
     ):
         self.update()
         if project_path is None:
-            project_path = self._project
+            project_path = self._path
         if len(self._job_table) != 0:
             if recursive:
                 return self._job_table[
                     self._job_table.project.str.contains(project_path)
                 ]
             else:
-                return self._job_table[self._job_table.project == project_path]
+                return self._job_table[
+                    self._job_table.project.str.endswith(project_path)
+                ]
         else:
             return self._job_table
 
@@ -609,5 +668,13 @@ def get_hamilton_version_from_file(hdf5_file, job_name):
 def get_job_status_from_file(hdf5_file, job_name):
     if os.path.exists(hdf5_file):
         return read_hdf5(hdf5_file, job_name + "/status")
+    else:
+        return None
+
+
+def _get_most_common_path(path, reference_paths):
+    path_match_lst = [p for p in reference_paths if os.path.commonpath([path, p]) == p]
+    if len(path_match_lst) > 0:
+        return max(path_match_lst, key=len)
     else:
         return None

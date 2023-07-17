@@ -36,14 +36,14 @@ class ProjectData(DataContainer):
         object.__setattr__(instance, "_project", None)
         return instance
 
-    def __init__(self, *args, project=None, **kwargs):
+    def __init__(self, *args, project=None, lazy=True, **kwargs):
         """
         A data storage container which can store itself to/retrieve itself from file at the project level.
 
         Args:
             project (pyiron_base.Project): The project instance the storage is attached to.
         """
-        super().__init__(*args, **kwargs)
+        super().__init__(*args, lazy=lazy, **kwargs)
         self._project = project
 
     def read(self):

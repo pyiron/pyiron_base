@@ -25,6 +25,12 @@ def register(parser):
         action="store_true",
         help="submit to queuing system on remote host",
     )
+    parser.add_argument(
+        "-c",
+        "--collect",
+        action="store_true",
+        help="only collect output of calculation",
+    )
 
 
 def main(args):
@@ -34,4 +40,5 @@ def main(args):
         file_path=args.file_path,
         debug=args.debug,
         submit_on_remote=args.submit,
+        collect=args.collect,
     )
