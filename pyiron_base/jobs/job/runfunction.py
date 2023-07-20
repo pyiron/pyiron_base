@@ -587,8 +587,8 @@ def run_job_with_runmode_executor_flux(job, executor, gpus_per_slot=None):
         )
     if not state.database.database_is_disabled:
         executable_template = Template(
-            source="#!/bin/bash\n"
-            "python -m pyiron_base.cli wrapper -p {{working_directory}} -j {{job_id}}"
+            "#!/bin/bash\n"
+            + "python -m pyiron_base.cli wrapper -p {{working_directory}} -j {{job_id}}"
         )
         exeuctable_str = executable_template.render(
             working_directory=job.working_directory,
@@ -597,8 +597,8 @@ def run_job_with_runmode_executor_flux(job, executor, gpus_per_slot=None):
         job_name = "pi_" + str(job.job_id)
     else:
         executable_template = Template(
-            source="#!/bin/bash\n"
-            "python -m pyiron_base.cli wrapper -p {{working_directory}} -f {{file_name}}{{h5_path}}"
+            "#!/bin/bash\n"
+            + "python -m pyiron_base.cli wrapper -p {{working_directory}} -f {{file_name}}{{h5_path}}"
         )
         exeuctable_str = executable_template.render(
             working_directory=job.working_directory,
