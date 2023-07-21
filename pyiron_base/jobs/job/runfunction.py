@@ -586,10 +586,8 @@ def run_job_with_runmode_executor_flux(job, executor, gpus_per_slot=None):
             "`conda install -c conda-forge flux-sched libhwloc=*=cuda*`"
         )
     executable_str, job_name = _generate_flux_execute_string(
-        job=job,
-        database_is_disabled=state.database.database_is_disabled
+        job=job, database_is_disabled=state.database.database_is_disabled
     )
-
     jobspec = flux.job.JobspecV1.from_batch_command(
         jobname=job_name,
         script=executable_str,
