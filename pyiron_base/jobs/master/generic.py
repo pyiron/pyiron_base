@@ -143,6 +143,7 @@ class GenericMaster(GenericJob):
 
     @wraps(GenericJob.set_input_to_read_only)
     def set_input_to_read_only(self):
+        super().set_input_to_read_only()
         self._input.read_only = True
 
     def first_child_name(self):
