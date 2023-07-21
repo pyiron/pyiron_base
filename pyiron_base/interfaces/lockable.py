@@ -9,9 +9,15 @@ has been locked by them or pyiron.
 
 The context manager functionality is implemented in a separate class rather than directly on Lockable to conserve dunder
 name space real estate and let subclasses be context managers on their own.
+
+Through out the code inside methods of `Lockable` will use `object.__setattr__`
+and `object.__getattribute__` to avoid any overloading attribute access that
+sibling classes may bring in.
 """
 
+from typing import Optional, Literal
 from functools import wraps
+import warnings
 
 from pyiron_base.interfaces.has_groups import HasGroups
 
@@ -30,12 +36,35 @@ def sentinel(meth):
     Returns:
         wrapped method
     """
-    @wraps(meth)
-    def f(self, *args, **kwargs):
-        if self.read_only:
+    def dispatch_or_error(self, *args, **kwargs):
+        try:
+            method = object.__getattribute__(self, "_lock_method")
+        except AttributeError:
+            method = None
+        if method not in ("error", "warning"):
+            method = "error"
+        if self.read_only and method == "error":
             raise Locked("Object is currently locked!  Use unlocked() if you know what you are doing.")
-        else:
-            return meth(self, *args, **kwargs)
+        elif self.read_only and method == "warning":
+            warnings.warn(
+                    f"{meth.__name__} called on {type(self)}, but object is locked!"
+            )
+        return meth(self, *args, **kwargs)
+
+    # if sentinel is applied to __setattr__ we must ensure that `read_only`
+    # stays available, otherwise we can't unlock again later
+    if meth.__name__ == "__setattr__":
+        @wraps(meth)
+        def f(self, *args, **kwargs):
+            if len(args) > 0:
+                target = args[0]
+            else:
+                target = kwargs["name"]
+            if target in ("read_only", "_read_only"):
+                return meth(self, *args, **kwargs)
+            return dispatch_or_error(self, *args, **kwargs)
+    else:
+        f = wraps(meth)(dispatch_or_error)
     return f
 
 class _UnlockContext:
@@ -95,6 +124,9 @@ class Lockable:
     not explicitely overriding it (as in the examples below), take care that either the other super classes call
     `super().__init__` or place this class before them in the inheritance order.  Also be sure to initialize it before
     using methods and properties decorated with :func:`.sentinel`.
+
+    Subclasses may override :meth:`_on_lock` and :meth:`_on_unlock` if they wish to customize locking/unlocking
+    behaviour, provided that they call super() in their overloads.
 
     Let's start with a simple example; a list that can be locked
 
@@ -217,11 +249,31 @@ class Lockable:
     Traceback (most recent call last):
         ...
     lockable.Locked: Object is currently locked!  Use unlocked() if you know what you are doing.
+
+    It's possible to change the errors raised into a warning and allow
+    modification by passing `lock_method` to :meth:`~.Lockable.__init__` or
+    `method` to :meth:`~.lock`.
+
+    >>> mw = LockList(lock_method="warning")
+    >>> mw.append(0)
+    >>> mw.lock()
+    >>> mw[0] = 1 # will print the warning
+    >>> mw[0]
+    1
+
+    >>> mw = LockList()
+    >>> mw.append(0)
+    >>> mw.lock(method='warning')
+    >>> mw[0] = 1 # will print the warning
+    >>> mw[0]
+    1
+
     """
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, *args, lock_method: str = "error", **kwargs):
         object.__setattr__(self, "_read_only", False)
+        object.__setattr__(self, "_lock_method", lock_method)
+        super().__init__(*args, **kwargs)
 
     @property
     def read_only(self) -> bool:
@@ -235,8 +287,8 @@ class Lockable:
     @read_only.setter
     def read_only(self, value: bool):
         changed = self._read_only != value
-        self._read_only = value
         if changed:
+            self._read_only = value
             if value:
                 self._on_lock()
             else:
@@ -250,10 +302,12 @@ class Lockable:
         for it in _iterate_lockable_subs(self):
             it.read_only = False
 
-    def lock(self):
+    def lock(self, method: Optional[Literal["error", "warning"]] = None):
         """
         Set :attr:`~.read_only`.
         """
+        if method is not None:
+            object.__setattr__(self, "_lock_method", method)
         self.read_only = True
 
     def unlocked(self) -> _UnlockContext:
