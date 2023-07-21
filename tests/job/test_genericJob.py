@@ -557,16 +557,17 @@ class TestGenericJob(TestWithFilledProject):
         job_disable = self.project.create_job(ReturnCodeJob, "job_db_disable")
         executor_str, job_name = _generate_flux_execute_string(job=job_disable, database_is_disabled=True)
         self.assertEqual(job_name, "pi_job_db_disable")
+        print(self.project_path)
         self.assertEqual(
             executor_str,
-            '#!/bin/bash\npython -m pyiron_base.cli wrapper -p /Users/janssen/PycharmProjects/pyiron_base/tests/job/test_genericJob/job_db_disable_hdf5/job_db_disable -f /Users/janssen/PycharmProjects/pyiron_base/tests/job/test_genericJob/job_db_disable.h5/job_db_disable'
+            '#!/bin/bash\npython -m pyiron_base.cli wrapper -p ' + self.project_path + '/job_db_disable_hdf5/job_db_disable -f ' + self.project_path + '/job_db_disable.h5/job_db_disable'
         )
         job_enable = self.project.create_job(ReturnCodeJob, "job_db_enable")
         executor_str, job_name = _generate_flux_execute_string(job=job_enable, database_is_disabled=False)
         self.assertEqual(job_name, "pi_None")
         self.assertEqual(
             executor_str,
-            '#!/bin/bash\npython -m pyiron_base.cli wrapper -p /Users/janssen/PycharmProjects/pyiron_base/tests/job/test_genericJob/job_db_enable_hdf5/job_db_enable -j None'
+            '#!/bin/bash\npython -m pyiron_base.cli wrapper -p ' + self.project_path + '/job_db_enable_hdf5/job_db_enable -j None'
         )
 
 
