@@ -4,7 +4,7 @@ dependencies:
 - coveralls
 - coverage
 - codacy-coverage
-- dill =0.3.6
+- dill =0.3.7
 - gitpython =3.1.32
 - h5io =0.1.8
 - h5py =3.9.0
