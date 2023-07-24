@@ -365,7 +365,7 @@ class PyironTable:
         with Pool(processes) as p:
             diff_dict_lst = list(
                 tqdm(
-                    p.imap(_apply_list_of_functions_on_job, job_to_analyse_lst),
+                    p.map(_apply_list_of_functions_on_job, job_to_analyse_lst),
                     total=len(job_to_analyse_lst),
                 )
             )
