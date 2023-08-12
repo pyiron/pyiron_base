@@ -30,7 +30,7 @@ class Executable(HasStorage):
         module=None,
         code=None,
         overwrite_nt_flag=False,
-        enforce_lower_case=True
+        enforce_lower_case=True,
     ):
         """
         Handle the path to the executable, as well as the version selection.
