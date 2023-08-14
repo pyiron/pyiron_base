@@ -42,7 +42,7 @@ setup(
         'pysqa==0.1.0',
         'sqlalchemy==2.0.19',
         'tables==3.8.0',
-        'tqdm==4.65.0',
+        'tqdm==4.66.1',
         'traitlets==5.9.0',
     ],
     cmdclass=versioneer.get_cmdclass(),
