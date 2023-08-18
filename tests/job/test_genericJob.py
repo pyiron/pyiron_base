@@ -8,6 +8,7 @@ from time import sleep
 from concurrent.futures import Future, ProcessPoolExecutor
 from pyiron_base.storage.parameters import GenericParameters
 from pyiron_base.jobs.job.generic import GenericJob
+from pyiron_base.jobs.job.runfunction import _generate_flux_execute_string
 from pyiron_base._tests import TestWithFilledProject, ToyJob
 
 
@@ -551,6 +552,22 @@ class TestGenericJob(TestWithFilledProject):
         # No copying jobs with futures that aren't done
         with self.assertRaises(RuntimeError):
             j2.copy()
+
+    def test_generate_flux_execute_string(self):
+        job_disable = self.project.create_job(ReturnCodeJob, "job_db_disable")
+        executor_str, job_name = _generate_flux_execute_string(job=job_disable, database_is_disabled=True)
+        self.assertEqual(job_name, "pi_job_db_disable")
+        self.assertEqual(
+            executor_str,
+            '#!/bin/bash\npython -m pyiron_base.cli wrapper -p ' + self.project_path + '/job_db_disable_hdf5/job_db_disable -f ' + self.project_path + '/job_db_disable.h5/job_db_disable'
+        )
+        job_enable = self.project.create_job(ReturnCodeJob, "job_db_enable")
+        executor_str, job_name = _generate_flux_execute_string(job=job_enable, database_is_disabled=False)
+        self.assertEqual(job_name, "pi_None")
+        self.assertEqual(
+            executor_str,
+            '#!/bin/bash\npython -m pyiron_base.cli wrapper -p ' + self.project_path + '/job_db_enable_hdf5/job_db_enable -j None'
+        )
 
 
 if __name__ == "__main__":

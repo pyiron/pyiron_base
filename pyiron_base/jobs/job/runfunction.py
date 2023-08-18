@@ -585,31 +585,12 @@ def run_job_with_runmode_executor_flux(job, executor, gpus_per_slot=None):
             "GPU support you will additionally need "
             "`conda install -c conda-forge flux-sched libhwloc=*=cuda*`"
         )
-    if not state.database.database_is_disabled:
-        executable_template = Template(
-            "#!/bin/bash\n",
-            "python -m pyiron_base.cli wrapper -p {{working_directory}} -j {{job_id}}",
-        )
-        exeuctable_str = executable_template.render(
-            working_directory=job.working_directory,
-            job_id=str(job.job_id),
-        )
-        job_name = "pi_" + str(job.job_id)
-    else:
-        executable_template = Template(
-            "#!/bin/bash\n",
-            "python -m pyiron_base.cli wrapper -p {{working_directory}} -f {{file_name}}{{h5_path}}",
-        )
-        exeuctable_str = executable_template.render(
-            working_directory=job.working_directory,
-            file_name=job.project_hdf5.file_name,
-            h5_path=job.project_hdf5.h5_path,
-        )
-        job_name = "pi_" + job.job_name
-
+    executable_str, job_name = _generate_flux_execute_string(
+        job=job, database_is_disabled=state.database.database_is_disabled
+    )
     jobspec = flux.job.JobspecV1.from_batch_command(
         jobname=job_name,
-        script=exeuctable_str,
+        script=executable_str,
         num_nodes=1,
         cores_per_slot=1,
         gpus_per_slot=gpus_per_slot,
@@ -749,3 +730,28 @@ def multiprocess_wrapper(
     else:
         raise ValueError("Either job_id or file_path have to be not None.")
     job_wrap.job.run_static()
+
+
+def _generate_flux_execute_string(job, database_is_disabled):
+    if not database_is_disabled:
+        executable_template = Template(
+            "#!/bin/bash\n"
+            + "python -m pyiron_base.cli wrapper -p {{working_directory}} -j {{job_id}}"
+        )
+        executable_str = executable_template.render(
+            working_directory=job.working_directory,
+            job_id=str(job.job_id),
+        )
+        job_name = "pi_" + str(job.job_id)
+    else:
+        executable_template = Template(
+            "#!/bin/bash\n"
+            + "python -m pyiron_base.cli wrapper -p {{working_directory}} -f {{file_name}}{{h5_path}}"
+        )
+        executable_str = executable_template.render(
+            working_directory=job.working_directory,
+            file_name=job.project_hdf5.file_name,
+            h5_path=job.project_hdf5.h5_path,
+        )
+        job_name = "pi_" + job.job_name
+    return executable_str, job_name
