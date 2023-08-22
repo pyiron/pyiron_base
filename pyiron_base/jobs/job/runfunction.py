@@ -1,16 +1,27 @@
 # coding: utf-8
 # Copyright (c) Max-Planck-Institut für Eisenforschung GmbH - Computational Materials Design (CM) Department
 # Distributed under the terms of "New BSD License", see the LICENSE file.
+from concurrent.futures import ProcessPoolExecutor
 from datetime import datetime
 import multiprocessing
 import os
 import posixpath
 import subprocess
 
+from jinja2 import Template
+
 from pyiron_base.utils.deprecate import deprecate
 from pyiron_base.jobs.job.wrapper import JobWrapper
 from pyiron_base.state import state
+from pyiron_base.utils.instance import static_isinstance
 
+
+try:
+    import flux.job
+
+    flux_available = True
+except ImportError:
+    flux_available = False
 
 """
 The function job.run() inside pyiron is executed differently depending on the status of the job object. This module 
@@ -39,6 +50,7 @@ of the server object attached to the job object: job.server.run_mode
     interactive_non_modal: run_job_with_runmode_interactive_non_modal
     queue: run_job_with_runmode_queue
     srun: run_job_with_runmode_srun
+    executor: run_job_with_runmode_executor
     thread: only affects children of a GenericMaster 
     worker: only affects children of a GenericMaster 
     
@@ -102,6 +114,20 @@ def run_job_with_status_created(job):
         job.run_static()
     elif job.server.run_mode.srun:
         run_job_with_runmode_srun(job=job)
+    elif job.server.run_mode.executor:
+        if job.server.gpus is not None:
+            gpus_per_slot = int(job.server.gpus / job.server.cores)
+            if gpus_per_slot < 0:
+                raise ValueError(
+                    "Both job.server.gpus and job.server.cores have to be greater than zero."
+                )
+        else:
+            gpus_per_slot = None
+        run_job_with_runmode_executor(
+            job=job,
+            executor=job.server.executor,
+            gpus_per_slot=gpus_per_slot,
+        )
     elif (
         job.server.run_mode.non_modal
         or job.server.run_mode.thread
@@ -431,6 +457,150 @@ def run_job_with_runmode_srun(job):
     )
 
 
+def run_job_with_runmode_executor(job, executor, gpus_per_slot=None):
+    """
+    Introduced in Python 3.2 the concurrent.futures interface enables the asynchronous execution of python programs.
+    A function is submitted to the executor and a future object is returned. The future object is updated in the
+    background once the executor finished executing the function. The job.server.run_mode.executor implements the same
+    functionality for pyiron jobs. An executor is set as an attribute to the server object:
+
+    >>> job.server.executor = concurrent.futures.Executor()
+    >>> job.run()
+    >>> job.server.future.done()
+    False
+    >>> job.server.future.result()
+    >>> job.server.future.done()
+    True
+
+    When the job is executed by calling the run() function a future object is returned. The job is then executed in the
+    background and the user can use the future object to check the status of the job.
+
+    Args:
+        job (GenericJob): pyiron job object
+        executor (concurrent.futures.Executor): executor class which implements the executor interface defined in the
+                                                python concurrent.futures.Executor class.
+        gpus_per_slot (int): number of GPUs per MPI rank, typically 1
+    """
+
+    if static_isinstance(
+        obj=job,
+        obj_type="pyiron_base.jobs.master.generic.GenericMaster"
+        # The static check is used to avoid a circular import:
+        # runfunction -> GenericJob -> GenericMaster -> runfunction
+        # This smells a bit, so if a better architecture is found in the future, use it
+        # to avoid string-based specifications
+    ):
+        raise NotImplementedError(
+            "Currently job.server.run_mode.executor does not support GenericMaster jobs."
+        )
+    if flux_available and isinstance(executor, flux.job.FluxExecutor):
+        run_job_with_runmode_executor_flux(
+            job=job, executor=executor, gpus_per_slot=gpus_per_slot
+        )
+    elif isinstance(executor, ProcessPoolExecutor):
+        run_job_with_runmode_executor_futures(job=job, executor=executor)
+    else:
+        raise NotImplementedError(
+            "Currently only flux.job.FluxExecutor and concurrent.futures.ProcessPoolExecutor are supported."
+        )
+
+
+def run_job_with_runmode_executor_futures(job, executor):
+    """
+    Interface for the ProcessPoolExecutor implemented in the python standard library as part of the concurrent.futures
+    module. The ProcessPoolExecutor does not provide any resource management, so the user is responsible to keep track of
+    the number of compute cores in use, as over-subscription can lead to low performance.
+
+    The [ProcessPoolExecutor docs](https://docs.python.org/3/library/concurrent.futures.html#processpoolexecutor) state: "The __main__ module must be importable by worker subprocesses. This means that ProcessPoolExecutor will not work in the interactive interpreter." (i.e. Jupyter notebooks). For standard usage this is a non-issue, but for the edge case of job classes defined in-notebook (e.g. children of `PythonTemplateJob`), the using the ProcessPoolExecutor will result in errors. To resolve this, relocate such classes to an importable .py file.
+
+    >>> from concurrent.futures import ProcessPoolExecutor
+    >>> job.server.executor = ProcessPoolExecutor()
+    >>> job.server.future.done()
+    False
+    >>> job.server.future.result()
+    >>> job.server.future.done()
+    True
+
+    Args:
+        job (GenericJob): pyiron job object
+        executor (concurrent.futures.Executor): executor class which implements the executor interface defined in the
+                                                python concurrent.futures.Executor class.
+    """
+    if state.database.database_is_disabled:
+        file_path = job.project_hdf5.file_name + job.project_hdf5.h5_path
+        connection_string = None
+    else:
+        file_path = None
+        if state.database.using_local_database:
+            connection_string = str(job.project.db.conn.engine.url)
+        else:
+            connection_string = None
+
+    job.server.future = executor.submit(
+        multiprocess_wrapper,
+        working_directory=job.project_hdf5.working_directory,
+        job_id=job.job_id,
+        file_path=file_path,
+        debug=False,
+        connection_string=connection_string,
+    )
+
+
+def run_job_with_runmode_executor_flux(job, executor, gpus_per_slot=None):
+    """
+    Interface for the flux.job.FluxExecutor executor. Flux is a hierarchical resource management. It can either be used to
+    replace queuing systems like SLURM or be used as a user specific queuing system within an existing allocation.
+    pyiron provides two interfaces to flux, this executor interface as well as a traditional queuing system interface
+    via pysqa. This executor interface is designed for the development of asynchronous simulation protocols, while the
+    traditional queuing system interface simplifies the transition from other queuing systems like SLURM. The usuage
+    is analog to the concurrent.futures.Executor interface:
+
+    >>> from flux.job import FluxExecutor
+    >>> job.server.executor = FluxExecutor()
+    >>> job.run()
+    >>> job.server.future.done()
+    False
+    >>> job.server.future.result()
+    >>> job.server.future.done()
+    True
+
+    A word of caution - flux is currently only available on Linux, for all other operation systems the ProcessPoolExecutor
+    from the python standard library concurrent.futures is recommended. The advantage of flux over the ProcessPoolExecutor
+    is that flux takes over the resource management, like monitoring how many cores are available while with the
+    ProcessPoolExecutor this is left to the user.
+
+    Args:
+        job (GenericJob): pyiron job object
+        executor (flux.job.FluxExecutor): flux executor class which implements the executor interface defined in the
+                                      python concurrent.futures.Executor class.
+        gpus_per_slot (int): number of GPUs per MPI rank, typically 1
+
+     Returns:
+         concurrent.futures.Future: future object to develop asynchronous simulation protocols
+    """
+    if not flux_available:
+        raise ModuleNotFoundError(
+            "No module named 'flux'. Running in flux mode is only available on Linux;"
+            "For CPU jobs, please use `conda install -c conda-forge flux-core`; for "
+            "GPU support you will additionally need "
+            "`conda install -c conda-forge flux-sched libhwloc=*=cuda*`"
+        )
+    executable_str, job_name = _generate_flux_execute_string(
+        job=job, database_is_disabled=state.database.database_is_disabled
+    )
+    jobspec = flux.job.JobspecV1.from_batch_command(
+        jobname=job_name,
+        script=executable_str,
+        num_nodes=1,
+        cores_per_slot=1,
+        gpus_per_slot=gpus_per_slot,
+        num_slots=job.server.cores,
+    )
+    jobspec.cwd = job.project_hdf5.working_directory
+    jobspec.environment = dict(os.environ)
+    job.server.future = executor.submit(jobspec)
+
+
 def run_time_decorator(func):
     def wrapper(job):
         if not state.database.database_is_disabled and job.job_id is not None:
@@ -560,3 +730,28 @@ def multiprocess_wrapper(
     else:
         raise ValueError("Either job_id or file_path have to be not None.")
     job_wrap.job.run_static()
+
+
+def _generate_flux_execute_string(job, database_is_disabled):
+    if not database_is_disabled:
+        executable_template = Template(
+            "#!/bin/bash\n"
+            + "python -m pyiron_base.cli wrapper -p {{working_directory}} -j {{job_id}}"
+        )
+        executable_str = executable_template.render(
+            working_directory=job.working_directory,
+            job_id=str(job.job_id),
+        )
+        job_name = "pi_" + str(job.job_id)
+    else:
+        executable_template = Template(
+            "#!/bin/bash\n"
+            + "python -m pyiron_base.cli wrapper -p {{working_directory}} -f {{file_name}}{{h5_path}}"
+        )
+        executable_str = executable_template.render(
+            working_directory=job.working_directory,
+            file_name=job.project_hdf5.file_name,
+            h5_path=job.project_hdf5.h5_path,
+        )
+        job_name = "pi_" + job.job_name
+    return executable_str, job_name

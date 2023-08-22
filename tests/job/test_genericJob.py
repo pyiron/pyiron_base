@@ -4,8 +4,11 @@
 
 import unittest
 import os
+from time import sleep
+from concurrent.futures import Future, ProcessPoolExecutor
 from pyiron_base.storage.parameters import GenericParameters
 from pyiron_base.jobs.job.generic import GenericJob
+from pyiron_base.jobs.job.runfunction import _generate_flux_execute_string
 from pyiron_base._tests import TestWithFilledProject, ToyJob
 
 
@@ -501,6 +504,71 @@ class TestGenericJob(TestWithFilledProject):
         except RuntimeError:
             pass
         self.assertTrue(j.status.aborted, "Job did not abort even though return code is 2!")
+
+    def test_job_executor_run(self):
+        j = self.project.create_job(ReturnCodeJob, "job_with_executor_run")
+        j.input["accepted_codes"] = [1]
+        j.server.executor = ProcessPoolExecutor()
+        self.assertTrue(j.server.run_mode.executor)
+        j.run()
+        j.server.future.result()
+        self.assertTrue(j.server.future.done())
+        self.assertTrue(j.status.finished)
+
+    def test_job_executor_cancel(self):
+        j = self.project.create_job(ReturnCodeJob, "job_with_executor_cancel")
+        j.input["accepted_codes"] = [1]
+        exe = ProcessPoolExecutor()
+        j.server.executor = exe
+        self.assertTrue(j.server.run_mode.executor)
+        exe.submit(sleep, 1)  # This part is a bit hacky, but it basically simulates other jobs on the same executor
+        j.run()
+        j.server.future.cancel()
+        j.refresh_job_status()
+        self.assertTrue(j.status.aborted)
+
+    def test_job_executor_wait(self):
+        j = self.project.create_job(ReturnCodeJob, "job_with_executor_wait")
+        j.input["accepted_codes"] = [1]
+        j.server.executor = ProcessPoolExecutor()
+        self.assertTrue(j.server.run_mode.executor)
+        j.run()
+        self.project.wait_for_job(job=j)
+        self.assertTrue(j.server.future.done())
+        self.assertTrue(j.status.finished)
+
+    def test_job_executor_copy(self):
+        j1 = self.project.create_job(ReturnCodeJob, "job_with_executor_copy")
+        j1.input["accepted_codes"] = [1]
+        j1.server.executor = ProcessPoolExecutor()
+        j2 = j1.copy()
+        self.assertIs(j2.server.executor, j1.server.executor)
+        self.assertTrue(j2.server.run_mode.executor)
+        j2.run()
+        j2.server.future.result()
+        self.assertTrue(j2.server.future.done())
+        j2.server.future = Future()
+        # Manually override the future with one that isn't done() to test copy spec:
+        # No copying jobs with futures that aren't done
+        with self.assertRaises(RuntimeError):
+            j2.copy()
+
+    def test_generate_flux_execute_string(self):
+        job_disable = self.project.create_job(ReturnCodeJob, "job_db_disable")
+        executor_str, job_name = _generate_flux_execute_string(job=job_disable, database_is_disabled=True)
+        self.assertEqual(job_name, "pi_job_db_disable")
+        self.assertEqual(
+            executor_str,
+            '#!/bin/bash\npython -m pyiron_base.cli wrapper -p ' + self.project_path + '/job_db_disable_hdf5/job_db_disable -f ' + self.project_path + '/job_db_disable.h5/job_db_disable'
+        )
+        job_enable = self.project.create_job(ReturnCodeJob, "job_db_enable")
+        executor_str, job_name = _generate_flux_execute_string(job=job_enable, database_is_disabled=False)
+        self.assertEqual(job_name, "pi_None")
+        self.assertEqual(
+            executor_str,
+            '#!/bin/bash\npython -m pyiron_base.cli wrapper -p ' + self.project_path + '/job_db_enable_hdf5/job_db_enable -j None'
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

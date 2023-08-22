@@ -546,6 +546,27 @@ class FlattenedStorage(HasHDF):
         else:
             raise KeyError(f"no array named {name}")
 
+    def del_array(self, name: str, ignore_missing: bool = False):
+        """
+        Remove an array.
+
+        Works with both per chunk and per element arrays.
+
+        Args:
+            name (str): name of the array
+            ignore_missing (bool): if given do not raise an error if no array
+                                   of the given `name` exists
+
+        Raises:
+            KeyError: if no array with given `name` exists and `ignore_missing` is not given
+        """
+        if name in self._per_element_arrays:
+            del self._per_element_arrays[name]
+        elif name in self._per_chunk_arrays:
+            del self._per_chunk_arrays[name]
+        elif not ignore_missing:
+            raise KeyError(name)
+
     def __getitem__(self, index):
         if isinstance(index, tuple) and len(index) == 2:
             return self.get_array(index[0], index[1])
@@ -557,6 +578,9 @@ class FlattenedStorage(HasHDF):
             self.set_array(index[0], index[1], value)
         else:
             raise IndexError("Must specify chunk index.")
+
+    def __delitem__(self, index):
+        self.del_array(index)
 
     def has_array(self, name):
         """

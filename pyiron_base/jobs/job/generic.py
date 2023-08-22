@@ -5,6 +5,7 @@
 Generic Job class extends the JobCore class with all the functionality to run the job object.
 """
 
+from concurrent.futures import Future
 from datetime import datetime
 import os
 import posixpath
@@ -137,12 +138,16 @@ class GenericJob(JobCore):
             self.refresh_job_status()
         elif os.path.exists(self.project_hdf5.file_name):
             initial_status = read_hdf5(
-                self.project_hdf5.file_name, self.job_name + "/status"
+                # in most cases self.project_hdf5.h5_path == / + self.job_name but not for child jobs of GenericMasters
+                self.project_hdf5.file_name,
+                self.project_hdf5.h5_path + "/status",
             )
             self._status = JobStatus(initial_status=initial_status)
             if "job_id" in self.list_nodes():
                 self._job_id = read_hdf5(
-                    self.project_hdf5.file_name, self.job_name + "/job_id"
+                    # in most cases self.project_hdf5.h5_path == / + self.job_name but not for child jobs of GenericMasters
+                    self.project_hdf5.file_name,
+                    self.project_hdf5.h5_path + "/job_id",
                 )
         else:
             self._status = JobStatus()
@@ -430,6 +435,15 @@ class GenericJob(JobCore):
                     self.project_hdf5.file_name, self.job_name + "/status"
                 )
             )
+        if (
+            isinstance(self.server.future, Future)
+            and not self.status.finished
+            and self.server.future.done()
+        ):
+            if self.server.future.cancelled():
+                self.status.aborted = True
+            else:
+                self.status.finished = True
 
     def clear_job(self):
         """
@@ -466,6 +480,14 @@ class GenericJob(JobCore):
         _job_reload_after_copy(
             job=copied_self, delete_file_after_copy=delete_file_after_copy
         )
+
+        # Copy executor - it cannot be copied and is just linked instead
+        if self.server.executor is not None:
+            copied_self.server.executor = self.server.executor
+        if self.server.future is not None and not self.server.future.done():
+            raise RuntimeError(
+                "Jobs whose server has executor and future attributes cannot be copied unless the future is `done()`"
+            )
         return copied_self
 
     def _internal_copy_to(
@@ -600,6 +622,18 @@ class GenericJob(JobCore):
             input_only=True,
             new_database_entry=False,
         )
+
+    def remove(self, _protect_childs=True):
+        """
+        Remove the job - this removes the HDF5 file, all data stored in the HDF5 file an the corresponding database entry.
+
+        Args:
+            _protect_childs (bool): [True/False] by default child jobs can not be deleted, to maintain the consistency
+                                    - default=True
+        """
+        if isinstance(self.server.future, Future) and not self.server.future.done():
+            self.server.future.cancel()
+        super().remove(_protect_childs=_protect_childs)
 
     def remove_child(self):
         """

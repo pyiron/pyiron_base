@@ -6,7 +6,7 @@ Load input parameters for jupyter notebooks from external HDF5 or JSON file
 """
 
 import json
-from pathlib2 import Path
+from pathlib import Path
 import warnings
 from pyiron_base.storage.hdfio import FileHDFio
 from pyiron_base.storage.datacontainer import DataContainer
