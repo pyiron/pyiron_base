@@ -14,7 +14,7 @@ import pandas
 import posixpath
 import numpy as np
 import sys
-from typing import Union
+from typing import Union, Optional, Any
 
 from pyiron_base.utils.deprecate import deprecate
 from pyiron_base.storage.helper_functions import read_hdf5, write_hdf5
@@ -1475,6 +1475,159 @@ class ProjectHDFio(FileHDFio):
         """
         return self._project.__class__(path=self.file_path)
 
+class DummyHDFio:
+    """
+    A dummy ProjectHDFio implementation to serialize objects into a dict
+    instead of a HDF5 file.
+
+    It is modeled after ProjectHDFio, but supports just enough methods to
+    successfully write objects.  `to_object` is explicitly not supported.
+
+    After all desired objects have been written to it, you may extract a pure
+    dict from with with `.to_dict`.
+
+    A simple example for storing data containers:
+
+    >>> from pyiron_base import DataContainer, Project
+    >>> pr = Project(...)
+    >>> hdf = DummyHDFio(pr, '/', {})
+    >>> d = DataContainer({'a': 42, 'b':{'c':4, 'g':33}})
+    >>> d.to_hdf(hdf)
+    >>> hdf.to_dict()
+    {'READ_ONLY': False,
+     'a__index_0': 42,
+     'b__index_1': {
+         'READ_ONLY': False,
+         'c__index_0': 4,
+         'g__index_1': 33,
+         'NAME': 'DataContainer',
+         'TYPE': "<class
+         'pyiron_base.storage.datacontainer.DataContainer'>",
+         'OBJECT': 'DataContainer',
+         'VERSION': '0.1.0',
+         'HDF_VERSION': '0.2.0'
+     },
+     'NAME': 'DataContainer',
+     'TYPE': "<class
+     'pyiron_base.storage.datacontainer.DataContainer'>",
+     'OBJECT': 'DataContainer',
+     'VERSION': '0.1.0',
+     'HDF_VERSION': '0.2.0'}
+    """
+
+    def __init__(self, project, name: str, cont: Optional[dict] = None):
+        """
+
+        Args:
+            project (Project): the project this object should advertise itself
+                               belong to; in practice it is not often used for
+                               writing objects
+            name (str): the name of HDF group this object fakes
+            cont (dict, optional): dict to save written values into, make a new
+                                   one if not given
+        """
+        self._project = project
+        self._dict = cont or {}
+        self._name = name
+
+    def __getitem__(self, item: str) -> Union["DummyHDFio", Any]:
+        """
+        Return a value from storage.
+
+        If `item` is in :meth:`.list_groups()` this must return another :class:`.GenericStorage`.
+
+        Args:
+            item (str): name of value
+
+        Returns:
+            :class:`.GenericStorage`: if `item` refers to a sub group
+            object: value that is stored under `item`
+
+        Raises:
+            KeyError: `item` is neither a node or a sub group of this group
+        """
+        return self._dict[item]
+
+    def __setitem__(self, item: str, value: Any):
+        self._dict[item] = value
+
+    def create_group(self, name: str):
+        """
+        Create a new sub group.
+
+        Args:
+            name (str): name of the new group
+        """
+        d = self._dict.get(name, None)
+        if d is None:
+            self._dict[name] = d = type(self)(self.project, name, {})
+        elif isinstance(d, DummyHDFio):
+            pass
+        else:
+            raise RuntimeError(f"'{name}' is already a node!")
+        return d
+
+    def list_nodes(self):
+        return [k for k, v in self._dict.items() if not isinstance(k, DummyHDFio)]
+
+    def list_groups(self):
+        return [k for k, v in self._dict.items() if isinstance(k, DummyHDFio)]
+
+    @property
+    def project(self):
+        return self._project
+
+    @property
+    def name(self):
+        return self._name
+
+    def open(self, name: str) -> "DummyHDFio":
+        """
+        Descend into a sub group.
+
+        If `name` does not exist yet, create a new group.  Calling :meth:`~.close` on the returned object returns this
+        object.
+
+        Args:
+            name (str): name of sub group
+
+        Returns:
+            :class:`.GenericStorage`: sub group
+        """
+        # FIXME: what if name in self.list_nodes()
+        new = self.create_group(name)
+        new._prev = self
+        return new
+
+    def close(self) -> "DummyHDFio":
+        """
+        Surface from a sub group.
+
+        If this object was not returned from a previous call to :meth:`.open` it returns itself silently.
+        """
+        try:
+            return self._prev
+        except AttributeError:
+            return self
+
+    def __enter__(self):
+        """
+        Compatibility function for the with statement
+        """
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        """
+        Compatibility function for the with statement
+        """
+        self.close()
+
+    def to_dict(self) -> dict:
+        def unwrap(v):
+            if isinstance(v, DummyHDFio):
+                return v.to_dict()
+            return v
+        return {k: unwrap(v) for k, v in self._dict.items()}
 
 def _get_safe_filename(file_name):
     file_path_no_ext, file_ext = os.path.splitext(file_name)
