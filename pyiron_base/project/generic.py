@@ -1212,9 +1212,9 @@ class Project(ProjectPath, HasGroups):
                 "To prevent users from accidentally deleting files - enable has to be set to True."
             )
         if not self.db.view_mode:
-            if not dirty and self.db:
+            if not dirty:
                 self._remove_jobs_helper(recursive=True)
-            elif not isinstance(self.db, FileTable):
+            elif dirty and not isinstance(self.db, FileTable):
                 df = self.job_table()
                 if len(df) > 0:
                     for job_id in tqdm(df.id.values):
