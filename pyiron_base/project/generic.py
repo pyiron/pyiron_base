@@ -1197,23 +1197,31 @@ class Project(ProjectPath, HasGroups):
                     elif os.path.isdir(fullname):
                         os.removedirs(fullname)
 
-    def remove(self, enable=False, enforce=False):
+    def remove(self, enable=False, enforce=False, dirty=False):
         """
         Delete all the whole project including all jobs in the project and its subprojects
 
         Args:
             enforce (bool): [True/False] delete jobs even though they are used in other projects - default=False
             enable (bool): [True/False] enable this command.
+            dirty (bool): [True/False] delete all files and database entries related to this project,
+                           without any consistency check.
         """
         if enable is not True:
             raise ValueError(
                 "To prevent users from accidentally deleting files - enable has to be set to True."
             )
         if not self.db.view_mode:
-            self._remove_jobs_helper(recursive=True)
+            if not dirty and self.db:
+                self._remove_jobs_helper(recursive=True)
+            elif not isinstance(self.db, FileTable):
+                df = self.job_table()
+                if len(df) > 0:
+                    for job_id in tqdm(df.id.values):
+                        self.db.delete_item(item_id=job_id)
             for file in self.list_files():
                 os.remove(os.path.join(self.path, file))
-            if enforce:
+            if enforce or dirty:
                 print("remove directory: {}".format(self.path))
                 shutil.rmtree(self.path, ignore_errors=True)
             else:
