@@ -62,6 +62,105 @@ def _is_ragged_in_1st_dim_only(value: Union[np.ndarray, list]) -> bool:
         return len(set(dim1)) > 1 and len(set(dim_other)) == 1
 
 
+def _import_class(class_name):
+    """
+    Import given class from fully qualified name and return class object.
+
+    Args:
+        class_name (str): fully qualified name of a pyiron class
+
+    Returns:
+        type: class object of the given name
+    """
+    internal_class_name = class_name.split(".")[-1][:-2]
+    class_path = class_name.split()[-1].split(".")[:-1]
+    class_path[0] = class_path[0][1:]
+    class_module_path = ".".join(class_path)
+    # ugly dynamic import, but only needed to log the warning anyway
+    from pyiron_base.jobs.job.jobtype import JobTypeChoice
+    job_class_dict = JobTypeChoice().job_class_dict # access global singleton
+    if internal_class_name in job_class_dict:
+        module_path = job_class_dict[internal_class_name]
+        if class_module_path != module_path:
+            state.logger.info(
+                f'Using registered module "{module_path}" instead of custom/old module "{class_module_path}" to'
+                f' import job type "{internal_class_name}"!'
+            )
+    else:
+        module_path = class_module_path
+    return getattr(
+        importlib.import_module(module_path),
+        internal_class_name,
+    )
+
+def create_instance(cls, **kwargs):
+    """
+    Create new instance of the given class from current group.
+
+    Uses the given **kwargs and a special classmethod "from_hdf_args" that
+    may be defined on cls to construct a dictionary of arguments and then
+    instatiate cls with them.
+
+    Args:
+        cls (type): pyiron type to instantiate
+        **kwargs: arguments for instance creation
+
+    Returns:
+        cls: instance of the given type
+    """
+
+    if hasattr(cls, "from_hdf_args"):
+        init_args = cls.from_hdf_args(self)
+    else:
+        init_args = {}
+
+    init_args.update(kwargs)
+
+    return cls(**init_args)
+
+def _to_object(hdf, class_name=None, **kwargs):
+    """
+    Load the full pyiron object from an HDF5 file
+
+    Args:
+        class_name(str, optional): if the 'TYPE' node is not available in
+                    the HDF5 file a manual object type can be set,
+                    must be as reported by `str(type(obj))`
+        **kwargs: optional parameters optional parameters to override init
+                  parameters
+
+    Returns:
+        pyiron object of the given class_name
+    """
+    if "TYPE" not in hdf.list_nodes() and class_name is None:
+        raise ValueError("Objects can be only recovered from hdf5 if TYPE is given")
+    elif class_name is not None and class_name != hdf.get("TYPE"):
+        raise ValueError(
+            "Object type in hdf5-file must be identical to input parameter"
+        )
+    class_name = class_name or hdf.get("TYPE")
+    class_path = class_name.split("<class '")[-1].split("'>")[0]
+    class_convert_dict = {  # Fix backwards compatibility
+        "pyiron_base.generic.datacontainer.DataContainer": "pyiron_base.storage.datacontainer.DataContainer",
+        "pyiron_base.generic.inputlist.InputList": "pyiron_base.storage.inputlist.InputList",
+        "pyiron_base.generic.flattenedstorage.FlattenedStorage": "pyiron_base.storage.flattenedstorage.FlattenedStorage",
+    }
+    if class_path in class_convert_dict.keys():
+        class_name_new = "<class '" + class_convert_dict[class_path] + "'>"
+        class_object = _import_class(class_name_new)
+    elif not class_path.startswith("abc."):
+        class_object = _import_class(class_name)
+    else:
+        class_object = class_constructor(cp=JOB_DYN_DICT[class_path.split(".")[-1]])
+
+    # Backwards compatibility since the format of TYPE changed
+    if class_name != str(class_object):
+        hdf["TYPE"] = str(class_object)
+
+    obj = create_instance(class_object, **kwargs)
+    obj.from_hdf(hdf=hdf.open(".."), group_name=hdf.h5_path.split("/")[-1])
+    return obj
+
 def open_hdf5(filename, mode="r", swmr=False):
     if swmr and mode != "r":
         store = h5py.File(filename, mode=mode, libver="latest")
@@ -69,7 +168,6 @@ def open_hdf5(filename, mode="r", swmr=False):
         return store
     else:
         return h5py.File(filename, mode=mode, libver="latest", swmr=swmr)
-
 
 class FileHDFio(HasGroups, MutableMapping):
     """
@@ -1300,60 +1398,7 @@ class ProjectHDFio(FileHDFio):
         """
         os.makedirs(self.working_directory, exist_ok=True)
 
-    def import_class(self, class_name):
-        """
-        Import given class from fully qualified name and return class object.
-
-        Args:
-            class_name (str): fully qualified name of a pyiron class
-
-        Returns:
-            type: class object of the given name
-        """
-        internal_class_name = class_name.split(".")[-1][:-2]
-        class_path = class_name.split()[-1].split(".")[:-1]
-        class_path[0] = class_path[0][1:]
-        class_module_path = ".".join(class_path)
-        if internal_class_name in self._project.job_type.job_class_dict:
-            module_path = self._project.job_type.job_class_dict[internal_class_name]
-            if class_module_path != module_path:
-                state.logger.info(
-                    f'Using registered module "{module_path}" instead of custom/old module "{class_module_path}" to'
-                    f' import job type "{internal_class_name}"!'
-                )
-        else:
-            module_path = class_module_path
-        return getattr(
-            importlib.import_module(module_path),
-            internal_class_name,
-        )
-
-    def create_instance(self, cls, **kwargs):
-        """
-        Create new instance of the given class from current group.
-
-        Uses the given **kwargs and a special classmethod "from_hdf_args" that
-        may be defined on cls to construct a dictionary of arguments and then
-        instatiate cls with them.
-
-        Args:
-            cls (type): pyiron type to instantiate
-            **kwargs: arguments for instance creation
-
-        Returns:
-            cls: instance of the given type
-        """
-
-        if hasattr(cls, "from_hdf_args"):
-            init_args = cls.from_hdf_args(self)
-        else:
-            init_args = {}
-
-        init_args.update(kwargs)
-
-        return cls(**init_args)
-
-    def to_object(self, class_name=None, **qwargs):
+    def to_object(self, class_name=None, **kwargs):
         """
         Load the full pyiron object from an HDF5 file
 
@@ -1361,40 +1406,13 @@ class ProjectHDFio(FileHDFio):
             class_name(str, optional): if the 'TYPE' node is not available in
                         the HDF5 file a manual object type can be set,
                         must be as reported by `str(type(obj))`
-            **qwargs: optional parameters optional parameters to override init
+            **kwargs: optional parameters optional parameters to override init
                       parameters
 
         Returns:
             pyiron object of the given class_name
         """
-        if "TYPE" not in self.list_nodes() and class_name is None:
-            raise ValueError("Objects can be only recovered from hdf5 if TYPE is given")
-        elif class_name is not None and class_name != self.get("TYPE"):
-            raise ValueError(
-                "Object type in hdf5-file must be identical to input parameter"
-            )
-        class_name = class_name or self.get("TYPE")
-        class_path = class_name.split("<class '")[-1].split("'>")[0]
-        class_convert_dict = {  # Fix backwards compatibility
-            "pyiron_base.generic.datacontainer.DataContainer": "pyiron_base.storage.datacontainer.DataContainer",
-            "pyiron_base.generic.inputlist.InputList": "pyiron_base.storage.inputlist.InputList",
-            "pyiron_base.generic.flattenedstorage.FlattenedStorage": "pyiron_base.storage.flattenedstorage.FlattenedStorage",
-        }
-        if class_path in class_convert_dict.keys():
-            class_name_new = "<class '" + class_convert_dict[class_path] + "'>"
-            class_object = self.import_class(class_name_new)
-        elif not class_path.startswith("abc."):
-            class_object = self.import_class(class_name)
-        else:
-            class_object = class_constructor(cp=JOB_DYN_DICT[class_path.split(".")[-1]])
-
-        # Backwards compatibility since the format of TYPE changed
-        if class_name != str(class_object):
-            self["TYPE"] = str(class_object)
-
-        obj = self.create_instance(class_object, **qwargs)
-        obj.from_hdf(hdf=self.open(".."), group_name=self.h5_path.split("/")[-1])
-        return obj
+        return _to_object(self, class_name, **kwargs)
 
     def get_job_id(self, job_specifier):
         """
