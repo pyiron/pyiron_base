@@ -1493,13 +1493,13 @@ class ProjectHDFio(FileHDFio):
         """
         return self._project.__class__(path=self.file_path)
 
-class DummyHDFio:
+class DummyHDFio(HasGroups):
     """
     A dummy ProjectHDFio implementation to serialize objects into a dict
     instead of a HDF5 file.
 
     It is modeled after ProjectHDFio, but supports just enough methods to
-    successfully write objects.  `to_object` is explicitly not supported.
+    successfully write objects.
 
     After all desired objects have been written to it, you may extract a pure
     dict from with with `.to_dict`.
@@ -1533,20 +1533,24 @@ class DummyHDFio:
      'HDF_VERSION': '0.2.0'}
     """
 
-    def __init__(self, project, name: str, cont: Optional[dict] = None):
+    def __init__(self, project, h5_path: str, cont: Optional[dict] = None, root=None):
         """
 
         Args:
             project (Project): the project this object should advertise itself
                                belong to; in practice it is not often used for
                                writing objects
-            name (str): the name of HDF group this object fakes
+            h5_path (str): the path of the HDF group this object fakes
             cont (dict, optional): dict to save written values into, make a new
                                    one if not given
+            root (DummyHDFio, optional): if this object will be a child of
+                                         another one, the parent must be passed
+                                         here, to make hdf['..'] work.
         """
         self._project = project
         self._dict = cont or {}
-        self._name = name
+        self._h5_path = h5_path
+        self._root = root
 
     def __getitem__(self, item: str) -> Union["DummyHDFio", Any]:
         """
@@ -1562,9 +1566,38 @@ class DummyHDFio:
             object: value that is stored under `item`
 
         Raises:
-            KeyError: `item` is neither a node or a sub group of this group
+            ValueError: `item` is neither a node or a sub group of this group
         """
-        return self._dict[item]
+        try:
+            v = self._dict[item]
+            if isinstance(v, DummyHDFio) and v._empty():
+                raise KeyError()
+            else:
+                return v
+        except KeyError:
+            if item == "..":
+                return self._root
+            # compat with ProjectHDFio with for some reasons raises ValueErrors
+            raise ValueError(item) from None
+
+    def get(self, key, default=None):
+        """
+        Internal wrapper function for __getitem__() - self[name]
+
+        Args:
+            key (str, slice): path to the data or key of the data object
+            default (object): default value to return if key doesn't exist
+
+        Returns:
+            dict, list, float, int: data or data object
+        """
+        try:
+            return self[key]
+        except ValueError:
+            if default is not None:
+                return default
+            else:
+                raise
 
     def __setitem__(self, item: str, value: Any):
         self._dict[item] = value
@@ -1576,28 +1609,36 @@ class DummyHDFio:
         Args:
             name (str): name of the new group
         """
+        if name == "..":
+            return self._root
         d = self._dict.get(name, None)
         if d is None:
-            self._dict[name] = d = type(self)(self.project, name, {})
+            self._dict[name] = d = type(self)(
+                    self.project,
+                    os.path.join(self.h5_path, name), cont={}, root=self
+            )
         elif isinstance(d, DummyHDFio):
             pass
         else:
             raise RuntimeError(f"'{name}' is already a node!")
         return d
 
-    def list_nodes(self):
-        return [k for k, v in self._dict.items() if not isinstance(k, DummyHDFio)]
+    def _list_nodes(self):
+        return [k for k, v in self._dict.items() if not isinstance(v, DummyHDFio)]
 
-    def list_groups(self):
-        return [k for k, v in self._dict.items() if isinstance(k, DummyHDFio)]
+    def _list_groups(self):
+        return [k for k, v in self._dict.items() if isinstance(v, DummyHDFio) and not v._empty()]
+
+    def __contains__(self, item):
+        return item in self._dict
 
     @property
     def project(self):
         return self._project
 
     @property
-    def name(self):
-        return self._name
+    def h5_path(self):
+        return self._h5_path
 
     def open(self, name: str) -> "DummyHDFio":
         """
@@ -1646,6 +1687,27 @@ class DummyHDFio:
                 return v.to_dict()
             return v
         return {k: unwrap(v) for k, v in self._dict.items()}
+
+    def to_object(self, class_name=None, **kwargs):
+        """
+        Load the full pyiron object from an HDF5 file
+
+        Args:
+            class_name(str, optional): if the 'TYPE' node is not available in
+                        the HDF5 file a manual object type can be set,
+                        must be as reported by `str(type(obj))`
+            **kwargs: optional parameters optional parameters to override init
+                      parameters
+
+        Returns:
+            pyiron object of the given class_name
+        """
+        return _to_object(self, class_name, **kwargs)
+
+    def _empty(self):
+        if len(self._dict) == 0:
+            return True
+        return len(self.list_nodes())==0 and all(self[g]._empty() for g in self.list_groups())
 
 def _get_safe_filename(file_name):
     file_path_no_ext, file_ext = os.path.splitext(file_name)
