@@ -31,7 +31,7 @@ setup(
     install_requires=[
         'dill==0.3.7',
         'gitpython==3.1.32',
-        'h5io==0.1.8',
+        'h5io==0.1.9',
         'h5py==3.9.0',
         'jinja2==3.1.2',
         'numpy==1.24.3',
