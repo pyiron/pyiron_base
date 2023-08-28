@@ -93,30 +93,6 @@ def _import_class(class_name):
         internal_class_name,
     )
 
-def create_instance(cls, **kwargs):
-    """
-    Create new instance of the given class from current group.
-
-    Uses the given **kwargs and a special classmethod "from_hdf_args" that
-    may be defined on cls to construct a dictionary of arguments and then
-    instatiate cls with them.
-
-    Args:
-        cls (type): pyiron type to instantiate
-        **kwargs: arguments for instance creation
-
-    Returns:
-        cls: instance of the given type
-    """
-
-    if hasattr(cls, "from_hdf_args"):
-        init_args = cls.from_hdf_args(self)
-    else:
-        init_args = {}
-
-    init_args.update(kwargs)
-
-    return cls(**init_args)
 
 def _to_object(hdf, class_name=None, **kwargs):
     """
@@ -157,7 +133,14 @@ def _to_object(hdf, class_name=None, **kwargs):
     if class_name != str(class_object):
         hdf["TYPE"] = str(class_object)
 
-    obj = create_instance(class_object, **kwargs)
+    if hasattr(class_object, "from_hdf_args"):
+        init_args = class_object.from_hdf_args(hdf)
+    else:
+        init_args = {}
+
+    init_args.update(kwargs)
+
+    obj = class_object(**init_args)
     obj.from_hdf(hdf=hdf.open(".."), group_name=hdf.h5_path.split("/")[-1])
     return obj
 
