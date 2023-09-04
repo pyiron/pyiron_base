@@ -35,7 +35,7 @@ setup(
         'h5py==3.9.0',
         'jinja2==3.1.2',
         'numpy==1.24.3',
-        'pandas==2.0.3',
+        'pandas==2.1.0',
         'pint==0.22',
         'psutil==5.9.5',
         'pyfileindex==0.0.11',
