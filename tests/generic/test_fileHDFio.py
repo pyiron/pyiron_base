@@ -6,7 +6,7 @@ import sys
 import warnings
 from io import StringIO
 import numpy as np
-from pyiron_base.storage.hdfio import FileHDFio, _is_ragged_in_1st_dim_only, state
+from pyiron_base.storage.hdfio import FileHDFio, _is_ragged_in_1st_dim_only, state, _import_class
 from pyiron_base._tests import PyironTestCase, TestWithProject, ToyJob as BaseToyJob
 from pyiron_base import GenericJob, JobType
 import unittest
@@ -644,7 +644,7 @@ class TestProjectHDFio(TestWithProject):
     def test_import_class(self):
 
         with self.subTest("import ToyJob without interfering:"):
-            toy_job_cls = self.empty_hdf5.import_class(str(BaseToyJob))
+            toy_job_cls = _import_class(str(BaseToyJob))
             self.assertIs(
                 toy_job_cls, BaseToyJob, msg="Did not return the requested class."
             )
@@ -654,7 +654,7 @@ class TestProjectHDFio(TestWithProject):
 
             with self.subTest("Import ToyJob while another ToyJob is registered"):
                 with self.assertLogs(state.logger) as log:
-                    toy_job_cls = self.empty_hdf5.import_class(str(BaseToyJob))
+                    toy_job_cls = _import_class(str(BaseToyJob))
                     self.assertEqual(
                         len(log.output),
                         1,
