@@ -30,7 +30,7 @@ setup(
     packages=find_packages(exclude=["*tests*", "*docs*", "*binder*", "*conda*", "*notebooks*", "*.ci_support*"]),
     install_requires=[
         'dill==0.3.7',
-        'gitpython==3.1.34',
+        'gitpython==3.1.35',
         'h5io==0.1.9',
         'h5py==3.9.0',
         'jinja2==3.1.2',
