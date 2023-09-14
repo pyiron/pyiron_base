@@ -1313,6 +1313,8 @@ class ProjectHDFio(FileHDFio):
         class_module_path = ".".join(class_path)
         if internal_class_name in self._project.job_type.job_class_dict:
             module_path = self._project.job_type.job_class_dict[internal_class_name]
+            if isinstance(module_path, type):
+                return module_path
             if class_module_path != module_path:
                 state.logger.info(
                     f'Using registered module "{module_path}" instead of custom/old module "{class_module_path}" to'
