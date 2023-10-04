@@ -525,6 +525,7 @@ class TestGenericJob(TestWithFilledProject):
         j.run()
         j.server.future.cancel()
         j.refresh_job_status()
+        self.assertEqual(j.status, "done")
         self.assertTrue(j.status.aborted)
 
     def test_job_executor_wait(self):
