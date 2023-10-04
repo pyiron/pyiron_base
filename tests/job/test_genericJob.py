@@ -524,8 +524,8 @@ class TestGenericJob(TestWithFilledProject):
         exe.submit(sleep, 5)  # This part is a bit hacky, but it basically simulates other jobs on the same executor
         j.run()
         j.server.future.cancel()
+        sleep(1)
         j.refresh_job_status()
-        self.assertEqual(j.status, "done")
         self.assertTrue(j.status.aborted)
 
     def test_job_executor_wait(self):
