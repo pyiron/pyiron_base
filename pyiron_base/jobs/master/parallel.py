@@ -7,6 +7,7 @@ The parallel master class is a metajob consisting of a list of jobs which are ex
 
 from collections import OrderedDict
 from datetime import datetime
+from typing import Union
 
 import numpy as np
 import pandas
@@ -19,6 +20,7 @@ from pyiron_base.jobs.master.submissionstatus import SubmissionStatus
 from pyiron_base.jobs.job.extension.jobstatus import JobStatus
 from pyiron_base.state import state
 from pyiron_base.jobs.job.wrapper import job_wrapper_function
+from pyiron_base.jobs.job.util import _get_safe_job_name
 from pyiron_base.utils.deprecate import deprecate
 
 __author__ = "Joerg Neugebauer, Jan Janssen"
@@ -825,7 +827,7 @@ class JobGenerator(object):
         """
         raise NotImplementedError("Implement in derived class")
 
-    def job_name(self, parameter):
+    def job_name(self, parameter) -> Union[str, tuple]:
         """
         Return new job name from parameter object.  The next child job created
         will have this name.  Subclasses may override this to give custom job
@@ -837,6 +839,8 @@ class JobGenerator(object):
 
         Returns:
             str: job name for the next child job
+            tuple: construct the job name via :func:`_get_safe_job_name`;
+                   allows any object that can be coerced to str inside the tuple
         """
         return self._master.ref_job.job_name + "_" + str(self._childcounter)
 
@@ -859,7 +863,7 @@ class JobGenerator(object):
         if len(self.parameter_list_cached) > self._childcounter:
             current_paramenter = self.parameter_list_cached[self._childcounter]
             job = self._master.create_child_job(
-                self.job_name(parameter=current_paramenter)
+                _get_safe_job_name(self.job_name(parameter=current_paramenter))
             )
             if job is not None:
                 self._childcounter += 1

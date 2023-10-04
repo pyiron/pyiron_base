@@ -13,6 +13,7 @@ from typing import Union
 
 from pyiron_base.state import state
 from pyiron_base.interfaces.lockable import Lockable, sentinel
+from pyiron_base.utils.instance import static_isinstance
 from pyiron_base.jobs.job.extension.server.runmode import Runmode
 
 __author__ = "Jan Janssen"
@@ -490,6 +491,8 @@ class Server(Lockable):  # add the option to return the job id and the hold id t
             exe (concurrent.futures.Executor):
         """
         if isinstance(exe, Executor):
+            self.run_mode.executor = True
+        elif static_isinstance(exe, "flux.job.executor.FluxExecutor"):
             self.run_mode.executor = True
         elif exe is None and self.run_mode.executor:
             self.run_mode.modal = True
