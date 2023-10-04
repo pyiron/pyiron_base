@@ -525,7 +525,6 @@ class TestGenericJob(TestWithFilledProject):
         j.run()
         j.server.future.cancel()
         j.refresh_job_status()
-        sleep(1)
         self.assertEqual(j.project.db.get_job_status(j.job_id), "aborted")
         self.assertEqual(j.status, "aborted")
         self.assertTrue(j.status.aborted)
