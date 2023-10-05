@@ -6,7 +6,6 @@ import unittest
 import os
 from time import sleep
 from concurrent.futures import Future, ProcessPoolExecutor
-from pyiron_base.state import state
 from pyiron_base.storage.parameters import GenericParameters
 from pyiron_base.jobs.job.generic import GenericJob
 from pyiron_base.jobs.job.runfunction import _generate_flux_execute_string
@@ -522,12 +521,9 @@ class TestGenericJob(TestWithFilledProject):
         exe = ProcessPoolExecutor(max_workers=1)
         j.server.executor = exe
         self.assertTrue(j.server.run_mode.executor)
-        exe.submit(sleep, 5)  # This part is a bit hacky, but it basically simulates other jobs on the same executor
-        j.run()
+        j.server.future = Future()
         j.server.future.cancel()
         j.refresh_job_status()
-        while not j.server.future.done():
-            sleep(0.1)
         self.assertEqual(j.status, "aborted")
         self.assertTrue(j.status.aborted)
 
