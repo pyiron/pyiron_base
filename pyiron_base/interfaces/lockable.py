@@ -330,7 +330,7 @@ class Lockable:
         Raises:
             ValueError: if `method` is not an allowed value
         """
-        if method not in ["error", "warning"]:
+        if method not in ["error", "warning", None]:
             raise ValueError(f"Unrecognized lock method {method}!")
         if method is not None:
             object.__setattr__(self, "_lock_method", method)
