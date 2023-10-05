@@ -28,7 +28,9 @@ __status__ = "production"
 __date__ = "Sep 1, 2017"
 
 
-class Server(Lockable):  # add the option to return the job id and the hold id to the server object
+class Server(
+    Lockable
+):  # add the option to return the job id and the hold id to the server object
     """
     Generic Server object to handle the execution environment for the job
 

@@ -320,7 +320,6 @@ class DataContainer(MutableMapping, Lockable, HasGroups, HasHDF):
 
     @sentinel
     def __setitem__(self, key, val):
-
         key = _normalize(key)
 
         if isinstance(key, tuple):
@@ -349,7 +348,6 @@ class DataContainer(MutableMapping, Lockable, HasGroups, HasHDF):
 
     @sentinel
     def __delitem__(self, key):
-
         key = _normalize(key)
 
         if isinstance(key, tuple):

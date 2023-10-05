@@ -21,8 +21,10 @@ import warnings
 
 from pyiron_base.interfaces.has_groups import HasGroups
 
+
 class Locked(Exception):
     pass
+
 
 def sentinel(meth):
     """
@@ -36,6 +38,7 @@ def sentinel(meth):
     Returns:
         wrapped method
     """
+
     def dispatch_or_error(self, *args, **kwargs):
         try:
             method = object.__getattribute__(self, "_lock_method")
@@ -44,16 +47,19 @@ def sentinel(meth):
         if method not in ("error", "warning"):
             method = "error"
         if self.read_only and method == "error":
-            raise Locked("Object is currently locked!  Use unlocked() if you know what you are doing.")
+            raise Locked(
+                "Object is currently locked!  Use unlocked() if you know what you are doing."
+            )
         elif self.read_only and method == "warning":
             warnings.warn(
-                    f"{meth.__name__} called on {type(self)}, but object is locked!"
+                f"{meth.__name__} called on {type(self)}, but object is locked!"
             )
         return meth(self, *args, **kwargs)
 
     # if sentinel is applied to __setattr__ we must ensure that `read_only`
     # stays available, otherwise we can't unlock again later
     if meth.__name__ == "__setattr__":
+
         @wraps(meth)
         def f(self, *args, **kwargs):
             if len(args) > 0:
@@ -63,9 +69,11 @@ def sentinel(meth):
             if target in ("read_only", "_read_only"):
                 return meth(self, *args, **kwargs)
             return dispatch_or_error(self, *args, **kwargs)
+
     else:
         f = wraps(meth)(dispatch_or_error)
     return f
+
 
 class _UnlockContext:
     """
@@ -73,6 +81,7 @@ class _UnlockContext:
 
     This is an implementation detail of :class:`Lockable`.
     """
+
     __slots__ = ("owner",)
 
     def __init__(self, owner):
@@ -84,7 +93,8 @@ class _UnlockContext:
 
     def __exit__(self, *_):
         self.owner.lock()
-        return False # never handle exceptions
+        return False  # never handle exceptions
+
 
 def _iterate_lockable_subs(lockable_groups):
     """
@@ -105,6 +115,7 @@ def _iterate_lockable_subs(lockable_groups):
         group = lockable_groups[g]
         yield group
         yield from _iterate_lockable_subs(g)
+
 
 class Lockable:
     """
