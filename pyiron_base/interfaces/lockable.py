@@ -25,6 +25,8 @@ from pyiron_base.interfaces.has_groups import HasGroups
 class Locked(Exception):
     pass
 
+class LockedWarning(UserWarning):
+    pass
 
 def sentinel(meth):
     """
@@ -52,7 +54,8 @@ def sentinel(meth):
             )
         elif self.read_only and method == "warning":
             warnings.warn(
-                f"{meth.__name__} called on {type(self)}, but object is locked!"
+                f"{meth.__name__} called on {type(self)}, but object is locked!",
+                category=LockedWarning
             )
         return meth(self, *args, **kwargs)
 
@@ -137,7 +140,7 @@ class Lockable:
     using methods and properties decorated with :func:`.sentinel`.
 
     Subclasses may override :meth:`_on_lock` and :meth:`_on_unlock` if they wish to customize locking/unlocking
-    behaviour, provided that they call super() in their overloads.
+    behaviour, provided that they call `super()` in their overloads.
 
     Let's start with a simple example; a list that can be locked
 
@@ -316,7 +319,19 @@ class Lockable:
     def lock(self, method: Optional[Literal["error", "warning"]] = None):
         """
         Set :attr:`~.read_only`.
+
+        Objects may be safely locked multiple times without further effect.
+
+        Args:
+            method (str, either "error" or "warning"): if "error" raise an :class:`.Locked` exception if modification is
+                    attempted; if "warning" raise a :class:`.LockedWarning` warning; default is "error" or the value
+                    passed to the constructor.
+
+        Raises:
+            ValueError: if `method` is not an allowed value
         """
+        if method not in ["error", "warning"]:
+            raise ValueError(f"Unrecognized lock method {method}!")
         if method is not None:
             object.__setattr__(self, "_lock_method", method)
         self.read_only = True
