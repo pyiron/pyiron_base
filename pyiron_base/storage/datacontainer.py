@@ -257,7 +257,7 @@ class DataContainer(MutableMapping, Lockable, HasGroups, HasHDF):
 
         return instance
 
-    def __init__(self, init=None, table_name=None, lazy=False, wrap_blacklist=()):
+    def __init__(self, init=None, table_name=None, lazy=False, wrap_blacklist=(), lock_method="warning"):
         """
         Create new container.
 
@@ -269,7 +269,7 @@ class DataContainer(MutableMapping, Lockable, HasGroups, HasHDF):
             wrap_blacklist (tuple of types): any values in `init` that are instances of the given types are *not*
                                              wrapped in :class:`.DataContainer`
         """
-        super().__init__(lock_method="warning")
+        super().__init__(lock_method=lock_method)
         self.table_name = table_name
         self._lazy = lazy
         if init is not None:
