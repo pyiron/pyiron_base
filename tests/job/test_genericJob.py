@@ -522,7 +522,7 @@ class TestGenericJob(TestWithFilledProject):
         exe = ProcessPoolExecutor(max_workers=1)
         j.server.executor = exe
         self.assertTrue(j.server.run_mode.executor)
-        exe.submit(sleep, 1)  # This part is a bit hacky, but it basically simulates other jobs on the same executor
+        exe.submit(sleep, 5)  # This part is a bit hacky, but it basically simulates other jobs on the same executor
         j.run()
         j.server.future.cancel()
         j.refresh_job_status()
