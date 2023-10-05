@@ -6,6 +6,7 @@ import unittest
 import os
 from time import sleep
 from concurrent.futures import Future, ProcessPoolExecutor
+from pyiron_base.state import state
 from pyiron_base.storage.parameters import GenericParameters
 from pyiron_base.jobs.job.generic import GenericJob
 from pyiron_base.jobs.job.runfunction import _generate_flux_execute_string
@@ -525,6 +526,9 @@ class TestGenericJob(TestWithFilledProject):
         j.run()
         j.server.future.cancel()
         j.refresh_job_status()
+        self.assertFalse(state.database.database_is_disabled)
+        self.assertTrue(j.server.future.done())
+        self.assertTrue(j.server.future.cancelled())
         self.assertEqual(j.project.db.get_job_status(j.job_id), "aborted")
         self.assertEqual(j.status, "aborted")
         self.assertTrue(j.status.aborted)
