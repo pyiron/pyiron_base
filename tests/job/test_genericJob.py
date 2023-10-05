@@ -519,7 +519,7 @@ class TestGenericJob(TestWithFilledProject):
     def test_job_executor_cancel(self):
         j = self.project.create_job(ReturnCodeJob, "job_with_executor_cancel")
         j.input["accepted_codes"] = [1]
-        exe = ProcessPoolExecutor()
+        exe = ProcessPoolExecutor(max_workers=1)
         j.server.executor = exe
         self.assertTrue(j.server.run_mode.executor)
         exe.submit(sleep, 1)  # This part is a bit hacky, but it basically simulates other jobs on the same executor
