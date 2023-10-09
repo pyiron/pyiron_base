@@ -121,7 +121,7 @@ class FlattenedStorage(HasHDF):
     >>> store.get_array("sum", 2)
     57
 
-    Finally you may add multiple arrays in one call to :method:`.add_chunk` by using keyword arguments
+    Finally you may add multiple arrays in one call to :meth:`.add_chunk` by using keyword arguments
 
     >>> store.add_chunk(4, even=[14, 16, 18, 20], odd=[13, 15, 17, 19], sum=119)
     >>> store.get_array("sum", 3)
@@ -129,7 +129,7 @@ class FlattenedStorage(HasHDF):
     >>> store.get_array("even", 3)
     array([14, 16, 18, 20])
 
-    It is usually not necessary to call :method:`.add_array` before :method:`.add_chunk`, the type of the array will be
+    It is usually not necessary to call :meth:`.add_array` before :meth:`.add_chunk`, the type of the array will be
     inferred in this case.
 
     If you skip the `frame` argument to :meth:`.get_array` it will return a flat array of all the values for that array
@@ -140,9 +140,9 @@ class FlattenedStorage(HasHDF):
     >>> store.get_array("even")
     array([ 0,  4,  6,  8, 10, 12, 14, 16, 18, 20])
 
-    Arrays may be of more complicated shape, too, see :method:`.add_array` for details.
+    Arrays may be of more complicated shape, too, see :meth:`.add_array` for details.
 
-    Use :method:`.copy` to obtain a deep copy of the storage, for shallow copies using the builting `copy.copy` is
+    Use :meth:`.copy` to obtain a deep copy of the storage, for shallow copies using the builting `copy.copy` is
     sufficient.
 
     >>> copy = store.copy()
@@ -153,7 +153,7 @@ class FlattenedStorage(HasHDF):
     >>> copy["even"]
     array([0, 4, 6, 8, 10, 12])
 
-    Storages can be :method:`.split` and :method:`.join` again as long as their internal chunk structure is consistent,
+    Storages can be :meth:`.split` and :meth:`.join` again as long as their internal chunk structure is consistent,
     i.e. same number of chunks and same chunk lengths.  If this is not the case a `ValueError` is raised.
 
     >>> even = store.split(["even"])
@@ -163,11 +163,11 @@ class FlattenedStorage(HasHDF):
     False
     >>> odd = store.split(["odd"])
 
-    :method:`.join` adds new arrays to the storage it is called on in-place.  To leave it unchanged, simply call copy
+    :meth:`.join` adds new arrays to the storage it is called on in-place.  To leave it unchanged, simply call copy
     before join.
     >>> both = even.copy().join(odd)
 
-    Chunks may be given string names, either by passing `identifier` to :method:`.add_chunk` or by setting to the
+    Chunks may be given string names, either by passing `identifier` to :meth:`.add_chunk` or by setting to the
     special per chunk array "identifier"
 
     >>> store.set_array("identifier", 1, "second")
@@ -300,7 +300,7 @@ class FlattenedStorage(HasHDF):
         Return integer index for given identifier.
 
         Args:
-            identifier (str): name of chunk previously passed to :method:`.add_chunk`
+            identifier (str): name of chunk previously passed to :meth:`.add_chunk`
 
         Returns:
             int: integer index for chunk
@@ -443,7 +443,7 @@ class FlattenedStorage(HasHDF):
 
         Args:
             name (str): name of the array to fetch
-            frame (int, str, optional): selects structure to fetch, as in :method:`.get_structure()`, if not given
+            frame (int, str, optional): selects structure to fetch, as in :meth:`.get_structure()`, if not given
                                         return a flat array of all values for either all chunks or elements
 
         Returns:
@@ -475,7 +475,7 @@ class FlattenedStorage(HasHDF):
         Return elements of array `name` in all chunks.  Values are returned in a ragged array of dtype=object.
 
         If `name` specifies a per chunk array, there's nothing to pad and this method is equivalent to
-        :method:`.get_array`.
+        :meth:`.get_array`.
 
         Args:
             name (str): name of array to fetch
@@ -497,10 +497,10 @@ class FlattenedStorage(HasHDF):
         Return elements of array `name` in all chunks.  Arrays are padded to be all of the same length.
 
         The padding value depends on the datatpye of the array or can be configured via the `fill` parameter of
-        :method:`.add_array`.
+        :meth:`.add_array`.
 
         If `name` specifies a per chunk array, there's nothing to pad and this method is equivalent to
-        :method:`.get_array`.
+        :meth:`.get_array`.
 
         Args:
             name (str): name of array to fetch
@@ -535,7 +535,7 @@ class FlattenedStorage(HasHDF):
 
         Args:
             name (str): name of array to set
-            frame (int, str): selects structure to set, as in :method:`.get_strucure()`
+            frame (int, str): selects structure to set, as in :meth:`.get_strucure()`
             value: value (for per chunk) or array of values (for per element); type and shape as per :meth:`.hasarray()`.
 
         Raises:
@@ -601,7 +601,7 @@ class FlattenedStorage(HasHDF):
 
     def has_array(self, name):
         """
-        Checks whether an array of the given name exists and returns meta data given to :method:`.add_array()`.
+        Checks whether an array of the given name exists and returns meta data given to :meth:`.add_array()`.
 
         >>> container.has_array("energy")
         {'shape': (), 'dtype': np.float64, 'per': 'chunk'}
@@ -613,7 +613,7 @@ class FlattenedStorage(HasHDF):
 
         Returns:
             None: if array does not exist
-            dict: if array exists, keys corresponds to the shape, dtype and per arguments of :method:`.add_array`
+            dict: if array exists, keys corresponds to the shape, dtype and per arguments of :meth:`.add_array`
         """
         if name in self._per_element_arrays:
             a = self._per_element_arrays[name]
@@ -656,7 +656,7 @@ class FlattenedStorage(HasHDF):
         Returns:
             :class:`.FlattenedStorage` or subclass: storage with the selected chunks
         """
-        new = self.__class__()
+        new = type(self)()
         for k, a in self._per_chunk_arrays.items():
             if k not in ("start_index", "length", "identifier"):
                 new.add_array(k, shape=a.shape[1:], dtype=a.dtype, per="chunk")
@@ -718,9 +718,19 @@ class FlattenedStorage(HasHDF):
 
         Args:
             store (:class:`.FlattenedStorage`): storage to join
+            lsuffix, rsuffix (str, optional): if either are given rename *all* arrays by appending the suffices to the
+                                              array name; `lsuffix` for arrays in this storage, `rsuffix` for arrays in
+                                              the added storage; in this case arrays are no longer available under the
+                                              old name
 
         Returns:
             :class:`.FlattenedStorage`: self
+
+        Raise:
+            ValueError: if the two stores do not have the same number of chunks
+            ValueError: if the two stores do not have equal chunk lengths
+            ValueError: if lsuffix and rsuffix are equal and different from ""
+            ValueError: if the stores share array names but `lsuffix` and `rsuffix` are not given
         """
         if len(self) != len(store):
             raise ValueError(
@@ -751,6 +761,8 @@ class FlattenedStorage(HasHDF):
         for k, a in store._per_element_arrays.items():
             if k in self._per_element_arrays and rename:
                 self._per_element_arrays[k + lsuffix] = self._per_element_arrays[k]
+                if lsuffix != "":
+                    del self._per_element_arrays[k]
                 k += rsuffix
             self._per_element_arrays[k] = a
 
@@ -758,6 +770,8 @@ class FlattenedStorage(HasHDF):
             if k not in ("start_index", "length", "identifier"):
                 if k in self._per_chunk_arrays and rename:
                     self._per_chunk_arrays[k + lsuffix] = self._per_chunk_arrays[k]
+                    if lsuffix != "":
+                        del self._per_chunk_arrays[k]
                     k += rsuffix
                 self._per_chunk_arrays[k] = a
 
@@ -791,10 +805,10 @@ class FlattenedStorage(HasHDF):
         >>> container.get_array("pressure", 2).shape
         (3, 3)
 
-        .. attention: Edge-case!
+        .. attention:: Edge-case!
 
             This will not work when the chunk length is also 1 and the array does not exist yet!  In this case the array
-            will be assumed to be per element and there is no way around explicitly calling :method:`.add_array()`.
+            will be assumed to be per element and there is no way around explicitly calling :meth:`.add_array()`.
 
 
         Args:
@@ -857,6 +871,22 @@ class FlattenedStorage(HasHDF):
         # return last_chunk_index, last_element_index
 
     def extend(self, other: "FlattenedStorage"):
+        """
+        Add chunks from `other` to this storage.
+
+        Afterwards the number of chunks and elements are the sum of the respective previous values.
+
+        If `other` defines new arrays or doesn't define some of the arrays they are padded by the fill values.
+
+        Args:
+            other (:class:`.FlattenedStorage`): other storage to add
+
+        Raises:
+            ValueError: if fill values between both storages are not compatible
+
+        Returns:
+            FlattenedStorage: return this storage
+        """
         self._check_compatible_fill_values(other=other)
 
         combined_num_chunks = self.num_chunks + other.num_chunks
@@ -898,6 +928,8 @@ class FlattenedStorage(HasHDF):
         self.num_chunks = combined_num_chunks
         self.current_chunk_index = self.num_chunks
         self.current_element_index = self.num_elements
+
+        return self
 
     def _check_compatible_fill_values(self, other: "FlattenedStorage"):
         """
