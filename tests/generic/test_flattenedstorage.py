@@ -290,13 +290,13 @@ class TestFlattenedStorage(TestWithProject):
         store = FlattenedStorage()
         self.assertEqual(sorted(store.list_arrays()), sorted(["identifier", "length", "start_index"]),
                          "Array names of empty storage don't match default arrays!")
-        self.assertEqual(store.list_arrays(only_user=True), [],
-                         "User array names of empty storage not empty!")
+        self.assertEqual(store.list_arrays(only_user=True), ["identifier"],
+                         "User array names of empty storage contains more than `identifier`!")
         store.add_array("energy", per="chunk")
         store.add_array("forces", shape=(3,), per="element")
         self.assertEqual(sorted(store.list_arrays()), sorted(["identifier", "length", "start_index", "energy", "forces"]),
                          "Array names don't match added ones!")
-        self.assertEqual(sorted(store.list_arrays(only_user=True)), sorted(["energy", "forces"]),
+        self.assertEqual(sorted(store.list_arrays(only_user=True)), sorted(["identifier", "energy", "forces"]),
                          "Array names don't match added ones!")
 
     def test_hdf_empty(self):
@@ -547,7 +547,7 @@ class TestFlattenedStorage(TestWithProject):
             foo.append(foo_val)
             bar.append(bar_val)
             store.add_chunk(i, identifier=f"ID{i}", foo=foo_val, bar=bar_val)
-            
+
         for i in range(3, 5):
             # default length for identifiers is 20 chars, so we need to push it a bit more
             foo_val = i
@@ -600,3 +600,33 @@ class TestFlattenedStorage(TestWithProject):
             store.del_array("elem2")
             self.assertTrue("elem2" not in store.list_arrays(),
                             "Per element array still present after del_array")
+
+    def test_to_pandas(self):
+        """to_pandas should return a dataframe with user defined arrays."""
+
+        store = FlattenedStorage(
+                even=self.even,
+                odd=self.odd,
+                even_sum=self.even_sum,
+                odd_sum=self.odd_sum,
+        )
+
+        arrays = store.list_arrays(only_user=True)
+        dfc = store.to_pandas()
+        self.assertEqual(sorted(arrays), sorted(dfc.columns),
+                         "Not all columns present in dataframe!")
+        for a in arrays:
+            with self.subTest(array=a):
+                for i, (elem_df, elem_st) in enumerate(zip(dfc[a], store.get_array_ragged(a))):
+                    self.assertEqual(elem_df, elem_st,
+                                     f"Element {i} in dataframe not equal to original: {elem_df}!={elem_st}!")
+
+        dfe = store.to_pandas(explode=True)
+        for a in arrays:
+            with self.subTest(array=a):
+                if a == "identifier":
+                    self.assertEqual(dfe[a].to_numpy().dtype, np.dtype("O"),
+                                     "dtype not conserved with explode=True!")
+                else:
+                    self.assertEqual(dfe[a].to_numpy().dtype, store[a].dtype,
+                                     "dtype not conserved with explode=True!")

@@ -24,6 +24,7 @@ from typing import Callable, Iterable, List, Tuple, Any
 
 import numpy as np
 import h5py
+import pandas as pd
 from pyiron_base.interfaces.has_hdf import HasHDF
 
 
@@ -630,7 +631,7 @@ class FlattenedStorage(HasHDF):
 
         Args:
             only_user (bool): If `True` include only array names added by the
-            user via :meth:`.add_array`.
+            user via :meth:`.add_array` and the `identifier` array.
 
         Returns:
             list of str: array names
@@ -1017,6 +1018,27 @@ class FlattenedStorage(HasHDF):
 
         if version >= "0.3.0":
             self._fill_values = hdf["_fill_values"]
+
+    def to_pandas(self, explode=False, include_index=False) -> pd.DataFrame:
+        """
+        Convert arrays to pandas dataframe.
+
+        Args:
+            explode (bool): If `False` values of per element arrays are stored
+                            in the dataframe as arrays, otherwise each row in the dataframe
+                            corresponds to an element in the original storage.
+
+        Returns:
+            :class:`pandas.DataFrame`: table of array values
+        """
+        arrays = self.list_arrays(only_user=True)
+        df = pd.DataFrame(
+                {a: self.get_array_ragged(a) for a in arrays}
+        )
+        if explode:
+            elem_arrays = [a for a in arrays if self.has_array(a)["per"] == "element"]
+            df = df.explode(elem_arrays).infer_objects(copy=False).reset_index(drop=not include_index)
+        return df
 
 
 def get_dtype_and_fill(storage: FlattenedStorage, name: str) -> Tuple[np.generic, Any]:
