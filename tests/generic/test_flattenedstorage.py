@@ -290,9 +290,13 @@ class TestFlattenedStorage(TestWithProject):
         store = FlattenedStorage()
         self.assertEqual(sorted(store.list_arrays()), sorted(["identifier", "length", "start_index"]),
                          "Array names of empty storage don't match default arrays!")
+        self.assertEqual(store.list_arrays(only_user=True), [],
+                         "User array names of empty storage not empty!")
         store.add_array("energy", per="chunk")
         store.add_array("forces", shape=(3,), per="element")
         self.assertEqual(sorted(store.list_arrays()), sorted(["identifier", "length", "start_index", "energy", "forces"]),
+                         "Array names don't match added ones!")
+        self.assertEqual(sorted(store.list_arrays(only_user=True)), sorted(["energy", "forces"]),
                          "Array names don't match added ones!")
 
     def test_hdf_empty(self):

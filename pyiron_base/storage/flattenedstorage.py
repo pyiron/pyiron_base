@@ -269,6 +269,22 @@ class FlattenedStorage(HasHDF):
     def __len__(self):
         return self.current_chunk_index
 
+    def _internal_arrays(self) -> Tuple[str, ...]:
+        """
+        Names of "internal" arrays, i.e. arrays needed for the correct inner
+        working of the flattened storage and that not are not added by the
+        user via :meth:`.add_array`.
+
+        Subclasses can override this tuple, by calling `super()` and appending
+        to it.
+
+        This exists mostly to support :meth:`.to_pandas()`.
+        """
+        return (
+                'start_index',
+                'length',
+        )
+
     def copy(self):
         """
         Return a deep copy of the storage.
@@ -608,14 +624,21 @@ class FlattenedStorage(HasHDF):
             return None
         return {"shape": a.shape[1:], "dtype": a.dtype, "per": per}
 
-    def list_arrays(self) -> List[str]:
+    def list_arrays(self, only_user=False) -> List[str]:
         """
         Return a list of names of arrays inside the storage.
+
+        Args:
+            only_user (bool): If `True` include only array names added by the
+            user via :meth:`.add_array`.
 
         Returns:
             list of str: array names
         """
-        return list(self._per_chunk_arrays) + list(self._per_element_arrays)
+        arrays = list(self._per_chunk_arrays) + list(self._per_element_arrays)
+        if only_user:
+            arrays = [a for a in arrays if a not in self._internal_arrays()]
+        return arrays
 
     def sample(
         self, selector: Callable[["FlattenedStorage", int], bool]
