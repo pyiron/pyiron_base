@@ -257,7 +257,14 @@ class DataContainer(MutableMapping, Lockable, HasGroups, HasHDF):
 
         return instance
 
-    def __init__(self, init=None, table_name=None, lazy=False, wrap_blacklist=(), lock_method="warning"):
+    def __init__(
+        self,
+        init=None,
+        table_name=None,
+        lazy=False,
+        wrap_blacklist=(),
+        lock_method="warning",
+    ):
         """
         Create new container.
 

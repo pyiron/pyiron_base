@@ -25,8 +25,10 @@ from pyiron_base.interfaces.has_groups import HasGroups
 class Locked(Exception):
     pass
 
+
 class LockedWarning(UserWarning):
     pass
+
 
 def sentinel(meth):
     """
@@ -55,7 +57,7 @@ def sentinel(meth):
         elif self.read_only and method == "warning":
             warnings.warn(
                 f"{meth.__name__} called on {type(self)}, but object is locked!",
-                category=LockedWarning
+                category=LockedWarning,
             )
         return meth(self, *args, **kwargs)
 
