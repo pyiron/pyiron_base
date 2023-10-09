@@ -282,8 +282,8 @@ class FlattenedStorage(HasHDF):
         This exists mostly to support :meth:`.to_pandas()`.
         """
         return (
-                'start_index',
-                'length',
+            "start_index",
+            "length",
         )
 
     def copy(self):
@@ -1064,12 +1064,14 @@ class FlattenedStorage(HasHDF):
             :class:`pandas.DataFrame`: table of array values
         """
         arrays = self.list_arrays(only_user=True)
-        df = pd.DataFrame(
-                {a: self.get_array_ragged(a) for a in arrays}
-        )
+        df = pd.DataFrame({a: self.get_array_ragged(a) for a in arrays})
         if explode:
             elem_arrays = [a for a in arrays if self.has_array(a)["per"] == "element"]
-            df = df.explode(elem_arrays).infer_objects(copy=False).reset_index(drop=not include_index)
+            df = (
+                df.explode(elem_arrays)
+                .infer_objects(copy=False)
+                .reset_index(drop=not include_index)
+            )
         return df
 
 
