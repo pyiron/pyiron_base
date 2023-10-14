@@ -4,7 +4,6 @@ import pkgutil
 import warnings
 
 import pandas
-from git import Repo, InvalidGitRepositoryError
 
 from pyiron_base import state
 from pyiron_base.database.performance import get_database_statistics
@@ -48,6 +47,8 @@ class Maintenance:
         Returns:
             pandas.DataFrame: The name of each module and the hash and version for its current git head.
         """
+        from git import Repo, InvalidGitRepositoryError
+
         module_names = [
             name for _, name, _ in pkgutil.iter_modules() if name.startswith("pyiron")
         ]
