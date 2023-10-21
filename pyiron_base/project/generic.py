@@ -23,7 +23,6 @@ from pyiron_base.state import state
 from pyiron_base.database.jobtable import (
     get_job_ids,
     get_job_id,
-    get_jobs,
     set_job_status,
     get_child_ids,
     get_job_working_directory,
@@ -507,8 +506,7 @@ class Project(ProjectPath, HasGroups):
         Returns:
             dict: columns are used as keys and point to a list of the corresponding values
         """
-        return get_jobs(
-            database=self.db,
+        return self.db.get_jobs(
             sql_query=self.sql_query,
             user=self.user,
             project_path=self.project_path,
