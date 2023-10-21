@@ -1593,23 +1593,22 @@ class Project(ProjectPath, HasGroups):
         """
         if not isinstance(recursive, bool):
             raise ValueError("recursive must be a boolean")
-        if not self.db.view_mode:
-            job_id_lst = self.get_job_ids(recursive=recursive)
-            if progress and len(job_id_lst) > 0:
-                job_id_lst = tqdm(job_id_lst)
-            for job_id in job_id_lst:
-                if job_id not in self.get_job_ids(recursive=recursive):
-                    continue
-                else:
-                    try:
-                        self.remove_job(job_specifier=job_id)
-                        state.logger.debug("Remove job with ID {0} ".format(job_id))
-                    except (IndexError, Exception):
-                        state.logger.debug(
-                            "Could not remove job with ID {0} ".format(job_id)
-                        )
-        else:
-            raise EnvironmentError("copy_to: is not available in Viewermode !")
+        if self.db.view_mode:
+            raise RuntimeError("copy_to: is not available in Viewermode !")
+        job_id_lst = self.get_job_ids(recursive=recursive)
+        if progress and len(job_id_lst) > 0:
+            job_id_lst = tqdm(job_id_lst)
+        for job_id in job_id_lst:
+            if job_id not in self.get_job_ids(recursive=recursive):
+                continue
+            else:
+                try:
+                    self.remove_job(job_specifier=job_id)
+                    state.logger.debug("Remove job with ID {0} ".format(job_id))
+                except (IndexError, Exception):
+                    state.logger.debug(
+                        "Could not remove job with ID {0} ".format(job_id)
+                    )
 
     def _remove_files(self, pattern="*"):
         """
