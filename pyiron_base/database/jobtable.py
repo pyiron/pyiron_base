@@ -20,33 +20,6 @@ __status__ = "production"
 __date__ = "Sep 1, 2017"
 
 
-
-def get_job_ids(database, sql_query, user, project_path, recursive=True):
-    """
-    Return the job IDs matching a specific query
-
-    Args:
-        database (DatabaseAccess): Database object
-        sql_query (str): SQL query to enter a more specific request
-        user (str): username of the user whoes user space should be searched
-        project_path (str): root_path - this is in contrast to the project_path in GenericPath
-        recursive (bool): search subprojects [True/False]
-
-    Returns:
-        list: a list of job IDs
-    """
-    if not isinstance(database, FileTable):
-        return database.get_jobs(
-            sql_query=sql_query,
-            user=user,
-            project_path=project_path,
-            recursive=recursive,
-            columns=["id"],
-        )["id"]
-    else:
-        return database.get_job_ids(project=project_path, recursive=recursive)
-
-
 def get_child_ids(database, sql_query, user, project_path, job_specifier, status=None):
     """
     Get the childs for a specific job

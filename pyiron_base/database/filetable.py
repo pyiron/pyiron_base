@@ -351,19 +351,6 @@ class FileTable(IsDatabase, metaclass=FileTableSingleton):
             ].tolist()  # ToDo: Check difference of tolist and to_list
         return dictionary
 
-    def get_job_ids(self, project=None, recursive=True):
-        """
-        Get job IDs from filetable
-
-        Args:
-            project (str/ None): path to the project
-            recursive (boolean): recursively iterate over all sub projects
-
-        Returns:
-            list/ None: list of job IDs
-        """
-        return self.get_jobs(project=project, recursive=recursive, columns=["id"])["id"]
-
     def get_job_id(self, job_specifier, project=None):
         """
         Get job ID from filetable
