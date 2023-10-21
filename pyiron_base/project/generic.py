@@ -23,7 +23,6 @@ from pyiron_base.project.path import ProjectPath
 from pyiron_base.database.filetable import FileTable
 from pyiron_base.state import state
 from pyiron_base.database.jobtable import (
-    get_job_ids,
     get_job_id,
     set_job_status,
     get_child_ids,
@@ -451,8 +450,7 @@ class Project(ProjectPath, HasGroups):
         Returns:
             list: a list of job IDs
         """
-        return get_job_ids(
-            database=self.db,
+        return self.db.get_job_ids(
             sql_query=self.sql_query,
             user=self.user,
             project_path=self.project_path,
