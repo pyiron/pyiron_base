@@ -10,6 +10,7 @@ from datetime import datetime
 import os
 import posixpath
 import signal
+import shutil
 import warnings
 
 from pyiron_base.state import state
@@ -1469,6 +1470,32 @@ class GenericJob(JobCore):
             project.db.set_job_status(job_id=master_id, status="busy")
             self._logger.info("busy master: {} {}".format(master_id, self.get_job_id()))
             del self
+
+    @staticmethod
+    def _bulk_remove_jobs(project, job_df, progress):
+        """
+        """
+        def del_files(row):
+            if progress is not None:
+                progress.update(1)
+            project_path, project, job = row[["projectpath", "project", "job"]]
+            if project_path is not None:
+                base_path = os.path.join(project_path, project, job)
+            else:
+                base_path = os.path.join(project, job)
+            if os.path.isfile(base_path + ".h5"):
+                os.remove(base_path + ".h5")
+            shutil.rmtree(base_path + "_hdf5", ignore_errors=True)
+
+        project.db.delete_item(job_df.id)
+        # if job doesn't match subjob, it's stored inside another job's HDF5 file and will be delete from there.
+        n_total = len(job_df)
+        job_df = job_df.query("job == subjob.str.slice(1, None)")
+        # sub jobs won't have their files deleted, so advance progress bar on its own
+        n_sub = n_total - len(job_df)
+        if progress is not None:
+            progress.update(n_sub)
+        job_df.apply(del_files, axis="columns")
 
 
 class GenericError(object):

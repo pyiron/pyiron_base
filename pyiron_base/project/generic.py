@@ -34,7 +34,7 @@ from pyiron_base.storage.filedata import load_file
 from pyiron_base.utils.deprecate import deprecate
 from pyiron_base.jobs.job.util import _special_symbol_replacements, _get_safe_job_name
 from pyiron_base.interfaces.has_groups import HasGroups
-from pyiron_base.jobs.job.jobtype import JobType, JobTypeChoice, JobFactory
+from pyiron_base.jobs.job.jobtype import JOB_CLASS_DICT, JobType, JobTypeChoice, JobFactory
 from pyiron_base.jobs.job.extension.server.queuestatus import (
     queue_delete_job,
     queue_is_empty,
@@ -1591,20 +1591,24 @@ class Project(ProjectPath, HasGroups):
             raise ValueError("recursive must be a boolean")
         if self.db.view_mode:
             raise RuntimeError("copy_to: is not available in Viewermode !")
-        job_id_lst = self.get_job_ids(recursive=recursive)
-        if progress and len(job_id_lst) > 0:
-            job_id_lst = tqdm(job_id_lst)
-        for job_id in job_id_lst:
-            if job_id not in self.get_job_ids(recursive=recursive):
-                continue
-            else:
-                try:
-                    self.remove_job(job_specifier=job_id)
-                    state.logger.debug("Remove job with ID {0} ".format(job_id))
-                except (IndexError, Exception):
-                    state.logger.debug(
-                        "Could not remove job with ID {0} ".format(job_id)
-                    )
+        job_df = self.job_table(
+                recursive=recursive,
+                columns=["id", "hamilton", "parentid", "masterid", "projectpath", "project", "job", "subjob"]
+        )
+        job_id_lst = job_df["id"]
+        parents = set(job_df.parentid.dropna())
+        masters = set(job_df.masterid.dropna())
+        if not (parents.issubset(job_id_lst) and masters.issubset(job_id_lst)):
+            assert False, "Somehow sort out out of project jobs"
+
+        progress = tqdm(total=len(job_id_lst)) if progress else None
+        for hamilton, sub_df in job_df.groupby("hamilton"):
+            try:
+                job_class = JobType.convert_str_to_class(JOB_CLASS_DICT, hamilton)
+            except ValueError: # if job class is not registered in JOB_CLASS_DICT use generic routine
+                from pyiron_base.jobs.job.generic import GenericJob
+                job_class = GenericJob
+            job_class._bulk_remove_jobs(self, sub_df, progress)
 
     def _remove_files(self, pattern="*"):
         """

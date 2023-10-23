@@ -504,6 +504,13 @@ class GenericMaster(GenericJob):
         """
         self.ref_job = parent
 
+    @staticmethod
+    def _bulk_remove_jobs(project, job_df, progress):
+        for job_id in job_df["id"]:
+            job = project.load(job_id)
+            job.child_project.remove(enable=True)
+
+        super()._bulk_remove_jobs(project, job_df, progress)
 
 def get_function_from_string(function_str):
     """
