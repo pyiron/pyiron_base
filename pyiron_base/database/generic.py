@@ -12,6 +12,7 @@ import warnings
 import numpy as np
 import re
 import os
+from typing import Union, Iterable
 from datetime import datetime
 from pyiron_base.utils.deprecate import deprecate
 import pandas
@@ -243,6 +244,29 @@ class IsDatabase(ABC):
         """
         for i_id in item_ids:
             self._item_update(par_dict=par_dict, item_id=i_id)
+
+    @abstractmethod
+    def _delete_item(self, item_id):
+        pass
+
+    def _delete_items(self, item_ids):
+        raise NotImplementedError()
+
+    def delete_item(self, item_id: Union[int, Iterable[int]]):
+        """
+        Delete database entry for job with given id.
+
+        Args:
+            item_id (int, iterable): job id to delete or iterable there of
+        """
+        if not isinstance(item_id, Iterable):
+            self._delete_item(item_id)
+        else:
+            try:
+                self._delete_items(item_id)
+            except NotImplementedError:
+                for i in item_id:
+                    self._delete_item(i)
 
     def set_job_status(self, status, job_id):
         """
@@ -1057,7 +1081,7 @@ class DatabaseAccess(IsDatabase):
         else:
             raise PermissionError("Not avilable in viewer mode.")
 
-    def delete_item(self, item_id):
+    def _delete_item(self, item_id):
         """
         Delete Item from database
 

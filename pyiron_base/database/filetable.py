@@ -140,7 +140,7 @@ class FileTable(IsDatabase, metaclass=FileTableSingleton):
         ).reset_index(drop=True)
         return int(par_dict_merged["id"])
 
-    def delete_item(self, item_id):
+    def _delete_item(self, item_id):
         """
         Delete Item from database
 
