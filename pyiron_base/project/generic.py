@@ -581,14 +581,41 @@ class Project(ProjectPath, HasGroups):
             case, you may seriously wish to consider setting `convert_to_object=False` and access only the HDF5/JobCore
             representation of the jobs instead.
         """
-        job_id_lst = self.job_table(recursive=recursive, **kwargs)["id"]
-        if progress:
-            job_id_lst = tqdm(job_id_lst)
-        for job_id in job_id_lst:
-            if path is not None:
-                yield self.inspect(job_id)[path]
-            else:  # Backwards compatibility - in future the option convert_to_object should be removed
-                yield self.load(job_id, convert_to_object=convert_to_object)
+        if not isinstance(self.db, FileTable):
+            job_id_lst = self.job_table(recursive=recursive, **kwargs)["id"]
+            if progress:
+                job_id_lst = tqdm(job_id_lst)
+            for job_id in job_id_lst:
+                if path is not None:
+                    yield self.inspect(job_id)[path]
+                else:  # Backwards compatibility - in future the option convert_to_object should be removed
+                    yield self.load(job_id, convert_to_object=convert_to_object)
+        else:
+            db_entry_lst = [row[1].to_dict() for row in self.job_table().iterrows()]
+            table_columns = [
+                "job",
+                "subjob",
+                "projectpath",
+                "project",
+                "status",
+                "hamilton",
+                "hamversion",
+            ]
+            if progress:
+                db_entry_lst = tqdm(db_entry_lst)
+            for db_entry in db_entry_lst:
+                if path is not None:
+                    yield self.load_from_jobpath(
+                        job_id=None,
+                        db_entry={column: db_entry[column] for column in table_columns},
+                        convert_to_object=False,
+                    )[path]
+                else:
+                    yield self.load_from_jobpath(
+                        job_id=None,
+                        db_entry={column: db_entry[column] for column in table_columns},
+                        convert_to_object=True,
+                    )
 
     def iter_output(self, recursive=True):
         """
