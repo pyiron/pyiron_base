@@ -581,11 +581,9 @@ class Project(ProjectPath, HasGroups):
             case, you may seriously wish to consider setting `convert_to_object=False` and access only the HDF5/JobCore
             representation of the jobs instead.
         """
+        job_table = self.job_table(recursive=recursive, **kwargs)
         if not isinstance(self.db, FileTable):
-            job_lst = [
-                [job_id, None]
-                for job_id in self.job_table(recursive=recursive, **kwargs)["id"]
-            ]
+            job_lst = [[job_id, None] for job_id in job_table["id"]]
         else:
             table_columns = [
                 "job",
@@ -598,9 +596,7 @@ class Project(ProjectPath, HasGroups):
             ]
             job_lst = [
                 [None, {column: db_entry[column] for column in table_columns}]
-                for db_entry in [
-                    row[1].to_dict() for row in self.job_table().iterrows()
-                ]
+                for db_entry in [row[1].to_dict() for row in job_table.iterrows()]
             ]
 
         if progress:
