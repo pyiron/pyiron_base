@@ -38,7 +38,7 @@ setup(
         'pandas==2.1.3',
         'pint==0.22',
         'psutil==5.9.5',
-        'pyfileindex==0.0.12',
+        'pyfileindex==0.0.13',
         'pysqa==0.1.3',
         'sqlalchemy==2.0.23',
         'tables==3.9.1',
