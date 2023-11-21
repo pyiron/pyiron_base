@@ -607,16 +607,12 @@ class Project(ProjectPath, HasGroups):
             job_lst = tqdm(job_lst)
         for job_id, db_entry in job_lst:
             if path is not None:
-                yield self.load_from_jobpath(
-                    job_id=job_id,
-                    db_entry=db_entry,
-                    convert_to_object=False,
-                )[path]
+                yield self.inspect(job_specifier=job_id, db_entry=db_entry)[path]
             else:  # Backwards compatibility - in future the option convert_to_object should be removed
-                yield self.load_from_jobpath(
-                    job_id=job_id,
+                yield self.load(
+                    job_specifier=job_id,
                     db_entry=db_entry,
-                    convert_to_object=True,
+                    convert_to_object=convert_to_object
                 )
 
     def iter_output(self, recursive=True):
