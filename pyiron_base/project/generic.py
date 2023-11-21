@@ -585,6 +585,10 @@ class Project(ProjectPath, HasGroups):
         if not isinstance(self.db, FileTable):
             job_lst = [[job_id, None] for job_id in job_table["id"]]
         else:
+            # From all the possible database columns, the following ones are removed:
+            # ["id", "chemicalformula", "timestart", "computer", "parentid",
+            #  "username", "timestop", "totalcputime", "masterid"]
+            # because those are not used when running without database and can lead errors.
             table_columns = [
                 "job",
                 "subjob",
