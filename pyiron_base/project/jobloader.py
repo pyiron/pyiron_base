@@ -53,11 +53,29 @@ class _JobByAttribute(ABC):
     def __getitem__(self, item):
         return self.__getattr__(item)
 
-    def __call__(self, job_specifier, convert_to_object=None):
+    def __call__(self, job_specifier=None, db_entry=None, convert_to_object=None):
+        if (
+            (job_specifier is None and db_entry is None)
+            or (job_specifier is not None and db_entry is not None)
+        ):
+            raise TypeError(
+                f"Exactly one of job_specifier or db_entry must be None, but got "
+                f"{job_specifier} and {db_entry}, respectively"
+            )
         if self._project.sql_query is not None:
             state.logger.warning(
                 f"SQL filter '{self._project.sql_query}' is active (may exclude job)"
             )
+
+        convert_to_object = convert_to_object if convert_to_object is not None \
+            else self.convert_to_object
+
+        if job_specifier is not None:
+            return self._from_job_specifier(job_specifier, convert_to_object)
+        else:
+            return self._from_db_entry(db_entry, convert_to_object)
+
+    def _from_job_specifier(self, job_specifier, convert_to_object):
         if not isinstance(job_specifier, (int, np.integer)):
             job_specifier = _get_safe_job_name(name=job_specifier)
         job_id = get_job_id(
@@ -74,9 +92,13 @@ class _JobByAttribute(ABC):
             return None
         return self._project.load_from_jobpath(
             job_id=job_id,
-            convert_to_object=convert_to_object
-            if convert_to_object is not None
-            else self.convert_to_object,
+            convert_to_object=convert_to_object,
+        )
+
+    def _from_db_entry(self, db_entry, convert_to_object):
+        return self._project.load_from_jobpath(
+            db_entry=db_entry,
+            convert_to_object=convert_to_object,
         )
 
     @property
@@ -98,8 +120,17 @@ class JobLoader(_JobByAttribute):
 
     convert_to_object = True
 
-    def __call__(self, job_specifier, convert_to_object=None) -> GenericJob:
-        return super().__call__(job_specifier, convert_to_object=convert_to_object)
+    def __call__(
+        self,
+        job_specifier=None,
+        db_entry=None,
+        convert_to_object=None
+    ) -> GenericJob:
+        return super().__call__(
+            job_specifier=job_specifier,
+            db_entry=db_entry,
+            convert_to_object=convert_to_object
+        )
 
 
 class JobInspector(_JobByAttribute):
@@ -116,5 +147,5 @@ class JobInspector(_JobByAttribute):
 
     convert_to_object = False
 
-    def __call__(self, job_specifier) -> JobPath:
-        return super().__call__(job_specifier)
+    def __call__(self, job_specifier=None, db_entry=None) -> JobPath:
+        return super().__call__(job_specifier=job_specifier, db_entry=db_entry)
