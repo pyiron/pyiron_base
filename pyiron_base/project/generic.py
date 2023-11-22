@@ -616,7 +616,7 @@ class Project(ProjectPath, HasGroups):
                 yield self.load_from_jobpath(
                     job_id=job_id,
                     db_entry=db_entry,
-                    convert_to_object=True,
+                    convert_to_object=convert_to_object,
                 )
 
     def iter_output(self, recursive=True):
