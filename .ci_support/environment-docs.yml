@@ -17,3 +17,4 @@ dependencies:
 - sqlalchemy
 - tqdm
 - traitlets
+- sphinx-rtd-theme
