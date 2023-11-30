@@ -36,6 +36,28 @@ __status__ = "production"
 __date__ = "Sep 1, 2017"
 
 
+# we sometimes move classes between modules; this would break HDF storage,
+# since objects save there the module path from which their classes can be
+# imported.  We can work around this by defining here an explicit map that
+# _to_object can use to find the new modules and update the HDF5 files
+_MODULE_CONVERSION_DICT = {
+        "pyiron_base.generic.datacontainer": "pyiron_base.storage.datacontainer",
+        "pyiron_base.generic.inputlist": "pyiron_base.storage.inputlist",
+        "pyiron_base.generic.flattenedstorage": "pyiron_base.storage.flattenedstorage",
+}
+
+def add_module_conversion_path(old, new):
+    if old not in _MODULE_CONVERSION_DICT:
+        _MODULE_CONVERSION_DICT[old] = new
+    else:
+        raise ValueError(f"Module path '{old}' already found in conversion dict, pointing to '{new}'!")
+
+def patch_sys_module():
+    for old, new in _MODULE_CONVERSION_DICT.items():
+        if old not in sys.modules:
+            sys.modules[old] = importlib.import_module(new)
+
+
 def _is_ragged_in_1st_dim_only(value: Union[np.ndarray, list]) -> bool:
     """
     Checks whether array or list of lists is ragged in the first dimension.
@@ -119,22 +141,18 @@ def _to_object(hdf, class_name=None, **kwargs):
         raise ValueError(
             "Object type in hdf5-file must be identical to input parameter"
         )
+
+    # add moved modules to sys path so our import mechanism and pickle can find them
+    patch_sys_module()
+
     class_name = class_name or hdf.get("TYPE")
     class_path = class_name.split("<class '")[-1].split("'>")[0]
-    class_convert_dict = {  # Fix backwards compatibility
-        "pyiron_base.generic.datacontainer.DataContainer": "pyiron_base.storage.datacontainer.DataContainer",
-        "pyiron_base.generic.inputlist.InputList": "pyiron_base.storage.inputlist.InputList",
-        "pyiron_base.generic.flattenedstorage.FlattenedStorage": "pyiron_base.storage.flattenedstorage.FlattenedStorage",
-    }
-    if class_path in class_convert_dict.keys():
-        class_name_new = "<class '" + class_convert_dict[class_path] + "'>"
-        class_object = _import_class(class_name_new)
-    elif not class_path.startswith("abc."):
+    if not class_path.startswith("abc."):
         class_object = _import_class(class_name)
     else:
         class_object = class_constructor(cp=JOB_DYN_DICT[class_path.split(".")[-1]])
 
-    # Backwards compatibility since the format of TYPE changed
+    # in case the module where we load the class from has changed
     if class_name != str(class_object):
         hdf["TYPE"] = str(class_object)
 
