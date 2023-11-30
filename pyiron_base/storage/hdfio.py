@@ -44,6 +44,7 @@ _MODULE_CONVERSION_DICT = {
         "pyiron_base.generic.datacontainer": "pyiron_base.storage.datacontainer",
         "pyiron_base.generic.inputlist": "pyiron_base.storage.inputlist",
         "pyiron_base.generic.flattenedstorage": "pyiron_base.storage.flattenedstorage",
+        "pyiron_base.table.datamining": "pyiron_base.jobs.datamining",
 }
 
 def add_module_conversion_path(old: str, new: str):
