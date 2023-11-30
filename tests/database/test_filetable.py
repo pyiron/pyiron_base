@@ -4,7 +4,7 @@
 
 from os import mkdir, rmdir
 from os.path import abspath, dirname, join
-from time import time
+from time import perf_counter as time
 
 from pyiron_base._tests import PyironTestCase, ToyJob
 
