@@ -81,6 +81,11 @@ def _import_class(class_name):
     job_class_dict = JobTypeChoice().job_class_dict # access global singleton
     if internal_class_name in job_class_dict:
         module_path = job_class_dict[internal_class_name]
+        # entries in the job_class_dict are either strings of modules or fully
+        # loaded class object; in the latter case our work here is done we just
+        # return the class
+        if isinstance(module_path, type):
+            return module_path
         if class_module_path != module_path:
             state.logger.info(
                 f'Using registered module "{module_path}" instead of custom/old module "{class_module_path}" to'
@@ -230,10 +235,7 @@ class FileHDFio(HasGroups, MutableMapping):
                 # underlying file once, this reduces the number of file opens in the most-likely case from 2 to 1 (1 to
                 # check whether the data is there and 1 to read it) and increases in the worst case from 1 to 2 (1 to
                 # try to read it here and one more time to verify it's not a group below).
-                obj = read_hdf5(self.file_name, title=self._get_h5_path(item))
-                if self._is_convertable_dtype_object_array(obj):
-                    obj = self._convert_dtype_obj_array(obj.copy())
-                return obj
+                return read_hdf5(self.file_name, title=self._get_h5_path(item))
             except (ValueError, OSError, RuntimeError, NotImplementedError):
                 # h5io couldn't find a dataset with name item, but there still might be a group with that name, which we
                 # check in the rest of the method

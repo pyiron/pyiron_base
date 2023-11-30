@@ -182,7 +182,14 @@ class TestFileHDFio(PyironTestCase):
 
         with self.subTest("object_array_with_lists"):
             array = hdf["object_array_with_lists"]
-            np.array_equal(array, object_array_with_lists)
+            self.assertEqual(len(array), len(object_array_with_lists),
+                             msg="object array read with incorrect length!")
+            for a_read, a_written in zip(array, object_array_with_lists):
+                # ProjectHDFio coerces lists inside numpy object arrays to
+                # arrays, because h5io cannot write them otherwise, so we have
+                # to do the same here
+                self.assertEqual(a_read, np.asarray(a_written),
+                                 msg="object array contents not the same!")
             self.assertIsInstance(array, np.ndarray)
             self.assertEqual(
                 array.dtype,
@@ -201,32 +208,14 @@ class TestFileHDFio(PyironTestCase):
         #     self.assertTrue(array.dtype == np.dtype(object))
 
         with self.subTest("int_array_as_objects_array"):
-            with self.assertLogs(state.logger) as w:
-                array = hdf["int_array_as_objects_array"]
-                self.assertEqual(len(w.output), 1)
-                self.assertTrue(w.output[0].startswith(warn_msg_start))
-            np.array_equal(array, int_array_as_objects_array)
+            array = hdf["int_array_as_objects_array"]
+            self.assertEqual(array, int_array_as_objects_array)
             self.assertIsInstance(array, np.ndarray)
-            self.assertEqual(
-                array.dtype,
-                np.dtype(int),
-                msg="dtype=object array containing only int not converted "
-                "to dtype int array.",
-            )
 
         with self.subTest("float_array_as_objects_array"):
-            with self.assertLogs(state.logger) as w:
-                array = hdf["float_array_as_objects_array"]
-                self.assertEqual(len(w.output), 1)
-                self.assertTrue(w.output[0].startswith(warn_msg_start))
-            np.array_equal(array, float_array_as_objects_array)
+            array = hdf["float_array_as_objects_array"]
+            self.assertEqual(array, float_array_as_objects_array)
             self.assertIsInstance(array, np.ndarray)
-            self.assertEqual(
-                array.dtype,
-                np.dtype(float),
-                msg="dtype=object array containing only float not converted"
-                " to dtype float array.",
-            )
 
         hdf.remove_group()
 
