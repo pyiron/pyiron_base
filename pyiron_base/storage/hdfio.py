@@ -41,11 +41,12 @@ __date__ = "Sep 1, 2017"
 # imported.  We can work around this by defining here an explicit map that
 # _to_object can use to find the new modules and update the HDF5 files
 _MODULE_CONVERSION_DICT = {
-        "pyiron_base.generic.datacontainer": "pyiron_base.storage.datacontainer",
-        "pyiron_base.generic.inputlist": "pyiron_base.storage.inputlist",
-        "pyiron_base.generic.flattenedstorage": "pyiron_base.storage.flattenedstorage",
-        "pyiron_base.table.datamining": "pyiron_base.jobs.datamining",
+    "pyiron_base.generic.datacontainer": "pyiron_base.storage.datacontainer",
+    "pyiron_base.generic.inputlist": "pyiron_base.storage.inputlist",
+    "pyiron_base.generic.flattenedstorage": "pyiron_base.storage.flattenedstorage",
+    "pyiron_base.table.datamining": "pyiron_base.jobs.datamining",
 }
+
 
 def add_module_conversion_path(old: str, new: str):
     """
@@ -64,7 +65,10 @@ def add_module_conversion_path(old: str, new: str):
     if old not in _MODULE_CONVERSION_DICT:
         _MODULE_CONVERSION_DICT[old] = new
     elif _MODULE_CONVERSION_DICT[old] != new:
-        raise ValueError(f"Module path '{old}' already found in conversion dict, pointing to '{new}'!")
+        raise ValueError(
+            f"Module path '{old}' already found in conversion dict, pointing to '{new}'!"
+        )
+
 
 def patch_sys_module():
     """
@@ -119,7 +123,8 @@ def _import_class(class_name):
     class_module_path = ".".join(class_path)
     # ugly dynamic import, but only needed to log the warning anyway
     from pyiron_base.jobs.job.jobtype import JobTypeChoice
-    job_class_dict = JobTypeChoice().job_class_dict # access global singleton
+
+    job_class_dict = JobTypeChoice().job_class_dict  # access global singleton
     if internal_class_name in job_class_dict:
         module_path = job_class_dict[internal_class_name]
         # entries in the job_class_dict are either strings of modules or fully
@@ -186,6 +191,7 @@ def _to_object(hdf, class_name=None, **kwargs):
     obj.from_hdf(hdf=hdf.open(".."), group_name=hdf.h5_path.split("/")[-1])
     return obj
 
+
 def open_hdf5(filename, mode="r", swmr=False):
     if swmr and mode != "r":
         store = h5py.File(filename, mode=mode, libver="latest")
@@ -193,6 +199,7 @@ def open_hdf5(filename, mode="r", swmr=False):
         return store
     else:
         return h5py.File(filename, mode=mode, libver="latest", swmr=swmr)
+
 
 class FileHDFio(HasGroups, MutableMapping):
     """
@@ -1515,6 +1522,7 @@ class ProjectHDFio(FileHDFio):
         """
         return self._project.__class__(path=self.file_path)
 
+
 class DummyHDFio(HasGroups):
     """
     A dummy ProjectHDFio implementation to serialize objects into a dict
@@ -1636,8 +1644,7 @@ class DummyHDFio(HasGroups):
         d = self._dict.get(name, None)
         if d is None:
             self._dict[name] = d = type(self)(
-                    self.project,
-                    os.path.join(self.h5_path, name), cont={}, root=self
+                self.project, os.path.join(self.h5_path, name), cont={}, root=self
             )
         elif isinstance(d, DummyHDFio):
             pass
@@ -1649,7 +1656,11 @@ class DummyHDFio(HasGroups):
         return [k for k, v in self._dict.items() if not isinstance(v, DummyHDFio)]
 
     def _list_groups(self):
-        return [k for k, v in self._dict.items() if isinstance(v, DummyHDFio) and not v._empty()]
+        return [
+            k
+            for k, v in self._dict.items()
+            if isinstance(v, DummyHDFio) and not v._empty()
+        ]
 
     def __contains__(self, item):
         return item in self._dict
@@ -1708,6 +1719,7 @@ class DummyHDFio(HasGroups):
             if isinstance(v, DummyHDFio):
                 return v.to_dict()
             return v
+
         return {k: unwrap(v) for k, v in self._dict.items()}
 
     def to_object(self, class_name=None, **kwargs):
@@ -1729,7 +1741,10 @@ class DummyHDFio(HasGroups):
     def _empty(self):
         if len(self._dict) == 0:
             return True
-        return len(self.list_nodes())==0 and all(self[g]._empty() for g in self.list_groups())
+        return len(self.list_nodes()) == 0 and all(
+            self[g]._empty() for g in self.list_groups()
+        )
+
 
 def _get_safe_filename(file_name):
     file_path_no_ext, file_ext = os.path.splitext(file_name)
