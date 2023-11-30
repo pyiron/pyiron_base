@@ -46,13 +46,31 @@ _MODULE_CONVERSION_DICT = {
         "pyiron_base.generic.flattenedstorage": "pyiron_base.storage.flattenedstorage",
 }
 
-def add_module_conversion_path(old, new):
+def add_module_conversion_path(old: str, new: str):
+    """
+    Add a new module conversion.
+
+    After this call any object that was previously defined in module `old` and is now defined in `new`, will be
+    correctly loaded by :func:`ProjectHDFio.to_object()`.
+
+    Args:
+        old (str): path to module that previously defined objects in storage
+        new (str): path to module that should be imported instead
+
+    Raises:
+        ValueError: if an entry for `old` already exists and does not point to `new`.
+    """
     if old not in _MODULE_CONVERSION_DICT:
         _MODULE_CONVERSION_DICT[old] = new
-    else:
+    elif _MODULE_CONVERSION_DICT[old] != new:
         raise ValueError(f"Module path '{old}' already found in conversion dict, pointing to '{new}'!")
 
 def patch_sys_module():
+    """
+    Imports modules added via :func:`add_module_conversion_path()` and makes them available in `sys.modules`.
+
+    If any modules are already defined in such a way they are silently skipped.
+    """
     for old, new in _MODULE_CONVERSION_DICT.items():
         if old not in sys.modules:
             sys.modules[old] = importlib.import_module(new)
