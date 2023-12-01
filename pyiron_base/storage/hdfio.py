@@ -166,7 +166,7 @@ def _to_object(hdf, class_name=None, **kwargs):
             "Object type in hdf5-file must be identical to input parameter"
         )
 
-    # add moved modules to sys path so our import mechanism and pickle can find them
+    # add moved modules to sys.modules so our import mechanism and pickle can find them
     patch_sys_module()
 
     class_name = class_name or hdf.get("TYPE")
