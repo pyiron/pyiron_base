@@ -1,6 +1,6 @@
 #!/bin/bash
 
-pip install pyiron_base==0.1.21 --no-deps --no-build-isolation
+pip install pyiron_base==0.1.21 --no-deps
 echo "Before save";
 for t in tests/backwards/*save.py; do
     echo "Running $t";
