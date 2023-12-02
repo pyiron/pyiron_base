@@ -47,5 +47,5 @@ jobs:
       run: |
         python .ci_support/pyironconfig.py
         pip install versioneer[toml]==0.29
-        pip install --no-deps .
+        pip install . --no-deps --no-build-isolation
         python -m unittest discover test_benchmarks

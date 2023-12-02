@@ -57,7 +57,7 @@ jobs:
       run: |
         python .ci_support/pyironconfig.py
         pip install versioneer[toml]==0.29
-        pip install --no-deps .
+        pip install . --no-deps --no-build-isolation
         coverage run --omit pyiron_base/_version.py -m unittest discover tests
         coverage combine
         coverage xml

@@ -1,13 +1,13 @@
 #!/bin/bash
 
-pip install --no-deps pyiron_base==0.1.21
+pip install pyiron_base==0.1.21 --no-deps --no-build-isolation
 echo "Before save";
 for t in tests/backwards/*save.py; do
     echo "Running $t";
     python $t
 done
 
-pip install --no-deps .
+pip install . --no-deps --no-build-isolation
 i=0;
 echo "Before loading";
 for t in tests/backwards/*load.py; do
