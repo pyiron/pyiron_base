@@ -25,7 +25,7 @@ jobs:
         miniforge-variant: Mambaforge
         channel-priority: strict
         auto-update-conda: true
-        environment-file: .ci_support/environment.yml
+        environment-file: environment.yml
     - name: Test
       shell: bash -l {0}
       run: |
