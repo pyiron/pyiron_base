@@ -31,8 +31,7 @@ jobs:
       shell: bash -l {0}
       run: |
         python .ci_support/pyironconfig.py
-        pip install versioneer[toml]==0.29
-        pip install . --no-deps --no-build-isolation
+        bash .ci_support/pip_install.sh
         mkdir public_html; cd docs
         sphinx-build -b html ./ ../public_html || exit 1;
         cd ..

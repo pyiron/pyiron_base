@@ -59,8 +59,8 @@ jobs:
       run: |
         pip install versioneer[toml]==0.29
         cd ../pyiron_atomistics
-         pip install . --no-deps --no-build-isolation
+        pip install . --no-deps --no-build-isolation
         cd ../pyiron_base
-         pip install . --no-deps --no-build-isolation
+        pip install . --no-deps --no-build-isolation
         cd ../pyiron_atomistics
         python -m unittest discover tests/
