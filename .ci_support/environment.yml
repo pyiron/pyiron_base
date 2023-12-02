@@ -1,7 +1,6 @@
 channels:
 - conda-forge
 dependencies:
-- coveralls
 - coverage
 - codacy-coverage
 - dill =0.3.7
