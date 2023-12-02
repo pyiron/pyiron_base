@@ -7,14 +7,9 @@ on:
     branches: [ main ]
   pull_request:
     branches: [ main ]
-    
-env:
-  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  CODACY_PROJECT_TOKEN: ${{ secrets.CODACY_PROJECT_TOKEN }}
 
 jobs:
   build:
-
     runs-on: ${{ matrix.operating-system }}
     strategy:
       matrix:
@@ -45,9 +40,7 @@ jobs:
           prefix: /usr/share/miniconda3/envs/my-env
 
     steps:
-    - uses: actions/checkout@v2
-    - name: Setup environment
-      run: cp .ci_support/environment.yml environment.yml
+    - uses: actions/checkout@v4
     - name: Setup Mambaforge
       uses: conda-incubator/setup-miniconda@v2
       with:
@@ -56,40 +49,24 @@ jobs:
         channels: conda-forge
         channel-priority: strict
         activate-environment: my-env
+        environment-file: .ci_support/environment.yml
         use-mamba: true
-    - name: Set cache date and number
-      run: |
-        echo "DATE=$(date +'%Y%m%d')" >> $GITHUB_ENV
-        cat .github/variables/cache_number.env >> $GITHUB_ENV
-    - uses: actions/cache@v2
-      with:
-        path: ${{ matrix.prefix }}
-        key: ${{ matrix.label }}-conda-${{ hashFiles('environment.yml') }}-${{ env.DATE }}-${{ env.CACHE_NUMBER }}
-      id: cache
-    - name: Update environment
-      run: mamba env update -n my-env -f environment.yml
-      if: steps.cache.outputs.cache-hit != 'true'  
-    - name: Setup
-      shell: bash -l {0}
-      run: |
-        python .ci_support/pyironconfig.py
-        pip install --no-deps .
     - name: Test
       shell: bash -l {0}
       timeout-minutes: 30
-      run: coverage run --omit pyiron_base/_version.py -m unittest discover tests
-    - name: Coverage
-      if:  matrix.label == 'linux-64-py-3-10'
-      continue-on-error: True
-      shell: bash -l {0}
       run: |
+        python .ci_support/pyironconfig.py
+        pip install versioneer[toml]==0.29
+        pip install --no-deps .
+        coverage run --omit pyiron_base/_version.py -m unittest discover tests
         coverage combine
-        coveralls
         coverage xml
+    - name: Coveralls
+      if: matrix.label == 'linux-64-py-3-11'
+      uses: coverallsapp/github-action@v2
     - name: Codacy
-      if:  matrix.label == 'linux-64-py-3-10' && github.event_name != 'push' 
+      if:  matrix.label == 'linux-64-py-3-11' && github.event_name != 'push'
       continue-on-error: True
       shell: bash -l {0}
       run: |
         python-codacy-coverage -r coverage.xml
-        
