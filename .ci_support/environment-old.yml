@@ -10,7 +10,7 @@ dependencies:
 - jinja2 =2.11.3
 - numpy =1.23.5
 - pandas =1.5.3
-- pint =0.12
+- pint =0.18
 - psutil =5.8.0
 - pyfileindex =0.0.16
 - pysqa =0.1.5
