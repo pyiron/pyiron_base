@@ -4,7 +4,7 @@ dependencies:
 - dill =0.3.1.1
 - gitpython =3.1.23
 - h5io =0.1.4
-- h5py =3.10.0
+- h5py =3.9.0
 - jinja2 =2.11.3
 - numpy =1.26.0
 - pandas =2.0.0
@@ -12,7 +12,7 @@ dependencies:
 - psutil =5.8.0
 - pyfileindex =0.0.16
 - pysqa =0.1.5
-- pytables =3.7.0
+- pytables =3.8.0
 - python-blosc2 =2.2.9
 - sqlalchemy =2.0.22
 - tqdm =4.44.0
