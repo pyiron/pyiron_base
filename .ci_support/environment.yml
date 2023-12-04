@@ -14,7 +14,8 @@ dependencies:
 - psutil =5.9.5
 - pyfileindex =0.0.18
 - pysqa =0.1.7
-- pytables =3.9.1
+- pytables =3.9.2
 - sqlalchemy =2.0.23
 - tqdm =4.66.1
 - traitlets =5.14.0
+- python-blosc2 =2.3.1
