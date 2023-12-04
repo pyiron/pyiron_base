@@ -87,7 +87,10 @@ class LocalMaintenance:
         **kwargs: dict,
     ):
         """
-        Iterate over the jobs within the current project and it is sub projects and rewrite the hdf file
+        Rewrite the hdf5 files of jobs.  This can free up unused space.
+
+        By default iterate recursively over the jobs within the current
+        project.  This can be controlled with `recursive` and `kwargs`.
 
         Args:
             recursive (bool): search subprojects [True/False] - True by default
