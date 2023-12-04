@@ -22,6 +22,7 @@ from pyiron_base.interfaces.has_groups import HasGroups
 from pyiron_base.state import state
 from pyiron_base.jobs.dynamic import JOB_DYN_DICT, class_constructor
 from pyiron_base.jobs.job.util import _get_safe_job_name
+import pyiron_base.project.maintenance
 import warnings
 
 __author__ = "Joerg Neugebauer, Jan Janssen"
@@ -97,10 +98,19 @@ def _import_class(module_path, class_name):
                 f' import job type "{class_name}"!'
             )
             module_path = known_module_path
-    return getattr(
-        importlib.import_module(module_path),
-        class_name,
-    )
+    try:
+        return getattr(
+            importlib.import_module(module_path),
+            class_name,
+        )
+    except ImportError:
+        if module_path in pyiron_base.project.maintenance._MODULE_CONVERSION_DICT:
+            raise RuntimeError(
+                    f"Could not import {class_name} from {module_path}, but module path known to have changed. "
+                     "Call project.maintenance.local.update_hdf_types() to upgrade storage!"
+            )
+        else:
+            raise
 
 
 def _to_object(hdf, class_name=None, **kwargs):
