@@ -38,7 +38,7 @@ def add_module_conversion(old: str, new: str):
         _MODULE_CONVERSION_DICT[old] = new
     elif _MODULE_CONVERSION_DICT[old] != new:
         raise ValueError(
-            f"Module path '{old}' already found in conversion dict, pointing to '{new}'!"
+            f"Module path '{old}' already found in conversion dict, pointing to '{_MODULE_CONVERSION_DICT[old]}'!"
         )
 
 
