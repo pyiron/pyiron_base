@@ -2,6 +2,8 @@ import importlib
 import os
 import pkgutil
 import warnings
+import sys
+import importlib
 
 import pandas
 
@@ -180,6 +182,23 @@ class LocalMaintenance:
         fix_project_data(self._project)
         for sub in self._project.iter_groups():
             fix_project_data(sub)
+
+        self.update_pyiron_tables(recursive=recursive, progress=progress, **kwargs)
+
+    def update_pyiron_tables(
+        self,
+        recursive: bool = True,
+        progress: bool = True,
+        **kwargs: dict,
+    ):
+        kwargs["hamilton"] = "PyironTable"
+        for old, new in _MODULE_CONVERSION_DICT.items():
+            sys.modules[old] = importlib.import_module(new)
+
+        for job in self._project.iter_jobs(
+            recursive=recursive, progress=progress, **kwargs
+        ):
+            job.to_hdf()
 
 
 class UpdateMaintenance:
