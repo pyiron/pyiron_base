@@ -62,13 +62,16 @@ def _is_ragged_in_1st_dim_only(value: Union[np.ndarray, list]) -> bool:
         dim1, dim_other = zip(*map(extract_dims, value))
         return len(set(dim1)) > 1 and len(set(dim_other)) == 1
 
+
 # for historic reasons we write str(class) into the HDF 'TYPE' field of objects, so we need to parse this back out
 def _extract_fully_qualified_name(type_field: str) -> str:
     return type_field.split("'")[1]
 
+
 def _extract_module_class_name(type_field: str) -> Tuple[str, str]:
     fully_qualified_path = _extract_fully_qualified_name(type_field)
-    return fully_qualified_path.rsplit('.', maxsplit=1)
+    return fully_qualified_path.rsplit(".", maxsplit=1)
+
 
 def _import_class(module_path, class_name):
     """
@@ -106,8 +109,8 @@ def _import_class(module_path, class_name):
     except ImportError:
         if module_path in pyiron_base.project.maintenance._MODULE_CONVERSION_DICT:
             raise RuntimeError(
-                    f"Could not import {class_name} from {module_path}, but module path known to have changed. "
-                     "Call project.maintenance.local.update_hdf_types() to upgrade storage!"
+                f"Could not import {class_name} from {module_path}, but module path known to have changed. "
+                "Call project.maintenance.local.update_hdf_types() to upgrade storage!"
             )
         else:
             raise

@@ -153,18 +153,22 @@ class LocalMaintenance:
                             (eg. status="finished"). Asterisk can be used to denote a wildcard, for zero or more
                             instances of any character
         """
+
         def recurse(hdf):
             contents = hdf.list_all()
             for group in contents["groups"]:
                 recurse(hdf[group])
             if "TYPE" in contents["nodes"]:
-                module_path, class_name = pyiron_base.storage.hdfio._extract_module_class_name(hdf["TYPE"])
+                (
+                    module_path,
+                    class_name,
+                ) = pyiron_base.storage.hdfio._extract_module_class_name(hdf["TYPE"])
                 if module_path in _MODULE_CONVERSION_DICT:
                     new_module_path = _MODULE_CONVERSION_DICT[module_path]
                     hdf["TYPE"] = f"<class '{new_module_path}.{class_name}'>"
 
         for job in self._project.iter_jobs(
-                recursive=recursive, progress=progress, convert_to_object=False, **kwargs
+            recursive=recursive, progress=progress, convert_to_object=False, **kwargs
         ):
             hdf = job.project_hdf5
             recurse(hdf)
@@ -176,6 +180,7 @@ class LocalMaintenance:
         fix_project_data(self._project)
         for sub in self._project.iter_groups():
             fix_project_data(sub)
+
 
 class UpdateMaintenance:
     def __init__(self, project):
