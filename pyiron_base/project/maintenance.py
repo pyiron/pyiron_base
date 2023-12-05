@@ -23,7 +23,7 @@ _MODULE_CONVERSION_DICT = {
 }
 
 
-def add_module_conversion_path(old: str, new: str):
+def add_module_conversion(old: str, new: str):
     """
     Add a new module conversion.
     After this call any object that was previously defined in module `old` and is now defined in `new`, will be
