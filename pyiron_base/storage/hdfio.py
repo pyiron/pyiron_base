@@ -139,6 +139,8 @@ def _to_object(hdf, class_name=None, **kwargs):
     type_field = class_name or hdf.get("TYPE")
     module_path, class_name = _extract_module_class_name(type_field)
 
+    # objects that have classes starting with abc. were likely created by pyiron_base.jobs.dynamic, so we cannot import
+    # them the usual way.  Instead reconstruct the class here from JOB_DYN_DICT.
     if not module_path.startswith("abc."):
         class_object = _import_class(module_path, class_name)
     else:

@@ -28,8 +28,10 @@ _MODULE_CONVERSION_DICT = {
 def add_module_conversion(old: str, new: str):
     """
     Add a new module conversion.
-    After this call any object that was previously defined in module `old` and is now defined in `new`, will be
-    correctly loaded by :func:`ProjectHDFio.to_object()`.
+
+    After setting up a conversion, call :meth:`.Project.maintenance.local.update_hdf_types` to rewrite the HDF5 files to
+    make this change and allow loading of previously saved objects.
+
     Args:
         old (str): path to module that previously defined objects in storage
         new (str): path to module that should be imported instead
@@ -147,6 +149,11 @@ class LocalMaintenance:
     ):
         """
         Rewrite TYPE fields in hdf5 files for renamed modules.
+
+        New module conversions can be added with
+        :func:`.add_module_conversion(old, new)`.  This method will then
+        consider all objects previously imported from `old` to be imported from
+        `new`.
 
         Args:
             recursive (bool): search subprojects [True/False] - True by default
