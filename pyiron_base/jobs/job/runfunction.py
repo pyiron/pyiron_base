@@ -404,7 +404,7 @@ def run_job_with_runmode_queue(job):
         run_time_max=job.server.run_time,
         memory_max=job.server.memory_limit,
         command=command,
-        **job.server.additional_arguments
+        **job.server.additional_arguments,
     )
     if que_id is not None:
         job.server.queue_id = que_id

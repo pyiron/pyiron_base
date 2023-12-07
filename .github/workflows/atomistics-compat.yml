@@ -20,28 +20,28 @@ jobs:
       matrix:
         include:
           - operating-system: macos-latest
-            python-version: '3.10'
+            python-version: '3.11'
             label: osx-64-py-3-10
             prefix: /Users/runner/miniconda3/envs/my-env
 
           - operating-system: windows-latest
-            python-version: '3.10'
+            python-version: '3.11'
             label: win-64-py-3-10
             prefix: C:\Miniconda3\envs\my-env
 
           - operating-system: ubuntu-latest
-            python-version: '3.10'
+            python-version: '3.11'
             label: linux-64-py-3-10
             prefix: /usr/share/miniconda3/envs/my-env
 
     steps:
-    - uses: actions/checkout@v2
-    - name: pyiron_atomistic
+    - uses: actions/checkout@v4
+    - name: Merge environment
       run: |
-        pip install PyYAML
         git clone https://github.com/pyiron/pyiron_atomistics ../pyiron_atomistics
         grep -v "pyiron_base" ../pyiron_atomistics/.ci_support/environment.yml > ../pyiron_atomistics/environment.yml
-        python .ci_support/condamerge.py --base .ci_support/environment.yml --add ../pyiron_atomistics/environment.yml > environment.yml
+        cp .ci_support/environment.yml environment.yml
+        tail --lines=+4 ../pyiron_atomistics/environment.yml >> environment.yml
     - name: Setup Mambaforge
       uses: conda-incubator/setup-miniconda@v2
       with:
@@ -50,38 +50,17 @@ jobs:
         channels: conda-forge
         channel-priority: strict
         activate-environment: my-env
+        environment-file: environment.yml
         use-mamba: true
-    - name: Set cache date and number
-      run: |
-        echo "DATE=$(date +'%Y%m%d')" >> $GITHUB_ENV
-        cat .github/variables/cache_number.env >> $GITHUB_ENV
-    - uses: actions/cache@v2
-      with:
-        path: ${{ matrix.prefix }}
-        key: ${{ matrix.label }}-conda-${{ hashFiles('environment.yml') }}-${{ env.DATE }}-${{ env.CACHE_NUMBER }}
-      id: cache
-    - name: Update environment
-      run: mamba env update -n my-env -f environment.yml
-      if: steps.cache.outputs.cache-hit != 'true'
-    - name: pyironconfig
-      shell: bash -l {0}
-      run: |
-        cd ../pyiron_atomistics
-        python .ci_support/pyironconfig.py
-        cd ../pyiron_base
-    - name: Install pyiron_atomistics
-      shell: bash -l {0}
-      run: |
-        cd ../pyiron_atomistics
-        pip install --no-deps .
-        cd ../pyiron_base
-    - name: Install pyiron_base
-      shell: bash -l {0}
-      run: |
-        pip install --no-deps .
-    - name: Test
+    - name: Tests
       shell: bash -l {0}
       timeout-minutes: 30
       run: |
+        pip install versioneer[toml]==0.29
         cd ../pyiron_atomistics
+        pip install . --no-deps --no-build-isolation
+        cd ../pyiron_base
+        pip install . --no-deps --no-build-isolation
+        cd ../pyiron_atomistics
+        python .ci_support/pyironconfig.py
         python -m unittest discover tests/

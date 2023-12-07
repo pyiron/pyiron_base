@@ -1,0 +1,64 @@
+[build-system]
+requires = ["dill", "gitpython", "h5io", "h5py", "jinja2", "numpy", "pandas", "pint", "psutil", "pyfileindex", "pysqa", "sqlalchemy", "tables", "tqdm", "traitlets", "setuptools", "versioneer[toml]==0.29"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pyiron_base"
+description = "Core components of the pyiron integrated development environment (IDE) for computational materials science"
+authors = [
+    { name = "Max-Planck-Institut für Eisenforschung GmbH - Computational Materials Design (CM) Department", email = "pyiron@mpie.de" },
+]
+readme = "README.rst"
+license = { file = "LICENSE" }
+keywords = ["pyiron"]
+requires-python = ">=3.8"
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Topic :: Scientific/Engineering :: Physics",
+    "License :: OSI Approved :: BSD License",
+    "Intended Audience :: Science/Research",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+]
+dependencies = [
+    "dill==0.3.7",
+    "gitpython==3.1.40",
+    "h5io==0.1.9",
+    "h5py==3.10.0",
+    "jinja2==3.1.2",
+    "numpy==1.26.2",
+    "pandas==2.1.3",
+    "pint==0.22",
+    "psutil==5.9.5",
+    "pyfileindex==0.0.18",
+    "pysqa==0.1.7",
+    "sqlalchemy==2.0.23",
+    "tables==3.9.2",
+    "tqdm==4.66.1",
+    "traitlets==5.14.0",
+]
+dynamic = ["version"]
+
+[project.urls]
+Homepage = "https://github.com/pyiron/pyiron_base"
+Documentation = "https://github.com/pyiron/pyiron_base"
+Repository = "https://github.com/pyiron/pyiron_base"
+
+[project.scripts]
+pyiron = "pyiron_base.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["pyiron_base*"]
+
+[tool.setuptools.dynamic]
+version = {attr = "pyiron_base.__version__"}
+
+[tool.versioneer]
+VCS = "git"
+style = "pep440-pre"
+versionfile_source = "pyiron_base/_version.py"
+parentdir_prefix = "pyiron_base"
+tag_prefix = "pyiron_base-"
