@@ -4,3 +4,4 @@ dependencies:
 - jupyter
 - papermill
 - matplotlib-base
+- gnuplot
