@@ -633,7 +633,7 @@ class TestProjectHDFio(TestWithProject):
     def test_import_class(self):
 
         with self.subTest("import ToyJob without interfering:"):
-            toy_job_cls = _import_class(str(BaseToyJob))
+            toy_job_cls = _import_class(BaseToyJob.__module__, BaseToyJob.__name__)
             self.assertIs(
                 toy_job_cls, BaseToyJob, msg="Did not return the requested class."
             )
@@ -643,7 +643,7 @@ class TestProjectHDFio(TestWithProject):
 
             with self.subTest("Import ToyJob while another ToyJob is registered"):
                 with self.assertLogs(state.logger) as log:
-                    toy_job_cls = _import_class(str(BaseToyJob))
+                    toy_job_cls = _import_class(BaseToyJob.__module__, BaseToyJob.__name__)
                     self.assertEqual(
                         len(log.output),
                         1,

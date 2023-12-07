@@ -14,7 +14,7 @@ import pandas
 import posixpath
 import numpy as np
 import sys
-from typing import Union, Optional, Any
+from typing import Union, Optional, Any, Tuple
 
 from pyiron_base.utils.deprecate import deprecate
 from pyiron_base.storage.helper_functions import read_hdf5, write_hdf5
@@ -22,6 +22,7 @@ from pyiron_base.interfaces.has_groups import HasGroups
 from pyiron_base.state import state
 from pyiron_base.jobs.dynamic import JOB_DYN_DICT, class_constructor
 from pyiron_base.jobs.job.util import _get_safe_job_name
+import pyiron_base.project.maintenance
 import warnings
 
 __author__ = "Joerg Neugebauer, Jan Janssen"
@@ -62,42 +63,57 @@ def _is_ragged_in_1st_dim_only(value: Union[np.ndarray, list]) -> bool:
         return len(set(dim1)) > 1 and len(set(dim_other)) == 1
 
 
-def _import_class(class_name):
+# for historic reasons we write str(class) into the HDF 'TYPE' field of objects, so we need to parse this back out
+def _extract_fully_qualified_name(type_field: str) -> str:
+    return type_field.split("'")[1]
+
+
+def _extract_module_class_name(type_field: str) -> Tuple[str, str]:
+    fully_qualified_path = _extract_fully_qualified_name(type_field)
+    return fully_qualified_path.rsplit(".", maxsplit=1)
+
+
+def _import_class(module_path, class_name):
     """
     Import given class from fully qualified name and return class object.
 
     Args:
+        module_path (str): fully qualified name of a pyiron class
         class_name (str): fully qualified name of a pyiron class
 
     Returns:
         type: class object of the given name
     """
-    internal_class_name = class_name.split(".")[-1][:-2]
-    class_path = class_name.split()[-1].split(".")[:-1]
-    class_path[0] = class_path[0][1:]
-    class_module_path = ".".join(class_path)
     # ugly dynamic import, but only needed to log the warning anyway
     from pyiron_base.jobs.job.jobtype import JobTypeChoice
 
     job_class_dict = JobTypeChoice().job_class_dict  # access global singleton
-    if internal_class_name in job_class_dict:
-        module_path = job_class_dict[internal_class_name]
+    if class_name in job_class_dict:
+        known_module_path = job_class_dict[class_name]
         # entries in the job_class_dict are either strings of modules or fully
         # loaded class object; in the latter case our work here is done we just
         # return the class
         if isinstance(module_path, type):
             return module_path
-        if class_module_path != module_path:
+        if module_path != known_module_path:
             state.logger.info(
-                f'Using registered module "{module_path}" instead of custom/old module "{class_module_path}" to'
-                f' import job type "{internal_class_name}"!'
+                f'Using registered module "{known_module_path}" instead of custom/old module "{module_path}" to'
+                f' import job type "{class_name}"!'
             )
-    else:
-        module_path = class_module_path
-    return getattr(
-        importlib.import_module(module_path),
-        internal_class_name,
-    )
+            module_path = known_module_path
+    try:
+        return getattr(
+            importlib.import_module(module_path),
+            class_name,
+        )
+    except ImportError:
+        if module_path in pyiron_base.project.maintenance._MODULE_CONVERSION_DICT:
+            raise RuntimeError(
+                f"Could not import {class_name} from {module_path}, but module path known to have changed. "
+                "Call project.maintenance.local.update_hdf_types() to upgrade storage!"
+            )
+        else:
+            raise
 
 
 def _to_object(hdf, class_name=None, **kwargs):
@@ -120,23 +136,18 @@ def _to_object(hdf, class_name=None, **kwargs):
         raise ValueError(
             "Object type in hdf5-file must be identical to input parameter"
         )
-    class_name = class_name or hdf.get("TYPE")
-    class_path = class_name.split("<class '")[-1].split("'>")[0]
-    class_convert_dict = {  # Fix backwards compatibility
-        "pyiron_base.generic.datacontainer.DataContainer": "pyiron_base.storage.datacontainer.DataContainer",
-        "pyiron_base.generic.inputlist.InputList": "pyiron_base.storage.inputlist.InputList",
-        "pyiron_base.generic.flattenedstorage.FlattenedStorage": "pyiron_base.storage.flattenedstorage.FlattenedStorage",
-    }
-    if class_path in class_convert_dict.keys():
-        class_name_new = "<class '" + class_convert_dict[class_path] + "'>"
-        class_object = _import_class(class_name_new)
-    elif not class_path.startswith("abc."):
-        class_object = _import_class(class_name)
+    type_field = class_name or hdf.get("TYPE")
+    module_path, class_name = _extract_module_class_name(type_field)
+
+    # objects that have classes starting with abc. were likely created by pyiron_base.jobs.dynamic, so we cannot import
+    # them the usual way.  Instead reconstruct the class here from JOB_DYN_DICT.
+    if not module_path.startswith("abc."):
+        class_object = _import_class(module_path, class_name)
     else:
-        class_object = class_constructor(cp=JOB_DYN_DICT[class_path.split(".")[-1]])
+        class_object = class_constructor(cp=JOB_DYN_DICT[class_name])
 
     # Backwards compatibility since the format of TYPE changed
-    if class_name != str(class_object):
+    if type_field != str(class_object):
         hdf["TYPE"] = str(class_object)
 
     if hasattr(class_object, "from_hdf_args"):
