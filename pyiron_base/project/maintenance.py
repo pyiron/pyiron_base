@@ -3,7 +3,6 @@ import os
 import pkgutil
 import warnings
 import sys
-import importlib
 
 import pandas
 
