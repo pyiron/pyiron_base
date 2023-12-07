@@ -3,9 +3,6 @@ import pyiron_base.project.maintenance
 from pyiron_base import DataContainer
 from pyiron_base._tests import TestWithProject, ToyJob
 
-def dummy_analysis_function(job):
-    return 42
-
 class TestModulePath(TestWithProject):
 
     def test_add_module_conversion(self):
