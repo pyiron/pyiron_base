@@ -238,8 +238,8 @@ class Lockable:
 
     but we can unlock it as usual
 
-    >>> with d.unlocked() as dopen:
-    ...   dopen['b']['d'] = 23
+    >>> with d.unlocked():
+    ...   d['b']['d'] = 23
     >>> d['b']['d']
     23
 
@@ -342,6 +342,10 @@ class Lockable:
         """
         Unlock the object temporarily.
 
-        Context manager returns this object again.
+        Context manager returns this object again and relocks it after the `with` statement finished.
+        
+        .. note:: `lock()` vs. `unlocked()`
+        
+            There is a small asymmetry between these two methods.  :meth:`.lock` can only be done once (meaningfully), while :meth:`.unlocked` is a context manager and can be called multiple times.
         """
         return _UnlockContext(self)
