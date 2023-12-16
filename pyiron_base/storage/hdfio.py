@@ -63,6 +63,26 @@ def _is_ragged_in_1st_dim_only(value: Union[np.ndarray, list]) -> bool:
         return len(set(dim1)) > 1 and len(set(dim_other)) == 1
 
 
+def _check_json_conversion(value):
+    use_json = True
+    if (
+            isinstance(value, (list, np.ndarray))
+            and len(value) > 0
+            and isinstance(value[0], (list, np.ndarray))
+            and len(value[0]) > 0
+            and not isinstance(value[0][0], str)
+            and _is_ragged_in_1st_dim_only(value)
+    ):
+        # if the sub-arrays in value all share shape[1:], h5io comes up with a more efficient storage format than
+        # just writing a dataset for each element, by concatenating along the first axis and storing the indices
+        # where to break the concatenated array again
+        value = np.array([np.asarray(v) for v in value], dtype=object)
+        use_json = False
+    elif isinstance(value, tuple):
+        value = list(value)
+    return value, use_json
+
+
 # for historic reasons we write str(class) into the HDF 'TYPE' field of objects, so we need to parse this back out
 def _extract_fully_qualified_name(type_field: str) -> str:
     return type_field.split("'")[1]
@@ -343,22 +363,7 @@ class FileHDFio(HasGroups, MutableMapping):
             value.to_hdf(self, key)
             return
 
-        use_json = True
-        if (
-            isinstance(value, (list, np.ndarray))
-            and len(value) > 0
-            and isinstance(value[0], (list, np.ndarray))
-            and len(value[0]) > 0
-            and not isinstance(value[0][0], str)
-            and _is_ragged_in_1st_dim_only(value)
-        ):
-            # if the sub-arrays in value all share shape[1:], h5io comes up with a more efficient storage format than
-            # just writing a dataset for each element, by concatenating along the first axis and storing the indices
-            # where to break the concatenated array again
-            value = np.array([np.asarray(v) for v in value], dtype=object)
-            use_json = False
-        elif isinstance(value, tuple):
-            value = list(value)
+        value, use_json = _check_json_conversion(value=value)
         write_hdf5(
             self.file_name,
             value,
