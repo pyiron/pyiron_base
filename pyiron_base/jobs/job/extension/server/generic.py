@@ -537,6 +537,53 @@ class Server:  # add the option to return the job id and the hold id to the serv
         else:
             return None
 
+    def to_dict(self):
+        server_dict = OrderedDict()
+        server_dict["user"] = self._user
+        server_dict["host"] = self._host
+        server_dict["run_mode"] = self.run_mode.mode
+        server_dict["queue"] = self.queue
+        server_dict["qid"] = self._queue_id
+        server_dict["cores"] = self.cores
+        server_dict["threads"] = self.threads
+        server_dict["new_h5"] = self.new_hdf
+        server_dict["structure_id"] = self.structure_id
+        server_dict["run_time"] = self.run_time
+        server_dict["memory_limit"] = self.memory_limit
+        server_dict["accept_crash"] = self.accept_crash
+        if len(self.additional_arguments) > 0:
+            server_dict["additional_arguments"] = self.additional_arguments
+        if self._gpus is not None:
+            server_dict["gpus"] = self._gpus
+        return server_dict
+
+    def from_dict(self, server_dict):
+        self._user = server_dict["user"]
+        self._host = server_dict["host"]
+        self._run_mode.mode = server_dict["run_mode"]
+        if self.run_mode.queue:
+            self._active_queue = server_dict["queue"]
+            if "qid" in server_dict.keys():
+                self._queue_id = server_dict["qid"]
+            else:
+                self._queue_id = None
+        if "structure_id" in server_dict.keys():
+            self._structure_id = server_dict["structure_id"]
+        self._cores = server_dict["cores"]
+        if "run_time" in server_dict.keys():
+            self._run_time = server_dict["run_time"]
+        if "memory_limit" in server_dict.keys():
+            self._memory_limit = server_dict["memory_limit"]
+        if "accept_crash" in server_dict.keys():
+            self._accept_crash = server_dict["accept_crash"] == 1
+        if "threads" in server_dict.keys():
+            self._threads = server_dict["threads"]
+        if "additional_arguments" in server_dict.keys():
+            self.additional_arguments = server_dict["additional_arguments"]
+        if "gpus" in server_dict.keys():
+            self._gpus = server_dict["gpus"]
+        self._new_hdf = server_dict["new_h5"] == 1
+
     def to_hdf(self, hdf, group_name=None):
         """
         Store Server object in HDF5 file
@@ -545,29 +592,11 @@ class Server:  # add the option to return the job id and the hold id to the serv
             hdf: HDF5 object
             group_name (str): node name in the HDF5 file
         """
-        hdf_dict = OrderedDict()
-        hdf_dict["user"] = self._user
-        hdf_dict["host"] = self._host
-        hdf_dict["run_mode"] = self.run_mode.mode
-        hdf_dict["queue"] = self.queue
-        hdf_dict["qid"] = self._queue_id
-        hdf_dict["cores"] = self.cores
-        hdf_dict["threads"] = self.threads
-        hdf_dict["new_h5"] = self.new_hdf
-        hdf_dict["structure_id"] = self.structure_id
-        hdf_dict["run_time"] = self.run_time
-        hdf_dict["memory_limit"] = self.memory_limit
-        hdf_dict["accept_crash"] = self.accept_crash
-        if len(self.additional_arguments) > 0:
-            hdf_dict["additional_arguments"] = self.additional_arguments
-        if self._gpus is not None:
-            hdf_dict["gpus"] = self._gpus
-
         if group_name is not None:
             with hdf.open(group_name) as hdf_group:
-                hdf_group["server"] = hdf_dict
+                hdf_group["server"] = self.to_dict()
         else:
-            hdf["server"] = hdf_dict
+            hdf["server"] = self.to_dict()
 
     def from_hdf(self, hdf, group_name=None):
         """
@@ -580,34 +609,9 @@ class Server:  # add the option to return the job id and the hold id to the serv
         """
         if group_name is not None:
             with hdf.open(group_name) as hdf_group:
-                hdf_dict = hdf_group["server"]
+                self.from_dict(server_dict=hdf_group["server"])
         else:
-            hdf_dict = hdf["server"]
-        self._user = hdf_dict["user"]
-        self._host = hdf_dict["host"]
-        self._run_mode.mode = hdf_dict["run_mode"]
-        if self.run_mode.queue:
-            self._active_queue = hdf_dict["queue"]
-            if "qid" in hdf_dict.keys():
-                self._queue_id = hdf_dict["qid"]
-            else:
-                self._queue_id = None
-        if "structure_id" in hdf_dict.keys():
-            self._structure_id = hdf_dict["structure_id"]
-        self._cores = hdf_dict["cores"]
-        if "run_time" in hdf_dict.keys():
-            self._run_time = hdf_dict["run_time"]
-        if "memory_limit" in hdf_dict.keys():
-            self._memory_limit = hdf_dict["memory_limit"]
-        if "accept_crash" in hdf_dict.keys():
-            self._accept_crash = hdf_dict["accept_crash"] == 1
-        if "threads" in hdf_dict.keys():
-            self._threads = hdf_dict["threads"]
-        if "additional_arguments" in hdf_dict.keys():
-            self.additional_arguments = hdf_dict["additional_arguments"]
-        if "gpus" in hdf_dict.keys():
-            self._gpus = hdf_dict["gpus"]
-        self._new_hdf = hdf_dict["new_h5"] == 1
+            self.from_dict(server_dict=hdf["server"])
 
     def db_entry(self):
         """
