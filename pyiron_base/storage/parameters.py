@@ -510,7 +510,7 @@ class GenericParameters:
         data_dict = self._type_to_dict()
         data_dict["data_dict"] = self._dataset
         if group_name:
-            h5_path = group_name/self.table_name
+            h5_path = group_name / self.table_name
         else:
             h5_path = self.table_name
         with hdf.open(h5_path) as hdf_group:
