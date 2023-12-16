@@ -507,14 +507,15 @@ class GenericParameters:
             hdf (ProjectHDFio): HDF5 group object
             group_name (str): HDF5 subgroup name - optional
         """
+        data_dict = self._type_to_dict()
+        data_dict["data_dict"] = self._dataset
         if group_name:
-            with hdf.open(group_name) as hdf_group:
-                hdf_child = hdf_group.create_group(self.table_name)
+            h5_path = group_name/self.table_name
         else:
-            hdf_child = hdf.create_group(self.table_name)
-
-        self._type_to_hdf(hdf_child)
-        hdf_child["data_dict"] = self._dataset
+            h5_path = self.table_name
+        with hdf.open(h5_path) as hdf_group:
+            for k, v in data_dict.items():
+                hdf_group[k] = v
 
     def from_hdf(self, hdf, group_name=None):
         """
@@ -936,17 +937,19 @@ class GenericParameters:
                 lst["Comment"].append("")
         return lst
 
-    def _type_to_hdf(self, hdf):
+    def _type_to_dict(self):
         """
         Internal helper function to save type and version in hdf root
 
         Args:
             hdf (ProjectHDFio): HDF5 group object
         """
-        hdf["NAME"] = self.__name__
-        hdf["TYPE"] = str(type(self))
-        hdf["VERSION"] = self.__version__
-        hdf["OBJECT"] = "GenericParameters"
+        return {
+            "NAME": self.__name__,
+            "TYPE": str(type(self)),
+            "VERSION": self.__version__,
+            "OBJECT": "GenericParameters",
+        }
 
     def _find_line(self, key_name):
         """
