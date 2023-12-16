@@ -66,12 +66,12 @@ def _is_ragged_in_1st_dim_only(value: Union[np.ndarray, list]) -> bool:
 def _check_json_conversion(value):
     use_json = True
     if (
-            isinstance(value, (list, np.ndarray))
-            and len(value) > 0
-            and isinstance(value[0], (list, np.ndarray))
-            and len(value[0]) > 0
-            and not isinstance(value[0][0], str)
-            and _is_ragged_in_1st_dim_only(value)
+        isinstance(value, (list, np.ndarray))
+        and len(value) > 0
+        and isinstance(value[0], (list, np.ndarray))
+        and len(value[0]) > 0
+        and not isinstance(value[0][0], str)
+        and _is_ragged_in_1st_dim_only(value)
     ):
         # if the sub-arrays in value all share shape[1:], h5io comes up with a more efficient storage format than
         # just writing a dataset for each element, by concatenating along the first axis and storing the indices
