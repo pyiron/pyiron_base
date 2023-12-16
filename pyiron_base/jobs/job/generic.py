@@ -1019,12 +1019,14 @@ class GenericJob(JobCore):
         # Build data dictionary
         data_dict = self._type_to_dict()
         data_dict["status"] = self.status.string
-        data_dict["input"] = {"generic_dict": {
-            "restart_file_list": self._restart_file_list,
-            "restart_file_dict": self._restart_file_dict,
-            "exclude_nodes_hdf": self._exclude_nodes_hdf,
-            "exclude_groups_hdf": self._exclude_groups_hdf,
-        }}
+        data_dict["input"] = {
+            "generic_dict": {
+                "restart_file_list": self._restart_file_list,
+                "restart_file_dict": self._restart_file_dict,
+                "exclude_nodes_hdf": self._exclude_nodes_hdf,
+                "exclude_groups_hdf": self._exclude_groups_hdf,
+            }
+        }
         if self._import_directory is not None:
             data_dict["import_directory"] = self._import_directory
 
