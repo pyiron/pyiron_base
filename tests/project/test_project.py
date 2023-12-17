@@ -207,6 +207,33 @@ class TestProjectOperations(TestWithFilledProject):
         self.assertIsInstance([val for val in self.project.iter_jobs(recursive=True, status="suspended",
                                                                      convert_to_object=True)][0], ToyJob)
 
+    def test_iter_jobs_without_database(self):
+        pr = Project('test_iter_jobs_without_database')
+        database_disabled = pr.state.settings.configuration["disable_database"]
+        pr.state.update({"disable_database": True})
+
+        pr_2 = pr.open("sub_1")
+        job_1 = pr_2.create_job(ToyJob, "toy1")
+        job_1.run()
+
+        pr_3 = pr.open("sub_2")
+        job_1 = pr_3.create_job(ToyJob, "toy2")
+        job_1.run()
+
+        try:
+            job_names = []
+            for job in pr.iter_jobs(status="finished"):
+                job_names.append(job.job_name)
+            self.assertListEqual(
+                ["toy1", "toy2"],
+                job_names,
+                msg="Expected to iterate among nested projects even without database"
+            )
+        finally:
+            pr.remove_jobs(recursive=True, silently=True)
+            pr.remove(enable=True)
+            pr.state.update({"disable_database": database_disabled})
+
     def test_maintenance_get_repository_status(self):
         df = self.project.maintenance.get_repository_status()
         self.assertIn('pyiron_base', df.Module.values)

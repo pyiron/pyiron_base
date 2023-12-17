@@ -581,14 +581,43 @@ class Project(ProjectPath, HasGroups):
             case, you may seriously wish to consider setting `convert_to_object=False` and access only the HDF5/JobCore
             representation of the jobs instead.
         """
-        job_id_lst = self.job_table(recursive=recursive, **kwargs)["id"]
+        job_table = self.job_table(recursive=recursive, **kwargs)
+        if not isinstance(self.db, FileTable):
+            job_lst = [[job_id, None] for job_id in job_table["id"]]
+        else:
+            # From all the possible database columns, the following ones are removed:
+            # ["id", "chemicalformula", "timestart", "computer", "parentid",
+            #  "username", "timestop", "totalcputime", "masterid"]
+            # because those are not used when running without database and can lead errors.
+            table_columns = [
+                "job",
+                "subjob",
+                "projectpath",
+                "project",
+                "status",
+                "hamilton",
+                "hamversion",
+            ]
+            job_lst = [
+                [None, {column: db_entry[column] for column in table_columns}]
+                for db_entry in [row[1].to_dict() for row in job_table.iterrows()]
+            ]
+
         if progress:
-            job_id_lst = tqdm(job_id_lst)
-        for job_id in job_id_lst:
+            job_lst = tqdm(job_lst)
+        for job_id, db_entry in job_lst:
             if path is not None:
-                yield self.inspect(job_id)[path]
+                yield self.load_from_jobpath(
+                    job_id=job_id,
+                    db_entry=db_entry,
+                    convert_to_object=False,
+                )[path]
             else:  # Backwards compatibility - in future the option convert_to_object should be removed
-                yield self.load(job_id, convert_to_object=convert_to_object)
+                yield self.load_from_jobpath(
+                    job_id=job_id,
+                    db_entry=db_entry,
+                    convert_to_object=convert_to_object,
+                )
 
     def iter_output(self, recursive=True):
         """

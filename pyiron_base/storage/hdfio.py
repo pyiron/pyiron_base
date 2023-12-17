@@ -14,7 +14,7 @@ import pandas
 import posixpath
 import numpy as np
 import sys
-from typing import Union
+from typing import Union, Optional, Any, Tuple
 
 from pyiron_base.utils.deprecate import deprecate
 from pyiron_base.storage.helper_functions import read_hdf5, write_hdf5
@@ -22,6 +22,7 @@ from pyiron_base.interfaces.has_groups import HasGroups
 from pyiron_base.state import state
 from pyiron_base.jobs.dynamic import JOB_DYN_DICT, class_constructor
 from pyiron_base.jobs.job.util import _get_safe_job_name
+import pyiron_base.project.maintenance
 import warnings
 
 __author__ = "Joerg Neugebauer, Jan Janssen"
@@ -60,6 +61,105 @@ def _is_ragged_in_1st_dim_only(value: Union[np.ndarray, list]) -> bool:
 
         dim1, dim_other = zip(*map(extract_dims, value))
         return len(set(dim1)) > 1 and len(set(dim_other)) == 1
+
+
+# for historic reasons we write str(class) into the HDF 'TYPE' field of objects, so we need to parse this back out
+def _extract_fully_qualified_name(type_field: str) -> str:
+    return type_field.split("'")[1]
+
+
+def _extract_module_class_name(type_field: str) -> Tuple[str, str]:
+    fully_qualified_path = _extract_fully_qualified_name(type_field)
+    return fully_qualified_path.rsplit(".", maxsplit=1)
+
+
+def _import_class(module_path, class_name):
+    """
+    Import given class from fully qualified name and return class object.
+
+    Args:
+        module_path (str): fully qualified name of a pyiron class
+        class_name (str): fully qualified name of a pyiron class
+
+    Returns:
+        type: class object of the given name
+    """
+    # ugly dynamic import, but only needed to log the warning anyway
+    from pyiron_base.jobs.job.jobtype import JobTypeChoice
+
+    job_class_dict = JobTypeChoice().job_class_dict  # access global singleton
+    if class_name in job_class_dict:
+        known_module_path = job_class_dict[class_name]
+        # entries in the job_class_dict are either strings of modules or fully
+        # loaded class object; in the latter case our work here is done we just
+        # return the class
+        if isinstance(module_path, type):
+            return module_path
+        if module_path != known_module_path:
+            state.logger.info(
+                f'Using registered module "{known_module_path}" instead of custom/old module "{module_path}" to'
+                f' import job type "{class_name}"!'
+            )
+            module_path = known_module_path
+    try:
+        return getattr(
+            importlib.import_module(module_path),
+            class_name,
+        )
+    except ImportError:
+        if module_path in pyiron_base.project.maintenance._MODULE_CONVERSION_DICT:
+            raise RuntimeError(
+                f"Could not import {class_name} from {module_path}, but module path known to have changed. "
+                "Call project.maintenance.local.update_hdf_types() to upgrade storage!"
+            )
+        else:
+            raise
+
+
+def _to_object(hdf, class_name=None, **kwargs):
+    """
+    Load the full pyiron object from an HDF5 file
+
+    Args:
+        class_name(str, optional): if the 'TYPE' node is not available in
+                    the HDF5 file a manual object type can be set,
+                    must be as reported by `str(type(obj))`
+        **kwargs: optional parameters optional parameters to override init
+                  parameters
+
+    Returns:
+        pyiron object of the given class_name
+    """
+    if "TYPE" not in hdf.list_nodes() and class_name is None:
+        raise ValueError("Objects can be only recovered from hdf5 if TYPE is given")
+    elif class_name is not None and class_name != hdf.get("TYPE"):
+        raise ValueError(
+            "Object type in hdf5-file must be identical to input parameter"
+        )
+    type_field = class_name or hdf.get("TYPE")
+    module_path, class_name = _extract_module_class_name(type_field)
+
+    # objects that have classes starting with abc. were likely created by pyiron_base.jobs.dynamic, so we cannot import
+    # them the usual way.  Instead reconstruct the class here from JOB_DYN_DICT.
+    if not module_path.startswith("abc."):
+        class_object = _import_class(module_path, class_name)
+    else:
+        class_object = class_constructor(cp=JOB_DYN_DICT[class_name])
+
+    # Backwards compatibility since the format of TYPE changed
+    if type_field != str(class_object):
+        hdf["TYPE"] = str(class_object)
+
+    if hasattr(class_object, "from_hdf_args"):
+        init_args = class_object.from_hdf_args(hdf)
+    else:
+        init_args = {}
+
+    init_args.update(kwargs)
+
+    obj = class_object(**init_args)
+    obj.from_hdf(hdf=hdf.open(".."), group_name=hdf.h5_path.split("/")[-1])
+    return obj
 
 
 def open_hdf5(filename, mode="r", swmr=False):
@@ -149,10 +249,7 @@ class FileHDFio(HasGroups, MutableMapping):
                 # underlying file once, this reduces the number of file opens in the most-likely case from 2 to 1 (1 to
                 # check whether the data is there and 1 to read it) and increases in the worst case from 1 to 2 (1 to
                 # try to read it here and one more time to verify it's not a group below).
-                obj = read_hdf5(self.file_name, title=self._get_h5_path(item))
-                if self._is_convertable_dtype_object_array(obj):
-                    obj = self._convert_dtype_obj_array(obj.copy())
-                return obj
+                return read_hdf5(self.file_name, title=self._get_h5_path(item))
             except (ValueError, OSError, RuntimeError, NotImplementedError):
                 # h5io couldn't find a dataset with name item, but there still might be a group with that name, which we
                 # check in the rest of the method
@@ -1300,60 +1397,7 @@ class ProjectHDFio(FileHDFio):
         """
         os.makedirs(self.working_directory, exist_ok=True)
 
-    def import_class(self, class_name):
-        """
-        Import given class from fully qualified name and return class object.
-
-        Args:
-            class_name (str): fully qualified name of a pyiron class
-
-        Returns:
-            type: class object of the given name
-        """
-        internal_class_name = class_name.split(".")[-1][:-2]
-        class_path = class_name.split()[-1].split(".")[:-1]
-        class_path[0] = class_path[0][1:]
-        class_module_path = ".".join(class_path)
-        if internal_class_name in self._project.job_type.job_class_dict:
-            module_path = self._project.job_type.job_class_dict[internal_class_name]
-            if class_module_path != module_path:
-                state.logger.info(
-                    f'Using registered module "{module_path}" instead of custom/old module "{class_module_path}" to'
-                    f' import job type "{internal_class_name}"!'
-                )
-        else:
-            module_path = class_module_path
-        return getattr(
-            importlib.import_module(module_path),
-            internal_class_name,
-        )
-
-    def create_instance(self, cls, **kwargs):
-        """
-        Create new instance of the given class from current group.
-
-        Uses the given **kwargs and a special classmethod "from_hdf_args" that
-        may be defined on cls to construct a dictionary of arguments and then
-        instatiate cls with them.
-
-        Args:
-            cls (type): pyiron type to instantiate
-            **kwargs: arguments for instance creation
-
-        Returns:
-            cls: instance of the given type
-        """
-
-        if hasattr(cls, "from_hdf_args"):
-            init_args = cls.from_hdf_args(self)
-        else:
-            init_args = {}
-
-        init_args.update(kwargs)
-
-        return cls(**init_args)
-
-    def to_object(self, class_name=None, **qwargs):
+    def to_object(self, class_name=None, **kwargs):
         """
         Load the full pyiron object from an HDF5 file
 
@@ -1361,40 +1405,13 @@ class ProjectHDFio(FileHDFio):
             class_name(str, optional): if the 'TYPE' node is not available in
                         the HDF5 file a manual object type can be set,
                         must be as reported by `str(type(obj))`
-            **qwargs: optional parameters optional parameters to override init
+            **kwargs: optional parameters optional parameters to override init
                       parameters
 
         Returns:
             pyiron object of the given class_name
         """
-        if "TYPE" not in self.list_nodes() and class_name is None:
-            raise ValueError("Objects can be only recovered from hdf5 if TYPE is given")
-        elif class_name is not None and class_name != self.get("TYPE"):
-            raise ValueError(
-                "Object type in hdf5-file must be identical to input parameter"
-            )
-        class_name = class_name or self.get("TYPE")
-        class_path = class_name.split("<class '")[-1].split("'>")[0]
-        class_convert_dict = {  # Fix backwards compatibility
-            "pyiron_base.generic.datacontainer.DataContainer": "pyiron_base.storage.datacontainer.DataContainer",
-            "pyiron_base.generic.inputlist.InputList": "pyiron_base.storage.inputlist.InputList",
-            "pyiron_base.generic.flattenedstorage.FlattenedStorage": "pyiron_base.storage.flattenedstorage.FlattenedStorage",
-        }
-        if class_path in class_convert_dict.keys():
-            class_name_new = "<class '" + class_convert_dict[class_path] + "'>"
-            class_object = self.import_class(class_name_new)
-        elif not class_path.startswith("abc."):
-            class_object = self.import_class(class_name)
-        else:
-            class_object = class_constructor(cp=JOB_DYN_DICT[class_path.split(".")[-1]])
-
-        # Backwards compatibility since the format of TYPE changed
-        if class_name != str(class_object):
-            self["TYPE"] = str(class_object)
-
-        obj = self.create_instance(class_object, **qwargs)
-        obj.from_hdf(hdf=self.open(".."), group_name=self.h5_path.split("/")[-1])
-        return obj
+        return _to_object(self, class_name, **kwargs)
 
     def get_job_id(self, job_specifier):
         """
@@ -1474,6 +1491,229 @@ class ProjectHDFio(FileHDFio):
             Project: pyiron project object
         """
         return self._project.__class__(path=self.file_path)
+
+
+class DummyHDFio(HasGroups):
+    """
+    A dummy ProjectHDFio implementation to serialize objects into a dict
+    instead of a HDF5 file.
+
+    It is modeled after ProjectHDFio, but supports just enough methods to
+    successfully write objects.
+
+    After all desired objects have been written to it, you may extract a pure
+    dict from with with `.to_dict`.
+
+    A simple example for storing data containers:
+
+    >>> from pyiron_base import DataContainer, Project
+    >>> pr = Project(...)
+    >>> hdf = DummyHDFio(pr, '/', {})
+    >>> d = DataContainer({'a': 42, 'b':{'c':4, 'g':33}})
+    >>> d.to_hdf(hdf)
+    >>> hdf.to_dict()
+    {'READ_ONLY': False,
+     'a__index_0': 42,
+     'b__index_1': {
+         'READ_ONLY': False,
+         'c__index_0': 4,
+         'g__index_1': 33,
+         'NAME': 'DataContainer',
+         'TYPE': "<class
+         'pyiron_base.storage.datacontainer.DataContainer'>",
+         'OBJECT': 'DataContainer',
+         'VERSION': '0.1.0',
+         'HDF_VERSION': '0.2.0'
+     },
+     'NAME': 'DataContainer',
+     'TYPE': "<class
+     'pyiron_base.storage.datacontainer.DataContainer'>",
+     'OBJECT': 'DataContainer',
+     'VERSION': '0.1.0',
+     'HDF_VERSION': '0.2.0'}
+    """
+
+    def __init__(self, project, h5_path: str, cont: Optional[dict] = None, root=None):
+        """
+
+        Args:
+            project (Project): the project this object should advertise itself
+                               belong to; in practice it is not often used for
+                               writing objects
+            h5_path (str): the path of the HDF group this object fakes
+            cont (dict, optional): dict to save written values into, make a new
+                                   one if not given
+            root (DummyHDFio, optional): if this object will be a child of
+                                         another one, the parent must be passed
+                                         here, to make hdf['..'] work.
+        """
+        self._project = project
+        self._dict = cont or {}
+        self._h5_path = h5_path
+        self._root = root
+
+    def __getitem__(self, item: str) -> Union["DummyHDFio", Any]:
+        """
+        Return a value from storage.
+
+        If `item` is in :meth:`.list_groups()` this must return another :class:`.GenericStorage`.
+
+        Args:
+            item (str): name of value
+
+        Returns:
+            :class:`.GenericStorage`: if `item` refers to a sub group
+            object: value that is stored under `item`
+
+        Raises:
+            ValueError: `item` is neither a node or a sub group of this group
+        """
+        try:
+            v = self._dict[item]
+            if isinstance(v, DummyHDFio) and v._empty():
+                raise KeyError()
+            else:
+                return v
+        except KeyError:
+            if item == "..":
+                return self._root
+            # compat with ProjectHDFio with for some reasons raises ValueErrors
+            raise ValueError(item) from None
+
+    def get(self, key, default=None):
+        """
+        Internal wrapper function for __getitem__() - self[name]
+
+        Args:
+            key (str, slice): path to the data or key of the data object
+            default (object): default value to return if key doesn't exist
+
+        Returns:
+            dict, list, float, int: data or data object
+        """
+        try:
+            return self[key]
+        except ValueError:
+            if default is not None:
+                return default
+            else:
+                raise
+
+    def __setitem__(self, item: str, value: Any):
+        self._dict[item] = value
+
+    def create_group(self, name: str):
+        """
+        Create a new sub group.
+
+        Args:
+            name (str): name of the new group
+        """
+        if name == "..":
+            return self._root
+        d = self._dict.get(name, None)
+        if d is None:
+            self._dict[name] = d = type(self)(
+                self.project, os.path.join(self.h5_path, name), cont={}, root=self
+            )
+        elif isinstance(d, DummyHDFio):
+            pass
+        else:
+            raise RuntimeError(f"'{name}' is already a node!")
+        return d
+
+    def _list_nodes(self):
+        return [k for k, v in self._dict.items() if not isinstance(v, DummyHDFio)]
+
+    def _list_groups(self):
+        return [
+            k
+            for k, v in self._dict.items()
+            if isinstance(v, DummyHDFio) and not v._empty()
+        ]
+
+    def __contains__(self, item):
+        return item in self._dict
+
+    @property
+    def project(self):
+        return self._project
+
+    @property
+    def h5_path(self):
+        return self._h5_path
+
+    def open(self, name: str) -> "DummyHDFio":
+        """
+        Descend into a sub group.
+
+        If `name` does not exist yet, create a new group.  Calling :meth:`~.close` on the returned object returns this
+        object.
+
+        Args:
+            name (str): name of sub group
+
+        Returns:
+            :class:`.GenericStorage`: sub group
+        """
+        # FIXME: what if name in self.list_nodes()
+        new = self.create_group(name)
+        new._prev = self
+        return new
+
+    def close(self) -> "DummyHDFio":
+        """
+        Surface from a sub group.
+
+        If this object was not returned from a previous call to :meth:`.open` it returns itself silently.
+        """
+        try:
+            return self._prev
+        except AttributeError:
+            return self
+
+    def __enter__(self):
+        """
+        Compatibility function for the with statement
+        """
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        """
+        Compatibility function for the with statement
+        """
+        self.close()
+
+    def to_dict(self) -> dict:
+        def unwrap(v):
+            if isinstance(v, DummyHDFio):
+                return v.to_dict()
+            return v
+
+        return {k: unwrap(v) for k, v in self._dict.items()}
+
+    def to_object(self, class_name=None, **kwargs):
+        """
+        Load the full pyiron object from an HDF5 file
+
+        Args:
+            class_name(str, optional): if the 'TYPE' node is not available in
+                        the HDF5 file a manual object type can be set,
+                        must be as reported by `str(type(obj))`
+            **kwargs: optional parameters optional parameters to override init
+                      parameters
+
+        Returns:
+            pyiron object of the given class_name
+        """
+        return _to_object(self, class_name, **kwargs)
+
+    def _empty(self):
+        if len(self._dict) == 0:
+            return True
+        return len(self.list_nodes()) == 0 and all(
+            self[g]._empty() for g in self.list_groups()
+        )
 
 
 def _get_safe_filename(file_name):

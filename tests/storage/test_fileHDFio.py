@@ -6,7 +6,7 @@ import sys
 import warnings
 from io import StringIO
 import numpy as np
-from pyiron_base.storage.hdfio import FileHDFio, _is_ragged_in_1st_dim_only, state
+from pyiron_base.storage.hdfio import FileHDFio, _is_ragged_in_1st_dim_only, state, _import_class
 from pyiron_base._tests import PyironTestCase, TestWithProject, ToyJob as BaseToyJob
 from pyiron_base import GenericJob, JobType
 import unittest
@@ -182,7 +182,14 @@ class TestFileHDFio(PyironTestCase):
 
         with self.subTest("object_array_with_lists"):
             array = hdf["object_array_with_lists"]
-            np.array_equal(array, object_array_with_lists)
+            self.assertEqual(len(array), len(object_array_with_lists),
+                             msg="object array read with incorrect length!")
+            for a_read, a_written in zip(array, object_array_with_lists):
+                # ProjectHDFio coerces lists inside numpy object arrays to
+                # arrays, because h5io cannot write them otherwise, so we have
+                # to do the same here
+                self.assertEqual(a_read, np.asarray(a_written),
+                                 msg="object array contents not the same!")
             self.assertIsInstance(array, np.ndarray)
             self.assertEqual(
                 array.dtype,
@@ -201,32 +208,14 @@ class TestFileHDFio(PyironTestCase):
         #     self.assertTrue(array.dtype == np.dtype(object))
 
         with self.subTest("int_array_as_objects_array"):
-            with self.assertLogs(state.logger) as w:
-                array = hdf["int_array_as_objects_array"]
-                self.assertEqual(len(w.output), 1)
-                self.assertTrue(w.output[0].startswith(warn_msg_start))
-            np.array_equal(array, int_array_as_objects_array)
+            array = hdf["int_array_as_objects_array"]
+            self.assertEqual(array, int_array_as_objects_array)
             self.assertIsInstance(array, np.ndarray)
-            self.assertEqual(
-                array.dtype,
-                np.dtype(int),
-                msg="dtype=object array containing only int not converted "
-                "to dtype int array.",
-            )
 
         with self.subTest("float_array_as_objects_array"):
-            with self.assertLogs(state.logger) as w:
-                array = hdf["float_array_as_objects_array"]
-                self.assertEqual(len(w.output), 1)
-                self.assertTrue(w.output[0].startswith(warn_msg_start))
-            np.array_equal(array, float_array_as_objects_array)
+            array = hdf["float_array_as_objects_array"]
+            self.assertEqual(array, float_array_as_objects_array)
             self.assertIsInstance(array, np.ndarray)
-            self.assertEqual(
-                array.dtype,
-                np.dtype(float),
-                msg="dtype=object array containing only float not converted"
-                " to dtype float array.",
-            )
 
         hdf.remove_group()
 
@@ -644,7 +633,7 @@ class TestProjectHDFio(TestWithProject):
     def test_import_class(self):
 
         with self.subTest("import ToyJob without interfering:"):
-            toy_job_cls = self.empty_hdf5.import_class(str(BaseToyJob))
+            toy_job_cls = _import_class(BaseToyJob.__module__, BaseToyJob.__name__)
             self.assertIs(
                 toy_job_cls, BaseToyJob, msg="Did not return the requested class."
             )
@@ -654,7 +643,7 @@ class TestProjectHDFio(TestWithProject):
 
             with self.subTest("Import ToyJob while another ToyJob is registered"):
                 with self.assertLogs(state.logger) as log:
-                    toy_job_cls = self.empty_hdf5.import_class(str(BaseToyJob))
+                    toy_job_cls = _import_class(BaseToyJob.__module__, BaseToyJob.__name__)
                     self.assertEqual(
                         len(log.output),
                         1,
