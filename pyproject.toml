@@ -24,7 +24,7 @@ classifiers = [
     "Programming Language :: Python :: 3.11",
 ]
 dependencies = [
-    "dill==0.3.7",
+    "cloudpickle==3.0.0",
     "gitpython==3.1.40",
     "h5io==0.1.9",
     "h5py==3.10.0",
