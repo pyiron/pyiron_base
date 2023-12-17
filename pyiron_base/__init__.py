@@ -61,7 +61,6 @@ from pyiron_base.utils.jedi import fix_ipython_autocomplete
 
 # Set version of pyiron_base
 __version__ = get_versions()["version"]
-del get_versions
 
 # Jedi fix
 fix_ipython_autocomplete()
