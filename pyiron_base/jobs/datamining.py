@@ -42,6 +42,7 @@ def _from_pickle(hdf, key):
         return cloudpickle.loads(codecs.decode(hdf[key].encode(), "base64"))
     except ModuleNotFoundError:
         import dill
+
         return dill.loads(codecs.decode(hdf[key].encode(), "base64"))
 
 
