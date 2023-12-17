@@ -132,13 +132,16 @@ def _get_template_classes():
     }
 
 
-def create_new_job_type(class_name, input_dict, write_input_funct, collect_output_funct, executable_str):
+def create_new_job_type(
+    class_name, input_dict, write_input_funct, collect_output_funct, executable_str
+):
     from pyiron_base.jobs.job.template import TemplateJob
 
     def _get_write_input_func(write_input_funct):
         def write_input(self):
             write_input_funct(
-                working_directory=self.working_directory, input_dict=self.input.to_builtin()
+                working_directory=self.working_directory,
+                input_dict=self.input.to_builtin(),
             )
 
         return write_input
@@ -171,7 +174,9 @@ def create_new_job_type(class_name, input_dict, write_input_funct, collect_outpu
                 executable_str=executable_str,
             ),
             "write_input": _get_write_input_func(write_input_funct=write_input_funct),
-            "collect_output": _get_collect_output_func(collect_output_funct=collect_output_funct),
+            "collect_output": _get_collect_output_func(
+                collect_output_funct=collect_output_funct
+            ),
         },
     )
 
