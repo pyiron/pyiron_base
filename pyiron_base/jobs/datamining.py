@@ -38,7 +38,11 @@ def _to_pickle(hdf, key, value):
 
 
 def _from_pickle(hdf, key):
-    return cloudpickle.loads(codecs.decode(hdf[key].encode(), "base64"))
+    try:
+        return cloudpickle.loads(codecs.decode(hdf[key].encode(), "base64"))
+    except ModuleNotFoundError:
+        import dill
+        return dill.loads(codecs.decode(hdf[key].encode(), "base64"))
 
 
 def get_job_id(job):
