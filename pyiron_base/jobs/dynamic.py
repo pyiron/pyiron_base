@@ -132,4 +132,48 @@ def _get_template_classes():
     }
 
 
+def create_new_job_type(class_name, input_dict, write_input_funct, collect_output_funct, executable_str):
+    from pyiron_base.jobs.job.template import TemplateJob
+
+    def _get_write_input_func(write_input_funct):
+        def write_input(self):
+            write_input_funct(
+                working_directory=self.working_directory, input_dict=self.input.to_builtin()
+            )
+
+        return write_input
+
+    def _init_constructor_dynamic_func(class_name, input_dict, executable_str):
+        def __init__(self, project, job_name):
+            super(self.__class__, self).__init__(project, job_name)
+            self.__name__ = class_name
+            self.input.update(input_dict)
+            self.executable = executable_str
+
+        return __init__
+
+    def _get_collect_output_func(collect_output_funct):
+        def collect_output(self):
+            self.output.update(
+                collect_output_funct(working_directory=self.working_directory)
+            )
+            self.to_hdf()
+
+        return collect_output
+
+    return type(
+        class_name,
+        (TemplateJob,),
+        {
+            "__init__": _init_constructor_dynamic_func(
+                class_name=class_name,
+                input_dict=input_dict,
+                executable_str=executable_str,
+            ),
+            "write_input": _get_write_input_func(write_input_funct=write_input_funct),
+            "collect_output": _get_collect_output_func(collect_output_funct=collect_output_funct),
+        },
+    )
+
+
 JOB_DYN_DICT = _get_template_classes()
