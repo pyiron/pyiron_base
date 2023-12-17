@@ -13,7 +13,7 @@ from pandas.errors import EmptyDataError
 from tqdm.auto import tqdm
 import types
 from typing import List, Tuple
-from pympipool import Pool
+from pympipool import Executor
 
 from pyiron_base.utils.deprecate import deprecate
 from pyiron_base.jobs.job.generic import GenericJob
@@ -362,10 +362,18 @@ class PyironTable:
             ]
             for job_id in job_id_lst
         ]
-        with Pool(processes) as p:
+        if processes > 1:
+            with Executor(processes) as exe:
+                diff_dict_lst = list(
+                    tqdm(
+                        exe.map(_apply_list_of_functions_on_job, job_to_analyse_lst),
+                        total=len(job_to_analyse_lst),
+                    )
+                )
+        else:
             diff_dict_lst = list(
                 tqdm(
-                    p.map(_apply_list_of_functions_on_job, job_to_analyse_lst),
+                    map(_apply_list_of_functions_on_job, job_to_analyse_lst),
                     total=len(job_to_analyse_lst),
                 )
             )
