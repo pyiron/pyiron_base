@@ -3,6 +3,7 @@ import h5io
 import h5py
 from pyiron_base.utils.error import retry
 from typing import Union
+import warnings
 
 
 def open_hdf5(filename, mode="r", swmr=False):
