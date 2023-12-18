@@ -803,12 +803,9 @@ class DataContainer(MutableMapping, Lockable, HasGroups, HasHDF):
                         "Error saving {} (key {}): DataContainer doesn't support saving elements "
                         'of type "{}" to HDF!'.format(v, k, type(v))
                     ) from None
-        for n in hdf.list_nodes():
+        for n in hdf.list_nodes() + hdf.list_groups():
             if n not in written_keys:
                 del hdf[n]
-        for g in hdf.list_groups():
-            if g not in written_keys:
-                del hdf[g]
 
     def _from_hdf(self, hdf, version=None):
         self.clear()
