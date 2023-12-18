@@ -9,12 +9,12 @@ dependencies:
 - h5py =3.10.0
 - jinja2 =3.1.2
 - numpy =1.26.2
-- pandas =2.1.3
+- pandas =2.1.4
 - pint =0.23
-- psutil =5.9.5
-- pyfileindex =0.0.18
+- psutil =5.9.7
+- pyfileindex =0.0.19
 - pympipool =0.7.9
-- pysqa =0.1.7
+- pysqa =0.1.8
 - pytables =3.9.2
 - sqlalchemy =2.0.23
 - tqdm =4.66.1
