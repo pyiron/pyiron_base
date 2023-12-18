@@ -21,6 +21,7 @@ from pyiron_base.storage.helper_functions import (
     open_hdf5,
     read_hdf5,
     write_hdf5_with_json_support,
+    write_dict_to_hdf,
     _is_ragged_in_1st_dim_only,
 )
 from pyiron_base.interfaces.has_groups import HasGroups
@@ -28,7 +29,6 @@ from pyiron_base.state import state
 from pyiron_base.jobs.dynamic import JOB_DYN_DICT, class_constructor
 from pyiron_base.jobs.job.util import _get_safe_job_name
 import pyiron_base.project.maintenance
-import warnings
 
 __author__ = "Joerg Neugebauer, Jan Janssen"
 __copyright__ = (
@@ -846,8 +846,7 @@ class FileHDFio(HasGroups, MutableMapping):
                 (set(hdf_old.list_nodes()) ^ set(check_nodes))
                 & set(hdf_old.list_nodes())
             )
-        for p in node_list:
-            hdf_new[p] = hdf_old[p]
+        write_dict_to_hdf(hdf=hdf_new, data_dict={p: hdf_old[p] for p in node_list})
         for p in group_list:
             h_new = hdf_new.create_group(p)
             ex_n = [e[-1] for e in exclude_nodes_split if p == e[0] or len(e) == 1]

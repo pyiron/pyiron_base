@@ -57,13 +57,34 @@ def write_hdf5(
 
 def write_hdf5_with_json_support(value, path, file_handle):
     value, use_json = _check_json_conversion(value=value)
-    write_hdf5(
-        file_handle,
-        value,
-        title=path,
-        overwrite="update",
-        use_json=use_json,
-    )
+    try:
+        write_hdf5(
+            file_handle,
+            value,
+            title=path,
+            overwrite="update",
+            use_json=use_json,
+        )
+    except TypeError:
+        raise TypeError(
+            "Error saving {} (key {}): DataContainer doesn't support saving elements "
+            'of type "{}" to HDF!'.format(value, path, type(value))
+        ) from None
+
+
+def write_dict_to_hdf(hdf, data_dict, groups=[]):
+    with open_hdf5(hdf.file_name, mode="a") as store:
+        for k, v in data_dict.items():
+            if k not in groups:
+                write_hdf5_with_json_support(
+                    file_handle=store, value=v, path=hdf.get_h5_path(k)
+                )
+        for group in groups:
+            hdf_group = hdf.create_group(group)
+            for k, v in data_dict[group].items():
+                write_hdf5_with_json_support(
+                    file_handle=store, value=v, path=hdf_group.get_h5_path(k)
+                )
 
 
 def _check_json_conversion(value):
