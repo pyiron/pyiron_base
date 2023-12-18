@@ -1,6 +1,5 @@
 import json
 import os
-from pyiron_base import Project
 from pyiron_base.jobs.dynamic import create_new_job_type
 from pyiron_base._tests import TestWithProject
 
