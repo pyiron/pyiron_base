@@ -271,6 +271,7 @@ class ScriptJob(GenericJob):
         This function enforces read-only mode for the input classes, but it has to be implement in the individual
         classes.
         """
+        super().set_input_to_read_only()
         self.input.read_only = True
 
     def to_hdf(self, hdf=None, group_name=None):
