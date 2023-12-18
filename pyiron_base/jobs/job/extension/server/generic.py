@@ -12,6 +12,7 @@ import socket
 from typing import Union
 
 from pyiron_base.state import state
+from pyiron_base.interfaces.lockable import Lockable, sentinel
 from pyiron_base.utils.instance import static_isinstance
 from pyiron_base.jobs.job.extension.server.runmode import Runmode
 
@@ -27,7 +28,9 @@ __status__ = "production"
 __date__ = "Sep 1, 2017"
 
 
-class Server:  # add the option to return the job id and the hold id to the server object
+class Server(
+    Lockable
+):  # add the option to return the job id and the hold id to the server object
     """
     Generic Server object to handle the execution environment for the job
 
@@ -95,6 +98,7 @@ class Server:  # add the option to return the job id and the hold id to the serv
         run_mode="modal",
         new_hdf=True,
     ):
+        super().__init__()
         self._cores = cores
         self._threads = threads
         self._active_queue = None
@@ -130,6 +134,7 @@ class Server:  # add the option to return the job id and the hold id to the serv
         return self._send_to_db
 
     @send_to_db.setter
+    @sentinel
     def send_to_db(self, send):
         """
         Set the boolean option to decide which jobs should be store in the external/public database
@@ -144,6 +149,7 @@ class Server:  # add the option to return the job id and the hold id to the serv
         return self._accept_crash
 
     @accept_crash.setter
+    @sentinel
     def accept_crash(self, accept):
         self._accept_crash = accept
 
@@ -158,6 +164,7 @@ class Server:  # add the option to return the job id and the hold id to the serv
         return self._structure_id
 
     @structure_id.setter
+    @sentinel
     def structure_id(self, structure_id):
         """
         Set the structure ID to be linked to an external/public database
@@ -178,6 +185,7 @@ class Server:  # add the option to return the job id and the hold id to the serv
         return self._active_queue
 
     @queue.setter
+    @sentinel
     def queue(self, new_scheduler):
         """
         Set a queue for the current simulation, by choosing one of the options
@@ -236,6 +244,7 @@ class Server:  # add the option to return the job id and the hold id to the serv
         return self._queue_id
 
     @queue_id.setter
+    @sentinel
     def queue_id(self, qid):
         """
         Set the queue ID
@@ -256,6 +265,7 @@ class Server:  # add the option to return the job id and the hold id to the serv
         return self._threads
 
     @threads.setter
+    @sentinel
     def threads(self, number_of_threads):
         """
         The number of threads selected for the current simulation
@@ -276,6 +286,7 @@ class Server:  # add the option to return the job id and the hold id to the serv
         return self._gpus
 
     @gpus.setter
+    @sentinel
     def gpus(self, number_of_gpus):
         """
         Total number of GPUs to use for this calculation.
@@ -296,6 +307,7 @@ class Server:  # add the option to return the job id and the hold id to the serv
         return self._cores
 
     @cores.setter
+    @sentinel
     def cores(self, new_cores):
         """
         The number of cores selected for the current simulation
@@ -335,6 +347,7 @@ class Server:  # add the option to return the job id and the hold id to the serv
         return self._run_time
 
     @run_time.setter
+    @sentinel
     def run_time(self, new_run_time):
         """
         The run time in seconds selected for the current simulation
@@ -366,6 +379,7 @@ class Server:  # add the option to return the job id and the hold id to the serv
         return self._memory_limit
 
     @memory_limit.setter
+    @sentinel
     def memory_limit(self, limit):
         if state.queue_adapter is not None and self._active_queue is not None:
             memory_max = state.queue_adapter.check_queue_parameters(
@@ -394,6 +408,7 @@ class Server:  # add the option to return the job id and the hold id to the serv
         return self._run_mode
 
     @run_mode.setter
+    @sentinel
     def run_mode(self, new_mode):
         """
         Set the run mode of the job
@@ -421,6 +436,7 @@ class Server:  # add the option to return the job id and the hold id to the serv
         return self._new_hdf
 
     @new_hdf.setter
+    @sentinel
     def new_hdf(self, new_hdf_bool):
         """
         New_hdf5 defines whether a subjob should be stored in the same HDF5 file or in a new one.
@@ -468,6 +484,7 @@ class Server:  # add the option to return the job id and the hold id to the serv
         return self._executor
 
     @executor.setter
+    @sentinel
     def executor(self, exe: Union[Executor, None]):
         """
         Executor to execute the job object this server object is attached to in the background.
@@ -499,6 +516,8 @@ class Server:  # add the option to return the job id and the hold id to the serv
         """
         return self._future
 
+    # We don't wrap future in sentinel, to allow it later to be dropped to
+    # None, once execution is finished
     @future.setter
     def future(self, future_obj: Future):
         """
