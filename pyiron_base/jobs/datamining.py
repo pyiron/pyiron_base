@@ -34,7 +34,9 @@ __date__ = "Sep 1, 2018"
 
 
 def _to_pickle(hdf, key, value):
-    hdf[key] = codecs.encode(cloudpickle.dumps(value), "base64").decode()
+    hdf[key] = codecs.encode(
+        cloudpickle.dumps(obj=value, protocol=5, buffer_callback=None), "base64"
+    ).decode()
 
 
 def _from_pickle(hdf, key):
