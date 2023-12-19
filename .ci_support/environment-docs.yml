@@ -2,7 +2,6 @@ channels:
 - conda-forge
 dependencies:
 - nbsphinx
-- dill
 - gitpython
 - h5io
 - h5py
