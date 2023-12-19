@@ -381,6 +381,10 @@ class SerialMasterBase(GenericMaster):
         ):
             self.server.run_mode.interactive = True
 
+    def append(self, job):
+        with self.server.unlocked():
+            super().append(job)
+
 
 class GenericOutput(OrderedDict):
     """
