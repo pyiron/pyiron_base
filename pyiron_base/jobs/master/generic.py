@@ -167,7 +167,7 @@ class GenericMaster(GenericJob):
                 "GenericMaster requires reference jobs to have status initialized, rather than ",
                 job.status.string,
             )
-        if job.server.cores >= self.server.cores:
+        if job.server.cores > self.server.cores:
             self.server.cores = job.server.cores
         if job.job_name not in self._job_name_lst:
             self._job_name_lst.append(job.job_name)
