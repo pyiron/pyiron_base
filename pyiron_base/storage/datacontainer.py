@@ -15,6 +15,7 @@ import pandas
 
 from pyiron_base.storage.fileio import read, write
 from pyiron_base.storage.hdfstub import HDFStub
+from pyiron_base.storage.helper_functions import write_dict_to_hdf
 from pyiron_base.interfaces.has_groups import HasGroups
 from pyiron_base.interfaces.has_hdf import HasHDF
 from pyiron_base.interfaces.lockable import Lockable, sentinel
@@ -775,7 +776,7 @@ class DataContainer(MutableMapping, Lockable, HasGroups, HasHDF):
         return self.table_name
 
     def _to_hdf(self, hdf):
-        hdf["READ_ONLY"] = self.read_only
+        data_dict = {"READ_ONLY": self.read_only}
         written_keys = _internal_hdf_nodes.copy()
         for i, (k, v) in enumerate(self.items()):
             if isinstance(k, str) and "__index_" in k:
@@ -793,16 +794,17 @@ class DataContainer(MutableMapping, Lockable, HasGroups, HasHDF):
                 if k in hdf.list_nodes():
                     del hdf[k]
                 v.to_hdf(hdf=hdf, group_name=k)
+            elif hasattr(v, "to_hdf") and isinstance(
+                v, (pandas.DataFrame, pandas.Series)
+            ):
+                hdf[k] = v
             else:
-                # if the value doesn't know how to serialize itself, assume
-                # that h5py knows how to
-                try:
-                    hdf[k] = v
-                except TypeError:
-                    raise TypeError(
-                        "Error saving {} (key {}): DataContainer doesn't support saving elements "
-                        'of type "{}" to HDF!'.format(v, k, type(v))
-                    ) from None
+                data_dict[k] = v
+        write_dict_to_hdf(
+            file_name=hdf.file_name,
+            h5_path=hdf.h5_path,
+            data_dict=data_dict,
+        )
         for n in hdf.list_nodes() + hdf.list_groups():
             if n not in written_keys:
                 del hdf[n]

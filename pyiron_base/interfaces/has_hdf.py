@@ -4,6 +4,7 @@
 """Interface for classes to serialize to HDF5."""
 
 from pyiron_base.storage.hdfio import ProjectHDFio
+from pyiron_base.storage.helper_functions import write_dict_to_hdf
 
 from abc import ABC, abstractmethod
 
@@ -173,12 +174,19 @@ class HasHDF(ABC):
         return {}
 
     def _store_type_to_hdf(self, hdf: ProjectHDFio):
-        hdf["NAME"] = self.__class__.__name__
-        hdf["TYPE"] = str(type(self))
-        hdf["OBJECT"] = hdf["NAME"]  # unused alias
+        data_dict = {
+            "NAME": self.__class__.__name__,
+            "TYPE": str(type(self)),
+            "OBJECT": self.__class__.__name__,
+            "HDF_VERSION": self.__hdf_version__,
+        }
         if hasattr(self, "__version__"):
-            hdf["VERSION"] = self.__version__
-        hdf["HDF_VERSION"] = self.__hdf_version__
+            data_dict["VERSION"] = self.__version__
+        write_dict_to_hdf(
+            file_name=hdf.file_name,
+            h5_path=hdf.h5_path,
+            data_dict=data_dict
+        )
 
     def from_hdf(self, hdf: ProjectHDFio, group_name: str = None):
         """
