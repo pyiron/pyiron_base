@@ -200,7 +200,7 @@ def list_groups_and_nodes(hdf, h5_path):
 def read_dict_from_hdf(file_name, h5_path, group_paths=[], slash="ignore"):
     """
     Read data from HDF5 file into a dictionary - by default only the nodes are converted to dictionaries, additional
-    groups can be specified using the group_paths parameter.
+    sub groups can be specified using the group_paths parameter.
 
     Args:
        hdf (pyiron_base.storage.hdfio.FileHDFio): HDF5 file object
