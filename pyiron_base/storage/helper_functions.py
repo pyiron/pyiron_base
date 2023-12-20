@@ -220,10 +220,11 @@ def read_dict_from_hdf5(hdf, group_paths=[], slash="ignore"):
     def resolve_nested_dict(group_path, data_dict):
         group_lst = group_path.split("/")
         if len(group_lst) > 1:
-            return {group_lst[0]: resolve_nested_dict(
-                group_path='/'.join(group_lst[1:]),
-                data_dict=data_dict
-            )}
+            return {
+                group_lst[0]: resolve_nested_dict(
+                    group_path="/".join(group_lst[1:]), data_dict=data_dict
+                )
+            }
         else:
             return {group_lst[0]: data_dict}
 
@@ -231,12 +232,14 @@ def read_dict_from_hdf5(hdf, group_paths=[], slash="ignore"):
         output_dict = get_dict_from_nodes(store=store, hdf=hdf, slash=slash)
         for group_path in group_paths:
             with hdf.open(group_path) as hdf_group:
-                output_dict.update(resolve_nested_dict(
-                    group_path=group_path,
-                    data_dict=get_dict_from_nodes(
-                        store=store, hdf=hdf_group, slash=slash
+                output_dict.update(
+                    resolve_nested_dict(
+                        group_path=group_path,
+                        data_dict=get_dict_from_nodes(
+                            store=store, hdf=hdf_group, slash=slash
+                        ),
                     )
-                ))
+                )
     return output_dict
 
 
