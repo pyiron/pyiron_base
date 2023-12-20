@@ -20,6 +20,7 @@ from pyiron_base.utils.deprecate import deprecate
 from pyiron_base.storage.helper_functions import (
     open_hdf5,
     read_hdf5,
+    list_groups_and_nodes,
     write_hdf5_with_json_support,
     write_dict_to_hdf,
     _is_ragged_in_1st_dim_only,
@@ -722,22 +723,12 @@ class FileHDFio(HasGroups, MutableMapping):
             dict: {'groups': [list of groups], 'nodes': [list of nodes]}
         """
         if self.file_exists:
-            groups = set()
-            nodes = set()
-            with open_hdf5(self.file_name) as h:
-                try:
-                    h = h[self.h5_path]
-                    for k in h.keys():
-                        if isinstance(h[k], h5py.Group):
-                            groups.add(k)
-                        else:
-                            nodes.add(k)
-                except KeyError:
-                    pass
-            iopy_nodes = self._filter_io_objects(groups)
+            with open_hdf5(self.file_name) as hdf:
+                groups, nodes = list_groups_and_nodes(hdf=hdf, h5_path=self.h5_path)
+            iopy_nodes = self._filter_io_objects(set(groups))
             return {
-                "groups": sorted(list(groups - iopy_nodes)),
-                "nodes": sorted(list((nodes - groups).union(iopy_nodes))),
+                "groups": sorted(list(set(groups) - iopy_nodes)),
+                "nodes": sorted(list((set(nodes) - set(groups)).union(iopy_nodes))),
             }
         else:
             return {"groups": [], "nodes": []}
