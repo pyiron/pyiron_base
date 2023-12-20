@@ -499,6 +499,14 @@ class GenericParameters:
             raise AssertionError()
         self._block_dict = block_dict
 
+    def to_dict(self):
+        data_dict = self._type_to_dict()
+        data_dict["data_dict"] = self._dataset
+        return data_dict
+
+    def from_dict(self, generic_parameters_dict):
+        self._dataset = generic_parameters_dict
+
     def to_hdf(self, hdf, group_name=None):
         """
         Store the GenericParameters in an HDF5 file
@@ -507,14 +515,12 @@ class GenericParameters:
             hdf (ProjectHDFio): HDF5 group object
             group_name (str): HDF5 subgroup name - optional
         """
-        data_dict = self._type_to_dict()
-        data_dict["data_dict"] = self._dataset
         if group_name:
             h5_path = group_name + "/" + self.table_name
         else:
             h5_path = self.table_name
         with hdf.open(h5_path) as hdf_group:
-            for k, v in data_dict.items():
+            for k, v in self.to_dict().items():
                 hdf_group[k] = v
 
     def from_hdf(self, hdf, group_name=None):
@@ -531,9 +537,9 @@ class GenericParameters:
         else:
             data = hdf[self.table_name]
         if isinstance(data, dict):
-            self._dataset = data
+            self.from_dict(generic_parameters_dict=data)
         else:
-            self._dataset = data._read("data_dict")
+            self.from_dict(generic_parameters_dict=data._read("data_dict"))
 
     def get_string_lst(self):
         """
