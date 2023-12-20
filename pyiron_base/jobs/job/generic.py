@@ -1062,7 +1062,7 @@ class GenericJob(JobCore):
         write_dict_to_hdf(
             file_name=self._hdf5.file_name,
             h5_path=self._hdf5.h5_path,
-            data_dict=self.to_dict()
+            data_dict=self.to_dict(),
         )
 
         # Write remaining objects to HDF5
@@ -1092,11 +1092,13 @@ class GenericJob(JobCore):
             group_name (str): HDF5 subgroup name - optional
         """
         self._set_hdf(hdf=hdf, group_name=group_name)
-        self.from_dict(job_dict=read_dict_from_hdf(
-            file_name=self._hdf5.file_name,
-            h5_path=self._hdf5.h5_path,
-            group_paths=["input"],
-        ))
+        self.from_dict(
+            job_dict=read_dict_from_hdf(
+                file_name=self._hdf5.file_name,
+                h5_path=self._hdf5.h5_path,
+                group_paths=["input"],
+            )
+        )
 
         if "executable" in self._hdf5.list_groups():
             self.executable.from_hdf(self._hdf5)
