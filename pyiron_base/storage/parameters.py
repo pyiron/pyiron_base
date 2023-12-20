@@ -13,6 +13,7 @@ import posixpath
 import warnings
 from ast import literal_eval
 from pyiron_base.state import state
+from pyiron_base.interfaces.has_dict import HasDict
 
 __author__ = "Joerg Neugebauer"
 __copyright__ = (
@@ -26,7 +27,7 @@ __status__ = "production"
 __date__ = "Sep 1, 2017"
 
 
-class GenericParameters:
+class GenericParameters(HasDict):
     """
     GenericParameters class defines the typical input file with a key value structure plus an additional column for comments.
     Convenience class to easily create, read, and modify input files
@@ -510,14 +511,15 @@ class GenericParameters:
         data_dict["data_dict"] = self._dataset
         return data_dict
 
-    def from_dict(self, generic_parameters_dict):
+    def from_dict(self, obj_dict, version: str = None):
         """
         Reload GenericParameters from dictionary
 
         Args:
-            generic_parameters_dict (dict): dictionary for reloading GenericParameters object
+            obj_dict (dict): dictionary for reloading GenericParameters object
+            version (str, optional): version of the HasDict format that is used
         """
-        self._dataset = generic_parameters_dict["data_dict"]
+        self._dataset = obj_dict["data_dict"]
 
     def to_hdf(self, hdf, group_name=None):
         """
@@ -549,10 +551,10 @@ class GenericParameters:
         else:
             data = hdf[self.table_name]
         if isinstance(data, dict):
-            self.from_dict(generic_parameters_dict={"data_dict": data})
+            self.from_dict(obj_dict={"data_dict": data})
         else:
             self.from_dict(
-                generic_parameters_dict={"data_dict": data._read("data_dict")}
+                obj_dict={"data_dict": data._read("data_dict")}
             )
 
     def get_string_lst(self):
@@ -956,20 +958,6 @@ class GenericParameters:
                 lst["Value"].append("")
                 lst["Comment"].append("")
         return lst
-
-    def _type_to_dict(self):
-        """
-        Internal helper function to save type and version in hdf root
-
-        Args:
-            hdf (ProjectHDFio): HDF5 group object
-        """
-        return {
-            "NAME": self.__name__,
-            "TYPE": str(type(self)),
-            "VERSION": self.__version__,
-            "OBJECT": "GenericParameters",
-        }
 
     def _find_line(self, key_name):
         """

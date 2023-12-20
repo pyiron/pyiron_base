@@ -4,6 +4,7 @@
 """Interface for classes to serialize to HDF5."""
 
 from pyiron_base.storage.hdfio import ProjectHDFio
+from pyiron_base.interfaces.has_dict import HasDict
 
 from abc import ABC, abstractmethod
 
@@ -39,7 +40,7 @@ class _WithHDF:
             self._hdf.close()
 
 
-class HasHDF(ABC):
+class HasHDF(HasDict, ABC):
     """
     Mixin class for objects that can write themselves to HDF.
 
@@ -172,15 +173,9 @@ class HasHDF(ABC):
         """
         return {}
 
-    def _store_type_to_dict(self):
-        type_dict = {
-            "NAME": self.__class__.__name__,
-            "TYPE": str(type(self)),
-            "OBJECT": self.__class__.__name__,  # unused alias
-            "HDF_VERSION": self.__hdf_version__,
-        }
-        if hasattr(self, "__version__"):
-            type_dict["VERSION"] = self.__version__
+    def _type_to_dict(self):
+        type_dict = super()._type_to_dict()
+        type_dict["HDF_VERSION"] = self.__hdf_version__
         return type_dict
 
     def from_hdf(self, hdf: ProjectHDFio, group_name: str = None):
@@ -220,7 +215,7 @@ class HasHDF(ABC):
             ):
                 raise ValueError("HDF group must be empty when group_name is not set.")
             self._to_hdf(hdf)
-            for k, v in self._store_type_to_dict().items():
+            for k, v in self._type_to_dict().items():
                 hdf[k] = v
 
     def rewrite_hdf(self, hdf: ProjectHDFio, group_name: str = None):

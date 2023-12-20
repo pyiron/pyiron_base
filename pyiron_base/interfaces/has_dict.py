@@ -21,14 +21,14 @@ class HasDict(ABC):
     __dict_version__ = "0.1.0"
 
     @abstractmethod
-    def _from_dict(self, data_dict: dict, version: str = None):
+    def from_dict(self, obj_dict: dict, version: str = None):
         pass
 
     @abstractmethod
-    def _to_dict(self):
+    def to_dict(self):
         pass
 
-    def _store_type_to_dict(self):
+    def _type_to_dict(self):
         type_dict = {
             "NAME": self.__class__.__name__,
             "TYPE": str(type(self)),
