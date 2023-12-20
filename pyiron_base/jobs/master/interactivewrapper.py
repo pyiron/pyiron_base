@@ -59,6 +59,7 @@ class InteractiveWrapper(GenericMaster):
         self.append(ref_job)
 
     def set_input_to_read_only(self):
+        super().set_input_to_read_only()
         self.input.read_only = True
 
     set_input_to_read_only.__doc__ = GenericMaster.set_input_to_read_only.__doc__

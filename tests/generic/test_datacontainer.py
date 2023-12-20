@@ -313,7 +313,8 @@ class TestDataContainer(TestWithCleanProject):
 
     def test_del_attr(self):
         class SubDataContainer(DataContainer):
-            def __init__(self):
+            def __init__(self, *args, **kwargs):
+                super().__init__(*args, **kwargs)
                 object.__setattr__(self, "attr", 42)
         s = SubDataContainer()
         del s.attr
