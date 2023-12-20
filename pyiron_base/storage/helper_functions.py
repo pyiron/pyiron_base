@@ -148,7 +148,7 @@ def write_dict_to_hdf(file_name, h5_path, data_dict, compression=4, slash="error
 
     Args:
         file_name (str): Name of the file on disk
-        h5_path (str): Path to a group in the HDF5 file where the data_dict is going to be stored
+        h5_path (str): Path to a group in the HDF5 file where the data_dict is going to be stored; all entries of `data_dict` will be stored beneath it.
         data_dict (dict): Dictionary of data objects to be stored in the HDF5 file, the keys provide the path inside
                           the HDF5 file and the values the data to be stored in those nodes. The corresponding HDF5
                           groups are created automatically:
