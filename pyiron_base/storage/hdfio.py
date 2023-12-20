@@ -841,7 +841,7 @@ class FileHDFio(HasGroups, MutableMapping):
         write_dict_to_hdf(
             file_name=hdf_new.file_name,
             h5_path=hdf_new.h5_path,
-            data_dict={p: hdf_old[p] for p in node_list}
+            data_dict={p: hdf_old[p] for p in node_list},
         )
         for p in group_list:
             h_new = hdf_new.create_group(p)
