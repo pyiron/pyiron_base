@@ -193,7 +193,6 @@ def list_groups_and_nodes(hdf, h5_path):
                 nodes.add(k)
     except KeyError:
         pass
-    print("list_groups_and_nodes():", h5_path, groups, nodes)
     return list(groups), list(nodes)
 
 
