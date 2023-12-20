@@ -1,6 +1,7 @@
 import numpy as np
 import h5io
 import h5py
+import posixpath
 from pyiron_base.utils.error import retry
 from typing import Union
 import warnings
@@ -142,13 +143,14 @@ def write_hdf5_with_json_support(
         ) from None
 
 
-def write_dict_to_hdf(hdf, data_dict, compression=4, slash="error"):
+def write_dict_to_hdf(file_name, h5_path, data_dict, compression=4, slash="error"):
     """
     Write dictionary to HDF5 file
 
     Args:
-        hdf (pyiron_base.storage.hdfio.FileHDFio): HDF5 file object
-        data_dict (dict): dictionary of data objects to be stored in the HDF5 file, the keys provide the path inside
+        file_name (str): Name of the file on disk
+        h5_path (str): Path to a group in the HDF5 file where the data_dict is going to be stored
+        data_dict (dict): Dictionary of data objects to be stored in the HDF5 file, the keys provide the path inside
                           the HDF5 file and the values the data to be stored in those nodes. The corresponding HDF5
                           groups are created automatically:
                               {
@@ -160,12 +162,12 @@ def write_dict_to_hdf(hdf, data_dict, compression=4, slash="error"):
                       keys in data. This does not apply to the top level name (title). If 'error', '/' is not allowed
                       in any lower-level keys.
     """
-    with open_hdf5(hdf.file_name, mode="a") as store:
+    with open_hdf5(file_name, mode="a") as store:
         for k, v in data_dict.items():
             write_hdf5_with_json_support(
                 file_handle=store,
                 value=v,
-                path=hdf.get_h5_path(k),
+                path=get_h5_path(h5_path=h5_path, name=k),
                 compression=compression,
                 slash=slash,
             )
@@ -196,25 +198,28 @@ def list_groups_and_nodes(hdf, h5_path):
     return list(groups), list(nodes)
 
 
-def read_dict_from_hdf5(hdf, group_paths=[], slash="ignore"):
+def read_dict_from_hdf5(file_name, h5_path, group_paths=[], slash="ignore"):
     """
     Read data from HDF5 file into a dictionary - by default only the nodes are converted to dictionaries, additional
     groups can be specified using the group_paths parameter.
 
     Args:
        hdf (pyiron_base.storage.hdfio.FileHDFio): HDF5 file object
+       file_name (str): Name of the file on disk
+       h5_path (str): Path to a group in the HDF5 file where the data is stored
        group_paths (list): list of additional groups to be included in the dictionary, for example:
                            ["input", "output", "output/generic"]
+                           These groups are defined relative to the h5_path.
        slash (str): 'ignore' | 'replace' Whether to replace the string {FWDSLASH} with the value /. This does
                     not apply to the top level name (title). If 'ignore', nothing will be replaced.
     Returns:
        dict:     The loaded data. Can be of any type supported by ``write_hdf5``.
     """
 
-    def get_dict_from_nodes(store, hdf, slash="ignore"):
+    def get_dict_from_nodes(store, h5_path, slash="ignore"):
         return {
-            n: read_hdf5(fname=store, title=hdf.get_h5_path(n), slash=slash)
-            for n in list_groups_and_nodes(hdf=store, h5_path=hdf.h5_path)[1]
+            n: read_hdf5(fname=store, title=get_h5_path(h5_path=h5_path, name=n), slash=slash)
+            for n in list_groups_and_nodes(hdf=store, h5_path=h5_path)[1]
         }
 
     def resolve_nested_dict(group_path, data_dict):
@@ -228,19 +233,34 @@ def read_dict_from_hdf5(hdf, group_paths=[], slash="ignore"):
         else:
             return {group_lst[0]: data_dict}
 
-    with open_hdf5(hdf.file_name, mode="r") as store:
-        output_dict = get_dict_from_nodes(store=store, hdf=hdf, slash=slash)
+    with open_hdf5(file_name, mode="r") as store:
+        output_dict = get_dict_from_nodes(store=store, h5_path=h5_path, slash=slash)
         for group_path in group_paths:
-            with hdf.open(group_path) as hdf_group:
-                output_dict.update(
-                    resolve_nested_dict(
-                        group_path=group_path,
-                        data_dict=get_dict_from_nodes(
-                            store=store, hdf=hdf_group, slash=slash
-                        ),
-                    )
+            output_dict.update(
+                resolve_nested_dict(
+                    group_path=group_path,
+                    data_dict=get_dict_from_nodes(
+                        store=store,
+                        h5_path=get_h5_path(h5_path=h5_path, name=group_path),
+                        slash=slash
+                    ),
                 )
+            )
     return output_dict
+
+
+def get_h5_path(h5_path, name):
+    """
+    Combine the current h5_path with the relative path
+
+    Args:
+        h5_path (str): absolute path of the node in the hdf5 file
+        name (str): relative path to be added to the absolute path
+
+    Returns:
+        str: combined path
+    """
+    return posixpath.join(h5_path, name)
 
 
 def _check_json_conversion(value):

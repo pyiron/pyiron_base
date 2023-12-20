@@ -18,6 +18,7 @@ from typing import Union, Optional, Any, Tuple
 
 from pyiron_base.utils.deprecate import deprecate
 from pyiron_base.storage.helper_functions import (
+    get_h5_path,
     open_hdf5,
     read_hdf5,
     list_groups_and_nodes,
@@ -837,7 +838,11 @@ class FileHDFio(HasGroups, MutableMapping):
                 (set(hdf_old.list_nodes()) ^ set(check_nodes))
                 & set(hdf_old.list_nodes())
             )
-        write_dict_to_hdf(hdf=hdf_new, data_dict={p: hdf_old[p] for p in node_list})
+        write_dict_to_hdf(
+            file_name=hdf_new.file_name,
+            h5_path=hdf_new.h5_path,
+            data_dict={p: hdf_old[p] for p in node_list}
+        )
         for p in group_list:
             h_new = hdf_new.create_group(p)
             ex_n = [e[-1] for e in exclude_nodes_split if p == e[0] or len(e) == 1]
@@ -988,7 +993,7 @@ class FileHDFio(HasGroups, MutableMapping):
         Returns:
             str: combined path
         """
-        return posixpath.join(self.h5_path, name)
+        return get_h5_path(h5_path=self.h5_path, name=name)
 
     def _get_h5io_type(self, name):
         """
