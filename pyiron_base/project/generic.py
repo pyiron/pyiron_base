@@ -93,7 +93,7 @@ class Project(ProjectPath, HasGroups):
         user (): Current unix/linux/windows user who is running pyiron
         sql_query (): An SQL query to limit the jobs within the project to a subset which matches the SQL query.
         db (): Connection to the SQL database.
-        job_type (): Job Type object with all the available job types: ['ExampleJob', 'SerialMaster', 'ParallelMaster',
+        job_type (): Job Type object with all the available job types: ['ExampleJob', 'ParallelMaster',
                         'ScriptJob', 'ListMaster'].
         view_mode (): If viewer_mode is enable pyiron has read only access to the database.
         data (pyiron_base.project.data.ProjectData): A storage container for project-level data.
@@ -330,13 +330,12 @@ class Project(ProjectPath, HasGroups):
         """
         Create one of the following jobs:
         - 'ExampleJob': example job just generating random number
-        - 'SerialMaster': series of jobs run in serial
         - 'ParallelMaster': series of jobs run in parallel
         - 'ScriptJob': Python script or jupyter notebook job container
         - 'ListMaster': list of jobs
 
         Args:
-            job_type (str): job type can be ['ExampleJob', 'SerialMaster', 'ParallelMaster', 'ScriptJob', 'ListMaster']
+            job_type (str): job type can be ['ExampleJob', 'ParallelMaster', 'ScriptJob', 'ListMaster']
             job_name (str): name of the job
             delete_existing_job (bool): delete an existing job - default false
 

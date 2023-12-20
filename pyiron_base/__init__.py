@@ -32,7 +32,6 @@ from pyiron_base.jobs.job.factory import JobFactoryCore
 from pyiron_base.jobs.master.generic import GenericMaster, get_function_from_string
 from pyiron_base.jobs.master.list import ListMaster
 from pyiron_base.jobs.master.parallel import ParallelMaster, JobGenerator
-from pyiron_base.jobs.master.serial import SerialMasterBase
 from pyiron_base.jobs.master.flexible import FlexibleMaster
 from pyiron_base.project.generic import Project, Creator
 from pyiron_base.utils.parser import Logstatus, extract_data_from_file
