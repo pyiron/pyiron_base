@@ -39,8 +39,7 @@ def read_hdf5(fname, title, slash="ignore"):
     Args:
         fname (str): Name of the file on disk, or file-like object.  Note: for files created with the 'core' driver,
                      HDF5 still requires this be non-empty.
-        title (str): The top-level directory name to use. Typically it is useful to make this your package name,
-                     e.g. ``'mnepython'``.
+        title (str): the HDF5 internal dataset path from which should be read, slashes indicate sub groups
         slash (str): 'ignore' | 'replace' Whether to replace the string {FWDSLASH} with the value /. This does
                      not apply to the top level name (title). If 'ignore', nothing will be replaced.
 
