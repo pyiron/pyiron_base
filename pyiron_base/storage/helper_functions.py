@@ -80,8 +80,7 @@ def write_hdf5(
         overwrite (str/bool): True | False | 'update' If True, overwrite file (if it exists). If 'update', appends the
                               title to the file (or replace value if title exists).
         compression (int): Compression level to use (0-9) to compress data using gzip.
-        title (str): The top-level directory name to use. Typically it is useful to make this your package name,
-                     e.g. ``'mnepython'``.
+        title (str): the HDF5 internal dataset path from which should be read, slashes indicate sub groups
         slash (str): 'error' | 'replace' Whether to replace forward-slashes ('/') in any key found nested within
                       keys in data. This does not apply to the top level name (title). If 'error', '/' is not allowed
                       in any lower-level keys.
@@ -115,8 +114,7 @@ def write_hdf5_with_json_support(
         value (object): Object to write. Can be of any of these types: {ndarray, dict, list, tuple, int, float, str,
                         datetime, timezone} Note that dict objects must only have ``str`` keys. It is recommended
                         to use ndarrays where possible, as it is handled most efficiently.
-        path (str): The top-level directory name to use. Typically it is useful to make this your package name,
-                     e.g. ``'mnepython'``.
+        path (str): the HDF5 internal dataset path from which should be read, slashes indicate sub groups
         file_handle (str): Name of the file on disk, or file-like object.  Note: for files created with the 'core'
                            driver, HDF5 still requires this be non-empty.:
         compression (int): Compression level to use (0-9) to compress data using gzip.
@@ -148,7 +146,8 @@ def write_dict_to_hdf(file_name, h5_path, data_dict, compression=4, slash="error
 
     Args:
         file_name (str): Name of the file on disk
-        h5_path (str): Path to a group in the HDF5 file where the data_dict is going to be stored; all entries of `data_dict` will be stored beneath it.
+        h5_path (str): Path to a group in the HDF5 file where the data_dict is going to be stored; all entries of
+                       `data_dict` will be stored beneath it.
         data_dict (dict): Dictionary of data objects to be stored in the HDF5 file, the keys provide the path inside
                           the HDF5 file and the values the data to be stored in those nodes. The corresponding HDF5
                           groups are created automatically:
