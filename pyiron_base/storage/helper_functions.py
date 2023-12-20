@@ -72,19 +72,12 @@ def write_hdf5_with_json_support(value, path, file_handle):
         ) from None
 
 
-def write_dict_to_hdf(hdf, data_dict, groups=[]):
+def write_dict_to_hdf(hdf, data_dict):
     with open_hdf5(hdf.file_name, mode="a") as store:
         for k, v in data_dict.items():
-            if k not in groups:
-                write_hdf5_with_json_support(
-                    file_handle=store, value=v, path=hdf.get_h5_path(k)
-                )
-        for group in groups:
-            hdf_group = hdf.create_group(group)
-            for k, v in data_dict[group].items():
-                write_hdf5_with_json_support(
-                    file_handle=store, value=v, path=hdf_group.get_h5_path(k)
-                )
+            write_hdf5_with_json_support(
+                file_handle=store, value=v, path=hdf.get_h5_path(k)
+            )
 
 
 def _check_json_conversion(value):
