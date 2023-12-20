@@ -198,7 +198,7 @@ def list_groups_and_nodes(hdf, h5_path):
     return list(groups), list(nodes)
 
 
-def read_dict_from_hdf5(file_name, h5_path, group_paths=[], slash="ignore"):
+def read_dict_from_hdf(file_name, h5_path, group_paths=[], slash="ignore"):
     """
     Read data from HDF5 file into a dictionary - by default only the nodes are converted to dictionaries, additional
     groups can be specified using the group_paths parameter.
