@@ -205,7 +205,7 @@ def read_dict_from_hdf(file_name, h5_path, group_paths=[], slash="ignore"):
     Args:
        hdf (pyiron_base.storage.hdfio.FileHDFio): HDF5 file object
        file_name (str): Name of the file on disk
-       h5_path (str): Path to a group in the HDF5 file where the data is stored
+       h5_path (str): Path to a group in the HDF5 file from where the data is read
        group_paths (list): list of additional groups to be included in the dictionary, for example:
                            ["input", "output", "output/generic"]
                            These groups are defined relative to the h5_path.
