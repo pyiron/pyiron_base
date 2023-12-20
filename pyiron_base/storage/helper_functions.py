@@ -266,7 +266,7 @@ def get_h5_path(h5_path, name):
 
 def _check_json_conversion(value):
     """
-    Check if the object can be converted to JSON to optimize the HDF5 performance. This can change the data tupe of the
+    Check if the object can be converted to JSON to optimize the HDF5 performance. This can change the data type of the
     object which is going to be stored in the HDF5 file.
 
     Args:
