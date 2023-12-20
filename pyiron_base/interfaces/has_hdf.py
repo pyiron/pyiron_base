@@ -183,9 +183,7 @@ class HasHDF(ABC):
         if hasattr(self, "__version__"):
             data_dict["VERSION"] = self.__version__
         write_dict_to_hdf(
-            file_name=hdf.file_name,
-            h5_path=hdf.h5_path,
-            data_dict=data_dict
+            file_name=hdf.file_name, h5_path=hdf.h5_path, data_dict=data_dict
         )
 
     def from_hdf(self, hdf: ProjectHDFio, group_name: str = None):
