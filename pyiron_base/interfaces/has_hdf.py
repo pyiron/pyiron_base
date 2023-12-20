@@ -183,10 +183,6 @@ class HasHDF(ABC):
             type_dict["VERSION"] = self.__version__
         return type_dict
 
-    def _store_type_to_hdf(self, hdf: ProjectHDFio):
-        for k, v in self._store_type_to_dict().items():
-            hdf[k] = v
-
     def from_hdf(self, hdf: ProjectHDFio, group_name: str = None):
         """
         Read object to HDF.
@@ -224,7 +220,8 @@ class HasHDF(ABC):
             ):
                 raise ValueError("HDF group must be empty when group_name is not set.")
             self._to_hdf(hdf)
-            self._store_type_to_hdf(hdf)
+            for k, v in self._store_type_to_dict().items():
+                hdf[k] = v
 
     def rewrite_hdf(self, hdf: ProjectHDFio, group_name: str = None):
         """
