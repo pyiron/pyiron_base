@@ -17,13 +17,20 @@ import sys
 from typing import Union, Optional, Any, Tuple
 
 from pyiron_base.utils.deprecate import deprecate
-from pyiron_base.storage.helper_functions import read_hdf5, write_hdf5
+from pyiron_base.storage.helper_functions import (
+    get_h5_path,
+    open_hdf5,
+    read_hdf5,
+    list_groups_and_nodes,
+    write_hdf5_with_json_support,
+    write_dict_to_hdf,
+    _is_ragged_in_1st_dim_only,
+)
 from pyiron_base.interfaces.has_groups import HasGroups
 from pyiron_base.state import state
 from pyiron_base.jobs.dynamic import JOB_DYN_DICT, class_constructor
 from pyiron_base.jobs.job.util import _get_safe_job_name
 import pyiron_base.project.maintenance
-import warnings
 
 __author__ = "Joerg Neugebauer, Jan Janssen"
 __copyright__ = (
@@ -35,32 +42,6 @@ __maintainer__ = "Jan Janssen"
 __email__ = "janssen@mpie.de"
 __status__ = "production"
 __date__ = "Sep 1, 2017"
-
-
-def _is_ragged_in_1st_dim_only(value: Union[np.ndarray, list]) -> bool:
-    """
-    Checks whether array or list of lists is ragged in the first dimension.
-
-    That means all other dimensions (except the first one) still have to match.
-
-    Args:
-        value (ndarray/list): array to check
-
-    Returns:
-        bool: True if elements of value are not all of the same shape
-    """
-    if isinstance(value, np.ndarray) and value.dtype != np.dtype("O"):
-        return False
-    else:
-
-        def extract_dims(v):
-            with warnings.catch_warnings():
-                warnings.simplefilter("ignore")
-                s = np.shape(v)
-            return s[0], s[1:]
-
-        dim1, dim_other = zip(*map(extract_dims, value))
-        return len(set(dim1)) > 1 and len(set(dim_other)) == 1
 
 
 # for historic reasons we write str(class) into the HDF 'TYPE' field of objects, so we need to parse this back out
@@ -160,15 +141,6 @@ def _to_object(hdf, class_name=None, **kwargs):
     obj = class_object(**init_args)
     obj.from_hdf(hdf=hdf.open(".."), group_name=hdf.h5_path.split("/")[-1])
     return obj
-
-
-def open_hdf5(filename, mode="r", swmr=False):
-    if swmr and mode != "r":
-        store = h5py.File(filename, mode=mode, libver="latest")
-        store.swmr = True
-        return store
-    else:
-        return h5py.File(filename, mode=mode, libver="latest", swmr=swmr)
 
 
 class FileHDFio(HasGroups, MutableMapping):
@@ -342,29 +314,8 @@ class FileHDFio(HasGroups, MutableMapping):
         ):
             value.to_hdf(self, key)
             return
-
-        use_json = True
-        if (
-            isinstance(value, (list, np.ndarray))
-            and len(value) > 0
-            and isinstance(value[0], (list, np.ndarray))
-            and len(value[0]) > 0
-            and not isinstance(value[0][0], str)
-            and _is_ragged_in_1st_dim_only(value)
-        ):
-            # if the sub-arrays in value all share shape[1:], h5io comes up with a more efficient storage format than
-            # just writing a dataset for each element, by concatenating along the first axis and storing the indices
-            # where to break the concatenated array again
-            value = np.array([np.asarray(v) for v in value], dtype=object)
-            use_json = False
-        elif isinstance(value, tuple):
-            value = list(value)
-        write_hdf5(
-            self.file_name,
-            value,
-            title=self._get_h5_path(key),
-            overwrite="update",
-            use_json=use_json,
+        write_hdf5_with_json_support(
+            value=value, path=self._get_h5_path(key), file_handle=self.file_name
         )
 
     def __delitem__(self, key):
@@ -773,22 +724,12 @@ class FileHDFio(HasGroups, MutableMapping):
             dict: {'groups': [list of groups], 'nodes': [list of nodes]}
         """
         if self.file_exists:
-            groups = set()
-            nodes = set()
-            with open_hdf5(self.file_name) as h:
-                try:
-                    h = h[self.h5_path]
-                    for k in h.keys():
-                        if isinstance(h[k], h5py.Group):
-                            groups.add(k)
-                        else:
-                            nodes.add(k)
-                except KeyError:
-                    pass
-            iopy_nodes = self._filter_io_objects(groups)
+            with open_hdf5(self.file_name) as hdf:
+                groups, nodes = list_groups_and_nodes(hdf=hdf, h5_path=self.h5_path)
+            iopy_nodes = self._filter_io_objects(set(groups))
             return {
-                "groups": sorted(list(groups - iopy_nodes)),
-                "nodes": sorted(list((nodes - groups).union(iopy_nodes))),
+                "groups": sorted(list(set(groups) - iopy_nodes)),
+                "nodes": sorted(list((set(nodes) - set(groups)).union(iopy_nodes))),
             }
         else:
             return {"groups": [], "nodes": []}
@@ -897,8 +838,11 @@ class FileHDFio(HasGroups, MutableMapping):
                 (set(hdf_old.list_nodes()) ^ set(check_nodes))
                 & set(hdf_old.list_nodes())
             )
-        for p in node_list:
-            hdf_new[p] = hdf_old[p]
+        write_dict_to_hdf(
+            file_name=hdf_new.file_name,
+            h5_path=hdf_new.h5_path,
+            data_dict={p: hdf_old[p] for p in node_list},
+        )
         for p in group_list:
             h_new = hdf_new.create_group(p)
             ex_n = [e[-1] for e in exclude_nodes_split if p == e[0] or len(e) == 1]
@@ -1049,7 +993,7 @@ class FileHDFio(HasGroups, MutableMapping):
         Returns:
             str: combined path
         """
-        return posixpath.join(self.h5_path, name)
+        return get_h5_path(h5_path=self.h5_path, name=name)
 
     def _get_h5io_type(self, name):
         """
