@@ -223,6 +223,7 @@ def read_dict_from_hdf(file_name, h5_path, group_paths=[], slash="ignore"):
         }
 
     def resolve_nested_dict(group_path, data_dict):
+        """Turns a dict with a key containing slashes into a nested dict.  {'/a/b/c': 1} -> {'a': {'b': {'c': 1}"""
         group_lst = group_path.split("/")
         if len(group_lst) > 1:
             return {
