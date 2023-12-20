@@ -500,12 +500,24 @@ class GenericParameters:
         self._block_dict = block_dict
 
     def to_dict(self):
+        """
+        Convert the GenericParameters object to a dictionary for storage
+
+        Returns:
+            dict: GenericParameters object as a dictionary
+        """
         data_dict = self._type_to_dict()
         data_dict["data_dict"] = self._dataset
         return data_dict
 
     def from_dict(self, generic_parameters_dict):
-        self._dataset = generic_parameters_dict
+        """
+        Reload GenericParameters from dictionary
+
+        Args:
+            generic_parameters_dict (dict): dictionary for reloading GenericParameters object
+        """
+        self._dataset = generic_parameters_dict["data_dict"]
 
     def to_hdf(self, hdf, group_name=None):
         """
@@ -537,9 +549,11 @@ class GenericParameters:
         else:
             data = hdf[self.table_name]
         if isinstance(data, dict):
-            self.from_dict(generic_parameters_dict=data)
+            self.from_dict(generic_parameters_dict={"data_dict": data})
         else:
-            self.from_dict(generic_parameters_dict=data._read("data_dict"))
+            self.from_dict(
+                generic_parameters_dict={"data_dict": data._read("data_dict")}
+            )
 
     def get_string_lst(self):
         """
