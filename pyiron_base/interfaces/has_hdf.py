@@ -92,7 +92,7 @@ class HasHDF(HasDict, ABC):
     >>> hdf
     {'groups': ['list'], 'nodes': []}
     >>> hdf['list']
-    {'groups': [], 'nodes': ['HDF_VERSION', 'NAME', 'OBJECT', 'TYPE', '__index_0', '__index_1', '__index_2', '__index_3']}
+    {'groups': [], 'nodes': ['DICT_VERSION', 'HDF_VERSION', 'NAME', 'OBJECT', 'TYPE', '__index_0', '__index_1', '__index_2', '__index_3']}
 
     (Since this is a docstring, actually calling :meth:`ProjectHDFio.to_object()` wont' work, so we'll simulate it.)
 
