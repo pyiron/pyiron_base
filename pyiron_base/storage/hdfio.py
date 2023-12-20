@@ -221,7 +221,7 @@ class FileHDFio(HasGroups, MutableMapping):
                 # underlying file once, this reduces the number of file opens in the most-likely case from 2 to 1 (1 to
                 # check whether the data is there and 1 to read it) and increases in the worst case from 1 to 2 (1 to
                 # try to read it here and one more time to verify it's not a group below).
-                return read_hdf5(self.file_name, title=self.get_h5_path(item))
+                return read_hdf5(self.file_name, title=self._get_h5_path(item))
             except (ValueError, OSError, RuntimeError, NotImplementedError):
                 # h5io couldn't find a dataset with name item, but there still might be a group with that name, which we
                 # check in the rest of the method
@@ -315,7 +315,7 @@ class FileHDFio(HasGroups, MutableMapping):
             value.to_hdf(self, key)
             return
         write_hdf5_with_json_support(
-            value=value, path=self.get_h5_path(key), file_handle=self.file_name
+            value=value, path=self._get_h5_path(key), file_handle=self.file_name
         )
 
     def __delitem__(self, key):
@@ -328,7 +328,7 @@ class FileHDFio(HasGroups, MutableMapping):
         if self.file_exists:
             try:
                 with open_hdf5(self.file_name, mode="a") as store:
-                    del store[self.get_h5_path(key)]
+                    del store[self._get_h5_path(key)]
             except (AttributeError, KeyError):
                 pass
 
@@ -584,7 +584,7 @@ class FileHDFio(HasGroups, MutableMapping):
         Returns:
             FileHDFio: FileHDFio object pointing to the new group
         """
-        full_name = self.get_h5_path(name)
+        full_name = self._get_h5_path(name)
         with open_hdf5(self.file_name, mode="a") as h:
             try:
                 h.create_group(full_name, track_order=track_order)
@@ -623,7 +623,7 @@ class FileHDFio(HasGroups, MutableMapping):
         if h5_rel_path.strip() == ".":
             h5_rel_path = ""
         if h5_rel_path.strip() != "":
-            new_h5_path.h5_path = self.get_h5_path(h5_rel_path)
+            new_h5_path.h5_path = self._get_h5_path(h5_rel_path)
         new_h5_path.history.append(h5_rel_path)
 
         return new_h5_path
@@ -947,7 +947,7 @@ class FileHDFio(HasGroups, MutableMapping):
         Returns:
             dict, list, float, int: data or data object
         """
-        return read_hdf5(self.file_name, title=self.get_h5_path(item))
+        return read_hdf5(self.file_name, title=self._get_h5_path(item))
 
     # def _open_store(self, mode="r"):
     #     """
@@ -983,7 +983,7 @@ class FileHDFio(HasGroups, MutableMapping):
 
         return Project(path=self.file_path)
 
-    def get_h5_path(self, name):
+    def _get_h5_path(self, name):
         """
         Internal function to combine the current h5_path with the relative path
 
