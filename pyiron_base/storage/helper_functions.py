@@ -223,6 +223,16 @@ def read_dict_from_hdf(file_name, h5_path, group_paths=[], slash="ignore"):
         }
 
     def resolve_nested_dict(group_path, data_dict):
+        """
+        Turns a dict with a key containing slashes into a nested dict.  {'/a/b/c': 1} -> {'a': {'b': {'c': 1}
+
+        Args:
+            group_path (str): path inside the HDF5 file the data_dictionary was loaded from
+            data_dict (dict): dictionary with data loaded from the HDF5 file
+
+        Returns:
+            dict: hierarchical dictionary
+        """
         groups = group_path.split("/")
         nested_dict = data_dict
         for g in groups[::-1]:
