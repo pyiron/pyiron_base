@@ -218,7 +218,9 @@ def read_dict_from_hdf5(file_name, h5_path, group_paths=[], slash="ignore"):
 
     def get_dict_from_nodes(store, h5_path, slash="ignore"):
         return {
-            n: read_hdf5(fname=store, title=get_h5_path(h5_path=h5_path, name=n), slash=slash)
+            n: read_hdf5(
+                fname=store, title=get_h5_path(h5_path=h5_path, name=n), slash=slash
+            )
             for n in list_groups_and_nodes(hdf=store, h5_path=h5_path)[1]
         }
 
@@ -242,7 +244,7 @@ def read_dict_from_hdf5(file_name, h5_path, group_paths=[], slash="ignore"):
                     data_dict=get_dict_from_nodes(
                         store=store,
                         h5_path=get_h5_path(h5_path=h5_path, name=group_path),
-                        slash=slash
+                        slash=slash,
                     ),
                 )
             )
