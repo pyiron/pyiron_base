@@ -32,7 +32,7 @@ def open_hdf5(filename, mode="r", swmr=False):
         return h5py.File(name=filename, mode=mode, libver="latest", swmr=swmr)
 
 
-def read_hdf5(fname, title="h5io", slash="ignore"):
+def read_hdf5(fname, title, slash="ignore"):
     """
     Read data from HDF5 file
 
