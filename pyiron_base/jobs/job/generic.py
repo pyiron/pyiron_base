@@ -1004,6 +1004,42 @@ class GenericJob(JobCore):
         if group_name is not None and self._hdf5 is not None:
             self._hdf5 = self._hdf5.open(group_name)
 
+    def to_dict(self):
+        data_dict = self._type_to_dict()
+        data_dict["status"] = self.status.string
+        data_dict["input/generic_dict"] = {
+            "restart_file_list": self._restart_file_list,
+            "restart_file_dict": self._restart_file_dict,
+            "exclude_nodes_hdf": self._exclude_nodes_hdf,
+            "exclude_groups_hdf": self._exclude_groups_hdf,
+        }
+        data_dict["server"] = self._server.to_dict()
+        if self._import_directory is not None:
+            data_dict["import_directory"] = self._import_directory
+        return data_dict
+
+    def from_dict(self, job_dict):
+        self._type_from_dict(type_dict=job_dict)
+        if "import_directory" in job_dict.keys():
+            self._import_directory = job_dict["import_directory"]
+        self._server.from_dict(server_dict=job_dict["server"])
+        input_dict = job_dict["input"]
+        if "generic_dict" in input_dict.keys():
+            generic_dict = input_dict["generic_dict"]
+            self._restart_file_list = generic_dict["restart_file_list"]
+            self._restart_file_dict = generic_dict["restart_file_dict"]
+            self._exclude_nodes_hdf = generic_dict["exclude_nodes_hdf"]
+            self._exclude_groups_hdf = generic_dict["exclude_groups_hdf"]
+        # Backwards compatbility
+        if "restart_file_list" in input_dict.keys():
+            self._restart_file_list = input_dict["restart_file_list"]
+        if "restart_file_dict" in input_dict.keys():
+            self._restart_file_dict = input_dict["restart_file_dict"]
+        if "exclude_nodes_hdf" in input_dict.keys():
+            self._exclude_nodes_hdf = input_dict["exclude_nodes_hdf"]
+        if "exclude_groups_hdf" in input_dict.keys():
+            self._exclude_groups_hdf = input_dict["exclude_groups_hdf"]
+
     def to_hdf(self, hdf=None, group_name=None):
         """
         Store the GenericJob in an HDF5 file
@@ -1012,23 +1048,17 @@ class GenericJob(JobCore):
             hdf (ProjectHDFio): HDF5 group object - optional
             group_name (str): HDF5 subgroup name - optional
         """
+
         self._set_hdf(hdf=hdf, group_name=group_name)
         self._executable_activate_mpi()
-        self._type_to_hdf()
-        self._hdf5["status"] = self.status.string
-        if self._import_directory is not None:
-            self._hdf5["import_directory"] = self._import_directory
-        self._server.to_hdf(self._hdf5)
+
+        # Write combined dictionary to HDF5
+        for k, v in self.to_dict().items():
+            self._hdf5[k] = v
+
+        # Write remaining objects to HDF5
         if self._executable is not None:
             self.executable.to_hdf(self._hdf5)
-        with self._hdf5.open("input") as hdf_input:
-            generic_dict = {
-                "restart_file_list": self._restart_file_list,
-                "restart_file_dict": self._restart_file_dict,
-                "exclude_nodes_hdf": self._exclude_nodes_hdf,
-                "exclude_groups_hdf": self._exclude_groups_hdf,
-            }
-            hdf_input["generic_dict"] = generic_dict
 
     @classmethod
     def from_hdf_args(cls, hdf):
@@ -1053,28 +1083,13 @@ class GenericJob(JobCore):
             group_name (str): HDF5 subgroup name - optional
         """
         self._set_hdf(hdf=hdf, group_name=group_name)
-        self._type_from_hdf()
-        if "import_directory" in self._hdf5.list_nodes():
-            self._import_directory = self._hdf5["import_directory"]
-        self._server.from_hdf(self._hdf5)
+        job_dict = {k: self._hdf5[k] for k in self._hdf5.list_nodes()}
+        with self._hdf5.open("input") as hdf_input:
+            job_dict["input"] = {k: hdf_input[k] for k in hdf_input.list_nodes()}
+        self.from_dict(job_dict=job_dict)
+
         if "executable" in self._hdf5.list_groups():
             self.executable.from_hdf(self._hdf5)
-        with self._hdf5.open("input") as hdf_input:
-            if "generic_dict" in hdf_input.list_nodes():
-                generic_dict = hdf_input["generic_dict"]
-                self._restart_file_list = generic_dict["restart_file_list"]
-                self._restart_file_dict = generic_dict["restart_file_dict"]
-                self._exclude_nodes_hdf = generic_dict["exclude_nodes_hdf"]
-                self._exclude_groups_hdf = generic_dict["exclude_groups_hdf"]
-            # Backwards compatbility
-            if "restart_file_list" in hdf_input.list_nodes():
-                self._restart_file_list = hdf_input["restart_file_list"]
-            if "restart_file_dict" in hdf_input.list_nodes():
-                self._restart_file_dict = hdf_input["restart_file_dict"]
-            if "exclude_nodes_hdf" in hdf_input.list_nodes():
-                self._exclude_nodes_hdf = hdf_input["exclude_nodes_hdf"]
-            if "exclude_groups_hdf" in hdf_input.list_nodes():
-                self._exclude_groups_hdf = hdf_input["exclude_groups_hdf"]
 
     def save(self):
         """
@@ -1322,26 +1337,37 @@ class GenericJob(JobCore):
                     path_binary_codes=None,
                 )
 
-    def _type_to_hdf(self):
+    def _type_to_dict(self):
         """
         Internal helper function to save type and version in HDF5 file root
         """
-        self._hdf5["NAME"] = self.__name__
-        self._hdf5["TYPE"] = str(type(self))
+        data_dict = {
+            "NAME": self.__name__,
+            "TYPE": str(type(self)),
+        }
         if self._executable:
-            self._hdf5["VERSION"] = self.executable.version
+            data_dict["VERSION"] = self.executable.version
         else:
-            self._hdf5["VERSION"] = self.__version__
+            data_dict["VERSION"] = self.__version__
         if hasattr(self, "__hdf_version__"):
-            self._hdf5["HDF_VERSION"] = self.__hdf_version__
+            data_dict["HDF_VERSION"] = self.__hdf_version__
+        return data_dict
+
+    def _type_from_dict(self, type_dict):
+        self.__obj_type__ = type_dict["TYPE"]
+        if self._executable is None:
+            self.__obj_version__ = type_dict["VERSION"]
 
     def _type_from_hdf(self):
         """
         Internal helper function to load type and version from HDF5 file root
         """
-        self.__obj_type__ = self._hdf5["TYPE"]
-        if self._executable is None:
-            self.__obj_version__ = self._hdf5["VERSION"]
+        self._type_from_dict(
+            type_dict={
+                "TYPE": self._hdf5["TYPE"],
+                "VERSION": self._hdf5["VERSION"],
+            }
+        )
 
     def run_time_to_db(self):
         """
