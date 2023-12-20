@@ -223,15 +223,11 @@ def read_dict_from_hdf(file_name, h5_path, group_paths=[], slash="ignore"):
         }
 
     def resolve_nested_dict(group_path, data_dict):
-        group_lst = group_path.split("/")
-        if len(group_lst) > 1:
-            return {
-                group_lst[0]: resolve_nested_dict(
-                    group_path="/".join(group_lst[1:]), data_dict=data_dict
-                )
-            }
-        else:
-            return {group_lst[0]: data_dict}
+        groups = group_path.split("/")
+        nested_dict = data_dict
+        for g in groups[::-1]:
+            nested_dict = {g: nested_dict}
+        return nested_dict
 
     with open_hdf5(file_name, mode="r") as store:
         output_dict = get_dict_from_nodes(store=store, h5_path=h5_path, slash=slash)
