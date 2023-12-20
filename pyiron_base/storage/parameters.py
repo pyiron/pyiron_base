@@ -553,9 +553,7 @@ class GenericParameters(HasDict):
         if isinstance(data, dict):
             self.from_dict(obj_dict={"data_dict": data})
         else:
-            self.from_dict(
-                obj_dict={"data_dict": data._read("data_dict")}
-            )
+            self.from_dict(obj_dict={"data_dict": data._read("data_dict")})
 
     def get_string_lst(self):
         """
