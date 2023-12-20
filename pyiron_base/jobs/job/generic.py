@@ -1279,7 +1279,7 @@ class GenericJob(JobCore):
         This function enforces read-only mode for the input classes, but it has to be implemented in the individual
         classes.
         """
-        pass
+        self.server.lock()
 
     def _run_if_busy(self):
         """
