@@ -1018,6 +1018,28 @@ class GenericJob(JobCore):
             data_dict["import_directory"] = self._import_directory
         return data_dict
 
+    def from_dict(self, job_dict):
+        self._type_from_dict(type_dict=job_dict)
+        if "import_directory" in job_dict.keys():
+            self._import_directory = job_dict["import_directory"]
+        self._server.from_dict(server_dict=job_dict["server"])
+        input_dict = job_dict["input"]
+        if "generic_dict" in input_dict.keys():
+            generic_dict = input_dict["generic_dict"]
+            self._restart_file_list = generic_dict["restart_file_list"]
+            self._restart_file_dict = generic_dict["restart_file_dict"]
+            self._exclude_nodes_hdf = generic_dict["exclude_nodes_hdf"]
+            self._exclude_groups_hdf = generic_dict["exclude_groups_hdf"]
+        # Backwards compatbility
+        if "restart_file_list" in input_dict.keys():
+            self._restart_file_list = input_dict["restart_file_list"]
+        if "restart_file_dict" in input_dict.keys():
+            self._restart_file_dict = input_dict["restart_file_dict"]
+        if "exclude_nodes_hdf" in input_dict.keys():
+            self._exclude_nodes_hdf = input_dict["exclude_nodes_hdf"]
+        if "exclude_groups_hdf" in input_dict.keys():
+            self._exclude_groups_hdf = input_dict["exclude_groups_hdf"]
+
     def to_hdf(self, hdf=None, group_name=None):
         """
         Store the GenericJob in an HDF5 file
@@ -1051,28 +1073,6 @@ class GenericJob(JobCore):
             project=hdf.create_project_from_hdf5(), file_name=job_name
         )
         return {"job_name": job_name, "project": project_hdf5}
-
-    def from_dict(self, job_dict):
-        self._type_from_dict(type_dict=job_dict)
-        if "import_directory" in job_dict.keys():
-            self._import_directory = job_dict["import_directory"]
-        self._server.from_dict(server_dict=job_dict["server"])
-        input_dict = job_dict["input"]
-        if "generic_dict" in input_dict.keys():
-            generic_dict = input_dict["generic_dict"]
-            self._restart_file_list = generic_dict["restart_file_list"]
-            self._restart_file_dict = generic_dict["restart_file_dict"]
-            self._exclude_nodes_hdf = generic_dict["exclude_nodes_hdf"]
-            self._exclude_groups_hdf = generic_dict["exclude_groups_hdf"]
-        # Backwards compatbility
-        if "restart_file_list" in input_dict.keys():
-            self._restart_file_list = input_dict["restart_file_list"]
-        if "restart_file_dict" in input_dict.keys():
-            self._restart_file_dict = input_dict["restart_file_dict"]
-        if "exclude_nodes_hdf" in input_dict.keys():
-            self._exclude_nodes_hdf = input_dict["exclude_nodes_hdf"]
-        if "exclude_groups_hdf" in input_dict.keys():
-            self._exclude_groups_hdf = input_dict["exclude_groups_hdf"]
 
     def from_hdf(self, hdf=None, group_name=None):
         """
