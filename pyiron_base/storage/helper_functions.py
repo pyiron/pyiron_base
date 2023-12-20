@@ -26,7 +26,7 @@ def open_hdf5(filename, mode="r", swmr=False):
     """
     if swmr and mode != "r":
         store = h5py.File(name=filename, mode=mode, libver="latest")
-        store.swmr = True
+        store.swmr_mode = True
         return store
     else:
         return h5py.File(name=filename, mode=mode, libver="latest", swmr=swmr)
