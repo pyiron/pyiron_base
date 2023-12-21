@@ -983,6 +983,19 @@ class FileHDFio(HasGroups, MutableMapping):
         )
 
     def read_dict_from_hdf(self, group_paths=[]):
+        """
+        Read data from HDF5 file into a dictionary - by default only the nodes are converted to dictionaries, additional
+        sub groups can be specified using the group_paths parameter.
+
+        Args:
+            group_paths (list): list of additional groups to be included in the dictionary, for example:
+                                ["input", "output", "output/generic"]
+                                These groups are defined relative to the h5_path.
+
+        Returns:
+            dict:     The loaded data. Can be of any type supported by ``write_hdf5``.
+
+        """
         return read_dict_from_hdf(
             file_name=self.file_name,
             h5_path=self.h5_path,
