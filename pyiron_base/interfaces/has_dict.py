@@ -19,9 +19,9 @@ __date__ = "Dec 20, 2023"
 
 class HasDict(ABC):
     __dict_version__ = "0.1.0"
-
+    @abstractmethod
     def from_dict(self, obj_dict: dict, version: str = None):
-        raise NotImplementedError
+        pass
 
     def to_dict(self):
         raise NotImplementedError
