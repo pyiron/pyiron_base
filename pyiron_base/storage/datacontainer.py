@@ -31,15 +31,7 @@ __status__ = "production"
 __date__ = "Jun 17, 2020"
 
 
-_internal_hdf_nodes = [
-    "NAME",
-    "TYPE",
-    "OBJECT",
-    "VERSION",
-    "HDF_VERSION",
-    "DICT_VERSION",
-    "READ_ONLY",
-]
+_internal_hdf_nodes = ["NAME", "TYPE", "OBJECT", "VERSION", "HDF_VERSION", "READ_ONLY"]
 
 
 def _normalize(key):
