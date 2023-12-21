@@ -40,7 +40,7 @@ class _WithHDF:
             self._hdf.close()
 
 
-class HasHDF(HasDict, ABC):
+class HasHDF(ABC):
     """
     Mixin class for objects that can write themselves to HDF.
 
