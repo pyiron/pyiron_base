@@ -19,9 +19,10 @@ from typing import Union, Optional, Any, Tuple
 from pyiron_base.utils.deprecate import deprecate
 from pyiron_base.storage.helper_functions import (
     get_h5_path,
+    list_groups_and_nodes,
     open_hdf5,
     read_hdf5,
-    list_groups_and_nodes,
+    read_dict_from_hdf,
     write_hdf5_with_json_support,
     write_dict_to_hdf,
     _is_ragged_in_1st_dim_only,
@@ -838,11 +839,7 @@ class FileHDFio(HasGroups, MutableMapping):
                 (set(hdf_old.list_nodes()) ^ set(check_nodes))
                 & set(hdf_old.list_nodes())
             )
-        write_dict_to_hdf(
-            file_name=hdf_new.file_name,
-            h5_path=hdf_new.h5_path,
-            data_dict={p: hdf_old[p] for p in node_list},
-        )
+        hdf_new.write_dict_to_hdf(data_dict={p: hdf_old[p] for p in node_list})
         for p in group_list:
             h_new = hdf_new.create_group(p)
             ex_n = [e[-1] for e in exclude_nodes_split if p == e[0] or len(e) == 1]
@@ -971,6 +968,40 @@ class FileHDFio(HasGroups, MutableMapping):
     #         self._store = None
     #     except AttributeError:
     #         pass
+
+    def write_dict_to_hdf(self, data_dict):
+        """
+        Write a dictionary to HDF5
+
+        Args:
+            data_dict (dict): dictionary with objects which should be written to HDF5
+        """
+        write_dict_to_hdf(
+            file_name=self.file_name,
+            h5_path=self.h5_path,
+            data_dict=data_dict,
+        )
+
+    def read_dict_from_hdf(self, group_paths=[]):
+        """
+        Read data from HDF5 file into a dictionary - by default only the nodes are converted to dictionaries, additional
+        sub groups can be specified using the group_paths parameter.
+
+        Args:
+            group_paths (list): list of additional groups to be included in the dictionary, for example:
+                                ["input", "output", "output/generic"]
+                                These groups are defined relative to the h5_path.
+
+        Returns:
+            dict:     The loaded data. Can be of any type supported by ``write_hdf5``.
+
+        """
+        return read_dict_from_hdf(
+            file_name=self.file_name,
+            h5_path=self.h5_path,
+            group_paths=group_paths,
+            slash="ignore",
+        )
 
     def create_project_from_hdf5(self):
         """

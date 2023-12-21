@@ -1054,8 +1054,7 @@ class GenericJob(JobCore, HasDict):
         self._executable_activate_mpi()
 
         # Write combined dictionary to HDF5
-        for k, v in self.to_dict().items():
-            self._hdf5[k] = v
+        self._hdf5.write_dict_to_hdf(data_dict=self.to_dict())
 
         # Write remaining objects to HDF5
         if self._executable is not None:
@@ -1084,10 +1083,7 @@ class GenericJob(JobCore, HasDict):
             group_name (str): HDF5 subgroup name - optional
         """
         self._set_hdf(hdf=hdf, group_name=group_name)
-        job_dict = {k: self._hdf5[k] for k in self._hdf5.list_nodes()}
-        with self._hdf5.open("input") as hdf_input:
-            job_dict["input"] = {k: hdf_input[k] for k in hdf_input.list_nodes()}
-        self.from_dict(job_dict=job_dict)
+        self.from_dict(job_dict=self._hdf5.read_dict_from_hdf(group_paths=["input"]))
 
         if "executable" in self._hdf5.list_groups():
             self.executable.from_hdf(self._hdf5)
