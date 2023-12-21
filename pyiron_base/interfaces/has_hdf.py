@@ -220,8 +220,7 @@ class HasHDF(ABC):
             ):
                 raise ValueError("HDF group must be empty when group_name is not set.")
             self._to_hdf(hdf)
-            for k, v in self._store_type_to_dict().items():
-                hdf[k] = v
+            hdf.write_dict_to_hdf(data_dict=self._store_type_to_dict())
 
     def rewrite_hdf(self, hdf: ProjectHDFio, group_name: str = None):
         """
