@@ -23,8 +23,9 @@ class HasDict(ABC):
     def from_dict(self, obj_dict: dict, version: str = None):
         pass
 
+    @abstractmethod
     def to_dict(self):
-        raise NotImplementedError
+        pass
 
     def _type_to_dict(self):
         type_dict = {
