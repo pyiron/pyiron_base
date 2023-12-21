@@ -47,6 +47,7 @@ from pyiron_base.utils.deprecate import deprecate
 from pyiron_base.jobs.job.extension.server.generic import Server
 from pyiron_base.database.filetable import FileTable
 from pyiron_base.storage.helper_functions import write_hdf5, read_hdf5
+from pyiron_base.interfaces.has_dict import HasDict
 
 __author__ = "Joerg Neugebauer, Jan Janssen"
 __copyright__ = (
@@ -109,7 +110,7 @@ _doc_str_generic_job_attr = (
 )
 
 
-class GenericJob(JobCore):
+class GenericJob(JobCore, HasDict):
     __doc__ = (
         """
     Generic Job class extends the JobCore class with all the functionality to run the job object. From this class
@@ -1341,14 +1342,9 @@ class GenericJob(JobCore):
         """
         Internal helper function to save type and version in HDF5 file root
         """
-        data_dict = {
-            "NAME": self.__name__,
-            "TYPE": str(type(self)),
-        }
-        if self._executable:
+        data_dict = super()._type_to_dict()
+        if self._executable:  # overwrite version - default self.__version__
             data_dict["VERSION"] = self.executable.version
-        else:
-            data_dict["VERSION"] = self.__version__
         if hasattr(self, "__hdf_version__"):
             data_dict["HDF_VERSION"] = self.__hdf_version__
         return data_dict
