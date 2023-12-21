@@ -1342,14 +1342,9 @@ class GenericJob(JobCore, HasDict):
         """
         Internal helper function to save type and version in HDF5 file root
         """
-        data_dict = {
-            "NAME": self.__name__,
-            "TYPE": str(type(self)),
-        }
-        if self._executable:
+        data_dict = super()._type_to_dict()
+        if self._executable:  # overwrite version - default self.__version__
             data_dict["VERSION"] = self.executable.version
-        else:
-            data_dict["VERSION"] = self.__version__
         if hasattr(self, "__hdf_version__"):
             data_dict["HDF_VERSION"] = self.__hdf_version__
         return data_dict
