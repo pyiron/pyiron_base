@@ -774,28 +774,8 @@ class DataContainer(MutableMapping, Lockable, HasGroups, HasHDF):
     def _get_hdf_group_name(self):
         return self.table_name
 
-    def _get_dict_for_storage(self):
-        """
-        When writing objects from the DataContainer to HDF5 files we currently handle three different cases:
-        (1) data types which are natively supported by h5io and which can be written to an open HDF5 file,
-        (2) pandas based data types which can be stored in HDF5 using h5io but which require a separate file handle and
-            cannot be stored in already opened HDF5 files,
-        (3) pyiron objects which implement their own to_hdf() and from_hdf() methods.
-        This function returns one dictionary for each of these three object types as well as a list of keys which were
-        already written to the HDF5 file.
-
-        The output is structured in the following way:
-        (1) list of key names which are going to be written to the HDF5 file.
-        (2) dictionary of objects of data type (1)
-        (3) dictionary of pandas objects - type (2)
-        (4) dictionary of pyiron objects which implement their own to_hdf() and from_hdf() methods - type (3)
-
-        Returns:
-            list, dict, dict, dict
-        """
-        to_hdf_dict = {}
-        pandas_dict = {}
-        data_dict = {"READ_ONLY": self.read_only}
+    def _to_hdf(self, hdf):
+        hdf["READ_ONLY"] = self.read_only
         written_keys = _internal_hdf_nodes.copy()
         for i, (k, v) in enumerate(self.items()):
             if isinstance(k, str) and "__index_" in k:
@@ -810,44 +790,19 @@ class DataContainer(MutableMapping, Lockable, HasGroups, HasHDF):
             ):
                 # if v will be written as a group, but a node of the same name k exists already in the file, h5py will
                 # complain, so delete it first
-                to_hdf_dict[k] = v
-            elif hasattr(v, "to_hdf") and isinstance(
-                v, (pandas.DataFrame, pandas.Series)
-            ):
-                pandas_dict[k] = v
+                if k in hdf.list_nodes():
+                    del hdf[k]
+                v.to_hdf(hdf=hdf, group_name=k)
             else:
-                data_dict[k] = v
-        return written_keys, data_dict, pandas_dict, to_hdf_dict
-
-    def _to_hdf(self, hdf):
-        # Build data dictionary
-        written_keys, data_dict, pandas_dict, to_hdf_dict = self._get_dict_for_storage()
-
-        # Write data_dict to HDF5
-        for k, v in data_dict.items():
-            # if the value doesn't know how to serialize itself, assume
-            # that h5py knows how to
-            try:
-                hdf[k] = v
-            except TypeError:
-                raise TypeError(
-                    "Error saving {} (key {}): DataContainer doesn't support saving elements "
-                    'of type "{}" to HDF!'.format(v, k, type(v))
-                ) from None
-
-        # Write pandas_dict to HDF5 - while the items in the pandas_dict are similar to those in the data_dict these
-        # items cannot be written to an already open HDF5 file, but require a file_name rather than a file_handle for
-        # writing them to an HDF5 file.
-        for k, v in pandas_dict.items():
-            hdf[k] = v
-
-        # Write to_hdf_dict to HDF5
-        for k, v in to_hdf_dict.items():
-            if k in hdf.list_nodes():
-                del hdf[k]
-            v.to_hdf(hdf=hdf, group_name=k)
-
-        # Remove unused items from HDF5
+                # if the value doesn't know how to serialize itself, assume
+                # that h5py knows how to
+                try:
+                    hdf[k] = v
+                except TypeError:
+                    raise TypeError(
+                        "Error saving {} (key {}): DataContainer doesn't support saving elements "
+                        'of type "{}" to HDF!'.format(v, k, type(v))
+                    ) from None
         for n in hdf.list_nodes() + hdf.list_groups():
             if n not in written_keys:
                 del hdf[n]
