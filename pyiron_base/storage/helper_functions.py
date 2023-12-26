@@ -242,16 +242,20 @@ def read_dict_from_hdf(file_name, h5_path, group_paths=[], slash="ignore"):
     with open_hdf5(file_name, mode="r") as store:
         output_dict = get_dict_from_nodes(store=store, h5_path=h5_path, slash=slash)
         for group_path in group_paths:
-            output_dict.update(
-                resolve_nested_dict(
-                    group_path=group_path,
-                    data_dict=get_dict_from_nodes(
-                        store=store,
-                        h5_path=get_h5_path(h5_path=h5_path, name=group_path),
-                        slash=slash,
-                    ),
-                )
+            read_dict = resolve_nested_dict(
+                group_path=group_path,
+                data_dict=get_dict_from_nodes(
+                    store=store,
+                    h5_path=get_h5_path(h5_path=h5_path, name=group_path),
+                    slash=slash,
+                ),
             )
+            for k, v in read_dict.items():
+                if k in output_dict.keys() and isinstance(v, dict):
+                    for sk, vs in v.items():
+                        output_dict[k][sk] = vs
+                else:
+                    output_dict[k] = v
     return output_dict
 
 
