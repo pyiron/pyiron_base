@@ -982,7 +982,7 @@ class FileHDFio(HasGroups, MutableMapping):
             data_dict=data_dict,
         )
 
-    def read_dict_from_hdf(self, group_paths=[], recursive=True):
+    def read_dict_from_hdf(self, group_paths=[], recursive=False):
         """
         Read data from HDF5 file into a dictionary - by default only the nodes are converted to dictionaries, additional
         sub groups can be specified using the group_paths parameter.
