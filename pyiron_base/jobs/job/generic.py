@@ -1083,7 +1083,8 @@ class GenericJob(JobCore, HasDict):
             group_name (str): HDF5 subgroup name - optional
         """
         self._set_hdf(hdf=hdf, group_name=group_name)
-        self.from_dict(job_dict=self._hdf5.read_dict_from_hdf(group_paths=["input"]))
+        with self._hdf5.open("input") as hdf5_input:
+            self.from_dict(job_dict=hdf5_input.read_dict_from_hdf(recursive=True))
 
         if "executable" in self._hdf5.list_groups():
             self.executable.from_hdf(self._hdf5)
