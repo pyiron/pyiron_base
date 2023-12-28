@@ -45,6 +45,14 @@ class TestWriteHdfIO(TestCase):
                 group_paths=["key_a", "key_c"],
             )
         )
+        self.assertEqual(
+            {'key_a': {'idx_0': 1, 'idx_1': 2}, 'key_b': 3, 'key_c': {'key_d': 4, 'key_e': 5}},
+            read_dict_from_hdf(
+                file_name=self.file_name,
+                h5_path=self.h5_path,
+                recursive=True,
+            )
+        )
 
     def test_write_overwrite_error(self):
         with self.assertRaises(OSError):
