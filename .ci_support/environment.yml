@@ -15,6 +15,6 @@ dependencies:
 - pyfileindex =0.0.19
 - pysqa =0.1.8
 - pytables =3.9.2
-- sqlalchemy =2.0.23
+- sqlalchemy =2.0.24
 - tqdm =4.66.1
 - traitlets =5.14.0
