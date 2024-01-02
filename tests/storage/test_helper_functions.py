@@ -1,4 +1,5 @@
 import os
+import posixpath
 import h5py
 from unittest import TestCase
 from pyiron_base.storage.helper_functions import (
@@ -6,8 +7,8 @@ from pyiron_base.storage.helper_functions import (
     read_hdf5,
     read_dict_from_hdf,
     write_hdf5,
-    write_dict_to_hdf,
 )
+from h5io_browser.base import write_dict_to_hdf
 
 
 def get_hdf5_raw_content(file_name):
@@ -82,7 +83,10 @@ class TestWriteDictHdfIO(TestCase):
         self.file_name = "test_write_dict_to_hdf.h5"
         self.h5_path = "data_hierarchical"
         self.data_hierarchical = {"a": [1, 2], "b": 3, "c": {"d": 4, "e": 5}}
-        write_dict_to_hdf(file_name=self.file_name, data_dict=self.data_hierarchical, h5_path=self.h5_path)
+        write_dict_to_hdf(
+            file_name=self.file_name,
+            data_dict={posixpath.join(self.h5_path, k): v for k, v in self.data_hierarchical.items()}
+        )
 
     def tearDown(self):
         os.remove(self.file_name)
