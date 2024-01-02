@@ -85,7 +85,7 @@ class IsDatabase(ABC):
 
     @staticmethod
     def _get_filtered_job_table(
-        df: pandas.DataFrame, **kwargs: dict, regex=False,
+        df: pandas.DataFrame, regex=False, **kwargs: dict,
     ) -> pandas.DataFrame:
         """
         Get a job table in a project based on matching values from any column in the project database
@@ -113,7 +113,9 @@ class IsDatabase(ABC):
                     f"Column name {key} does not exist in the project database!"
                 )
         if len(kwargs) > 0 and not regex:
-            logger.warn("regex=False when using keyword sorting is deprecated")
+            logger.warning(
+                "regex=False when using keyword sorting is deprecated",
+            )
         for key, val in kwargs.items():
             if regex:
                 update = df[key].apply(lambda x: re.search(val, x)).astype(bool)
@@ -219,7 +221,7 @@ class IsDatabase(ABC):
                 "`job_name_contains` is deprecated - use `job='*term*'` instead"
             )
             kwargs["job"] = "*{}*".format(job_name_contains)
-        df = self._get_filtered_job_table(df, **kwargs, regex=regex)
+        df = self._get_filtered_job_table(df, regex=regex, **kwargs)
         if sort_by is not None:
             return df.sort_values(by=sort_by)
         return df
