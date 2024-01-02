@@ -7,7 +7,12 @@ Classes to map the Python objects to HDF5 data structures
 
 import numbers
 from h5io_browser import Pointer
-from h5io_browser.base import _open_hdf, _is_ragged_in_1st_dim_only
+from h5io_browser.base import (
+    _open_hdf,
+    _is_ragged_in_1st_dim_only,
+    _read_hdf,
+    _write_hdf5_with_json_support,
+)
 import os
 import importlib
 import pandas
@@ -20,9 +25,7 @@ from pyiron_base.utils.deprecate import deprecate
 from pyiron_base.storage.helper_functions import (
     get_h5_path,
     list_groups_and_nodes,
-    read_hdf5,
     read_dict_from_hdf,
-    write_hdf5_with_json_support,
 )
 from pyiron_base.interfaces.has_groups import HasGroups
 from pyiron_base.state import state
@@ -214,7 +217,9 @@ class FileHDFio(HasGroups, Pointer):
                 # underlying file once, this reduces the number of file opens in the most-likely case from 2 to 1 (1 to
                 # check whether the data is there and 1 to read it) and increases in the worst case from 1 to 2 (1 to
                 # try to read it here and one more time to verify it's not a group below).
-                return read_hdf5(self.file_name, title=self._get_h5_path(item))
+                return _read_hdf(
+                    hdf_filehandle=self.file_name, h5_path=self._get_h5_path(item)
+                )
             except (ValueError, OSError, RuntimeError, NotImplementedError):
                 # h5io couldn't find a dataset with name item, but there still might be a group with that name, which we
                 # check in the rest of the method
@@ -307,8 +312,10 @@ class FileHDFio(HasGroups, Pointer):
         ):
             value.to_hdf(self, key)
             return
-        write_hdf5_with_json_support(
-            value=value, path=self._get_h5_path(key), file_handle=self.file_name
+        _write_hdf5_with_json_support(
+            hdf_filehandle=self.file_name,
+            h5_path=self._get_h5_path(key),
+            data=value,
         )
 
     @property
@@ -714,7 +721,7 @@ class FileHDFio(HasGroups, Pointer):
         Returns:
             dict, list, float, int: data or data object
         """
-        return read_hdf5(self.file_name, title=self._get_h5_path(item))
+        return _read_hdf(hdf_filehandle=self.file_name, h5_path=self._get_h5_path(item))
 
     def write_dict_to_hdf(self, data_dict):
         """

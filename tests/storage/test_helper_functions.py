@@ -4,11 +4,9 @@ import h5py
 from unittest import TestCase
 from pyiron_base.storage.helper_functions import (
     list_groups_and_nodes,
-    read_hdf5,
     read_dict_from_hdf,
-    write_hdf5,
 )
-from h5io_browser.base import write_dict_to_hdf
+from h5io_browser.base import write_dict_to_hdf, _read_hdf, _write_hdf
 
 
 def get_hdf5_raw_content(file_name):
@@ -28,13 +26,13 @@ class TestWriteHdfIO(TestCase):
         self.file_name = "test_write_hdf5.h5"
         self.h5_path = "data_hierarchical"
         self.data_hierarchical = {"a": [1, 2], "b": 3, "c": {"d": 4, "e": 5}}
-        write_hdf5(fname=self.file_name, data=self.data_hierarchical, title=self.h5_path)
+        _write_hdf(hdf_filehandle=self.file_name, data=self.data_hierarchical, h5_path=self.h5_path)
 
     def tearDown(self):
         os.remove(self.file_name)
 
     def test_read_hierarchical(self):
-        self.assertEqual(self.data_hierarchical, read_hdf5(fname=self.file_name, title=self.h5_path))
+        self.assertEqual(self.data_hierarchical, _read_hdf(hdf_filehandle=self.file_name, h5_path=self.h5_path))
 
     def test_read_dict_hierarchical(self):
         self.assertEqual({'key_b': 3}, read_dict_from_hdf(file_name=self.file_name, h5_path=self.h5_path))
@@ -57,7 +55,7 @@ class TestWriteHdfIO(TestCase):
 
     def test_write_overwrite_error(self):
         with self.assertRaises(OSError):
-            write_hdf5(fname=self.file_name, data=self.data_hierarchical, title=self.h5_path, overwrite=False)
+            _write_hdf(hdf_filehandle=self.file_name, data=self.data_hierarchical, h5_path=self.h5_path, overwrite=False)
 
     def test_hdf5_structure(self):
         self.assertEqual(get_hdf5_raw_content(file_name=self.file_name), [
@@ -93,7 +91,7 @@ class TestWriteDictHdfIO(TestCase):
 
     def test_read_hierarchical(self):
         with self.assertRaises(ValueError):
-            read_hdf5(fname=self.file_name, title=self.h5_path)
+            _read_hdf(hdf_filehandle=self.file_name, h5_path=self.h5_path)
 
     def test_read_dict_hierarchical(self):
         self.assertEqual(self.data_hierarchical, read_dict_from_hdf(file_name=self.file_name, h5_path=self.h5_path))

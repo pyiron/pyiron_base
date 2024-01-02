@@ -1,115 +1,6 @@
-import h5io
-from h5io_browser.base import _check_json_conversion, _open_hdf
+from h5io_browser.base import _open_hdf, _read_hdf
 import h5py
 import posixpath
-from pyiron_base.utils.error import retry
-
-
-def read_hdf5(fname, title, slash="ignore"):
-    """
-    Read data from HDF5 file
-
-    Args:
-        fname (str): Name of the file on disk, or file-like object.  Note: for files created with the 'core' driver,
-                     HDF5 still requires this be non-empty.
-        title (str): the HDF5 internal dataset path from which should be read, slashes indicate sub groups
-        slash (str): 'ignore' | 'replace' Whether to replace the string {FWDSLASH} with the value /. This does
-                     not apply to the top level name (title). If 'ignore', nothing will be replaced.
-
-    Returns:
-        object:     The loaded data. Can be of any type supported by ``write_hdf5``.
-    """
-    return retry(
-        lambda: h5io.read_hdf5(
-            fname=fname,
-            title=title,
-            slash=slash,
-        ),
-        error=BlockingIOError,
-        msg=f"Two or more processes tried to access the file {fname}.",
-        at_most=10,
-        delay=1,
-    )
-
-
-def write_hdf5(
-    fname,
-    data,
-    overwrite=False,
-    compression=4,
-    title="h5io",
-    slash="error",
-    use_json=False,
-):
-    """
-    Write data to HDF5 file
-
-    Args:
-        fname (str): Name of the file on disk, or file-like object.  Note: for files created with the 'core' driver,
-                     HDF5 still requires this be non-empty.
-        data (object): Object to write. Can be of any of these types: {ndarray, dict, list, tuple, int, float, str,
-                       datetime, timezone} Note that dict objects must only have ``str`` keys. It is recommended
-                       to use ndarrays where possible, as it is handled most efficiently.
-        overwrite (str/bool): True | False | 'update' If True, overwrite file (if it exists). If 'update', appends the
-                              title to the file (or replace value if title exists).
-        compression (int): Compression level to use (0-9) to compress data using gzip.
-        title (str): the HDF5 internal dataset path from which should be read, slashes indicate sub groups
-        slash (str): 'error' | 'replace' Whether to replace forward-slashes ('/') in any key found nested within
-                      keys in data. This does not apply to the top level name (title). If 'error', '/' is not allowed
-                      in any lower-level keys.
-        use_json (bool): To accelerate the read and write performance of small dictionaries and lists they can be
-                         combined to JSON objects and stored as strings.
-    """
-    retry(
-        lambda: h5io.write_hdf5(
-            fname=fname,
-            data=data,
-            overwrite=overwrite,
-            compression=compression,
-            title=title,
-            slash=slash,
-            use_json=use_json,
-        ),
-        error=BlockingIOError,
-        msg=f"Two or more processes tried to access the file {fname}.",
-        at_most=10,
-        delay=1,
-    )
-
-
-def write_hdf5_with_json_support(
-    value, path, file_handle, compression=4, slash="error"
-):
-    """
-    Write data to HDF5 file and store dictionaries as JSON to optimize performance
-    Args:
-        value (object): Object to write. Can be of any of these types: {ndarray, dict, list, tuple, int, float, str,
-                        datetime, timezone} Note that dict objects must only have ``str`` keys. It is recommended
-                        to use ndarrays where possible, as it is handled most efficiently.
-        path (str): the HDF5 internal dataset path from which should be read, slashes indicate sub groups
-        file_handle (str): Name of the file on disk, or file-like object.  Note: for files created with the 'core'
-                           driver, HDF5 still requires this be non-empty.:
-        compression (int): Compression level to use (0-9) to compress data using gzip.
-        slash (str): 'error' | 'replace' Whether to replace forward-slashes ('/') in any key found nested within
-                      keys in data. This does not apply to the top level name (title). If 'error', '/' is not allowed
-                      in any lower-level keys.
-    """
-    value, use_json = _check_json_conversion(value=value)
-    try:
-        write_hdf5(
-            fname=file_handle,
-            data=value,
-            compression=compression,
-            slash=slash,
-            use_json=use_json,
-            title=path,
-            overwrite="update",
-        )
-    except TypeError:
-        raise TypeError(
-            "Error saving {} (key {}): DataContainer doesn't support saving elements "
-            'of type "{}" to HDF!'.format(value, path, type(value))
-        ) from None
 
 
 def list_groups_and_nodes(hdf, h5_path):
@@ -169,8 +60,10 @@ def read_dict_from_hdf(
             dict:        The loaded data. Can be of any type supported by ``write_hdf5``.
         """
         return {
-            n: read_hdf5(
-                fname=store, title=get_h5_path(h5_path=h5_path, name=n), slash=slash
+            n: _read_hdf(
+                hdf_filehandle=store,
+                h5_path=get_h5_path(h5_path=h5_path, name=n),
+                slash=slash,
             )
             for n in list_groups_and_nodes(hdf=store, h5_path=h5_path)[1]
         }
