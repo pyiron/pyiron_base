@@ -7,7 +7,7 @@ Classes to map the Python objects to HDF5 data structures
 
 import numbers
 from h5io_browser import Pointer
-from h5io_browser.base import _open_hdf, _is_ragged_in_1st_dim_only, read_dict_from_hdf
+from h5io_browser.base import _open_hdf, _is_ragged_in_1st_dim_only
 import os
 import importlib
 import pandas
@@ -20,6 +20,8 @@ from pyiron_base.utils.deprecate import deprecate
 from pyiron_base.storage.helper_functions import (
     get_h5_path,
     read_hdf5,
+    read_dict_from_hdf,
+    write_hdf5_with_json_support,
 )
 from pyiron_base.interfaces.has_groups import HasGroups
 from pyiron_base.state import state
@@ -303,8 +305,10 @@ class FileHDFio(Pointer, HasGroups):
             not isinstance(value, (pandas.DataFrame, pandas.Series))
         ):
             value.to_hdf(self, key)
-        else:
-            super().__setitem__(key=key, value=value)
+            return
+        write_hdf5_with_json_support(
+            value=value, path=self._get_h5_path(key), file_handle=self.file_name
+        )
 
     @property
     def base_name(self):
@@ -738,6 +742,7 @@ class FileHDFio(Pointer, HasGroups):
         return read_dict_from_hdf(
             file_name=self.file_name,
             h5_path=self.h5_path,
+            group_paths=group_paths,
             recursive=recursive,
             slash="ignore",
         )
