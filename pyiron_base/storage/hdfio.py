@@ -19,6 +19,7 @@ from typing import Union, Optional, Any, Tuple
 from pyiron_base.utils.deprecate import deprecate
 from pyiron_base.storage.helper_functions import (
     get_h5_path,
+    list_groups_and_nodes,
     read_hdf5,
     read_dict_from_hdf,
     write_hdf5_with_json_support,
@@ -508,7 +509,16 @@ class FileHDFio(HasGroups, Pointer):
         Returns:
             dict: {'groups': [list of groups], 'nodes': [list of nodes]}
         """
-        return self.list_h5_path(h5_path=self.h5_path)
+        if self.file_exists:
+            with _open_hdf(self.file_name) as hdf:
+                groups, nodes = list_groups_and_nodes(hdf=hdf, h5_path=self.h5_path)
+            iopy_nodes = self._filter_io_objects(set(groups))
+            return {
+                "groups": sorted(list(set(groups) - iopy_nodes)),
+                "nodes": sorted(list((set(nodes) - set(groups)).union(iopy_nodes))),
+            }
+        else:
+            return {"groups": [], "nodes": []}
 
     def _list_nodes(self):
         return self.list_all()["nodes"]
