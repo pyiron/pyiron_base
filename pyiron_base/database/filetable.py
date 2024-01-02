@@ -658,7 +658,11 @@ def filter_function(file_name):
 
 
 def get_hamilton_from_file(hdf5_file, job_name):
-    return _read_hdf(hdf_filehandle=hdf5_file, h5_path=job_name + "/TYPE").split(".")[-1].split("'")[0]
+    return (
+        _read_hdf(hdf_filehandle=hdf5_file, h5_path=job_name + "/TYPE")
+        .split(".")[-1]
+        .split("'")[0]
+    )
 
 
 def get_hamilton_version_from_file(hdf5_file, job_name):
