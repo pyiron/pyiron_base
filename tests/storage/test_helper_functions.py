@@ -36,7 +36,7 @@ class TestWriteHdfIO(TestCase):
         self.assertEqual(self.data_hierarchical, read_hdf5(fname=self.file_name, title=self.h5_path))
 
     def test_read_dict_hierarchical(self):
-        self.assertEqual({'key_b': 3}, {k.replace("data_hierarchical/", ""): v for k, v in read_dict_from_hdf(file_name=self.file_name, h5_path=os.path.join(self.h5_path, "key_b")).items()})
+        self.assertEqual({'key_b': 3}, {k.replace("data_hierarchical/", ""): v for k, v in read_dict_from_hdf(file_name=self.file_name, h5_path=posixpath.join(self.h5_path, "key_b")).items()})
         self.assertEqual(
             self.data_hierarchical,
             read_dict_from_hdf(
