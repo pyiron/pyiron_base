@@ -497,6 +497,16 @@ class FileHDFio(Pointer, HasGroups):
         """
         self.__setitem__(key=key, value=value)
 
+    def list_all(self):
+        """
+        Returns dictionary of :method:`.list_groups()` and :method:`.list_nodes()`.
+
+        Returns:
+            dict: results of :method:`.list_groups() under the key "groups"; results of :method:`.list_nodes()` und the
+                  key "nodes"
+        """
+        return self._list_all()
+
     def _list_all(self):
         """
         List all groups and nodes of the HDF5 file - where groups are equivalent to directories and nodes to files.
