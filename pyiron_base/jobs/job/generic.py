@@ -12,6 +12,8 @@ import posixpath
 import signal
 import warnings
 
+from h5io_browser.base import _read_hdf, _write_hdf
+
 from pyiron_base.state import state
 from pyiron_base.state.signal import catch_signals
 from pyiron_base.jobs.job.extension.executable import Executable
@@ -46,7 +48,6 @@ from pyiron_base.utils.instance import static_isinstance
 from pyiron_base.utils.deprecate import deprecate
 from pyiron_base.jobs.job.extension.server.generic import Server
 from pyiron_base.database.filetable import FileTable
-from pyiron_base.storage.helper_functions import write_hdf5, read_hdf5
 from pyiron_base.interfaces.has_dict import HasDict
 
 __author__ = "Joerg Neugebauer, Jan Janssen"
@@ -138,14 +139,14 @@ class GenericJob(JobCore, HasDict):
             self._status = JobStatus(db=project.db, job_id=self.job_id)
             self.refresh_job_status()
         elif os.path.exists(self.project_hdf5.file_name):
-            initial_status = read_hdf5(
+            initial_status = _read_hdf(
                 # in most cases self.project_hdf5.h5_path == / + self.job_name but not for child jobs of GenericMasters
                 self.project_hdf5.file_name,
                 self.project_hdf5.h5_path + "/status",
             )
             self._status = JobStatus(initial_status=initial_status)
             if "job_id" in self.list_nodes():
-                self._job_id = read_hdf5(
+                self._job_id = _read_hdf(
                     # in most cases self.project_hdf5.h5_path == / + self.job_name but not for child jobs of GenericMasters
                     self.project_hdf5.file_name,
                     self.project_hdf5.h5_path + "/job_id",
@@ -432,7 +433,7 @@ class GenericJob(JobCore, HasDict):
             )
         elif state.database.database_is_disabled:
             self._status = JobStatus(
-                initial_status=read_hdf5(
+                initial_status=_read_hdf(
                     self.project_hdf5.file_name, self.job_name + "/status"
                 )
             )
@@ -1054,7 +1055,7 @@ class GenericJob(JobCore, HasDict):
         self._executable_activate_mpi()
 
         # Write combined dictionary to HDF5
-        self._hdf5.write_dict_to_hdf(data_dict=self.to_dict())
+        self._hdf5.write_dict(data_dict=self.to_dict())
 
         # Write remaining objects to HDF5
         if self._executable is not None:
@@ -1102,10 +1103,10 @@ class GenericJob(JobCore, HasDict):
         if not state.database.database_is_disabled:
             job_id = self.project.db.add_item_dict(self.db_entry())
             self._job_id = job_id
-            write_hdf5(
-                self.project_hdf5.file_name,
-                job_id,
-                title=self.job_name + "/job_id",
+            _write_hdf(
+                hdf_filehandle=self.project_hdf5.file_name,
+                data=job_id,
+                h5_path=self.job_name + "/job_id",
                 overwrite="update",
             )
             self.refresh_job_status()
