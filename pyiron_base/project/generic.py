@@ -709,7 +709,7 @@ class Project(ProjectPath, HasGroups):
             element_lst=element_lst,
             **kwargs,
         )
-        if not isinstance(self.db, FileTable):
+        if not isinstance(self.db, FileTable) or not auto_refresh_job_status:
             return job_table
         else:
             return self._refresh_job_status_file_table(df=job_table)
