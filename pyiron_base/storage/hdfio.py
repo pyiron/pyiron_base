@@ -140,7 +140,7 @@ def _to_object(hdf, class_name=None, **kwargs):
     return obj
 
 
-class FileHDFio(Pointer, HasGroups):
+class FileHDFio(HasGroups, Pointer):
     """
     Class that provides all info to access a h5 file. This class is based on h5io.py, which allows to
     get and put a large variety of jobs to/from h5
@@ -174,7 +174,7 @@ class FileHDFio(Pointer, HasGroups):
     """
 
     def __init__(self, file_name, h5_path="/", mode="a"):
-        super().__init__(file_name=file_name, h5_path=h5_path)
+        Pointer.__init__(self=self, file_name=file_name, h5_path=h5_path)
         self.history = []
         self._filter = ["groups", "nodes", "objects"]
 
@@ -500,16 +500,6 @@ class FileHDFio(Pointer, HasGroups):
             value (pandas.DataFrame, pandas.Series, dict, list, float, int): basically any kind of data is supported
         """
         self.__setitem__(key=key, value=value)
-
-    def list_all(self):
-        """
-        Returns dictionary of :method:`.list_groups()` and :method:`.list_nodes()`.
-
-        Returns:
-            dict: results of :method:`.list_groups() under the key "groups"; results of :method:`.list_nodes()` und the
-                  key "nodes"
-        """
-        return self._list_all()
 
     def _list_all(self):
         """
