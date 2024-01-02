@@ -85,7 +85,9 @@ class IsDatabase(ABC):
 
     @staticmethod
     def _get_filtered_job_table(
-        df: pandas.DataFrame, regex=False, **kwargs: dict,
+        df: pandas.DataFrame,
+        regex=False,
+        **kwargs: dict,
     ) -> pandas.DataFrame:
         """
         Get a job table in a project based on matching values from any column in the project database
