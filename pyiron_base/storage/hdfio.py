@@ -213,7 +213,9 @@ class FileHDFio(HasGroups, Pointer):
                 # underlying file once, this reduces the number of file opens in the most-likely case from 2 to 1 (1 to
                 # check whether the data is there and 1 to read it) and increases in the worst case from 1 to 2 (1 to
                 # try to read it here and one more time to verify it's not a group below).
-                return _read_hdf(hdf_filehandle=self.file_name, h5_path=self._get_h5_path(item))
+                return _read_hdf(
+                    hdf_filehandle=self.file_name, h5_path=self._get_h5_path(item)
+                )
             except (ValueError, OSError, RuntimeError, NotImplementedError):
                 # h5io couldn't find a dataset with name item, but there still might be a group with that name, which we
                 # check in the rest of the method

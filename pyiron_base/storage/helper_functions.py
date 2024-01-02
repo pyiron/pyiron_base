@@ -143,7 +143,9 @@ def read_dict_from_hdf(
         """
         return {
             n: _read_hdf(
-                hdf_filehandle=store, h5_path=get_h5_path(h5_path=h5_path, name=n), slash=slash
+                hdf_filehandle=store,
+                h5_path=get_h5_path(h5_path=h5_path, name=n),
+                slash=slash,
             )
             for n in list_groups_and_nodes(hdf=store, h5_path=h5_path)[1]
         }
