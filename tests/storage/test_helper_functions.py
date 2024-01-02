@@ -4,11 +4,10 @@ import h5py
 from unittest import TestCase
 from pyiron_base.storage.helper_functions import (
     list_groups_and_nodes,
-    read_hdf5,
     read_dict_from_hdf,
     write_hdf5,
 )
-from h5io_browser.base import write_dict_to_hdf
+from h5io_browser.base import write_dict_to_hdf, _read_hdf
 
 
 def get_hdf5_raw_content(file_name):
@@ -34,7 +33,7 @@ class TestWriteHdfIO(TestCase):
         os.remove(self.file_name)
 
     def test_read_hierarchical(self):
-        self.assertEqual(self.data_hierarchical, read_hdf5(fname=self.file_name, title=self.h5_path))
+        self.assertEqual(self.data_hierarchical, _read_hdf(hdf_filehandle=self.file_name, h5_path=self.h5_path))
 
     def test_read_dict_hierarchical(self):
         self.assertEqual({'key_b': 3}, read_dict_from_hdf(file_name=self.file_name, h5_path=self.h5_path))
@@ -93,7 +92,7 @@ class TestWriteDictHdfIO(TestCase):
 
     def test_read_hierarchical(self):
         with self.assertRaises(ValueError):
-            read_hdf5(fname=self.file_name, title=self.h5_path)
+            _read_hdf(hdf_filehandle=self.file_name, h5_path=self.h5_path)
 
     def test_read_dict_hierarchical(self):
         self.assertEqual(self.data_hierarchical, read_dict_from_hdf(file_name=self.file_name, h5_path=self.h5_path))

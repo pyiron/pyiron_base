@@ -1,35 +1,8 @@
 import h5io
-from h5io_browser.base import _check_json_conversion, _open_hdf
+from h5io_browser.base import _check_json_conversion, _open_hdf, _read_hdf
 import h5py
 import posixpath
 from pyiron_base.utils.error import retry
-
-
-def read_hdf5(fname, title, slash="ignore"):
-    """
-    Read data from HDF5 file
-
-    Args:
-        fname (str): Name of the file on disk, or file-like object.  Note: for files created with the 'core' driver,
-                     HDF5 still requires this be non-empty.
-        title (str): the HDF5 internal dataset path from which should be read, slashes indicate sub groups
-        slash (str): 'ignore' | 'replace' Whether to replace the string {FWDSLASH} with the value /. This does
-                     not apply to the top level name (title). If 'ignore', nothing will be replaced.
-
-    Returns:
-        object:     The loaded data. Can be of any type supported by ``write_hdf5``.
-    """
-    return retry(
-        lambda: h5io.read_hdf5(
-            fname=fname,
-            title=title,
-            slash=slash,
-        ),
-        error=BlockingIOError,
-        msg=f"Two or more processes tried to access the file {fname}.",
-        at_most=10,
-        delay=1,
-    )
 
 
 def write_hdf5(
@@ -169,8 +142,8 @@ def read_dict_from_hdf(
             dict:        The loaded data. Can be of any type supported by ``write_hdf5``.
         """
         return {
-            n: read_hdf5(
-                fname=store, title=get_h5_path(h5_path=h5_path, name=n), slash=slash
+            n: _read_hdf(
+                hdf_filehandle=store, h5_path=get_h5_path(h5_path=h5_path, name=n), slash=slash
             )
             for n in list_groups_and_nodes(hdf=store, h5_path=h5_path)[1]
         }
