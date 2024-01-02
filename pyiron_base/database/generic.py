@@ -148,6 +148,7 @@ class IsDatabase(ABC):
         full_table=False,
         element_lst=None,
         job_name_contains="",
+        regex=False,
         **kwargs,
     ):
         """
@@ -216,7 +217,7 @@ class IsDatabase(ABC):
                 "`job_name_contains` is deprecated - use `job='*term*'` instead"
             )
             kwargs["job"] = "*{}*".format(job_name_contains)
-        df = self._get_filtered_job_table(df, **kwargs)
+        df = self._get_filtered_job_table(df, **kwargs, regex=regex)
         if sort_by is not None:
             return df.sort_values(by=sort_by)
         return df
