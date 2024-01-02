@@ -1,4 +1,5 @@
 import os
+import posixpath
 import h5py
 from unittest import TestCase
 from pyiron_base.storage.helper_functions import (
@@ -35,22 +36,21 @@ class TestWriteHdfIO(TestCase):
         self.assertEqual(self.data_hierarchical, read_hdf5(fname=self.file_name, title=self.h5_path))
 
     def test_read_dict_hierarchical(self):
-        self.assertEqual({'key_b': 3}, read_dict_from_hdf(file_name=self.file_name, h5_path=self.h5_path))
+        self.assertEqual({'key_b': 3}, {k.replace("data_hierarchical/", ""): v for k, v in read_dict_from_hdf(file_name=self.file_name, h5_path=os.path.join(self.h5_path, "key_b")).items()})
         self.assertEqual(
-            {'key_a': {'idx_0': 1, 'idx_1': 2}, 'key_b': 3, 'key_c': {'key_d': 4, 'key_e': 5}},
+            self.data_hierarchical,
             read_dict_from_hdf(
                 file_name=self.file_name,
                 h5_path=self.h5_path,
-                group_paths=["key_a", "key_c"],
-            )
+            )['data_hierarchical']
         )
         self.assertEqual(
-            {'key_a': {'idx_0': 1, 'idx_1': 2}, 'key_b': 3, 'key_c': {'key_d': 4, 'key_e': 5}},
-            read_dict_from_hdf(
+            {'key_a/idx_0': 1, 'key_a/idx_1': 2, 'key_b': 3, 'key_c/key_d': 4, 'key_c/key_e': 5},
+            {k.replace("/data_hierarchical/", ""): v for k, v in read_dict_from_hdf(
                 file_name=self.file_name,
                 h5_path=self.h5_path,
                 recursive=True,
-            )
+            ).items()}
         )
 
     def test_write_overwrite_error(self):
@@ -81,7 +81,10 @@ class TestWriteDictHdfIO(TestCase):
         self.file_name = "test_write_dict_to_hdf.h5"
         self.h5_path = "data_hierarchical"
         self.data_hierarchical = {"a": [1, 2], "b": 3, "c": {"d": 4, "e": 5}}
-        write_dict_to_hdf(file_name=self.file_name, data_dict=self.data_hierarchical, h5_path=self.h5_path)
+        write_dict_to_hdf(
+            file_name=self.file_name,
+            data_dict={posixpath.join(self.h5_path, k): v for k, v in self.data_hierarchical.items()}
+        )
 
     def tearDown(self):
         os.remove(self.file_name)
@@ -91,7 +94,13 @@ class TestWriteDictHdfIO(TestCase):
             read_hdf5(fname=self.file_name, title=self.h5_path)
 
     def test_read_dict_hierarchical(self):
-        self.assertEqual(self.data_hierarchical, read_dict_from_hdf(file_name=self.file_name, h5_path=self.h5_path))
+        self.assertEqual(
+            self.data_hierarchical,
+            {
+                k.replace("/data_hierarchical/", ""): v
+                for k, v in read_dict_from_hdf(file_name=self.file_name, h5_path=self.h5_path, recursive=True).items()
+            }
+        )
 
     def test_hdf5_structure(self):
         self.assertEqual(get_hdf5_raw_content(file_name=self.file_name), [
