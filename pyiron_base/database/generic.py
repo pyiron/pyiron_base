@@ -112,6 +112,8 @@ class IsDatabase(ABC):
                 raise ValueError(
                     f"Column name {key} does not exist in the project database!"
                 )
+        if len(kwargs) > 0 and not regex:
+            logger.warn("regex=False when using keyword sorting is deprecated")
         for key, val in kwargs.items():
             if regex:
                 update = df[key].apply(lambda x: re.search(val, x)).astype(bool)
