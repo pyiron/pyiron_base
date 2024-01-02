@@ -322,16 +322,16 @@ class TestFileHDFio(PyironTestCase):
 
     def test_rewrite_hdf5(self):
         with self.subTest("directly rewrite"):
-            initial_file_size = self.full_hdf5.file_size(self.full_hdf5)
+            initial_file_size = self.full_hdf5.file_size()
             self.full_hdf5.rewrite_hdf5()
             _check_full_hdf_values(self, self.full_hdf5)
-            initial_rewrite_file_size = self.full_hdf5.file_size(self.full_hdf5)
+            initial_rewrite_file_size = self.full_hdf5.file_size()
             self.assertLess(initial_rewrite_file_size, initial_file_size)
 
         with self.subTest("increase file size"):
             with self.full_hdf5.open("content") as hdf:
                 _write_full_hdf_content(hdf)
-            increased_file_size = self.full_hdf5.file_size(self.full_hdf5)
+            increased_file_size = self.full_hdf5.file_size()
             _check_full_hdf_values(self, self.full_hdf5)
             self.assertGreater(
                 increased_file_size,
@@ -341,7 +341,7 @@ class TestFileHDFio(PyironTestCase):
 
         with self.subTest("rewrite again"):
             self.full_hdf5.rewrite_hdf5()
-            final_file_size = self.full_hdf5.file_size(self.full_hdf5)
+            final_file_size = self.full_hdf5.file_size()
             _check_full_hdf_values(self, self.full_hdf5)
             self.assertLess(
                 final_file_size,
@@ -497,7 +497,7 @@ class TestFileHDFio(PyironTestCase):
         self.assertEqual(self.i_o_hdf5.base_name, "filehdfio_io")
 
     def test_file_size(self):
-        self.assertTrue(self.es_hdf5.file_size(self.es_hdf5) > 0)
+        self.assertTrue(self.es_hdf5.file_size() > 0)
 
     def test_get_size(self):
         self.assertTrue(self.es_hdf5.get_size(self.es_hdf5) > 0)
