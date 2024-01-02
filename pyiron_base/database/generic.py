@@ -85,7 +85,7 @@ class IsDatabase(ABC):
 
     @staticmethod
     def _get_filtered_job_table(
-        df: pandas.DataFrame, **kwargs: dict
+        df: pandas.DataFrame, **kwargs: dict, regex=False,
     ) -> pandas.DataFrame:
         """
         Get a job table in a project based on matching values from any column in the project database
@@ -113,22 +113,25 @@ class IsDatabase(ABC):
                     f"Column name {key} does not exist in the project database!"
                 )
         for key, val in kwargs.items():
-            invert = False
-            if isinstance(val, str) and val[0] == "!":
-                invert = True
-                val = val[1:]
-            if val is None:
-                update = df[key].isnull()
-            elif str(val).startswith("*") and str(val).endswith("*"):
-                update = df[key].str.contains(str(val).replace("*", ""))
-            elif str(val).endswith("*"):
-                update = df[key].str.startswith(str(val).replace("*", ""))
-            elif str(val).startswith("*"):
-                update = df[key].str.endswith(str(val).replace("*", ""))
+            if regex:
+                update = df[key].apply(lambda x: re.search(val, x)).astype(bool)
             else:
-                update = df[key] == val
-            if invert:
-                update = ~update
+                invert = False
+                if isinstance(val, str) and val[0] == "!":
+                    invert = True
+                    val = val[1:]
+                if val is None:
+                    update = df[key].isnull()
+                elif str(val).startswith("*") and str(val).endswith("*"):
+                    update = df[key].str.contains(str(val).replace("*", ""))
+                elif str(val).endswith("*"):
+                    update = df[key].str.startswith(str(val).replace("*", ""))
+                elif str(val).startswith("*"):
+                    update = df[key].str.endswith(str(val).replace("*", ""))
+                else:
+                    update = df[key] == val
+                if invert:
+                    update = ~update
             mask &= update
         return df[mask]
 
