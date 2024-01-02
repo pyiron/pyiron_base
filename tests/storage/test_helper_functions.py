@@ -4,10 +4,9 @@ from unittest import TestCase
 from pyiron_base.storage.helper_functions import (
     list_groups_and_nodes,
     read_hdf5,
-    read_dict_from_hdf,
     write_hdf5,
-    write_dict_to_hdf,
 )
+from h5io_browser.base import read_dict_from_hdf, write_dict_to_hdf
 
 
 def get_hdf5_raw_content(file_name):

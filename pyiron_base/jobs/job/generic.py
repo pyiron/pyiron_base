@@ -1054,7 +1054,7 @@ class GenericJob(JobCore, HasDict):
         self._executable_activate_mpi()
 
         # Write combined dictionary to HDF5
-        self._hdf5.write_dict_to_hdf(data_dict=self.to_dict())
+        self._hdf5.write_dict(data_dict=self.to_dict())
 
         # Write remaining objects to HDF5
         if self._executable is not None:
