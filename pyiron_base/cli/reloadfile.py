@@ -2,7 +2,7 @@
 # Copyright (c) Max-Planck-Institut für Eisenforschung GmbH - Computational Materials Design (CM) Department
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 import os
-import h5py
+from h5io_browser.base import _open_hdf
 import shutil
 from pyiron_base import Project
 from pyiron_base.state import state
@@ -22,7 +22,7 @@ def register(parser):
 
 
 def main(args):
-    with h5py.File(args.input_path, mode="r") as f:
+    with _open_hdf(filename=args.input_path, mode="r") as f:
         job_name = list(f.keys())[0]
     project_path = os.path.join(os.path.abspath("."), job_name + ".h5")
     shutil.copy(args.input_path, project_path)
