@@ -14,7 +14,7 @@ dependencies:
 - pint =0.23
 - psutil =5.9.7
 - pyfileindex =0.0.19
-- pysqa =0.1.8
+- pysqa =0.1.9
 - pytables =3.9.2
 - sqlalchemy =2.0.24
 - tqdm =4.66.1
