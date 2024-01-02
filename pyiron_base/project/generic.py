@@ -695,49 +695,24 @@ class Project(ProjectPath, HasGroups):
         """
         auto_refresh_job_status (bool): will automatically reload job status by calling refresh_job_status() upon calling job_table
         """
+        if not isinstance(self.db, FileTable) and auto_refresh_job_status:
+            self.refresh_job_status()
+        job_table = self.db.job_table(
+            sql_query=self.sql_query,
+            user=self.user,
+            project_path=self.project_path,
+            recursive=recursive,
+            columns=columns,
+            all_columns=all_columns,
+            sort_by=sort_by,
+            full_table=full_table,
+            element_lst=element_lst,
+            **kwargs,
+        )
         if not isinstance(self.db, FileTable):
-            if auto_refresh_job_status:
-                self.refresh_job_status()
-            return self.db.job_table(
-                sql_query=self.sql_query,
-                user=self.user,
-                project_path=self.project_path,
-                recursive=recursive,
-                columns=columns,
-                all_columns=all_columns,
-                sort_by=sort_by,
-                full_table=full_table,
-                element_lst=element_lst,
-                **kwargs,
-            )
-        elif not auto_refresh_job_status:
-            return self.db.job_table(
-                sql_query=self.sql_query,
-                user=self.user,
-                project_path=self.project_path,
-                recursive=recursive,
-                columns=columns,
-                all_columns=all_columns,
-                sort_by=sort_by,
-                full_table=full_table,
-                element_lst=element_lst,
-                **kwargs,
-            )
+            return job_table
         else:
-            return self._refresh_job_status_file_table(
-                df=self.db.job_table(
-                    sql_query=self.sql_query,
-                    user=self.user,
-                    project_path=self.project_path,
-                    recursive=recursive,
-                    columns=columns,
-                    all_columns=all_columns,
-                    sort_by=sort_by,
-                    full_table=full_table,
-                    element_lst=element_lst,
-                    **kwargs,
-                )
-            )
+            return self._refresh_job_status_file_table(df=job_table)
 
     job_table.__doc__ = "\n".join(
         [
