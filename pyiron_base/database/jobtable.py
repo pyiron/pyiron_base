@@ -20,13 +20,12 @@ __status__ = "production"
 __date__ = "Sep 1, 2017"
 
 
-def get_jobs(database, sql_query, user, project_path, recursive=True, columns=None):
+def get_jobs(database, user, project_path, recursive=True, columns=None):
     """
     Internal function to return the jobs as dictionary rather than a pandas.Dataframe
 
     Args:
         database (DatabaseAccess): Database object
-        sql_query (str): SQL query to enter a more specific request
         user (str): username of the user whoes user space should be searched
         project_path (str): root_path - this is in contrast to the project_path in GenericPath
         recursive (bool): search subprojects [True/False]
@@ -41,7 +40,6 @@ def get_jobs(database, sql_query, user, project_path, recursive=True, columns=No
         if columns is None:
             columns = ["id", "project"]
         df = database.job_table(
-            sql_query=sql_query,
             user=user,
             project_path=project_path,
             recursive=recursive,
@@ -56,13 +54,12 @@ def get_jobs(database, sql_query, user, project_path, recursive=True, columns=No
         )
 
 
-def get_job_ids(database, sql_query, user, project_path, recursive=True):
+def get_job_ids(database, user, project_path, recursive=True):
     """
     Return the job IDs matching a specific query
 
     Args:
         database (DatabaseAccess): Database object
-        sql_query (str): SQL query to enter a more specific request
         user (str): username of the user whoes user space should be searched
         project_path (str): root_path - this is in contrast to the project_path in GenericPath
         recursive (bool): search subprojects [True/False]
@@ -73,7 +70,6 @@ def get_job_ids(database, sql_query, user, project_path, recursive=True):
     if not isinstance(database, FileTable):
         return get_jobs(
             database=database,
-            sql_query=sql_query,
             user=user,
             project_path=project_path,
             recursive=recursive,
@@ -82,13 +78,12 @@ def get_job_ids(database, sql_query, user, project_path, recursive=True):
         return database.get_job_ids(project=project_path, recursive=recursive)
 
 
-def get_child_ids(database, sql_query, user, project_path, job_specifier, status=None):
+def get_child_ids(database, user, project_path, job_specifier, status=None):
     """
     Get the childs for a specific job
 
     Args:
         database (DatabaseAccess): Database object
-        sql_query (str): SQL query to enter a more specific request
         user (str): username of the user whoes user space should be searched
         project_path (str): root_path - this is in contrast to the project_path in GenericPath
         job_specifier (str): name of the master job or the master jobs job ID
@@ -98,7 +93,7 @@ def get_child_ids(database, sql_query, user, project_path, job_specifier, status
         list: list of child IDs
     """
     if not isinstance(database, FileTable):
-        id_master = get_job_id(database, sql_query, user, project_path, job_specifier)
+        id_master = get_job_id(database, user, project_path, job_specifier)
         if id_master is None:
             return []
         else:
@@ -117,13 +112,12 @@ def get_child_ids(database, sql_query, user, project_path, job_specifier, status
         return database.get_child_ids(job_specifier=job_specifier, project=project_path)
 
 
-def get_job_id(database, sql_query, user, project_path, job_specifier):
+def get_job_id(database, user, project_path, job_specifier):
     """
     get the job_id for job named job_name in the local project path from database
 
     Args:
         database (DatabaseAccess): Database object
-        sql_query (str): SQL query to enter a more specific request
         user (str): username of the user whoes user space should be searched
         project_path (str): root_path - this is in contrast to the project_path in GenericPath
         job_specifier (str): name of the job or job ID
@@ -136,7 +130,6 @@ def get_job_id(database, sql_query, user, project_path, job_specifier):
             return job_specifier  # is id
 
         job_dict = database._job_dict(
-            sql_query=sql_query,
             user=user,
             project_path=project_path,
             recursive=False,
@@ -144,7 +137,6 @@ def get_job_id(database, sql_query, user, project_path, job_specifier):
         )
         if len(job_dict) == 0:
             job_dict = database._job_dict(
-                sql_query=sql_query,
                 user=user,
                 project_path=project_path,
                 recursive=True,
@@ -164,13 +156,12 @@ def get_job_id(database, sql_query, user, project_path, job_specifier):
         return database.get_job_id(job_specifier=job_specifier, project=project_path)
 
 
-def set_job_status(database, sql_query, user, project_path, job_specifier, status):
+def set_job_status(database, user, project_path, job_specifier, status):
     """
     Set the status of a particular job
 
     Args:
         database (DatabaseAccess/ FileTable): Database object
-        sql_query (str): SQL query to enter a more specific request
         user (str): username of the user whoes user space should be searched
         project_path (str): root_path - this is in contrast to the project_path in GenericPath
         job_specifier (str): name of the job or job ID
@@ -181,7 +172,6 @@ def set_job_status(database, sql_query, user, project_path, job_specifier, statu
     database.set_job_status(
         job_id=get_job_id(
             database=database,
-            sql_query=sql_query,
             user=user,
             project_path=project_path,
             job_specifier=job_specifier,
@@ -190,13 +180,12 @@ def set_job_status(database, sql_query, user, project_path, job_specifier, statu
     )
 
 
-def get_job_status(database, sql_query, user, project_path, job_specifier):
+def get_job_status(database, user, project_path, job_specifier):
     """
     Get the status of a particular job
 
     Args:
         database (DatabaseAccess): Database object
-        sql_query (str): SQL query to enter a more specific request
         user (str): username of the user whoes user space should be searched
         project_path (str): root_path - this is in contrast to the project_path in GenericPath
         job_specifier (str): name of the job or job ID
@@ -209,7 +198,6 @@ def get_job_status(database, sql_query, user, project_path, job_specifier):
     return database.get_job_status(
         job_id=get_job_id(
             database=database,
-            sql_query=sql_query,
             user=user,
             project_path=project_path,
             job_specifier=job_specifier,
@@ -217,13 +205,12 @@ def get_job_status(database, sql_query, user, project_path, job_specifier):
     )
 
 
-def get_job_working_directory(database, sql_query, user, project_path, job_specifier):
+def get_job_working_directory(database, user, project_path, job_specifier):
     """
     Get the working directory of a particular job
 
     Args:
         database (DatabaseAccess): Database object
-        sql_query (str): SQL query to enter a more specific request
         user (str): username of the user whoes user space should be searched
         project_path (str): root_path - this is in contrast to the project_path in GenericPath
         job_specifier (str): name of the job or job ID
@@ -234,7 +221,6 @@ def get_job_working_directory(database, sql_query, user, project_path, job_speci
     return database.get_job_working_directory(
         job_id=get_job_id(
             database=database,
-            sql_query=sql_query,
             user=user,
             project_path=project_path,
             job_specifier=job_specifier,

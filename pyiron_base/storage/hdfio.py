@@ -899,10 +899,6 @@ class ProjectHDFio(FileHDFio):
 
             current unix/linux/windows user who is running pyiron
 
-        .. attribute:: sql_query
-
-            an SQL query to limit the jobs within the project to a subset which matches the SQL query.
-
         .. attribute:: db
 
             connection to the SQL database
@@ -987,26 +983,6 @@ class ProjectHDFio(FileHDFio):
             str: pyiron user directory of the current project
         """
         return self._project.root_path
-
-    @property
-    def sql_query(self):
-        """
-        Get the SQL query for the project
-
-        Returns:
-            str: SQL query
-        """
-        return self._project.sql_query
-
-    @sql_query.setter
-    def sql_query(self, new_query):
-        """
-        Set the SQL query for the project
-
-        Args:
-            new_query (str): SQL query
-        """
-        self._project.sql_query = new_query
 
     @property
     def user(self):

@@ -80,7 +80,6 @@ class Project(ProjectPath, HasGroups):
         path (GenericPath, str): path of the project defined by GenericPath, absolute or relative (with respect to
                                      current working directory) path
         user (str): current pyiron user
-        sql_query (str): SQL query to only select a subset of the existing jobs within the current project
         default_working_directory (bool): Access default working directory, for ScriptJobs this equals the project
                                     directory of the ScriptJob for regular projects it falls back to the current
                                     directory.
@@ -94,7 +93,6 @@ class Project(ProjectPath, HasGroups):
         history (): Previously opened projects / folders.
         parent_group (): Parent project - one level above the current project.
         user (): Current unix/linux/windows user who is running pyiron
-        sql_query (): An SQL query to limit the jobs within the project to a subset which matches the SQL query.
         db (): Connection to the SQL database.
         job_type (): Job Type object with all the available job types: ['ExampleJob', 'SerialMaster', 'ParallelMaster',
                         'ScriptJob', 'ListMaster'].
@@ -113,9 +111,7 @@ class Project(ProjectPath, HasGroups):
             {'foo': 42}
     """
 
-    def __init__(
-        self, path="", user=None, sql_query=None, default_working_directory=False
-    ):
+    def __init__(self, path="", user=None, default_working_directory=False):
         if default_working_directory and path == "":
             inputdict = Notebook.get_custom_dict()
             if inputdict is not None and "project_dir" in inputdict.keys():
@@ -126,7 +122,6 @@ class Project(ProjectPath, HasGroups):
         super(Project, self).__init__(path=path)
 
         self.user = user
-        self.sql_query = sql_query
         self._filter = ["groups", "nodes", "objects"]
         self._inspect_mode = False
         self._data = None
@@ -223,7 +218,7 @@ class Project(ProjectPath, HasGroups):
         Returns:
             Project: copy of the project object
         """
-        new = self.__class__(path=self.path, user=self.user, sql_query=self.sql_query)
+        new = self.__class__(path=self.path, user=self.user)
         new._filter = self._filter
         new._inspect_mode = self._inspect_mode
         return new
@@ -452,7 +447,6 @@ class Project(ProjectPath, HasGroups):
             project = self.project_path
         return get_child_ids(
             database=self.db,
-            sql_query=self.sql_query,
             user=self.user,
             project_path=project,
             job_specifier=job_specifier,
@@ -499,7 +493,6 @@ class Project(ProjectPath, HasGroups):
         """
         return get_jobs(
             database=self.db,
-            sql_query=self.sql_query,
             user=self.user,
             project_path=self.project_path,
             recursive=recursive,
@@ -518,7 +511,6 @@ class Project(ProjectPath, HasGroups):
         """
         return get_job_ids(
             database=self.db,
-            sql_query=self.sql_query,
             user=self.user,
             project_path=self.project_path,
             recursive=recursive,
@@ -536,7 +528,6 @@ class Project(ProjectPath, HasGroups):
         """
         return get_job_id(
             database=self.db,
-            sql_query=self.sql_query,
             user=self.user,
             project_path=self.project_path,
             job_specifier=job_specifier,
@@ -558,7 +549,6 @@ class Project(ProjectPath, HasGroups):
             project = self.project_path
         return get_job_status(
             database=self.db,
-            sql_query=self.sql_query,
             user=self.user,
             project_path=project,
             job_specifier=job_specifier,
@@ -578,7 +568,6 @@ class Project(ProjectPath, HasGroups):
         if project is None:
             project = self.project_path
         return get_job_working_directory(
-            sql_query=self.sql_query,
             user=self.user,
             project_path=project,
             database=self.db,
@@ -762,7 +751,6 @@ class Project(ProjectPath, HasGroups):
         if not isinstance(self.db, FileTable) and auto_refresh_job_status:
             self.refresh_job_status()
         job_table = self.db.job_table(
-            sql_query=self.sql_query,
             user=self.user,
             project_path=self.project_path,
             recursive=recursive,
@@ -1063,7 +1051,6 @@ class Project(ProjectPath, HasGroups):
                 if isinstance(job_specifier, str):
                     job_id = get_job_id(
                         database=self.db,
-                        sql_query=self.sql_query,
                         user=self.user,
                         project_path=self.project_path,
                         job_specifier=job_specifier,
@@ -1314,7 +1301,6 @@ class Project(ProjectPath, HasGroups):
             project = self.project_path
         set_job_status(
             database=self.db,
-            sql_query=self.sql_query,
             user=self.user,
             project_path=project,
             job_specifier=job_specifier,

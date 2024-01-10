@@ -787,7 +787,6 @@ class GenericJob(JobCore, HasDict):
         else:
             ft = FileTable(index_from=self.project_hdf5.path + "_hdf5/")
             df = ft.job_table(
-                sql_query=None,
                 user=state.settings.login_user,
                 project_path=None,
                 all_columns=True,
