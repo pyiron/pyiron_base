@@ -3,6 +3,7 @@
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
 import codecs
+import concurrent.futures
 from datetime import datetime
 import dill as pickle
 import json
@@ -13,7 +14,6 @@ from pandas.errors import EmptyDataError
 from tqdm.auto import tqdm
 import types
 from typing import List, Tuple
-from pympipool import Executor
 
 from pyiron_base.utils.deprecate import deprecate
 from pyiron_base.jobs.job.generic import GenericJob
@@ -234,7 +234,7 @@ class PyironTable:
             new_system_functions = []
         return new_user_functions, new_system_functions
 
-    def create_table(self, file, job_status_list, processes=1, enforce_update=False):
+    def create_table(self, file, job_status_list, executor=None, enforce_update=False):
         """
         Create or update the table.
 
@@ -248,7 +248,7 @@ class PyironTable:
         Args:
             file (FileHDFio): HDF were the previous state of the table is stored
             job_status_list (list of str): only consider jobs with these statuses
-            processes (int): number of parallel tasks
+            executor (concurrent.futures.Executor): executor for parallel execution
             enforce_update (bool): if True always regenerate the table completely.
         """
         # if there's new keys, apply the *new* functions to the old jobs and name the resulting table `df_new_keys`
@@ -269,7 +269,7 @@ class PyironTable:
                 df_new_keys = self._iterate_over_job_lst(
                     job_id_lst=self._get_job_ids(),
                     function_lst=function_lst,
-                    processes=processes,
+                    executor=executor,
                 )
                 if len(df_new_keys) > 0:
                     self._df = pandas.concat([self._df, df_new_keys], axis="columns")
@@ -282,7 +282,7 @@ class PyironTable:
             df_new_ids = self._iterate_over_job_lst(
                 job_id_lst=new_jobs,
                 function_lst=self.add._function_lst,
-                processes=processes,
+                executor=executor,
             )
             if len(df_new_ids) > 0:
                 self._df = pandas.concat([self._df, df_new_ids], ignore_index=True)
@@ -339,7 +339,7 @@ class PyironTable:
         return project_table[filter_funct(project_table)]["id"].tolist()
 
     def _iterate_over_job_lst(
-        self, job_id_lst: List, function_lst: List, processes: int
+        self, job_id_lst: List, function_lst: List, executor: concurrent.futures.Executor = None,
     ) -> List[dict]:
         """
         Apply functions to job.
@@ -349,7 +349,7 @@ class PyironTable:
         Args:
             job_id_lst (list of JobPath): all jobs to analyze
             function_lst (list of functions): all functions to apply on jobs.  Must return a dictionary.
-            processes (int): number of parallel tasks
+            executor (concurrent.futures.Executor): executor for parallel execution
 
         Returns:
             list of dict: a list of the merged dicts from all functions for each job
@@ -362,14 +362,13 @@ class PyironTable:
             ]
             for job_id in job_id_lst
         ]
-        if processes > 1:
-            with Executor(processes) as exe:
-                diff_dict_lst = list(
-                    tqdm(
-                        exe.map(_apply_list_of_functions_on_job, job_to_analyse_lst),
-                        total=len(job_to_analyse_lst),
-                    )
+        if executor is not None:
+            diff_dict_lst = list(
+                tqdm(
+                    executor.map(_apply_list_of_functions_on_job, job_to_analyse_lst),
+                    total=len(job_to_analyse_lst),
                 )
+            )
         else:
             diff_dict_lst = list(
                 tqdm(
@@ -778,7 +777,7 @@ class TableJob(GenericJob):
                 file=hdf5_input,
                 job_status_list=job_status_list,
                 enforce_update=self._enforce_update,
-                processes=self.server.cores,
+                executor=self.server.executor,
             )
         self.to_hdf()
         self._pyiron_table._df.to_csv(
