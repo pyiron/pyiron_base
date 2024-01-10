@@ -6,9 +6,14 @@ Classes to map the Python objects to HDF5 data structures
 """
 
 import numbers
-import h5py
+from h5io_browser import Pointer
+from h5io_browser.base import (
+    _open_hdf,
+    _is_ragged_in_1st_dim_only,
+    _read_hdf,
+    _write_hdf5_with_json_support,
+)
 import os
-from collections.abc import MutableMapping
 import importlib
 import pandas
 import posixpath
@@ -17,13 +22,16 @@ import sys
 from typing import Union, Optional, Any, Tuple
 
 from pyiron_base.utils.deprecate import deprecate
-from pyiron_base.storage.helper_functions import read_hdf5, write_hdf5
+from pyiron_base.storage.helper_functions import (
+    get_h5_path,
+    list_groups_and_nodes,
+    read_dict_from_hdf,
+)
 from pyiron_base.interfaces.has_groups import HasGroups
 from pyiron_base.state import state
 from pyiron_base.jobs.dynamic import JOB_DYN_DICT, class_constructor
 from pyiron_base.jobs.job.util import _get_safe_job_name
 import pyiron_base.project.maintenance
-import warnings
 
 __author__ = "Joerg Neugebauer, Jan Janssen"
 __copyright__ = (
@@ -35,32 +43,6 @@ __maintainer__ = "Jan Janssen"
 __email__ = "janssen@mpie.de"
 __status__ = "production"
 __date__ = "Sep 1, 2017"
-
-
-def _is_ragged_in_1st_dim_only(value: Union[np.ndarray, list]) -> bool:
-    """
-    Checks whether array or list of lists is ragged in the first dimension.
-
-    That means all other dimensions (except the first one) still have to match.
-
-    Args:
-        value (ndarray/list): array to check
-
-    Returns:
-        bool: True if elements of value are not all of the same shape
-    """
-    if isinstance(value, np.ndarray) and value.dtype != np.dtype("O"):
-        return False
-    else:
-
-        def extract_dims(v):
-            with warnings.catch_warnings():
-                warnings.simplefilter("ignore")
-                s = np.shape(v)
-            return s[0], s[1:]
-
-        dim1, dim_other = zip(*map(extract_dims, value))
-        return len(set(dim1)) > 1 and len(set(dim_other)) == 1
 
 
 # for historic reasons we write str(class) into the HDF 'TYPE' field of objects, so we need to parse this back out
@@ -162,16 +144,7 @@ def _to_object(hdf, class_name=None, **kwargs):
     return obj
 
 
-def open_hdf5(filename, mode="r", swmr=False):
-    if swmr and mode != "r":
-        store = h5py.File(filename, mode=mode, libver="latest")
-        store.swmr = True
-        return store
-    else:
-        return h5py.File(filename, mode=mode, libver="latest", swmr=swmr)
-
-
-class FileHDFio(HasGroups, MutableMapping):
+class FileHDFio(HasGroups, Pointer):
     """
     Class that provides all info to access a h5 file. This class is based on h5io.py, which allows to
     get and put a large variety of jobs to/from h5
@@ -205,13 +178,8 @@ class FileHDFio(HasGroups, MutableMapping):
     """
 
     def __init__(self, file_name, h5_path="/", mode="a"):
-        file_name += ".h5" if not file_name.endswith(".h5") else ""
-        if not os.path.isabs(file_name):
-            raise ValueError("file_name must be given as absolute path name")
-        self._file_name = None
-        self.file_name = file_name
+        Pointer.__init__(self=self, file_name=file_name, h5_path=h5_path)
         self.history = []
-        self.h5_path = h5_path
         self._filter = ["groups", "nodes", "objects"]
 
     # MutableMapping Impl
@@ -249,7 +217,9 @@ class FileHDFio(HasGroups, MutableMapping):
                 # underlying file once, this reduces the number of file opens in the most-likely case from 2 to 1 (1 to
                 # check whether the data is there and 1 to read it) and increases in the worst case from 1 to 2 (1 to
                 # try to read it here and one more time to verify it's not a group below).
-                return read_hdf5(self.file_name, title=self._get_h5_path(item))
+                return _read_hdf(
+                    hdf_filehandle=self.file_name, h5_path=self._get_h5_path(item)
+                )
             except (ValueError, OSError, RuntimeError, NotImplementedError):
                 # h5io couldn't find a dataset with name item, but there still might be a group with that name, which we
                 # check in the rest of the method
@@ -342,77 +312,11 @@ class FileHDFio(HasGroups, MutableMapping):
         ):
             value.to_hdf(self, key)
             return
-
-        use_json = True
-        if (
-            isinstance(value, (list, np.ndarray))
-            and len(value) > 0
-            and isinstance(value[0], (list, np.ndarray))
-            and len(value[0]) > 0
-            and not isinstance(value[0][0], str)
-            and _is_ragged_in_1st_dim_only(value)
-        ):
-            # if the sub-arrays in value all share shape[1:], h5io comes up with a more efficient storage format than
-            # just writing a dataset for each element, by concatenating along the first axis and storing the indices
-            # where to break the concatenated array again
-            value = np.array([np.asarray(v) for v in value], dtype=object)
-            use_json = False
-        elif isinstance(value, tuple):
-            value = list(value)
-        write_hdf5(
-            self.file_name,
-            value,
-            title=self._get_h5_path(key),
-            overwrite="update",
-            use_json=use_json,
+        _write_hdf5_with_json_support(
+            hdf_filehandle=self.file_name,
+            h5_path=self._get_h5_path(key),
+            data=value,
         )
-
-    def __delitem__(self, key):
-        """
-        Delete item from the HDF5 file
-
-        Args:
-            key (str): key of the item to delete
-        """
-        if self.file_exists:
-            try:
-                with open_hdf5(self.file_name, mode="a") as store:
-                    del store[self._get_h5_path(key)]
-            except (AttributeError, KeyError):
-                pass
-
-    @property
-    def file_exists(self):
-        """
-        Check if the HDF5 file exists already
-
-        Returns:
-            bool: [True/False]
-        """
-        if os.path.isfile(self.file_name):
-            return True
-        else:
-            return False
-
-    @property
-    def file_name(self):
-        """
-        Get the file name of the HDF5 file
-
-        Returns:
-            str: absolute path to the HDF5 file
-        """
-        return self._file_name
-
-    @file_name.setter
-    def file_name(self, new_file_name):
-        """
-        Set the file name of the HDF5 file
-
-        Args:
-            new_file_name (str): absolute path to the HDF5 file
-        """
-        self._file_name = os.path.abspath(new_file_name).replace("\\", "/")
 
     @property
     def base_name(self):
@@ -433,80 +337,6 @@ class FileHDFio(HasGroups, MutableMapping):
             str: HDF5 file location
         """
         return posixpath.dirname(self.file_name)
-
-    @property
-    def h5_path(self):
-        """
-        Get the path in the HDF5 file starting from the root group - meaning this path starts with '/'
-
-        Returns:
-            str: HDF5 path
-        """
-        return self._h5_path
-
-    @h5_path.setter
-    def h5_path(self, path):
-        """
-        Set the path in the HDF5 file starting from the root group
-
-        Args:
-            path (str): HDF5 path
-        """
-        if (path is None) or (path == ""):
-            path = "/"
-        self._h5_path = posixpath.normpath(path)
-        if not posixpath.isabs(self._h5_path):
-            self._h5_path = "/" + self._h5_path
-
-    @property
-    def is_root(self):
-        """
-        Check if the current h5_path is pointing to the HDF5 root group.
-
-        Returns:
-            bool: [True/False]
-        """
-        return "/" == self.h5_path
-
-    # @property
-    # def is_open(self):
-    #     """
-    #     Check if the HDF5 file is currently opened in h5py
-    #
-    #     Returns:
-    #         bool: [True/False]
-    #     """
-    #     try:
-    #         return self._store.is_open
-    #     except AttributeError:
-    #         return False
-
-    @property
-    def is_empty(self):
-        """
-        Check if the HDF5 file is empty
-
-        Returns:
-            bool: [True/False]
-        """
-        if self.file_exists:
-            with open_hdf5(self.file_name) as h:
-                return len(h.keys()) == 0
-        else:
-            return True
-
-    @staticmethod
-    def file_size(hdf):
-        """
-        Get size of the HDF5 file
-
-        Args:
-            hdf (FileHDFio): hdf file
-
-        Returns:
-            float: file size in Bytes
-        """
-        return os.path.getsize(hdf.file_name)
 
     def get_size(self, hdf):
         """
@@ -534,92 +364,6 @@ class FileHDFio(HasGroups, MutableMapping):
         new_h5._filter = self._filter
         return new_h5
 
-    def copy_to(self, destination, file_name=None, maintain_name=True):
-        """
-        Copy the content of the HDF5 file to a new location
-
-        Args:
-            destination (FileHDFio): FileHDFio object pointing to the new location
-            file_name (str): name of the new HDF5 file - optional
-            maintain_name (bool): by default the names of the HDF5 groups are maintained
-
-        Returns:
-            FileHDFio: FileHDFio object pointing to a file which now contains the same content as file of the current
-                       FileHDFio object.
-        """
-
-        def _internal_copy(source, source_path, target, target_path, maintain_flag):
-            """
-            Internal function to copy content of one HDF5 file to another or copy a group within the same HDF5 file.
-
-            Args:
-                source (h5py.File): HDF5 File object
-                source_path (str): Path inside the source HDF5 file
-                target (h5py.File): HDF5 File object
-                target_path (str): Path inside the target HDF5 file
-                maintain_flag (bool): Maintain the same group name
-            """
-            if maintain_flag:
-                try:
-                    target.create_group(target_path)
-                except ValueError:
-                    pass  # In case the copy_to() function failed previously and the group already exists.
-
-            if target_path == "/":
-                source.copy(target_path, "/") if source == target else source.copy(
-                    target_path, target
-                )
-            else:
-                if maintain_flag:
-                    if dest_path != "":
-                        source.copy(source_path, target[dest_path])
-                    else:
-                        source.copy(source_path, target)
-                else:
-                    group_name_old = source_path.split("/")[-1]
-                    try:
-                        target.create_group("/tmp")
-                    except ValueError:
-                        pass
-                    source.copy(source_path, target["/tmp"])
-                    try:
-                        target.move("/tmp/" + group_name_old, target_path)
-                    except ValueError:
-                        del target[dest_path]
-                        target.move("/tmp/" + group_name_old, target_path)
-                    del target["/tmp"]
-
-        if file_name is None:
-            file_name = destination.file_name
-
-        if self.file_exists:
-            dest_path = (
-                destination.h5_path[1:]
-                if destination.h5_path[0] == "/"
-                else destination.h5_path
-            )
-            if self.file_name != file_name:
-                with open_hdf5(self.file_name, mode="r") as f_source:
-                    with open_hdf5(file_name, mode="a") as f_target:
-                        _internal_copy(
-                            source=f_source,
-                            source_path=self._h5_path,
-                            target=f_target,
-                            target_path=dest_path,
-                            maintain_flag=maintain_name,
-                        )
-            else:
-                with open_hdf5(file_name, mode="a") as f_target:
-                    _internal_copy(
-                        source=f_target,
-                        source_path=self._h5_path,
-                        target=f_target,
-                        target_path=dest_path,
-                        maintain_flag=maintain_name,
-                    )
-
-        return destination
-
     def create_group(self, name, track_order=False):
         """
         Create an HDF5 group - similar to a folder in the filesystem - the HDF5 groups allow the users to structure
@@ -634,7 +378,7 @@ class FileHDFio(HasGroups, MutableMapping):
             FileHDFio: FileHDFio object pointing to the new group
         """
         full_name = self._get_h5_path(name)
-        with open_hdf5(self.file_name, mode="a") as h:
+        with _open_hdf(self.file_name, mode="a") as h:
             try:
                 h.create_group(full_name, track_order=track_order)
             except ValueError:
@@ -647,7 +391,7 @@ class FileHDFio(HasGroups, MutableMapping):
         Remove an HDF5 group - if it exists. If the group does not exist no error message is raised.
         """
         try:
-            with open_hdf5(self.file_name, mode="a") as hdf_file:
+            with _open_hdf(self.file_name, mode="a") as hdf_file:
                 del hdf_file[self.h5_path]
         except KeyError:
             pass
@@ -773,22 +517,12 @@ class FileHDFio(HasGroups, MutableMapping):
             dict: {'groups': [list of groups], 'nodes': [list of nodes]}
         """
         if self.file_exists:
-            groups = set()
-            nodes = set()
-            with open_hdf5(self.file_name) as h:
-                try:
-                    h = h[self.h5_path]
-                    for k in h.keys():
-                        if isinstance(h[k], h5py.Group):
-                            groups.add(k)
-                        else:
-                            nodes.add(k)
-                except KeyError:
-                    pass
-            iopy_nodes = self._filter_io_objects(groups)
+            with _open_hdf(self.file_name) as hdf:
+                groups, nodes = list_groups_and_nodes(hdf=hdf, h5_path=self.h5_path)
+            iopy_nodes = self._filter_io_objects(set(groups))
             return {
-                "groups": sorted(list(groups - iopy_nodes)),
-                "nodes": sorted(list((nodes - groups).union(iopy_nodes))),
+                "groups": sorted(list(set(groups) - iopy_nodes)),
+                "nodes": sorted(list((set(nodes) - set(groups)).union(iopy_nodes))),
             }
         else:
             return {"groups": [], "nodes": []}
@@ -897,22 +631,12 @@ class FileHDFio(HasGroups, MutableMapping):
                 (set(hdf_old.list_nodes()) ^ set(check_nodes))
                 & set(hdf_old.list_nodes())
             )
-        for p in node_list:
-            hdf_new[p] = hdf_old[p]
+        hdf_new.write_dict(data_dict={p: hdf_old[p] for p in node_list})
         for p in group_list:
             h_new = hdf_new.create_group(p)
             ex_n = [e[-1] for e in exclude_nodes_split if p == e[0] or len(e) == 1]
             ex_g = [e[-1] for e in exclude_groups_split if p == e[0] or len(e) == 1]
             self.hd_copy(hdf_old[p], h_new, exclude_nodes=ex_n, exclude_groups=ex_g)
-        ### old ###
-        # for p in hdf_old.list_nodes():
-        #     if p not in exclude_nodes:
-        #         hdf_new[p] = hdf_old[p]
-        #
-        # for p in hdf_old.list_groups():
-        #     if p not in exclude_groups:
-        #         h_new = hdf_new.create_group(p)
-        #         self.hd_copy(hdf_old[p], h_new, exclude_groups=exclude_groups, exclude_nodes=exclude_nodes)
         return hdf_new
 
     @deprecate(job_name="ignored!", exclude_groups="ignored!", exclude_nodes="ignored!")
@@ -977,12 +701,6 @@ class FileHDFio(HasGroups, MutableMapping):
         del self.history
         del self._h5_path
 
-    def __enter__(self):
-        """
-        Compatibility function for the with statement
-        """
-        return self
-
     def __exit__(self, exc_type, exc_val, exc_tb):
         """
         Compatibility function for the with statement
@@ -1003,30 +721,38 @@ class FileHDFio(HasGroups, MutableMapping):
         Returns:
             dict, list, float, int: data or data object
         """
-        return read_hdf5(self.file_name, title=self._get_h5_path(item))
+        return _read_hdf(hdf_filehandle=self.file_name, h5_path=self._get_h5_path(item))
 
-    # def _open_store(self, mode="r"):
-    #     """
-    #     Internal function to open the HDF5 file
-    #
-    #     Args:
-    #         mode (str): file mode can be either 'w': write, 'r': read or 'a': append
-    #     """
-    #     try:
-    #         if not self._store:
-    #             self._store = HDFStoreIO(self.file_name, mode=mode)
-    #     except AttributeError:
-    #         self._store = HDFStoreIO(self.file_name, mode=mode)
-    #
-    # def _close_store(self):
-    #     """
-    #     Internal function to close the HDF5 file
-    #     """
-    #     try:
-    #         self._store.close()
-    #         self._store = None
-    #     except AttributeError:
-    #         pass
+    def write_dict_to_hdf(self, data_dict):
+        """
+        Write a dictionary to HDF5
+
+        Args:
+            data_dict (dict): dictionary with objects which should be written to HDF5
+        """
+        self.write_dict(data_dict=data_dict)
+
+    def read_dict_from_hdf(self, group_paths=[], recursive=False):
+        """
+        Read data from HDF5 file into a dictionary - by default only the nodes are converted to dictionaries, additional
+        sub groups can be specified using the group_paths parameter.
+
+        Args:
+            group_paths (list): list of additional groups to be included in the dictionary, for example:
+                                ["input", "output", "output/generic"]
+                                These groups are defined relative to the h5_path.
+            recursive (bool): Load all subgroups recursively
+
+        Returns:
+            dict:     The loaded data. Can be of any type supported by ``write_hdf5``.
+        """
+        return read_dict_from_hdf(
+            file_name=self.file_name,
+            h5_path=self.h5_path,
+            group_paths=group_paths,
+            recursive=recursive,
+            slash="ignore",
+        )
 
     def create_project_from_hdf5(self):
         """
@@ -1049,7 +775,7 @@ class FileHDFio(HasGroups, MutableMapping):
         Returns:
             str: combined path
         """
-        return posixpath.join(self.h5_path, name)
+        return get_h5_path(h5_path=self.h5_path, name=name)
 
     def _get_h5io_type(self, name):
         """
@@ -1061,7 +787,7 @@ class FileHDFio(HasGroups, MutableMapping):
         Returns:
             str: h5io type
         """
-        with open_hdf5(self.file_name) as store:
+        with _open_hdf(self.file_name) as store:
             return str(store[self.h5_path][name].attrs.get("TITLE", ""))
 
     def _filter_io_objects(self, groups):

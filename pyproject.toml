@@ -1,5 +1,5 @@
 [build-system]
-requires = ["dill", "gitpython", "h5io", "h5py", "jinja2", "numpy", "pandas", "pint", "psutil", "pyfileindex", "pysqa", "sqlalchemy", "tables", "tqdm", "traitlets", "setuptools", "versioneer[toml]==0.29"]
+requires = ["cloudpickle", "gitpython", "h5io", "h5py", "jinja2", "numpy", "pandas", "pint", "psutil", "pyfileindex", "pysqa", "sqlalchemy", "tables", "tqdm", "traitlets", "setuptools", "versioneer[toml]==0.29"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -24,21 +24,21 @@ classifiers = [
     "Programming Language :: Python :: 3.11",
 ]
 dependencies = [
-    "dill==0.3.7",
+    "cloudpickle==3.0.0",
     "gitpython==3.1.40",
-    "h5io==0.1.9",
+    "h5io_browser==0.0.5",
     "h5py==3.10.0",
     "jinja2==3.1.2",
-    "numpy==1.26.2",
+    "numpy==1.26.3",
     "pandas==2.1.4",
     "pint==0.23",
     "psutil==5.9.7",
-    "pyfileindex==0.0.19",
-    "pysqa==0.1.8",
-    "sqlalchemy==2.0.23",
+    "pyfileindex==0.0.20",
+    "pysqa==0.1.9",
+    "sqlalchemy==2.0.25",
     "tables==3.9.2",
     "tqdm==4.66.1",
-    "traitlets==5.14.0",
+    "traitlets==5.14.1",
 ]
 dynamic = ["version"]
 
