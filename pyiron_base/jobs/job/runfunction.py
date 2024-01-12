@@ -454,6 +454,7 @@ def run_job_with_runmode_srun(job):
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         universal_newlines=True,
+        env=os.environ.copy(),
     )
 
 
@@ -641,6 +642,7 @@ def execute_job_with_external_executable(job):
             stderr=subprocess.STDOUT,
             universal_newlines=True,
             check=True,
+            env=os.environ.copy(),
         ).stdout
     except subprocess.CalledProcessError as e:
         out, job_crashed = handle_failed_job(job=job, error=e)
