@@ -35,6 +35,7 @@ class ExecutableContainerJob(TemplateJob):
     >>> job.output
 
     """
+
     def __init__(self, project, job_name):
         super().__init__(project, job_name)
         self._write_input_funct = None

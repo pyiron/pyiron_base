@@ -376,6 +376,7 @@ class Project(ProjectPath, HasGroups):
         >>> job.run()
         >>> job.output
         """
+
         def job_factory(project, job_name):
             job = project.project.create.job.ExecutableContainerJob(job_name=job_name)
             job.set_job_type(
