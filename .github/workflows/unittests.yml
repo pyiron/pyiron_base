@@ -57,7 +57,7 @@ jobs:
       run: |
         python .ci_support/pyironconfig.py
         bash .ci_support/pip_install.sh
-        coverage run --omit pyiron_base/_version.py -m unittest discover tests
+        coverage run --omit="pyiron_base/_version.py,tests/*" -m unittest discover tests
         coverage combine
         coverage xml
     - name: Coveralls
