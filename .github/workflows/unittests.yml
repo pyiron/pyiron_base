@@ -58,7 +58,6 @@ jobs:
         python .ci_support/pyironconfig.py
         bash .ci_support/pip_install.sh
         coverage run --omit pyiron_base/_version.py -m unittest discover tests
-        coverage combine
         coverage xml
     - name: Coveralls
       if: matrix.label == 'linux-64-py-3-11'
