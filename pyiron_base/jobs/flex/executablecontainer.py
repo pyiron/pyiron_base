@@ -11,7 +11,6 @@ class ExecutableJobContainer(TemplateJob):
 
     def set_job_type(
         self,
-        class_name,
         write_input_funct,
         collect_output_funct,
         default_input_dict,
