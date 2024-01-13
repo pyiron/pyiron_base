@@ -12,3 +12,8 @@ class TestPythonFunctionContainer(TestWithProject):
         job.input["b"] = 5
         job.run()
         self.assertEqual(job.output["result"], 9)
+        self.assertEqual(job.status, "finished")
+        job_reload = self.project.load(job.job_name)
+        self.assertEqual(job_reload.input["a"], 4)
+        self.assertEqual(job_reload.input["b"], 5)
+        self.assertEqual(job_reload.output["result"], 9)
