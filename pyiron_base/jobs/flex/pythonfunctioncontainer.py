@@ -60,12 +60,17 @@ class PythonFunctionContainerJob(PythonTemplateJob):
         self._function = cloudpickle.loads(self.project_hdf5["function"])
 
     def save(self):
-        self.job_name = self._function.__name__ + get_hash(
+        job_name = self._function.__name__ + get_hash(
             binary=cloudpickle.dumps(
                 {"fn": self._function, "kwargs": self.input.to_builtin()}
             )
         )
-        super().save()
+        self.job_name = job_name
+        if job_name in self.project.list_nodes():
+            self.from_hdf()
+            self.status.finished = True
+        else:
+            super().save()
 
     def run_static(self):
         output = self._function(**self.input.to_builtin())
