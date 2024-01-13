@@ -6,7 +6,7 @@ def my_function(a, b=8):
 
 
 class TestPythonFunctionContainer(TestWithProject):
-    def test_pythonfunctioncontainer_as_job(self):
+    def test_as_job(self):
         job = self.project.wrap_python_function(my_function)
         job.input["a"] = 4
         job.input["b"] = 5
@@ -18,7 +18,7 @@ class TestPythonFunctionContainer(TestWithProject):
         self.assertEqual(job_reload.input["b"], 5)
         self.assertEqual(job_reload.output["result"], 9)
 
-    def test_pythonfunctioncontainer_as_function(self):
+    def test_as_function(self):
         my_function_as_job = self.project.wrap_python_function(my_function)
         self.assertEqual(my_function_as_job(a=5, b=6), 11)
         self.assertTrue(my_function_as_job.status.finished)
