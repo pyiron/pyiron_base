@@ -52,7 +52,6 @@ from pyiron_base.jobs.job.extension.server.queuestatus import (
     queue_enable_reservation,
     queue_check_job_is_waiting_or_running,
 )
-from pyiron_base.jobs.flex.executablecontainer import ExecutableJobContainer
 from pyiron_base.project.external import Notebook
 from pyiron_base.project.data import ProjectData
 from pyiron_base.project.archiving import export_archive, import_archive
