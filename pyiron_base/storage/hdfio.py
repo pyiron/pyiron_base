@@ -29,7 +29,6 @@ from pyiron_base.storage.helper_functions import (
 )
 from pyiron_base.interfaces.has_groups import HasGroups
 from pyiron_base.state import state
-from pyiron_base.jobs.dynamic import JOB_DYN_DICT, class_constructor
 from pyiron_base.jobs.job.util import _get_safe_job_name
 import pyiron_base.project.maintenance
 
@@ -120,13 +119,7 @@ def _to_object(hdf, class_name=None, **kwargs):
         )
     type_field = class_name or hdf.get("TYPE")
     module_path, class_name = _extract_module_class_name(type_field)
-
-    # objects that have classes starting with abc. were likely created by pyiron_base.jobs.dynamic, so we cannot import
-    # them the usual way.  Instead reconstruct the class here from JOB_DYN_DICT.
-    if not module_path.startswith("abc."):
-        class_object = _import_class(module_path, class_name)
-    else:
-        class_object = class_constructor(cp=JOB_DYN_DICT[class_name])
+    class_object = _import_class(module_path, class_name)
 
     # Backwards compatibility since the format of TYPE changed
     if type_field != str(class_object):
