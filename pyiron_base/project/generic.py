@@ -36,7 +36,12 @@ from pyiron_base.storage.filedata import load_file
 from pyiron_base.utils.deprecate import deprecate
 from pyiron_base.jobs.job.util import _special_symbol_replacements, _get_safe_job_name
 from pyiron_base.interfaces.has_groups import HasGroups
-from pyiron_base.jobs.job.jobtype import JobType, JobTypeChoice, JobFactory
+from pyiron_base.jobs.job.jobtype import (
+    JobType,
+    JobTypeChoice,
+    JobFactory,
+    JOB_CLASS_DICT,
+)
 from pyiron_base.jobs.job.extension.server.queuestatus import (
     queue_delete_job,
     queue_is_empty,
@@ -47,6 +52,7 @@ from pyiron_base.jobs.job.extension.server.queuestatus import (
     queue_enable_reservation,
     queue_check_job_is_waiting_or_running,
 )
+from pyiron_base.jobs.flex.executablecontainer import ExecutableJobContainer
 from pyiron_base.project.external import Notebook
 from pyiron_base.project.data import ProjectData
 from pyiron_base.project.archiving import export_archive, import_archive
@@ -325,6 +331,26 @@ class Project(ProjectPath, HasGroups):
         """
         new = self.copy()
         return new.open(group, history=False)
+
+    def create_job_class(
+        self,
+        class_name,
+        write_input_funct,
+        collect_output_funct,
+        default_input_dict,
+        executable_str,
+    ):
+        def job_factory(project, job_name):
+            job = project.create_job(job_type=ExecutableJobContainer, job_name=job_name)
+            job.set_job_type(
+                write_input_funct=write_input_funct,
+                collect_output_funct=collect_output_funct,
+                default_input_dict=default_input_dict,
+                executable_str=executable_str,
+            )
+            return job
+
+        JOB_CLASS_DICT[class_name] = job_factory
 
     def create_job(self, job_type, job_name, delete_existing_job=False):
         """
