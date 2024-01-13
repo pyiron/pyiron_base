@@ -51,6 +51,11 @@ class PythonFunctionContainerJob(PythonTemplateJob):
         self.input.update(get_function_parameter_dict(funct=funct))
         self._function = funct
 
+    def __call__(self, *args, **kwargs):
+        self.input.update(inspect.signature(self._function).bind(*args, **kwargs).arguments)
+        self.run()
+        return self.output["result"]
+
     def to_hdf(self, hdf=None, group_name=None):
         super().to_hdf(hdf=hdf, group_name=group_name)
         self.project_hdf5["function"] = np.void(cloudpickle.dumps(self._function))
