@@ -340,7 +340,7 @@ class Project(ProjectPath, HasGroups):
         executable_str,
     ):
         def job_factory(project, job_name):
-            job = project.create.job.ExecutableJobContainer(job_name=job_name)
+            job = project.project.create.job.ExecutableJobContainer(job_name=job_name)
             job.set_job_type(
                 write_input_funct=write_input_funct,
                 collect_output_funct=collect_output_funct,
