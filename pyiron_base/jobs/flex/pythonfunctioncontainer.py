@@ -35,7 +35,9 @@ class PythonFunctionContainerJob(PythonTemplateJob):
     >>> job.input["b"] = 5
     >>> job.run()
     >>> job.output
-
+    >>>
+    >>> test_function_wrapped = pr.wrap_python_function(test_function)
+    >>> test_function_wrapped(4, b=6)
     """
 
     def __init__(self, project, job_name):
@@ -52,7 +54,9 @@ class PythonFunctionContainerJob(PythonTemplateJob):
         self._function = funct
 
     def __call__(self, *args, **kwargs):
-        self.input.update(inspect.signature(self._function).bind(*args, **kwargs).arguments)
+        self.input.update(
+            inspect.signature(self._function).bind(*args, **kwargs).arguments
+        )
         self.run()
         return self.output["result"]
 

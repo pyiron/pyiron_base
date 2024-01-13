@@ -396,6 +396,9 @@ class Project(ProjectPath, HasGroups):
         >>> job.input["b"] = 5
         >>> job.run()
         >>> job.output
+        >>>
+        >>> test_function_wrapped = pr.wrap_python_function(test_function)
+        >>> test_function_wrapped(4, b=6)
 
         """
         job = self.create.job.PythonFunctionContainerJob(
