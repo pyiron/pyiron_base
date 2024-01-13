@@ -30,7 +30,7 @@ class PythonFunctionContainerJob(PythonTemplateJob):
     >>>
     >>> from pyiron_base import Project
     >>> pr = Project("test")
-    >>> job = pr.wrap.python_function(test_function)
+    >>> job = pr.wrap_python_function(test_function)
     >>> job.input["a"] = 4
     >>> job.input["b"] = 5
     >>> job.run()

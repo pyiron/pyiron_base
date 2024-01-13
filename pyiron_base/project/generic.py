@@ -50,7 +50,6 @@ from pyiron_base.jobs.job.extension.server.queuestatus import (
 from pyiron_base.project.external import Notebook
 from pyiron_base.project.data import ProjectData
 from pyiron_base.project.archiving import export_archive, import_archive
-from pyiron_base.project.wrap import Wrapper
 from typing import Generator, Union, Dict, TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -219,10 +218,6 @@ class Project(ProjectPath, HasGroups):
         )
         return self._size_conversion(size)
 
-    @property
-    def wrap(self):
-        return Wrapper(project=self)
-
     @staticmethod
     def _size_conversion(size: pint.Quantity):
         sign_prefactor = 1
@@ -378,6 +373,36 @@ class Project(ProjectPath, HasGroups):
         )
         table.analysis_project = self
         return table
+
+    def wrap_python_function(self, python_function):
+        """
+        Create a pyiron job object from any python function
+
+        Args:
+            python_function (callable): python function to create a job object from
+
+        Returns:
+            pyiron_base.jobs.flex.pythonfunctioncontainer.PythonFunctionContainerJob: pyiron job object
+
+        Example:
+
+        >>> def test_function(a, b=8):
+        >>>     return a+b
+        >>>
+        >>> from pyiron_base import Project
+        >>> pr = Project("test")
+        >>> job = pr.wrap_python_function(test_function)
+        >>> job.input["a"] = 4
+        >>> job.input["b"] = 5
+        >>> job.run()
+        >>> job.output
+
+        """
+        job = self.create.job.PythonFunctionContainerJob(
+            job_name=python_function.__name__
+        )
+        job.python_function = python_function
+        return job
 
     def get_child_ids(self, job_specifier, project=None):
         """
