@@ -1,5 +1,6 @@
 import os
 from pyiron_base._tests import TestWithProject
+from pyiron_base.jobs.job.jobtype import JOB_CLASS_DICT
 
 
 def write_input(input_dict, working_directory="."):
@@ -29,3 +30,4 @@ class TestExecutableContainer(TestWithProject):
         job_reload = self.project.load(job.job_name)
         self.assertEqual(job_reload.input["energy"], energy_value)
         self.assertEqual(job_reload.output["energy"], energy_value)
+        del JOB_CLASS_DICT["CatJob"]
