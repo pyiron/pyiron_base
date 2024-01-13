@@ -50,6 +50,7 @@ from pyiron_base.jobs.job.extension.server.queuestatus import (
 from pyiron_base.project.external import Notebook
 from pyiron_base.project.data import ProjectData
 from pyiron_base.project.archiving import export_archive, import_archive
+from pyiron_base.project.wrap import Wrapper
 from typing import Generator, Union, Dict, TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -217,6 +218,10 @@ class Project(ProjectPath, HasGroups):
             * pint.UnitRegistry().byte
         )
         return self._size_conversion(size)
+
+    @property
+    def wrap(self):
+        return Wrapper(project=self)
 
     @staticmethod
     def _size_conversion(size: pint.Quantity):
