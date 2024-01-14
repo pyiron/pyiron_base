@@ -49,6 +49,15 @@ from pyiron_base.utils.deprecate import deprecate
 from pyiron_base.jobs.job.extension.server.generic import Server
 from pyiron_base.database.filetable import FileTable
 from pyiron_base.interfaces.has_dict import HasDict
+import networkx as nx
+from pyiron_base.graphs.components import (
+    draw,
+    draw_recursive_with_label,
+    get_graph,
+    GraphGather,
+    GraphItem,
+    GraphScatter,
+)
 
 __author__ = "Joerg Neugebauer, Jan Janssen"
 __copyright__ = (
@@ -368,6 +377,129 @@ class GenericJob(JobCore, HasDict):
         elif not self.project_hdf5.working_directory:
             self._create_working_directory()
         return self.project_hdf5.working_directory
+
+    @property
+    def future(self):
+        return self.server.future
+
+    @future.setter
+    def future(self, future_obj):
+        self.server.future = future_obj
+
+    def get_status(self):
+        status_lst = self._get_status_of_links().values()
+        if self.future is not None and self.future.done():
+            return "done"
+        elif self.future is not None:
+            return "running"
+        elif (
+                "done" in status_lst
+                and "wait" not in status_lst
+                and "running" not in status_lst
+                and "ready" not in status_lst
+        ):
+            return "ready"
+        else:
+            return "wait"
+
+    def ready(self):
+        if self.future is not None and self.future.done():
+            return True
+        else:
+            return False
+
+    def get_links(self):
+        return self._links.arguments.items()
+
+    def get_graph(self):
+        return get_graph(workflow=self)
+
+    def get_tasks(self):
+        kwargs = {}
+        task_lst = []
+        if self.ready():
+            return task_lst
+        elif self.future is not None:
+            return []
+        else:
+            return_task_lst = False
+            for key, value in self.get_links():
+                if (
+                        isinstance(value, (GenericJob, GraphGather))
+                        and value.future is None
+                ):
+                    task_lst += value.get_tasks()
+                elif (
+                        isinstance(value, GenericJob) and value.future.done()
+                ) or isinstance(value, (GraphGather, GraphItem, GraphScatter)):
+                    kwargs[key] = value.result()
+                elif not isinstance(
+                        value, (GenericJob, GraphGather, GraphItem, GraphScatter)
+                ):
+                    kwargs[key] = value
+                else:
+                    return_task_lst = True
+            if len(task_lst) > 0 or return_task_lst:
+                return task_lst
+            else:
+                if self.get_status() == "ready":
+                    return [[self, self._funct, kwargs, self._executor]]
+                else:
+                    return []
+
+    def result(self):
+        if self.future is None:
+            kwargs = {
+                key: (
+                    value.result()
+                    if isinstance(
+                        value,
+                        (GenericJob, GraphGather, GraphItem, GraphScatter),
+                    )
+                    else value
+                )
+                for key, value in self.get_links()
+            }
+            self._future = Future()
+            self.future.set_result(self._funct(**kwargs))
+        return self.future.result()
+
+    def draw_recursive(
+            self, graph, link_to=None, link_to_label=None, show_values=False
+    ):
+        draw_recursive_with_label(
+            node_name=self._name + "_" + str(self.__hash__()),
+            graph=graph,
+            label=self._name,
+            links=self.get_links(),
+            ready=self.ready(),
+            link_to=link_to,
+            link_to_label=link_to_label,
+            show_values=show_values,
+        )
+
+    def draw(self, show_values=False):
+        graph = nx.DiGraph()
+        self.draw_recursive(
+            graph=graph, link_to=None, link_to_label=None, show_values=show_values
+        )
+        return draw(graph=graph)
+
+    def _get_status_of_links(self):
+        return {
+            key: (
+                value.get_status()
+                if isinstance(value, (GenericJob, GraphGather))
+                else "done"
+            )
+            for key, value in self.get_links()
+        }
+
+    def __getattr__(self, name):
+        if name in self._links.arguments.keys():
+            return self._links.arguments[name]
+        else:
+            raise AttributeError(name)
 
     def collect_logfiles(self):
         """
