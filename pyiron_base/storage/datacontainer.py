@@ -837,10 +837,16 @@ class DataContainer(MutableMapping, Lockable, HasGroups, HasHDF):
                     (*normalize_key(n), hdf[n] if not self._lazy else HDFStub(hdf, n))
                 )
             for g in hdf.list_groups():
+                def to_object(hdf_group):
+                    if hasattr(hdf_group, "to_object"):
+                        return hdf_group.to_object()
+                    else:
+                        return hdf_group
+
                 items.append(
                     (
                         *normalize_key(g),
-                        hdf[g].to_object() if not self._lazy else HDFStub(hdf, g),
+                        to_object(hdf[g]) if not self._lazy else HDFStub(hdf, g),
                     )
                 )
 
