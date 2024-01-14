@@ -8,6 +8,7 @@ from pyiron_base.storage.inputlist import InputList
 from collections.abc import Iterator
 import copy
 import os
+import sys
 import unittest
 import warnings
 import h5py
@@ -686,6 +687,7 @@ class TestDataContainer(TestWithCleanProject):
         self.assertEqual(len(d), len(items),
                          "Number of items in HDF does not match length of container!")
 
+    @unittest.skipIf(sys.version_info < (3, 11), "__getstate__() and __setstate__() support in h5io requires Python 3.11")
     def test_project_in_datacontainer(self):
         pl = DataContainer(table_name="project")
         pl.update({"project": self.project})
