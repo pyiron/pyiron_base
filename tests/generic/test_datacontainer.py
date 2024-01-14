@@ -686,6 +686,15 @@ class TestDataContainer(TestWithCleanProject):
         self.assertEqual(len(d), len(items),
                          "Number of items in HDF does not match length of container!")
 
+    def test_project_in_datacontainer(self):
+        pl = DataContainer(table_name="project")
+        pl.update({"project": self.project})
+        pl.to_hdf(hdf=self.hdf)
+        pl_reload = DataContainer(table_name="project")
+        pl_reload.from_hdf(hdf=self.hdf)
+        self.assertEqual(pl_reload.project.project_path, self.project.project_path)
+        self.assertEqual(pl_reload.project.root_path, self.project.root_path)
+
 
 class TestInputList(PyironTestCase):
 
