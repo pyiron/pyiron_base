@@ -14,6 +14,7 @@ import numpy as np
 import pandas
 
 from pyiron_base.storage.fileio import read, write
+from pyiron_base.storage.hdfio import ProjectHDFio
 from pyiron_base.storage.hdfstub import HDFStub
 from pyiron_base.interfaces.has_groups import HasGroups
 from pyiron_base.interfaces.has_hdf import HasHDF
@@ -839,7 +840,7 @@ class DataContainer(MutableMapping, Lockable, HasGroups, HasHDF):
             for g in hdf.list_groups():
 
                 def to_object(hdf_group):
-                    if hasattr(hdf_group, "to_object"):
+                    if isinstance(hdf_group, ProjectHDFio):
                         return hdf_group.to_object()
                     else:
                         return hdf_group
