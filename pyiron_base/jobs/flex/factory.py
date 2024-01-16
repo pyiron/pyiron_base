@@ -1,3 +1,6 @@
+from pyiron_base.utils.instance import static_isinstance
+
+
 def create_job_factory(
     write_input_funct,
     executable_str,
@@ -45,13 +48,20 @@ def create_job_factory(
         Create a job based on the previously defined write_input(), collect_output() and the executable string.
 
         Args:
-            project (ProjectHDFio): ProjectHDFio instance which points to the HDF5 file the job is stored in
+            project (ProjectHDFio/ Project): ProjectHDFio instance which points to the HDF5 file the job is stored in
             job_name (str): name of the job, which has to be unique within the project
 
         Returns:
             pyiron_base.jobs.flex.executablecontainer.ExecutableContainerJob: pyiron job object
         """
-        job = project.project.create.job.ExecutableContainerJob(job_name=job_name)
+        if static_isinstance(project, "pyiron_base.project.generic.Project"):
+            job = project.create.job.ExecutableContainerJob(job_name=job_name)
+        elif static_isinstance(project, "pyiron_base.storage.hdfio.ProjectHDFio"):
+            job = project.project.create.job.ExecutableContainerJob(job_name=job_name)
+        else:
+            raise TypeError(
+                "Expected ProjectHDFio/ Project but recieved", type(project)
+            )
         job.set_job_type(
             write_input_funct=write_input_funct,
             collect_output_funct=collect_output_funct,
