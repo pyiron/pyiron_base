@@ -175,6 +175,16 @@ class GenericPath(object):
         """
         return self.path
 
+    def __getstate__(self):
+        return {
+            "root_path": self._root_path,
+            "project_path": self._project_path,
+        }
+
+    def __setstate__(self, state):
+        self._root_path = state["root_path"]
+        self._project_path = state["project_path"]
+
     @staticmethod
     def _windows_path_to_unix_path(path):
         """
@@ -347,6 +357,15 @@ class ProjectPath(GenericPath):
             exc_tb: Python internal
         """
         self.close()
+
+    def __getstate__(self):
+        state_dict = super.__getstate__()
+        state_dict["history"] = self._history
+        return state_dict
+
+    def __setstate__(self, state):
+        super().__setstate__(state)
+        self._history = state["history"]
 
     def _convert_str_to_generic_path(self, path):
         """
