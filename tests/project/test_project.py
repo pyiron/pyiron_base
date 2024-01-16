@@ -239,7 +239,8 @@ class TestProjectOperations(TestWithFilledProject):
         df = self.project.maintenance.get_repository_status()
         self.assertIn('pyiron_base', df.Module.values)
 
-    def test_serialization(self):
+    def test_pickle(self):
+        """Project should be pickle-able."""
         project_reload = pickle.loads(pickle.dumps(self.project))
         self.assertEqual(project_reload.root_path, self.project.root_path)
         self.assertEqual(project_reload.project_path, self.project.project_path)

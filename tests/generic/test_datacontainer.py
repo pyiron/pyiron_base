@@ -689,6 +689,7 @@ class TestDataContainer(TestWithCleanProject):
 
     @unittest.skipIf(sys.version_info < (3, 11), "__getstate__() and __setstate__() support in h5io requires Python 3.11")
     def test_project_in_datacontainer(self):
+        """DataContainer should be able to save Project to HDF."""
         pl = DataContainer(table_name="project")
         pl.update({"project": self.project})
         pl.to_hdf(hdf=self.hdf)
