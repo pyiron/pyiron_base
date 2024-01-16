@@ -44,9 +44,9 @@ class ExecutableContainerJob(TemplateJob):
     def set_job_type(
         self,
         write_input_funct,
-        collect_output_funct,
-        default_input_dict,
         executable_str,
+        collect_output_funct,
+        default_input_dict=None,
     ):
         """
         Set the pre-defined write_input() and collect_output() function plus a dictionary of default inputs and an
@@ -54,14 +54,18 @@ class ExecutableContainerJob(TemplateJob):
 
         Args:
             write_input_funct (callable): The write input function write_input(input_dict, working_directory)
-            collect_output_funct (callable): The collect output function collect_output(working_directory)
-            default_input_dict (dict): Default input for the newly created job class
             executable_str (str): Call to an external executable
+            collect_output_funct (callable): The collect output function collect_output(working_directory)
+            default_input_dict (dict/None): Default input for the newly created job class
+
+        Returns:
+            callable: Function which requires a project and a job_name as input and returns a job object
         """
-        self.input.update(default_input_dict)
         self._write_input_funct = write_input_funct
-        self._collect_output_funct = collect_output_funct
         self.executable = executable_str
+        self._collect_output_funct = collect_output_funct
+        if default_input_dict is not None:
+            self.input.update(default_input_dict)
 
     def write_input(self):
         self._write_input_funct(

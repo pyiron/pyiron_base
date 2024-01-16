@@ -34,8 +34,9 @@ from pyiron_base.database.jobtable import (
 from pyiron_base.storage.hdfio import ProjectHDFio
 from pyiron_base.storage.filedata import load_file
 from pyiron_base.utils.deprecate import deprecate
-from pyiron_base.jobs.job.util import _special_symbol_replacements, _get_safe_job_name
 from pyiron_base.interfaces.has_groups import HasGroups
+from pyiron_base.jobs.flex.factory import create_job_factory
+from pyiron_base.jobs.job.util import _special_symbol_replacements, _get_safe_job_name
 from pyiron_base.jobs.job.jobtype import (
     JobType,
     JobTypeChoice,
@@ -376,18 +377,12 @@ class Project(ProjectPath, HasGroups):
         >>> job.run()
         >>> job.output
         """
-
-        def job_factory(project, job_name):
-            job = project.project.create.job.ExecutableContainerJob(job_name=job_name)
-            job.set_job_type(
-                write_input_funct=write_input_funct,
-                collect_output_funct=collect_output_funct,
-                default_input_dict=default_input_dict,
-                executable_str=executable_str,
-            )
-            return job
-
-        JOB_CLASS_DICT[class_name] = job_factory
+        JOB_CLASS_DICT[class_name] = create_job_factory(
+            write_input_funct=write_input_funct,
+            collect_output_funct=collect_output_funct,
+            default_input_dict=default_input_dict,
+            executable_str=executable_str,
+        )
 
     def create_job(self, job_type, job_name, delete_existing_job=False):
         """
