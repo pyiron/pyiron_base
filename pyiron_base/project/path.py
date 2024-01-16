@@ -359,7 +359,7 @@ class ProjectPath(GenericPath):
         self.close()
 
     def __getstate__(self):
-        state_dict = super.__getstate__()
+        state_dict = super().__getstate__()
         state_dict["history"] = self._history
         return state_dict
 

@@ -1549,7 +1549,7 @@ class Project(ProjectPath, HasGroups):
         )
 
     def __getstate__(self):
-        state_dict = super.__getstate__()
+        state_dict = super().__getstate__()
         state_dict.update(
             {
                 "user": self.user,
