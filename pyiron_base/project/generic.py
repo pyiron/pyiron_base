@@ -1548,6 +1548,31 @@ class Project(ProjectPath, HasGroups):
             {"groups": self.list_dirs(skip_hdf5=True), "nodes": self.list_nodes()}
         )
 
+    def __getstate__(self):
+        state_dict = super().__getstate__()
+        state_dict.update(
+            {
+                "user": self.user,
+                "sql_query": self.sql_query,
+                "filter": self._filter,
+                "inspect_mode": self._inspect_mode,
+            }
+        )
+        return state_dict
+
+    def __setstate__(self, state):
+        super().__setstate__(state)
+        self.user = state["user"]
+        self.sql_query = state["sql_query"]
+        self._filter = state["filter"]
+        self._inspect_mode = state["inspect_mode"]
+        self._data = None
+        self._creator = Creator(project=self)
+        self._loader = JobLoader(project=self)
+        self._inspector = JobInspector(project=self)
+        self.job_type = JobTypeChoice()
+        self._maintenance = None
+
     def _get_item_helper(self, item, convert_to_object=True):
         """
         Internal helper function to get item from project
