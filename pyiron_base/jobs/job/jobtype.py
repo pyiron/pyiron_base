@@ -13,7 +13,6 @@ from pyiron_base.storage.hdfio import ProjectHDFio
 from pyiron_base.interfaces.singleton import Singleton
 from pyiron_base.interfaces.factory import PyironFactory
 from pyiron_base.jobs.job.extension.jobstatus import job_status_finished_lst
-from pyiron_base.jobs.dynamic import JOB_DYN_DICT, class_constructor
 from typing import Type, Union
 
 __author__ = "Joerg Neugebauer, Jan Janssen"
@@ -229,55 +228,16 @@ class JobFactory(PyironFactory):
 
     def __init__(self, project):
         self._job_class_dict = JOB_CLASS_DICT
-        self._job_dyn_dict = JOB_DYN_DICT
         self._project = project
 
     def __dir__(self):
         """
         Enable autocompletion by overwriting the __dir__() function.
         """
-        return list(self._job_class_dict.keys()) + list(self._job_dyn_dict.keys())
+        return list(self._job_class_dict.keys())
 
     def __getattr__(self, name):
-        # FIXME: due to a bug in job registration dynamically created jobs are also present in self._job_class_dict, so
-        # we first have to check whether name is in _job_dyn_dict before we check the general _job_class_dict
-        if name in self._job_dyn_dict:
-
-            def wrapper(job_name, delete_existing_job=False, delete_aborted_job=False):
-                """
-                Create one of the following jobs:
-                - 'ExampleJob': example job just generating random number
-                - 'SerialMaster': series of jobs run in serial
-                - 'ParallelMaster': series of jobs run in parallel
-                - 'ScriptJob': Python script or jupyter notebook job container
-                - 'ListMaster': list of jobs
-
-                Args:
-                    job_name (str): name of the job
-                    delete_existing_job (bool): delete an existing job - default false
-                    delete_aborted_job (bool): delete an existing and aborted job - default false
-
-                Returns:
-                    GenericJob: job object depending on the job_type selected
-                """
-                job_name = _get_safe_job_name(job_name)
-                return JobType(
-                    class_name=name,
-                    project=ProjectHDFio(
-                        project=self._project.copy(), file_name=job_name
-                    ),
-                    job_name=job_name,
-                    job_class_dict={
-                        name: class_constructor(cp=cp)
-                        for name, cp in self._job_dyn_dict.items()
-                    },
-                    delete_existing_job=delete_existing_job,
-                    delete_aborted_job=delete_aborted_job,
-                )
-
-            return wrapper
-
-        elif name in self._job_class_dict:
+        if name in self._job_class_dict:
 
             def wrapper(job_name, delete_existing_job=False, delete_aborted_job=False):
                 """

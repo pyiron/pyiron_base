@@ -14,7 +14,7 @@ import numpy as np
 import pandas
 
 from pyiron_base.storage.fileio import read, write
-from pyiron_base.storage.hdfstub import HDFStub
+from pyiron_base.storage.hdfstub import HDFStub, to_object
 from pyiron_base.interfaces.has_groups import HasGroups
 from pyiron_base.interfaces.has_hdf import HasHDF
 from pyiron_base.interfaces.lockable import Lockable, sentinel
@@ -840,7 +840,7 @@ class DataContainer(MutableMapping, Lockable, HasGroups, HasHDF):
                 items.append(
                     (
                         *normalize_key(g),
-                        hdf[g].to_object() if not self._lazy else HDFStub(hdf, g),
+                        to_object(hdf[g]) if not self._lazy else HDFStub(hdf, g),
                     )
                 )
 
