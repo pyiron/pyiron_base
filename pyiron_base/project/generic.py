@@ -34,9 +34,15 @@ from pyiron_base.database.jobtable import (
 from pyiron_base.storage.hdfio import ProjectHDFio
 from pyiron_base.storage.filedata import load_file
 from pyiron_base.utils.deprecate import deprecate
-from pyiron_base.jobs.job.util import _special_symbol_replacements, _get_safe_job_name
 from pyiron_base.interfaces.has_groups import HasGroups
-from pyiron_base.jobs.job.jobtype import JobType, JobTypeChoice, JobFactory
+from pyiron_base.jobs.flex.factory import create_job_factory
+from pyiron_base.jobs.job.util import _special_symbol_replacements, _get_safe_job_name
+from pyiron_base.jobs.job.jobtype import (
+    JobType,
+    JobTypeChoice,
+    JobFactory,
+    JOB_CLASS_DICT,
+)
 from pyiron_base.jobs.job.extension.server.queuestatus import (
     queue_delete_job,
     queue_is_empty,
@@ -325,6 +331,58 @@ class Project(ProjectPath, HasGroups):
         """
         new = self.copy()
         return new.open(group, history=False)
+
+    def create_job_class(
+        self,
+        class_name,
+        write_input_funct,
+        collect_output_funct,
+        default_input_dict,
+        executable_str,
+    ):
+        """
+        Create a new job class based on pre-defined write_input() and collect_output() function plus a dictionary of
+        default inputs and an executable string.
+
+        Args:
+            class_name (str): A name for the newly created job class, so it is accessible via pr.create.job.<class_name>
+            write_input_funct (callable): The write input function write_input(input_dict, working_directory)
+            collect_output_funct (callable): The collect output function collect_output(working_directory)
+            default_input_dict (dict): Default input for the newly created job class
+            executable_str (str): Call to an external executable
+
+        Example:
+
+        >>> def write_input(input_dict, working_directory="."):
+        >>>     with open(os.path.join(working_directory, "input_file"), "w") as f:
+        >>>         f.write(str(input_dict["energy"]))
+        >>>
+        >>>
+        >>> def collect_output(working_directory="."):
+        >>>     with open(os.path.join(working_directory, "output_file"), "r") as f:
+        >>>         return {"energy": float(f.readline())}
+        >>>
+        >>>
+        >>> from pyiron_base import Project
+        >>> pr = Project("test")
+        >>> pr.create_job_class(
+        >>>     class_name="CatJob",
+        >>>     write_input_funct=write_input,
+        >>>     collect_output_funct=collect_output,
+        >>>     default_input_dict={"energy": 1.0},
+        >>>     executable_str="cat input_file > output_file",
+        >>> )
+        >>> job = pr.create.job.CatJob(job_name="job_test")
+        >>> job.input["energy"] = 2.0
+        >>> job.run()
+        >>> job.output
+        """
+        JOB_CLASS_DICT[class_name] = create_job_factory(
+            write_input_funct=write_input_funct,
+            collect_output_funct=collect_output_funct,
+            default_input_dict=default_input_dict,
+            executable_str=executable_str,
+        )
 
     def create_job(self, job_type, job_name, delete_existing_job=False):
         """
