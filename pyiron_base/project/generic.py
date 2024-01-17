@@ -432,6 +432,39 @@ class Project(ProjectPath, HasGroups):
         table.analysis_project = self
         return table
 
+    def wrap_python_function(self, python_function):
+        """
+        Create a pyiron job object from any python function
+
+        Args:
+            python_function (callable): python function to create a job object from
+
+        Returns:
+            pyiron_base.jobs.flex.pythonfunctioncontainer.PythonFunctionContainerJob: pyiron job object
+
+        Example:
+
+        >>> def test_function(a, b=8):
+        >>>     return a+b
+        >>>
+        >>> from pyiron_base import Project
+        >>> pr = Project("test")
+        >>> job = pr.wrap_python_function(test_function)
+        >>> job.input["a"] = 4
+        >>> job.input["b"] = 5
+        >>> job.run()
+        >>> job.output
+        >>>
+        >>> test_function_wrapped = pr.wrap_python_function(test_function)
+        >>> test_function_wrapped(4, b=6)
+
+        """
+        job = self.create.job.PythonFunctionContainerJob(
+            job_name=python_function.__name__
+        )
+        job.python_function = python_function
+        return job
+
     def get_child_ids(self, job_specifier, project=None):
         """
         Get the childs for a specific job
