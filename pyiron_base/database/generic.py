@@ -135,7 +135,7 @@ class IsDatabase(ABC):
         full_table=False,
         element_lst=None,
         job_name_contains="",
-        mode: typing.Literal["regex", "glob"]="glob"
+        mode: typing.Literal["regex", "glob"]="glob",
         **kwargs,
     ):
         """
