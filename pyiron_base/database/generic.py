@@ -93,11 +93,8 @@ class IsDatabase(ABC):
         """
         Get a job table in a project based on matching values from any column in the project database
 
-        The values in `kwargs` can be wildcards, with the following special charaters:
-            - !value matches in the inverse of value
-            - *value matches anything that ends in value
-            - value* matches anything that starts with value
-            - *value* matches anything that contains value
+        The values in `kwargs` can be wildcards. The matches can be given
+        either via "glob" or "regex".
 
         Args:
             df (pandas.DataFrame): DataFrame to be filtered
@@ -117,7 +114,8 @@ class IsDatabase(ABC):
                 )
         for key, val in kwargs.items():
             if mode == "regex":
-                update = df[key].apply(lambda x: re.search(val, x)).astype(bool)
+                pattern = re.compile(val)
+                update = df[key].apply(lambda x: pattern(x)).astype(bool)
             elif mode == "glob":
                 matches = fnmatch.filter(df[key], val)
                 update = np.array([k in matches for k in df[key]])
@@ -158,6 +156,7 @@ class IsDatabase(ABC):
             full_table (bool): Whether to show the entire pandas table
             element_lst (list): list of elements required in the chemical formular - by default None
             job_name_contains (str): (deprecated) A string which should be contained in every job_name
+            mode (str): search mode when kwargs are given.
             **kwargs (dict): Optional arguments for filtering with keys matching the project database column name
                             (eg. status="finished"). Asterisk can be used to denote a wildcard, for zero or more
                             instances of any character
