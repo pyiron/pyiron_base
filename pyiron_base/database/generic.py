@@ -87,7 +87,7 @@ class IsDatabase(ABC):
     @staticmethod
     def _get_filtered_job_table(
         df: pandas.DataFrame,
-        mode: typing.Literal["regex", "glob"]="glob"
+        mode: typing.Literal["regex", "glob"]="glob",
         **kwargs: dict,
     ) -> pandas.DataFrame:
         """
