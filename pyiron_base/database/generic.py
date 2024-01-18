@@ -15,6 +15,7 @@ import os
 from datetime import datetime
 from pyiron_base.utils.deprecate import deprecate
 import pandas
+import typing
 from sqlalchemy import (
     create_engine,
     MetaData,
@@ -86,7 +87,7 @@ class IsDatabase(ABC):
     @staticmethod
     def _get_filtered_job_table(
         df: pandas.DataFrame,
-        regex=False,
+        mode: typing.Literal["regex", "glob"]="glob"
         **kwargs: dict,
     ) -> pandas.DataFrame:
         """
@@ -114,30 +115,12 @@ class IsDatabase(ABC):
                 raise ValueError(
                     f"Column name {key} does not exist in the project database!"
                 )
-        if len(kwargs) > 0 and not regex:
-            logger.warning(
-                "regex=False when using keyword sorting is deprecated",
-            )
         for key, val in kwargs.items():
-            if regex:
+            if mode == "regex":
                 update = df[key].apply(lambda x: re.search(val, x)).astype(bool)
-            else:
-                invert = False
-                if isinstance(val, str) and val[0] == "!":
-                    invert = True
-                    val = val[1:]
-                if val is None:
-                    update = df[key].isnull()
-                elif str(val).startswith("*") and str(val).endswith("*"):
-                    update = df[key].str.contains(str(val).replace("*", ""))
-                elif str(val).endswith("*"):
-                    update = df[key].str.startswith(str(val).replace("*", ""))
-                elif str(val).startswith("*"):
-                    update = df[key].str.endswith(str(val).replace("*", ""))
-                else:
-                    update = df[key] == val
-                if invert:
-                    update = ~update
+            elif mode == "glob":
+                matches = fnmatch.filter(df[key], val)
+                update = np.array([k in matches for k in df[key]])
             mask &= update
         return df[mask]
 
