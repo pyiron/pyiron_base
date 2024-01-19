@@ -781,7 +781,7 @@ class Project(ProjectPath, HasGroups):
         element_lst=None,
         job_name_contains="",
         auto_refresh_job_status=False,
-        mode: typing.Literal["regex", "glob"]="glob",
+        mode: typing.Literal["regex", "glob"] = "glob",
         **kwargs: dict,
     ):
         """
