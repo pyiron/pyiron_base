@@ -115,11 +115,12 @@ class IsDatabase(ABC):
                 )
         for key, val in kwargs.items():
             if mode == "regex":
-                pattern = re.compile(val)
-                update = df[key].apply(lambda x: pattern(x)).astype(bool)
+                pattern = re.compile(str(val))
+                update = df[key].apply(lambda x: pattern.search(x)).astype(bool)
             elif mode == "glob":
-                matches = fnmatch.filter(df[key], val)
-                update = np.array([k in matches for k in df[key]])
+                arr = np.asarray(df[key]).astype(str)
+                matches = fnmatch.filter(arr, str(val))
+                update = np.array([k in matches for k in arr])
             mask &= update
         return df[mask]
 
