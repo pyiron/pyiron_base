@@ -116,7 +116,7 @@ class IsDatabase(ABC):
         for key, val in kwargs.items():
             if mode == "regex":
                 pattern = re.compile(str(val))
-                update = df[key].apply(lambda x: pattern.search(x)).astype(bool)
+                update = df[key].apply(pattern.search).astype(bool)
             elif mode == "glob":
                 if str(val).startswith("!"):
                     logger.warn(
