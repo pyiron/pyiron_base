@@ -56,7 +56,7 @@ from pyiron_base.jobs.job.extension.server.queuestatus import (
 from pyiron_base.project.external import Notebook
 from pyiron_base.project.data import ProjectData
 from pyiron_base.project.archiving import export_archive, import_archive
-from typing import Generator, Union, Dict, TYPE_CHECKING
+from typing import Generator, Union, Dict, TYPE_CHECKING, Literal
 
 if TYPE_CHECKING:
     from pyiron_base.jobs.job.generic import GenericJob
@@ -781,7 +781,7 @@ class Project(ProjectPath, HasGroups):
         element_lst=None,
         job_name_contains="",
         auto_refresh_job_status=False,
-        mode: typing.Literal["regex", "glob"] = "glob",
+        mode: Literal["regex", "glob"] = "glob",
         **kwargs: dict,
     ):
         """
