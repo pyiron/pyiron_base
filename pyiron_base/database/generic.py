@@ -118,6 +118,13 @@ class IsDatabase(ABC):
                 pattern = re.compile(str(val))
                 update = df[key].apply(lambda x: pattern.search(x)).astype(bool)
             elif mode == "glob":
+                if str(val).startswith("!"):
+                    logger.warn(
+                        "It looks like you are using an old pyiron convention."
+                        " If you meant to exclude the term following '!', use"
+                        " `mode='regex' and use a regex convention (such as"
+                        " `^(?!term$)`)"
+                    )
                 arr = np.asarray(df[key]).astype(str)
                 matches = fnmatch.filter(arr, str(val))
                 update = np.array([k in matches for k in arr])
