@@ -16,6 +16,7 @@ from datetime import datetime
 from pyiron_base.utils.deprecate import deprecate
 import pandas
 import typing
+import fnmatch
 from sqlalchemy import (
     create_engine,
     MetaData,
