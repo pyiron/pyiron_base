@@ -178,19 +178,19 @@ class TestProjectOperations(TestWithFilledProject):
             n_top_jobs_named_toy_1
         )
         self.assertEqual(
-            len(self.project.job_table(recursive=True, status="!finished")),
+            len(self.project.job_table(recursive=True, status="^(?!finished)", mode="regex")),
             n_suspended_jobs + n_aborted_jobs,
         )
         self.assertEqual(
-            len(self.project.job_table(recursive=True, status="!aborted")),
+            len(self.project.job_table(recursive=True, status="^(?!aborted)", mode="regex")),
             n_jobs - n_aborted_jobs
         )
         self.assertEqual(
-            len(self.project.job_table(recursive=True, job="!toy_1")),
+            len(self.project.job_table(recursive=True, job="^(?!toy_1)", mode="regex")),
             n_jobs - n_jobs_named_toy_1
         )
         self.assertEqual(
-            len(self.project.job_table(recursive=True, job="!toy_*")),
+            len(self.project.job_table(recursive=True, job="^(?!toy_)", mode="regex")),
             0
         )
         self.assertRaises(ValueError, self.project.job_table, gibberish=True)

@@ -15,6 +15,8 @@ import os
 from datetime import datetime
 from pyiron_base.utils.deprecate import deprecate
 import pandas
+import typing
+import fnmatch
 from sqlalchemy import (
     create_engine,
     MetaData,
@@ -85,16 +87,15 @@ class IsDatabase(ABC):
 
     @staticmethod
     def _get_filtered_job_table(
-        df: pandas.DataFrame, **kwargs: dict
+        df: pandas.DataFrame,
+        mode: typing.Literal["regex", "glob"] = "glob",
+        **kwargs: dict,
     ) -> pandas.DataFrame:
         """
         Get a job table in a project based on matching values from any column in the project database
 
-        The values in `kwargs` can be wildcards, with the following special charaters:
-            - !value matches in the inverse of value
-            - *value matches anything that ends in value
-            - value* matches anything that starts with value
-            - *value* matches anything that contains value
+        The values in `kwargs` can be wildcards. The matches can be given
+        either via "glob" or "regex".
 
         Args:
             df (pandas.DataFrame): DataFrame to be filtered
@@ -113,22 +114,20 @@ class IsDatabase(ABC):
                     f"Column name {key} does not exist in the project database!"
                 )
         for key, val in kwargs.items():
-            invert = False
-            if isinstance(val, str) and val[0] == "!":
-                invert = True
-                val = val[1:]
-            if val is None:
-                update = df[key].isnull()
-            elif str(val).startswith("*") and str(val).endswith("*"):
-                update = df[key].str.contains(str(val).replace("*", ""))
-            elif str(val).endswith("*"):
-                update = df[key].str.startswith(str(val).replace("*", ""))
-            elif str(val).startswith("*"):
-                update = df[key].str.endswith(str(val).replace("*", ""))
-            else:
-                update = df[key] == val
-            if invert:
-                update = ~update
+            if mode == "regex":
+                pattern = re.compile(str(val))
+                update = df[key].apply(pattern.search).astype(bool)
+            elif mode == "glob":
+                if str(val).startswith("!"):
+                    logger.warn(
+                        "It looks like you are using an old pyiron convention."
+                        " If you meant to exclude the term following '!', use"
+                        " `mode='regex' and use a regex convention (such as"
+                        " `^(?!term$)`)"
+                    )
+                arr = np.asarray(df[key]).astype(str)
+                matches = fnmatch.filter(arr, str(val))
+                update = np.array([k in matches for k in arr])
             mask &= update
         return df[mask]
 
@@ -145,6 +144,7 @@ class IsDatabase(ABC):
         full_table=False,
         element_lst=None,
         job_name_contains="",
+        mode: typing.Literal["regex", "glob"] = "glob",
         **kwargs,
     ):
         """
@@ -165,6 +165,7 @@ class IsDatabase(ABC):
             full_table (bool): Whether to show the entire pandas table
             element_lst (list): list of elements required in the chemical formular - by default None
             job_name_contains (str): (deprecated) A string which should be contained in every job_name
+            mode (str): search mode when kwargs are given.
             **kwargs (dict): Optional arguments for filtering with keys matching the project database column name
                             (eg. status="finished"). Asterisk can be used to denote a wildcard, for zero or more
                             instances of any character
@@ -213,7 +214,7 @@ class IsDatabase(ABC):
                 "`job_name_contains` is deprecated - use `job='*term*'` instead"
             )
             kwargs["job"] = "*{}*".format(job_name_contains)
-        df = self._get_filtered_job_table(df, **kwargs)
+        df = self._get_filtered_job_table(df, mode=mode, **kwargs)
         if sort_by is not None:
             return df.sort_values(by=sort_by)
         return df
