@@ -11,7 +11,7 @@ dependencies:
 - numpy =1.26.3
 - pandas =2.1.4
 - pint =0.23
-- psutil =5.9.7
+- psutil =5.9.8
 - pyfileindex =0.0.20
 - pysqa =0.1.10
 - pytables =3.9.2
