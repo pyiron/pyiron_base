@@ -12,8 +12,8 @@ dependencies:
 - pandas =2.2.0
 - pint =0.23
 - psutil =5.9.8
-- pyfileindex =0.0.20
-- pysqa =0.1.10
+- pyfileindex =0.0.21
+- pysqa =0.1.11
 - pytables =3.9.2
 - sqlalchemy =2.0.25
 - tqdm =4.66.1
