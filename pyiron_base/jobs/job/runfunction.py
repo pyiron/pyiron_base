@@ -633,19 +633,35 @@ def execute_job_with_external_executable(job):
         cores=job.server.cores, threads=job.server.threads, gpus=job.server.gpus
     )
     job_crashed, out = False, None
-    try:
-        out = subprocess.run(
-            executable,
-            cwd=job.project_hdf5.working_directory,
-            shell=shell,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-            universal_newlines=True,
-            check=True,
-            env=os.environ.copy(),
-        ).stdout
-    except subprocess.CalledProcessError as e:
-        out, job_crashed = handle_failed_job(job=job, error=e)
+    if job.server.conda_environment_name is None:
+        try:
+            out = subprocess.run(
+                executable,
+                cwd=job.project_hdf5.working_directory,
+                shell=shell,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                universal_newlines=True,
+                check=True,
+                env=os.environ.copy(),
+            ).stdout
+        except subprocess.CalledProcessError as e:
+            out, job_crashed = handle_failed_job(job=job, error=e)
+    else:
+        import conda_subprocess
+
+        try:
+            out = conda_subprocess.run(
+                executable,
+                cwd=job.project_hdf5.working_directory,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                universal_newlines=True,
+                check=True,
+                prefix_name=job.server.conda_environment_name,
+            ).stdout
+        except subprocess.CalledProcessError as e:
+            out, job_crashed = handle_failed_job(job=job, error=e)
 
     job._logger.info(
         "{}, status: {}, output: {}".format(job.job_info_str, job.status, out)

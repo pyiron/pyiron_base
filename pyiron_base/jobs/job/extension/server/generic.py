@@ -121,6 +121,7 @@ class Server(
         self._send_to_db = False
         self._structure_id = None
         self._accept_crash = False
+        self._environment_name = None
         self.additional_arguments = {}
 
     @property
@@ -530,6 +531,27 @@ class Server(
         """
         self._future = future_obj
 
+    @property
+    def conda_environment_name(self):
+        """
+        Get name of the conda environment the job should be executed in.
+
+        Returns:
+            str: name of the conda environment
+        """
+        return self._environment_name
+
+    @conda_environment_name.setter
+    @sentinel
+    def conda_environment_name(self, environment_name):
+        """
+        Set name of the conda environment the job should be executed in.
+
+        Args:
+            environment_name (str): name of the conda environment
+        """
+        self._environment_name = environment_name
+
     @staticmethod
     def list_queues():
         """
@@ -557,23 +579,28 @@ class Server(
             return None
 
     def to_dict(self):
-        server_dict = OrderedDict()
-        server_dict["user"] = self._user
-        server_dict["host"] = self._host
-        server_dict["run_mode"] = self.run_mode.mode
-        server_dict["queue"] = self.queue
-        server_dict["qid"] = self._queue_id
-        server_dict["cores"] = self.cores
-        server_dict["threads"] = self.threads
-        server_dict["new_h5"] = self.new_hdf
-        server_dict["structure_id"] = self.structure_id
-        server_dict["run_time"] = self.run_time
-        server_dict["memory_limit"] = self.memory_limit
-        server_dict["accept_crash"] = self.accept_crash
+        server_dict = OrderedDict(
+            {
+                "user": self._user,
+                "host": self._host,
+                "run_mode": self.run_mode.mode,
+                "queue": self.queue,
+                "qid": self._queue_id,
+                "cores": self.cores,
+                "threads": self.threads,
+                "new_h5": self.new_hdf,
+                "structure_id": self.structure_id,
+                "run_time": self.run_time,
+                "memory_limit": self.memory_limit,
+                "accept_crash": self.accept_crash,
+            }
+        )
         if len(self.additional_arguments) > 0:
             server_dict["additional_arguments"] = self.additional_arguments
         if self._gpus is not None:
             server_dict["gpus"] = self._gpus
+        if self._environment_name is not None:
+            server_dict["conda_environment_name"] = self._environment_name
         return server_dict
 
     def from_dict(self, server_dict):
@@ -586,21 +613,22 @@ class Server(
                 self._queue_id = server_dict["qid"]
             else:
                 self._queue_id = None
-        if "structure_id" in server_dict.keys():
-            self._structure_id = server_dict["structure_id"]
         self._cores = server_dict["cores"]
-        if "run_time" in server_dict.keys():
-            self._run_time = server_dict["run_time"]
-        if "memory_limit" in server_dict.keys():
-            self._memory_limit = server_dict["memory_limit"]
+        h5_mapping = {
+            "structure_id": "_structure_id",
+            "run_time": "_run_time",
+            "memory_limit": "_memory_limit",
+            "threads": "_threads",
+            "additional_arguments": "additional_arguments",
+            "gpus": "_gpus",
+            "conda_environment_name": "_environment_name",
+        }
+        for h5_key, obj_attr in h5_mapping.items():
+            if h5_key in server_dict.keys():
+                setattr(self, obj_attr, server_dict[h5_key])
+
         if "accept_crash" in server_dict.keys():
             self._accept_crash = server_dict["accept_crash"] == 1
-        if "threads" in server_dict.keys():
-            self._threads = server_dict["threads"]
-        if "additional_arguments" in server_dict.keys():
-            self.additional_arguments = server_dict["additional_arguments"]
-        if "gpus" in server_dict.keys():
-            self._gpus = server_dict["gpus"]
         self._new_hdf = server_dict["new_h5"] == 1
 
     def to_hdf(self, hdf, group_name=None):
