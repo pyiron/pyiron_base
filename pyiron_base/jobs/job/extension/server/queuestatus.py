@@ -228,9 +228,13 @@ def wait_for_job(job, interval_in_s=5, max_iterations=100):
                     finished = True
                     break
                 elif isinstance(job.server.future, Future):
-                    job.server.future.result(timeout=interval_in_s)
-                    finished = job.server.future.done()
-                    break
+                    try:
+                        job.server.future.result(timeout=interval_in_s)
+                    except TimeoutError:
+                        pass
+                    else:
+                        finished = job.server.future.done()
+                        break
                 else:
                     time.sleep(interval_in_s)
             if not finished:
