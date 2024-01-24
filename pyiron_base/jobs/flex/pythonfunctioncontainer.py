@@ -113,8 +113,10 @@ class PythonFunctionContainerJob(PythonTemplateJob):
             self._executor_type is not None
             and "executor" in inspect.signature(self._function).parameters.keys()
         ):
+            input_dict = self.input.to_builtin()
+            del input_dict["executor"]
             output = self._function(
-                **self.input.to_builtin(), executor=self.get_executor()
+                **input_dict, executor=self.get_executor()
             )
         else:
             output = self._function(**self.input.to_builtin())
