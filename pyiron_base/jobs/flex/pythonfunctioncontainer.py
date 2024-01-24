@@ -83,15 +83,27 @@ class PythonFunctionContainerJob(PythonTemplateJob):
 
     def get_executor(self):
         if self._executor_type is None:
-            raise ValueError("No executor type defined - Please set self.executor_type.")
-        elif isinstance(self._executor_type, str) and self.executor_type == "ProcessPoolExecutor":
+            raise ValueError(
+                "No executor type defined - Please set self.executor_type."
+            )
+        elif (
+            isinstance(self._executor_type, str)
+            and self.executor_type == "ProcessPoolExecutor"
+        ):
             from concurrent.futures import ProcessPoolExecutor
+
             return ProcessPoolExecutor(max_workers=self.server.cores)
-        elif isinstance(self._executor_type, str) and self.executor_type == "ThreadPoolExecutor":
+        elif (
+            isinstance(self._executor_type, str)
+            and self.executor_type == "ThreadPoolExecutor"
+        ):
             from concurrent.futures import ThreadPoolExecutor
+
             return ThreadPoolExecutor(max_workers=self.server.cores)
         elif isinstance(self._executor_type, str):
-            raise TypeError("Unknown Executor Type: Please select either ProcessPoolExecutor or ThreadPoolExecutor.")
+            raise TypeError(
+                "Unknown Executor Type: Please select either ProcessPoolExecutor or ThreadPoolExecutor."
+            )
         else:
             raise TypeError("The self.executor_type has to be a string.")
 
@@ -115,9 +127,7 @@ class PythonFunctionContainerJob(PythonTemplateJob):
         ):
             input_dict = self.input.to_builtin()
             del input_dict["executor"]
-            output = self._function(
-                **input_dict, executor=self.get_executor()
-            )
+            output = self._function(**input_dict, executor=self.get_executor())
         else:
             output = self._function(**self.input.to_builtin())
         self.output.update({"result": output})
