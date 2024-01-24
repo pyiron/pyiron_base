@@ -110,7 +110,7 @@ class PythonFunctionContainerJob(PythonTemplateJob):
 
     def run_static(self):
         if (
-            self.server.executor is not None
+            self._executor_type is not None
             and "executor" in inspect.signature(self._function).parameters.keys()
         ):
             output = self._function(
