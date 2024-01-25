@@ -60,6 +60,9 @@ called to supply the correct init parameters.  `to_object()` can also be supplie
 the ones written to HDF5, in particular it will always provide `job_name` and `project`.  However only those parameters 
 that are needed (i.e. declared by that classes' `__init__()`) will be passed.
 
+## Run function 
+Explain how a job is executed. 
+
 ## Queuing System Submission
 
 If you just want to configure the queue setup, look into the [documentation](https://pyiron.readthedocs.io/en/latest/source/installation.html#hpc-cluster-with-postgresql-database-and-jupyterhub). 

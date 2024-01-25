@@ -1,6 +1,6 @@
-======================================================================
-pyiron_base - Workflow manager developed as part of the pyiron project
-======================================================================
+======================================
+:code:`pyiron_base` - Workflow Manager
+======================================
 
 :Author:  Jan Janssen
 :Contact: janssen@mpie.de
@@ -174,7 +174,9 @@ Documentation
    :maxdepth: 2
 
    installation
+   tutorial
    examples
+   features
    commandline
    developer
    faq
