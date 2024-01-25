@@ -346,7 +346,10 @@ class PyironTable:
         return project_table[filter_funct(project_table)]["id"].tolist()
 
     def _iterate_over_job_lst(
-        self, job_id_lst: List, function_lst: List, executor: concurrent.futures.Executor = None,
+        self,
+        job_id_lst: List,
+        function_lst: List,
+        executor: concurrent.futures.Executor = None,
     ) -> List[dict]:
         """
         Apply functions to job.
