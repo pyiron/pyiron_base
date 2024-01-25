@@ -81,7 +81,7 @@ class PythonFunctionContainerJob(PythonTemplateJob):
         if "executor_type" in self.project_hdf5.list_nodes():
             self._executor_type = self.project_hdf5["executor_type"]
 
-    def get_executor(self):
+    def _get_executor(self):
         if self._executor_type is None:
             raise ValueError(
                 "No executor type defined - Please set self.executor_type."
@@ -127,7 +127,7 @@ class PythonFunctionContainerJob(PythonTemplateJob):
         ):
             input_dict = self.input.to_builtin()
             del input_dict["executor"]
-            output = self._function(**input_dict, executor=self.get_executor())
+            output = self._function(**input_dict, executor=self._get_executor())
         else:
             output = self._function(**self.input.to_builtin())
         self.output.update({"result": output})
