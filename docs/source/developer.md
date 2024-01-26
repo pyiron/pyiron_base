@@ -1,6 +1,27 @@
 # Developers
 Explain the technology behind the `pyiron_base` workflow manager. 
 
+## Install from Source
+For development, it is recommended to first create a conda environment containing all of pyiron's dependencies. The
+dependencies are available in pyiron [environment.yml](https://github.com/pyiron/pyiron_base/blob/main/.ci_support/environment.yml)
+file.
+```
+git clone https://github.com/pyiron/pyiron_base.git
+conda env create -f pyiron/environment.yml
+```
+If conda is not available on your machine, the next best thing would be to install pyiron and its dependencies via pip.
+
+To include this version in your `PYTHONPATH` add the following line to your `~/.profile` or `~/.bashrc` configuration:
+```
+export PYTHONPATH=${HOME}/path/to/pyiron_base/:${PYTHONPATH}
+```
+When you import pyiron in any python shell or jupyter notebook it should load the version from `~/path/to/`. Finally you
+can switch to other branches using git: 
+```
+git checkout -b main
+```
+In this case we switch to the main branch.
+
 ## HDF5 Serialization Architecture
 
 ### Structure
