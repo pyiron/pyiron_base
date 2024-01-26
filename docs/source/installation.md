@@ -292,3 +292,18 @@ RESOURCE_PATHS = ~/pyiron/resources
 ```
 
 Be careful when updating the database configuration as pyiron does not transfer the content of the database automatically. 
+
+#### Submit to Multiple Remote HPC Clusters
+Finally pyiron also supports configuring multiple HPC clusters. In this case rather than creating a `queue.yaml` file in
+the queues resource directory we create a `clusters.yaml` file with the following content: 
+
+```
+cluster_primary: cluster_one
+cluster:
+  cluster_one: cluster_1.yaml
+  cluster_two: cluster_2.yaml
+```
+
+The `cluster_primary` defines the default cluster and the different clusters are each defined in their own `cluster_*.yaml`
+file. Those `cluster_*.yaml` have the same structure as the `queue.yaml` file discussed above, but they cannot be named
+`queue.yaml` as pyiron otherwise assumes that only one cluster is available. 
