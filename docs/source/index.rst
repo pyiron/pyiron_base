@@ -1,6 +1,6 @@
-======================================
-:code:`pyiron_base` - Workflow Manager
-======================================
+==============================
+pyiron_base - Workflow Manager
+==============================
 
 :Author:  Jan Janssen
 :Contact: janssen@mpie.de
