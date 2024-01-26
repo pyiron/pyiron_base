@@ -485,7 +485,7 @@ def run_job_with_runmode_executor(job, executor, gpus_per_slot=None):
 
     if static_isinstance(
         obj=job,
-        obj_type="pyiron_base.jobs.master.generic.GenericMaster"
+        obj_type="pyiron_base.jobs.master.generic.GenericMaster",
         # The static check is used to avoid a circular import:
         # runfunction -> GenericJob -> GenericMaster -> runfunction
         # This smells a bit, so if a better architecture is found in the future, use it
