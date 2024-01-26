@@ -1,6 +1,6 @@
-======================================
-:code:`pyiron_base` - Workflow Manager
-======================================
+==============================
+pyiron_base - Workflow Manager
+==============================
 
 :Author:  Jan Janssen
 :Contact: janssen@mpie.de
@@ -139,7 +139,7 @@ BSD 3-Clause License without any warranties::
 
     BSD 3-Clause License
 
-    Copyright (c) 2023, Jan Janssen
+    Copyright (c) 2018, Max-Planck-Institut für Eisenforschung GmbH - Computational Materials Design (CM) Department
     All rights reserved.
 
     Redistribution and use in source and binary forms, with or without
