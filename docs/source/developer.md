@@ -1,4 +1,5 @@
 # Developers
+Explain the technology behind the `pyiron_base` workflow manager. 
 
 ## HDF5 Serialization Architecture
 

@@ -1,52 +1,6 @@
 # Examples
 Demonstrate a series of workflows implemented with `pyiron_base`. This should be the same workflow as they are 
-demonstrated in the example notebooks. 
-## Parameter Study for a Python Function
-```python
-def test_function(a, b=8):
-    return a+b
-
-from pyiron_base import Project
-pr = Project("test")
-job = pr.wrap_python_function(test_function)
-job.input["a"] = 4
-job.input["b"] = 5
-job.run()
-job.output["result"] 
-```
-
-## Parameter Study for an External Executable 
-```python
-import os 
-
-def write_input(input_dict, working_directory="."):
-    with open(os.path.join(working_directory, "input_file"), "w") as f:
-        f.write(str(input_dict["energy"]))
-
-
-def collect_output(working_directory="."):
-    with open(os.path.join(working_directory, "output_file"), "r") as f:
-        return {"energy": float(f.readline())}
-
-
-from pyiron_base import Project
-pr = Project("test")
-pr.create_job_class(
-    class_name="CatJob",
-    write_input_funct=write_input,
-    collect_output_funct=collect_output,
-    default_input_dict={"energy": 1.0},
-    executable_str="cat input_file > output_file",
-)
-job = pr.create.job.CatJob(job_name="job_test")
-job.input["energy"] = 2.0
-job.run()
-job.output
-```
-
-## Up-scaling a Simulation Protocol 
-
-### Python Function 
+demonstrated in the example notebooks.
 ```python
 import os
 import matplotlib.pyplot as plt
@@ -133,15 +87,4 @@ job_workflow.run()
 plt.plot(job_workflow.output.result["volume"], job_workflow.output.result["energy"])
 plt.xlabel("Volume")
 plt.ylabel("Energy")
-```
-
-### Jupyter Notebook 
-Explain how to submit a Jupyter notebook with a `ScriptJob`
-
-```python
-from pyiron_base import Project
-pr = Project("demo")
-script = pr.create_job(pr.job_type.ScriptJob, "script")
-script.script_path = "demo.ipynb"
-script.run()
 ```

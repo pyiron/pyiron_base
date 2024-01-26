@@ -176,7 +176,6 @@ Documentation
    installation
    tutorial
    examples
-   features
    commandline
    developer
    faq
