@@ -64,6 +64,115 @@ It is highly recommended to follow these sections step by step, as already a typ
 lead to rather cryptic error messages. 
 
 ### Remote pyiron Installation
+Login to the remote HPC using secure shell (SSH): 
+```
+ssh remote_hpc
+```
+This is achieved by creating an SSH key on the workstation using the `ssh-keygen` command, copying the SSH public key to
+the remote computer and adding it to the `authorized_keys`. A typical SSH setup is explained on the internet in various
+places for example [cyberciti.biz](https://www.cyberciti.biz/faq/how-to-set-up-ssh-keys-on-linux-unix/). 
+
+#### Connect to Jupyterlab on Remote HPC
+In addition, the SSH setup can be configured in the `~/.ssh/config` in the home directory of your workstation you use to
+connect to the remote HPC:
+```
+Host remote_hpc
+    Hostname login.hpc.remote.com
+    User pyiron
+    IdentityFile ~/.ssh/id_rsa
+    LocalForward 9000 localhost:8888
+```
+The `IdentityFile` line defines the SSH key and the `LocalForward` part defines the port forwarding. The port forwarding
+is not necessary, still it enables starting a jupyter environment on the remote HPC and connecting to it from the local
+workstation.
+
+To test the SSH configuration, login to the remote HPC using `ssh remote_hpc` and then start the jupyter lab environment:
+```
+jupyter lab
+```
+Finally, on your local workstation access `http://localhost:9000`. The login requires a security token, this is printed
+on the command line of the remote HPC after executing the `jupyter lab` command. 
+
+#### Configure pyiron on Remote HPC
+Create a `~/.pyiron` file in the home directory of the remote HPC. As most HPC clusters do not provide a central SQL 
+database and file based databases like [SQLite](https://www.sqlite.org) do not work on shared file systems when multiple
+compute nodes try to access it at the same time the recommended setup is to disable the database on the HPC cluster.  
+```
+[DEFAULT]
+RESOURCE_PATHS = /home/<username>/resources
+PROJECT_CHECK_ENABLED = False
+DISABLE_DATABASE = True
+```
+To disable the database set the `DISABLE_DATABASE` parameter to true and the `PROJECT_CHECK_ENABLED` to false. Finally,
+the `RESOURCE_PATHS` is required to store the configuration of the queuing system. 
+
+In the `RESOURCE_PATHS` create a `queues` folder:
+```
+mkdir -p /home/<username>/resources/queues
+```
+Afterwards in the queues folder create the configuration for the queuing system following the documentation of the [python
+simple queuing system](https://pysqa.readthedocs.io). For example for a SLURM based queuing system create a `queue.yaml`
+file inside the `queues` folder. 
+```
+queue_type: SLURM
+queue_primary: slurm
+queues:
+  slurm: {cores_max: 100, cores_min: 10, run_time_max: 259200, script: slurm.sh}
+```
+The `queue.yaml` file defines the limits in terms of the maximum number of cores available on a given queue `cores_max`
+as well as the minimum number of cores `cores_min`, the maximum run time `run_time_max` and finally the shell script 
+template `script` to define the submission script. The submission script `slurm.sh` is again placed in the `queues` 
+folder. 
+```
+#!/bin/bash
+#SBATCH --output=time.out
+#SBATCH --job-name={{job_name}}
+#SBATCH --chdir={{working_directory}}
+#SBATCH --get-user-env=L
+#SBATCH --partition=slurm
+{%- if run_time_max %}
+#SBATCH --time={{ [1, run_time_max // 60]|max }}
+{%- endif %}
+{%- if memory_max %}
+#SBATCH --mem={{memory_max}}G
+{%- endif %}
+#SBATCH --cpus-per-task={{cores}}
+
+{{command}}
+```
+The shell script for the [python simple queuing system](https://pysqa.readthedocs.io) uses [jinja](https://jinja.palletsprojects.com/)
+templates to simplify the configuration of queuing systems. The configuration for other queuing systems is documented 
+on the [python simple queuing system documentation](https://pysqa.readthedocs.io/en/latest/queue.html).
+
+#### Validate the Configuration
+To test your queuing system configuration use the [python simple queuing system](https://pysqa.readthedocs.io) interface:
+```python
+from pysqa import QueueAdapter
+qa = QueueAdapter(directory="/home/<username>/resources/queues")
+print(qa.queue_list)
+```
+If the `queue.yaml` file is configured correctly, the list of queues available on the remote HPC is plotted when the 
+code above is executed. 
+
+To validate the `~/.pyiron` configuration file, after the `queue.yaml` file is correctly configured you can use: 
+```python
+from pyiron_base import state
+print(state.settings._configuration)
+```
+The `state` object is commonly used to represent the `~/.pyiron` configuration on the python side. 
+
+Furthermore is the `RESOURCE_PATHS` is correctly configured, the `pyiron_base` workflow manager should be able to access
+the queuing system configuration: 
+```python
+from pyiron_base import Project
+
+pr = Project(path=".")
+job = pr.create.job.ScriptJob(job_name="test")
+print(job.server.queue_list)
+```
+This should again print the list of queues configured in the `queue.yaml` file. 
+
+Finally, you can try to submit a calculation to the queuing system. 
 
 ### Connect to Remote pyiron Installation
 
