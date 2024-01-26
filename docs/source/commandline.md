@@ -1,4 +1,4 @@
-# Command Line Interface
+# Command Line
 There's a few command line tools shipped with pyiron to help administrating and keeping up with your pyiron project as 
 well as some that are used internally. All of them are installed by default in the `pyiron` script that has a few sub 
 commands.

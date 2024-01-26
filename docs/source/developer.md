@@ -22,7 +22,7 @@ git checkout -b main
 ```
 In this case we switch to the main branch.
 
-## HDF5 Serialization Architecture
+## HDF5 Serialization
 
 ### Structure
 Each hierachical object lives under its own group in the hdf, i.e. objects that are attributes of another must have 
@@ -85,7 +85,7 @@ that are needed (i.e. declared by that classes' `__init__()`) will be passed.
 ## Run function 
 Explain how a job is executed. 
 
-## Queuing System Submission
+## Queuing System
 
 If you just want to configure the queue setup, look into the [documentation](https://pyiron.readthedocs.io/en/latest/source/installation.html#hpc-cluster-with-postgresql-database-and-jupyterhub). 
 The following details on the code flow for job submission to the queue.
