@@ -29,7 +29,6 @@ __date__ = "Mar 23, 2021"
 
 
 class PyironTestCase(unittest.TestCase, ABC):
-
     """
     Base class for all pyiron unit tets.
 
@@ -143,7 +142,6 @@ class ToyJob(PythonTemplateJob):
 
 
 class TestWithFilledProject(TestWithProject, ABC):
-
     """
     Tests that creates a projects, creates jobs and sub jobs in it, and at the end of unit testing,
     removes the project.

@@ -515,10 +515,12 @@ class Settings(metaclass=Singleton):
         if isinstance(paths, str):
             paths = paths.replace(",", os.pathsep).split(os.pathsep)
         return [
-            self.convert_path_to_abs_posix(p)
-            if ensure_ends_with is None
-            or self.convert_path_to_abs_posix(p).endswith(ensure_ends_with)
-            else self.convert_path_to_abs_posix(p) + ensure_ends_with
+            (
+                self.convert_path_to_abs_posix(p)
+                if ensure_ends_with is None
+                or self.convert_path_to_abs_posix(p).endswith(ensure_ends_with)
+                else self.convert_path_to_abs_posix(p) + ensure_ends_with
+            )
             for p in paths
         ]
 

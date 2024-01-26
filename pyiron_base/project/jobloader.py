@@ -74,9 +74,11 @@ class _JobByAttribute(ABC):
             return None
         return self._project.load_from_jobpath(
             job_id=job_id,
-            convert_to_object=convert_to_object
-            if convert_to_object is not None
-            else self.convert_to_object,
+            convert_to_object=(
+                convert_to_object
+                if convert_to_object is not None
+                else self.convert_to_object
+            ),
         )
 
     @property
