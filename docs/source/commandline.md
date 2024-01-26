@@ -6,19 +6,19 @@ commands.
 * `pyiron install` Installs the pyiron resources for the first time, if you don't get them via conda.
 * `pyiron ls` List the jobs inside a project and filter them with a few primitives
    Print the run time of all finished jobs
-   ```
+   ```commandline
    pyiron ls -c job totalcputime -s finished
    ```
    Print all jobs with iron
-   ```
+   ```commandline
    pyiron ls -e Fe
    ```
    Print all jobs that successfully finished yesterday and a bit
-   ```
+   ```commandline
    pyiron ls -s finished -i 1d5h
    ```
    Print all jobs that were aborted less than 5 hours ago and match `spx.*restart`:
-   ``` 
+   ```commandline
    pyiron ls -n "spx.*restart" -i 5h -s aborted
    ```
 * `pyiron rm` Delete jobs and whole projects from the database and the file system.  If you simply `rm` jobs and projects 

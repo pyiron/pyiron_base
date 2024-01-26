@@ -1,13 +1,11 @@
 # Examples
-Demonstrate a series of workflows implemented with `pyiron_base`. This should be the same workflow as they are 
-demonstrated in the example notebooks.
+Demonstration of a workflow implemented with `pyiron_base`. Based on the history of `pyiron_base` being developed as a
+part of `pyiron_atomistics` the example covers the implementation of a workflow for the density functional theory (DFT)
+simulation code [quantum espresso](https://www.quantum-espresso.org). As a first step to interface with the quantum 
+espresso DFT simulation code the `write_input()` and the `collect_output()` function:
 ```python
 import os
-import matplotlib.pyplot as plt
-import numpy as np
-from ase.build import bulk
 from ase.io import write
-from pwtools import io
 
 
 def write_input(input_dict, working_directory="."):
@@ -23,6 +21,15 @@ def write_input(input_dict, working_directory="."):
         tstress=True, 
         tprnfor=True
     )
+```
+The `write_input()` function takes a dictionary `input_dict` and the path to the working directory `working_directory` 
+as inputs and then writes the input files into the working directory. In this example the `write()` function from the
+[atomic simulation environment](https://wiki.fysik.dtu.dk/ase/index.html) is used to write the input files. 
+
+Analog to the `write_input()` function the `collect_output()` function gets the `working_directory` as an input and then
+parses the files in the working directory to return the output as a dictionary.
+```python
+from pwtools import io
 
 
 def collect_output(working_directory="."):
@@ -35,6 +42,16 @@ def collect_output(working_directory="."):
             "energy": out.etot,
             "volume": out.volume,
         }
+```
+For the parsing of the output files of the quantum espresso DFT simulation code the [pwtools](https://elcorto.github.io/pwtools/)
+package is used. It can parse both, static calculation as well as structure optimizations or molecular dynamic 
+trajectories. 
+
+Finally, the third function is the workflow which combines multiple quantum espresso DFT simulation. In this example 
+the workflow initially optimizes the lattice structure followed by the calculation of the change of energy over a series
+of five different strains ranging from 90% to 110%. 
+```python
+import numpy as np
 
 
 def workflow(project, structure): 
@@ -62,9 +79,15 @@ def workflow(project, structure):
         volume_lst.append(job_strain.output.volume)
     
     return {"volume": volume_lst, "energy": energy_lst}
-
-
+```
+After the definition of the individual functions it is time to put the different parts together. This part again starts
+by importing the required modules. For the `pyiron_base` workflow framework the `Project` class is imported. 
+```python
+from ase.build import bulk
+import matplotlib.pyplot as plt
 from pyiron_base import Project
+
+
 pr = Project("test")
 pr.create_job_class(
     class_name="QEJob",
@@ -88,3 +111,10 @@ plt.plot(job_workflow.output.result["volume"], job_workflow.output.result["energ
 plt.xlabel("Volume")
 plt.ylabel("Energy")
 ```
+After creating the quantum espresso job class using the `create_job_class()` function which takes the `write_input()`
+function, the `collect_output()` function, the executable and the default input as input, the actual execution of the 
+workflow comes down to three simple steps. First the creation of the job object instance using the `wrap_python_function()`
+followed by setting the input parameters, in this case the `project` instance and the atomistic structure created with 
+the [atomistic simulation environment](https://wiki.fysik.dtu.dk/ase/index.html) and finally executing the workflow 
+using the `run()` function. As a last step the energy volume curve is plotted with the [matplotlib](https://matplotlib.org)
+library. 

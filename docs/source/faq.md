@@ -1,8 +1,8 @@
-# Frequently Asked Questions About
+# FAQ
 The list of frequently asked questions is still work in progress. If your question is not answered here you can check
 the Github repository for frequently asked questions [pyiron/FAQs](https://github.com/pyiron/FAQs/issues). 
 
-## How to cite pyiron?
+### How to cite pyiron?
 By citing the `pyiron` paper you support the pyiron developers and enabled us to continue to develop pyiron as open-source
 research software.
 ```
@@ -20,7 +20,7 @@ research software.
 }
 ```
 
-## What is the meaning of the name - pyiron?
+### What is the meaning of the name - pyiron?
 pyiron is the combination of **py** + **iron** connecting Python, the programming language with iron as pyiron was
 initially developed at the Max Planck Institut für Eisenforschung (iron research).
 
