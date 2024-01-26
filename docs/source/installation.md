@@ -224,3 +224,38 @@ slower but does not require a continuous internet connection on the workstation.
 is not recommended, it is only designed for use cases when a stable internet connection is not available. 
 
 ### Advanced configuration 
+Besides the general variables in the `~/.pyiron` configuration, the other settings are used to define the database 
+connection. More detailed examples about the configuration can be found below; for now we continue with the configuration
+of the database. pyiron can use a database to build an index of the HDF5 files on the file system which accelerates job
+analysis. By default pyiron uses an [SQLite](https://www.sqlite.org) database for this index, but the database can also 
+be disabled or a [PostgreSQL](https://www.postgresql.org) database can be used to improve performance.
+
+* By default the database is defined by the `FILE` option which is equal to the `DATABASE_FILE` option and gives the path
+  to the [SQLite](https://www.sqlite.org) database file. As the [SQLite](https://www.sqlite.org) database is a file-based
+  database, it struggles with parallel access on a shared file system (common for HPC clusters).
+* To address this limitation it is possible to disable the database on HPC clusters using the `DISABLE_DATABASE` option 
+  by setting it to `true`. This is commonly used when the calculations are only executed on the remote cluster but the 
+  analysis is done on a local workstation or a group server which supports an SQL-based database.
+* The other database options, namely `TYPE`, `HOST`, `NAME`, `USER`, `PASSWD` and `JOB_TABLE` define the connection 
+  details to connect to a PostgreSQL database. Inside pyiron [sqlalchemy](https://www.sqlalchemy.org) is used to support
+  different SQL-based databases, therefore it is also possible to provide the sqlalchemy connection string directly as
+  `CONNECTION`.
+* Finally some pyiron installations use a group management component which is currently in development. They might have
+  additional options in their `~/.pyiron` configuration to enable sharing calculations between different users. These 
+  options are `VIEWERUSER`, `VIEWERPASSWD` and `VIEWER_TABLE`. As this is a development feature it is not yet fully 
+  documented. Basically those are the access details for the global database viewer, which can read the database entries
+  of all users. With this configuration it is possible to load jobs of other users. 
+
+In analogy to the `~/.pyiron` configuration file pyiron also supports using environment variables to configure the pyiron
+installation. The available environment variables are: 
+
+* the `PYIRONCONFIG` environment variable defines the location of the `.pyiron` configuration file.
+* the `PYIRONRESOURCEPATHS` environment variable defines the `RESOURCE_PATHS` option.
+* the `PYIRONPROJECTPATHS` environment variable defines the `PROJECT_PATHS` option.
+* the `PYIRONPROJECTCHECKENABLED` environment variable defines the `PROJECT_CHECK_ENABLED` option.
+* the `PYIRONDISABLE` environment variable defines the `DISABLE_DATABASE` option.
+* the `PYIRONSQLTYPE`, `PYIRONSQLFILE`, `PYIRONSQHOST`, `PYIRONSQLDATABASE`, `PYIRONUSER` and `PYIRONSQLUSERKEY` 
+  environment variables define the SQL database connection and can also be summarized in the `PYIRONSQLCONNECTIONSTRING` 
+  environment variable.
+* the `PYIRONSQLVIEWTABLENAME`, `PYIRONSQLVIEWUSER` and `PYIRONSQLVIEWUSERKEY` environment variables define the SQL 
+  viewer connection and can also be summarized in the `PYIRONSQLVIEWCONNECTIONSTRING` environment variable. 
