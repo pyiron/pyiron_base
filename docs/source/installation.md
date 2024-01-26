@@ -246,6 +246,7 @@ be disabled or a [PostgreSQL](https://www.postgresql.org) database can be used t
   documented. Basically those are the access details for the global database viewer, which can read the database entries
   of all users. With this configuration it is possible to load jobs of other users. 
 
+#### Environment Variables
 In analogy to the `~/.pyiron` configuration file pyiron also supports using environment variables to configure the pyiron
 installation. The available environment variables are: 
 
@@ -259,3 +260,35 @@ installation. The available environment variables are:
   environment variable.
 * the `PYIRONSQLVIEWTABLENAME`, `PYIRONSQLVIEWUSER` and `PYIRONSQLVIEWUSERKEY` environment variables define the SQL 
   viewer connection and can also be summarized in the `PYIRONSQLVIEWCONNECTIONSTRING` environment variable. 
+
+#### PostgreSQL Database
+To accelerate the pyiron installation it is recommended to use a [PostgreSQL](https://www.postgresql.org) database 
+rather than the default [SQLite](https://www.sqlite.org) database. To configure the database server, the following 
+options can be added to the `~/.pyiron`:
+
+* `TYPE` the typ of the database, while [sqlalchemy](https://www.sqlalchemy.org) supports a wide range of different 
+  databases [PostgreSQL](https://www.postgresql.org) is recommended and can be selected by setting the type to `Postgres`.
+* `HOST` the database host where the database is running.
+* `NAME` the name of the database.
+* `USER` the database user, in contrast to many other software packages pyiron requires one database user per system 
+  user who is using pyiron. The database is only used to store an index of the calculations executed with pyiron, 
+  therefore knowledge gained from accessing the database is limited unless the user has also access to the file system.
+* `PASSWD` the database user password. While it is a bad practice to store the database password in the configuration 
+  file, the database only contains the the job index. Still it is important that the user creates an pyiron specific 
+  password and should never store their system user password in the `.pyiron` configuration file.
+* `JOB_TABLE` the name of the database table. pyiron is commonly using one table per user. 
+
+A typical `.pyiron` configuration with a [PostgreSQL](https://www.postgresql.org) database might look like this:
+```
+[DEFAULT]  
+TYPE = Postgres
+HOST = database.hpc-cluster.university.edu
+NAME = pyiron
+USER = janj
+PASSWD = **********
+JOB_TABLE = jobs_janj
+PROJECT_PATHS = ~/pyiron/projects
+RESOURCE_PATHS = ~/pyiron/resources  
+```
+
+Be careful when updating the database configuration as pyiron does not transfer the content of the database automatically. 
