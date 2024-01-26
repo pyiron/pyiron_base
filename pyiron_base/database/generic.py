@@ -1162,9 +1162,11 @@ class DatabaseAccess(IsDatabase):
                 ]
             elif isinstance(value, list):
                 or_statement = [
-                    self.simulation_table.c[str(key)] == element
-                    if "%" not in element
-                    else self.simulation_table.c[str(key)].like(element)
+                    (
+                        self.simulation_table.c[str(key)] == element
+                        if "%" not in element
+                        else self.simulation_table.c[str(key)].like(element)
+                    )
                     for element in value
                 ]
                 # here we wrap the given values in an sqlalchemy-type or_statement

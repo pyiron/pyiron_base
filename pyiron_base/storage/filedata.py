@@ -112,7 +112,6 @@ if _has_imported["PIL"]:
 if _has_imported["nbformat"]:
 
     class OwnNotebookNode(nbformat.NotebookNode):
-
         """Wrapper for nbformat.NotebookNode with some additional representation based on nbconvert."""
 
         def _repr_html_(self):
