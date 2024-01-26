@@ -1,4 +1,4 @@
-# Examples
+# Example
 Demonstration of a workflow implemented with `pyiron_base`. Based on the history of `pyiron_base` being developed as a
 part of `pyiron_atomistics` the example covers the implementation of a workflow for the density functional theory (DFT)
 simulation code [quantum espresso](https://www.quantum-espresso.org). As a first step to interface with the quantum 
