@@ -47,16 +47,16 @@ def _normalize(key):
     return key
 
 
-class DataContainer(MutableMapping, Lockable, HasGroups, HasHDF):
+class DataContainerBase(MutableMapping, Lockable, HasGroups):
     """
     Mutable sequence with optional keys.
 
-    If no argument is given, the constructor creates a new empty DataContainer.  If
+    If no argument is given, the constructor creates a new empty DataContainerBase.  If
     specified init maybe a Sequence, Set or Mapping and all recursive
-    occurrences of these are also wrapped by DataContainer.
+    occurrences of these are also wrapped by DataContainerBase.
 
-    >>> pl = DataContainer([3, 2, 1, 0])
-    >>> pm = DataContainer({"foo": 24, "bar": 42})
+    >>> pl = DataContainerBase([3, 2, 1, 0])
+    >>> pm = DataContainerBase({"foo": 24, "bar": 42})
 
     Access can be like a normal list with integers or optionally with strings
     as keys.
@@ -70,23 +70,23 @@ class DataContainer(MutableMapping, Lockable, HasGroups, HasHDF):
 
     Keys do not have to be present for all elements.
 
-    >>> pl2 = DataContainer([1,2])
+    >>> pl2 = DataContainerBase([1,2])
     >>> pl2["end"] = 3
     >>> pl2
-    DataContainer({0: 1, 1: 2, 'end': 3})
+    DataContainerBase({0: 1, 1: 2, 'end': 3})
 
-    It is also allowed to set an item one past the length of the DataContainer,
+    It is also allowed to set an item one past the length of the DataContainerBase,
     this is then equivalent to appending that element.  This allows to use the
-    update method also with other DataContainers
+    update method also with other DataContainerBases
 
     >>> pl[len(pl)] = -1
     >>> pl
-    DataContainer([3, 2, 1, 0, -1])
+    DataContainerBase([3, 2, 1, 0, -1])
     >>> pl.pop(-1)
     -1
 
     Where strings are used they may also be used as attributes.  Getting keys
-    which clash with methods of DataContainer must be done with item access, but
+    which clash with methods of DataContainerBase must be done with item access, but
     setting them works without overwriting the instance methods, but is not
     recommended for readability.
 
@@ -94,13 +94,13 @@ class DataContainer(MutableMapping, Lockable, HasGroups, HasHDF):
     24
     >>> pm.tail = 23
     >>> pm
-    DataContainer({'foo': 24, 'bar': 42, 'tail': 23})
+    DataContainerBase({'foo': 24, 'bar': 42, 'tail': 23})
 
-    Keys and indices can be tuples to traverse nested DataContainers.
+    Keys and indices can be tuples to traverse nested DataContainerBases.
 
-    >>> pn = DataContainer({"foo": {"bar": [4, 2]}})
+    >>> pn = DataContainerBase({"foo": {"bar": [4, 2]}})
     >>> pn["foo", "bar"]
-    DataContainer([4, 2])
+    DataContainerBase([4, 2])
     >>> pn["foo", "bar", 0]
     4
 
@@ -118,7 +118,7 @@ class DataContainer(MutableMapping, Lockable, HasGroups, HasHDF):
 
     >>> pl["0"] == pl[0]
     True
-    >>> DataContainer({1: 42})
+    >>> DataContainerBase({1: 42})
     Traceback (most recent call last):
         File "<stdin>", line 1, in <module>
         File "datacontainer.py", line 126, in __init__
@@ -127,11 +127,11 @@ class DataContainer(MutableMapping, Lockable, HasGroups, HasHDF):
 
     When initializing from a dict, it may not have integers or decimal strings
     as keys unless they match their position in the insertion order.  This is
-    to avoid ambiguities in the final order of the DataContainer.
+    to avoid ambiguities in the final order of the DataContainerBase.
 
-    >>> DataContainer({0: "foo", 1: "bar", 2: 42})
-    DataContainer(['foo', 'bar', 42])
-    >>> DataContainer({0: "foo", 2: 42, 1: "bar"})
+    >>> DataContainerBase({0: "foo", 1: "bar", 2: 42})
+    DataContainerBase(['foo', 'bar', 42])
+    >>> DataContainerBase({0: "foo", 2: 42, 1: "bar"})
     Traceback (most recent call last):
         File "<stdin>", line 1, in <module>
         File "datacontainer.py", line 132, in __init__
@@ -139,7 +139,7 @@ class DataContainer(MutableMapping, Lockable, HasGroups, HasHDF):
     ValueError: keys in initializer must not be int or str of decimal digits or in correct order, is 2
 
 
-    Using keys is completely optional, DataContainer can always be treated as a
+    Using keys is completely optional, DataContainerBase can always be treated as a
     list, with the exception that `iter()` iterates of the keys and indices.
     This is to correctly implement the MutableMapping protocol, to convert to a
     normal list and discard the keys use `values()`.
@@ -157,23 +157,17 @@ class DataContainer(MutableMapping, Lockable, HasGroups, HasHDF):
 
     Implements :class:`.HasGroups`.  Groups are nested data containers and nodes are everything else.
 
-    >>> p = DataContainer({"a": 42, "b": [0, 1, 2]})
+    >>> p = DataContainerBase({"a": 42, "b": [0, 1, 2]})
     >>> p.list_groups()
     ['b']
     >>> p.list_nodes()
     ['a']
 
-    If instantiated with the argument `lazy=True`, data read from HDF5 later via :method:`.from_hdf` are not actually
-    read, but only earmarked to be read later when actually accessed via :class:`.HDFStub`.  This is largely
-    transparent, i.e. when accessing an earmarked value it will automatically be loaded and this loaded value is stored
-    in container.  The only difference is in the string representation of the container, values not read yet appear as
-    'HDFStub(...)' in the output.
-
     .. attention:: Subclasses beware!
 
-        DataContainer require some careful treatment when creating subclasses.
+        DataContainerBase require some careful treatment when creating subclasses.
 
-        1. Since DataContainers are expected to recursively instantiate themselves subclasses need to keep their
+        1. Since DataContainerBases are expected to recursively instantiate themselves subclasses need to keep their
         `__init__ compatible to the base class.  That means being able to be instantiated without arguments, if
         arguments are given the first one (or `init`) has to accept a Mapping or Iterable.  Additional arguments may be
         added, but must be after `init` and must have a default.
@@ -182,18 +176,17 @@ class DataContainer(MutableMapping, Lockable, HasGroups, HasHDF):
         `object.__setattr__` the first time you define that attribute.  Afterwards using normal assignment syntax works.
 
         3. Subclasses should always be thought of as general data structures, if you want to subclass to have access to
-        the HDF5 functionality or the way the DataContainer is shown in jupyter notebooks, but only have a fixed number
-        of attributes it is better to create a new class that has an DataContainer as an attribute and dispatch to the
-        :meth:`DataContainer.from_hdf`, :meth:`DataContainer.to_hdf` and :meth:`DataContainer._repr_json_`
+        the HDF5 functionality or the way the DataContainerBase is shown in jupyter notebooks, but only have a fixed number
+        of attributes it is better to create a new class that has an DataContainerBase as an attribute and dispatch to the
+        :meth:`DataContainerBase.from_hdf`, :meth:`DataContainerBase.to_hdf` and :meth:`DataContainerBase._repr_json_`
         methods.
-        4. To allow lazy loading sub classes must accept a `lazy` keyword argument and pass it to `super().__init__`.
 
 
     A few examples for subclasses
 
-    >>> class ExtendedContainer(DataContainer):
-    ...     def __init__(self, init=None, my_fancy_field=42, table_name=None, lazy=False):
-    ...         super().__init__(init=init, table_name=table_name, lazy=lazy)
+    >>> class ExtendedContainer(DataContainerBase):
+    ...     def __init__(self, init=None, my_fancy_field=42, table_name=None):
+    ...         super().__init__(init=init, table_name=table_name)
     ...         object.__setattr__(self, "my_fancy_field", my_fancy_field)
 
     After defining it once like this you can access my_fancy_field as a normal attribute, but it will not be stored in
@@ -210,7 +203,7 @@ class DataContainer(MutableMapping, Lockable, HasGroups, HasHDF):
     >>> e
     ExtendedContainer({'foo': 1, 'bar': 5})
 
-    Be aware the :class:`.DataContainer` and its subclasses are recursive data structures, i.e. your fancy attribute
+    Be aware the :class:`.DataContainerBase` and its subclasses are recursive data structures, i.e. your fancy attribute
     will be available also on sub groups.
 
     >>> g = e.create_group('sub')
@@ -220,7 +213,7 @@ class DataContainer(MutableMapping, Lockable, HasGroups, HasHDF):
     >>> e
     ExtendedContainer({'foo': 1, 'bar': 5, 'sub': ExtendedContainer({'fnord': 23})})
 
-    For that reason most of time you'll actually want a class that uses a DataContainer for storage, but doesn't derive
+    For that reason most of time you'll actually want a class that uses a DataContainerBase for storage, but doesn't derive
     from it.
 
     >>> from pyiron_base.interfaces.object import HasStorage
@@ -243,7 +236,6 @@ class DataContainer(MutableMapping, Lockable, HasGroups, HasHDF):
     """
 
     __version__ = "0.1.0"
-    __hdf_version__ = "0.2.0"
 
     def __new__(cls, *args, **kwargs):
         instance = super().__new__(cls)
@@ -253,7 +245,6 @@ class DataContainer(MutableMapping, Lockable, HasGroups, HasHDF):
         object.__setattr__(instance, "_store", [])
         object.__setattr__(instance, "_indices", {})
         object.__setattr__(instance, "table_name", None)
-        object.__setattr__(instance, "_lazy", False)
 
         return instance
 
@@ -261,7 +252,6 @@ class DataContainer(MutableMapping, Lockable, HasGroups, HasHDF):
         self,
         init=None,
         table_name=None,
-        lazy=False,
         wrap_blacklist=(),
         lock_method="warning",
     ):
@@ -272,13 +262,11 @@ class DataContainer(MutableMapping, Lockable, HasGroups, HasHDF):
             init (Sequence, Mapping): initial data for the container, nested occurances of Sequence and Mapping are
                                       translated to nested containers
             table_name (str): default name of the data container in HDF5
-            lazy (bool): if True, use :class:`.HDFStub` to load values lazily from HDF5
             wrap_blacklist (tuple of types): any values in `init` that are instances of the given types are *not*
-                                             wrapped in :class:`.DataContainer`
+                                             wrapped in :class:`.DataContainerBase`
         """
         super().__init__(lock_method=lock_method)
         self.table_name = table_name
-        self._lazy = lazy
         if init is not None:
             self.update(init, wrap=True, blacklist=wrap_blacklist)
 
@@ -302,23 +290,13 @@ class DataContainer(MutableMapping, Lockable, HasGroups, HasHDF):
 
         elif isinstance(key, int):
             try:
-                v = self._store[key]
-                if not isinstance(v, HDFStub):
-                    return v
-                else:
-                    v = self._store[key] = v.load()
-                    return v
+                return self._store[key]
             except IndexError:
                 raise IndexError("list index out of range") from None
 
         elif isinstance(key, str):
             try:
-                v = self._store[self._indices[key]]
-                if not isinstance(v, HDFStub):
-                    return v
-                else:
-                    v = self._store[self._indices[key]] = v.load()
-                    return v
+                return self._store[self._indices[key]]
             except KeyError:
                 raise KeyError(repr(key)) from None
 
@@ -421,7 +399,8 @@ class DataContainer(MutableMapping, Lockable, HasGroups, HasHDF):
     def __repr__(self):
         name = self.__class__.__name__
         if self.has_keys():
-            # access _store and _indices directly to avoid forcing HDFStubs
+            # access _store and _indices directly to avoid forcing HDFStubs in
+            # subclass
             index2key = {v: k for k, v in self._indices.items()}
             return (
                 name
@@ -451,7 +430,7 @@ class DataContainer(MutableMapping, Lockable, HasGroups, HasHDF):
                 # _normalize calls int() on all digit string keys this is
                 # transparent for the rest of the module
                 k = str(k)
-                if isinstance(v, DataContainer):
+                if isinstance(v, type(self)):
                     dd[k] = v.to_builtin(stringify=stringify)
                 else:
                     dd[k] = repr(v) if stringify else v
@@ -461,14 +440,14 @@ class DataContainer(MutableMapping, Lockable, HasGroups, HasHDF):
             return list(
                 (
                     v.to_builtin(stringify=stringify)
-                    if isinstance(v, DataContainer)
+                    if isinstance(v, type(self))
                     else repr(v)
                 )
                 for v in self.values()
             )
         else:
             return list(
-                v.to_builtin(stringify=stringify) if isinstance(v, DataContainer) else v
+                v.to_builtin(stringify=stringify) if isinstance(v, type(self)) else v
                 for v in self.values()
             )
 
@@ -552,7 +531,7 @@ class DataContainer(MutableMapping, Lockable, HasGroups, HasHDF):
             ValueError: if key is found twice and stop_on_first_hit is False
 
         Returns:
-            DataContainer: container that has ``key``
+            DataContainerBase: container that has ``key``
         """
         # search within current level
         if key in self:
@@ -566,11 +545,11 @@ class DataContainer(MutableMapping, Lockable, HasGroups, HasHDF):
         # descend into subgroups
         for it in self.groups():
             hit = self[it]._search_parent(key, stop_on_first_hit)
-            if isinstance(hit, DataContainer):
+            if isinstance(hit, type(self)):
                 if stop_on_first_hit:
                     return hit
                 else:
-                    if isinstance(first_hit, DataContainer):
+                    if isinstance(first_hit, type(self)):
                         raise ValueError("'" + key + "' exists more than once!")
                 first_hit = hit
         return first_hit
@@ -591,7 +570,7 @@ class DataContainer(MutableMapping, Lockable, HasGroups, HasHDF):
         Args:
             init (Sequence, Set, Mapping): container to draw new elements from
             wrap (bool): if True wrap all encountered Sequences and Mappings in
-                         :class:`.DataContainer` recursively
+                         :class:`.DataContainerBase` recursively
             blacklist (list of types): when `wrap` is True, don't wrap these types even if they're instances of Sequence
                                        or Mapping
             **kwargs: update from this mapping as well
@@ -639,7 +618,7 @@ class DataContainer(MutableMapping, Lockable, HasGroups, HasHDF):
     @sentinel
     def extend(self, vals):
         """
-        Append vals to the end of this DataContainer.
+        Append vals to the end of this DataContainerBase.
 
         Args:
             vals (Sequence): any python sequence to draw new elements from
@@ -682,7 +661,7 @@ class DataContainer(MutableMapping, Lockable, HasGroups, HasHDF):
         Raises:
             IndexError: if index > len(self)
 
-        >>> pl = DataContainer([42])
+        >>> pl = DataContainerBase([42])
         >>> pl.mark(0, "head")
         >>> pl.head == 42
         True
@@ -699,7 +678,7 @@ class DataContainer(MutableMapping, Lockable, HasGroups, HasHDF):
     @sentinel
     def clear(self):
         """
-        Remove all items from DataContainer.
+        Remove all items from DataContainerBase.
         """
         self._store.clear()
         self._indices.clear()
@@ -713,14 +692,14 @@ class DataContainer(MutableMapping, Lockable, HasGroups, HasHDF):
             name (str): key under which to store the new subcontainer in this container
 
         Returns:
-            DataContainer: the newly created subcontainer
+            DataContainerBase: the newly created subcontainer
 
         Raises:
             ValueError: name already exists in container and is not a sub container
 
-        >>> pl = DataContainer({})
+        >>> pl = DataContainerBase({})
         >>> pl.create_group("group_name")
-        DataContainer([])
+        DataContainerBase([])
         >>> list(pl.group_name)
         []
         """
@@ -732,7 +711,7 @@ class DataContainer(MutableMapping, Lockable, HasGroups, HasHDF):
             if isinstance(v, self.__class__):
                 return v
             else:
-                raise ValueError(f"'{name}' already exists in DataContainer.")
+                raise ValueError(f"'{name}' already exists in DataContainerBase.")
 
     def has_keys(self):
         """
@@ -760,9 +739,9 @@ class DataContainer(MutableMapping, Lockable, HasGroups, HasHDF):
         copy module.
 
         Returns:
-            DataContainer: deep copy of itself
+            DataContainerBase: deep copy of itself
 
-        >>> pl = DataContainer([[1,2,3]])
+        >>> pl = DataContainerBase([[1,2,3]])
         >>> pl.copy() == pl
         True
         >>> pl.copy() is pl
@@ -770,8 +749,115 @@ class DataContainer(MutableMapping, Lockable, HasGroups, HasHDF):
         >>> all(a is not b for a, b in zip(pl.copy().values(), pl.values()))
         True
         """
-        self._force_load()
         return copy.deepcopy(self)
+
+    def nodes(self):
+        """
+        Iterator over keys to terminal nodes.
+
+        Returns:
+            :class:`list`: list of keys to normal values.
+        """
+        for k, v in self.items():
+            if not isinstance(v, type(self)):
+                yield k
+
+    def _list_nodes(self):
+        return list(self.nodes())
+
+    def groups(self):
+        """
+        Iterate over keys to nested containers.
+
+        Returns:
+            :class:`list`: list of all keys to elements of :class:`DataContainerBase`.
+        """
+        for k, v in self.items():
+            if isinstance(v, type(self)):
+                yield k
+
+    def _list_groups(self):
+        return list(self.groups())
+
+    @sentinel
+    def read(self, file_name, wrap=True):
+        """
+        Parse file as dictionary and add its keys to this container.
+
+        For supported file types, see :func:`.fileio.read`.
+
+        Errors during reading of the files generate a warning, but leave the container unchanged.
+
+        Args:
+            file_name(str): path to the input file
+            wrap(bool), if set to true will wrap the inputed data itself as a datacontainer inside the datacontainer
+
+        Raises:
+            :class:`ValueError`: if file extension doesn't match one of the supported ones
+        """
+        self.update(read(file_name), wrap=wrap)
+
+    def write(self, file_name):
+        """
+        Writes the DataContainerBase to a text file.
+
+        For supported file types, see :func:`.fileio.write`.
+
+        Args:
+            file_name(str): the name of the file to be writen to.
+        """
+        write(self.to_builtin(), file_name)
+
+    # Lockable overload
+    def _on_unlock(self):
+        warnings.warn("Unlock previously locked object!")
+        super()._on_unlock()
+
+class DataContainer(DataContainerBase, HasHDF):
+    __doc__ = f"""{DataContainerBase.__doc__}
+
+    If instantiated with the argument `lazy=True`, data read from HDF5 later via :method:`.from_hdf` are not actually
+    read, but only earmarked to be read later when actually accessed via :class:`.HDFStub`.  This is largely
+    transparent, i.e. when accessing an earmarked value it will automatically be loaded and this loaded value is stored
+    in container.  The only difference is in the string representation of the container, values not read yet appear as
+    'HDFStub(...)' in the output.
+
+    .. attention:: Subclasses beware!
+        1. To allow lazy loading sub classes must accept a `lazy` keyword argument and pass it to `super().__init__`.
+    """
+    __hdf_version__ = "0.2.0"
+
+    def __new__(cls, *args, **kwargs):
+        instance = super().__new__(cls, *args, **kwargs)
+        object.__setattr__(instance, "_lazy", False)
+
+        return instance
+
+    def __init__(
+        self,
+        init=None,
+        table_name=None,
+        lazy=False,
+        wrap_blacklist=(),
+        lock_method="warning",
+    ):
+        """
+        Create new container.
+
+        Args:
+            init (Sequence, Mapping): initial data for the container, nested occurances of Sequence and Mapping are
+                                      translated to nested containers
+            table_name (str): default name of the data container in HDF5
+            lazy (bool): if True, use :class:`.HDFStub` to load values lazily from HDF5
+            wrap_blacklist (tuple of types): any values in `init` that are instances of the given types are *not*
+                                             wrapped in :class:`.DataContainerBase`
+        """
+        super().__init__(init=init, table_name=table_name,
+                         wrap_blacklist=wrap_blacklist,
+                         lock_method=lock_method)
+        self._lazy = lazy
+
+    # HasHDF impl'
 
     def _get_hdf_group_name(self):
         return self.table_name
@@ -851,62 +937,14 @@ class DataContainer(MutableMapping, Lockable, HasGroups, HasHDF):
 
             self.read_only = bool(hdf.get("READ_ONLY", False))
 
-    def nodes(self):
-        """
-        Iterator over keys to terminal nodes.
-
-        Returns:
-            :class:`list`: list of keys to normal values.
-        """
-        for k, v in self.items():
-            if not isinstance(v, DataContainer):
-                yield k
-
-    def _list_nodes(self):
-        return list(self.nodes())
-
-    def groups(self):
-        """
-        Iterate over keys to nested containers.
-
-        Returns:
-            :class:`list`: list of all keys to elements of :class:`DataContainer`.
-        """
-        for k, v in self.items():
-            if isinstance(v, DataContainer):
-                yield k
-
-    def _list_groups(self):
-        return list(self.groups())
-
-    @sentinel
-    def read(self, file_name, wrap=True):
-        """
-        Parse file as dictionary and add its keys to this container.
-
-        For supported file types, see :func:`.fileio.read`.
-
-        Errors during reading of the files generate a warning, but leave the container unchanged.
-
-        Args:
-            file_name(str): path to the input file
-            wrap(bool), if set to true will wrap the inputed data itself as a datacontainer inside the datacontainer
-
-        Raises:
-            :class:`ValueError`: if file extension doesn't match one of the supported ones
-        """
-        self.update(read(file_name), wrap=wrap)
-
-    def write(self, file_name):
-        """
-        Writes the DataContainer to a text file.
-
-        For supported file types, see :func:`.fileio.write`.
-
-        Args:
-            file_name(str): the name of the file to be writen to.
-        """
-        write(self.to_builtin(), file_name)
+    # HDFStub compat
+    def __getitem__(self, key):
+        value = super().__getitem__(key)
+        if not isinstance(value, HDFStub):
+            return value
+        else:
+            value = self[key] = value.load()
+            return value
 
     def _force_load(self, recursive=True):
         """
@@ -920,18 +958,31 @@ class DataContainer(MutableMapping, Lockable, HasGroups, HasHDF):
 
         # values are loaded from HDF once they are accessed via __getitem__, which is implicitly called by values()
         for v in self.values():
-            if recursive and isinstance(v, DataContainer):
+            if recursive and isinstance(v, type(self)):
                 v._force_load()
 
-    # Lockable overload
-    def _on_unlock(self):
-        warnings.warn("Unlock previously locked object!")
-        super()._on_unlock()
+    def copy(self):
+        """
+        Returns deep copy of it self.  A shallow copy can be obtained via the
+        copy module.
+
+        Returns:
+            DataContainer: deep copy of itself
+
+        >>> pl = DataContainer([[1,2,3]])
+        >>> pl.copy() == pl
+        True
+        >>> pl.copy() is pl
+        False
+        >>> all(a is not b for a, b in zip(pl.copy().values(), pl.values()))
+        True
+        """
+        self._force_load()
+        return super().copy()
 
     def __init_subclass__(cls):
         # called whenever a subclass of DataContainer is defined, then register all subclasses with the same function
         # that the DataContainer is registered
         HDFStub.register(cls, lambda h, g: h[g].to_object(lazy=True))
-
 
 HDFStub.register(DataContainer, lambda h, g: h[g].to_object(lazy=True))
