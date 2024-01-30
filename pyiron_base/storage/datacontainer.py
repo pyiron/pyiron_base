@@ -813,6 +813,7 @@ class DataContainerBase(MutableMapping, Lockable, HasGroups):
         warnings.warn("Unlock previously locked object!")
         super()._on_unlock()
 
+
 class DataContainer(DataContainerBase, HasHDF):
     __doc__ = f"""{DataContainerBase.__doc__}
 
@@ -852,9 +853,12 @@ class DataContainer(DataContainerBase, HasHDF):
             wrap_blacklist (tuple of types): any values in `init` that are instances of the given types are *not*
                                              wrapped in :class:`.DataContainerBase`
         """
-        super().__init__(init=init, table_name=table_name,
-                         wrap_blacklist=wrap_blacklist,
-                         lock_method=lock_method)
+        super().__init__(
+            init=init,
+            table_name=table_name,
+            wrap_blacklist=wrap_blacklist,
+            lock_method=lock_method,
+        )
         self._lazy = lazy
 
     # HasHDF impl'
@@ -984,5 +988,6 @@ class DataContainer(DataContainerBase, HasHDF):
         # called whenever a subclass of DataContainer is defined, then register all subclasses with the same function
         # that the DataContainer is registered
         HDFStub.register(cls, lambda h, g: h[g].to_object(lazy=True))
+
 
 HDFStub.register(DataContainer, lambda h, g: h[g].to_object(lazy=True))
