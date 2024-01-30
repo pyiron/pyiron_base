@@ -122,6 +122,7 @@ class Server(
         self._structure_id = None
         self._accept_crash = False
         self._environment_name = None
+        self._environment_path = None
         self.additional_arguments = {}
 
     @property
@@ -552,6 +553,27 @@ class Server(
         """
         self._environment_name = environment_name
 
+    @property
+    def conda_environment_path(self):
+        """
+        Get path of the conda environment the job should be executed in.
+
+        Returns:
+            str: path of the conda environment
+        """
+        return self._environment_path
+
+    @conda_environment_path.setter
+    @sentinel
+    def conda_environment_path(self, environment_path):
+        """
+        Set path of the conda environment the job should be executed in.
+
+        Args:
+            environment_path (str): path of the conda environment
+        """
+        self._environment_path = environment_path
+
     @staticmethod
     def list_queues():
         """
@@ -601,6 +623,8 @@ class Server(
             server_dict["gpus"] = self._gpus
         if self._environment_name is not None:
             server_dict["conda_environment_name"] = self._environment_name
+        if self._environment_path is not None:
+            server_dict["conda_environment_path"] = self._environment_path
         return server_dict
 
     def from_dict(self, server_dict):
@@ -622,6 +646,7 @@ class Server(
             "additional_arguments": "additional_arguments",
             "gpus": "_gpus",
             "conda_environment_name": "_environment_name",
+            "conda_environment_path": "_environment_path",
         }
         for h5_key, obj_attr in h5_mapping.items():
             if h5_key in server_dict.keys():

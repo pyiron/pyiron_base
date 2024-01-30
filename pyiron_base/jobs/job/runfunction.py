@@ -633,7 +633,7 @@ def execute_job_with_external_executable(job):
         cores=job.server.cores, threads=job.server.threads, gpus=job.server.gpus
     )
     job_crashed, out = False, None
-    if job.server.conda_environment_name is None:
+    if job.server.conda_environment_name is None and job.server.conda_environment_path is None:
         try:
             out = subprocess.run(
                 executable,
@@ -649,7 +649,12 @@ def execute_job_with_external_executable(job):
             out, job_crashed = handle_failed_job(job=job, error=e)
     else:
         import conda_subprocess
-
+        if job.server.conda_environment_name is not None:
+            prefix_name = job.server.conda_environment_name
+            prefix_path = None
+        else:
+            prefix_name = None
+            prefix_path = job.server.conda_environment_path
         try:
             out = conda_subprocess.run(
                 executable,
@@ -658,7 +663,8 @@ def execute_job_with_external_executable(job):
                 stderr=subprocess.STDOUT,
                 universal_newlines=True,
                 check=True,
-                prefix_name=job.server.conda_environment_name,
+                prefix_name=prefix_name,
+                prefix_path=prefix_path,
             ).stdout
         except subprocess.CalledProcessError as e:
             out, job_crashed = handle_failed_job(job=job, error=e)
