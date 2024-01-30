@@ -459,9 +459,11 @@ class DataContainer(MutableMapping, Lockable, HasGroups, HasHDF):
             return dd
         elif stringify:
             return list(
-                v.to_builtin(stringify=stringify)
-                if isinstance(v, DataContainer)
-                else repr(v)
+                (
+                    v.to_builtin(stringify=stringify)
+                    if isinstance(v, DataContainer)
+                    else repr(v)
+                )
                 for v in self.values()
             )
         else:

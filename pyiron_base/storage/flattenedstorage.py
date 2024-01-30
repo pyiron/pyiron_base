@@ -1011,9 +1011,9 @@ class FlattenedStorage(HasHDF):
             num_elements = hdf["num_atoms"]
 
         self._num_chunks_alloc = self.num_chunks = self.current_chunk_index = num_chunks
-        self._num_elements_alloc = (
-            self.num_elements
-        ) = self.current_element_index = num_elements
+        self._num_elements_alloc = self.num_elements = self.current_element_index = (
+            num_elements
+        )
 
         if version == "0.1.0":
             with hdf.open("arrays") as hdf_arrays:
