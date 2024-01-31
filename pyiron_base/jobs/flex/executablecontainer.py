@@ -10,6 +10,8 @@ class ExecutableContainerJob(TemplateJob):
 
     Example:
 
+    >>> import os
+    >>>
     >>> def write_input(input_dict, working_directory="."):
     >>>     with open(os.path.join(working_directory, "input_file"), "w") as f:
     >>>         f.write(str(input_dict["energy"]))
