@@ -32,6 +32,8 @@ class TestExecutableContainer(TestWithProject):
         job_reload = self.project.load(job.job_name)
         self.assertEqual(job_reload.input["energy"], energy_value)
         self.assertEqual(job_reload.output["energy"], energy_value)
+        self.assertEqual(str(job.executable), "cat input_file > output_file")
+        self.assertEqual(str(job_reload.executable), "cat input_file > output_file")
         del JOB_CLASS_DICT["CatJob"]
 
     def test_create_job_factory_with_project(self):
