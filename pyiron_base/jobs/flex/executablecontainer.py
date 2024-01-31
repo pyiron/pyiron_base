@@ -34,7 +34,8 @@ class ExecutableContainerJob(TemplateJob):
     >>> job = pr.create.job.CatJob(job_name="job_test")
     >>> job.input["energy"] = 2.0
     >>> job.run()
-    >>> job.output
+    >>> print(job.output)
+    DataContainer({'energy': 2.0})
 
     """
 
