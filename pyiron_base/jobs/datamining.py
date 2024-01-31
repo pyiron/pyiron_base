@@ -786,7 +786,9 @@ class TableJob(GenericJob):
             if self.server.executor is not None:
                 executor = self.server.executor
             elif self.server.cores > 1:
-                executor = concurrent.futures.ProcessPoolExecutor(max_workers=self.server.cores)
+                executor = concurrent.futures.ProcessPoolExecutor(
+                    max_workers=self.server.cores
+                )
             else:
                 executor = None
             self._pyiron_table.create_table(
