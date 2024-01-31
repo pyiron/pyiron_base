@@ -31,7 +31,7 @@ class ExecutableContainerJob(TemplateJob):
     >>>     default_input_dict={"energy": 1.0},
     >>>     executable_str="cat input_file > output_file",
     >>> )
-    >>> job = self.project.create.job.CatJob(job_name="job_test")
+    >>> job = pr.create.job.CatJob(job_name="job_test")
     >>> job.input["energy"] = 2.0
     >>> job.run()
     >>> job.output
