@@ -17,9 +17,11 @@ from pyiron_base.utils.deprecate import Deprecator, deprecate, deprecate_soon
 from pyiron_base.utils.error import ImportAlarm
 from pyiron_base.jobs.job.extension.executable import Executable
 from pyiron_base.project.external import Notebook, load, dump
+from pyiron_base.jobs.dynamic import warn_dynamic_job_classes
+from pyiron_base.jobs.flex.factory import create_job_factory
+from pyiron_base.jobs.job.extension.server.queuestatus import validate_que_request
 from pyiron_base.jobs.job.generic import GenericJob
 from pyiron_base.jobs.job.interactive import InteractiveBase
-from pyiron_base.jobs.master.interactivewrapper import InteractiveWrapper
 from pyiron_base.jobs.job.extension.jobstatus import (
     JobStatus,
     job_status_successful_lst,
@@ -29,14 +31,14 @@ from pyiron_base.jobs.job.extension.jobstatus import (
 from pyiron_base.jobs.job.jobtype import JOB_CLASS_DICT, JobType, JobTypeChoice
 from pyiron_base.jobs.job.template import TemplateJob, PythonTemplateJob
 from pyiron_base.jobs.job.factory import JobFactoryCore
+from pyiron_base.jobs.master.flexible import FlexibleMaster
 from pyiron_base.jobs.master.generic import GenericMaster, get_function_from_string
+from pyiron_base.jobs.master.interactivewrapper import InteractiveWrapper
 from pyiron_base.jobs.master.list import ListMaster
 from pyiron_base.jobs.master.parallel import ParallelMaster, JobGenerator
 from pyiron_base.jobs.master.serial import SerialMasterBase
-from pyiron_base.jobs.master.flexible import FlexibleMaster
 from pyiron_base.project.generic import Project, Creator
 from pyiron_base.utils.parser import Logstatus, extract_data_from_file
-from pyiron_base.jobs.job.extension.server.queuestatus import validate_que_request
 from pyiron_base.state.settings import Settings
 from pyiron_base.state.install import install_dialog
 from pyiron_base.jobs.datamining import PyironTable, TableJob
@@ -64,3 +66,9 @@ __version__ = get_versions()["version"]
 
 # Jedi fix
 fix_ipython_autocomplete()
+
+# Dynamic job class definition is no longer supported in pyiron_base >=0.7.0
+warn_dynamic_job_classes(
+    resource_folder_lst=state.settings.resource_paths,
+    logger=state.logger,
+)

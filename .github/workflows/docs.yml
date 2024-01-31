@@ -13,19 +13,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
-    - name: Merge environment
-      run: |
-        cp .ci_support/environment.yml environment.yml
-        tail --lines=+4 .ci_support/environment-docs.yml >> environment.yml
     - name: Setup Mambaforge
       uses: conda-incubator/setup-miniconda@v2
       with:
-        python-version: ${{ matrix.python-version }}
+        python-version: "3.12"
         miniforge-variant: Mambaforge
         channels: conda-forge
         channel-priority: strict
         activate-environment: my-env
-        environment-file: environment.yml
+        environment-file: .ci_support/environment-docs.yml
         use-mamba: true
     - name: Documentation
       shell: bash -l {0}
@@ -33,5 +29,5 @@ jobs:
         python .ci_support/pyironconfig.py
         bash .ci_support/pip_install.sh
         mkdir public_html; cd docs
-        sphinx-build -b html ./ ../public_html || exit 1;
+        sphinx-build -b html ./source ../public_html || exit 1;
         cd ..

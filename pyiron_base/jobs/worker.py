@@ -74,6 +74,7 @@ def worker_function(args):
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
             universal_newlines=True,
+            env=os.environ.copy(),
         )
     except subprocess.CalledProcessError:
         pass

@@ -454,6 +454,7 @@ def run_job_with_runmode_srun(job):
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         universal_newlines=True,
+        env=os.environ.copy(),
     )
 
 
@@ -484,7 +485,7 @@ def run_job_with_runmode_executor(job, executor, gpus_per_slot=None):
 
     if static_isinstance(
         obj=job,
-        obj_type="pyiron_base.jobs.master.generic.GenericMaster"
+        obj_type="pyiron_base.jobs.master.generic.GenericMaster",
         # The static check is used to avoid a circular import:
         # runfunction -> GenericJob -> GenericMaster -> runfunction
         # This smells a bit, so if a better architecture is found in the future, use it
@@ -641,6 +642,7 @@ def execute_job_with_external_executable(job):
             stderr=subprocess.STDOUT,
             universal_newlines=True,
             check=True,
+            env=os.environ.copy(),
         ).stdout
     except subprocess.CalledProcessError as e:
         out, job_crashed = handle_failed_job(job=job, error=e)
