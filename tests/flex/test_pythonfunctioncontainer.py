@@ -1,7 +1,14 @@
+from concurrent.futures import ProcessPoolExecutor
+from time import sleep
 from pyiron_base._tests import TestWithProject
 
 
 def my_function(a, b=8):
+    return a+b
+
+
+def my_sleep_funct(a, b=8):
+    sleep(0.01)
     return a+b
 
 
@@ -27,3 +34,27 @@ class TestPythonFunctionContainer(TestWithProject):
         self.assertEqual(job_reload.input["a"], 5)
         self.assertEqual(job_reload.input["b"], 6)
         self.assertEqual(job_reload.output["result"], 11)
+
+    def test_with_executor(self):
+        with ProcessPoolExecutor() as exe:
+            job = self.project.wrap_python_function(my_sleep_funct)
+            job.input["a"] = 4
+            job.input["b"] = 5
+            job.server.executor = exe
+            self.assertTrue(job.server.run_mode.executor)
+            job.run()
+            self.assertFalse(job.server.future.done())
+            self.assertIsNone(job.server.future.result())
+            self.assertTrue(job.server.future.done())
+
+    def test_with_executor_wait(self):
+        with ProcessPoolExecutor() as exe:
+            job = self.project.wrap_python_function(my_sleep_funct)
+            job.input["a"] = 4
+            job.input["b"] = 6
+            job.server.executor = exe
+            self.assertTrue(job.server.run_mode.executor)
+            job.run()
+            self.assertFalse(job.server.future.done())
+            self.project.wait_for_job(job=job, interval_in_s=0.01, max_iterations=100)
+            self.assertTrue(job.server.future.done())
