@@ -1,4 +1,6 @@
+import unittest
 from concurrent.futures import ProcessPoolExecutor
+import sys
 from time import sleep
 from pyiron_base._tests import TestWithProject
 
@@ -47,6 +49,7 @@ class TestPythonFunctionContainer(TestWithProject):
             self.assertIsNone(job.server.future.result())
             self.assertTrue(job.server.future.done())
 
+    @unittest.skipIf(sys.version_info < (3, 11), reason="requires python3.11 or higher")
     def test_with_executor_wait(self):
         with ProcessPoolExecutor() as exe:
             job = self.project.wrap_python_function(my_sleep_funct)
