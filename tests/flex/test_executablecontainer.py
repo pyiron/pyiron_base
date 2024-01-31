@@ -37,7 +37,7 @@ class TestExecutableContainer(TestWithProject):
         executable_dict = {
             'version': 'cat input_file > output_file',
             'name': 'executablecontainerjob',
-            'operation_system_nt': False,
+            'operation_system_nt': os.name == "nt",
             'executable': None,
             'mpi': False,
             'accepted_return_codes': [0]
