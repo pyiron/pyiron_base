@@ -34,6 +34,16 @@ class TestExecutableContainer(TestWithProject):
         self.assertEqual(job_reload.output["energy"], energy_value)
         self.assertEqual(str(job.executable), "cat input_file > output_file")
         self.assertEqual(str(job_reload.executable), "cat input_file > output_file")
+        executable_dict = {
+            'version': 'cat input_file > output_file',
+            'name': 'executablecontainerjob',
+            'operation_system_nt': False,
+            'executable': None,
+            'mpi': False,
+            'accepted_return_codes': [0]
+        }
+        self.assertEqual(job.executable._storage.to_builtin(), executable_dict)
+        self.assertEqual(job_reload.executable._storage.to_builtin(), executable_dict)
         del JOB_CLASS_DICT["CatJob"]
 
     def test_create_job_factory_with_project(self):
