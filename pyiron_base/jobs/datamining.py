@@ -783,11 +783,17 @@ class TableJob(GenericJob):
         if self.job_id is not None:
             self.project.db.item_update({"timestart": datetime.now()}, self.job_id)
         with self.project_hdf5.open("input") as hdf5_input:
+            if self.server.executor is not None:
+                executor = self.server.executor
+            elif self.server.cores > 1:
+                executor = concurrent.futures.ProcessPoolExecutor(max_workers=self.server.cores)
+            else:
+                executor = None
             self._pyiron_table.create_table(
                 file=hdf5_input,
                 job_status_list=job_status_list,
                 enforce_update=self._enforce_update,
-                executor=self.server.executor,
+                executor=executor,
             )
         self.to_hdf()
         self._pyiron_table._df.to_csv(
