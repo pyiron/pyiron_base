@@ -447,7 +447,11 @@ class DataContainerBase(MutableMapping, Lockable, HasGroups):
             )
         else:
             return list(
-                v.to_builtin(stringify=stringify) if isinstance(v, DataContainerBase) else v
+                (
+                    v.to_builtin(stringify=stringify)
+                    if isinstance(v, DataContainerBase)
+                    else v
+                )
                 for v in self.values()
             )
 
