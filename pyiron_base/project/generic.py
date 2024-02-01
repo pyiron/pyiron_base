@@ -332,8 +332,8 @@ class Project(ProjectPath, HasGroups):
         new = self.copy()
         return new.open(group, history=False)
 
+    @staticmethod
     def create_job_class(
-        self,
         class_name,
         write_input_funct,
         collect_output_funct,
