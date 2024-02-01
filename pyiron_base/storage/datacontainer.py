@@ -430,7 +430,7 @@ class DataContainerBase(MutableMapping, Lockable, HasGroups):
                 # _normalize calls int() on all digit string keys this is
                 # transparent for the rest of the module
                 k = str(k)
-                if isinstance(v, type(self)):
+                if isinstance(v, DataContainerBase):
                     dd[k] = v.to_builtin(stringify=stringify)
                 else:
                     dd[k] = repr(v) if stringify else v
@@ -440,14 +440,14 @@ class DataContainerBase(MutableMapping, Lockable, HasGroups):
             return list(
                 (
                     v.to_builtin(stringify=stringify)
-                    if isinstance(v, type(self))
+                    if isinstance(v, DataContainerBase)
                     else repr(v)
                 )
                 for v in self.values()
             )
         else:
             return list(
-                v.to_builtin(stringify=stringify) if isinstance(v, type(self)) else v
+                v.to_builtin(stringify=stringify) if isinstance(v, DataContainerBase) else v
                 for v in self.values()
             )
 
@@ -545,11 +545,11 @@ class DataContainerBase(MutableMapping, Lockable, HasGroups):
         # descend into subgroups
         for it in self.groups():
             hit = self[it]._search_parent(key, stop_on_first_hit)
-            if isinstance(hit, type(self)):
+            if isinstance(hit, DataContainerBase):
                 if stop_on_first_hit:
                     return hit
                 else:
-                    if isinstance(first_hit, type(self)):
+                    if isinstance(first_hit, DataContainerBase):
                         raise ValueError("'" + key + "' exists more than once!")
                 first_hit = hit
         return first_hit
@@ -759,7 +759,7 @@ class DataContainerBase(MutableMapping, Lockable, HasGroups):
             :class:`list`: list of keys to normal values.
         """
         for k, v in self.items():
-            if not isinstance(v, type(self)):
+            if not isinstance(v, DataContainerBase):
                 yield k
 
     def _list_nodes(self):
@@ -773,7 +773,7 @@ class DataContainerBase(MutableMapping, Lockable, HasGroups):
             :class:`list`: list of all keys to elements of :class:`DataContainerBase`.
         """
         for k, v in self.items():
-            if isinstance(v, type(self)):
+            if isinstance(v, DataContainerBase):
                 yield k
 
     def _list_groups(self):
@@ -962,7 +962,7 @@ class DataContainer(DataContainerBase, HasHDF):
 
         # values are loaded from HDF once they are accessed via __getitem__, which is implicitly called by values()
         for v in self.values():
-            if recursive and isinstance(v, type(self)):
+            if recursive and isinstance(v, DataContainer):
                 v._force_load()
 
     def copy(self):
