@@ -102,6 +102,24 @@ def read_dict_from_hdf(
         except KeyError:
             return []
 
+    def merge_dict(main_dict, add_dict):
+        """
+        Merge two dictionaries recursively
+
+        Args:
+            main_dict (dict): The primary dictionary, the secondary dictionary is merged into
+            add_dict (dict): The secondary dictionary which is merged in the primary dictionary
+
+        Returns:
+            dict: The merged dictionary with all keys
+        """
+        for k, v in add_dict.items():
+            if k in main_dict.keys() and isinstance(v, dict):
+                main_dict[k] = merge_dict(main_dict=main_dict[k], add_dict=v)
+            else:
+                main_dict[k] = v
+        return main_dict
+
     if recursive and len(group_paths) > 0:
         raise ValueError(
             "Loading subgroups can either be defined by the group paths ",
@@ -126,20 +144,17 @@ def read_dict_from_hdf(
                 for g in get_groups_hdf(hdf=store, h5_path=h5_path)
             ]
         for group_path in group_paths:
-            read_dict = resolve_nested_dict(
-                group_path=group_path,
-                data_dict=get_dict_from_nodes(
-                    store=store,
-                    h5_path=get_h5_path(h5_path=h5_path, name=group_path),
-                    slash=slash,
+            output_dict = merge_dict(
+                main_dict=output_dict,
+                add_dict=resolve_nested_dict(
+                    group_path=group_path,
+                    data_dict=get_dict_from_nodes(
+                        store=store,
+                        h5_path=get_h5_path(h5_path=h5_path, name=group_path),
+                        slash=slash,
+                    ),
                 ),
             )
-            for k, v in read_dict.items():
-                if k in output_dict.keys() and isinstance(v, dict):
-                    for sk, vs in v.items():
-                        output_dict[k][sk] = vs
-                else:
-                    output_dict[k] = v
     return output_dict
 
 
