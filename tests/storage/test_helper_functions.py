@@ -25,7 +25,7 @@ class TestWriteHdfIO(TestCase):
     def setUp(self):
         self.file_name = "test_write_hdf5.h5"
         self.h5_path = "data_hierarchical"
-        self.data_hierarchical = {"a": [1, 2], "b": 3, "c": {"d": 4, "e": 5}}
+        self.data_hierarchical = {"a": [1, 2], "b": 3, "c": {"d": 4, "e": {"f": 5}}}
         _write_hdf(hdf_filehandle=self.file_name, data=self.data_hierarchical, h5_path=self.h5_path)
 
     def tearDown(self):
@@ -37,7 +37,7 @@ class TestWriteHdfIO(TestCase):
     def test_read_dict_hierarchical(self):
         self.assertEqual({'key_b': 3}, read_dict_from_hdf(file_name=self.file_name, h5_path=self.h5_path))
         self.assertEqual(
-            {'key_a': {'idx_0': 1, 'idx_1': 2}, 'key_b': 3, 'key_c': {'key_d': 4, 'key_e': 5}},
+            {'key_a': {'idx_0': 1, 'idx_1': 2}, 'key_b': 3, 'key_c': {'key_d': 4}},
             read_dict_from_hdf(
                 file_name=self.file_name,
                 h5_path=self.h5_path,
@@ -45,7 +45,15 @@ class TestWriteHdfIO(TestCase):
             )
         )
         self.assertEqual(
-            {'key_a': {'idx_0': 1, 'idx_1': 2}, 'key_b': 3, 'key_c': {'key_d': 4, 'key_e': 5}},
+            {'key_a': {'idx_0': 1, 'idx_1': 2}, 'key_b': 3, 'key_c': {'key_d': 4, 'key_e': {'key_f': 5}}},
+            read_dict_from_hdf(
+                file_name=self.file_name,
+                h5_path=self.h5_path,
+                group_paths=["key_a", "key_c", "key_c/key_e"],
+            )
+        )
+        self.assertEqual(
+            {'key_a': {'idx_0': 1, 'idx_1': 2}, 'key_b': 3, 'key_c': {'key_d': 4, 'key_e': {'key_f': 5}}},
             read_dict_from_hdf(
                 file_name=self.file_name,
                 h5_path=self.h5_path,
@@ -66,7 +74,8 @@ class TestWriteHdfIO(TestCase):
             {'data_hierarchical/key_b': {'TITLE': 'int'}},
             {'data_hierarchical/key_c': {'TITLE': 'dict'}},
             {'data_hierarchical/key_c/key_d': {'TITLE': 'int'}},
-            {'data_hierarchical/key_c/key_e': {'TITLE': 'int'}}
+            {'data_hierarchical/key_c/key_e': {'TITLE': 'dict'}},
+            {'data_hierarchical/key_c/key_e/key_f': {'TITLE': 'int'}}
         ])
 
     def test_list_groups(self):
