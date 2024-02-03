@@ -1694,6 +1694,7 @@ class Project(ProjectPath, HasGroups):
         if item in self.list_files():
             file_name = posixpath.join(self.path, "{}".format(item))
             from pyiron_base.storage.filedata import load_file
+
             return load_file(file_name, project=self)
         if item in self.list_dirs():
             with self.open(item) as new_item:
