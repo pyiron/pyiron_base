@@ -92,3 +92,18 @@ class TestExecutableContainer(TestWithProject):
                 project="project",
                 job_name="job_test"
             )
+
+    def test_create_job_factory_no_functions(self):
+        create_catjob = create_job_factory(
+            executable_str="python --version",
+        )
+        job = create_catjob(
+            project=ProjectHDFio(project=self.project, file_name="any.h5", h5_path=None, mode=None),
+            job_name="job_no"
+        )
+        job.run()
+        self.assertTrue(job.status.finished)
+        self.assertEqual(os.listdir(job.working_directory), ['error.out'])
+        with open(os.path.join(job.working_directory, 'error.out'), "r") as f:
+            content = f.readlines()
+        self.assertEqual(content[0].split()[0], "Python")

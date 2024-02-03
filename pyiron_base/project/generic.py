@@ -335,10 +335,10 @@ class Project(ProjectPath, HasGroups):
     @staticmethod
     def create_job_class(
         class_name,
-        write_input_funct,
-        collect_output_funct,
-        default_input_dict,
         executable_str,
+        write_input_funct=None,
+        collect_output_funct=None,
+        default_input_dict=None,
     ):
         """
         Create a new job class based on pre-defined write_input() and collect_output() function plus a dictionary of
@@ -346,10 +346,10 @@ class Project(ProjectPath, HasGroups):
 
         Args:
             class_name (str): A name for the newly created job class, so it is accessible via pr.create.job.<class_name>
+            executable_str (str): Call to an external executable
             write_input_funct (callable): The write input function write_input(input_dict, working_directory)
             collect_output_funct (callable): The collect output function collect_output(working_directory)
             default_input_dict (dict): Default input for the newly created job class
-            executable_str (str): Call to an external executable
 
         Example:
 

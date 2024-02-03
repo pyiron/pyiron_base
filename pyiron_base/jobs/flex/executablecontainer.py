@@ -46,9 +46,9 @@ class ExecutableContainerJob(TemplateJob):
 
     def set_job_type(
         self,
-        write_input_funct,
         executable_str,
-        collect_output_funct,
+        write_input_funct=None,
+        collect_output_funct=None,
         default_input_dict=None,
     ):
         """
@@ -56,30 +56,34 @@ class ExecutableContainerJob(TemplateJob):
         executable string.
 
         Args:
-            write_input_funct (callable): The write input function write_input(input_dict, working_directory)
             executable_str (str): Call to an external executable
+            write_input_funct (callable): The write input function write_input(input_dict, working_directory)
             collect_output_funct (callable): The collect output function collect_output(working_directory)
             default_input_dict (dict/None): Default input for the newly created job class
 
         Returns:
             callable: Function which requires a project and a job_name as input and returns a job object
         """
-        self._write_input_funct = write_input_funct
         self.executable = executable_str
-        self._collect_output_funct = collect_output_funct
+        if write_input_funct is not None:
+            self._write_input_funct = write_input_funct
+        if collect_output_funct is not None:
+            self._collect_output_funct = collect_output_funct
         if default_input_dict is not None:
             self.input.update(default_input_dict)
 
     def write_input(self):
-        self._write_input_funct(
-            input_dict=self.input.to_builtin(), working_directory=self.working_directory
-        )
+        if self._write_input_funct is not None:
+            self._write_input_funct(
+                input_dict=self.input.to_builtin(), working_directory=self.working_directory
+            )
 
     def collect_output(self):
-        self.output.update(
-            self._collect_output_funct(working_directory=self.working_directory)
-        )
-        self.to_hdf()
+        if self._collect_output_funct is not None:
+            self.output.update(
+                self._collect_output_funct(working_directory=self.working_directory)
+            )
+            self.to_hdf()
 
     def to_hdf(self, hdf=None, group_name=None):
         super().to_hdf(hdf=hdf, group_name=group_name)
@@ -94,9 +98,11 @@ class ExecutableContainerJob(TemplateJob):
 
     def from_hdf(self, hdf=None, group_name=None):
         super().from_hdf(hdf=hdf, group_name=group_name)
-        self._write_input_funct = cloudpickle.loads(
-            self.project_hdf5["write_input_function"]
-        )
-        self._collect_output_funct = cloudpickle.loads(
-            self.project_hdf5["collect_output_function"]
-        )
+        if "write_input_function" in self.project_hdf5.list_nodes():
+            self._write_input_funct = cloudpickle.loads(
+                self.project_hdf5["write_input_function"]
+            )
+        if "write_input_function" in self.project_hdf5.list_nodes():
+            self._collect_output_funct = cloudpickle.loads(
+                self.project_hdf5["collect_output_function"]
+            )

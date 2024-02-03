@@ -2,9 +2,9 @@ from pyiron_base.utils.instance import static_isinstance
 
 
 def create_job_factory(
-    write_input_funct,
     executable_str,
-    collect_output_funct,
+    write_input_funct=None,
+    collect_output_funct=None,
     default_input_dict=None,
 ):
     """
@@ -12,8 +12,8 @@ def create_job_factory(
     default inputs and an executable string.
 
     Args:
-        write_input_funct (callable): The write input function write_input(input_dict, working_directory)
         executable_str (str): Call to an external executable
+        write_input_funct (callable): The write input function write_input(input_dict, working_directory)
         collect_output_funct (callable): The collect output function collect_output(working_directory)
         default_input_dict (dict/None): Default input for the newly created job class
 
