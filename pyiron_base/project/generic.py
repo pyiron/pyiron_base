@@ -32,7 +32,6 @@ from pyiron_base.database.jobtable import (
     get_job_status,
 )
 from pyiron_base.storage.hdfio import ProjectHDFio
-from pyiron_base.storage.filedata import load_file
 from pyiron_base.utils.deprecate import deprecate
 from pyiron_base.interfaces.has_groups import HasGroups
 from pyiron_base.jobs.flex.factory import create_job_factory
@@ -1694,6 +1693,7 @@ class Project(ProjectPath, HasGroups):
             return ProjectHDFio(project=self, file_name=file_name)
         if item in self.list_files():
             file_name = posixpath.join(self.path, "{}".format(item))
+            from pyiron_base.storage.filedata import load_file
             return load_file(file_name, project=self)
         if item in self.list_dirs():
             with self.open(item) as new_item:
