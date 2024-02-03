@@ -645,7 +645,7 @@ def execute_job_with_external_executable(job):
             check=True,
             env=os.environ.copy(),
         ).stdout
-    except subprocess.CalledProcessError as e:
+    except (subprocess.CalledProcessError, FileNotFoundError) as e:
         out, job_crashed = handle_failed_job(job=job, error=e)
 
     job._logger.info(
@@ -687,22 +687,32 @@ def handle_failed_job(job, error):
     Returns:
         boolean, str: job crashed and error message
     """
-    out = error.output
-    if error.returncode in job.executable.accepted_return_codes:
-        return False, out
-    elif not job.server.accept_crash:
+    if hasattr(error, "output"):
+        out = error.output
+        if error.returncode in job.executable.accepted_return_codes:
+            return False, out
+        elif not job.server.accept_crash:
+            job._logger.warning("Job aborted")
+            job._logger.warning(error.output)
+            job.status.aborted = True
+            job._hdf5["status"] = job.status.string
+            job.run_time_to_db()
+            error_file = posixpath.join(job.project_hdf5.working_directory, "error.msg")
+            with open(error_file, "w") as f:
+                f.write(error.output)
+            if job.server.run_mode.non_modal:
+                state.database.close_connection()
+            raise RuntimeError("Job aborted")
+        else:
+            return True, out
+    else:
         job._logger.warning("Job aborted")
-        job._logger.warning(error.output)
         job.status.aborted = True
+        job._hdf5["status"] = job.status.string
         job.run_time_to_db()
-        error_file = posixpath.join(job.project_hdf5.working_directory, "error.msg")
-        with open(error_file, "w") as f:
-            f.write(error.output)
         if job.server.run_mode.non_modal:
             state.database.close_connection()
         raise RuntimeError("Job aborted")
-    else:
-        return True, out
 
 
 def multiprocess_wrapper(
