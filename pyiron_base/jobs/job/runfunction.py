@@ -627,6 +627,7 @@ def execute_job_with_external_executable(job):
     )
     if job.executable.executable_path == "":
         job.status.aborted = True
+        job._hdf5["status"] = job.status.string
         raise ValueError("No executable set!")
     job.status.running = True
     executable, shell = job.executable.get_input_for_subprocess_call(
