@@ -75,7 +75,8 @@ class ExecutableContainerJob(TemplateJob):
     def write_input(self):
         if self._write_input_funct is not None:
             self._write_input_funct(
-                input_dict=self.input.to_builtin(), working_directory=self.working_directory
+                input_dict=self.input.to_builtin(),
+                working_directory=self.working_directory,
             )
 
     def collect_output(self):
