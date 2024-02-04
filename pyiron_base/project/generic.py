@@ -390,7 +390,7 @@ class Project(ProjectPath, HasGroups):
         executable_str,
         write_input_funct=None,
         collect_output_funct=None,
-        default_input_dict=None,
+        input_dict=None,
         conda_environment_path=None,
         conda_environment_name=None,
         input_file_lst=None,
@@ -403,7 +403,7 @@ class Project(ProjectPath, HasGroups):
             executable_str (str):
             write_input_funct (callable):
             collect_output_funct (callable):
-            default_input_dict (dict):
+            input_dict (dict):
             conda_environment_path (str):
             conda_environment_name (str):
             input_file_lst (list):
@@ -415,7 +415,7 @@ class Project(ProjectPath, HasGroups):
         job_factory = create_job_factory(
             write_input_funct=write_input_funct,
             collect_output_funct=collect_output_funct,
-            default_input_dict=default_input_dict,
+            default_input_dict=input_dict,
             executable_str=executable_str,
         )
         job = job_factory(project=self, job_name=job_name)
