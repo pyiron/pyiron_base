@@ -119,7 +119,7 @@ class OutputFiles:
         return list(self._get_file_convert_dict().keys())
 
     def _get_file_convert_dict(self):
-        return {f.replace(".", "_"): f for f in os.listdir(self.working_directory)}
+        return {f.replace(".", "_"): f for f in os.listdir(self._working_directory)}
 
     def __getattr__(self, attr):
         convert_dict = self._get_file_convert_dict()
