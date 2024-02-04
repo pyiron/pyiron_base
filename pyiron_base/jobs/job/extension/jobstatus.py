@@ -116,7 +116,10 @@ class JobStatus(object):
         Args:
             db (DatabaseAccess): The database which should be responsible for this job.
         """
-        if db is not None and not (static_isinstance(db, "pyiron_base.database.generic.DatabaseAccess") or static_isinstance(db, "pyiron_base.database.filetable.FileTable")):
+        if db is not None and not (
+            static_isinstance(db, "pyiron_base.database.generic.DatabaseAccess")
+            or static_isinstance(db, "pyiron_base.database.filetable.FileTable")
+        ):
             raise TypeError("The database has to be an DatabaseAccess object.")
         self._db = db
 
