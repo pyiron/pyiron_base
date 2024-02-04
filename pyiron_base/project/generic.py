@@ -213,6 +213,7 @@ class Project(ProjectPath, HasGroups):
         Get the size of the project
         """
         import pint
+
         size = (
             sum(
                 [
