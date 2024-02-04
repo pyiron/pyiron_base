@@ -5,8 +5,7 @@
 The JobStatus class belongs to the GenericJob object.
 """
 
-from pyiron_base.database.generic import DatabaseAccess
-from pyiron_base.database.filetable import FileTable
+from pyiron_base.utils.instance import static_isinstance
 
 __author__ = "Jan Janssen"
 __copyright__ = (
@@ -117,7 +116,7 @@ class JobStatus(object):
         Args:
             db (DatabaseAccess): The database which should be responsible for this job.
         """
-        if db is not None and not isinstance(db, (DatabaseAccess, FileTable)):
+        if db is not None and not (static_isinstance(db, "pyiron_base.database.generic.DatabaseAccess") or static_isinstance(db, "pyiron_base.database.filetable.FileTable")):
             raise TypeError("The database has to be an DatabaseAccess object.")
         self._db = db
 

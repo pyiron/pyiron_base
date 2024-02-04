@@ -9,7 +9,6 @@ from urllib.parse import quote_plus
 from pyiron_base.state.logger import logger
 from pyiron_base.interfaces.singleton import Singleton
 from pyiron_base.state.settings import settings as s
-from pyiron_base.database.generic import DatabaseAccess
 import os
 
 __author__ = "Jan Janssen, Liam Huber"
@@ -122,6 +121,7 @@ class DatabaseManager(metaclass=Singleton):
         accessable.
         """
         if self._database is None and not self.database_is_disabled:
+            from pyiron_base.database.generic import DatabaseAccess
             self._database = DatabaseAccess(
                 self.sql_connection_string,
                 self.sql_table_name,
@@ -149,6 +149,7 @@ class DatabaseManager(metaclass=Singleton):
             )
 
     def open_local_sqlite_connection(self, connection_string):
+        from pyiron_base.database.generic import DatabaseAccess
         self._database = DatabaseAccess(connection_string, self.sql_table_name)
         self._use_local_database = True
         self._database_is_disabled = False
@@ -173,6 +174,7 @@ class DatabaseManager(metaclass=Singleton):
             if self._database.view_mode:
                 logger.info("Database is already in viewer mode!")
             else:
+                from pyiron_base.database.generic import DatabaseAccess
                 self.close_connection()
                 self._database = DatabaseAccess(
                     self.sql_view_connection_string,
@@ -191,6 +193,7 @@ class DatabaseManager(metaclass=Singleton):
             and not self.database_is_disabled
         ):
             if self._database.view_mode:
+                from pyiron_base.database.generic import DatabaseAccess
                 self.close_connection()
                 self._database = DatabaseAccess(
                     self.sql_connection_string,
