@@ -384,6 +384,52 @@ class Project(ProjectPath, HasGroups):
             executable_str=executable_str,
         )
 
+    def create_job_step(
+        self,
+        job_name,
+        executable_str,
+        write_input_funct=None,
+        collect_output_funct=None,
+        default_input_dict=None,
+        conda_environment_path=None,
+        conda_environment_name=None,
+        input_file_lst=None,
+        execute_job=True,
+    ):
+        """
+
+        Args:
+            job_name (str):
+            executable_str (str):
+            write_input_funct (callable):
+            collect_output_funct (callable):
+            default_input_dict (dict):
+            conda_environment_path (str):
+            conda_environment_name (str):
+            input_file_lst (list):
+            execute_job (boolean):
+
+        Returns:
+
+        """
+        job_factory = create_job_factory(
+            write_input_funct=write_input_funct,
+            collect_output_funct=collect_output_funct,
+            default_input_dict=default_input_dict,
+            executable_str=executable_str,
+        )
+        job = job_factory(project=self, job_name=job_name)
+        if conda_environment_path is not None:
+            job.server.conda_environment_path = conda_environment_path
+        elif conda_environment_name is not None:
+            job.server.conda_environment_name = conda_environment_name
+        if input_file_lst is not None and len(input_file_lst) > 0:
+            for file in input_file_lst:
+                job.restart_file_list.append(file)
+        if execute_job:
+            job.run()
+        return job
+
     def create_job(self, job_type, job_name, delete_existing_job=False):
         """
         Create one of the following jobs:
