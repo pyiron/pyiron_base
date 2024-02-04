@@ -88,6 +88,7 @@ def _import_class(module_path, class_name):
         )
     except ImportError:
         import pyiron_base.project.maintenance
+
         if module_path in pyiron_base.project.maintenance._MODULE_CONVERSION_DICT:
             raise RuntimeError(
                 f"Could not import {class_name} from {module_path}, but module path known to have changed. "
