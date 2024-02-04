@@ -13,7 +13,6 @@ import shutil
 import stat
 from tqdm.auto import tqdm
 import pandas
-import pint
 import math
 import numpy as np
 
@@ -213,6 +212,7 @@ class Project(ProjectPath, HasGroups):
         """
         Get the size of the project
         """
+        import pint
         size = (
             sum(
                 [
@@ -225,7 +225,7 @@ class Project(ProjectPath, HasGroups):
         return self._size_conversion(size)
 
     @staticmethod
-    def _size_conversion(size: pint.Quantity):
+    def _size_conversion(size):
         sign_prefactor = 1
         if size < 0:
             sign_prefactor = -1
