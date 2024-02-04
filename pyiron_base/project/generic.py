@@ -224,6 +224,12 @@ class Project(ProjectPath, HasGroups):
         )
         return self._size_conversion(size)
 
+    @property
+    def conda_environment(self):
+        from pyiron_base.project.condaenv import CondaEnvironment
+
+        return CondaEnvironment()
+
     @staticmethod
     def _size_conversion(size: pint.Quantity):
         sign_prefactor = 1
