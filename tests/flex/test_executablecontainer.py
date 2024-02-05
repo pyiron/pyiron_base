@@ -94,10 +94,11 @@ class TestExecutableContainer(TestWithProject):
         )
         job.run()
         self.assertEqual(dir(job.files), ['error_out', 'input_file', 'output_file'])
-        self.assertEqual(
-            job.files.error_out,
-            os.path.abspath(os.path.join(__file__, "..", "test_executablecontainer", "job_output_files_hdf5", "job_output_files", "error.out"))
-        )
+        output_file_path = os.path.abspath(os.path.join(__file__, "..", "test_executablecontainer", "job_output_files_hdf5", "job_output_files", "error.out"))
+        if os.name != "nt":
+            self.assertEqual(job.files.error_out, output_file_path)
+        else:
+            self.assertEqual(job.files.error_out.replace("/", "\\"), output_file_path)
 
     def test_create_job_factory_typeerror(self):
         create_catjob = create_job_factory(
