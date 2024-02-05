@@ -19,8 +19,9 @@ class CondaEnvironment:
             raise AttributeError(f"Unknown conda environment {item}. Use one of {self._list_all_known_prefixes_dict()} or create a new one.")
 
     @staticmethod
-    def create(env_name, env_file):
+    def create(env_name, env_file, use_mamba=True):
+        exe = "mamba" if use_mamba else "conda"
         subprocess.check_output(
-            ["mamba", "env", "create", "-n", env_name, "-f", env_file, "-y"],
+            [exe, "env", "create", "-n", env_name, "-f", env_file, "-y"],
             universal_newlines=True,
         )
