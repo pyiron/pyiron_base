@@ -5,8 +5,7 @@
 The SubmissionStatus class belongs to the GenericJob object. It is presently used only for the parallel master class.
 """
 
-from pyiron_base.database.generic import DatabaseAccess
-from pyiron_base.database.filetable import FileTable
+from pyiron_base.utils.instance import static_isinstance
 
 __author__ = "Joerg Neugebauer, Jan Janssen"
 __copyright__ = (
@@ -82,7 +81,10 @@ class SubmissionStatus(object):
         Args:
             db (DatabaseAccess): The database which should be responsible for this job.
         """
-        if db and not isinstance(db, (DatabaseAccess, FileTable)):
+        if db and not (
+            static_isinstance(db, "pyiron_base.database.generic.DatabaseAccess")
+            or static_isinstance(db, "pyiron_base.database.filetable.FileTable")
+        ):
             raise TypeError("The database has to be an DatabaseAccess object.")
         self._db = db
 
