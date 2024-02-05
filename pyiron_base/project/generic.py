@@ -229,7 +229,9 @@ class Project(ProjectPath, HasGroups):
         try:
             from pyiron_base.project.condaenv import CondaEnvironment
         except ImportError as e:
-            raise ImportError("You need to have the conda python package installed to access conda environments.") from None
+            raise ImportError(
+                "You need to have the conda python package installed to access conda environments."
+            ) from None
 
         return CondaEnvironment()
 
