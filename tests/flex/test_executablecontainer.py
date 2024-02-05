@@ -81,7 +81,7 @@ class TestExecutableContainer(TestWithProject):
         self.assertEqual(job_reload.input["energy"], energy_value)
         self.assertEqual(job_reload.output["energy"], energy_value)
 
-    def test_job_output_files(self):
+    def test_job_files(self):
         create_catjob = create_job_factory(
             write_input_funct=write_input,
             collect_output_funct=collect_output,
@@ -93,9 +93,9 @@ class TestExecutableContainer(TestWithProject):
             job_name="job_output_files"
         )
         job.run()
-        self.assertEqual(dir(job.output_files), ['error_out', 'input_file', 'output_file'])
+        self.assertEqual(dir(job.files), ['error_out', 'input_file', 'output_file'])
         self.assertEqual(
-            job.output_files.error_out,
+            job.files.error_out,
             os.path.abspath(os.path.join(__file__, "..", "test_executablecontainer", "job_output_files_hdf5", "job_output_files", "error.out"))
         )
 
