@@ -18,7 +18,6 @@ import math
 import numpy as np
 
 from pyiron_base.project.jobloader import JobLoader, JobInspector
-from pyiron_base.project.maintenance import Maintenance
 from pyiron_base.project.path import ProjectPath
 from pyiron_base.database.filetable import FileTable
 from pyiron_base.state import state
@@ -155,6 +154,8 @@ class Project(ProjectPath, HasGroups):
     @property
     def maintenance(self):
         if self._maintenance is None:
+            from pyiron_base.project.maintenance import Maintenance
+
             self._maintenance = Maintenance(self)
         return self._maintenance
 

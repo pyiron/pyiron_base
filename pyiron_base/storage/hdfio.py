@@ -30,7 +30,6 @@ from pyiron_base.storage.helper_functions import (
 from pyiron_base.interfaces.has_groups import HasGroups
 from pyiron_base.state import state
 from pyiron_base.jobs.job.util import _get_safe_job_name
-import pyiron_base.project.maintenance
 
 __author__ = "Joerg Neugebauer, Jan Janssen"
 __copyright__ = (
@@ -88,6 +87,8 @@ def _import_class(module_path, class_name):
             class_name,
         )
     except ImportError:
+        import pyiron_base.project.maintenance
+
         if module_path in pyiron_base.project.maintenance._MODULE_CONVERSION_DICT:
             raise RuntimeError(
                 f"Could not import {class_name} from {module_path}, but module path known to have changed. "

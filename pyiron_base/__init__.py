@@ -43,7 +43,6 @@ from pyiron_base.state.settings import Settings
 from pyiron_base.state.install import install_dialog
 from pyiron_base.jobs.datamining import PyironTable, TableJob
 from pyiron_base.interfaces.object import HasDatabase, HasStorage, PyironObject
-from pyiron_base.database.performance import get_database_statistics
 from pyiron_base.interfaces.has_groups import HasGroups
 from pyiron_base.interfaces.has_hdf import HasHDF
 
