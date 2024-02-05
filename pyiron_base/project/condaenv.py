@@ -16,7 +16,7 @@ class CondaEnvironment:
         if item in item_dict.keys():
             return item_dict[item]
         else:
-            raise AttributeError()
+            raise AttributeError(f"Unknown conda environment {item}. Use one of {self._list_all_known_prefixes_dict()} or create a new one.")
 
     @staticmethod
     def create(env_name, env_file):
