@@ -12,7 +12,6 @@ from pyiron_base.storage.datacontainer import DataContainer
 from pyiron_base.storage.has_stored_traits import HasStoredTraits
 from pyiron_base.storage.inputlist import InputList
 from pyiron_base.storage.parameters import GenericParameters
-from pyiron_base.storage.filedata import load_file, FileDataTemplate, FileData
 from pyiron_base.utils.deprecate import Deprecator, deprecate, deprecate_soon
 from pyiron_base.utils.error import ImportAlarm
 from pyiron_base.jobs.job.extension.executable import Executable
@@ -49,12 +48,6 @@ from pyiron_base.interfaces.has_hdf import HasHDF
 from pyiron_base.jobs.job.toolkit import Toolkit, BaseTools
 
 Project.register_tools("base", BaseTools)
-
-# optional API of the pyiron_base module
-try:
-    from pyiron_base.project.gui import ProjectGUI
-except (ImportError, TypeError, AttributeError):
-    pass
 
 # Internal init
 from ._version import get_versions
