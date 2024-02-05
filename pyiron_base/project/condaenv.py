@@ -5,7 +5,7 @@ from conda.core.envs_manager import list_all_known_prefixes
 
 class CondaEnvironment:
     def __dir__(self):
-        return list(self._list_all_known_prefixes_dict().keys())
+        return list(self._list_all_known_prefixes_dict().keys()) + ["create"]
 
     @staticmethod
     def _list_all_known_prefixes_dict():
