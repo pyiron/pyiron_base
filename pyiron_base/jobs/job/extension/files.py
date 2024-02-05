@@ -1,7 +1,7 @@
 import os
 
 
-class OutputFiles:
+class Files:
     def __init__(self, working_directory):
         self._working_directory = working_directory
 

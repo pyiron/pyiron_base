@@ -49,7 +49,6 @@ from pyiron_base.utils.deprecate import deprecate
 from pyiron_base.jobs.job.extension.server.generic import Server
 from pyiron_base.database.filetable import FileTable
 from pyiron_base.interfaces.has_dict import HasDict
-from pyiron_base.jobs.job.extension.outputfiles import OutputFiles
 
 __author__ = "Joerg Neugebauer, Jan Janssen"
 __copyright__ = (
@@ -164,7 +163,6 @@ class GenericJob(JobCore, HasDict):
         self._write_work_dir_warnings = True
         self.interactive_cache = None
         self.error = GenericError(job=self)
-        self.output_files = OutputFiles(working_directory=self.working_directory)
 
     @property
     def version(self):

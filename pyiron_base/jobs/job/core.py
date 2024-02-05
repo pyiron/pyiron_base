@@ -31,6 +31,7 @@ from pyiron_base.jobs.job.util import (
     _job_remove_folder,
 )
 from pyiron_base.state import state
+from pyiron_base.jobs.job.extension.files import Files
 
 __author__ = "Jan Janssen"
 __copyright__ = (
@@ -351,6 +352,10 @@ class JobCore(HasGroups):
             str: absolute path
         """
         return self.project_hdf5.path
+
+    @property
+    def files(self):
+        return Files(working_directory=self.working_directory)
 
     def check_if_job_exists(self, job_name=None, project=None):
         """
