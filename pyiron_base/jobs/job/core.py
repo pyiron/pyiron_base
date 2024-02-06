@@ -142,6 +142,7 @@ class JobCore(HasGroups):
     @property
     def files(self):
         return FileBrowser(self)
+
     files.__doc__ = FileBrowser.__doc__
 
     @property
@@ -908,8 +909,8 @@ class JobCore(HasGroups):
 
         if item in self.list_files():
             warnings.warn(
-                    "Using __getitem__ on a job to access files in deprecated: use job.files instead!",
-                    category=DeprecationWarning
+                "Using __getitem__ on a job to access files in deprecated: use job.files instead!",
+                category=DeprecationWarning,
             )
             return _job_read_file(self, item)
 
