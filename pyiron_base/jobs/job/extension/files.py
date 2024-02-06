@@ -66,7 +66,7 @@ class FileBrowser:
         return _job_list_files(job=self._job)
 
     def _ipython_display_(self):
-        path = job.working_directory + ":"
+        path = self._job.working_directory + ":"
         files = ["\t" + f for f in _job_list_files(job=self._job)]
         print(os.linesep.join([path, *files]))
 
