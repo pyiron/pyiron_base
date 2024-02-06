@@ -47,7 +47,7 @@ class FileBrowser:
         self._job = job
 
     def _get_file_dict(self):
-        return {f.replace(".", "_"):f for f in _job_list_files(job=self._job)}
+        return {f.replace(".", "_"): f for f in _job_list_files(job=self._job)}
 
     def __dir__(self):
         return list(self._get_file_dict().keys()) + [
