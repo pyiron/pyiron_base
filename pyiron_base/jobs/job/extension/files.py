@@ -1,4 +1,5 @@
 import os
+from typing import List
 from pyiron_base.jobs.job.util import (
     _job_list_files,
     _job_read_file,
