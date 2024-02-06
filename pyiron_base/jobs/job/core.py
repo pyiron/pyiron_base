@@ -1190,7 +1190,7 @@ class FileBrowser:
         print(*_job_read_file(self, file_name, tail=lines), sep="")
 
     def __getitem__(self, item):
-        if item not _job_list_files(self._job):
+        if item not in _job_list_files(self._job):
             raise KeyError(item)
 
         return _job_read_file(self._job, item)
