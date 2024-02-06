@@ -4,12 +4,14 @@
 """
 Helper functions for the JobCore and GenericJob objects
 """
+from itertools import islice
 import os
 import posixpath
 import psutil
 import tarfile
 import stat
 import shutil
+import monty.io
 from typing import Optional, Union
 from pyiron_base.utils.instance import static_isinstance
 from pyiron_base.utils.safetar import safe_extract
@@ -261,6 +263,11 @@ def _kill_child(job):
                     job_process.kill()
 
 
+def _job_compressed_name(job):
+    """Return the canonical file name of a compressed job."""
+    return os.path.join(job.working_directory, job.job_name + ".tar.bz2")
+
+
 def _job_compress(job, files_to_compress=None):
     """
     Compress the output files of a job object.
@@ -275,10 +282,7 @@ def _job_compress(job, files_to_compress=None):
         cwd = os.getcwd()
         try:
             os.chdir(job.working_directory)
-            with tarfile.open(
-                os.path.join(job.working_directory, job.job_name + ".tar.bz2"),
-                "w:bz2",
-            ) as tar:
+            with tarfile.open(_job_compressed_name(job), "w:bz2") as tar:
                 for name in files_to_compress:
                     if "tar" not in name and not stat.S_ISFIFO(os.stat(name).st_mode):
                         tar.add(name)
@@ -292,7 +296,7 @@ def _job_compress(job, files_to_compress=None):
         finally:
             os.chdir(cwd)
     else:
-        print("The files are already compressed!")
+        job.logger.info("The files are already compressed!")
 
 
 def _job_decompress(job):
@@ -302,8 +306,8 @@ def _job_decompress(job):
     Args:
         job (JobCore): job object to decompress
     """
+    tar_file_name = _job_compressed_name(job)
     try:
-        tar_file_name = os.path.join(job.working_directory, job.job_name + ".tar.bz2")
         with tarfile.open(tar_file_name, "r:bz2") as tar:
             safe_extract(tar, job.working_directory)
         os.remove(tar_file_name)
@@ -321,11 +325,79 @@ def _job_is_compressed(job):
     Returns:
         bool: [True/False]
     """
-    compressed_name = job.job_name + ".tar.bz2"
-    for name in job.list_files():
-        if compressed_name in name:
-            return True
-    return False
+    compressed_name = os.path.basename(_job_compressed_name(job))
+    return compressed_name in os.listdir(job.working_directory)
+
+
+def _job_list_files(job):
+    """
+    Returns list of files in the jobs working directory.
+
+    If the job is compressed, return a list of files in the archive.
+
+    Args:
+        job (JobCore): job object to inspect files in
+
+    Returns:
+        list of str: file names
+    """
+    if os.path.isdir(job.working_directory):
+        if _job_is_compressed(job):
+            with tarfile.open(_job_compressed_name(job), "r") as tar:
+                return [member.name for member in tar.getmembers() if member.isfile()]
+        else:
+            return os.listdir(job.working_directory)
+    return []
+
+
+def _job_read_file(job, file_name, tail=None):
+    """
+    Return list of lines of the given file.
+
+    Transparently decompresses the file if job is compressed.
+
+    If `tail` is given and job is decompressed, only read the last lines
+    instead of traversing the full file.
+
+    Args:
+        file_name (str): the file to print
+        tail (int, optional): only return the last lines
+
+    Raises:
+        FileNotFoundError: if the given file name does not exist in the job folder
+    """
+    if file_name not in job.list_files():
+        raise FileNotFoundError(file_name)
+
+    if _job_is_compressed(job):
+        with tarfile.open(_job_compressed_name(job), encoding="utf8") as f:
+            lines = [
+                line.decode("utf8") for line in f.extractfile(file_name).readlines()
+            ]
+            if tail is None:
+                return lines
+            else:
+                return lines[-tail:]
+    else:
+        file_name = posixpath.join(job.working_directory, file_name)
+        if tail is None:
+            with open(file_name) as f:
+                return f.readlines()
+        else:
+            lines = list(
+                reversed(
+                    [
+                        l + os.linesep
+                        for l in islice(monty.io.reverse_readfile(file_name), tail)
+                    ]
+                )
+            )
+            # compatibility with the other methods
+            # monty strips all newlines, where as reading the other ways does
+            # not.  So if a file does not end with a newline (as most text
+            # files) adding it to every line like above adds an additional one.
+            lines[-1] = lines[-1].rstrip(os.linesep)
+            return lines
 
 
 def _job_archive(job):
