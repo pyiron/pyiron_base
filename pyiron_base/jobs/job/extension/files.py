@@ -93,4 +93,4 @@ class FileBrowser:
         try:
             return self[self._get_file_dict()[item]]
         except KeyError:
-            raise AttributeError(name) from None
+            raise AttributeError(item) from None
