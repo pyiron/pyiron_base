@@ -46,7 +46,14 @@ class FileBrowser:
         self._job = job
 
     def __dir__(self):
-        return _job_list_files(job=self._job) + ["list", "tail", "__dir__", "__getitem__", "__getattr__", "_ipython_display_"]
+        return _job_list_files(job=self._job) + [
+            "list",
+            "tail",
+            "__dir__",
+            "__getitem__",
+            "__getattr__",
+            "_ipython_display_",
+        ]
 
     def list(self) -> List[str]:
         """
