@@ -104,12 +104,20 @@ class FileBrowser:
         ):
             raise KeyError(item)
 
-        return _working_directory_read_file(
-            working_directory=self._working_directory, file_name=item
-        )
+        return File(os.path.join(self._working_directory, item))
 
     def __getattr__(self, item):
         try:
             return self[self._get_file_dict()[item]]
         except KeyError:
             raise AttributeError(item) from None
+
+
+class File(str):
+    def tail(self, lines: int = 100):
+        print(
+            *_working_directory_read_file(
+                working_directory=os.path.dirname(self), file_name=os.path.basename(self), tail=lines
+            ),
+            sep="",
+        )

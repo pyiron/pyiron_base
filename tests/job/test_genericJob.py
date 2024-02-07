@@ -585,11 +585,31 @@ class TestGenericJob(TestWithFilledProject):
                 reference_str = os.linesep.join(content[-i-1:]) + os.linesep
                 self.assertEqual(f.getvalue().replace('\r', ''), reference_str.replace('\r', ''),
                                  "tail read incorrect lines from output file when job uncompressed!")
+                with contextlib.redirect_stdout(io.StringIO(newline=os.linesep)) as f:
+                    job.files.tail("test_file", lines=i+1)
+                reference_str = os.linesep.join(content[-i-1:]) + os.linesep
+                self.assertEqual(f.getvalue().replace('\r', ''), reference_str.replace('\r', ''),
+                                 "tail read incorrect lines from output file when job uncompressed!")
+                with contextlib.redirect_stdout(io.StringIO(newline=os.linesep)) as f:
+                    job.files.test_file.tail(lines=i+1)
+                reference_str = os.linesep.join(content[-i-1:]) + os.linesep
+                self.assertEqual(f.getvalue().replace('\r', ''), reference_str.replace('\r', ''),
+                                 "tail read incorrect lines from output file when job uncompressed!")
 
         job.compress()
         for i in range(len(content)):
             with contextlib.redirect_stdout(io.StringIO()) as f:
                 job.tail("test_file", lines=i+1)
+            reference_str = os.linesep.join(content[-i-1:]) + os.linesep
+            self.assertEqual(f.getvalue().replace('\r', ''), reference_str.replace('\r', ''),
+                             "tail read incorrect lines from output file when job compressed!")
+            with contextlib.redirect_stdout(io.StringIO()) as f:
+                job.files.tail("test_file", lines=i+1)
+            reference_str = os.linesep.join(content[-i-1:]) + os.linesep
+            self.assertEqual(f.getvalue().replace('\r', ''), reference_str.replace('\r', ''),
+                             "tail read incorrect lines from output file when job compressed!")
+            with contextlib.redirect_stdout(io.StringIO()) as f:
+                job.files.test_file.tail(lines=i+1)
             reference_str = os.linesep.join(content[-i-1:]) + os.linesep
             self.assertEqual(f.getvalue().replace('\r', ''), reference_str.replace('\r', ''),
                              "tail read incorrect lines from output file when job compressed!")
