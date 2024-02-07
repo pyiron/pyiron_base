@@ -213,6 +213,7 @@ class Project(ProjectPath, HasGroups):
         Get the size of the project
         """
         from pyiron_base.project.size import get_folder_size
+
         return get_folder_size(path=self.path)
 
     def copy(self):
