@@ -212,37 +212,8 @@ class Project(ProjectPath, HasGroups):
         """
         Get the size of the project
         """
-        import pint
-
-        def _size_conversion(size: pint.Quantity):
-            sign_prefactor = 1
-            if size < 0:
-                sign_prefactor = -1
-                size *= -1
-            elif size == 0:
-                return size
-
-            prefix_index = math.floor(math.log2(size) / 10) - 1
-            prefix = ["Ki", "Mi", "Gi", "Ti", "Pi"]
-
-            size *= sign_prefactor
-            if prefix_index < 0:
-                return size
-            elif prefix_index < 5:
-                return size.to(f"{prefix[prefix_index]}byte")
-            else:
-                return size.to(f"{prefix[-1]}byte")
-
-        size = (
-            sum(
-                [
-                    sum([os.path.getsize(os.path.join(path, f)) for f in files])
-                    for path, dirs, files in os.walk(self.path)
-                ]
-            )
-            * pint.UnitRegistry().byte
-        )
-        return _size_conversion(size)
+        from pyiron_base.project.size import get_folder_size
+        return get_folder_size(path=self.path)
 
     def copy(self):
         """
