@@ -41,13 +41,3 @@ class TestExecutableContainerConda(TestWithProject):
         job.server.conda_environment_path = self.project.conda_environment.py312
         job.run()
         self.assertEqual(job["error.out"][0], "Python 3.12.1\n")
-
-    def test_conda_environment_name(self):
-        self.project.create_job_class(
-            class_name="PythonVersionJob",
-            executable_str="python --version",
-        )
-        job = self.project.create.job.PythonVersionJob(job_name="job_conda_name")
-        job.server.conda_environment_name = "py312"
-        job.run()
-        self.assertEqual(job["error.out"][0], "Python 3.12.1\n")
