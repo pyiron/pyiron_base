@@ -13,12 +13,10 @@ import shutil
 import stat
 from tqdm.auto import tqdm
 import pandas
-import pint
 import math
 import numpy as np
 
 from pyiron_base.project.jobloader import JobLoader, JobInspector
-from pyiron_base.project.maintenance import Maintenance
 from pyiron_base.project.path import ProjectPath
 from pyiron_base.database.filetable import FileTable
 from pyiron_base.state import state
@@ -32,7 +30,6 @@ from pyiron_base.database.jobtable import (
     get_job_status,
 )
 from pyiron_base.storage.hdfio import ProjectHDFio
-from pyiron_base.storage.filedata import load_file
 from pyiron_base.utils.deprecate import deprecate
 from pyiron_base.interfaces.has_groups import HasGroups
 from pyiron_base.jobs.flex.factory import create_job_factory
@@ -155,6 +152,8 @@ class Project(ProjectPath, HasGroups):
     @property
     def maintenance(self):
         if self._maintenance is None:
+            from pyiron_base.project.maintenance import Maintenance
+
             self._maintenance = Maintenance(self)
         return self._maintenance
 
@@ -213,16 +212,9 @@ class Project(ProjectPath, HasGroups):
         """
         Get the size of the project
         """
-        size = (
-            sum(
-                [
-                    sum([os.path.getsize(os.path.join(path, f)) for f in files])
-                    for path, dirs, files in os.walk(self.path)
-                ]
-            )
-            * pint.UnitRegistry().byte
-        )
-        return self._size_conversion(size)
+        from pyiron_base.project.size import get_folder_size
+
+        return get_folder_size(path=self.path)
 
     @property
     def conda_environment(self):
@@ -234,26 +226,6 @@ class Project(ProjectPath, HasGroups):
             ) from None
 
         return CondaEnvironment()
-
-    @staticmethod
-    def _size_conversion(size: pint.Quantity):
-        sign_prefactor = 1
-        if size < 0:
-            sign_prefactor = -1
-            size *= -1
-        elif size == 0:
-            return size
-
-        prefix_index = math.floor(math.log2(size) / 10) - 1
-        prefix = ["Ki", "Mi", "Gi", "Ti", "Pi"]
-
-        size *= sign_prefactor
-        if prefix_index < 0:
-            return size
-        elif prefix_index < 5:
-            return size.to(f"{prefix[prefix_index]}byte")
-        else:
-            return size.to(f"{prefix[-1]}byte")
 
     def copy(self):
         """
@@ -1705,6 +1677,8 @@ class Project(ProjectPath, HasGroups):
             return ProjectHDFio(project=self, file_name=file_name)
         if item in self.list_files():
             file_name = posixpath.join(self.path, "{}".format(item))
+            from pyiron_base.storage.filedata import load_file
+
             return load_file(file_name, project=self)
         if item in self.list_dirs():
             with self.open(item) as new_item:

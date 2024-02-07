@@ -9,6 +9,7 @@ import tempfile
 import pint
 import pickle
 from pyiron_base.project.generic import Project
+from pyiron_base.project.size import _size_conversion
 from pyiron_base._tests import (
     PyironTestCase, TestWithProject, TestWithFilledProject, ToyJob
 )
@@ -90,7 +91,7 @@ class TestProjectOperations(TestWithFilledProject):
         byte = pint.UnitRegistry().byte
         for value in conv_check.keys():
             with self.subTest(value):
-                converted_size = self.project._size_conversion(value * byte)
+                converted_size = _size_conversion(value * byte)
                 self.assertEqual(converted_size.m, conv_check[value][0])
                 self.assertEqual(str(converted_size.u), conv_check[value][1])
 

@@ -12,7 +12,7 @@ import numpy as np
 import os
 import pandas
 from pyfileindex import PyFileIndex
-from pyiron_base.database.generic import IsDatabase
+from pyiron_base.database.interface import IsDatabase
 from h5io_browser.base import _read_hdf, _write_hdf
 
 __author__ = "Jan Janssen"
