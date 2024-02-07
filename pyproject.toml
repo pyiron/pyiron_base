@@ -47,6 +47,12 @@ Homepage = "https://github.com/pyiron/pyiron_base"
 Documentation = "https://github.com/pyiron/pyiron_base"
 Repository = "https://github.com/pyiron/pyiron_base"
 
+[project.optional-dependencies]
+conda = [
+    "conda==23.11.0",
+    "conda_subprocess==0.0.1",
+]
+
 [project.scripts]
 pyiron = "pyiron_base.cli:main"
 
