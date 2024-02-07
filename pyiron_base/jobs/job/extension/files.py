@@ -117,7 +117,9 @@ class File(str):
     def tail(self, lines: int = 100):
         print(
             *_working_directory_read_file(
-                working_directory=os.path.dirname(self), file_name=os.path.basename(self), tail=lines
+                working_directory=os.path.dirname(self),
+                file_name=os.path.basename(self),
+                tail=lines,
             ),
             sep="",
         )
