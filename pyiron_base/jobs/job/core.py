@@ -141,7 +141,7 @@ class JobCore(HasGroups):
 
     @property
     def files(self):
-        return FileBrowser(self)
+        return FileBrowser(working_directory=self.working_directory)
 
     files.__doc__ = FileBrowser.__doc__
 

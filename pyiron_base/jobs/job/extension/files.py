@@ -1,8 +1,8 @@
 import os
 from typing import List
 from pyiron_base.jobs.job.util import (
-    _job_list_files,
-    _job_read_file,
+    _working_directory_list_files,
+    _working_directory_read_file,
 )
 
 
@@ -41,13 +41,18 @@ class FileBrowser:
     ["SYSTEM=pyiron\n", "ENCUT=270\n", ...]
     """
 
-    __slots__ = ("_job",)
+    __slots__ = ("_working_directory",)
 
-    def __init__(self, job):
-        self._job = job
+    def __init__(self, working_directory):
+        self._working_directory = working_directory
 
     def _get_file_dict(self):
-        return {f.replace(".", "_"): f for f in _job_list_files(job=self._job)}
+        return {
+            f.replace(".", "_"): f
+            for f in _working_directory_list_files(
+                working_directory=self._working_directory
+            )
+        }
 
     def __dir__(self):
         return list(self._get_file_dict().keys()) + [
@@ -63,11 +68,16 @@ class FileBrowser:
         """
         List all files in the working directory of the job.
         """
-        return _job_list_files(job=self._job)
+        return _working_directory_list_files(working_directory=self._working_directory)
 
     def _ipython_display_(self):
         path = self._job.working_directory + ":"
-        files = ["\t" + f for f in _job_list_files(job=self._job)]
+        files = [
+            "\t" + f
+            for f in _working_directory_list_files(
+                working_directory=self._working_directory
+            )
+        ]
         print(os.linesep.join([path, *files]))
 
     def tail(self, file: str, lines: int = 100):
@@ -81,13 +91,22 @@ class FileBrowser:
         Raises:
             FileNotFoundError: if the given file does not exist
         """
-        print(*_job_read_file(job=self._job, file_name=file, tail=lines), sep="")
+        print(
+            *_working_directory_read_file(
+                working_directory=self._working_directory, file_name=file, tail=lines
+            ),
+            sep="",
+        )
 
     def __getitem__(self, item):
-        if item not in _job_list_files(job=self._job):
+        if item not in _working_directory_list_files(
+            working_directory=self._working_directory
+        ):
             raise KeyError(item)
 
-        return _job_read_file(job=self._job, file_name=item)
+        return _working_directory_read_file(
+            working_directory=self._working_directory, file_name=item
+        )
 
     def __getattr__(self, item):
         try:
