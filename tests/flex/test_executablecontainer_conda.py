@@ -5,7 +5,7 @@ from pyiron_base._tests import TestWithProject
 
 try:
     import conda
-    skip_conda_test = False
+    skip_conda_test = os.name == "nt"
 except ImportError:
     skip_conda_test = True
 
