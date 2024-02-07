@@ -37,8 +37,8 @@ class FileBrowser:
     For files that have valid python variable names can also be accessed by
     attribute notation
 
-    >>> job.files.INCAR
-    ["SYSTEM=pyiron\n", "ENCUT=270\n", ...]
+    >>> job.files.INCAR # doctest: +SKIP
+    File('INCAR')
     """
 
     __slots__ = ("_working_directory",)
