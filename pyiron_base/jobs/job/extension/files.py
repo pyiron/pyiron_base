@@ -55,14 +55,7 @@ class FileBrowser:
         }
 
     def __dir__(self):
-        return list(self._get_file_dict().keys()) + [
-            "list",
-            "tail",
-            "__dir__",
-            "__getitem__",
-            "__getattr__",
-            "_ipython_display_",
-        ]
+        return list(self._get_file_dict().keys()) + super().__dir__()
 
     def list(self) -> List[str]:
         """
