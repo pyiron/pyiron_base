@@ -1,6 +1,7 @@
 # Copyright (c) Max-Planck-Institut für Eisenforschung GmbH - Computational Materials Design (CM) Department
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
+import types
 from pyiron_base._tests import PyironTestCase
 from pyiron_base import JobType, GenericJob
 
@@ -48,10 +49,11 @@ class TestJobType(PyironTestCase):
                     )
                     self.assertNotIn(job_type, old_job_type_dict)
                 else:
-                    self.assertTrue(
-                        issubclass(cls, GenericJob),
-                        msg=f"{cls} is not a subclass of GenericJob",
-                    )
+                    if isinstance(cls, type):  # ignore dynamically defined classes
+                        self.assertTrue(
+                            issubclass(cls, GenericJob),
+                            msg=f"{cls} is not a subclass of GenericJob",
+                        )
 
     def test_register(self):
         job_class_list_no_error = [
