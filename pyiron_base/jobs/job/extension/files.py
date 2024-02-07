@@ -37,8 +37,8 @@ class FileBrowser:
     For files that have valid python variable names can also be accessed by
     attribute notation
 
-    >>> job.files.INCAR
-    ["SYSTEM=pyiron\n", "ENCUT=270\n", ...]
+    >>> job.files.INCAR # doctest: +SKIP
+    File('INCAR')
     """
 
     __slots__ = ("_working_directory",)
@@ -55,14 +55,7 @@ class FileBrowser:
         }
 
     def __dir__(self):
-        return list(self._get_file_dict().keys()) + [
-            "list",
-            "tail",
-            "__dir__",
-            "__getitem__",
-            "__getattr__",
-            "_ipython_display_",
-        ]
+        return list(self._get_file_dict().keys()) + super().__dir__()
 
     def list(self) -> List[str]:
         """
