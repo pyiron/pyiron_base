@@ -81,6 +81,26 @@ class TestExecutableContainer(TestWithProject):
         self.assertEqual(job_reload.input["energy"], energy_value)
         self.assertEqual(job_reload.output["energy"], energy_value)
 
+    def test_job_files(self):
+        create_catjob = create_job_factory(
+            write_input_funct=write_input,
+            collect_output_funct=collect_output,
+            default_input_dict={"energy": 1.0},
+            executable_str="cat input_file > output_file",
+        )
+        job = create_catjob(
+            project=ProjectHDFio(project=self.project, file_name="any.h5", h5_path=None, mode=None),
+            job_name="job_output_files"
+        )
+        job.run()
+        for file in ['error_out', 'input_file', 'output_file']:
+            self.assertTrue(file in dir(job.files))
+        output_file_path = os.path.abspath(os.path.join(__file__, "..", "test_executablecontainer", "job_output_files_hdf5", "job_output_files", "error.out"))
+        if os.name != "nt":
+            self.assertEqual(job.files.error_out, output_file_path)
+        else:
+            self.assertEqual(job.files.error_out.replace("/", "\\"), output_file_path)
+
     def test_create_job_factory_typeerror(self):
         create_catjob = create_job_factory(
             write_input_funct=write_input,
