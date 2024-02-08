@@ -3,6 +3,8 @@ channels:
 dependencies:
 - coverage
 - codacy-coverage
+- conda =23.11.0
+- conda_subprocess =0.0.1
 - cloudpickle =3.0.0
 - gitpython =3.1.41
 - h5io_browser =0.0.7

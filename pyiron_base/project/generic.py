@@ -216,6 +216,17 @@ class Project(ProjectPath, HasGroups):
 
         return get_folder_size(path=self.path)
 
+    @property
+    def conda_environment(self):
+        try:
+            from pyiron_base.project.condaenv import CondaEnvironment
+        except ImportError as e:
+            raise ImportError(
+                "You need to have the conda python package installed to access conda environments."
+            ) from None
+
+        return CondaEnvironment()
+
     def copy(self):
         """
         Copy the project object - copying just the Python object but maintaining the same pyiron path
