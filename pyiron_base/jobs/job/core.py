@@ -10,6 +10,7 @@ import math
 import os
 import posixpath
 import shutil
+from typing import List
 import warnings
 
 from pyiron_base.interfaces.has_groups import HasGroups
@@ -26,11 +27,15 @@ from pyiron_base.jobs.job.util import (
     _job_is_compressed,
     _job_compress,
     _job_decompress,
+    _job_list_files,
+    _job_read_file,
     _job_delete_files,
     _job_delete_hdf,
     _job_remove_folder,
 )
 from pyiron_base.state import state
+from pyiron_base.utils.deprecate import deprecate
+from pyiron_base.jobs.job.extension.files import FileBrowser
 
 __author__ = "Jan Janssen"
 __copyright__ = (
@@ -133,6 +138,12 @@ class JobCore(HasGroups):
     @property
     def content(self):
         return self._hdf5_content
+
+    @property
+    def files(self):
+        return FileBrowser(working_directory=self.working_directory)
+
+    files.__doc__ = FileBrowser.__doc__
 
     @property
     def job_name(self):
@@ -595,6 +606,7 @@ class JobCore(HasGroups):
             return response[-1]["id"]
         return None
 
+    @deprecate("use job.files.list()")
     def list_files(self):
         """
         List files inside the working directory
@@ -605,9 +617,7 @@ class JobCore(HasGroups):
         Returns:
             list: list of file names
         """
-        if os.path.isdir(self.working_directory):
-            return os.listdir(self.working_directory)
-        return []
+        return _job_list_files(self)
 
     def list_childs(self):
         """
@@ -898,9 +908,11 @@ class JobCore(HasGroups):
         """
 
         if item in self.list_files():
-            file_name = posixpath.join(self.working_directory, "{}".format(item))
-            with open(file_name) as f:
-                return f.readlines()
+            warnings.warn(
+                "Using __getitem__ on a job to access files in deprecated: use job.files instead!",
+                category=DeprecationWarning,
+            )
+            return _job_read_file(self, item)
 
         # first try to access HDF5 directly to make the common case fast
         try:
