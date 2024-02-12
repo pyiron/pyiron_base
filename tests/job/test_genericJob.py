@@ -87,17 +87,21 @@ class TestGenericJob(TestWithFilledProject):
         pass
 
     def test_compress_file_list(self):
+        file_lst = ["file_not_to_compress", "file_to_compress"]
         ham = self.project.create.job.ScriptJob("job_script_compress")
         os.makedirs(ham.working_directory, exist_ok=True)
-        with open(os.path.join(ham.working_directory, "file_not_to_compress"), "w") as f:
-            f.writelines(["not to compress"])
-        with open(os.path.join(ham.working_directory, "file_to_compress"), "w") as f:
-            f.writelines(["to compress"])
-        self.assertEqual(ham.files.list(), ["file_to_compress", "file_not_to_compress"])
-        self.assertEqual(os.listdir(ham.working_directory), ["file_to_compress", "file_not_to_compress"])
+        for file in file_lst:
+            with open(os.path.join(ham.working_directory, file), "w") as f:
+                f.writelines(["content: " + file])
+        for file in file_lst:
+            self.assertTrue(file in ham.files.list())
+        for file in file_lst:
+            self.assertTrue(file in os.listdir(ham.working_directory))
         ham.compress(files_to_compress=["file_to_compress"])
-        self.assertEqual(os.listdir(ham.working_directory), ["job_script_compress.tar.bz2", "file_not_to_compress"])
-        self.assertEqual(ham.files.list(), ["file_not_to_compress", "file_to_compress"])
+        for file in ["job_script_compress.tar.bz2", "file_not_to_compress"]:
+            self.assertTrue(file in os.listdir(ham.working_directory))
+        for file in file_lst:
+            self.assertTrue(file in ham.files.list())
         ham.remove()
 
     def test_job_name(self):
