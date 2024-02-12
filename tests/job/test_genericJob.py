@@ -463,8 +463,26 @@ class TestGenericJob(TestWithFilledProject):
             wd_files = os.listdir(job_restart.working_directory)
             self.assertEqual(len(wd_files), 1, "Only one zipped file should be present in the working directory")
             self.assertEqual(wd_files[0], f"{job_restart.name}.tar.bz2", "Inconsistent name for the zipped file")
+            wd_files = job_restart.files.list()
+            self.assertEqual(
+                len(wd_files),
+                1,
+                "Only one input file should be present in the working directory",
+            )
+            self.assertCountEqual(
+                wd_files, ["input.yml"]
+            )
             job_restart.decompress()
             wd_files = job_restart.list_files()
+            self.assertEqual(
+                len(wd_files),
+                1,
+                "Only one input file should be present in the working directory",
+            )
+            self.assertCountEqual(
+                wd_files, ["input.yml"]
+            )
+            wd_files = job_restart.files.list()
             self.assertEqual(
                 len(wd_files),
                 1,
