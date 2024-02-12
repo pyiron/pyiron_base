@@ -34,7 +34,7 @@ dependencies = [
     "pandas==2.2.0",
     "pint==0.23",
     "psutil==5.9.8",
-    "pyfileindex==0.0.21",
+    "pyfileindex==0.0.22",
     "pysqa==0.1.15",
     "sqlalchemy==2.0.26",
     "tables==3.9.2",
