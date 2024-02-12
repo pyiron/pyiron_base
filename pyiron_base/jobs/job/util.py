@@ -366,10 +366,14 @@ def _working_directory_list_files(working_directory):
     if os.path.isdir(working_directory):
         uncompressed_files_lst = os.listdir(working_directory)
         if _working_directory_is_compressed(working_directory=working_directory):
-            compressed_job_name = _get_compressed_job_name(working_directory=working_directory)
+            compressed_job_name = _get_compressed_job_name(
+                working_directory=working_directory
+            )
             with tarfile.open(compressed_job_name, "r") as tar:
                 job_archive_name = os.path.basename(compressed_job_name)
-                compressed_files_lst = [member.name for member in tar.getmembers() if member.isfile()]
+                compressed_files_lst = [
+                    member.name for member in tar.getmembers() if member.isfile()
+                ]
                 uncompressed_files_lst.remove(job_archive_name)
                 return uncompressed_files_lst + compressed_files_lst
         else:
