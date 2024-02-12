@@ -77,7 +77,8 @@ def get_job_ids(database, sql_query, user, project_path, recursive=True):
             user=user,
             project_path=project_path,
             recursive=recursive,
-        )["id"]
+            columns=["id"],
+        )
     else:
         return database.get_job_ids(project=project_path, recursive=recursive)
 
