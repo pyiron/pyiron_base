@@ -86,6 +86,20 @@ class TestGenericJob(TestWithFilledProject):
     def test_index(self):
         pass
 
+    def test_compress_file_list(self):
+        ham = self.project.create.job.ScriptJob("job_script_compress")
+        os.makedirs(ham.working_directory, exist_ok=True)
+        with open(os.path.join(ham.working_directory, "file_not_to_compress"), "w") as f:
+            f.writelines(["not to compress"])
+        with open(os.path.join(ham.working_directory, "file_to_compress"), "w") as f:
+            f.writelines(["to compress"])
+        self.assertEqual(ham.files.list(), ["file_to_compress", "file_not_to_compress"])
+        self.assertEqual(os.listdir(ham.working_directory), ["file_to_compress", "file_not_to_compress"])
+        ham.compress(files_to_compress=["file_to_compress"])
+        self.assertEqual(os.listdir(ham.working_directory), ["job_script_compress.tar.bz2", "file_not_to_compress"])
+        self.assertEqual(ham.files.list(), ["file_not_to_compress", "file_to_compress"])
+        ham.remove()
+
     def test_job_name(self):
         cwd = self.file_location
         with self.subTest("ensure create is working"):
