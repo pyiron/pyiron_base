@@ -418,7 +418,7 @@ def _working_directory_read_file(working_directory, file_name, tail=None):
     ):
         raise FileNotFoundError(file_name)
 
-    if _working_directory_is_compressed(working_directory=working_directory):
+    if _working_directory_is_compressed(working_directory=working_directory) and file_name not in os.listdir(working_directory):
         with tarfile.open(
             _get_compressed_job_name(working_directory=working_directory),
             encoding="utf8",

@@ -102,6 +102,12 @@ class TestGenericJob(TestWithFilledProject):
             self.assertTrue(file in os.listdir(ham.working_directory))
         for file in file_lst:
             self.assertTrue(file in ham.files.list())
+        with contextlib.redirect_stdout(io.StringIO(newline=os.linesep)) as f:
+            ham.files.file_not_to_compress.tail()
+        self.assertEqual(f.getvalue().replace('\r', ''), "content: file_not_to_compress\n")
+        with contextlib.redirect_stdout(io.StringIO(newline=os.linesep)) as f:
+            ham.files.file_to_compress.tail()
+        self.assertEqual(f.getvalue().replace('\r', ''), "content: file_to_compress\n")
         ham.remove()
 
     def test_job_name(self):
