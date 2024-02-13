@@ -3,6 +3,7 @@
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
 import contextlib
+import functools
 import unittest
 import os
 from time import sleep
@@ -473,6 +474,18 @@ class TestGenericJob(TestWithFilledProject):
         wd_files = os.listdir(job.working_directory)
         self.assertEqual(len(wd_files), 1, "Only one zipped file should be present in the working directory")
         self.assertEqual(wd_files[0], f"{job.name}.tar.bz2", "Inconsistent name for the zipped file")
+
+    def test_remove_job(self):
+        job = self.project.create_job(ReturnCodeJob, "job_without_hdf5")
+        job.run()
+        self.assertTrue(isinstance(job.job_id, int))
+        self.assertTrue(os.path.isfile(job.project_hdf5.file_name))
+        os.remove(job.project_hdf5.file_name)
+        with open(job.project_hdf5.file_name, "w") as f:
+            f.writelines(["wrong file"])
+        self.assertTrue(os.path.isfile(job.project_hdf5.file_name))
+        self.project.remove_job(job_specifier=job.job_name)
+        self.assertIsNone(self.project.load(job_specifier=job.job_name))
 
     def test_restart(self):
         wd_warn_key = "write_work_dir_warnings"
