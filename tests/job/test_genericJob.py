@@ -3,7 +3,6 @@
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
 import contextlib
-import functools
 import unittest
 import os
 from time import sleep
