@@ -86,6 +86,30 @@ class TestGenericJob(TestWithFilledProject):
     def test_index(self):
         pass
 
+    def test_compress_file_list(self):
+        file_lst = ["file_not_to_compress", "file_to_compress"]
+        ham = self.project.create.job.ScriptJob("job_script_compress")
+        os.makedirs(ham.working_directory, exist_ok=True)
+        for file in file_lst:
+            with open(os.path.join(ham.working_directory, file), "w") as f:
+                f.writelines(["content: " + file])
+        for file in file_lst:
+            self.assertTrue(file in ham.files.list())
+        for file in file_lst:
+            self.assertTrue(file in os.listdir(ham.working_directory))
+        ham.compress(files_to_compress=["file_to_compress"])
+        for file in ["job_script_compress.tar.bz2", "file_not_to_compress"]:
+            self.assertTrue(file in os.listdir(ham.working_directory))
+        for file in file_lst:
+            self.assertTrue(file in ham.files.list())
+        with contextlib.redirect_stdout(io.StringIO(newline=os.linesep)) as f:
+            ham.files.file_not_to_compress.tail()
+        self.assertEqual(f.getvalue().replace('\r', ''), "content: file_not_to_compress\n")
+        with contextlib.redirect_stdout(io.StringIO(newline=os.linesep)) as f:
+            ham.files.file_to_compress.tail()
+        self.assertEqual(f.getvalue().replace('\r', ''), "content: file_to_compress\n")
+        ham.remove()
+
     def test_job_name(self):
         cwd = self.file_location
         with self.subTest("ensure create is working"):
