@@ -106,7 +106,7 @@ class FileBrowser:
             try:
                 return self[self._get_file_dict()[item]]
             except KeyError:
-                raise FileNotFoundError(item)
+                raise FileNotFoundError(item) from None
 
 
 class File(str):
