@@ -907,7 +907,7 @@ class JobCore(HasGroups):
             dict, list, float, int, :class:`.DataContainer`, None: data or data object; if nothing is found None is returned
         """
 
-        if item in self.list_files():
+        if item in self.files.list():
             warnings.warn(
                 "Using __getitem__ on a job to access files in deprecated: use job.files instead!",
                 category=DeprecationWarning,

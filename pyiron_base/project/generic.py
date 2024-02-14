@@ -1270,7 +1270,7 @@ class Project(ProjectPath, HasGroups):
         for job_id in self.get_job_ids(recursive=recursive):
             job = self.inspect(job_id)
             if job.status == "finished":
-                for file in job.list_files():
+                for file in job.files.list():
                     fullname = os.path.join(job.working_directory, file)
                     if os.path.isfile(fullname) and ".h5" not in fullname:
                         os.remove(fullname)
