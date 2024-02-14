@@ -790,7 +790,9 @@ class TableJob(JobWithExecutor):
                     file=hdf5_input,
                     job_status_list=job_status_list,
                     enforce_update=self._enforce_update,
-                    executor=self._get_executor(max_workers=self._get_executor(max_workers=self.server.cores)),
+                    executor=self._get_executor(
+                        max_workers=self._get_executor(max_workers=self.server.cores)
+                    ),
                 )
             else:
                 self._pyiron_table.create_table(
