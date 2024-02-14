@@ -92,7 +92,7 @@ def _import_class(module_path, class_name):
             raise RuntimeError(
                 f"Could not import {class_name} from {module_path}, but module path known to have changed. "
                 "Call project.maintenance.local.update_hdf_types() to upgrade storage!"
-            )
+            ) from None
         else:
             raise
 
