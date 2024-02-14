@@ -1185,26 +1185,27 @@ class Project(ProjectPath, HasGroups):
         if isinstance(job_specifier, (list, np.ndarray)):
             for job_id in job_specifier:
                 self.remove_job(job_specifier=job_id, _unprotect=_unprotect)
-        else:
-            if not self.db.view_mode:
-                try:
-                    job = self.inspect(job_specifier=job_specifier)
-                    if job is None:
-                        state.logger.warning(
-                            "Job '%s' does not exist and could not be removed",
-                            str(job_specifier),
-                        )
-                    elif _unprotect:
-                        job.remove_child()
-                    else:
-                        job.remove()
-                except IOError as _:
-                    state.logger.debug(
-                        "hdf file does not exist. Removal from database will be attempted."
-                    )
-                    self.db.delete_item(job.job_id)
+            return
+        if self.db.view_mode:
+            raise EnvironmentError("copy_to: is not available in Viewermode !")
+        job = self.inspect(job_specifier=job_specifier)
+        if job is None:
+            state.logger.warning(
+                "Job '%s' does not exist and could not be removed",
+                str(job_specifier),
+            )
+            return
+        try:
+            if _unprotect:
+                job.remove_child()
             else:
-                raise EnvironmentError("copy_to: is not available in Viewermode !")
+                job.remove()
+        except IOError as _:
+            state.logger.debug(
+                "hdf file does not exist. Removal from database will be attempted."
+            )
+            self.db.delete_item(job.id)
+                
 
     def remove_jobs(self, recursive=False, progress=True, silently=False):
         """
@@ -1699,20 +1700,19 @@ class Project(ProjectPath, HasGroups):
         """
         if not isinstance(recursive, bool):
             raise ValueError("recursive must be a boolean")
-        if not self.db.view_mode:
-            job_id_lst = self.get_job_ids(recursive=recursive)
-            if progress and len(job_id_lst) > 0:
-                job_id_lst = tqdm(job_id_lst)
-            for job_id in job_id_lst:
-                try:
-                    self.remove_job(job_specifier=job_id)
-                    state.logger.debug("Remove job with ID {0} ".format(job_id))
-                except (IndexError, Exception):
-                    state.logger.debug(
-                        "Could not remove job with ID {0} ".format(job_id)
-                    )
-        else:
+        if self.db.view_mode:
             raise EnvironmentError("copy_to: is not available in Viewermode !")
+        job_id_lst = self.get_job_ids(recursive=recursive)
+        job_id_progress = tqdm(job_id_lst) if progress else job_id_lst
+        for job_id in job_id_progress:
+            try:
+                self.remove_job(job_specifier=job_id)
+                state.logger.debug("Remove job with ID {0} ".format(job_id))
+            except (IndexError, Exception):
+                state.logger.debug(
+                    "Could not remove job with ID {0} ".format(job_id)
+                )
+            
 
     def _remove_files(self, pattern="*"):
         """
