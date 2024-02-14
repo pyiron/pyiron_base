@@ -1202,8 +1202,7 @@ class Project(ProjectPath, HasGroups):
                     state.logger.debug(
                         "hdf file does not exist. Removal from database will be attempted."
                     )
-                    job_id = self.get_job_id(job_specifier)
-                    self.db.delete_item(job_id)
+                    self.db.delete_item(job.job_id)
             else:
                 raise EnvironmentError("copy_to: is not available in Viewermode !")
 
