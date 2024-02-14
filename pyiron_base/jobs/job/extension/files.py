@@ -101,7 +101,7 @@ class FileBrowser:
 
     def __getattr__(self, item):
         if item == "__dict__":
-            raise AttributeError()
+            raise AttributeError(item)
         else:
             try:
                 return self[self._get_file_dict()[item]]
