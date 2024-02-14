@@ -95,7 +95,7 @@ class FileBrowser:
         if item not in _working_directory_list_files(
             working_directory=self._working_directory
         ):
-            raise KeyError(item)
+            raise FileNotFoundError(item)
 
         return File(os.path.join(self._working_directory, item))
 
@@ -103,7 +103,7 @@ class FileBrowser:
         try:
             return self[self._get_file_dict()[item]]
         except KeyError:
-            raise AttributeError(item) from None
+            raise FileNotFoundError(item)
 
 
 class File(str):
