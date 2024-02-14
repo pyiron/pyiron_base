@@ -100,10 +100,13 @@ class FileBrowser:
         return File(os.path.join(self._working_directory, item))
 
     def __getattr__(self, item):
-        try:
-            return self[self._get_file_dict()[item]]
-        except KeyError:
-            raise FileNotFoundError(item)
+        if item == "__dict__":
+            raise AttributeError()
+        else:
+            try:
+                return self[self._get_file_dict()[item]]
+            except KeyError:
+                raise FileNotFoundError(item)
 
 
 class File(str):
