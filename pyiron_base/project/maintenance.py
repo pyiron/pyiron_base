@@ -182,8 +182,12 @@ class LocalMaintenance:
             recurse(hdf)
 
         def fix_project_data(pr):
-            hdf = pr.create_hdf(pr.path, "project_data")["../data"]
-            recurse(hdf)
+            try:
+                hdf = pr.create_hdf(pr.path, "project_data")["../data"]
+                recurse(hdf)
+            except ValueError:
+                # in case project data does not exist yet
+                pass
 
         fix_project_data(self._project)
         for sub in self._project.iter_groups():
