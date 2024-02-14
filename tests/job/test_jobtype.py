@@ -47,10 +47,11 @@ class TestJobType(PyironTestCase):
                     )
                     self.assertNotIn(job_type, old_job_type_dict)
                 else:
-                    self.assertTrue(
-                        issubclass(cls, GenericJob),
-                        msg=f"{cls} is not a subclass of GenericJob",
-                    )
+                    if isinstance(cls, type):  # ignore dynamically defined classes
+                        self.assertTrue(
+                            issubclass(cls, GenericJob),
+                            msg=f"{cls} is not a subclass of GenericJob",
+                        )
 
     def test_register(self):
         job_class_list_no_error = [

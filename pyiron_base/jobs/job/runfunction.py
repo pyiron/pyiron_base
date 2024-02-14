@@ -454,6 +454,7 @@ def run_job_with_runmode_srun(job):
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         universal_newlines=True,
+        env=os.environ.copy(),
     )
 
 
@@ -484,7 +485,7 @@ def run_job_with_runmode_executor(job, executor, gpus_per_slot=None):
 
     if static_isinstance(
         obj=job,
-        obj_type="pyiron_base.jobs.master.generic.GenericMaster"
+        obj_type="pyiron_base.jobs.master.generic.GenericMaster",
         # The static check is used to avoid a circular import:
         # runfunction -> GenericJob -> GenericMaster -> runfunction
         # This smells a bit, so if a better architecture is found in the future, use it
@@ -626,24 +627,52 @@ def execute_job_with_external_executable(job):
     )
     if job.executable.executable_path == "":
         job.status.aborted = True
+        job._hdf5["status"] = job.status.string
         raise ValueError("No executable set!")
     job.status.running = True
     executable, shell = job.executable.get_input_for_subprocess_call(
         cores=job.server.cores, threads=job.server.threads, gpus=job.server.gpus
     )
     job_crashed, out = False, None
-    try:
-        out = subprocess.run(
-            executable,
-            cwd=job.project_hdf5.working_directory,
-            shell=shell,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-            universal_newlines=True,
-            check=True,
-        ).stdout
-    except subprocess.CalledProcessError as e:
-        out, job_crashed = handle_failed_job(job=job, error=e)
+    if (
+        job.server.conda_environment_name is None
+        and job.server.conda_environment_path is None
+    ):
+        try:
+            out = subprocess.run(
+                executable,
+                cwd=job.project_hdf5.working_directory,
+                shell=shell,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                universal_newlines=True,
+                check=True,
+                env=os.environ.copy(),
+            ).stdout
+        except (subprocess.CalledProcessError, FileNotFoundError) as e:
+            out, job_crashed = handle_failed_job(job=job, error=e)
+    else:
+        import conda_subprocess
+
+        if job.server.conda_environment_name is not None:
+            prefix_name = job.server.conda_environment_name
+            prefix_path = None
+        else:
+            prefix_name = None
+            prefix_path = job.server.conda_environment_path
+        try:
+            out = conda_subprocess.run(
+                executable,
+                cwd=job.project_hdf5.working_directory,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                universal_newlines=True,
+                check=True,
+                prefix_name=prefix_name,
+                prefix_path=prefix_path,
+            ).stdout
+        except (subprocess.CalledProcessError, FileNotFoundError) as e:
+            out, job_crashed = handle_failed_job(job=job, error=e)
 
     job._logger.info(
         "{}, status: {}, output: {}".format(job.job_info_str, job.status, out)
@@ -684,22 +713,32 @@ def handle_failed_job(job, error):
     Returns:
         boolean, str: job crashed and error message
     """
-    out = error.output
-    if error.returncode in job.executable.accepted_return_codes:
-        return False, out
-    elif not job.server.accept_crash:
+    if hasattr(error, "output"):
+        out = error.output
+        if error.returncode in job.executable.accepted_return_codes:
+            return False, out
+        elif not job.server.accept_crash:
+            job._logger.warning("Job aborted")
+            job._logger.warning(error.output)
+            job.status.aborted = True
+            job._hdf5["status"] = job.status.string
+            job.run_time_to_db()
+            error_file = posixpath.join(job.project_hdf5.working_directory, "error.msg")
+            with open(error_file, "w") as f:
+                f.write(error.output)
+            if job.server.run_mode.non_modal:
+                state.database.close_connection()
+            raise RuntimeError("Job aborted")
+        else:
+            return True, out
+    else:
         job._logger.warning("Job aborted")
-        job._logger.warning(error.output)
         job.status.aborted = True
+        job._hdf5["status"] = job.status.string
         job.run_time_to_db()
-        error_file = posixpath.join(job.project_hdf5.working_directory, "error.msg")
-        with open(error_file, "w") as f:
-            f.write(error.output)
         if job.server.run_mode.non_modal:
             state.database.close_connection()
         raise RuntimeError("Job aborted")
-    else:
-        return True, out
 
 
 def multiprocess_wrapper(

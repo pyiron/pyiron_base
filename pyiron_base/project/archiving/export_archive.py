@@ -26,9 +26,11 @@ def update_project(project_instance, directory_to_transfer, archive_directory, d
         os.path.relpath(p, pr_transfer.project_path) for p in df["project"].values
     ]
     return [
-        os.path.join(dir_name_archive, dir_name_transfer, p)
-        if p != "."
-        else os.path.join(dir_name_archive, dir_name_transfer)
+        (
+            os.path.join(dir_name_archive, dir_name_transfer, p)
+            if p != "."
+            else os.path.join(dir_name_archive, dir_name_transfer)
+        )
         for p in path_rel_lst
     ]
 
@@ -43,9 +45,11 @@ def generate_list_of_directories(df_files, directory_to_transfer, archive_direct
     ]
     dir_name_transfer = getdir(path=directory_to_transfer)
     return [
-        os.path.join(archive_directory, dir_name_transfer, p)
-        if p != "."
-        else os.path.join(archive_directory, dir_name_transfer)
+        (
+            os.path.join(archive_directory, dir_name_transfer, p)
+            if p != "."
+            else os.path.join(archive_directory, dir_name_transfer)
+        )
         for p in path_rel_lst
     ]
 

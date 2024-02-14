@@ -7,7 +7,9 @@ from os.path import dirname, join, abspath, exists, islink
 import os
 import tempfile
 import pint
+import pickle
 from pyiron_base.project.generic import Project
+from pyiron_base.project.size import _size_conversion
 from pyiron_base._tests import (
     PyironTestCase, TestWithProject, TestWithFilledProject, ToyJob
 )
@@ -89,7 +91,7 @@ class TestProjectOperations(TestWithFilledProject):
         byte = pint.UnitRegistry().byte
         for value in conv_check.keys():
             with self.subTest(value):
-                converted_size = self.project._size_conversion(value * byte)
+                converted_size = _size_conversion(value * byte)
                 self.assertEqual(converted_size.m, conv_check[value][0])
                 self.assertEqual(str(converted_size.u), conv_check[value][1])
 
@@ -177,19 +179,19 @@ class TestProjectOperations(TestWithFilledProject):
             n_top_jobs_named_toy_1
         )
         self.assertEqual(
-            len(self.project.job_table(recursive=True, status="!finished")),
+            len(self.project.job_table(recursive=True, status="^(?!finished)", mode="regex")),
             n_suspended_jobs + n_aborted_jobs,
         )
         self.assertEqual(
-            len(self.project.job_table(recursive=True, status="!aborted")),
+            len(self.project.job_table(recursive=True, status="^(?!aborted)", mode="regex")),
             n_jobs - n_aborted_jobs
         )
         self.assertEqual(
-            len(self.project.job_table(recursive=True, job="!toy_1")),
+            len(self.project.job_table(recursive=True, job="^(?!toy_1)", mode="regex")),
             n_jobs - n_jobs_named_toy_1
         )
         self.assertEqual(
-            len(self.project.job_table(recursive=True, job="!toy_*")),
+            len(self.project.job_table(recursive=True, job="^(?!toy_)", mode="regex")),
             0
         )
         self.assertRaises(ValueError, self.project.job_table, gibberish=True)
@@ -237,6 +239,12 @@ class TestProjectOperations(TestWithFilledProject):
     def test_maintenance_get_repository_status(self):
         df = self.project.maintenance.get_repository_status()
         self.assertIn('pyiron_base', df.Module.values)
+
+    def test_pickle(self):
+        """Project should be pickle-able."""
+        project_reload = pickle.loads(pickle.dumps(self.project))
+        self.assertEqual(project_reload.root_path, self.project.root_path)
+        self.assertEqual(project_reload.project_path, self.project.project_path)
 
 
 @unittest.skipUnless(os.name=="posix", "symlinking is only available on posix platforms")

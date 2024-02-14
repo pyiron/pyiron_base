@@ -12,8 +12,8 @@ import numpy as np
 import os
 import pandas
 from pyfileindex import PyFileIndex
-from pyiron_base.database.generic import IsDatabase
-from pyiron_base.storage.helper_functions import read_hdf5, write_hdf5
+from pyiron_base.database.interface import IsDatabase
+from h5io_browser.base import _read_hdf, _write_hdf
 
 __author__ = "Jan Janssen"
 __copyright__ = (
@@ -501,18 +501,18 @@ class FileTable(IsDatabase, metaclass=FileTableSingleton):
         if isinstance(job_id, Iterable):
             for j_id in job_id:
                 db_entry = self.get_item_by_id(item_id=j_id)
-                write_hdf5(
-                    db_entry["project"] + db_entry["subjob"] + ".h5",
-                    status,
-                    title=db_entry["subjob"][1:] + "/status",
+                _write_hdf(
+                    hdf_filehandle=db_entry["project"] + db_entry["subjob"] + ".h5",
+                    data=status,
+                    h5_path=db_entry["subjob"][1:] + "/status",
                     overwrite="update",
                 )
         else:
             db_entry = self.get_item_by_id(item_id=job_id)
-            write_hdf5(
-                db_entry["project"] + db_entry["subjob"] + ".h5",
-                status,
-                title=db_entry["subjob"][1:] + "/status",
+            _write_hdf(
+                hdf_filehandle=db_entry["project"] + db_entry["subjob"] + ".h5",
+                data=status,
+                h5_path=db_entry["subjob"][1:] + "/status",
                 overwrite="update",
             )
 
@@ -658,16 +658,20 @@ def filter_function(file_name):
 
 
 def get_hamilton_from_file(hdf5_file, job_name):
-    return read_hdf5(hdf5_file, job_name + "/TYPE").split(".")[-1].split("'")[0]
+    return (
+        _read_hdf(hdf_filehandle=hdf5_file, h5_path=job_name + "/TYPE")
+        .split(".")[-1]
+        .split("'")[0]
+    )
 
 
 def get_hamilton_version_from_file(hdf5_file, job_name):
-    return read_hdf5(hdf5_file, job_name + "/VERSION")
+    return _read_hdf(hdf_filehandle=hdf5_file, h5_path=job_name + "/VERSION")
 
 
 def get_job_status_from_file(hdf5_file, job_name):
     if os.path.exists(hdf5_file):
-        return read_hdf5(hdf5_file, job_name + "/status")
+        return _read_hdf(hdf_filehandle=hdf5_file, h5_path=job_name + "/status")
     else:
         return None
 

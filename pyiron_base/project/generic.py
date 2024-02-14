@@ -13,12 +13,10 @@ import shutil
 import stat
 from tqdm.auto import tqdm
 import pandas
-import pint
 import math
 import numpy as np
 
 from pyiron_base.project.jobloader import JobLoader, JobInspector
-from pyiron_base.project.maintenance import Maintenance
 from pyiron_base.project.path import ProjectPath
 from pyiron_base.database.filetable import FileTable
 from pyiron_base.state import state
@@ -32,11 +30,16 @@ from pyiron_base.database.jobtable import (
     get_job_status,
 )
 from pyiron_base.storage.hdfio import ProjectHDFio
-from pyiron_base.storage.filedata import load_file
 from pyiron_base.utils.deprecate import deprecate
-from pyiron_base.jobs.job.util import _special_symbol_replacements, _get_safe_job_name
 from pyiron_base.interfaces.has_groups import HasGroups
-from pyiron_base.jobs.job.jobtype import JobType, JobTypeChoice, JobFactory
+from pyiron_base.jobs.flex.factory import create_job_factory
+from pyiron_base.jobs.job.util import _special_symbol_replacements, _get_safe_job_name
+from pyiron_base.jobs.job.jobtype import (
+    JobType,
+    JobTypeChoice,
+    JobFactory,
+    JOB_CLASS_DICT,
+)
 from pyiron_base.jobs.job.extension.server.queuestatus import (
     queue_delete_job,
     queue_is_empty,
@@ -50,7 +53,7 @@ from pyiron_base.jobs.job.extension.server.queuestatus import (
 from pyiron_base.project.external import Notebook
 from pyiron_base.project.data import ProjectData
 from pyiron_base.project.archiving import export_archive, import_archive
-from typing import Generator, Union, Dict, TYPE_CHECKING
+from typing import Generator, Union, Dict, TYPE_CHECKING, Literal
 
 if TYPE_CHECKING:
     from pyiron_base.jobs.job.generic import GenericJob
@@ -149,6 +152,8 @@ class Project(ProjectPath, HasGroups):
     @property
     def maintenance(self):
         if self._maintenance is None:
+            from pyiron_base.project.maintenance import Maintenance
+
             self._maintenance = Maintenance(self)
         return self._maintenance
 
@@ -207,36 +212,20 @@ class Project(ProjectPath, HasGroups):
         """
         Get the size of the project
         """
-        size = (
-            sum(
-                [
-                    sum([os.path.getsize(os.path.join(path, f)) for f in files])
-                    for path, dirs, files in os.walk(self.path)
-                ]
-            )
-            * pint.UnitRegistry().byte
-        )
-        return self._size_conversion(size)
+        from pyiron_base.project.size import get_folder_size
 
-    @staticmethod
-    def _size_conversion(size: pint.Quantity):
-        sign_prefactor = 1
-        if size < 0:
-            sign_prefactor = -1
-            size *= -1
-        elif size == 0:
-            return size
+        return get_folder_size(path=self.path)
 
-        prefix_index = math.floor(math.log2(size) / 10) - 1
-        prefix = ["Ki", "Mi", "Gi", "Ti", "Pi"]
+    @property
+    def conda_environment(self):
+        try:
+            from pyiron_base.project.condaenv import CondaEnvironment
+        except ImportError as e:
+            raise ImportError(
+                "You need to have the conda python package installed to access conda environments."
+            ) from None
 
-        size *= sign_prefactor
-        if prefix_index < 0:
-            return size
-        elif prefix_index < 5:
-            return size.to(f"{prefix[prefix_index]}byte")
-        else:
-            return size.to(f"{prefix[-1]}byte")
+        return CondaEnvironment()
 
     def copy(self):
         """
@@ -326,6 +315,58 @@ class Project(ProjectPath, HasGroups):
         new = self.copy()
         return new.open(group, history=False)
 
+    @staticmethod
+    def create_job_class(
+        class_name,
+        executable_str,
+        write_input_funct=None,
+        collect_output_funct=None,
+        default_input_dict=None,
+    ):
+        """
+        Create a new job class based on pre-defined write_input() and collect_output() function plus a dictionary of
+        default inputs and an executable string.
+
+        Args:
+            class_name (str): A name for the newly created job class, so it is accessible via pr.create.job.<class_name>
+            executable_str (str): Call to an external executable
+            write_input_funct (callable): The write input function write_input(input_dict, working_directory)
+            collect_output_funct (callable): The collect output function collect_output(working_directory)
+            default_input_dict (dict): Default input for the newly created job class
+
+        Example:
+
+        >>> def write_input(input_dict, working_directory="."):
+        >>>     with open(os.path.join(working_directory, "input_file"), "w") as f:
+        >>>         f.write(str(input_dict["energy"]))
+        >>>
+        >>>
+        >>> def collect_output(working_directory="."):
+        >>>     with open(os.path.join(working_directory, "output_file"), "r") as f:
+        >>>         return {"energy": float(f.readline())}
+        >>>
+        >>>
+        >>> from pyiron_base import Project
+        >>> pr = Project("test")
+        >>> pr.create_job_class(
+        >>>     class_name="CatJob",
+        >>>     write_input_funct=write_input,
+        >>>     collect_output_funct=collect_output,
+        >>>     default_input_dict={"energy": 1.0},
+        >>>     executable_str="cat input_file > output_file",
+        >>> )
+        >>> job = pr.create.job.CatJob(job_name="job_test")
+        >>> job.input["energy"] = 2.0
+        >>> job.run()
+        >>> job.output
+        """
+        JOB_CLASS_DICT[class_name] = create_job_factory(
+            write_input_funct=write_input_funct,
+            collect_output_funct=collect_output_funct,
+            default_input_dict=default_input_dict,
+            executable_str=executable_str,
+        )
+
     def create_job(self, job_type, job_name, delete_existing_job=False):
         """
         Create one of the following jobs:
@@ -372,6 +413,39 @@ class Project(ProjectPath, HasGroups):
         )
         table.analysis_project = self
         return table
+
+    def wrap_python_function(self, python_function):
+        """
+        Create a pyiron job object from any python function
+
+        Args:
+            python_function (callable): python function to create a job object from
+
+        Returns:
+            pyiron_base.jobs.flex.pythonfunctioncontainer.PythonFunctionContainerJob: pyiron job object
+
+        Example:
+
+        >>> def test_function(a, b=8):
+        >>>     return a+b
+        >>>
+        >>> from pyiron_base import Project
+        >>> pr = Project("test")
+        >>> job = pr.wrap_python_function(test_function)
+        >>> job.input["a"] = 4
+        >>> job.input["b"] = 5
+        >>> job.run()
+        >>> job.output
+        >>>
+        >>> test_function_wrapped = pr.wrap_python_function(test_function)
+        >>> test_function_wrapped(4, b=6)
+
+        """
+        job = self.create.job.PythonFunctionContainerJob(
+            job_name=python_function.__name__
+        )
+        job.python_function = python_function
+        return job
 
     def get_child_ids(self, job_specifier, project=None):
         """
@@ -689,54 +763,31 @@ class Project(ProjectPath, HasGroups):
         element_lst=None,
         job_name_contains="",
         auto_refresh_job_status=False,
+        mode: Literal["regex", "glob"] = "glob",
         **kwargs: dict,
     ):
         """
         auto_refresh_job_status (bool): will automatically reload job status by calling refresh_job_status() upon calling job_table
         """
-        if not isinstance(self.db, FileTable):
-            if auto_refresh_job_status:
-                self.refresh_job_status()
-            return self.db.job_table(
-                sql_query=self.sql_query,
-                user=self.user,
-                project_path=self.project_path,
-                recursive=recursive,
-                columns=columns,
-                all_columns=all_columns,
-                sort_by=sort_by,
-                full_table=full_table,
-                element_lst=element_lst,
-                **kwargs,
-            )
-        elif not auto_refresh_job_status:
-            return self.db.job_table(
-                sql_query=self.sql_query,
-                user=self.user,
-                project_path=self.project_path,
-                recursive=recursive,
-                columns=columns,
-                all_columns=all_columns,
-                sort_by=sort_by,
-                full_table=full_table,
-                element_lst=element_lst,
-                **kwargs,
-            )
+        if not isinstance(self.db, FileTable) and auto_refresh_job_status:
+            self.refresh_job_status()
+        job_table = self.db.job_table(
+            sql_query=self.sql_query,
+            user=self.user,
+            project_path=self.project_path,
+            recursive=recursive,
+            columns=columns,
+            all_columns=all_columns,
+            sort_by=sort_by,
+            full_table=full_table,
+            element_lst=element_lst,
+            mode=mode,
+            **kwargs,
+        )
+        if not isinstance(self.db, FileTable) or not auto_refresh_job_status:
+            return job_table
         else:
-            return self._refresh_job_status_file_table(
-                df=self.db.job_table(
-                    sql_query=self.sql_query,
-                    user=self.user,
-                    project_path=self.project_path,
-                    recursive=recursive,
-                    columns=columns,
-                    all_columns=all_columns,
-                    sort_by=sort_by,
-                    full_table=full_table,
-                    element_lst=element_lst,
-                    **kwargs,
-                )
-            )
+            return self._refresh_job_status_file_table(df=job_table)
 
     job_table.__doc__ = "\n".join(
         [
@@ -1150,8 +1201,7 @@ class Project(ProjectPath, HasGroups):
                     state.logger.debug(
                         "hdf file does not exist. Removal from database will be attempted."
                     )
-                    job_id = self.get_job_id(job_specifier)
-                    self.db.delete_item(job_id)
+                    self.db.delete_item(job.job_id)
             else:
                 raise EnvironmentError("copy_to: is not available in Viewermode !")
 
@@ -1218,7 +1268,7 @@ class Project(ProjectPath, HasGroups):
         for job_id in self.get_job_ids(recursive=recursive):
             job = self.inspect(job_id)
             if job.status == "finished":
-                for file in job.list_files():
+                for file in job.files.list():
                     fullname = os.path.join(job.working_directory, file)
                     if os.path.isfile(fullname) and ".h5" not in fullname:
                         os.remove(fullname)
@@ -1572,6 +1622,31 @@ class Project(ProjectPath, HasGroups):
             {"groups": self.list_dirs(skip_hdf5=True), "nodes": self.list_nodes()}
         )
 
+    def __getstate__(self):
+        state_dict = super().__getstate__()
+        state_dict.update(
+            {
+                "user": self.user,
+                "sql_query": self.sql_query,
+                "filter": self._filter,
+                "inspect_mode": self._inspect_mode,
+            }
+        )
+        return state_dict
+
+    def __setstate__(self, state):
+        super().__setstate__(state)
+        self.user = state["user"]
+        self.sql_query = state["sql_query"]
+        self._filter = state["filter"]
+        self._inspect_mode = state["inspect_mode"]
+        self._data = None
+        self._creator = Creator(project=self)
+        self._loader = JobLoader(project=self)
+        self._inspector = JobInspector(project=self)
+        self.job_type = JobTypeChoice()
+        self._maintenance = None
+
     def _get_item_helper(self, item, convert_to_object=True):
         """
         Internal helper function to get item from project
@@ -1600,6 +1675,8 @@ class Project(ProjectPath, HasGroups):
             return ProjectHDFio(project=self, file_name=file_name)
         if item in self.list_files():
             file_name = posixpath.join(self.path, "{}".format(item))
+            from pyiron_base.storage.filedata import load_file
+
             return load_file(file_name, project=self)
         if item in self.list_dirs():
             with self.open(item) as new_item:
@@ -1626,16 +1703,13 @@ class Project(ProjectPath, HasGroups):
             if progress and len(job_id_lst) > 0:
                 job_id_lst = tqdm(job_id_lst)
             for job_id in job_id_lst:
-                if job_id not in self.get_job_ids(recursive=recursive):
-                    continue
-                else:
-                    try:
-                        self.remove_job(job_specifier=job_id)
-                        state.logger.debug("Remove job with ID {0} ".format(job_id))
-                    except (IndexError, Exception):
-                        state.logger.debug(
-                            "Could not remove job with ID {0} ".format(job_id)
-                        )
+                try:
+                    self.remove_job(job_specifier=job_id)
+                    state.logger.debug("Remove job with ID {0} ".format(job_id))
+                except (IndexError, Exception):
+                    state.logger.debug(
+                        "Could not remove job with ID {0} ".format(job_id)
+                    )
         else:
             raise EnvironmentError("copy_to: is not available in Viewermode !")
 

@@ -299,7 +299,10 @@ class Executable(HasStorage):
         try:
             return self.executable_lst[self.version]
         except KeyError:
-            return ""
+            if isinstance(self.version, str):
+                return self.version
+            else:
+                return ""
 
     def _get_hdf_group_name(self):
         return "executable"
