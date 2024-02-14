@@ -73,8 +73,8 @@ def _import_class(module_path, class_name):
         # entries in the job_class_dict are either strings of modules or fully
         # loaded class object; in the latter case our work here is done we just
         # return the class
-        if isinstance(module_path, type):
-            return module_path
+        if isinstance(known_module_path, type):
+            return known_module_path
         if module_path != known_module_path:
             state.logger.info(
                 f'Using registered module "{known_module_path}" instead of custom/old module "{module_path}" to'
