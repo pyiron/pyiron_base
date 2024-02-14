@@ -285,7 +285,7 @@ def _job_compress(job, files_to_compress=None):
     """
     if not _job_is_compressed(job):
         if files_to_compress is None:
-            files_to_compress = list(job.list_files())
+            files_to_compress = job.files.list()
         cwd = os.getcwd()
         try:
             os.chdir(job.working_directory)
