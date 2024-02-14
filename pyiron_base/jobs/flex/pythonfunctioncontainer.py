@@ -43,6 +43,7 @@ class PythonFunctionContainerJob(PythonTemplateJob):
     def __init__(self, project, job_name):
         super().__init__(project, job_name)
         self._function = None
+        self._executor_type = None
 
     @property
     def python_function(self):
@@ -52,6 +53,14 @@ class PythonFunctionContainerJob(PythonTemplateJob):
     def python_function(self, funct):
         self.input.update(get_function_parameter_dict(funct=funct))
         self._function = funct
+
+    @property
+    def executor_type(self):
+        return self._executor_type
+
+    @executor_type.setter
+    def executor_type(self, exe):
+        self._executor_type = exe
 
     def __call__(self, *args, **kwargs):
         self.input.update(
@@ -63,10 +72,40 @@ class PythonFunctionContainerJob(PythonTemplateJob):
     def to_hdf(self, hdf=None, group_name=None):
         super().to_hdf(hdf=hdf, group_name=group_name)
         self.project_hdf5["function"] = np.void(cloudpickle.dumps(self._function))
+        if self._executor_type is not None:
+            self.project_hdf5["executor_type"] = self._executor_type
 
     def from_hdf(self, hdf=None, group_name=None):
         super().from_hdf(hdf=hdf, group_name=group_name)
         self._function = cloudpickle.loads(self.project_hdf5["function"])
+        if "executor_type" in self.project_hdf5.list_nodes():
+            self._executor_type = self.project_hdf5["executor_type"]
+
+    def _get_executor(self):
+        if self._executor_type is None:
+            raise ValueError(
+                "No executor type defined - Please set self.executor_type."
+            )
+        elif (
+            isinstance(self._executor_type, str)
+            and self.executor_type == "ProcessPoolExecutor"
+        ):
+            from concurrent.futures import ProcessPoolExecutor
+
+            return ProcessPoolExecutor(max_workers=self.server.cores)
+        elif (
+            isinstance(self._executor_type, str)
+            and self.executor_type == "ThreadPoolExecutor"
+        ):
+            from concurrent.futures import ThreadPoolExecutor
+
+            return ThreadPoolExecutor(max_workers=self.server.cores)
+        elif isinstance(self._executor_type, str):
+            raise TypeError(
+                "Unknown Executor Type: Please select either ProcessPoolExecutor or ThreadPoolExecutor."
+            )
+        else:
+            raise TypeError("The self.executor_type has to be a string.")
 
     def save(self):
         job_name = self._function.__name__ + get_hash(
@@ -82,7 +121,15 @@ class PythonFunctionContainerJob(PythonTemplateJob):
             super().save()
 
     def run_static(self):
-        output = self._function(**self.input.to_builtin())
+        if (
+            self._executor_type is not None
+            and "executor" in inspect.signature(self._function).parameters.keys()
+        ):
+            input_dict = self.input.to_builtin()
+            del input_dict["executor"]
+            output = self._function(**input_dict, executor=self._get_executor())
+        else:
+            output = self._function(**self.input.to_builtin())
         self.output.update({"result": output})
         self.to_hdf()
         self.status.finished = True
