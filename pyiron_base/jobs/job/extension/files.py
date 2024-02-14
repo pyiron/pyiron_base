@@ -100,7 +100,7 @@ class FileBrowser:
         return File(os.path.join(self._working_directory, item))
 
     def __getattr__(self, item):
-        if item == "__dict__":
+        if item.startswith("__") and item.endswith("__"):
             raise AttributeError(item)
         else:
             try:
