@@ -16,7 +16,7 @@ import types
 from typing import List, Tuple
 
 from pyiron_base.utils.deprecate import deprecate
-from pyiron_base.jobs.job.generic import GenericJob
+from pyiron_base.jobs.job.executor import JobWithExecutor
 from pyiron_base.jobs.job.extension import jobstatus
 from pyiron_base.storage.hdfio import FileHDFio
 from pyiron_base.jobs.master.generic import get_function_from_string
@@ -460,7 +460,7 @@ class PyironTable:
         return self._df._repr_html_()
 
 
-class TableJob(GenericJob):
+class TableJob(JobWithExecutor):
     """
 
     Since a project can have a large number of jobs, it is often necessary
@@ -783,20 +783,22 @@ class TableJob(GenericJob):
         if self.job_id is not None:
             self.project.db.item_update({"timestart": datetime.now()}, self.job_id)
         with self.project_hdf5.open("input") as hdf5_input:
-            if self.server.executor is not None:
-                executor = self.server.executor
-            elif self.server.cores > 1:
-                executor = concurrent.futures.ProcessPoolExecutor(
-                    max_workers=self.server.cores
+            if self._executor_type is None and self.server.cores > 1:
+                self._executor_type = "ProcessPoolExecutor"
+            if self._executor_type is not None:
+                self._pyiron_table.create_table(
+                    file=hdf5_input,
+                    job_status_list=job_status_list,
+                    enforce_update=self._enforce_update,
+                    executor=self._get_executor(max_workers=self._get_executor(max_workers=self.server.cores)),
                 )
             else:
-                executor = None
-            self._pyiron_table.create_table(
-                file=hdf5_input,
-                job_status_list=job_status_list,
-                enforce_update=self._enforce_update,
-                executor=executor,
-            )
+                self._pyiron_table.create_table(
+                    file=hdf5_input,
+                    job_status_list=job_status_list,
+                    enforce_update=self._enforce_update,
+                    executor=None,
+                )
         self.to_hdf()
         self._pyiron_table._df.to_csv(
             os.path.join(self.working_directory, "pyirontable.csv"), index=False

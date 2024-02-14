@@ -6,6 +6,7 @@ Template class to define jobs
 """
 
 from pyiron_base.jobs.job.generic import GenericJob
+from pyiron_base.jobs.job.executor import JobWithExecutor
 from pyiron_base.interfaces.object import HasStorage
 
 __author__ = "Jan Janssen"
@@ -49,3 +50,17 @@ class PythonTemplateJob(TemplateJob):
         super().__init__(project, job_name)
         self._python_only_job = True
         self._write_work_dir_warnings = False
+
+
+class PythonTemplateJobWithExecutor(PythonTemplateJob, JobWithExecutor):
+    def __init__(self, project, job_name):
+        GenericJob.__init__(self, project, job_name)
+        self._executor_type = None
+
+    def to_hdf(self, hdf=None, group_name=None):
+        GenericJob.to_hdf(self, hdf=hdf, group_name=group_name)
+        self._executor_type_to_hdf()
+
+    def from_hdf(self, hdf=None, group_name=None):
+        GenericJob.from_hdf(self, hdf=hdf, group_name=group_name)
+        self._executor_type_from_hdf()
