@@ -285,7 +285,7 @@ def _job_compress(job, files_to_compress=None):
     """
     if not _job_is_compressed(job):
         if files_to_compress is None:
-            files_to_compress = list(job.list_files())
+            files_to_compress = job.files.list()
         cwd = os.getcwd()
         try:
             os.chdir(job.working_directory)
@@ -364,13 +364,20 @@ def _working_directory_list_files(working_directory):
         list of str: file names
     """
     if os.path.isdir(working_directory):
+        uncompressed_files_lst = os.listdir(working_directory)
         if _working_directory_is_compressed(working_directory=working_directory):
-            with tarfile.open(
-                _get_compressed_job_name(working_directory=working_directory), "r"
-            ) as tar:
-                return [member.name for member in tar.getmembers() if member.isfile()]
+            compressed_job_name = _get_compressed_job_name(
+                working_directory=working_directory
+            )
+            with tarfile.open(compressed_job_name, "r") as tar:
+                job_archive_name = os.path.basename(compressed_job_name)
+                compressed_files_lst = [
+                    member.name for member in tar.getmembers() if member.isfile()
+                ]
+                uncompressed_files_lst.remove(job_archive_name)
+                return uncompressed_files_lst + compressed_files_lst
         else:
-            return os.listdir(working_directory)
+            return uncompressed_files_lst
     return []
 
 
@@ -411,7 +418,9 @@ def _working_directory_read_file(working_directory, file_name, tail=None):
     ):
         raise FileNotFoundError(file_name)
 
-    if _working_directory_is_compressed(working_directory=working_directory):
+    if _working_directory_is_compressed(
+        working_directory=working_directory
+    ) and file_name not in os.listdir(working_directory):
         with tarfile.open(
             _get_compressed_job_name(working_directory=working_directory),
             encoding="utf8",
