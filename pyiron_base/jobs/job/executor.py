@@ -33,6 +33,13 @@ class JobWithExecutor(GenericJob):
             from concurrent.futures import ThreadPoolExecutor
 
             return ThreadPoolExecutor(max_workers=max_workers)
+        elif (
+            isinstance(self._executor_type, str)
+            and self.executor_type == "pympipool.Executor"
+        ):
+            from pympipool import Executor
+
+            return Executor(max_workers=max_workers)
         elif isinstance(self._executor_type, str):
             raise TypeError(
                 "Unknown Executor Type: Please select either ProcessPoolExecutor or ThreadPoolExecutor."
