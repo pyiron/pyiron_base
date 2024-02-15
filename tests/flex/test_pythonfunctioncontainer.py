@@ -14,6 +14,11 @@ def my_sleep_funct(a, b=8):
     return a+b
 
 
+def my_function_exe(a_lst, b_lst, executor):
+    future_lst = [executor.submit(my_function, a=a, b=b) for a, b in zip(a_lst, b_lst)]
+    return [future.result() for future in future_lst]
+
+
 class TestPythonFunctionContainer(TestWithProject):
     def test_as_job(self):
         job = self.project.wrap_python_function(my_function)
@@ -61,3 +66,13 @@ class TestPythonFunctionContainer(TestWithProject):
             self.assertFalse(job.server.future.done())
             self.project.wait_for_job(job=job, interval_in_s=0.01, max_iterations=1000)
             self.assertTrue(job.server.future.done())
+
+    def test_with_internal_executor(self):
+        job = self.project.wrap_python_function(my_function_exe)
+        job.input["a_lst"] = [1, 2, 3, 4]
+        job.input["b_lst"] = [5, 6, 7, 8]
+        job.server.cores = 2
+        job.executor_type = "ProcessPoolExecutor"
+        job.run()
+        self.assertEqual(job.output["result"], [6, 8, 10, 12])
+        self.assertTrue(job.status.finished)
