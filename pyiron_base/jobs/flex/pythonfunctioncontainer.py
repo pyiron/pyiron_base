@@ -3,7 +3,7 @@ import hashlib
 import re
 import cloudpickle
 import numpy as np
-from pyiron_base.jobs.job.template import PythonTemplateJobWithExecutor
+from pyiron_base.jobs.job.template import PythonTemplateJob
 
 
 def get_function_parameter_dict(funct):
@@ -19,7 +19,7 @@ def get_hash(binary):
     return str(hashlib.md5(binary_no_ipykernel).hexdigest())
 
 
-class PythonFunctionContainerJob(PythonTemplateJobWithExecutor):
+class PythonFunctionContainerJob(PythonTemplateJob):
     """
     The PythonFunctionContainerJob is designed to wrap any kind of python function into a pyiron job object
 

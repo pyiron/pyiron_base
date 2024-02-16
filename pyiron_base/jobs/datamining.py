@@ -16,7 +16,7 @@ import types
 from typing import List, Tuple
 
 from pyiron_base.utils.deprecate import deprecate
-from pyiron_base.jobs.job.executor import JobWithExecutor
+from pyiron_base.jobs.job.generic import GenericJob
 from pyiron_base.jobs.job.extension import jobstatus
 from pyiron_base.storage.hdfio import FileHDFio
 from pyiron_base.jobs.master.generic import get_function_from_string
@@ -460,7 +460,7 @@ class PyironTable:
         return self._df._repr_html_()
 
 
-class TableJob(JobWithExecutor):
+class TableJob(GenericJob):
     """
 
     Since a project can have a large number of jobs, it is often necessary

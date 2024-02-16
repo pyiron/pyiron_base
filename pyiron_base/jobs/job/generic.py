@@ -157,6 +157,7 @@ class GenericJob(JobCore, HasDict):
         self._restart_file_dict = dict()
         self._exclude_nodes_hdf = list()
         self._exclude_groups_hdf = list()
+        self._executor_type = None
         self._process = None
         self._compress_by_default = False
         self._python_only_job = False
@@ -368,6 +369,14 @@ class GenericJob(JobCore, HasDict):
         elif not self.project_hdf5.working_directory:
             self._create_working_directory()
         return self.project_hdf5.working_directory
+
+    @property
+    def executor_type(self):
+        return self._executor_type
+
+    @executor_type.setter
+    def executor_type(self, exe):
+        self._executor_type = exe
 
     def collect_logfiles(self):
         """
@@ -1019,6 +1028,8 @@ class GenericJob(JobCore, HasDict):
         data_dict["server"] = self._server.to_dict()
         if self._import_directory is not None:
             data_dict["import_directory"] = self._import_directory
+        if self._executor_type is not None:
+            data_dict["executor_type"] = self._executor_type
         return data_dict
 
     def from_dict(self, job_dict):
@@ -1042,6 +1053,8 @@ class GenericJob(JobCore, HasDict):
             self._exclude_nodes_hdf = input_dict["exclude_nodes_hdf"]
         if "exclude_groups_hdf" in input_dict.keys():
             self._exclude_groups_hdf = input_dict["exclude_groups_hdf"]
+        if "executor_type" in input_dict.keys():
+            self._executor_type = input_dict["executor_type"]
 
     def to_hdf(self, hdf=None, group_name=None):
         """
@@ -1492,6 +1505,39 @@ class GenericJob(JobCore, HasDict):
             project.db.set_job_status(job_id=master_id, status="busy")
             self._logger.info("busy master: {} {}".format(master_id, self.get_job_id()))
             del self
+
+    def _get_executor(self, max_workers=None):
+        if self._executor_type is None:
+            raise ValueError(
+                "No executor type defined - Please set self.executor_type."
+            )
+        elif (
+            isinstance(self._executor_type, str)
+            and self.executor_type == "ProcessPoolExecutor"
+        ):
+            from concurrent.futures import ProcessPoolExecutor
+
+            return ProcessPoolExecutor(max_workers=max_workers)
+        elif (
+            isinstance(self._executor_type, str)
+            and self.executor_type == "ThreadPoolExecutor"
+        ):
+            from concurrent.futures import ThreadPoolExecutor
+
+            return ThreadPoolExecutor(max_workers=max_workers)
+        elif (
+            isinstance(self._executor_type, str)
+            and self.executor_type == "pympipool.Executor"
+        ):
+            from pympipool import Executor
+
+            return Executor(max_workers=max_workers)
+        elif isinstance(self._executor_type, str):
+            raise TypeError(
+                "Unknown Executor Type: Please select either ProcessPoolExecutor or ThreadPoolExecutor."
+            )
+        else:
+            raise TypeError("The self.executor_type has to be a string.")
 
 
 class GenericError(object):
