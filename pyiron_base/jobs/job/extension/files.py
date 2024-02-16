@@ -95,15 +95,18 @@ class FileBrowser:
         if item not in _working_directory_list_files(
             working_directory=self._working_directory
         ):
-            raise KeyError(item)
+            raise FileNotFoundError(item)
 
         return File(os.path.join(self._working_directory, item))
 
     def __getattr__(self, item):
-        try:
-            return self[self._get_file_dict()[item]]
-        except KeyError:
-            raise AttributeError(item) from None
+        if item.startswith("__") and item.endswith("__"):
+            raise AttributeError(item)
+        else:
+            try:
+                return self[self._get_file_dict()[item]]
+            except KeyError:
+                raise FileNotFoundError(item) from None
 
 
 class File(str):
