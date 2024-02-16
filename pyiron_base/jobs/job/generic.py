@@ -9,7 +9,6 @@ from concurrent.futures import Future
 from datetime import datetime
 import os
 import posixpath
-import signal
 import warnings
 
 from h5io_browser.base import _read_hdf, _write_hdf

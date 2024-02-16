@@ -9,6 +9,7 @@ import os
 import logging
 from pyiron_base.project.generic import Project
 from pyiron_base.state import state
+from pyiron_base.state.signal import catch_signals
 from pyiron_base.database.filetable import (
     get_hamilton_from_file,
     get_hamilton_version_from_file,
@@ -126,7 +127,8 @@ class JobWrapper(object):
             self.job.status.collect = True
             self.job.run()
         else:
-            self.job.run_static()
+            with catch_signals(self.job.signal_intercept):
+                self.job.run_static()
 
 
 def job_wrapper_function(
