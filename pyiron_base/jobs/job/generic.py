@@ -16,13 +16,14 @@ from h5io_browser.base import _read_hdf, _write_hdf
 
 from pyiron_base.state import state
 from pyiron_base.state.signal import catch_signals
-from pyiron_base.jobs.job.extension.executable import Executable
-from pyiron_base.jobs.job.extension.jobstatus import JobStatus
 from pyiron_base.jobs.job.core import (
     JobCore,
     _doc_str_job_core_args,
     _doc_str_job_core_attr,
 )
+from pyiron_base.jobs.job.extension.executable import Executable
+from pyiron_base.jobs.job.extension.executor import EXECUTORDICT
+from pyiron_base.jobs.job.extension.jobstatus import JobStatus
 from pyiron_base.jobs.job.runfunction import (
     run_job_with_parameter_repair,
     run_job_with_status_initialized,
@@ -109,9 +110,6 @@ _doc_str_generic_job_attr = (
                                                                'ScriptJob', 'ListMaster']
 """
 )
-
-
-AVAILABLE_EXECUTOR_TYPES = ["pympipool.Executor", "ThreadPoolExecutor", "ProcessPoolExecutor"]
 
 
 class GenericJob(JobCore, HasDict):
@@ -379,11 +377,11 @@ class GenericJob(JobCore, HasDict):
 
     @executor_type.setter
     def executor_type(self, exe):
-        if isinstance(exe, str) and exe in AVAILABLE_EXECUTOR_TYPES:
+        if isinstance(exe, str) and exe in EXECUTORDICT.keys():
             self._executor_type = exe
         else:
             raise TypeError(
-                "Unknown Executor Type: Please select one of the following: {}.".format(AVAILABLE_EXECUTOR_TYPES)
+                "Unknown Executor Type: Please select one of the following: {}.".format(list(EXECUTORDICT.keys()))
             )
 
     def collect_logfiles(self):
@@ -1521,29 +1519,9 @@ class GenericJob(JobCore, HasDict):
             )
         elif (
             isinstance(self._executor_type, str)
-            and self.executor_type == "ProcessPoolExecutor"
+            and self._executor_type in EXECUTORDICT.keys()
         ):
-            from concurrent.futures import ProcessPoolExecutor
-
-            return ProcessPoolExecutor(max_workers=max_workers)
-        elif (
-            isinstance(self._executor_type, str)
-            and self.executor_type == "ThreadPoolExecutor"
-        ):
-            from concurrent.futures import ThreadPoolExecutor
-
-            return ThreadPoolExecutor(max_workers=max_workers)
-        elif (
-            isinstance(self._executor_type, str)
-            and self.executor_type == "pympipool.Executor"
-        ):
-            from pympipool import Executor
-
-            return Executor(max_workers=max_workers)
-        elif isinstance(self._executor_type, str) and self._executor_type not in AVAILABLE_EXECUTOR_TYPES:
-            raise TypeError(
-                "Unknown Executor Type: Please select one of the following: {}.".format(AVAILABLE_EXECUTOR_TYPES)
-            )
+            return EXECUTORDICT[self._executor_type](max_workers=max_workers)
         else:
             raise TypeError("The self.executor_type has to be a string.")
 
