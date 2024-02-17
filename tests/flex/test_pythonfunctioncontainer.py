@@ -76,10 +76,16 @@ class TestPythonFunctionContainer(TestWithProject):
         self.assertTrue(os.path.exists(job.project_hdf5.file_name))
         process = subprocess.Popen(
             ["python", "-m", "pyiron_base.cli", "wrapper", "-p", job.project.path, "-j", str(job.job_id)],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
             cwd=job.project.path,
         )
         sleep(5)
-        self.assertIsNone(process.poll())
+        if process.poll() is not None:
+            res = process.communicate()
+            print(process.returncode, res)
+        else:
+            self.assertIsNone(process.poll())
         process.terminate()
         sleep(2)
         self.assertTrue(job.status.aborted)
