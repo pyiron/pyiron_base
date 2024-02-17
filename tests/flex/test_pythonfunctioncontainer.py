@@ -59,9 +59,9 @@ class TestPythonFunctionContainer(TestWithProject):
         job.server.run_mode.thread = True
         job.run()
         self.assertIsNotNone(job._process)
-        sleep(10)
+        sleep(5)
         job._process.terminate()
-        sleep(1)
+        sleep(2)
         self.assertTrue(job.status.aborted)
         self.assertEqual(job["status"], "aborted")
 
@@ -77,9 +77,9 @@ class TestPythonFunctionContainer(TestWithProject):
         process = subprocess.Popen(
             ["python", "-m", "pyiron_base.cli", "wrapper", "-p", job.working_directory, "-j", str(job.job_id)],
         )
-        sleep(10)
+        sleep(5)
         process.terminate()
-        sleep(1)
+        sleep(2)
         self.assertTrue(job.status.aborted)
 
     @unittest.skipIf(sys.version_info < (3, 11), reason="requires python3.11 or higher")
