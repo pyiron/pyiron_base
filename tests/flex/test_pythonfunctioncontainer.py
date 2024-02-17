@@ -55,11 +55,11 @@ class TestPythonFunctionContainer(TestWithProject):
         job = self.project.wrap_python_function(my_sleep_funct)
         job.input["a"] = 5
         job.input["b"] = 6
-        job.input["sleep_time"] = 10
+        job.input["sleep_time"] = 20
         job.server.run_mode.thread = True
         job.run()
         self.assertIsNotNone(job._process)
-        sleep(5)
+        sleep(10)
         job._process.terminate()
         sleep(0.1)
         self.assertTrue(job.status.aborted)
@@ -69,7 +69,7 @@ class TestPythonFunctionContainer(TestWithProject):
         job = self.project.wrap_python_function(my_sleep_funct)
         job.input["a"] = 6
         job.input["b"] = 7
-        job.input["sleep_time"] = 10
+        job.input["sleep_time"] = 20
         job.server.run_mode.manual = True
         job.run()
         self.assertTrue(job.status.submitted)
@@ -77,7 +77,7 @@ class TestPythonFunctionContainer(TestWithProject):
         process = subprocess.Popen(
             ["python", "-m", "pyiron_base.cli", "wrapper", "-p", job.working_directory, "-j", str(job.job_id)],
         )
-        sleep(5)
+        sleep(10)
         process.terminate()
         sleep(1)
         self.assertTrue(job.status.aborted)
