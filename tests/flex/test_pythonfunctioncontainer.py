@@ -78,6 +78,7 @@ class TestPythonFunctionContainer(TestWithProject):
             ["python", "-m", "pyiron_base.cli", "wrapper", "-p", job.working_directory, "-j", str(job.job_id)],
         )
         sleep(5)
+        self.assertIsNone(process.poll())
         process.terminate()
         sleep(2)
         self.assertTrue(job.status.aborted)
