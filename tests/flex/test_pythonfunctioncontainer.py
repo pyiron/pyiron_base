@@ -1,8 +1,10 @@
+import os.path
 import unittest
 from concurrent.futures import ProcessPoolExecutor
 import sys
 from time import sleep
 from pyiron_base._tests import TestWithProject
+import subprocess
 
 
 def my_function(a, b=8):
@@ -62,6 +64,23 @@ class TestPythonFunctionContainer(TestWithProject):
         sleep(0.1)
         self.assertTrue(job.status.aborted)
         self.assertEqual(job["status"], "aborted")
+
+    def test_job_run_mode_manual(self):
+        job = self.project.wrap_python_function(my_sleep_funct)
+        job.input["a"] = 6
+        job.input["b"] = 7
+        job.input["sleep_time"] = 10
+        job.server.run_mode.manual = True
+        job.run()
+        self.assertTrue(job.status.submitted)
+        self.assertTrue(os.path.exists(job.project_hdf5.file_name))
+        process = subprocess.Popen(
+            ["python", "-m", "pyiron_base.cli", "wrapper", "-p", job.working_directory, "-j", str(job.job_id)],
+        )
+        sleep(5)
+        process.terminate()
+        sleep(1)
+        self.assertTrue(job.status.aborted)
 
     @unittest.skipIf(sys.version_info < (3, 11), reason="requires python3.11 or higher")
     def test_with_executor_wait(self):
