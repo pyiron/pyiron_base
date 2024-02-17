@@ -1,10 +1,8 @@
-import os.path
 import unittest
 from concurrent.futures import ProcessPoolExecutor
 import sys
 from time import sleep
 from pyiron_base._tests import TestWithProject
-import subprocess
 
 
 def my_function(a, b=8):
