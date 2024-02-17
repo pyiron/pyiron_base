@@ -111,6 +111,9 @@ _doc_str_generic_job_attr = (
 )
 
 
+AVAILABLE_EXECUTOR_TYPES = ["pympipool.Executor", "ThreadPoolExecutor", "ProcessPoolExecutor"]
+
+
 class GenericJob(JobCore, HasDict):
     __doc__ = (
         """
@@ -376,7 +379,12 @@ class GenericJob(JobCore, HasDict):
 
     @executor_type.setter
     def executor_type(self, exe):
-        self._executor_type = exe
+        if isinstance(exe, str) and exe in AVAILABLE_EXECUTOR_TYPES:
+            self._executor_type = exe
+        else:
+            raise TypeError(
+                "Unknown Executor Type: Please select one of the following: {}.".format(AVAILABLE_EXECUTOR_TYPES)
+            )
 
     def collect_logfiles(self):
         """
@@ -1532,9 +1540,9 @@ class GenericJob(JobCore, HasDict):
             from pympipool import Executor
 
             return Executor(max_workers=max_workers)
-        elif isinstance(self._executor_type, str):
+        elif isinstance(self._executor_type, str) and self._executor_type not in AVAILABLE_EXECUTOR_TYPES:
             raise TypeError(
-                "Unknown Executor Type: Please select either ProcessPoolExecutor or ThreadPoolExecutor."
+                "Unknown Executor Type: Please select one of the following: {}.".format(AVAILABLE_EXECUTOR_TYPES)
             )
         else:
             raise TypeError("The self.executor_type has to be a string.")
