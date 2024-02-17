@@ -84,7 +84,7 @@ class TestProjectDataParallel(TestWithProject):
         table.add['name'] = lambda j: j.name
         table.add['array'] = lambda j: np.arange(8)
         table.server.cores = 2
-        table.executor_type = "pympipool.Executor"
+        table.executor_type = "PyMPIPoolExecutor"
         table.run()
         df = table.get_dataframe()
         self.assertEqual(2, len(df), "Table not correctly filtered.")
