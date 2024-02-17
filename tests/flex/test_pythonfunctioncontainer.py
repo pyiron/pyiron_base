@@ -1,3 +1,4 @@
+import os
 import unittest
 from concurrent.futures import ProcessPoolExecutor
 import sys
@@ -49,6 +50,7 @@ class TestPythonFunctionContainer(TestWithProject):
             self.assertIsNone(job.server.future.result())
             self.assertTrue(job.server.future.done())
 
+    @unittest.skipIf(os.name == "nt", "Starting subprocesses on windows take a long time.")
     def test_terminate_job(self):
         job = self.project.wrap_python_function(my_sleep_funct)
         job.input["a"] = 5
@@ -57,9 +59,9 @@ class TestPythonFunctionContainer(TestWithProject):
         job.server.run_mode.thread = True
         job.run()
         self.assertIsNotNone(job._process)
-        sleep(10)
+        sleep(5)
         job._process.terminate()
-        sleep(2)
+        sleep(1)
         self.assertTrue(job.status.aborted)
         self.assertEqual(job["status"], "aborted")
 

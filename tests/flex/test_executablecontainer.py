@@ -1,5 +1,6 @@
 import os
 import subprocess
+import unittest
 from time import sleep
 from pyiron_base._tests import TestWithProject
 from pyiron_base.jobs.job.jobtype import JOB_CLASS_DICT
@@ -130,12 +131,18 @@ class TestExecutableContainer(TestWithProject):
             content = f.readlines()
         self.assertEqual(content[0].split()[0], "Python")
 
+    @unittest.skipIf(os.name == "nt", "Starting subprocesses on windows take a long time.")
     def test_job_run_mode_manual(self):
         create_sleep_job = create_job_factory(
             executable_str="sleep 10",
         )
         job = create_sleep_job(
-            project=ProjectHDFio(project=self.project, file_name="any.h5", h5_path=None, mode=None),
+            project=ProjectHDFio(
+                project=self.project,
+                file_name="job_sleep.h5",
+                h5_path=None,
+                mode=None,
+            ),
             job_name="job_sleep"
         )
         job.server.run_mode.manual = True
@@ -151,9 +158,9 @@ class TestExecutableContainer(TestWithProject):
         sleep(5)
         if process.poll() is not None:
             res = process.communicate()
-            print(process.returncode, res)
+            print("Debug test_job_run_mode_manual():", process.returncode, res)
         else:
             self.assertIsNone(process.poll())
         process.terminate()
-        sleep(2)
+        sleep(1)
         self.assertTrue(job.status.aborted)
