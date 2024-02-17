@@ -381,7 +381,9 @@ class GenericJob(JobCore, HasDict):
             self._executor_type = exe
         else:
             raise TypeError(
-                "Unknown Executor Type: Please select one of the following: {}.".format(list(EXECUTORDICT.keys()))
+                "Unknown Executor Type: Please select one of the following: {}.".format(
+                    list(EXECUTORDICT.keys())
+                )
             )
 
     def collect_logfiles(self):
