@@ -61,7 +61,7 @@ class TestPythonFunctionContainer(TestWithProject):
         self.assertIsNotNone(job._process)
         sleep(10)
         job._process.terminate()
-        sleep(0.1)
+        sleep(1)
         self.assertTrue(job.status.aborted)
         self.assertEqual(job["status"], "aborted")
 
