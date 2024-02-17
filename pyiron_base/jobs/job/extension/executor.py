@@ -29,7 +29,7 @@ def get_pympipool_flux_executor(max_workers):
 
 
 EXECUTORDICT = {
-    "ThreadPoolExecutor": get_thread_executor
+    "ThreadPoolExecutor": get_thread_executor,
     "ProcessPoolExecutor": get_process_executor,
     "PyMPIPoolExecutor": get_pympipool_mpi_executor,
     "PyMPIPoolSlurmExecutor": get_pympipool_slurm_executor,
