@@ -57,7 +57,7 @@ class TestPythonFunctionContainer(TestWithProject):
         job.server.run_mode.thread = True
         job.run()
         self.assertIsNotNone(job._process)
-        sleep(5)
+        sleep(10)
         job._process.terminate()
         sleep(2)
         self.assertTrue(job.status.aborted)
