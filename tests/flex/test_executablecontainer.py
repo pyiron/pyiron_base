@@ -1,4 +1,5 @@
 import os
+import subprocess
 from pyiron_base._tests import TestWithProject
 from pyiron_base.jobs.job.jobtype import JOB_CLASS_DICT
 from pyiron_base import create_job_factory
