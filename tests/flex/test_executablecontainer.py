@@ -127,3 +127,31 @@ class TestExecutableContainer(TestWithProject):
         with open(os.path.join(job.working_directory, 'error.out'), "r") as f:
             content = f.readlines()
         self.assertEqual(content[0].split()[0], "Python")
+
+    def test_job_run_mode_manual(self):
+        create_sleep_job = create_job_factory(
+            executable_str="sleep 10",
+        )
+        job = create_sleep_job(
+            project=ProjectHDFio(project=self.project, file_name="any.h5", h5_path=None, mode=None),
+            job_name="job_sleep"
+        )
+        job.server.run_mode.manual = True
+        job.run()
+        self.assertTrue(job.status.submitted)
+        self.assertTrue(os.path.exists(job.project_hdf5.file_name))
+        process = subprocess.Popen(
+            ["python", "-m", "pyiron_base.cli", "wrapper", "-p", job.project.path, "-j", str(job.job_id)],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            cwd=job.project.path,
+        )
+        sleep(5)
+        if process.poll() is not None:
+            res = process.communicate()
+            print(process.returncode, res)
+        else:
+            self.assertIsNone(process.poll())
+        process.terminate()
+        sleep(2)
+        self.assertTrue(job.status.aborted)
