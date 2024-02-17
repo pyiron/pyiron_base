@@ -357,8 +357,8 @@ class PyironTable:
         Any functions that raise an error are set to `None` in the final list.
 
         Args:
-            job_id_lst (list of JobPath): all jobs to analyze
-            function_lst (list of functions): all functions to apply on jobs.  Must return a dictionary.
+            job_id_lst (list of int): all job ids to analyze
+            function_lst (list of functions): all functions to apply on jobs. Must return a dictionary.
             executor (concurrent.futures.Executor): executor for parallel execution
 
         Returns:
