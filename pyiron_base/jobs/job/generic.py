@@ -381,7 +381,9 @@ class GenericJob(JobCore, HasDict):
         elif isinstance(exe, str):
             try:
                 exe_class = import_class(exe)  # Make sure it's available
-                if not (isclass(exe_class) and issubclass(exe_class, Executor)):  # And what we want
+                if not (
+                    isclass(exe_class) and issubclass(exe_class, Executor)
+                ):  # And what we want
                     raise TypeError(
                         f"{exe} imported OK, but {exe_class} is not a subclass of {Executor}"
                     )
