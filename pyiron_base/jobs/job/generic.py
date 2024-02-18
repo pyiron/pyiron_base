@@ -5,11 +5,11 @@
 Generic Job class extends the JobCore class with all the functionality to run the job object.
 """
 
-from concurrent.futures import Future
+from concurrent.futures import Future, Executor
 from datetime import datetime
+from inspect import isclass
 import os
 import posixpath
-import signal
 import warnings
 
 from h5io_browser.base import _read_hdf, _write_hdf
@@ -22,7 +22,6 @@ from pyiron_base.jobs.job.core import (
     _doc_str_job_core_attr,
 )
 from pyiron_base.jobs.job.extension.executable import Executable
-from pyiron_base.jobs.job.extension.executor import EXECUTORDICT
 from pyiron_base.jobs.job.extension.jobstatus import JobStatus
 from pyiron_base.jobs.job.runfunction import (
     run_job_with_parameter_repair,
@@ -45,7 +44,7 @@ from pyiron_base.jobs.job.util import (
     _job_store_before_copy,
     _job_reload_after_copy,
 )
-from pyiron_base.utils.instance import static_isinstance
+from pyiron_base.utils.instance import static_isinstance, import_class
 from pyiron_base.utils.deprecate import deprecate
 from pyiron_base.jobs.job.extension.server.generic import Server
 from pyiron_base.database.filetable import FileTable
@@ -377,13 +376,29 @@ class GenericJob(JobCore, HasDict):
 
     @executor_type.setter
     def executor_type(self, exe):
-        if isinstance(exe, str) and exe in EXECUTORDICT.keys():
+        if exe is None:
             self._executor_type = exe
+        elif isinstance(exe, str):
+            try:
+                exe_class = import_class(exe)  # Make sure it's available
+                if not (isclass(exe_class) and issubclass(exe_class, Executor)):  # And what we want
+                    raise TypeError(
+                        f"{exe} imported OK, but {exe_class} is not a subclass of {Executor}"
+                    )
+            except Exception as e:
+                raise ImportError("Something went wrong trying to import {exe}") from e
+            else:
+                self._executor_type = exe
+        elif isclass(exe) and issubclass(exe, Executor):
+            self._executor_type = f"{exe.__module__}.{exe.__name__}"
+        elif isinstance(exe, Executor):
+            raise NotImplementedError(
+                "We don't want to let you pass an entire executor, because you might think its state comes "
+                "with it. Try passing `.__class__` on this object instead."
+            )
         else:
             raise TypeError(
-                "Unknown Executor Type: Please select one of the following: {}.".format(
-                    list(EXECUTORDICT.keys())
-                )
+                f"Expected an executor class or string representing one, but got {exe}"
             )
 
     def collect_logfiles(self):
@@ -1519,11 +1534,8 @@ class GenericJob(JobCore, HasDict):
             raise ValueError(
                 "No executor type defined - Please set self.executor_type."
             )
-        elif (
-            isinstance(self._executor_type, str)
-            and self._executor_type in EXECUTORDICT.keys()
-        ):
-            return EXECUTORDICT[self._executor_type](max_workers=max_workers)
+        elif isinstance(self._executor_type, str):
+            return import_class(self._executor_type)(max_workers=max_workers)
         else:
             raise TypeError("The self.executor_type has to be a string.")
 

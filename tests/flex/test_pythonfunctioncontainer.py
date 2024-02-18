@@ -72,13 +72,11 @@ class TestPythonFunctionContainer(TestWithProject):
         job.input["a_lst"] = [1, 2, 3, 4]
         job.input["b_lst"] = [5, 6, 7, 8]
         job.server.cores = 2
-        with self.assertRaises(TypeError):
+        with self.assertRaises(ImportError):
             job.executor_type = "Executor"
-        with self.assertRaises(TypeError):
-            job.executor_type = ProcessPoolExecutor
-        with self.assertRaises(TypeError):
-            job.executor_type = None
-        job.executor_type = "ProcessPoolExecutor"
+        job.executor_type = ProcessPoolExecutor
+        job.executor_type = None
+        job.executor_type = "concurrent.futures.ProcessPoolExecutor"
         job.run()
         self.assertEqual(job.output["result"], [6, 8, 10, 12])
         self.assertTrue(job.status.finished)
