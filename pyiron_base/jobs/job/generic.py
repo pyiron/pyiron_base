@@ -5,24 +5,24 @@
 Generic Job class extends the JobCore class with all the functionality to run the job object.
 """
 
-from concurrent.futures import Future
+from concurrent.futures import Future, Executor
 from datetime import datetime
+from inspect import isclass
 import os
 import posixpath
-import signal
 import warnings
 
 from h5io_browser.base import _read_hdf, _write_hdf
 
 from pyiron_base.state import state
 from pyiron_base.state.signal import catch_signals
-from pyiron_base.jobs.job.extension.executable import Executable
-from pyiron_base.jobs.job.extension.jobstatus import JobStatus
 from pyiron_base.jobs.job.core import (
     JobCore,
     _doc_str_job_core_args,
     _doc_str_job_core_attr,
 )
+from pyiron_base.jobs.job.extension.executable import Executable
+from pyiron_base.jobs.job.extension.jobstatus import JobStatus
 from pyiron_base.jobs.job.runfunction import (
     run_job_with_parameter_repair,
     run_job_with_status_initialized,
@@ -44,7 +44,7 @@ from pyiron_base.jobs.job.util import (
     _job_store_before_copy,
     _job_reload_after_copy,
 )
-from pyiron_base.utils.instance import static_isinstance
+from pyiron_base.utils.instance import static_isinstance, import_class
 from pyiron_base.utils.deprecate import deprecate
 from pyiron_base.jobs.job.extension.server.generic import Server
 from pyiron_base.database.filetable import FileTable
@@ -157,6 +157,7 @@ class GenericJob(JobCore, HasDict):
         self._restart_file_dict = dict()
         self._exclude_nodes_hdf = list()
         self._exclude_groups_hdf = list()
+        self._executor_type = None
         self._process = None
         self._compress_by_default = False
         self._python_only_job = False
@@ -368,6 +369,39 @@ class GenericJob(JobCore, HasDict):
         elif not self.project_hdf5.working_directory:
             self._create_working_directory()
         return self.project_hdf5.working_directory
+
+    @property
+    def executor_type(self):
+        return self._executor_type
+
+    @executor_type.setter
+    def executor_type(self, exe):
+        if exe is None:
+            self._executor_type = exe
+        elif isinstance(exe, str):
+            try:
+                exe_class = import_class(exe)  # Make sure it's available
+                if not (
+                    isclass(exe_class) and issubclass(exe_class, Executor)
+                ):  # And what we want
+                    raise TypeError(
+                        f"{exe} imported OK, but {exe_class} is not a subclass of {Executor}"
+                    )
+            except Exception as e:
+                raise ImportError("Something went wrong trying to import {exe}") from e
+            else:
+                self._executor_type = exe
+        elif isclass(exe) and issubclass(exe, Executor):
+            self._executor_type = f"{exe.__module__}.{exe.__name__}"
+        elif isinstance(exe, Executor):
+            raise NotImplementedError(
+                "We don't want to let you pass an entire executor, because you might think its state comes "
+                "with it. Try passing `.__class__` on this object instead."
+            )
+        else:
+            raise TypeError(
+                f"Expected an executor class or string representing one, but got {exe}"
+            )
 
     def collect_logfiles(self):
         """
@@ -1019,6 +1053,8 @@ class GenericJob(JobCore, HasDict):
         data_dict["server"] = self._server.to_dict()
         if self._import_directory is not None:
             data_dict["import_directory"] = self._import_directory
+        if self._executor_type is not None:
+            data_dict["executor_type"] = self._executor_type
         return data_dict
 
     def from_dict(self, job_dict):
@@ -1042,6 +1078,8 @@ class GenericJob(JobCore, HasDict):
             self._exclude_nodes_hdf = input_dict["exclude_nodes_hdf"]
         if "exclude_groups_hdf" in input_dict.keys():
             self._exclude_groups_hdf = input_dict["exclude_groups_hdf"]
+        if "executor_type" in input_dict.keys():
+            self._executor_type = input_dict["executor_type"]
 
     def to_hdf(self, hdf=None, group_name=None):
         """
@@ -1492,6 +1530,16 @@ class GenericJob(JobCore, HasDict):
             project.db.set_job_status(job_id=master_id, status="busy")
             self._logger.info("busy master: {} {}".format(master_id, self.get_job_id()))
             del self
+
+    def _get_executor(self, max_workers=None):
+        if self._executor_type is None:
+            raise ValueError(
+                "No executor type defined - Please set self.executor_type."
+            )
+        elif isinstance(self._executor_type, str):
+            return import_class(self._executor_type)(max_workers=max_workers)
+        else:
+            raise TypeError("The self.executor_type has to be a string.")
 
 
 class GenericError(object):

@@ -43,6 +43,7 @@ class PythonFunctionContainerJob(PythonTemplateJob):
     def __init__(self, project, job_name):
         super().__init__(project, job_name)
         self._function = None
+        self._executor_type = None
 
     @property
     def python_function(self):
@@ -82,7 +83,17 @@ class PythonFunctionContainerJob(PythonTemplateJob):
             super().save()
 
     def run_static(self):
-        output = self._function(**self.input.to_builtin())
+        if (
+            self._executor_type is not None
+            and "executor" in inspect.signature(self._function).parameters.keys()
+        ):
+            input_dict = self.input.to_builtin()
+            del input_dict["executor"]
+            output = self._function(
+                **input_dict, executor=self._get_executor(max_workers=self.server.cores)
+            )
+        else:
+            output = self._function(**self.input.to_builtin())
         self.output.update({"result": output})
         self.to_hdf()
         self.status.finished = True
