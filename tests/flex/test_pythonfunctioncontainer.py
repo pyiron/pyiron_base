@@ -75,8 +75,12 @@ class TestPythonFunctionContainer(TestWithProject):
         with self.assertRaises(ImportError):
             job.executor_type = "Executor"
         job.executor_type = ProcessPoolExecutor
+        self.assertTrue(isinstance(job._get_executor(max_workers=2), ProcessPoolExecutor))
         job.executor_type = None
+        with self.assertRaises(ValueError):
+            job._get_executor(max_workers=2)
         job.executor_type = "concurrent.futures.ProcessPoolExecutor"
+        self.assertTrue(isinstance(job._get_executor(max_workers=2), ProcessPoolExecutor))
         job.run()
         self.assertEqual(job.output["result"], [6, 8, 10, 12])
         self.assertTrue(job.status.finished)
