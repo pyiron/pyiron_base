@@ -1271,6 +1271,7 @@ class GenericJob(JobCore, HasDict):
         self.refresh_job_status()
         if not (self.status.finished or self.status.suspended):
             self.status.aborted = True
+            self.project_hdf5["status"] = self.status.string
 
     def _run_if_new(self, debug=False):
         """
