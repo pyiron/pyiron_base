@@ -14,7 +14,6 @@ from typing import Type, Dict, List, Union
 
 from pyiron_base.jobs.master.flexible import FlexibleMaster
 from pyiron_base.jobs.script import ScriptJob
-from pyiron_base.jobs.master.serial import SerialMasterBase
 from pyiron_base.jobs.datamining import TableJob
 from pyiron_base.storage.hdfio import ProjectHDFio
 from pyiron_base.state import state
@@ -119,6 +118,5 @@ class JobFactory(JobFactoryCore):
         return {
             "FlexibleMaster": FlexibleMaster,
             "ScriptJob": ScriptJob,
-            "SerialMasterBase": SerialMasterBase,
             "TableJob": TableJob,
         }

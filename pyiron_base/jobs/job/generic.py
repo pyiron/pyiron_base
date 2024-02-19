@@ -105,7 +105,7 @@ _doc_str_generic_job_attr = (
 
         .. attribute:: job_type
 
-            Job type object with all the available job types: ['ExampleJob', 'SerialMaster', 'ParallelMaster',
+            Job type object with all the available job types: ['ExampleJob', 'ParallelMaster',
                                                                'ScriptJob', 'ListMaster']
 """
 )
@@ -345,7 +345,7 @@ class GenericJob(JobCore, HasDict):
     @property
     def job_type(self):
         """
-        Job type object with all the available job types: ['ExampleJob', 'SerialMaster', 'ParallelMaster', 'ScriptJob',
+        Job type object with all the available job types: ['ExampleJob', 'ParallelMaster', 'ScriptJob',
                                                            'ListMaster']
         Returns:
             JobTypeChoice: Job type object
@@ -942,8 +942,6 @@ class GenericJob(JobCore, HasDict):
         - ‘Sphinx’:
         - ‘Vasp’:
         - ‘GenericMaster’:
-        - ‘SerialMaster’: series of jobs run in serial
-        - ‘AtomisticSerialMaster’:
         - ‘ParallelMaster’: series of jobs run in parallel
         - ‘KmcMaster’:
         - ‘ThermoLambdaMaster’:
@@ -952,7 +950,6 @@ class GenericJob(JobCore, HasDict):
         - ‘Murnaghan’:
         - ‘MinimizeMurnaghan’:
         - ‘ElasticMatrix’:
-        - ‘ConvergenceVolume’:
         - ‘ConvergenceEncutParallel’:
         - ‘ConvergenceKpointParallel’:
         - ’PhonopyMaster’:
@@ -968,9 +965,9 @@ class GenericJob(JobCore, HasDict):
         Args:
             job_type (str): job type can be ['StructureContainer’, ‘StructurePipeline’, ‘AtomisticExampleJob’,
                                              ‘ExampleJob’, ‘Lammps’, ‘KMC’, ‘Sphinx’, ‘Vasp’, ‘GenericMaster’,
-                                             ‘SerialMaster’, ‘AtomisticSerialMaster’, ‘ParallelMaster’, ‘KmcMaster’,
+                                             ‘ParallelMaster’, ‘KmcMaster’,
                                              ‘ThermoLambdaMaster’, ‘RandomSeedMaster’, ‘MeamFit’, ‘Murnaghan’,
-                                             ‘MinimizeMurnaghan’, ‘ElasticMatrix’, ‘ConvergenceVolume’,
+                                             ‘MinimizeMurnaghan’, ‘ElasticMatrix’,
                                              ‘ConvergenceEncutParallel’, ‘ConvergenceKpointParallel’, ’PhonopyMaster’,
                                              ‘DefectFormationEnergy’, ‘LammpsASE’, ‘PipelineMaster’,
                                              ’TransformationPath’, ‘ThermoIntEamQh’, ‘ThermoIntDftEam’, ‘ScriptJob’,
