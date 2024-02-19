@@ -21,9 +21,7 @@ from pyiron_base.project.path import ProjectPath
 from pyiron_base.database.filetable import FileTable
 from pyiron_base.state import state
 from pyiron_base.database.jobtable import (
-    get_job_ids,
     get_job_id,
-    get_jobs,
     set_job_status,
     get_child_ids,
     get_job_working_directory,
@@ -508,8 +506,7 @@ class Project(ProjectPath, HasGroups):
         Returns:
             dict: columns are used as keys and point to a list of the corresponding values
         """
-        return get_jobs(
-            database=self.db,
+        return self.db.get_jobs(
             sql_query=self.sql_query,
             user=self.user,
             project_path=self.project_path,
@@ -527,8 +524,7 @@ class Project(ProjectPath, HasGroups):
         Returns:
             list: a list of job IDs
         """
-        return get_job_ids(
-            database=self.db,
+        return self.db.get_job_ids(
             sql_query=self.sql_query,
             user=self.user,
             project_path=self.project_path,
@@ -1700,15 +1696,25 @@ class Project(ProjectPath, HasGroups):
         if not isinstance(recursive, bool):
             raise ValueError("recursive must be a boolean")
         if self.db.view_mode:
-            raise EnvironmentError("copy_to: is not available in Viewermode !")
-        job_id_lst = self.get_job_ids(recursive=recursive)
-        job_id_progress = tqdm(job_id_lst) if progress else job_id_lst
-        for job_id in job_id_progress:
+            raise RuntimeError("copy_to: is not available in Viewermode !")
+        job_df = self.job_table(
+                recursive=recursive,
+                columns=["id", "hamilton", "parentid", "masterid", "projectpath", "project", "job", "subjob"]
+        )
+        job_id_lst = job_df["id"]
+        parents = set(job_df.parentid.dropna())
+        masters = set(job_df.masterid.dropna())
+        if not (parents.issubset(job_id_lst) and masters.issubset(job_id_lst)):
+            assert False, "Somehow sort out out of project jobs"
+
+        progress = tqdm(total=len(job_id_lst)) if progress else None
+        for hamilton, sub_df in job_df.groupby("hamilton"):
             try:
-                self.remove_job(job_specifier=job_id)
-                state.logger.debug("Remove job with ID {0} ".format(job_id))
-            except (IndexError, Exception):
-                state.logger.debug("Could not remove job with ID {0} ".format(job_id))
+                job_class = JobType.convert_str_to_class(JOB_CLASS_DICT, hamilton)
+            except ValueError: # if job class is not registered in JOB_CLASS_DICT use generic routine
+                from pyiron_base.jobs.job.generic import GenericJob
+                job_class = GenericJob
+            job_class._bulk_remove_jobs(self, sub_df, progress)
 
     def _remove_files(self, pattern="*"):
         """

@@ -189,10 +189,8 @@ class TestDatabaseAccess(PyironTestCase):
         par_dict = self.add_items("BO")
         key = par_dict["id"]
         self.database.delete_item(key)
-        self.assertRaises(
-            Exception, self.database.delete_item, [key]
-        )  # use only str or int
-        # self.assertRaises(Exception, self.database.get_item_by_id, key)  # ensure item does not exist anymore
+        self.assertRaises(Exception, self.database.get_item_by_id, key,
+                          "Item still exists after delete_item!")
 
     def test_get_item_by_id(self):
         """

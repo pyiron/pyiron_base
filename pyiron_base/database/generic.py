@@ -12,6 +12,7 @@ import warnings
 import numpy as np
 import re
 import os
+from typing import Union, Iterable
 from datetime import datetime
 from pyiron_base.utils.deprecate import deprecate
 import pandas
@@ -739,7 +740,7 @@ class DatabaseAccess(IsDatabase):
         else:
             raise PermissionError("Not avilable in viewer mode.")
 
-    def delete_item(self, item_id):
+    def _delete_item(self, item_id):
         """
         Delete Item from database
 
@@ -760,6 +761,19 @@ class DatabaseAccess(IsDatabase):
                 self.conn.close()
         else:
             raise PermissionError("Not avilable in viewer mode.")
+
+    # IsDatabase impl'
+    def _get_jobs(self, sql_query, user, project_path, recursive=True, columns=None):
+        df = self.job_table(
+            sql_query=sql_query,
+            user=user,
+            project_path=project_path,
+            recursive=recursive,
+            columns=columns,
+        )
+        if len(df) == 0:
+            return {key: list() for key in columns}
+        return df.to_dict(orient="list")
 
     # Shortcut
     def get_item_by_id(self, item_id):
