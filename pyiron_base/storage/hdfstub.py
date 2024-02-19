@@ -4,6 +4,7 @@ Convenience class to lazily read values from HDF.
 
 # Copyright (c) Max-Planck-Institut für Eisenforschung GmbH - Computational Materials Design (CM) Department
 # Distributed under the terms of "New BSD License", see the LICENSE file.
+from pyiron_base.storage.hdfio import ProjectHDFio
 
 __author__ = "Marvin Poul"
 __copyright__ = (
@@ -98,9 +99,16 @@ class HDFStub:
             return self._hdf[self._group_name]
 
         load = self._load_functions.get(
-            self._hdf[self._group_name]["TYPE"], lambda h, g: h[g].to_object()
+            self._hdf[self._group_name]["TYPE"], lambda h, g: to_object(hdf_group=h[g])
         )
         return load(self._hdf, self._group_name)
 
     def __repr__(self):
         return f"{self.__class__.__name__}({self._hdf}, {self._group_name})"
+
+
+def to_object(hdf_group):
+    if isinstance(hdf_group, ProjectHDFio):
+        return hdf_group.to_object()
+    else:
+        return hdf_group

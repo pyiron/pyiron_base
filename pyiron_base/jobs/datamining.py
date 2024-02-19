@@ -3,8 +3,9 @@
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
 import codecs
+import concurrent.futures
 from datetime import datetime
-import dill as pickle
+import cloudpickle
 import json
 import numpy as np
 import os
@@ -34,11 +35,18 @@ __date__ = "Sep 1, 2018"
 
 
 def _to_pickle(hdf, key, value):
-    hdf[key] = codecs.encode(pickle.dumps(value), "base64").decode()
+    hdf[key] = codecs.encode(
+        cloudpickle.dumps(obj=value, protocol=5, buffer_callback=None), "base64"
+    ).decode()
 
 
 def _from_pickle(hdf, key):
-    return pickle.loads(codecs.decode(hdf[key].encode(), "base64"))
+    try:
+        return cloudpickle.loads(codecs.decode(hdf[key].encode(), "base64"))
+    except ModuleNotFoundError:
+        import dill
+
+        return dill.loads(codecs.decode(hdf[key].encode(), "base64"))
 
 
 def get_job_id(job):
@@ -233,7 +241,7 @@ class PyironTable:
             new_system_functions = []
         return new_user_functions, new_system_functions
 
-    def create_table(self, file, job_status_list, enforce_update=False):
+    def create_table(self, file, job_status_list, executor=None, enforce_update=False):
         """
         Create or update the table.
 
@@ -247,6 +255,7 @@ class PyironTable:
         Args:
             file (FileHDFio): HDF were the previous state of the table is stored
             job_status_list (list of str): only consider jobs with these statuses
+            executor (concurrent.futures.Executor): executor for parallel execution
             enforce_update (bool): if True always regenerate the table completely.
         """
         # if there's new keys, apply the *new* functions to the old jobs and name the resulting table `df_new_keys`
@@ -265,8 +274,9 @@ class PyironTable:
                     if funct.__name__ in new_system_functions
                 ]
                 df_new_keys = self._iterate_over_job_lst(
-                    job_lst=map(self._project.inspect, self._get_job_ids()),
+                    job_id_lst=self._get_job_ids(),
                     function_lst=function_lst,
+                    executor=executor,
                 )
                 if len(df_new_keys) > 0:
                     self._df = pandas.concat([self._df, df_new_keys], axis="columns")
@@ -277,7 +287,9 @@ class PyironTable:
         )
         if len(new_jobs) > 0:
             df_new_ids = self._iterate_over_job_lst(
-                job_lst=new_jobs, function_lst=self.add._function_lst
+                job_id_lst=new_jobs,
+                function_lst=self.add._function_lst,
+                executor=executor,
             )
             if len(df_new_ids) > 0:
                 self._df = pandas.concat([self._df, df_new_ids], ignore_index=True)
@@ -333,44 +345,47 @@ class PyironTable:
         filter_funct = self.db_filter_function
         return project_table[filter_funct(project_table)]["id"].tolist()
 
-    @staticmethod
-    def _apply_function_on_job(funct, job):
-        try:
-            return funct(job)
-        except (ValueError, TypeError):
-            return {}
-
-    def _apply_list_of_functions_on_job(self, job, function_lst):
-        diff_dict = {}
-        for funct in function_lst:
-            funct_dict = self._apply_function_on_job(funct, job)
-            for key, value in funct_dict.items():
-                diff_dict[key] = value
-        return diff_dict
-
-    def _iterate_over_job_lst(self, job_lst: List, function_lst: List) -> List[dict]:
+    def _iterate_over_job_lst(
+        self,
+        job_id_lst: List,
+        function_lst: List,
+        executor: concurrent.futures.Executor = None,
+    ) -> List[dict]:
         """
         Apply functions to job.
 
         Any functions that raise an error are set to `None` in the final list.
 
         Args:
-            job_lst (list of JobPath): all jobs to analyze
-            function_lst (list of functions): all functions to apply on jobs.  Must return a dictionary.
+            job_id_lst (list of int): all job ids to analyze
+            function_lst (list of functions): all functions to apply on jobs. Must return a dictionary.
+            executor (concurrent.futures.Executor): executor for parallel execution
 
         Returns:
             list of dict: a list of the merged dicts from all functions for each job
         """
-        diff_dict_lst = []
-        for job_inspect in tqdm(job_lst, desc="Processing jobs"):
-            if self.convert_to_object:
-                job = job_inspect.to_object()
-            else:
-                job = job_inspect
-            diff_dict = self._apply_list_of_functions_on_job(
-                job=job, function_lst=function_lst
+        job_to_analyse_lst = [
+            [
+                self._project.db.get_item_by_id(job_id),
+                function_lst,
+                self.convert_to_object,
+            ]
+            for job_id in job_id_lst
+        ]
+        if executor is not None:
+            diff_dict_lst = list(
+                tqdm(
+                    executor.map(_apply_list_of_functions_on_job, job_to_analyse_lst),
+                    total=len(job_to_analyse_lst),
+                )
             )
-            diff_dict_lst.append(diff_dict)
+        else:
+            diff_dict_lst = list(
+                tqdm(
+                    map(_apply_list_of_functions_on_job, job_to_analyse_lst),
+                    total=len(job_to_analyse_lst),
+                )
+            )
         self.refill_dict(diff_dict_lst)
         return pandas.DataFrame(diff_dict_lst)
 
@@ -432,7 +447,7 @@ class PyironTable:
                 and job.status in job_status_list
                 and self.filter_function(job)
             ):
-                job_update_lst.append(job)
+                job_update_lst.append(job_id)
         return job_update_lst
 
     def _repr_html_(self):
@@ -768,11 +783,22 @@ class TableJob(GenericJob):
         if self.job_id is not None:
             self.project.db.item_update({"timestart": datetime.now()}, self.job_id)
         with self.project_hdf5.open("input") as hdf5_input:
-            self._pyiron_table.create_table(
-                file=hdf5_input,
-                job_status_list=job_status_list,
-                enforce_update=self._enforce_update,
-            )
+            if self._executor_type is None and self.server.cores > 1:
+                self._executor_type = "concurrent.futures.ProcessPoolExecutor"
+            if self._executor_type is not None:
+                self._pyiron_table.create_table(
+                    file=hdf5_input,
+                    job_status_list=job_status_list,
+                    enforce_update=self._enforce_update,
+                    executor=self._get_executor(max_workers=self.server.cores),
+                )
+            else:
+                self._pyiron_table.create_table(
+                    file=hdf5_input,
+                    job_status_list=job_status_list,
+                    enforce_update=self._enforce_update,
+                    executor=None,
+                )
         self.to_hdf()
         self._pyiron_table._df.to_csv(
             os.path.join(self.working_directory, "pyirontable.csv"), index=False
@@ -814,3 +840,26 @@ def always_true(_):
 
     """
     return True
+
+
+def _apply_function_on_job(funct, job):
+    try:
+        return funct(job)
+    except (ValueError, TypeError):
+        return {}
+
+
+def _apply_list_of_functions_on_job(input_parameters):
+    from pyiron_base.jobs.job.path import JobPath
+
+    db_entry, function_lst, convert_to_object = input_parameters
+    job = JobPath.from_db_entry(db_entry)
+    if convert_to_object:
+        job = job.to_object()
+        job.set_input_to_read_only()
+    diff_dict = {}
+    for funct in function_lst:
+        funct_dict = _apply_function_on_job(funct, job)
+        for key, value in funct_dict.items():
+            diff_dict[key] = value
+    return diff_dict

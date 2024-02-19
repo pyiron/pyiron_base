@@ -2,12 +2,47 @@ import importlib
 import os
 import pkgutil
 import warnings
+import sys
 
 import pandas
 
 from pyiron_base import state
 from pyiron_base.database.performance import get_database_statistics
+import pyiron_base.storage.hdfio
 from pyiron_base.project.update.pyiron_base_03x_to_04x import pyiron_base_03x_to_04x
+
+
+# we sometimes move classes between modules; this would break HDF storage,
+# since objects save there the module path from which their classes can be
+# imported.  We can work around this by defining here an explicit map that
+# _to_object can use to find the new modules and update the HDF5 files
+_MODULE_CONVERSION_DICT = {
+    "pyiron_base.generic.datacontainer": "pyiron_base.storage.datacontainer",
+    "pyiron_base.generic.inputlist": "pyiron_base.storage.inputlist",
+    "pyiron_base.generic.flattenedstorage": "pyiron_base.storage.flattenedstorage",
+    "pyiron_base.table.datamining": "pyiron_base.jobs.datamining",
+}
+
+
+def add_module_conversion(old: str, new: str):
+    """
+    Add a new module conversion.
+
+    After setting up a conversion, call :meth:`.Project.maintenance.local.update_hdf_types` to rewrite the HDF5 files to
+    make this change and allow loading of previously saved objects.
+
+    Args:
+        old (str): path to module that previously defined objects in storage
+        new (str): path to module that should be imported instead
+    Raises:
+        ValueError: if an entry for `old` already exists and does not point to `new`.
+    """
+    if old not in _MODULE_CONVERSION_DICT:
+        _MODULE_CONVERSION_DICT[old] = new
+    elif _MODULE_CONVERSION_DICT[old] != new:
+        raise ValueError(
+            f"Module path '{old}' already found in conversion dict, pointing to '{_MODULE_CONVERSION_DICT[old]}'!"
+        )
 
 
 class Maintenance:
@@ -87,7 +122,10 @@ class LocalMaintenance:
         **kwargs: dict,
     ):
         """
-        Iterate over the jobs within the current project and it is sub projects and rewrite the hdf file
+        Rewrite the hdf5 files of jobs.  This can free up unused space.
+
+        By default iterate recursively over the jobs within the current
+        project.  This can be controlled with `recursive` and `kwargs`.
 
         Args:
             recursive (bool): search subprojects [True/False] - True by default
@@ -101,6 +139,76 @@ class LocalMaintenance:
         ):
             hdf = job.project_hdf5
             hdf.rewrite_hdf5(job.name)
+
+    def update_hdf_types(
+        self,
+        recursive: bool = True,
+        progress: bool = True,
+        **kwargs: dict,
+    ):
+        """
+        Rewrite TYPE fields in hdf5 files for renamed modules.
+
+        New module conversions can be added with
+        :func:`.add_module_conversion(old, new)`.  This method will then
+        consider all objects previously imported from `old` to be imported from
+        `new`.
+
+        Args:
+            recursive (bool): search subprojects [True/False] - True by default
+            progress (bool): if True (default), add an interactive progress bar to the iteration
+            **kwargs (dict): Optional arguments for filtering with keys matching the project database column name
+                            (eg. status="finished"). Asterisk can be used to denote a wildcard, for zero or more
+                            instances of any character
+        """
+
+        def recurse(hdf):
+            contents = hdf.list_all()
+            for group in contents["groups"]:
+                recurse(hdf[group])
+            if "TYPE" in contents["nodes"]:
+                (
+                    module_path,
+                    class_name,
+                ) = pyiron_base.storage.hdfio._extract_module_class_name(hdf["TYPE"])
+                if module_path in _MODULE_CONVERSION_DICT:
+                    new_module_path = _MODULE_CONVERSION_DICT[module_path]
+                    hdf["TYPE"] = f"<class '{new_module_path}.{class_name}'>"
+
+        for job in self._project.iter_jobs(
+            recursive=recursive, progress=progress, convert_to_object=False, **kwargs
+        ):
+            hdf = job.project_hdf5
+            recurse(hdf)
+
+        def fix_project_data(pr):
+            try:
+                hdf = pr.create_hdf(pr.path, "project_data")["../data"]
+                recurse(hdf)
+            except ValueError:
+                # in case project data does not exist yet
+                pass
+
+        fix_project_data(self._project)
+        for sub in self._project.iter_groups():
+            fix_project_data(sub)
+
+        self.update_pyiron_tables(recursive=recursive, progress=progress, **kwargs)
+
+    def update_pyiron_tables(
+        self,
+        recursive: bool = True,
+        progress: bool = True,
+        **kwargs: dict,
+    ):
+        kwargs["hamilton"] = "PyironTable"
+        for old, new in _MODULE_CONVERSION_DICT.items():
+            sys.modules[old] = importlib.import_module(new)
+
+        for job in self._project.iter_jobs(
+            recursive=recursive, progress=progress, **kwargs
+        ):
+            job.to_hdf()
 
 
 class UpdateMaintenance:

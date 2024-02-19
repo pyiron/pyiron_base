@@ -2,18 +2,24 @@ channels:
 - conda-forge
 dependencies:
 - nbsphinx
-- dill
-- gitpython
-- h5io
-- h5py
-- jinja2
+- sphinx
+- sphinx_rtd_theme
+- myst-parser
 - numpy
-- pandas
-- pint
-- psutil
-- pyfileindex
-- pysqa
-- pytables
-- sqlalchemy
-- tqdm
-- traitlets
+- cloudpickle =3.0.0
+- gitpython =3.1.42
+- h5io_browser =0.0.9
+- h5py =3.10.0
+- jinja2 =3.1.3
+- monty =2024.2.2
+- numpy =1.26.4
+- pandas =2.2.0
+- pint =0.23
+- psutil =5.9.8
+- pyfileindex =0.0.22
+- pympipool =0.7.13
+- pysqa =0.1.15
+- pytables =3.9.2
+- sqlalchemy =2.0.27
+- tqdm =4.66.2
+- traitlets =5.14.1

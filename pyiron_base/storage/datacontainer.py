@@ -14,9 +14,10 @@ import numpy as np
 import pandas
 
 from pyiron_base.storage.fileio import read, write
-from pyiron_base.storage.hdfstub import HDFStub
+from pyiron_base.storage.hdfstub import HDFStub, to_object
 from pyiron_base.interfaces.has_groups import HasGroups
 from pyiron_base.interfaces.has_hdf import HasHDF
+from pyiron_base.interfaces.lockable import Lockable, sentinel
 
 __author__ = "Marvin Poul"
 __copyright__ = (
@@ -46,7 +47,7 @@ def _normalize(key):
     return key
 
 
-class DataContainer(MutableMapping, HasGroups, HasHDF):
+class DataContainer(MutableMapping, Lockable, HasGroups, HasHDF):
     """
     Mutable sequence with optional keys.
 
@@ -252,12 +253,18 @@ class DataContainer(MutableMapping, HasGroups, HasHDF):
         object.__setattr__(instance, "_store", [])
         object.__setattr__(instance, "_indices", {})
         object.__setattr__(instance, "table_name", None)
-        object.__setattr__(instance, "_read_only", False)
         object.__setattr__(instance, "_lazy", False)
 
         return instance
 
-    def __init__(self, init=None, table_name=None, lazy=False, wrap_blacklist=()):
+    def __init__(
+        self,
+        init=None,
+        table_name=None,
+        lazy=False,
+        wrap_blacklist=(),
+        lock_method="warning",
+    ):
         """
         Create new container.
 
@@ -269,6 +276,7 @@ class DataContainer(MutableMapping, HasGroups, HasHDF):
             wrap_blacklist (tuple of types): any values in `init` that are instances of the given types are *not*
                                              wrapped in :class:`.DataContainer`
         """
+        super().__init__(lock_method=lock_method)
         self.table_name = table_name
         self._lazy = lazy
         if init is not None:
@@ -317,10 +325,8 @@ class DataContainer(MutableMapping, HasGroups, HasHDF):
         else:
             raise ValueError("{} is not a valid key, must be str or int".format(key))
 
+    @sentinel
     def __setitem__(self, key, val):
-        if self.read_only:
-            self._read_only_error()
-
         key = _normalize(key)
 
         if isinstance(key, tuple):
@@ -347,10 +353,8 @@ class DataContainer(MutableMapping, HasGroups, HasHDF):
         else:
             raise ValueError("{} is not a valid key, must be str or int".format(key))
 
+    @sentinel
     def __delitem__(self, key):
-        if self.read_only:
-            self._read_only_error()
-
         key = _normalize(key)
 
         if isinstance(key, tuple):
@@ -387,6 +391,7 @@ class DataContainer(MutableMapping, HasGroups, HasHDF):
     def _is_class_var(cls, name):
         return any(name in c.__dict__ for c in cls.__mro__)
 
+    @sentinel
     def __setattr__(self, name, val):
         # Search instance variables (self.__dict___) and class variables
         # (self.__class__.__dict__ + iterating over mro to find variables on
@@ -398,6 +403,7 @@ class DataContainer(MutableMapping, HasGroups, HasHDF):
         else:
             self[name] = val
 
+    @sentinel
     def __delattr__(self, name):
         # see __setattr__
         if name in self.__dict__ or self._is_class_var(name):
@@ -429,28 +435,6 @@ class DataContainer(MutableMapping, HasGroups, HasHDF):
         else:
             return name + "([" + ", ".join("{!r}".format(v) for v in self._store) + "])"
 
-    @property
-    def read_only(self):
-        """
-        bool: if set, raise warning when attempts are made to modify the container
-        """
-        return self._read_only
-
-    @read_only.setter
-    def read_only(self, val):
-        # can't mark a read-only list as writeable
-        if self._read_only and not val:
-            self._read_only_error()
-        else:
-            self._read_only = bool(val)
-
-    @classmethod
-    def _read_only_error(cls):
-        warnings.warn(
-            "The input in {} changed, while the state of the job was already "
-            "finished.".format(cls.__name__)
-        )
-
     def to_builtin(self, stringify=False):
         """
         Convert the container back to builtin dict's and list's recursively.
@@ -475,9 +459,11 @@ class DataContainer(MutableMapping, HasGroups, HasHDF):
             return dd
         elif stringify:
             return list(
-                v.to_builtin(stringify=stringify)
-                if isinstance(v, DataContainer)
-                else repr(v)
+                (
+                    v.to_builtin(stringify=stringify)
+                    if isinstance(v, DataContainer)
+                    else repr(v)
+                )
                 for v in self.values()
             )
         else:
@@ -596,6 +582,7 @@ class DataContainer(MutableMapping, HasGroups, HasHDF):
         else:
             return val
 
+    @sentinel
     def update(self, init, wrap=False, blacklist=(), **kwargs):
         """
         Add all elements or key-value pairs from init to this container.  If wrap is
@@ -639,6 +626,7 @@ class DataContainer(MutableMapping, HasGroups, HasHDF):
         else:
             super().update(init, **kwargs)
 
+    @sentinel
     def append(self, val):
         """
         Add new value to the container without a key.
@@ -648,6 +636,7 @@ class DataContainer(MutableMapping, HasGroups, HasHDF):
         """
         self._store.append(val)
 
+    @sentinel
     def extend(self, vals):
         """
         Append vals to the end of this DataContainer.
@@ -659,6 +648,7 @@ class DataContainer(MutableMapping, HasGroups, HasHDF):
         for v in vals:
             self.append(v)
 
+    @sentinel
     def insert(self, index, val, key=None):
         """
         Add a new element to the container at the specified position, with an optional
@@ -679,6 +669,7 @@ class DataContainer(MutableMapping, HasGroups, HasHDF):
 
         self._store.insert(index, val)
 
+    @sentinel
     def mark(self, index, key):
         """
         Add a key to an existing item at index.  If key already exists, it is
@@ -705,6 +696,7 @@ class DataContainer(MutableMapping, HasGroups, HasHDF):
 
         self._indices[key] = index
 
+    @sentinel
     def clear(self):
         """
         Remove all items from DataContainer.
@@ -712,6 +704,7 @@ class DataContainer(MutableMapping, HasGroups, HasHDF):
         self._store.clear()
         self._indices.clear()
 
+    @sentinel
     def create_group(self, name):
         """
         Add a new empty subcontainer under the given key.
@@ -812,12 +805,9 @@ class DataContainer(MutableMapping, HasGroups, HasHDF):
                         "Error saving {} (key {}): DataContainer doesn't support saving elements "
                         'of type "{}" to HDF!'.format(v, k, type(v))
                     ) from None
-        for n in hdf.list_nodes():
+        for n in hdf.list_nodes() + hdf.list_groups():
             if n not in written_keys:
                 del hdf[n]
-        for g in hdf.list_groups():
-            if g not in written_keys:
-                del hdf[g]
 
     def _from_hdf(self, hdf, version=None):
         self.clear()
@@ -852,7 +842,7 @@ class DataContainer(MutableMapping, HasGroups, HasHDF):
                 items.append(
                     (
                         *normalize_key(g),
-                        hdf[g].to_object() if not self._lazy else HDFStub(hdf, g),
+                        to_object(hdf[g]) if not self._lazy else HDFStub(hdf, g),
                     )
                 )
 
@@ -889,6 +879,7 @@ class DataContainer(MutableMapping, HasGroups, HasHDF):
     def _list_groups(self):
         return list(self.groups())
 
+    @sentinel
     def read(self, file_name, wrap=True):
         """
         Parse file as dictionary and add its keys to this container.
@@ -931,6 +922,11 @@ class DataContainer(MutableMapping, HasGroups, HasHDF):
         for v in self.values():
             if recursive and isinstance(v, DataContainer):
                 v._force_load()
+
+    # Lockable overload
+    def _on_unlock(self):
+        warnings.warn("Unlock previously locked object!")
+        super()._on_unlock()
 
     def __init_subclass__(cls):
         # called whenever a subclass of DataContainer is defined, then register all subclasses with the same function

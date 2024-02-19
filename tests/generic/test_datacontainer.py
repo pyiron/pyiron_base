@@ -8,6 +8,7 @@ from pyiron_base.storage.inputlist import InputList
 from collections.abc import Iterator
 import copy
 import os
+import sys
 import unittest
 import warnings
 import h5py
@@ -313,7 +314,8 @@ class TestDataContainer(TestWithCleanProject):
 
     def test_del_attr(self):
         class SubDataContainer(DataContainer):
-            def __init__(self):
+            def __init__(self, *args, **kwargs):
+                super().__init__(*args, **kwargs)
                 object.__setattr__(self, "attr", 42)
         s = SubDataContainer()
         del s.attr
@@ -684,6 +686,17 @@ class TestDataContainer(TestWithCleanProject):
               + [k for k in self.hdf[d.table_name].list_groups() if "__index_" in k]
         self.assertEqual(len(d), len(items),
                          "Number of items in HDF does not match length of container!")
+
+    @unittest.skipIf(sys.version_info < (3, 11), "__getstate__() and __setstate__() support in h5io requires Python 3.11")
+    def test_project_in_datacontainer(self):
+        """DataContainer should be able to save Project to HDF."""
+        pl = DataContainer(table_name="project")
+        pl.update({"project": self.project})
+        pl.to_hdf(hdf=self.hdf)
+        pl_reload = DataContainer(table_name="project")
+        pl_reload.from_hdf(hdf=self.hdf)
+        self.assertEqual(pl_reload.project.project_path, self.project.project_path)
+        self.assertEqual(pl_reload.project.root_path, self.project.root_path)
 
 
 class TestInputList(PyironTestCase):

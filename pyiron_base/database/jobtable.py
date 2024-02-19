@@ -19,8 +19,6 @@ __email__ = "janssen@mpie.de"
 __status__ = "production"
 __date__ = "Sep 1, 2017"
 
-
-
 def get_child_ids(database, sql_query, user, project_path, job_specifier, status=None):
     """
     Get the childs for a specific job

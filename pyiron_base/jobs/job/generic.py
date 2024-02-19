@@ -5,23 +5,25 @@
 Generic Job class extends the JobCore class with all the functionality to run the job object.
 """
 
-from concurrent.futures import Future
+from concurrent.futures import Future, Executor
 from datetime import datetime
+from inspect import isclass
 import os
 import posixpath
-import signal
 import shutil
 import warnings
 
+from h5io_browser.base import _read_hdf, _write_hdf
+
 from pyiron_base.state import state
 from pyiron_base.state.signal import catch_signals
-from pyiron_base.jobs.job.extension.executable import Executable
-from pyiron_base.jobs.job.extension.jobstatus import JobStatus
 from pyiron_base.jobs.job.core import (
     JobCore,
     _doc_str_job_core_args,
     _doc_str_job_core_attr,
 )
+from pyiron_base.jobs.job.extension.executable import Executable
+from pyiron_base.jobs.job.extension.jobstatus import JobStatus
 from pyiron_base.jobs.job.runfunction import (
     run_job_with_parameter_repair,
     run_job_with_status_initialized,
@@ -43,11 +45,11 @@ from pyiron_base.jobs.job.util import (
     _job_store_before_copy,
     _job_reload_after_copy,
 )
-from pyiron_base.utils.instance import static_isinstance
+from pyiron_base.utils.instance import static_isinstance, import_class
 from pyiron_base.utils.deprecate import deprecate
 from pyiron_base.jobs.job.extension.server.generic import Server
 from pyiron_base.database.filetable import FileTable
-from pyiron_base.storage.helper_functions import write_hdf5, read_hdf5
+from pyiron_base.interfaces.has_dict import HasDict
 
 __author__ = "Joerg Neugebauer, Jan Janssen"
 __copyright__ = (
@@ -110,7 +112,7 @@ _doc_str_generic_job_attr = (
 )
 
 
-class GenericJob(JobCore):
+class GenericJob(JobCore, HasDict):
     __doc__ = (
         """
     Generic Job class extends the JobCore class with all the functionality to run the job object. From this class
@@ -138,14 +140,14 @@ class GenericJob(JobCore):
             self._status = JobStatus(db=project.db, job_id=self.job_id)
             self.refresh_job_status()
         elif os.path.exists(self.project_hdf5.file_name):
-            initial_status = read_hdf5(
+            initial_status = _read_hdf(
                 # in most cases self.project_hdf5.h5_path == / + self.job_name but not for child jobs of GenericMasters
                 self.project_hdf5.file_name,
                 self.project_hdf5.h5_path + "/status",
             )
             self._status = JobStatus(initial_status=initial_status)
             if "job_id" in self.list_nodes():
-                self._job_id = read_hdf5(
+                self._job_id = _read_hdf(
                     # in most cases self.project_hdf5.h5_path == / + self.job_name but not for child jobs of GenericMasters
                     self.project_hdf5.file_name,
                     self.project_hdf5.h5_path + "/job_id",
@@ -156,6 +158,7 @@ class GenericJob(JobCore):
         self._restart_file_dict = dict()
         self._exclude_nodes_hdf = list()
         self._exclude_groups_hdf = list()
+        self._executor_type = None
         self._process = None
         self._compress_by_default = False
         self._python_only_job = False
@@ -368,6 +371,39 @@ class GenericJob(JobCore):
             self._create_working_directory()
         return self.project_hdf5.working_directory
 
+    @property
+    def executor_type(self):
+        return self._executor_type
+
+    @executor_type.setter
+    def executor_type(self, exe):
+        if exe is None:
+            self._executor_type = exe
+        elif isinstance(exe, str):
+            try:
+                exe_class = import_class(exe)  # Make sure it's available
+                if not (
+                    isclass(exe_class) and issubclass(exe_class, Executor)
+                ):  # And what we want
+                    raise TypeError(
+                        f"{exe} imported OK, but {exe_class} is not a subclass of {Executor}"
+                    )
+            except Exception as e:
+                raise ImportError("Something went wrong trying to import {exe}") from e
+            else:
+                self._executor_type = exe
+        elif isclass(exe) and issubclass(exe, Executor):
+            self._executor_type = f"{exe.__module__}.{exe.__name__}"
+        elif isinstance(exe, Executor):
+            raise NotImplementedError(
+                "We don't want to let you pass an entire executor, because you might think its state comes "
+                "with it. Try passing `.__class__` on this object instead."
+            )
+        else:
+            raise TypeError(
+                f"Expected an executor class or string representing one, but got {exe}"
+            )
+
     def collect_logfiles(self):
         """
         Collect the log files of the external executable and store the information in the HDF5 file. This method has
@@ -432,7 +468,7 @@ class GenericJob(JobCore):
             )
         elif state.database.database_is_disabled:
             self._status = JobStatus(
-                initial_status=read_hdf5(
+                initial_status=_read_hdf(
                     self.project_hdf5.file_name, self.job_name + "/status"
                 )
             )
@@ -779,6 +815,7 @@ class GenericJob(JobCore):
         state.queue_adapter.transfer_file_to_remote(
             file=self.project_hdf5.file_name,
             transfer_back=True,
+            delete_file_on_remote=True,
         )
         if state.database.database_is_disabled:
             self.project.db.update()
@@ -1005,6 +1042,46 @@ class GenericJob(JobCore):
         if group_name is not None and self._hdf5 is not None:
             self._hdf5 = self._hdf5.open(group_name)
 
+    def to_dict(self):
+        data_dict = self._type_to_dict()
+        data_dict["status"] = self.status.string
+        data_dict["input/generic_dict"] = {
+            "restart_file_list": self._restart_file_list,
+            "restart_file_dict": self._restart_file_dict,
+            "exclude_nodes_hdf": self._exclude_nodes_hdf,
+            "exclude_groups_hdf": self._exclude_groups_hdf,
+        }
+        data_dict["server"] = self._server.to_dict()
+        if self._import_directory is not None:
+            data_dict["import_directory"] = self._import_directory
+        if self._executor_type is not None:
+            data_dict["executor_type"] = self._executor_type
+        return data_dict
+
+    def from_dict(self, job_dict):
+        self._type_from_dict(type_dict=job_dict)
+        if "import_directory" in job_dict.keys():
+            self._import_directory = job_dict["import_directory"]
+        self._server.from_dict(server_dict=job_dict["server"])
+        input_dict = job_dict["input"]
+        if "generic_dict" in input_dict.keys():
+            generic_dict = input_dict["generic_dict"]
+            self._restart_file_list = generic_dict["restart_file_list"]
+            self._restart_file_dict = generic_dict["restart_file_dict"]
+            self._exclude_nodes_hdf = generic_dict["exclude_nodes_hdf"]
+            self._exclude_groups_hdf = generic_dict["exclude_groups_hdf"]
+        # Backwards compatbility
+        if "restart_file_list" in input_dict.keys():
+            self._restart_file_list = input_dict["restart_file_list"]
+        if "restart_file_dict" in input_dict.keys():
+            self._restart_file_dict = input_dict["restart_file_dict"]
+        if "exclude_nodes_hdf" in input_dict.keys():
+            self._exclude_nodes_hdf = input_dict["exclude_nodes_hdf"]
+        if "exclude_groups_hdf" in input_dict.keys():
+            self._exclude_groups_hdf = input_dict["exclude_groups_hdf"]
+        if "executor_type" in input_dict.keys():
+            self._executor_type = input_dict["executor_type"]
+
     def to_hdf(self, hdf=None, group_name=None):
         """
         Store the GenericJob in an HDF5 file
@@ -1013,23 +1090,16 @@ class GenericJob(JobCore):
             hdf (ProjectHDFio): HDF5 group object - optional
             group_name (str): HDF5 subgroup name - optional
         """
+
         self._set_hdf(hdf=hdf, group_name=group_name)
         self._executable_activate_mpi()
-        self._type_to_hdf()
-        self._hdf5["status"] = self.status.string
-        if self._import_directory is not None:
-            self._hdf5["import_directory"] = self._import_directory
-        self._server.to_hdf(self._hdf5)
+
+        # Write combined dictionary to HDF5
+        self._hdf5.write_dict(data_dict=self.to_dict())
+
+        # Write remaining objects to HDF5
         if self._executable is not None:
             self.executable.to_hdf(self._hdf5)
-        with self._hdf5.open("input") as hdf_input:
-            generic_dict = {
-                "restart_file_list": self._restart_file_list,
-                "restart_file_dict": self._restart_file_dict,
-                "exclude_nodes_hdf": self._exclude_nodes_hdf,
-                "exclude_groups_hdf": self._exclude_groups_hdf,
-            }
-            hdf_input["generic_dict"] = generic_dict
 
     @classmethod
     def from_hdf_args(cls, hdf):
@@ -1054,28 +1124,13 @@ class GenericJob(JobCore):
             group_name (str): HDF5 subgroup name - optional
         """
         self._set_hdf(hdf=hdf, group_name=group_name)
-        self._type_from_hdf()
-        if "import_directory" in self._hdf5.list_nodes():
-            self._import_directory = self._hdf5["import_directory"]
-        self._server.from_hdf(self._hdf5)
+        job_dict = self._hdf5.read_dict_from_hdf()
+        with self._hdf5.open("input") as hdf5_input:
+            job_dict["input"] = hdf5_input.read_dict_from_hdf(recursive=True)
+        self.from_dict(job_dict=job_dict)
+
         if "executable" in self._hdf5.list_groups():
             self.executable.from_hdf(self._hdf5)
-        with self._hdf5.open("input") as hdf_input:
-            if "generic_dict" in hdf_input.list_nodes():
-                generic_dict = hdf_input["generic_dict"]
-                self._restart_file_list = generic_dict["restart_file_list"]
-                self._restart_file_dict = generic_dict["restart_file_dict"]
-                self._exclude_nodes_hdf = generic_dict["exclude_nodes_hdf"]
-                self._exclude_groups_hdf = generic_dict["exclude_groups_hdf"]
-            # Backwards compatbility
-            if "restart_file_list" in hdf_input.list_nodes():
-                self._restart_file_list = hdf_input["restart_file_list"]
-            if "restart_file_dict" in hdf_input.list_nodes():
-                self._restart_file_dict = hdf_input["restart_file_dict"]
-            if "exclude_nodes_hdf" in hdf_input.list_nodes():
-                self._exclude_nodes_hdf = hdf_input["exclude_nodes_hdf"]
-            if "exclude_groups_hdf" in hdf_input.list_nodes():
-                self._exclude_groups_hdf = hdf_input["exclude_groups_hdf"]
 
     def save(self):
         """
@@ -1088,10 +1143,10 @@ class GenericJob(JobCore):
         if not state.database.database_is_disabled:
             job_id = self.project.db.add_item_dict(self.db_entry())
             self._job_id = job_id
-            write_hdf5(
-                self.project_hdf5.file_name,
-                job_id,
-                title=self.job_name + "/job_id",
+            _write_hdf(
+                hdf_filehandle=self.project_hdf5.file_name,
+                data=job_id,
+                h5_path=self.job_name + "/job_id",
                 overwrite="update",
             )
             self.refresh_job_status()
@@ -1217,6 +1272,7 @@ class GenericJob(JobCore):
         self.refresh_job_status()
         if not (self.status.finished or self.status.suspended):
             self.status.aborted = True
+            self.project_hdf5["status"] = self.status.string
 
     def _run_if_new(self, debug=False):
         """
@@ -1265,7 +1321,7 @@ class GenericJob(JobCore):
         This function enforces read-only mode for the input classes, but it has to be implemented in the individual
         classes.
         """
-        pass
+        self.server.lock()
 
     def _run_if_busy(self):
         """
@@ -1323,26 +1379,32 @@ class GenericJob(JobCore):
                     path_binary_codes=None,
                 )
 
-    def _type_to_hdf(self):
+    def _type_to_dict(self):
         """
         Internal helper function to save type and version in HDF5 file root
         """
-        self._hdf5["NAME"] = self.__name__
-        self._hdf5["TYPE"] = str(type(self))
-        if self._executable:
-            self._hdf5["VERSION"] = self.executable.version
-        else:
-            self._hdf5["VERSION"] = self.__version__
+        data_dict = super()._type_to_dict()
+        if self._executable:  # overwrite version - default self.__version__
+            data_dict["VERSION"] = self.executable.version
         if hasattr(self, "__hdf_version__"):
-            self._hdf5["HDF_VERSION"] = self.__hdf_version__
+            data_dict["HDF_VERSION"] = self.__hdf_version__
+        return data_dict
+
+    def _type_from_dict(self, type_dict):
+        self.__obj_type__ = type_dict["TYPE"]
+        if self._executable is None:
+            self.__obj_version__ = type_dict["VERSION"]
 
     def _type_from_hdf(self):
         """
         Internal helper function to load type and version from HDF5 file root
         """
-        self.__obj_type__ = self._hdf5["TYPE"]
-        if self._executable is None:
-            self.__obj_version__ = self._hdf5["VERSION"]
+        self._type_from_dict(
+            type_dict={
+                "TYPE": self._hdf5["TYPE"],
+                "VERSION": self._hdf5["VERSION"],
+            }
+        )
 
     def run_time_to_db(self):
         """
@@ -1496,6 +1558,16 @@ class GenericJob(JobCore):
         if progress is not None:
             progress.update(n_sub)
         job_df.apply(del_files, axis="columns")
+
+    def _get_executor(self, max_workers=None):
+        if self._executor_type is None:
+            raise ValueError(
+                "No executor type defined - Please set self.executor_type."
+            )
+        elif isinstance(self._executor_type, str):
+            return import_class(self._executor_type)(max_workers=max_workers)
+        else:
+            raise TypeError("The self.executor_type has to be a string.")
 
 
 class GenericError(object):

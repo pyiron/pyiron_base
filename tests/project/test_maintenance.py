@@ -13,21 +13,21 @@ class TestMaintenance(TestWithFilledProject):
         job: GenericJob = self.project["toy_1"]
         job["user/some"] = _test_array(5)
         job["user/some"] = _test_array()
-        self.initial_toy_1_hdf_file_size = job.project_hdf5.file_size(job.project_hdf5)
+        self.initial_toy_1_hdf_file_size = job.project_hdf5.file_size()
 
     def _assert_setup(self):
         job_hdf = self.project["toy_1"].project_hdf5
         array = self.project["toy_1/user/some"]
         self.assertEqual(array, _test_array())
         self.assertAlmostEqual(
-            job_hdf.file_size(job_hdf), self.initial_toy_1_hdf_file_size
+            job_hdf.file_size(), self.initial_toy_1_hdf_file_size
         )
 
     def _assert_hdf_rewrite(self):
         job_hdf = self.project["toy_1"].project_hdf5
         array = self.project["toy_1/user/some"]
         self.assertEqual(array, _test_array())
-        self.assertLess(job_hdf.file_size(job_hdf), self.initial_toy_1_hdf_file_size)
+        self.assertLess(job_hdf.file_size(), self.initial_toy_1_hdf_file_size)
 
     def test_repository_status(self):
         df = self.project.maintenance.get_repository_status()

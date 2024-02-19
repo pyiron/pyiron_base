@@ -2,10 +2,12 @@
 # Copyright (c) Max-Planck-Institut für Eisenforschung GmbH - Computational Materials Design (CM) Department
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
+import contextlib
 import unittest
 import os
 from time import sleep
 from concurrent.futures import Future, ProcessPoolExecutor
+import io
 from pyiron_base.storage.parameters import GenericParameters
 from pyiron_base.jobs.job.generic import GenericJob
 from pyiron_base.jobs.job.runfunction import _generate_flux_execute_string
@@ -83,6 +85,30 @@ class TestGenericJob(TestWithFilledProject):
 
     def test_index(self):
         pass
+
+    def test_compress_file_list(self):
+        file_lst = ["file_not_to_compress", "file_to_compress"]
+        ham = self.project.create.job.ScriptJob("job_script_compress")
+        os.makedirs(ham.working_directory, exist_ok=True)
+        for file in file_lst:
+            with open(os.path.join(ham.working_directory, file), "w") as f:
+                f.writelines(["content: " + file])
+        for file in file_lst:
+            self.assertTrue(file in ham.files.list())
+        for file in file_lst:
+            self.assertTrue(file in os.listdir(ham.working_directory))
+        ham.compress(files_to_compress=["file_to_compress"])
+        for file in ["job_script_compress.tar.bz2", "file_not_to_compress"]:
+            self.assertTrue(file in os.listdir(ham.working_directory))
+        for file in file_lst:
+            self.assertTrue(file in ham.files.list())
+        with contextlib.redirect_stdout(io.StringIO(newline=os.linesep)) as f:
+            ham.files.file_not_to_compress.tail()
+        self.assertEqual(f.getvalue().replace('\r', ''), "content: file_not_to_compress\n")
+        with contextlib.redirect_stdout(io.StringIO(newline=os.linesep)) as f:
+            ham.files.file_to_compress.tail()
+        self.assertEqual(f.getvalue().replace('\r', ''), "content: file_to_compress\n")
+        ham.remove()
 
     def test_job_name(self):
         cwd = self.file_location
@@ -444,9 +470,21 @@ class TestGenericJob(TestWithFilledProject):
 
     def test_compress(self):
         job = self.project.load(self.project.get_job_ids()[0])
-        wd_files = job.list_files()
+        wd_files = os.listdir(job.working_directory)
         self.assertEqual(len(wd_files), 1, "Only one zipped file should be present in the working directory")
         self.assertEqual(wd_files[0], f"{job.name}.tar.bz2", "Inconsistent name for the zipped file")
+
+    def test_remove_job(self):
+        job = self.project.create_job(ReturnCodeJob, "job_without_hdf5")
+        job.run()
+        self.assertTrue(isinstance(job.job_id, int))
+        self.assertTrue(os.path.isfile(job.project_hdf5.file_name))
+        os.remove(job.project_hdf5.file_name)
+        with open(job.project_hdf5.file_name, "w") as f:
+            f.writelines(["wrong file"])
+        self.assertTrue(os.path.isfile(job.project_hdf5.file_name))
+        self.project.remove_job(job_specifier=job.job_name)
+        self.assertIsNone(self.project.load(job_specifier=job.job_name))
 
     def test_restart(self):
         wd_warn_key = "write_work_dir_warnings"
@@ -458,11 +496,29 @@ class TestGenericJob(TestWithFilledProject):
             job = self.project.load(self.project.get_job_ids()[0])
             job_restart = job.restart()
             job_restart.run()
-            wd_files = job_restart.list_files()
+            wd_files = os.listdir(job_restart.working_directory)
             self.assertEqual(len(wd_files), 1, "Only one zipped file should be present in the working directory")
             self.assertEqual(wd_files[0], f"{job_restart.name}.tar.bz2", "Inconsistent name for the zipped file")
+            wd_files = job_restart.files.list()
+            self.assertEqual(
+                len(wd_files),
+                1,
+                "Only one input file should be present in the working directory",
+            )
+            self.assertCountEqual(
+                wd_files, ["input.yml"]
+            )
             job_restart.decompress()
             wd_files = job_restart.list_files()
+            self.assertEqual(
+                len(wd_files),
+                1,
+                "Only one input file should be present in the working directory",
+            )
+            self.assertCountEqual(
+                wd_files, ["input.yml"]
+            )
+            wd_files = job_restart.files.list()
             self.assertEqual(
                 len(wd_files),
                 1,
@@ -567,6 +623,40 @@ class TestGenericJob(TestWithFilledProject):
             executor_str,
             '#!/bin/bash\npython -m pyiron_base.cli wrapper -p ' + self.project_path + '/job_db_enable_hdf5/job_db_enable -j None'
         )
+
+    def test_tail(self):
+        """job.tail should print the last lines of a file to stdout"""
+        job = self.project.load(self.project.get_job_ids()[0])
+        job.decompress()
+        content = ["Content", "More", "Lines"]
+        with open(os.path.join(job.working_directory, "test_file"), "w") as f:
+            f.write(os.linesep.join(content))
+
+        for i in range(len(content)):
+            with self.subTest(i=i):
+                with contextlib.redirect_stdout(io.StringIO(newline=os.linesep)) as f:
+                    job.files.tail("test_file", lines=i+1)
+                reference_str = os.linesep.join(content[-i-1:]) + os.linesep
+                self.assertEqual(f.getvalue().replace('\r', ''), reference_str.replace('\r', ''),
+                                 "tail read incorrect lines from output file when job uncompressed!")
+                with contextlib.redirect_stdout(io.StringIO(newline=os.linesep)) as f:
+                    job.files.test_file.tail(lines=i+1)
+                reference_str = os.linesep.join(content[-i-1:]) + os.linesep
+                self.assertEqual(f.getvalue().replace('\r', ''), reference_str.replace('\r', ''),
+                                 "tail read incorrect lines from output file when job uncompressed!")
+
+        job.compress()
+        for i in range(len(content)):
+            with contextlib.redirect_stdout(io.StringIO()) as f:
+                job.files.tail("test_file", lines=i+1)
+            reference_str = os.linesep.join(content[-i-1:]) + os.linesep
+            self.assertEqual(f.getvalue().replace('\r', ''), reference_str.replace('\r', ''),
+                             "tail read incorrect lines from output file when job compressed!")
+            with contextlib.redirect_stdout(io.StringIO()) as f:
+                job.files.test_file.tail(lines=i+1)
+            reference_str = os.linesep.join(content[-i-1:]) + os.linesep
+            self.assertEqual(f.getvalue().replace('\r', ''), reference_str.replace('\r', ''),
+                             "tail read incorrect lines from output file when job compressed!")
 
 
 if __name__ == "__main__":
