@@ -118,7 +118,6 @@ class IsDatabase(ABC):
         self,
         user,
         project_path,
-        sql_query=None,
         recursive=True,
         columns=None,
         all_columns=False,
@@ -134,7 +133,6 @@ class IsDatabase(ABC):
         Access the job_table.
 
         Args:
-            sql_query (str): SQL query to enter a more specific request
             user (str): username of the user whoes user space should be searched
             project_path (str): root_path - this is in contrast to the project_path in GenericPath
             recursive (bool): search subprojects [True/False]
@@ -187,7 +185,6 @@ class IsDatabase(ABC):
         pandas.set_option("display.max_colwidth", max_colwidth)
         df = self._get_job_table(
             user=user,
-            sql_query=sql_query,
             project_path=project_path,
             recursive=recursive,
             columns=columns,
