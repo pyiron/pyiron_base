@@ -664,7 +664,6 @@ class TableJob(GenericJob):
                 hdf5_input["project"] = {
                     "path": self._analysis_project.path,
                     "user": self._analysis_project.user,
-                    "sql_query": self._analysis_project.sql_query,
                     "filter": self._analysis_project._filter,
                     "inspect_mode": self._analysis_project._inspect_mode,
                 }
@@ -694,7 +693,6 @@ class TableJob(GenericJob):
                     project = self.project.__class__(
                         path=project_dict["path"],
                         user=project_dict["user"],
-                        sql_query=project_dict["sql_query"],
                     )
                     project._filter = project_dict["filter"]
                     project._inspect_mode = project_dict["inspect_mode"]
