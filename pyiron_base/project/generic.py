@@ -771,12 +771,7 @@ class Project(ProjectPath, HasGroups):
         [
             ll
             for ll in FileTable.job_table.__doc__.split("\n")
-            if not any(
-                [
-                    item in ll
-                    for item in ["user (str)", "project_path (str)"]
-                ]
-            )
+            if not any([item in ll for item in ["user (str)", "project_path (str)"]])
         ]
     )
 
