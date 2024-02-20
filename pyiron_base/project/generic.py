@@ -94,7 +94,7 @@ class Project(ProjectPath, HasGroups):
         parent_group (): Parent project - one level above the current project.
         user (): Current unix/linux/windows user who is running pyiron
         db (): Connection to the SQL database.
-        job_type (): Job Type object with all the available job types: ['ExampleJob', 'SerialMaster', 'ParallelMaster',
+        job_type (): Job Type object with all the available job types: ['ExampleJob', 'ParallelMaster',
                         'ScriptJob', 'ListMaster'].
         view_mode (): If viewer_mode is enable pyiron has read only access to the database.
         data (pyiron_base.project.data.ProjectData): A storage container for project-level data.
@@ -210,6 +210,17 @@ class Project(ProjectPath, HasGroups):
         from pyiron_base.project.size import get_folder_size
 
         return get_folder_size(path=self.path)
+
+    @property
+    def conda_environment(self):
+        try:
+            from pyiron_base.project.condaenv import CondaEnvironment
+        except ImportError as e:
+            raise ImportError(
+                "You need to have the conda python package installed to access conda environments."
+            ) from None
+
+        return CondaEnvironment()
 
     def copy(self):
         """
@@ -355,13 +366,12 @@ class Project(ProjectPath, HasGroups):
         """
         Create one of the following jobs:
         - 'ExampleJob': example job just generating random number
-        - 'SerialMaster': series of jobs run in serial
         - 'ParallelMaster': series of jobs run in parallel
         - 'ScriptJob': Python script or jupyter notebook job container
         - 'ListMaster': list of jobs
 
         Args:
-            job_type (str): job type can be ['ExampleJob', 'SerialMaster', 'ParallelMaster', 'ScriptJob', 'ListMaster']
+            job_type (str): job type can be ['ExampleJob', 'ParallelMaster', 'ScriptJob', 'ListMaster']
             job_name (str): name of the job
             delete_existing_job (bool): delete an existing job - default false
 
@@ -1156,27 +1166,26 @@ class Project(ProjectPath, HasGroups):
         if isinstance(job_specifier, (list, np.ndarray)):
             for job_id in job_specifier:
                 self.remove_job(job_specifier=job_id, _unprotect=_unprotect)
-        else:
-            if not self.db.view_mode:
-                try:
-                    job = self.inspect(job_specifier=job_specifier)
-                    if job is None:
-                        state.logger.warning(
-                            "Job '%s' does not exist and could not be removed",
-                            str(job_specifier),
-                        )
-                    elif _unprotect:
-                        job.remove_child()
-                    else:
-                        job.remove()
-                except IOError as _:
-                    state.logger.debug(
-                        "hdf file does not exist. Removal from database will be attempted."
-                    )
-                    job_id = self.get_job_id(job_specifier)
-                    self.db.delete_item(job_id)
+            return
+        if self.db.view_mode:
+            raise EnvironmentError("copy_to: is not available in Viewermode !")
+        job = self.inspect(job_specifier=job_specifier)
+        if job is None:
+            state.logger.warning(
+                "Job '%s' does not exist and could not be removed",
+                str(job_specifier),
+            )
+            return
+        try:
+            if _unprotect:
+                job.remove_child()
             else:
-                raise EnvironmentError("copy_to: is not available in Viewermode !")
+                job.remove()
+        except IOError as _:
+            state.logger.debug(
+                "hdf file does not exist. Removal from database will be attempted."
+            )
+            self.db.delete_item(job.id)
 
     def remove_jobs(self, recursive=False, progress=True, silently=False):
         """
@@ -1241,7 +1250,7 @@ class Project(ProjectPath, HasGroups):
         for job_id in self.get_job_ids(recursive=recursive):
             job = self.inspect(job_id)
             if job.status == "finished":
-                for file in job.list_files():
+                for file in job.files.list():
                     fullname = os.path.join(job.working_directory, file)
                     if os.path.isfile(fullname) and ".h5" not in fullname:
                         os.remove(fullname)
@@ -1668,23 +1677,16 @@ class Project(ProjectPath, HasGroups):
         """
         if not isinstance(recursive, bool):
             raise ValueError("recursive must be a boolean")
-        if not self.db.view_mode:
-            job_id_lst = self.get_job_ids(recursive=recursive)
-            if progress and len(job_id_lst) > 0:
-                job_id_lst = tqdm(job_id_lst)
-            for job_id in job_id_lst:
-                if job_id not in self.get_job_ids(recursive=recursive):
-                    continue
-                else:
-                    try:
-                        self.remove_job(job_specifier=job_id)
-                        state.logger.debug("Remove job with ID {0} ".format(job_id))
-                    except (IndexError, Exception):
-                        state.logger.debug(
-                            "Could not remove job with ID {0} ".format(job_id)
-                        )
-        else:
+        if self.db.view_mode:
             raise EnvironmentError("copy_to: is not available in Viewermode !")
+        job_id_lst = self.get_job_ids(recursive=recursive)
+        job_id_progress = tqdm(job_id_lst) if progress else job_id_lst
+        for job_id in job_id_progress:
+            try:
+                self.remove_job(job_specifier=job_id)
+                state.logger.debug("Remove job with ID {0} ".format(job_id))
+            except (IndexError, Exception):
+                state.logger.debug("Could not remove job with ID {0} ".format(job_id))
 
     def _remove_files(self, pattern="*"):
         """

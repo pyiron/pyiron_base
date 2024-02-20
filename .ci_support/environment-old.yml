@@ -6,11 +6,13 @@ dependencies:
 - h5io_browser =0.0.6
 - h5py =3.6.0
 - jinja2 =2.11.3
+- monty =2021.3.3
 - numpy =1.23.5
 - pandas =2.0.0
 - pint =0.18
 - psutil =5.8.0
 - pyfileindex =0.0.16
+- pympipool =0.7.11
 - pysqa =0.1.12
 - pytables =3.6.1
 - sqlalchemy =2.0.22

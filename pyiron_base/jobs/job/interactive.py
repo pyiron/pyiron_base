@@ -109,7 +109,7 @@ class InteractiveBase(GenericJob):
 
         .. attribute:: job_type
 
-            Job type object with all the available job types: ['ExampleJob', 'SerialMaster', 'ParallelMaster', 'ScriptJob',
+            Job type object with all the available job types: ['ExampleJob', 'ParallelMaster', 'ScriptJob',
                                                                'ListMaster']
 
     Examples:

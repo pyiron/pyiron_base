@@ -13,6 +13,7 @@ from jinja2 import Template
 from pyiron_base.utils.deprecate import deprecate
 from pyiron_base.jobs.job.wrapper import JobWrapper
 from pyiron_base.state import state
+from pyiron_base.state.signal import catch_signals
 from pyiron_base.utils.instance import static_isinstance
 
 
@@ -634,19 +635,45 @@ def execute_job_with_external_executable(job):
         cores=job.server.cores, threads=job.server.threads, gpus=job.server.gpus
     )
     job_crashed, out = False, None
-    try:
-        out = subprocess.run(
-            executable,
-            cwd=job.project_hdf5.working_directory,
-            shell=shell,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-            universal_newlines=True,
-            check=True,
-            env=os.environ.copy(),
-        ).stdout
-    except (subprocess.CalledProcessError, FileNotFoundError) as e:
-        out, job_crashed = handle_failed_job(job=job, error=e)
+    if (
+        job.server.conda_environment_name is None
+        and job.server.conda_environment_path is None
+    ):
+        try:
+            out = subprocess.run(
+                executable,
+                cwd=job.project_hdf5.working_directory,
+                shell=shell,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                universal_newlines=True,
+                check=True,
+                env=os.environ.copy(),
+            ).stdout
+        except (subprocess.CalledProcessError, FileNotFoundError) as e:
+            out, job_crashed = handle_failed_job(job=job, error=e)
+    else:
+        import conda_subprocess
+
+        if job.server.conda_environment_name is not None:
+            prefix_name = job.server.conda_environment_name
+            prefix_path = None
+        else:
+            prefix_name = None
+            prefix_path = job.server.conda_environment_path
+        try:
+            out = conda_subprocess.run(
+                executable,
+                cwd=job.project_hdf5.working_directory,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                universal_newlines=True,
+                check=True,
+                prefix_name=prefix_name,
+                prefix_path=prefix_path,
+            ).stdout
+        except (subprocess.CalledProcessError, FileNotFoundError) as e:
+            out, job_crashed = handle_failed_job(job=job, error=e)
 
     job._logger.info(
         "{}, status: {}, output: {}".format(job.job_info_str, job.status, out)
@@ -742,7 +769,8 @@ def multiprocess_wrapper(
         )
     else:
         raise ValueError("Either job_id or file_path have to be not None.")
-    job_wrap.job.run_static()
+    with catch_signals(job_wrap.job.signal_intercept):
+        job_wrap.job.run_static()
 
 
 def _generate_flux_execute_string(job, database_is_disabled):

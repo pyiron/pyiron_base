@@ -30,7 +30,6 @@ __date__ = "Sep 1, 2017"
 JOB_CLASS_DICT = {
     "FlexibleMaster": "pyiron_base.jobs.master.flexible",
     "ScriptJob": "pyiron_base.jobs.script",
-    "SerialMasterBase": "pyiron_base.jobs.master.serial",
     "TableJob": "pyiron_base.jobs.datamining",
     "WorkerJob": "pyiron_base.jobs.worker",
     "ExecutableContainerJob": "pyiron_base.jobs.flex.executablecontainer",
@@ -244,7 +243,6 @@ class JobFactory(PyironFactory):
                 """
                 Create one of the following jobs:
                 - 'ExampleJob': example job just generating random number
-                - 'SerialMaster': series of jobs run in serial
                 - 'ParallelMaster': series of jobs run in parallel
                 - 'ScriptJob': Python script or jupyter notebook job container
                 - 'ListMaster': list of jobs

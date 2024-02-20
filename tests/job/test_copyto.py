@@ -9,12 +9,6 @@ from pyiron_base._tests import TestWithProject
 class TestCopyTo(TestWithProject):
 
     def test_copy_to_job(self):
-        job_ser = self.project.create.job.SerialMasterBase("sequence_single")
-        ham = self.project.create.job.ScriptJob("job_single")
-        ham.copy_to(job_ser)
-        self.assertTrue(job_ser['job_single/input/custom_dict'] is not None)
-        job_ser.remove()
-
         job = self.project.create.job.ScriptJob("job_script")
 
         with open('foo.py', 'w') as f:
@@ -38,16 +32,6 @@ class TestCopyTo(TestWithProject):
         sub_project = sub_project.open("sub_project")
         ham = self.project.create_job("ScriptJob", "job_single_pr")
         ham.copy_to(project=sub_project)
-
-    def test_copy_to_job_ex(self):
-        job_ser = self.project.create.job.SerialMasterBase("sequence_single_ex")
-        ham = self.project.create.job.ScriptJob("job_single_ex")
-        ham.to_hdf()
-        ham.copy_to(job_ser)
-        self.assertTrue(job_ser['job_single_ex/input/custom_dict'] is not None,
-                        "Input not copied!")
-        ham.remove()
-        job_ser.remove()
 
     def test_copy_to_project_ex(self):
         sub_project = self.project.copy()
