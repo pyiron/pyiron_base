@@ -774,7 +774,7 @@ class Project(ProjectPath, HasGroups):
             if not any(
                 [
                     item in ll
-                    for item in ["sql_query (str)", "user (str)", "project_path (str)"]
+                    for item in ["user (str)", "project_path (str)"]
                 ]
             )
         ]
@@ -1604,7 +1604,6 @@ class Project(ProjectPath, HasGroups):
         state_dict.update(
             {
                 "user": self.user,
-                "sql_query": self.sql_query,
                 "filter": self._filter,
                 "inspect_mode": self._inspect_mode,
             }
@@ -1614,7 +1613,6 @@ class Project(ProjectPath, HasGroups):
     def __setstate__(self, state):
         super().__setstate__(state)
         self.user = state["user"]
-        self.sql_query = state["sql_query"]
         self._filter = state["filter"]
         self._inspect_mode = state["inspect_mode"]
         self._data = None
