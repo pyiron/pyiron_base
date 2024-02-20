@@ -258,7 +258,6 @@ class DatabaseAccess(IsDatabase):
 
     def _job_dict(
         self,
-        sql_query,
         user,
         project_path,
         recursive,
@@ -270,7 +269,6 @@ class DatabaseAccess(IsDatabase):
         Internal function to access the database from the project directly.
 
         Args:
-            sql_query (str): SQL query to enter a more specific request
             user (str): username of the user whoes user space should be searched
             project_path (str): root_path - this is in contrast to the project_path in GenericPath
             recursive (bool): search subprojects [True/False]
@@ -315,17 +313,6 @@ class DatabaseAccess(IsDatabase):
         if user is not None:
             dict_clause["username"] = str(user)
             # FOR GET_ITEMS_SQL: clause.append("username = '" + self.user + "'")
-        if sql_query is not None:
-            # FOR GET_ITEMS_SQL: clause.append(self.sql_query)
-            if "AND" in sql_query:
-                cl_split = sql_query.split(" AND ")
-            elif "and" in sql_query:
-                cl_split = sql_query.split(" and ")
-            else:
-                cl_split = [sql_query]
-            dict_clause.update(
-                {str(element.split()[0]): element.split()[2] for element in cl_split}
-            )
         if job is not None:
             dict_clause["job"] = str(job)
 
@@ -347,7 +334,6 @@ class DatabaseAccess(IsDatabase):
 
     def _get_job_table(
         self,
-        sql_query,
         user,
         project_path,
         recursive=True,
@@ -355,7 +341,6 @@ class DatabaseAccess(IsDatabase):
         element_lst=None,
     ):
         job_dict = self._job_dict(
-            sql_query=sql_query,
             user=user,
             project_path=project_path,
             recursive=recursive,
