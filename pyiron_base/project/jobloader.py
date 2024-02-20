@@ -54,15 +54,10 @@ class _JobByAttribute(ABC):
         return self.__getattr__(item)
 
     def __call__(self, job_specifier, convert_to_object=None):
-        if self._project.sql_query is not None:
-            state.logger.warning(
-                f"SQL filter '{self._project.sql_query}' is active (may exclude job)"
-            )
         if not isinstance(job_specifier, (int, np.integer)):
             job_specifier = _get_safe_job_name(name=job_specifier)
         job_id = get_job_id(
             database=self._project.db,
-            sql_query=self._project.sql_query,
             user=self._project.user,
             project_path=self._project.project_path,
             job_specifier=job_specifier,
