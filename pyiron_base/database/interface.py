@@ -59,9 +59,9 @@ class IsDatabase(ABC):
     @abstractmethod
     def _get_job_table(
         self,
-        sql_query,
         user,
         project_path,
+        sql_query=None,
         recursive=True,
         columns=None,
         element_lst=None,
@@ -116,9 +116,9 @@ class IsDatabase(ABC):
 
     def job_table(
         self,
-        sql_query,
         user,
         project_path,
+        sql_query=None,
         recursive=True,
         columns=None,
         all_columns=False,
