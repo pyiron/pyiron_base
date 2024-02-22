@@ -300,3 +300,48 @@ class IsDatabase(ABC):
                 'totalcputime']
         """
         return self.get_table_headings()
+
+    @abstractmethod
+    def _get_jobs(self, sql_query, user, project_path, recursive=True, columns=None):
+        pass
+
+    def get_jobs(self, sql_query, user, project_path, recursive=True, columns=None):
+        """
+        Internal function to return the jobs as dictionary rather than a pandas.Dataframe
+
+        Args:
+            sql_query (str): SQL query to enter a more specific request
+            user (str): username of the user whoes user space should be searched
+            project_path (str): root_path - this is in contrast to the project_path in GenericPath
+            recursive (bool): search subprojects [True/False]
+            columns (list): by default only the columns ['id', 'project'] are selected, but the user can select a subset
+                            of ['id', 'status', 'chemicalformula', 'job', 'subjob', 'project', 'projectpath', 'timestart',
+                            'timestop', 'totalcputime', 'computer', 'hamilton', 'hamversion', 'parentid', 'masterid']
+
+        Returns:
+            dict: columns are used as keys and point to a list of the corresponding values
+        """
+        if columns is None:
+            columns = ["id", "project"]
+        return self._get_jobs(sql_query, user, project_path, recursive, columns)
+
+    def get_job_ids(self, sql_query, user, project_path, recursive=True):
+        """
+        Return the job IDs matching a specific query
+
+        Args:
+            database (DatabaseAccess): Database object
+            sql_query (str): SQL query to enter a more specific request
+            user (str): username of the user whoes user space should be searched
+            project_path (str): root_path - this is in contrast to the project_path in GenericPath
+            recursive (bool): search subprojects [True/False]
+
+        Returns:
+            list: a list of job IDs
+        """
+        return self.get_jobs(
+            sql_query=sql_query,
+            user=user,
+            project_path=project_path,
+            recursive=recursive,
+        )["id"]
