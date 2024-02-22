@@ -300,7 +300,7 @@ class IsDatabase(ABC):
                 'totalcputime']
         """
         return self.get_table_headings()
- 
+
     @abstractmethod
     def _get_jobs(self, sql_query, user, project_path, recursive=True, columns=None):
         pass
@@ -323,9 +323,7 @@ class IsDatabase(ABC):
         """
         if columns is None:
             columns = ["id", "project"]
-        return self._get_jobs(
-                sql_query, user, project_path, recursive, columns
-        )
+        return self._get_jobs(sql_query, user, project_path, recursive, columns)
 
     def get_job_ids(self, sql_query, user, project_path, recursive=True):
         """
