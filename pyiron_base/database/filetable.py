@@ -331,7 +331,6 @@ class FileTable(IsDatabase, metaclass=FileTableSingleton):
         if columns is None:
             columns = ["id", "project"]
         df = self.job_table(
-            sql_query=None,
             user=None,
             project_path=project,
             recursive=recursive,
@@ -599,7 +598,6 @@ class FileTable(IsDatabase, metaclass=FileTableSingleton):
 
     def _get_job_table(
         self,
-        sql_query,
         user,
         project_path=None,
         recursive=True,
