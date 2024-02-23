@@ -412,12 +412,16 @@ class Project(ProjectPath, HasGroups):
         table.analysis_project = self
         return table
 
-    def wrap_python_function(self, python_function):
+    def wrap_python_function(self, python_function, automatically_rename=True):
         """
         Create a pyiron job object from any python function
 
         Args:
             python_function (callable): python function to create a job object from
+            automatically_rename (bool): Whether to automatically rename the name at
+                save-time to be based on the name of the wrapped function and the input;
+                useful if the same function will be wrapped into multiple jobs with
+                different input. (Default is True.)
 
         Returns:
             pyiron_base.jobs.flex.pythonfunctioncontainer.PythonFunctionContainerJob: pyiron job object
@@ -442,6 +446,7 @@ class Project(ProjectPath, HasGroups):
         job = self.create.job.PythonFunctionContainerJob(
             job_name=python_function.__name__
         )
+        job._mangle_name_on_save = automatically_rename
         job.python_function = python_function
         return job
 
