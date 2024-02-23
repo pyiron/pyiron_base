@@ -73,18 +73,16 @@ class PythonFunctionContainerJob(PythonTemplateJob):
         self._mangle_name_on_save = bool(self.project_hdf5["_mangle_name_on_save"])
 
     def save(self):
-        hash_suffix = get_hash(
-            binary=cloudpickle.dumps(
-                {"fn": self._function, "kwargs": self.input.to_builtin()}
-            )
-        )
-
-        job_name = self._function.__name__
         if self._mangle_name_on_save:
-            job_name += hash_suffix
+            job_name = self._function.__name__ + get_hash(
+                binary=cloudpickle.dumps(
+                    {"fn": self._function, "kwargs": self.input.to_builtin()}
+                )
+            )
 
-        self.job_name = job_name
-        if job_name in self.project.list_nodes():
+            self.job_name = job_name
+
+        if self.job_name in self.project.list_nodes():
             self.from_hdf()
             self.status.finished = True
         else:
