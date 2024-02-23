@@ -100,3 +100,49 @@ class TestPythonFunctionContainer(TestWithProject):
         job.run()
         self.assertEqual(job.output["result"], [6, 8, 10, 12])
         self.assertTrue(job.status.finished)
+
+    def test_name_mangling(self):
+        def make_a_simple_job():
+            job = self.project.wrap_python_function(my_function)
+            job.input["a"] = 1
+            job.input["b"] = 2
+            return job
+
+        job = make_a_simple_job()
+        self.assertEqual(
+            job.job_name,
+            my_function.__name__,
+            msg="Sanity check"
+        )
+        try:
+            job.save()
+            self.assertNotEqual(
+                job.job_name,
+                my_function.__name__,
+                msg="By default, we expect the wrapped job names to get mangled based "
+                    "on their input so multiple calls to the wrap get unique names"
+            )
+            loaded = self.project.load(job.job_name)
+            self.assertTrue(
+                loaded._mangle_name_on_save,
+                msg="The mangling preference should survive saving and loading"
+            )
+        finally:
+            job.remove()
+
+        job = make_a_simple_job()
+        job._mangle_name_on_save = False
+        try:
+            job.save()
+            self.assertEqual(
+                job.job_name,
+                my_function.__name__,
+                msg="When requested, the job name should retain its original value"
+            )
+            loaded = self.project.load(job.job_name)
+            self.assertFalse(
+                loaded._mangle_name_on_save,
+                msg="The mangling preference should survive saving and loading"
+            )
+        finally:
+            job.remove()
