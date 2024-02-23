@@ -127,7 +127,7 @@ class TestPythonFunctionContainer(TestWithProject):
                 )
                 self.assertEqual(
                     expected_mangle_state,
-                    job._mangle_name_on_save,
+                    job._automatically_rename_on_save,
                     msg="Sanity check"
                 )
             try:
@@ -142,7 +142,7 @@ class TestPythonFunctionContainer(TestWithProject):
                 loaded = self.project.load(job.job_name)
                 self.assertEqual(
                     expected_mangle_state,
-                    loaded._mangle_name_on_save,
+                    loaded._automatically_rename_on_save,
                     msg="The mangling preference should survive saving and loading"
                 )
             finally:
