@@ -102,47 +102,48 @@ class TestPythonFunctionContainer(TestWithProject):
         self.assertTrue(job.status.finished)
 
     def test_name_mangling(self):
-        def make_a_simple_job():
-            job = self.project.wrap_python_function(my_function)
+        def make_a_simple_job(mangling):
+            if mangling is None:  # Test the default
+                job = self.project.wrap_python_function(my_function)
+            else:
+                job = self.project.wrap_python_function(
+                    my_function,
+                    automatically_rename=mangling
+                )
             job.input["a"] = 1
             job.input["b"] = 2
             return job
 
-        job = make_a_simple_job()
-        self.assertEqual(
-            job.job_name,
-            my_function.__name__,
-            msg="Sanity check"
-        )
-        try:
-            job.save()
-            self.assertNotEqual(
-                job.job_name,
-                my_function.__name__,
-                msg="By default, we expect the wrapped job names to get mangled based "
-                    "on their input so multiple calls to the wrap get unique names"
-            )
-            loaded = self.project.load(job.job_name)
-            self.assertTrue(
-                loaded._mangle_name_on_save,
-                msg="The mangling preference should survive saving and loading"
-            )
-        finally:
-            job.remove()
+        for mangling in [None, False, True]:
+            expected_mangle_state = True if mangling is None else mangling
+            # i.e. we expect the default in wrap_python_function to be True
 
-        job = make_a_simple_job()
-        job._mangle_name_on_save = False
-        try:
-            job.save()
-            self.assertEqual(
-                job.job_name,
-                my_function.__name__,
-                msg="When requested, the job name should retain its original value"
-            )
-            loaded = self.project.load(job.job_name)
-            self.assertFalse(
-                loaded._mangle_name_on_save,
-                msg="The mangling preference should survive saving and loading"
-            )
-        finally:
-            job.remove()
+            with self.subTest(f"Renaming flag {mangling}"):
+                job = make_a_simple_job(mangling)
+                self.assertEqual(
+                    job.job_name,
+                    my_function.__name__,
+                    msg="Sanity check"
+                )
+                self.assertEqual(
+                    expected_mangle_state,
+                    job._mangle_name_on_save,
+                    msg="Sanity check"
+                )
+            try:
+                job.save()
+                self.assertNotEqual(
+                    expected_mangle_state,
+                    job.job_name == my_function.__name__,
+                    msg="When automatic renaming is requested (also the default None "
+                        "case), the job should get renamed after saving; otherwise the "
+                        "name should be left alone."
+                )
+                loaded = self.project.load(job.job_name)
+                self.assertEqual(
+                    expected_mangle_state,
+                    loaded._mangle_name_on_save,
+                    msg="The mangling preference should survive saving and loading"
+                )
+            finally:
+                job.remove()
