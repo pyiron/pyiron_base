@@ -44,7 +44,7 @@ class PythonFunctionContainerJob(PythonTemplateJob):
         super().__init__(project, job_name)
         self._function = None
         self._executor_type = None
-        self._mangle_name_on_save = True  # Automatically rename job using function and
+        self._mangle_name_on_save = False  # Automatically rename job using function and
         # input values
 
     @property
