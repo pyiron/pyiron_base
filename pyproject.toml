@@ -36,7 +36,7 @@ dependencies = [
     "psutil==5.9.8",
     "pyfileindex==0.0.22",
     "pympipool==0.7.13",
-    "pysqa==0.1.15",
+    "pysqa==0.1.16",
     "sqlalchemy==2.0.27",
     "tables==3.9.2",
     "tqdm==4.66.2",
