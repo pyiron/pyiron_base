@@ -79,13 +79,11 @@ class PythonFunctionContainerJob(PythonTemplateJob):
 
     def save(self):
         if self._automatically_rename_on_save:
-            job_name = self._function.__name__ + get_hash(
+            self.job_name = self.job_name + get_hash(
                 binary=cloudpickle.dumps(
                     {"fn": self._function, "kwargs": self.input.to_builtin()}
                 )
             )
-
-            self.job_name = job_name
 
             if self.job_name in self.project.list_nodes():
                 self.from_hdf()
