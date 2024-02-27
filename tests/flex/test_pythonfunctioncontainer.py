@@ -102,48 +102,71 @@ class TestPythonFunctionContainer(TestWithProject):
         self.assertTrue(job.status.finished)
 
     def test_name_mangling(self):
-        def make_a_simple_job(mangling):
-            if mangling is None:  # Test the default
-                job = self.project.wrap_python_function(my_function)
-            else:
-                job = self.project.wrap_python_function(
-                    my_function,
-                    automatically_rename=mangling
-                )
+        with self.subTest("Auto name and rename"):
+            job = self.project.wrap_python_function(my_function)
             job.input["a"] = 1
             job.input["b"] = 2
-            return job
 
-        for mangling in [None, False, True]:
-            expected_mangle_state = True if mangling is None else mangling
-            # i.e. we expect the default in wrap_python_function to be True
-
-            with self.subTest(f"Renaming flag {mangling}"):
-                job = make_a_simple_job(mangling)
-                self.assertEqual(
-                    job.job_name,
-                    my_function.__name__,
-                    msg="Sanity check"
-                )
-                self.assertEqual(
-                    expected_mangle_state,
-                    job._automatically_rename_on_save,
-                    msg="Sanity check"
-                )
+            self.assertEqual(
+                my_function.__name__,
+                job.job_name,
+                msg="Docs claim job name takes function name by default"
+            )
+            pre_save_name = job.job_name
             try:
                 job.save()
                 self.assertNotEqual(
-                    expected_mangle_state,
-                    job.job_name == my_function.__name__,
-                    msg="When automatic renaming is requested (also the default None "
-                        "case), the job should get renamed after saving; otherwise the "
-                        "name should be left alone."
+                    pre_save_name,
+                    job.job_name,
+                    msg="Docs claim default is to modify the name on save"
                 )
-                loaded = self.project.load(job.job_name)
+                self.assertTrue(
+                    pre_save_name in job.job_name,
+                    msg="The job name should still be based off the original name"
+                )
+            finally:
+                job.remove()
+
+        with self.subTest("Custom name and rename"):
+            name = "foo"
+            job = self.project.wrap_python_function(my_function, job_name=name)
+            job.input["a"] = 1
+            job.input["b"] = 2
+
+            self.assertEqual(
+                name,
+                job.job_name,
+                msg="Provided name should be used"
+            )
+            try:
+                job.save()
+                self.assertNotEqual(
+                    name,
+                    job.job_name,
+                    msg="Docs claim default is to modify the name on save"
+                )
+                print("NAME STUFF", name, job.job_name)
+                self.assertTrue(
+                    name in job.job_name,
+                    msg="The job name should still be based off the original name"
+                )
+            finally:
+                job.remove()
+
+        with self.subTest("No rename"):
+            job = self.project.wrap_python_function(
+                my_function, automatically_rename=False
+            )
+            job.input["a"] = 1
+            job.input["b"] = 2
+
+            pre_save_name = job.job_name
+            try:
+                job.save()
                 self.assertEqual(
-                    expected_mangle_state,
-                    loaded._automatically_rename_on_save,
-                    msg="The mangling preference should survive saving and loading"
+                    pre_save_name,
+                    job.job_name,
+                    msg="We should be able to deactivate the automatic renaming"
                 )
             finally:
                 job.remove()
