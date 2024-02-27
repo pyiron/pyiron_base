@@ -101,7 +101,7 @@ class TestPythonFunctionContainer(TestWithProject):
         self.assertEqual(job.output["result"], [6, 8, 10, 12])
         self.assertTrue(job.status.finished)
 
-    def test_name_mangling(self):
+    def test_name_options(self):
         with self.subTest("Auto name and rename"):
             job = self.project.wrap_python_function(my_function)
             job.input["a"] = 1
