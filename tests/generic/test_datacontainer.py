@@ -701,17 +701,20 @@ class TestDataContainerBase(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
+        first = {"foo": "bar"}
         inner = [0, {"depth": 23}]
         cls.body = [
-            {"foo": "bar"},
+            first,
             2,
             42,
             {"next": inner}
         ]
         cls.base_inside = DataContainer(cls.body)
-        cls.base_inside[-1]["next"] = DataContainerBase(cls.base_inside[-1]["next"])
+        cls.base_inside[0] = Sub(first)
+        cls.base_inside[-1]["next"] = DataContainerBase(inner)
         cls.base_outside = DataContainerBase(cls.body)
-        cls.base_outside[-1]["next"] = DataContainer(cls.base_outside[-1]["next"])
+        cls.base_outside[-1]["next"] = DataContainer(inner)
+        cls.base_outside[0] = Sub(first)
 
     def test_to_builtin(self):
         """to_builtin should recurse fully even if DataContainer and DataContainerBase are nested."""
@@ -719,6 +722,20 @@ class TestDataContainerBase(unittest.TestCase):
                          "incorrect when DataContainerBase is inside")
         self.assertEqual(self.body, self.base_outside.to_builtin(),
                          "incorrect when DataContainer is inside")
+
+    def test_nodes(self):
+        """list_nodes() should never return sub classes of DataContainerBase"""
+        self.assertEqual(self.base_inside.list_nodes(), [1, 2],
+                         "nodes should not contain first and last key.")
+        self.assertEqual(self.base_outside.list_nodes(), [1, 2],
+                         "nodes should not contain first and last key.")
+
+    def test_groups(self):
+        """list_groups() should never return sub classes of DataContainerBase"""
+        self.assertEqual(self.base_inside.list_groups(), [0, 3],
+                         "groups should not contain second and third key.")
+        self.assertEqual(self.base_outside.list_groups(), [0, 3],
+                         "groups should not contain second and third key.")
 
 class TestInputList(PyironTestCase):
 
