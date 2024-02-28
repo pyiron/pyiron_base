@@ -17,9 +17,7 @@ import pandas as pd
 
 
 class Sub(DataContainer):
-    def __init__(self, init=None, table_name=None, lazy=False, wrap_blacklist=()):
-        super().__init__(init=init, table_name=table_name, lazy=lazy, wrap_blacklist=())
-        self.foo = 42
+    pass
 
 class TestDataContainer(TestWithCleanProject):
 
