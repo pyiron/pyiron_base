@@ -2,7 +2,7 @@
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 import pyiron_base
 from pyiron_base._tests import TestWithCleanProject, PyironTestCase
-from pyiron_base.storage.datacontainer import DataContainer
+from pyiron_base.storage.datacontainer import DataContainer, DataContainerBase
 from pyiron_base.storage.hdfstub import HDFStub
 from pyiron_base.storage.inputlist import InputList
 from collections.abc import Iterator
@@ -698,6 +698,29 @@ class TestDataContainer(TestWithCleanProject):
         self.assertEqual(pl_reload.project.project_path, self.project.project_path)
         self.assertEqual(pl_reload.project.root_path, self.project.root_path)
 
+class TestDataContainerBase(unittest.TestCase):
+    """Test interactions between base class and full data container."""
+
+    @classmethod
+    def setUpClass(cls):
+        inner = [0, {"depth": 23}]
+        cls.body = [
+            {"foo": "bar"},
+            2,
+            42,
+            {"next": inner}
+        ]
+        cls.base_inside = DataContainer(cls.body)
+        cls.base_inside[-1]["next"] = DataContainerBase(cls.base_inside[-1]["next"])
+        cls.base_outside = DataContainerBase(cls.body)
+        cls.base_outside[-1]["next"] = DataContainer(cls.base_outside[-1]["next"])
+
+    def test_to_builtin(self):
+        """to_builtin should recurse fully even if DataContainer and DataContainerBase are nested."""
+        self.assertEqual(self.body, self.base_inside.to_builtin(),
+                         "incorrect when DataContainerBase is inside")
+        self.assertEqual(self.body, self.base_outside.to_builtin(),
+                         "incorrect when DataContainer is inside")
 
 class TestInputList(PyironTestCase):
 
