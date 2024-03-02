@@ -95,7 +95,7 @@ class HasDictfromHDF(HasDict, HasHDF):
     Implements HasDict in terms of HasHDF.
 
     This class is intended for "old-style" objects that should be able to be
-    used as children for objects that already implements HasDict and expect
+    used as children for objects that already implement HasDict and expect
     their children to implmement it.
     """
 
