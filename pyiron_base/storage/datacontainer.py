@@ -14,6 +14,7 @@ import numpy as np
 import pandas
 
 from pyiron_base.interfaces.has_groups import HasGroups
+from pyiron_base.interfaces.has_dict import HasDictfromHDF
 from pyiron_base.interfaces.has_hdf import HasHDF
 from pyiron_base.interfaces.lockable import Lockable, sentinel
 from pyiron_base.storage.fileio import read, write
@@ -835,7 +836,7 @@ class DataContainerBase(MutableMapping, Lockable, HasGroups):
         super()._on_unlock()
 
 
-class DataContainer(DataContainerBase, HasHDF):
+class DataContainer(DataContainerBase, HasDictfromHDF, HasHDF):
     __doc__ = f"""{DataContainerBase.__doc__}
 
     If instantiated with the argument `lazy=True`, data read from HDF5 later via :method:`.from_hdf` are not actually
