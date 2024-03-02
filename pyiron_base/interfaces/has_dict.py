@@ -85,7 +85,6 @@ class HasHDFfromDict(HasHDF, HasDict):
     """
 
     def _from_hdf(self, hdf, version=None):
-        entries = self._get_hdf_entries()
         self.from_dict(hdf.read_dict_from_hdf(recursive=True))
 
     def _to_hdf(self, hdf):
