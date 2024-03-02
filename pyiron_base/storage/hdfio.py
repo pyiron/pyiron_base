@@ -1385,7 +1385,10 @@ class DummyHDFio(HasGroups):
 
     @property
     def project(self):
-        return self._project
+        if self._project is not None:
+            return self._project
+        else:
+            raise RuntimeError("No project set!")
 
     @property
     def h5_path(self):
