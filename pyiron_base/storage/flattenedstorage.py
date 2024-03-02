@@ -26,6 +26,7 @@ import numpy as np
 import h5py
 import pandas as pd
 from pyiron_base.interfaces.has_hdf import HasHDF
+from pyiron_base.interfaces.lockable import Lockable, sentinel
 
 
 def _ensure_str_array_size(array, strlen):
@@ -45,7 +46,7 @@ def _ensure_str_array_size(array, strlen):
         return array
 
 
-class FlattenedStorage(HasHDF):
+class FlattenedStorage(Lockable, HasHDF):
     """
     Efficient storage of ragged arrays in flattened arrays.
 
@@ -195,6 +196,20 @@ class FlattenedStorage(HasHDF):
     array([ 7,  9, 11])
     >>> len(store)
     3
+
+    You can set storages as read-only via methods defined on
+    :class:`.Lockable`.
+
+    >>> store.lock()
+    >>> store.get_array("even", 0)
+    array([0])
+    >>> store.set_array("even", np.array([4]))
+    >>> store.get_array("even", 0)
+    array([0])
+    >>> with store.unlocked():
+    ...   store.set_array("even", np.array([4]))
+    >>> store.get_array("even", 0)
+    array([4])
     """
 
     __version__ = "0.2.0"
@@ -215,7 +230,7 @@ class FlattenedStorage(HasHDF):
         str: "_default",
     }
 
-    def __init__(self, num_chunks=1, num_elements=1, **kwargs):
+    def __init__(self, num_chunks=1, num_elements=1, lock_method="error", **kwargs):
         """
         Create new flattened storage.
 
@@ -318,6 +333,7 @@ class FlattenedStorage(HasHDF):
         end = start + self._per_chunk_arrays["length"][frame]
         return slice(start, end, 1)
 
+    @sentinel
     def _resize_elements(self, new):
         old_max = self._num_elements_alloc
         self._num_elements_alloc = new
@@ -332,6 +348,7 @@ class FlattenedStorage(HasHDF):
                 if k in self._fill_values.keys():
                     self._per_element_arrays[k][old_max:] = self._fill_values[k]
 
+    @sentinel
     def _resize_chunks(self, new):
         old_max = self._num_chunks_alloc
         self._num_chunks_alloc = new
@@ -346,6 +363,7 @@ class FlattenedStorage(HasHDF):
                 if k in self._fill_values.keys():
                     self._per_chunk_arrays[k][old_max:] = self._fill_values[k]
 
+    @sentinel
     def add_array(self, name, shape=(), dtype=np.float64, fill=None, per="element"):
         """
         Add a custom array to the container.
@@ -527,6 +545,7 @@ class FlattenedStorage(HasHDF):
 
         return np.array([resize_and_pad(v) for v in values])
 
+    @sentinel
     def set_array(self, name, frame, value):
         """
         Add array for given structure.
@@ -563,6 +582,7 @@ class FlattenedStorage(HasHDF):
         else:
             raise KeyError(f"no array named {name}")
 
+    @sentinel
     def del_array(self, name: str, ignore_missing: bool = False):
         """
         Remove an array.
@@ -590,12 +610,14 @@ class FlattenedStorage(HasHDF):
         else:
             return self.get_array(index)
 
+    @sentinel
     def __setitem__(self, index, value):
         if isinstance(index, tuple) and len(index) == 2:
             self.set_array(index[0], index[1], value)
         else:
             raise IndexError("Must specify chunk index.")
 
+    @sentinel
     def __delitem__(self, index):
         self.del_array(index)
 
@@ -708,6 +730,7 @@ class FlattenedStorage(HasHDF):
                 split._per_chunk_arrays[k] = np.copy(split._per_chunk_arrays[k])
         return split
 
+    @sentinel
     def join(
         self, store: "FlattenedStorage", lsuffix: str = "", rsuffix: str = ""
     ) -> "FlattenedStorage":
@@ -779,6 +802,7 @@ class FlattenedStorage(HasHDF):
         self._resize_chunks(self._num_chunks_alloc)
         return self
 
+    @sentinel
     def add_chunk(self, chunk_length, identifier=None, **arrays):
         """
         Add a new chunk to the storeage.
@@ -870,6 +894,7 @@ class FlattenedStorage(HasHDF):
         self.current_element_index = i
         # return last_chunk_index, last_element_index
 
+    @sentinel
     def extend(self, other: "FlattenedStorage"):
         """
         Add chunks from `other` to this storage.
