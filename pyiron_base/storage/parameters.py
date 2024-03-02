@@ -500,14 +500,13 @@ class GenericParameters(HasDict):
             raise AssertionError()
         self._block_dict = block_dict
 
-    def to_dict(self):
+    def _to_dict(self):
         """
         Convert the GenericParameters object to a dictionary for storage
 
         Returns:
             dict: GenericParameters object as a dictionary
         """
-        data_dict = self._type_to_dict()
         data_dict["data_dict"] = self._dataset
         return data_dict
 
