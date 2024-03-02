@@ -1151,8 +1151,8 @@ class GenericJob(JobCore, HasDict):
         if group_name is not None and self._hdf5 is not None:
             self._hdf5 = self._hdf5.open(group_name)
 
-    def to_dict(self):
-        data_dict = self._type_to_dict()
+    def _to_dict(self):
+        data_dict = {}
         data_dict["status"] = self.status.string
         data_dict["input/generic_dict"] = {
             "restart_file_list": self.restart_file_list,
