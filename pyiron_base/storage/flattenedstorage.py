@@ -238,6 +238,8 @@ class FlattenedStorage(Lockable, HasHDF):
             num_chunks (int): pre-allocation for per chunk arrays
             num_elements (int): pre-allocation for per elements arrays
         """
+        super().__init__(lock_method=lock_method)
+
         # tracks allocated versed as yet used number of chunks/elements
         self._num_chunks_alloc = num_chunks
         self._num_elements_alloc = num_elements
