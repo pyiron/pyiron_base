@@ -507,8 +507,7 @@ class GenericParameters(HasDict):
         Returns:
             dict: GenericParameters object as a dictionary
         """
-        data_dict["data_dict"] = self._dataset
-        return data_dict
+        return {"data_dict": self._dataset}
 
     def from_dict(self, obj_dict, version: str = None):
         """
