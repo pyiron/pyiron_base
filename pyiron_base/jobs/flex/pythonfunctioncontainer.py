@@ -44,7 +44,7 @@ class PythonFunctionContainerJob(PythonTemplateJob):
         super().__init__(project, job_name)
         self._function = None
         self._executor_type = None
-        self._automatically_rename_on_save = False
+        self._automatically_rename_on_save_using_input = False
         # Automatically rename job using function and input values at save time
         # This is useful for the edge case where these jobs are created from a wrapper
         # and automatically assigned a name based on the function name, but multiple
@@ -70,15 +70,19 @@ class PythonFunctionContainerJob(PythonTemplateJob):
     def to_hdf(self, hdf=None, group_name=None):
         super().to_hdf(hdf=hdf, group_name=group_name)
         self.project_hdf5["function"] = np.void(cloudpickle.dumps(self._function))
-        self.project_hdf5["_automatically_rename_on_save"] = self._automatically_rename_on_save
+        self.project_hdf5["_automatically_rename_on_save_using_input"] = (
+            self._automatically_rename_on_save_using_input
+        )
 
     def from_hdf(self, hdf=None, group_name=None):
         super().from_hdf(hdf=hdf, group_name=group_name)
         self._function = cloudpickle.loads(self.project_hdf5["function"])
-        self._automatically_rename_on_save = bool(self.project_hdf5["_automatically_rename_on_save"])
+        self._automatically_rename_on_save_using_input = bool(
+            self.project_hdf5["_automatically_rename_on_save_using_input"]
+        )
 
     def save(self):
-        if self._automatically_rename_on_save:
+        if self._automatically_rename_on_save_using_input:
             self.job_name = self.job_name + get_hash(
                 binary=cloudpickle.dumps(
                     {"fn": self._function, "kwargs": self.input.to_builtin()}
@@ -88,10 +92,8 @@ class PythonFunctionContainerJob(PythonTemplateJob):
             if self.job_name in self.project.list_nodes():
                 self.from_hdf()
                 self.status.finished = True
-            else:
-                super().save()
-        else:
-            super().save()
+                return  # Without saving
+        super().save()
 
     def run_static(self):
         if (

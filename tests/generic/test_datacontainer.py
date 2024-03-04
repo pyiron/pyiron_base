@@ -2,7 +2,7 @@
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 import pyiron_base
 from pyiron_base._tests import TestWithCleanProject, PyironTestCase
-from pyiron_base.storage.datacontainer import DataContainer
+from pyiron_base.storage.datacontainer import DataContainer, DataContainerBase
 from pyiron_base.storage.hdfstub import HDFStub
 from pyiron_base.storage.inputlist import InputList
 from collections.abc import Iterator
@@ -17,9 +17,7 @@ import pandas as pd
 
 
 class Sub(DataContainer):
-    def __init__(self, init=None, table_name=None, lazy=False, wrap_blacklist=()):
-        super().__init__(init=init, table_name=table_name, lazy=lazy, wrap_blacklist=())
-        self.foo = 42
+    pass
 
 class TestDataContainer(TestWithCleanProject):
 
@@ -698,6 +696,46 @@ class TestDataContainer(TestWithCleanProject):
         self.assertEqual(pl_reload.project.project_path, self.project.project_path)
         self.assertEqual(pl_reload.project.root_path, self.project.root_path)
 
+class TestDataContainerBase(unittest.TestCase):
+    """Test interactions between base class and full data container."""
+
+    @classmethod
+    def setUpClass(cls):
+        first = {"foo": "bar"}
+        inner = [0, {"depth": 23}]
+        cls.body = [
+            first,
+            2,
+            42,
+            {"next": inner}
+        ]
+        cls.base_inside = DataContainer(cls.body)
+        cls.base_inside[0] = Sub(first)
+        cls.base_inside[-1]["next"] = DataContainerBase(inner)
+        cls.base_outside = DataContainerBase(cls.body)
+        cls.base_outside[-1]["next"] = DataContainer(inner)
+        cls.base_outside[0] = Sub(first)
+
+    def test_to_builtin(self):
+        """to_builtin should recurse fully even if DataContainer and DataContainerBase are nested."""
+        self.assertEqual(self.body, self.base_inside.to_builtin(),
+                         "incorrect when DataContainerBase is inside")
+        self.assertEqual(self.body, self.base_outside.to_builtin(),
+                         "incorrect when DataContainer is inside")
+
+    def test_nodes(self):
+        """list_nodes() should never return sub classes of DataContainerBase"""
+        self.assertEqual(self.base_inside.list_nodes(), [1, 2],
+                         "nodes should not contain first and last key.")
+        self.assertEqual(self.base_outside.list_nodes(), [1, 2],
+                         "nodes should not contain first and last key.")
+
+    def test_groups(self):
+        """list_groups() should never return sub classes of DataContainerBase"""
+        self.assertEqual(self.base_inside.list_groups(), [0, 3],
+                         "groups should not contain second and third key.")
+        self.assertEqual(self.base_outside.list_groups(), [0, 3],
+                         "groups should not contain second and third key.")
 
 class TestInputList(PyironTestCase):
 
