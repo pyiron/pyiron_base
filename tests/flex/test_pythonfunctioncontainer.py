@@ -55,7 +55,9 @@ class TestPythonFunctionContainer(TestWithProject):
             self.assertIsNone(job.server.future.result())
             self.assertTrue(job.server.future.done())
 
-    @unittest.skipIf(os.name == "nt", "Starting subprocesses on windows take a long time.")
+    @unittest.skipIf(
+        os.name == "nt", "Starting subprocesses on windows take a long time."
+    )
     def test_terminate_job(self):
         job = self.project.wrap_python_function(my_sleep_funct)
         job.input["a"] = 5
