@@ -124,14 +124,14 @@ class TestPythonFunctionContainer(TestWithProject):
             )
             loaded = self.project.load(job.job_name)
             self.assertTrue(
-                loaded._mangle_name_on_save,
+                loaded._automatically_rename_on_save_using_input,
                 msg="The mangling preference should survive saving and loading"
             )
         finally:
             job.remove()
 
         job = make_a_simple_job()
-        job._mangle_name_on_save = False
+        job._automatically_rename_on_save_using_input = False
         try:
             job.save()
             self.assertEqual(
@@ -141,7 +141,7 @@ class TestPythonFunctionContainer(TestWithProject):
             )
             loaded = self.project.load(job.job_name)
             self.assertFalse(
-                loaded._mangle_name_on_save,
+                loaded._automatically_rename_on_save_using_input,
                 msg="The mangling preference should survive saving and loading"
             )
         finally:

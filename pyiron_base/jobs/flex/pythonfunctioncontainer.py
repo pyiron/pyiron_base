@@ -44,8 +44,7 @@ class PythonFunctionContainerJob(PythonTemplateJob):
         super().__init__(project, job_name)
         self._function = None
         self._executor_type = None
-        self._mangle_name_on_save = True  # Automatically rename job using function and
-        # input values
+        self._automatically_rename_on_save_using_input = True
 
     @property
     def python_function(self):
@@ -66,15 +65,19 @@ class PythonFunctionContainerJob(PythonTemplateJob):
     def to_hdf(self, hdf=None, group_name=None):
         super().to_hdf(hdf=hdf, group_name=group_name)
         self.project_hdf5["function"] = np.void(cloudpickle.dumps(self._function))
-        self.project_hdf5["_mangle_name_on_save"] = self._mangle_name_on_save
+        self.project_hdf5[
+            "_automatically_rename_on_save_using_input"
+        ] = self._automatically_rename_on_save_using_input
 
     def from_hdf(self, hdf=None, group_name=None):
         super().from_hdf(hdf=hdf, group_name=group_name)
         self._function = cloudpickle.loads(self.project_hdf5["function"])
-        self._mangle_name_on_save = bool(self.project_hdf5["_mangle_name_on_save"])
+        self._automatically_rename_on_save_using_input = bool(
+            self.project_hdf5["_automatically_rename_on_save_using_input"]
+        )
 
     def save(self):
-        if self._mangle_name_on_save:
+        if self._automatically_rename_on_save_using_input:
             job_name = self._function.__name__ + get_hash(
                 binary=cloudpickle.dumps(
                     {"fn": self._function, "kwargs": self.input.to_builtin()}
