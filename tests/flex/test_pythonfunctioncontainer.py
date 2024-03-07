@@ -55,7 +55,9 @@ class TestPythonFunctionContainer(TestWithProject):
             self.assertIsNone(job.server.future.result())
             self.assertTrue(job.server.future.done())
 
-    @unittest.skipIf(os.name == "nt", "Starting subprocesses on windows take a long time.")
+    @unittest.skipIf(
+        os.name == "nt", "Starting subprocesses on windows take a long time."
+    )
     def test_terminate_job(self):
         job = self.project.wrap_python_function(my_sleep_funct)
         job.input["a"] = 5
@@ -100,3 +102,49 @@ class TestPythonFunctionContainer(TestWithProject):
         job.run()
         self.assertEqual(job.output["result"], [6, 8, 10, 12])
         self.assertTrue(job.status.finished)
+
+    def test_name_mangling(self):
+        def make_a_simple_job():
+            job = self.project.wrap_python_function(my_function)
+            job.input["a"] = 1
+            job.input["b"] = 2
+            return job
+
+        job = make_a_simple_job()
+        self.assertEqual(
+            job.job_name,
+            my_function.__name__,
+            msg="Sanity check"
+        )
+        try:
+            job.save()
+            self.assertNotEqual(
+                job.job_name,
+                my_function.__name__,
+                msg="By default, we expect the wrapped job names to get mangled based "
+                    "on their input so multiple calls to the wrap get unique names"
+            )
+            loaded = self.project.load(job.job_name)
+            self.assertTrue(
+                loaded._automatically_rename_on_save_using_input,
+                msg="The mangling preference should survive saving and loading"
+            )
+        finally:
+            job.remove()
+
+        job = make_a_simple_job()
+        job._automatically_rename_on_save_using_input = False
+        try:
+            job.save()
+            self.assertEqual(
+                job.job_name,
+                my_function.__name__,
+                msg="When requested, the job name should retain its original value"
+            )
+            loaded = self.project.load(job.job_name)
+            self.assertFalse(
+                loaded._automatically_rename_on_save_using_input,
+                msg="The mangling preference should survive saving and loading"
+            )
+        finally:
+            job.remove()

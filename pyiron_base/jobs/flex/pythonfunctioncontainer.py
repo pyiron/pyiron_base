@@ -44,6 +44,7 @@ class PythonFunctionContainerJob(PythonTemplateJob):
         super().__init__(project, job_name)
         self._function = None
         self._executor_type = None
+        self._automatically_rename_on_save_using_input = True
 
     @property
     def python_function(self):
@@ -64,23 +65,32 @@ class PythonFunctionContainerJob(PythonTemplateJob):
     def to_hdf(self, hdf=None, group_name=None):
         super().to_hdf(hdf=hdf, group_name=group_name)
         self.project_hdf5["function"] = np.void(cloudpickle.dumps(self._function))
+        self.project_hdf5["_automatically_rename_on_save_using_input"] = (
+            self._automatically_rename_on_save_using_input
+        )
 
     def from_hdf(self, hdf=None, group_name=None):
         super().from_hdf(hdf=hdf, group_name=group_name)
         self._function = cloudpickle.loads(self.project_hdf5["function"])
+        self._automatically_rename_on_save_using_input = bool(
+            self.project_hdf5["_automatically_rename_on_save_using_input"]
+        )
 
     def save(self):
-        job_name = self._function.__name__ + get_hash(
-            binary=cloudpickle.dumps(
-                {"fn": self._function, "kwargs": self.input.to_builtin()}
+        if self._automatically_rename_on_save_using_input:
+            job_name = self._function.__name__ + get_hash(
+                binary=cloudpickle.dumps(
+                    {"fn": self._function, "kwargs": self.input.to_builtin()}
+                )
             )
-        )
-        self.job_name = job_name
-        if job_name in self.project.list_nodes():
-            self.from_hdf()
-            self.status.finished = True
-        else:
-            super().save()
+
+            self.job_name = job_name
+
+            if self.job_name in self.project.list_nodes():
+                self.from_hdf()
+                self.status.finished = True
+                return  # Without saving
+        super().save()
 
     def run_static(self):
         if (
