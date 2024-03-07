@@ -452,7 +452,7 @@ class Project(ProjectPath, HasGroups):
         job = self.create.job.PythonFunctionContainerJob(
             job_name=python_function.__name__ if job_name is None else job_name
         )
-        job._automatically_rename_on_save = automatically_rename
+        job._automatically_rename_on_save_using_input = automatically_rename
         job.python_function = python_function
         return job
 
