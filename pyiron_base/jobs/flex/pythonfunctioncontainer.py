@@ -44,7 +44,12 @@ class PythonFunctionContainerJob(PythonTemplateJob):
         super().__init__(project, job_name)
         self._function = None
         self._executor_type = None
-        self._automatically_rename_on_save_using_input = True
+        self._automatically_rename_on_save_using_input = False
+        # Automatically rename job using function and input values at save time
+        # This is useful for the edge case where these jobs are created from a wrapper
+        # and automatically assigned a name based on the function name, but multiple
+        # jobs are created from the same function (and thus distinguished only by their
+        # input)
 
     @property
     def python_function(self):
@@ -78,18 +83,16 @@ class PythonFunctionContainerJob(PythonTemplateJob):
 
     def save(self):
         if self._automatically_rename_on_save_using_input:
-            job_name = self._function.__name__ + get_hash(
+            self.job_name = self.job_name + get_hash(
                 binary=cloudpickle.dumps(
                     {"fn": self._function, "kwargs": self.input.to_builtin()}
                 )
             )
 
-            self.job_name = job_name
-
-            if self.job_name in self.project.list_nodes():
-                self.from_hdf()
-                self.status.finished = True
-                return  # Without saving
+        if self.job_name in self.project.list_nodes():
+            self.from_hdf()
+            self.status.finished = True
+            return  # Without saving
         super().save()
 
     def run_static(self):

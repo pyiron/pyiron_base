@@ -103,48 +103,79 @@ class TestPythonFunctionContainer(TestWithProject):
         self.assertEqual(job.output["result"], [6, 8, 10, 12])
         self.assertTrue(job.status.finished)
 
-    def test_name_mangling(self):
-        def make_a_simple_job():
+    def test_name_options(self):
+        with self.subTest("Auto name and rename"):
             job = self.project.wrap_python_function(my_function)
             job.input["a"] = 1
             job.input["b"] = 2
-            return job
 
-        job = make_a_simple_job()
-        self.assertEqual(
-            job.job_name,
-            my_function.__name__,
-            msg="Sanity check"
-        )
-        try:
-            job.save()
-            self.assertNotEqual(
-                job.job_name,
-                my_function.__name__,
-                msg="By default, we expect the wrapped job names to get mangled based "
-                    "on their input so multiple calls to the wrap get unique names"
-            )
-            loaded = self.project.load(job.job_name)
-            self.assertTrue(
-                loaded._automatically_rename_on_save_using_input,
-                msg="The mangling preference should survive saving and loading"
-            )
-        finally:
-            job.remove()
-
-        job = make_a_simple_job()
-        job._automatically_rename_on_save_using_input = False
-        try:
-            job.save()
             self.assertEqual(
-                job.job_name,
                 my_function.__name__,
-                msg="When requested, the job name should retain its original value"
+                job.job_name,
+                msg="Docs claim job name takes function name by default"
             )
-            loaded = self.project.load(job.job_name)
-            self.assertFalse(
-                loaded._automatically_rename_on_save_using_input,
-                msg="The mangling preference should survive saving and loading"
+            pre_save_name = job.job_name
+            try:
+                job.save()
+                self.assertNotEqual(
+                    pre_save_name,
+                    job.job_name,
+                    msg="Docs claim default is to modify the name on save"
+                )
+                self.assertTrue(
+                    pre_save_name in job.job_name,
+                    msg="The job name should still be based off the original name"
+                )
+            finally:
+                job.remove()
+
+        with self.subTest("Custom name and rename"):
+            name = "foo"
+            job = self.project.wrap_python_function(my_function, job_name=name)
+            job.input["a"] = 1
+            job.input["b"] = 2
+
+            self.assertEqual(
+                name,
+                job.job_name,
+                msg="Provided name should be used"
             )
-        finally:
-            job.remove()
+            try:
+                job.save()
+                self.assertNotEqual(
+                    name,
+                    job.job_name,
+                    msg="Docs claim default is to modify the name on save"
+                )
+                print("NAME STUFF", name, job.job_name)
+                self.assertTrue(
+                    name in job.job_name,
+                    msg="The job name should still be based off the original name"
+                )
+            finally:
+                job.remove()
+
+        with self.subTest("No rename"):
+            job = self.project.wrap_python_function(
+                my_function, automatically_rename=False
+            )
+            job.input["a"] = 1
+            job.input["b"] = 2
+
+            pre_save_name = job.job_name
+            try:
+                job.save()
+                self.assertEqual(
+                    pre_save_name,
+                    job.job_name,
+                    msg="We should be able to deactivate the automatic renaming"
+                )
+                n_ids = len(self.project.job_table())
+                job.save()
+                self.assertEqual(
+                    n_ids,
+                    len(self.project.job_table()),
+                    msg="When re-saving, the job should be found and loaded instead"
+                )
+            finally:
+                job.remove()
