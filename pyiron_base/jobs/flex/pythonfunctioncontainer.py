@@ -89,10 +89,10 @@ class PythonFunctionContainerJob(PythonTemplateJob):
                 )
             )
 
-            if self.job_name in self.project.list_nodes():
-                self.from_hdf()
-                self.status.finished = True
-                return  # Without saving
+        if self.job_name in self.project.list_nodes():
+            self.from_hdf()
+            self.status.finished = True
+            return  # Without saving
         super().save()
 
     def run_static(self):
