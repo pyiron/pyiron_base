@@ -170,5 +170,12 @@ class TestPythonFunctionContainer(TestWithProject):
                     job.job_name,
                     msg="We should be able to deactivate the automatic renaming"
                 )
+                n_ids = len(self.project.job_table())
+                job.save()
+                self.assertEqual(
+                    n_ids,
+                    len(self.project.job_table()),
+                    msg="When re-saving, the job should be found and loaded instead"
+                )
             finally:
                 job.remove()
