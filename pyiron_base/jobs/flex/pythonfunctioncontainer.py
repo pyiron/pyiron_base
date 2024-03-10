@@ -43,6 +43,13 @@ class PythonFunctionContainerJob(PythonTemplateJob):
     def __init__(self, project, job_name):
         super().__init__(project, job_name)
         self._function = None
+        self._executor_type = None
+        self._automatically_rename_on_save_using_input = False
+        # Automatically rename job using function and input values at save time
+        # This is useful for the edge case where these jobs are created from a wrapper
+        # and automatically assigned a name based on the function name, but multiple
+        # jobs are created from the same function (and thus distinguished only by their
+        # input)
 
     @property
     def python_function(self):
@@ -63,26 +70,43 @@ class PythonFunctionContainerJob(PythonTemplateJob):
     def to_hdf(self, hdf=None, group_name=None):
         super().to_hdf(hdf=hdf, group_name=group_name)
         self.project_hdf5["function"] = np.void(cloudpickle.dumps(self._function))
+        self.project_hdf5["_automatically_rename_on_save_using_input"] = (
+            self._automatically_rename_on_save_using_input
+        )
 
     def from_hdf(self, hdf=None, group_name=None):
         super().from_hdf(hdf=hdf, group_name=group_name)
         self._function = cloudpickle.loads(self.project_hdf5["function"])
+        self._automatically_rename_on_save_using_input = bool(
+            self.project_hdf5["_automatically_rename_on_save_using_input"]
+        )
 
     def save(self):
-        job_name = self._function.__name__ + get_hash(
-            binary=cloudpickle.dumps(
-                {"fn": self._function, "kwargs": self.input.to_builtin()}
+        if self._automatically_rename_on_save_using_input:
+            self.job_name = self.job_name + get_hash(
+                binary=cloudpickle.dumps(
+                    {"fn": self._function, "kwargs": self.input.to_builtin()}
+                )
             )
-        )
-        self.job_name = job_name
-        if job_name in self.project.list_nodes():
+
+        if self.job_name in self.project.list_nodes():
             self.from_hdf()
             self.status.finished = True
-        else:
-            super().save()
+            return  # Without saving
+        super().save()
 
     def run_static(self):
-        output = self._function(**self.input.to_builtin())
+        if (
+            self._executor_type is not None
+            and "executor" in inspect.signature(self._function).parameters.keys()
+        ):
+            input_dict = self.input.to_builtin()
+            del input_dict["executor"]
+            output = self._function(
+                **input_dict, executor=self._get_executor(max_workers=self.server.cores)
+            )
+        else:
+            output = self._function(**self.input.to_builtin())
         self.output.update({"result": output})
         self.to_hdf()
         self.status.finished = True

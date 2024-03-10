@@ -30,6 +30,7 @@ from pyiron_base.storage.helper_functions import (
 from pyiron_base.interfaces.has_groups import HasGroups
 from pyiron_base.state import state
 from pyiron_base.jobs.job.util import _get_safe_job_name
+from pyiron_base.utils.instance import static_isinstance
 
 __author__ = "Joerg Neugebauer, Jan Janssen"
 __copyright__ = (
@@ -135,6 +136,13 @@ def _to_object(hdf, class_name=None, **kwargs):
 
     obj = class_object(**init_args)
     obj.from_hdf(hdf=hdf.open(".."), group_name=hdf.h5_path.split("/")[-1])
+    if static_isinstance(obj=obj, obj_type="pyiron_base.jobs.job.generic.GenericJob"):
+        module_name = module_path.split(".")[0]
+        module = importlib.import_module(module_name)
+        if hasattr(module, "Project"):
+            obj.project_hdf5._project = getattr(module, "Project")(
+                obj.project_hdf5.project.path
+            )
     return obj
 
 

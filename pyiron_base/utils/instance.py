@@ -19,6 +19,9 @@ __status__ = "production"
 __date__ = "Sep 1, 2017"
 
 
+import importlib
+
+
 def static_isinstance(obj, obj_type):
     """
     A static implementation of isinstance() - instead of comparing an object and a class, the object is compared to a
@@ -42,3 +45,11 @@ def static_isinstance(obj, obj_type):
         return obj_type in obj_class_lst
     else:
         raise TypeError()
+
+
+def import_class(class_type):
+    module_path, class_name = class_type.rsplit(".", maxsplit=1)
+    return getattr(
+        importlib.import_module(module_path),
+        class_name,
+    )

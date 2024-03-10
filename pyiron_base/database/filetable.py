@@ -314,11 +314,12 @@ class FileTable(IsDatabase, metaclass=FileTableSingleton):
         else:
             return [{"id": i} for i in df_dict["id"].values()]
 
-    def get_jobs(self, project=None, recursive=True, columns=None):
+    def _get_jobs(self, user, sql_query, project=None, recursive=True, columns=None):
         """
         Get jobs as dictionary from filetable
 
         Args:
+            user/sql_query: ignored for compat with IsDatabase
             project (str/ None): path to the project
             recursive (boolean): recursively iterate over all sub projects
             columns (list/ None): list of columns to return
@@ -349,19 +350,6 @@ class FileTable(IsDatabase, metaclass=FileTableSingleton):
                 key
             ].tolist()  # ToDo: Check difference of tolist and to_list
         return dictionary
-
-    def get_job_ids(self, project=None, recursive=True):
-        """
-        Get job IDs from filetable
-
-        Args:
-            project (str/ None): path to the project
-            recursive (boolean): recursively iterate over all sub projects
-
-        Returns:
-            list/ None: list of job IDs
-        """
-        return self.get_jobs(project=project, recursive=recursive, columns=["id"])["id"]
 
     def get_job_id(self, job_specifier, project=None):
         """

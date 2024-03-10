@@ -21,9 +21,7 @@ from pyiron_base.project.path import ProjectPath
 from pyiron_base.database.filetable import FileTable
 from pyiron_base.state import state
 from pyiron_base.database.jobtable import (
-    get_job_ids,
     get_job_id,
-    get_jobs,
     set_job_status,
     get_child_ids,
     get_job_working_directory,
@@ -96,7 +94,7 @@ class Project(ProjectPath, HasGroups):
         user (): Current unix/linux/windows user who is running pyiron
         sql_query (): An SQL query to limit the jobs within the project to a subset which matches the SQL query.
         db (): Connection to the SQL database.
-        job_type (): Job Type object with all the available job types: ['ExampleJob', 'SerialMaster', 'ParallelMaster',
+        job_type (): Job Type object with all the available job types: ['ExampleJob', 'ParallelMaster',
                         'ScriptJob', 'ListMaster'].
         view_mode (): If viewer_mode is enable pyiron has read only access to the database.
         data (pyiron_base.project.data.ProjectData): A storage container for project-level data.
@@ -417,13 +415,12 @@ class Project(ProjectPath, HasGroups):
         """
         Create one of the following jobs:
         - 'ExampleJob': example job just generating random number
-        - 'SerialMaster': series of jobs run in serial
         - 'ParallelMaster': series of jobs run in parallel
         - 'ScriptJob': Python script or jupyter notebook job container
         - 'ListMaster': list of jobs
 
         Args:
-            job_type (str): job type can be ['ExampleJob', 'SerialMaster', 'ParallelMaster', 'ScriptJob', 'ListMaster']
+            job_type (str): job type can be ['ExampleJob', 'ParallelMaster', 'ScriptJob', 'ListMaster']
             job_name (str): name of the job
             delete_existing_job (bool): delete an existing job - default false
 
@@ -461,12 +458,19 @@ class Project(ProjectPath, HasGroups):
         table.analysis_project = self
         return table
 
-    def wrap_python_function(self, python_function):
+    def wrap_python_function(
+        self, python_function, job_name=None, automatically_rename=True
+    ):
         """
         Create a pyiron job object from any python function
 
         Args:
             python_function (callable): python function to create a job object from
+            job_name (str | None): The name for the created job. (Default is None, use
+                the name of the function.)
+            automatically_rename (bool): Whether to automatically rename the job at
+                save-time to append a string based on the input values. (Default is
+                True.)
 
         Returns:
             pyiron_base.jobs.flex.pythonfunctioncontainer.PythonFunctionContainerJob: pyiron job object
@@ -489,8 +493,9 @@ class Project(ProjectPath, HasGroups):
 
         """
         job = self.create.job.PythonFunctionContainerJob(
-            job_name=python_function.__name__
+            job_name=python_function.__name__ if job_name is None else job_name
         )
+        job._automatically_rename_on_save_using_input = automatically_rename
         job.python_function = python_function
         return job
 
@@ -554,8 +559,7 @@ class Project(ProjectPath, HasGroups):
         Returns:
             dict: columns are used as keys and point to a list of the corresponding values
         """
-        return get_jobs(
-            database=self.db,
+        return self.db.get_jobs(
             sql_query=self.sql_query,
             user=self.user,
             project_path=self.project_path,
@@ -573,8 +577,7 @@ class Project(ProjectPath, HasGroups):
         Returns:
             list: a list of job IDs
         """
-        return get_job_ids(
-            database=self.db,
+        return self.db.get_job_ids(
             sql_query=self.sql_query,
             user=self.user,
             project_path=self.project_path,

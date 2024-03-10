@@ -907,13 +907,6 @@ class JobCore(HasGroups):
             dict, list, float, int, :class:`.DataContainer`, None: data or data object; if nothing is found None is returned
         """
 
-        if item in self.files.list():
-            warnings.warn(
-                "Using __getitem__ on a job to access files in deprecated: use job.files instead!",
-                category=DeprecationWarning,
-            )
-            return _job_read_file(self, item)
-
         # first try to access HDF5 directly to make the common case fast
         try:
             group = self._hdf5[item]
@@ -959,6 +952,13 @@ class JobCore(HasGroups):
                 # either group does not contain a data container or it is does, but it does not have the path we're
                 # looking for
                 pass
+
+        if item in self.files.list():
+            warnings.warn(
+                "Using __getitem__ on a job to access files in deprecated: use job.files instead!",
+                category=DeprecationWarning,
+            )
+            return _job_read_file(self, item)
 
         item_obj = name_lst[0]
         if item_obj in self._list_ext_childs():

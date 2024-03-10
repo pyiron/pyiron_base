@@ -13,6 +13,7 @@ from jinja2 import Template
 from pyiron_base.utils.deprecate import deprecate
 from pyiron_base.jobs.job.wrapper import JobWrapper
 from pyiron_base.state import state
+from pyiron_base.state.signal import catch_signals
 from pyiron_base.utils.instance import static_isinstance
 
 
@@ -768,7 +769,8 @@ def multiprocess_wrapper(
         )
     else:
         raise ValueError("Either job_id or file_path have to be not None.")
-    job_wrap.job.run_static()
+    with catch_signals(job_wrap.job.signal_intercept):
+        job_wrap.job.run_static()
 
 
 def _generate_flux_execute_string(job, database_is_disabled):
