@@ -4,7 +4,7 @@ from pyiron_base._tests import TestWithProject
 
 class TestExecutableContainer(TestWithProject):
     def test_conda_environment_path(self):
-        python_version_step = self.project.create_job_step(
+        python_version_step = self.project.wrap_executable(
             job_name="pythonjobstep",
             executable_str="python --version",
             write_input_funct=None,
