@@ -37,7 +37,7 @@ dependencies = [
     "pyfileindex==0.0.23",
     "pympipool==0.7.17",
     "pysqa==0.1.17",
-    "sqlalchemy==2.0.27",
+    "sqlalchemy==2.0.28",
     "tables==3.9.2",
     "tqdm==4.66.2",
     "traitlets==5.14.1",
