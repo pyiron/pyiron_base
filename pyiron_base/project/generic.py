@@ -365,6 +365,77 @@ class Project(ProjectPath, HasGroups):
             executable_str=executable_str,
         )
 
+    def wrap_executable(
+        self,
+        job_name,
+        executable_str,
+        write_input_funct=None,
+        collect_output_funct=None,
+        input_dict=None,
+        conda_environment_path=None,
+        conda_environment_name=None,
+        input_file_lst=None,
+        execute_job=False,
+    ):
+        """
+        Wrap any executable into a pyiron job object using the ExecutableContainerJob.
+
+        Args:
+            job_name (str): name of the new job object
+            executable_str (str): call to an external executable
+            write_input_funct (callable): The write input function write_input(input_dict, working_directory)
+            collect_output_funct (callable): The collect output function collect_output(working_directory)
+            input_dict (dict): Default input for the newly created job class
+            conda_environment_path (str): path of the conda environment
+            conda_environment_name (str): name of the conda environment
+            input_file_lst (list): list of files to be copied to the working directory before executing it\
+            execute_job (boolean): automatically call run() on the job object - default false
+
+        Example:
+
+        >>> def write_input(input_dict, working_directory="."):
+        >>>     with open(os.path.join(working_directory, "input_file"), "w") as f:
+        >>>         f.write(str(input_dict["energy"]))
+        >>>
+        >>>
+        >>> def collect_output(working_directory="."):
+        >>>     with open(os.path.join(working_directory, "output_file"), "r") as f:
+        >>>         return {"energy": float(f.readline())}
+        >>>
+        >>>
+        >>> from pyiron_base import Project
+        >>> pr = Project("test")
+        >>> job = pr.wrap_executable(
+        >>>     job_name="Cat_Job_energy_1_0",
+        >>>     write_input_funct=write_input,
+        >>>     collect_output_funct=collect_output,
+        >>>     input_dict={"energy": 1.0},
+        >>>     executable_str="cat input_file > output_file",
+        >>>     execute_job=True,
+        >>> )
+        >>> print(job.output)
+
+        Returns:
+            pyiron_base.jobs.flex.ExecutableContainerJob: pyiron job object
+        """
+        job_factory = create_job_factory(
+            write_input_funct=write_input_funct,
+            collect_output_funct=collect_output_funct,
+            default_input_dict=input_dict,
+            executable_str=executable_str,
+        )
+        job = job_factory(project=self, job_name=job_name)
+        if conda_environment_path is not None:
+            job.server.conda_environment_path = conda_environment_path
+        elif conda_environment_name is not None:
+            job.server.conda_environment_name = conda_environment_name
+        if input_file_lst is not None and len(input_file_lst) > 0:
+            for file in input_file_lst:
+                job.restart_file_list.append(file)
+        if execute_job:
+            job.run()
+        return job
+
     def create_job(self, job_type, job_name, delete_existing_job=False):
         """
         Create one of the following jobs:
