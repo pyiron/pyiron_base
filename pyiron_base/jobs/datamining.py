@@ -252,6 +252,12 @@ class PyironTable:
 
         The result is available via :meth:`.get_dataframe`.
 
+        .. warning::
+            The executor, if given, must not naively pickle the mapped functions or
+            arguments, as PyironTable relies on lambda functions internally.  Use
+            with executors that rely on dill or cloudpickle instead.  Pyiron
+            provides such executors in the `pympipool` sub packages.
+
         Args:
             file (FileHDFio): HDF were the previous state of the table is stored
             job_status_list (list of str): only consider jobs with these statuses
@@ -784,7 +790,7 @@ class TableJob(GenericJob):
             self.project.db.item_update({"timestart": datetime.now()}, self.job_id)
         with self.project_hdf5.open("input") as hdf5_input:
             if self._executor_type is None and self.server.cores > 1:
-                self._executor_type = "concurrent.futures.ProcessPoolExecutor"
+                self._executor_type = "pympipool.mpi.executor.PyMPIExecutor"
             if self._executor_type is not None:
                 self._pyiron_table.create_table(
                     file=hdf5_input,
