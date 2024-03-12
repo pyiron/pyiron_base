@@ -1,5 +1,6 @@
 import os
 import unittest
+import warnings
 from pyiron_base._tests import TestWithProject
 
 
@@ -39,5 +40,11 @@ class TestExecutableContainerConda(TestWithProject):
         )
         job = self.project.create.job.PythonVersionJob(job_name="job_conda_path")
         job.server.conda_environment_path = self.project.conda_environment.py312
+        self.assertTrue(self.project.path in self.project.conda_environment.py312)
+        environments_lst = self.project.conda_environment._get_existing_environments(use_mamba=False)
+        self.assertTrue(self.project.conda_environment.py312 in environments_lst)
+        with warnings.catch_warnings(record=True) as w:
+            self.project.conda_environment.create(env_name="py312", env_file="env.yaml")
+        self.assertEqual(len(w), 1)
         job.run()
         self.assertEqual(job["error.out"][0], "Python 3.12.1\n")
