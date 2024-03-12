@@ -784,7 +784,7 @@ class TableJob(GenericJob):
             self.project.db.item_update({"timestart": datetime.now()}, self.job_id)
         with self.project_hdf5.open("input") as hdf5_input:
             if self._executor_type is None and self.server.cores > 1:
-                self._executor_type = "concurrent.futures.ProcessPoolExecutor"
+                self._executor_type = "pympipool.mpi.executor.PyMPIExecutor"
             if self._executor_type is not None:
                 self._pyiron_table.create_table(
                     file=hdf5_input,
