@@ -21,7 +21,7 @@ class CondaEnvironment:
             )
 
     @staticmethod
-    def create(env_name, env_file, use_mamba=True):
+    def create(env_name, env_file, use_mamba=False):
         exe = "mamba" if use_mamba else "conda"
         subprocess.check_output(
             [exe, "env", "create", "-n", env_name, "-f", env_file, "-y"],
