@@ -222,8 +222,9 @@ class Project(ProjectPath, HasGroups):
             raise ImportError(
                 "You need to have the conda python package installed to access conda environments."
             ) from None
-
-        return CondaEnvironment()
+        conda_dir = os.path.join(self.path, "conda")
+        os.makedirs(conda_dir, exist_ok=True)
+        return CondaEnvironment(env_path=conda_dir)
 
     def copy(self):
         """
