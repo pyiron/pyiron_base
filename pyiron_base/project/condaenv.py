@@ -44,10 +44,25 @@ class CondaEnvironment:
         env_lst = self._get_existing_environments(use_mamba=use_mamba)
         env_path = os.path.join(os.path.abspath(self._env_path), env_name)
         if env_name not in env_lst and env_path not in env_lst:
-            command_lst = [exe, "env", "create", "--prefix", env_path, "-f", env_file, "-y"]
+            command_lst = [
+                exe,
+                "env",
+                "create",
+                "--prefix",
+                env_path,
+                "-f",
+                env_file,
+                "-y",
+            ]
             subprocess.check_output(
                 command_lst,
                 universal_newlines=True,
             )
         else:
-            warnings.warn("The conda environment " + env_name + " already exists in " + str(env_path) + ".")
+            warnings.warn(
+                "The conda environment "
+                + env_name
+                + " already exists in "
+                + str(env_path)
+                + "."
+            )
