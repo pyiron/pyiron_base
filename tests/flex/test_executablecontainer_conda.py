@@ -41,8 +41,7 @@ class TestExecutableContainerConda(TestWithProject):
         job = self.project.create.job.PythonVersionJob(job_name="job_conda_path")
         job.server.conda_environment_path = self.project.conda_environment.py312
         self.assertTrue(self.project.path in self.project.conda_environment.py312)
-        environments_lst = self.project.conda_environment._get_existing_environments(use_mamba=False)
-        self.assertTrue(self.project.conda_environment.py312 in environments_lst)
+        self.assertTrue(self.project.conda_environment.py312 in self.project.conda_environment._list_all_known_prefixes_dict().values())
         with warnings.catch_warnings(record=True) as w:
             self.project.conda_environment.create(env_name="py312", env_file="env.yaml")
         self.assertEqual(len(w), 1)
