@@ -252,6 +252,12 @@ class PyironTable:
 
         The result is available via :meth:`.get_dataframe`.
 
+        .. warning::
+            The executor, if given, must not naively pickle the mapped functions or
+            arguments, as PyironTable relies on lambda functions internally.  Use
+            with executors that rely on dill or cloudpickle instead.  Pyiron
+            provides such executors in the `pympipool` sub packages.
+
         Args:
             file (FileHDFio): HDF were the previous state of the table is stored
             job_status_list (list of str): only consider jobs with these statuses
