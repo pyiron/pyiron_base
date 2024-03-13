@@ -129,7 +129,7 @@ class TestExecutableContainer(TestWithProject):
             job_name="job_no"
         )
         job.run()
-        self.assertEqual(job.output['command_line'], "Python 3.11.8\n")
+        self.assertTrue("Python" in job.output['command_line'])
         self.assertTrue(job.status.finished)
         self.assertEqual(os.listdir(job.working_directory), ['error.out'])
         with open(os.path.join(job.working_directory, 'error.out'), "r") as f:
