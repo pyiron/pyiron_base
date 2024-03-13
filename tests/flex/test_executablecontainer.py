@@ -31,7 +31,7 @@ class TestExecutableContainer(TestWithProject):
         job = self.project.create.job.CatJob(job_name="job_test")
         job.input["energy"] = energy_value
         job.run()
-        self.assertIsNone(job.output['command_line'])
+        self.assertEqual(job.output['command_line'], "")
         self.assertEqual(job.output["energy"], energy_value)
         job_reload = self.project.load(job.job_name)
         self.assertEqual(job_reload.input["energy"], energy_value)
@@ -81,7 +81,7 @@ class TestExecutableContainer(TestWithProject):
         )
         job.input["energy"] = energy_value
         job.run()
-        self.assertIsNone(job.output['command_line'])
+        self.assertEqual(job.output['command_line'], "")
         self.assertEqual(job.output["energy"], energy_value)
         job_reload = self.project.load(job.job_name)
         self.assertEqual(job_reload.input["energy"], energy_value)
@@ -99,7 +99,7 @@ class TestExecutableContainer(TestWithProject):
             job_name="job_output_files"
         )
         job.run()
-        self.assertIsNone(job.output['command_line'])
+        self.assertEqual(job.output['command_line'], "")
         for file in ['error_out', 'input_file', 'output_file']:
             self.assertTrue(file in dir(job.files))
         output_file_path = os.path.abspath(os.path.join(__file__, "..", "test_executablecontainer", "job_output_files_hdf5", "job_output_files", "error.out"))
