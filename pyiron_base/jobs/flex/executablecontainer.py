@@ -79,6 +79,9 @@ class ExecutableContainerJob(TemplateJob):
                 working_directory=self.working_directory,
             )
 
+    def run_static(self):
+        self.storage.output.command_line = super().run_static()
+
     def collect_output(self):
         if self._collect_output_funct is not None:
             self.output.update(
