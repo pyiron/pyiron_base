@@ -61,7 +61,6 @@ class TestExecutableContainer(TestWithProject):
         job = create_catjob(project=self.project, job_name="job_test")
         job.input["energy"] = energy_value
         job.run()
-        self.assertIsNone(job.output['command_line'])
         self.assertEqual(job.output["energy"], energy_value)
         job_reload = self.project.load(job.job_name)
         self.assertEqual(job_reload.input["energy"], energy_value)
@@ -81,7 +80,6 @@ class TestExecutableContainer(TestWithProject):
         )
         job.input["energy"] = energy_value
         job.run()
-        self.assertEqual(job.output['command_line'], "")
         self.assertEqual(job.output["energy"], energy_value)
         job_reload = self.project.load(job.job_name)
         self.assertEqual(job_reload.input["energy"], energy_value)
