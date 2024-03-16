@@ -23,6 +23,8 @@ __date__ = "Sep 1, 2017"
 
 
 class Executable(HasStorage):
+    __hdf_version__ = "0.3.0"
+
     def __init__(
         self,
         path_binary_codes=None,
@@ -216,6 +218,31 @@ class Executable(HasStorage):
             self.storage.mpi = True
         else:
             self.storage.mpi = False
+
+    def to_dict(self):
+        executable_dict = self._type_to_dict()
+        executable_storage_dict = self.storage._type_to_dict()
+        executable_storage_dict["READ_ONLY"] = self.storage._read_only
+        executable_storage_dict.update(self.storage.to_builtin())
+        executable_dict["executable"] = executable_storage_dict
+        return executable_dict
+
+    def from_dict(self, executable_dict):
+        data_container_keys = [
+            'version',
+            'name',
+            'operation_system_nt',
+            'executable',
+            'mpi',
+            'accepted_return_codes'
+        ]
+        self.storage.update({
+            executable_dict["executable"][key]
+            for key in data_container_keys
+            if key in executable_dict["executable"].keys()
+        })
+        if executable_dict["executable"]['READ_ONLY']:
+            self.storage.read_only = True
 
     def get_input_for_subprocess_call(self, cores, threads, gpus=None):
         """

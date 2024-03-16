@@ -1048,6 +1048,9 @@ class GenericJob(JobCore, HasDict):
             "exclude_groups_hdf": self._exclude_groups_hdf,
         }
         data_dict["server"] = self._server.to_dict()
+        if self._executable is not None:
+            self._executable_activate_mpi()
+            data_dict["executable"] = self._executable.to_dict()
         if self._import_directory is not None:
             data_dict["import_directory"] = self._import_directory
         if self._executor_type is not None:
@@ -1059,6 +1062,8 @@ class GenericJob(JobCore, HasDict):
         if "import_directory" in job_dict.keys():
             self._import_directory = job_dict["import_directory"]
         self._server.from_dict(server_dict=job_dict["server"])
+        if "executable" in job_dict.keys():
+            self._executable.from_dict(job_dict["executable"])
         input_dict = job_dict["input"]
         if "generic_dict" in input_dict.keys():
             generic_dict = input_dict["generic_dict"]
@@ -1086,16 +1091,8 @@ class GenericJob(JobCore, HasDict):
             hdf (ProjectHDFio): HDF5 group object - optional
             group_name (str): HDF5 subgroup name - optional
         """
-
         self._set_hdf(hdf=hdf, group_name=group_name)
-        self._executable_activate_mpi()
-
-        # Write combined dictionary to HDF5
         self._hdf5.write_dict(data_dict=self.to_dict())
-
-        # Write remaining objects to HDF5
-        if self._executable is not None:
-            self.executable.to_hdf(self._hdf5)
 
     @classmethod
     def from_hdf_args(cls, hdf):
