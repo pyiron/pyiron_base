@@ -87,7 +87,7 @@ class ExecutableContainerJob(TemplateJob):
             self.to_hdf()
 
     def to_dict(self):
-        job_dict = self.to_dict()
+        job_dict = super().to_dict()
         if self._write_input_funct is not None:
             job_dict["write_input_function"] = np.void(
                 cloudpickle.dumps(self._write_input_funct)
