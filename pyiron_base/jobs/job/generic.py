@@ -1048,8 +1048,8 @@ class GenericJob(JobCore, HasDict):
             "exclude_groups_hdf": self._exclude_groups_hdf,
         }
         data_dict["server"] = self._server.to_dict()
+        self._executable_activate_mpi()
         if self._executable is not None:
-            self._executable_activate_mpi()
             data_dict["executable"] = self._executable.to_dict()
         if self._import_directory is not None:
             data_dict["import_directory"] = self._import_directory
@@ -1063,7 +1063,7 @@ class GenericJob(JobCore, HasDict):
             self._import_directory = job_dict["import_directory"]
         self._server.from_dict(server_dict=job_dict["server"])
         if "executable" in job_dict.keys() and job_dict["executable"] is not None:
-            self._executable.from_dict(job_dict["executable"])
+            self.executable.from_dict(job_dict["executable"])
         input_dict = job_dict["input"]
         if "generic_dict" in input_dict.keys():
             generic_dict = input_dict["generic_dict"]
