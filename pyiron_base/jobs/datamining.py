@@ -677,9 +677,7 @@ class TableJob(GenericJob):
         for k, v in add_dict.items():
             job_dict["input/" + k] = v
         if self.pyiron_table._filter_function is not None:
-            _to_pickle(
-                job_dict, "input/filter", self.pyiron_table._filter_function
-            )
+            _to_pickle(job_dict, "input/filter", self.pyiron_table._filter_function)
         if self.pyiron_table._db_filter_function is not None:
             _to_pickle(
                 job_dict, "input/db_filter", self.pyiron_table._db_filter_function
