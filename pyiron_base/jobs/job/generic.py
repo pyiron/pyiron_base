@@ -49,6 +49,7 @@ from pyiron_base.utils.deprecate import deprecate
 from pyiron_base.jobs.job.extension.server.generic import Server
 from pyiron_base.database.filetable import FileTable
 from pyiron_base.interfaces.has_dict import HasDict
+from pyiron_base.storage.datacontainer import DataContainer
 
 __author__ = "Joerg Neugebauer, Jan Janssen"
 __copyright__ = (
@@ -1120,10 +1121,14 @@ class GenericJob(JobCore, HasDict):
         job_dict = self._hdf5.read_dict_from_hdf()
         with self._hdf5.open("input") as hdf5_input:
             job_dict["input"] = hdf5_input.read_dict_from_hdf(recursive=True)
-        self.from_dict(job_dict=job_dict)
-
+        # Backwards compatibility to the previous HasHDF based interface
         if "executable" in self._hdf5.list_groups():
-            self.executable.from_hdf(self._hdf5)
+            exe_dict = self._hdf5["executable/executable"].to_object().to_builtin()
+            exe_dict["READ_ONLY"] = self._hdf5["executable/executable/READ_ONLY"]
+            job_dict["executable"] = {
+                "executable": exe_dict
+            }
+        self.from_dict(job_dict=job_dict)
 
     def save(self):
         """
