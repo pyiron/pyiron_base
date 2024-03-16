@@ -229,19 +229,21 @@ class Executable(HasStorage):
 
     def from_dict(self, executable_dict):
         data_container_keys = [
-            'version',
-            'name',
-            'operation_system_nt',
-            'executable',
-            'mpi',
-            'accepted_return_codes'
+            "version",
+            "name",
+            "operation_system_nt",
+            "executable",
+            "mpi",
+            "accepted_return_codes",
         ]
-        self.storage.update({
-            executable_dict["executable"][key]
-            for key in data_container_keys
-            if key in executable_dict["executable"].keys()
-        })
-        if executable_dict["executable"]['READ_ONLY']:
+        self.storage.update(
+            {
+                executable_dict["executable"][key]
+                for key in data_container_keys
+                if key in executable_dict["executable"].keys()
+            }
+        )
+        if executable_dict["executable"]["READ_ONLY"]:
             self.storage.read_only = True
 
     def get_input_for_subprocess_call(self, cores, threads, gpus=None):
