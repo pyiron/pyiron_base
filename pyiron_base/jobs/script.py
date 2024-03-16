@@ -285,7 +285,9 @@ class ScriptJob(GenericJob):
         super().from_dict(job_dict=job_dict)
         if "parallel" in job_dict["input"].keys():
             self._enable_mpi4py = job_dict["input"]["parallel"]
-        self.script_path = job_dict["input"]["path"]
+        path = job_dict["input"]["path"]
+        if path is not None:
+            self.script_path = path
         if "custom_dict" in job_dict["input"].keys():
             self.input.update(job_dict["input"]["custom_dict"])
 
