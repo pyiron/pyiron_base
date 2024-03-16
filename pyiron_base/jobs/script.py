@@ -274,54 +274,20 @@ class ScriptJob(GenericJob):
         super().set_input_to_read_only()
         self.input.read_only = True
 
-    def to_hdf(self, hdf=None, group_name=None):
-        """
-        Store the ScriptJob in an HDF5 file
+    def to_dict(self):
+        job_dict = super().to_dict()
+        job_dict["input/path"] = self._script_path
+        job_dict["input/parallel"] = self._enable_mpi4py
+        job_dict["input/custom_dict"] = self.input.to_builtin()
+        return job_dict
 
-        Args:
-            hdf (ProjectHDFio): HDF5 group object - optional
-            group_name (str): HDF5 subgroup name - optional
-        """
-        super(ScriptJob, self).to_hdf(hdf=hdf, group_name=group_name)
-        with self.project_hdf5.open("input") as hdf5_input:
-            hdf5_input["path"] = self._script_path
-            hdf5_input["parallel"] = self._enable_mpi4py
-            self.input.to_hdf(hdf5_input)
-
-    def from_hdf(self, hdf=None, group_name=None):
-        """
-        Restore the ScriptJob from an HDF5 file
-
-        Args:
-            hdf (ProjectHDFio): HDF5 group object - optional
-            group_name (str): HDF5 subgroup name - optional
-        """
-        super(ScriptJob, self).from_hdf(hdf=hdf, group_name=group_name)
-        if "HDF_VERSION" in self.project_hdf5.list_nodes():
-            version = self.project_hdf5["HDF_VERSION"]
-        else:
-            version = "0.1.0"
-        if version == "0.1.0":
-            with self.project_hdf5.open("input") as hdf5_input:
-                try:
-                    self.script_path = hdf5_input["path"]
-                    gp = GenericParameters(table_name="custom_dict")
-                    gp.from_hdf(hdf5_input)
-                    for k in gp.keys():
-                        self.input[k] = gp[k]
-                except TypeError:
-                    pass
-        elif version == "0.2.0":
-            with self.project_hdf5.open("input") as hdf5_input:
-                if "parallel" in hdf5_input.list_nodes():
-                    self._enable_mpi4py = hdf5_input["parallel"]
-                try:
-                    self.script_path = hdf5_input["path"]
-                except TypeError:
-                    pass
-                self.input.from_hdf(hdf5_input)
-        else:
-            raise ValueError("Cannot handle hdf version: {}".format(version))
+    def from_dict(self, job_dict):
+        super().from_dict(job_dict=job_dict)
+        if "parallel" in job_dict["input"].keys():
+            self._enable_mpi4py = job_dict["input"]["parallel"]
+        self.script_path = job_dict["input"]["path"]
+        if "custom_dict" in job_dict["input"].keys():
+            self.input.update(job_dict["input"]["custom_dict"])
 
     def write_input(self):
         """
