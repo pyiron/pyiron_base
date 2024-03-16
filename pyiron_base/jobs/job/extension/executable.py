@@ -237,7 +237,7 @@ class Executable(HasStorage):
             'accepted_return_codes'
         ]
         self.storage.update({
-            executable_dict["executable"][key]
+            key: executable_dict["executable"][key]
             for key in data_container_keys
             if key in executable_dict["executable"].keys()
         })

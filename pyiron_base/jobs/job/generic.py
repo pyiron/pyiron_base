@@ -1062,7 +1062,7 @@ class GenericJob(JobCore, HasDict):
         if "import_directory" in job_dict.keys():
             self._import_directory = job_dict["import_directory"]
         self._server.from_dict(server_dict=job_dict["server"])
-        if "executable" in job_dict.keys():
+        if "executable" in job_dict.keys() and job_dict["executable"] is not None:
             self._executable.from_dict(job_dict["executable"])
         input_dict = job_dict["input"]
         if "generic_dict" in input_dict.keys():
