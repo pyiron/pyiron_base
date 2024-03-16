@@ -658,6 +658,64 @@ class TableJob(GenericJob):
                 hdf5_output.file_name, key=hdf5_output.h5_path + "/table"
             )
 
+    def to_dict(self):
+        job_dict = super().to_dict()
+        job_dict["input/bool_dict"] = {
+            "enforce_update": self._enforce_update,
+            "convert_to_object": self._pyiron_table.convert_to_object,
+        }
+        if self._analysis_project is not None:
+            job_dict["input/project"] = {
+                "path": self._analysis_project.path,
+                "user": self._analysis_project.user,
+                "sql_query": self._analysis_project.sql_query,
+                "filter": self._analysis_project._filter,
+                "inspect_mode": self._analysis_project._inspect_mode,
+            }
+        add_dict = {}
+        self._pyiron_table.add._to_hdf(add_dict)
+        for k, v in add_dict.items():
+            job_dict["input/" + k] = v
+        if self.pyiron_table._filter_function is not None:
+            _to_pickle(
+                job_dict, "input/filter", self.pyiron_table._filter_function
+            )
+        if self.pyiron_table._db_filter_function is not None:
+            _to_pickle(
+                job_dict, "input/db_filter", self.pyiron_table._db_filter_function
+            )
+        return job_dict
+
+    def from_dict(self, job_dict):
+        super().from_dict(job_dict=job_dict)
+        if "project" in job_dict["input"].keys():
+            project_dict = job_dict["input"]["project"]
+            if os.path.exists(project_dict["path"]):
+                project = self.project.__class__(
+                    path=project_dict["path"],
+                    user=project_dict["user"],
+                    sql_query=project_dict["sql_query"],
+                )
+                project._filter = project_dict["filter"]
+                project._inspect_mode = project_dict["inspect_mode"]
+                self.analysis_project = project
+            else:
+                self._logger.warning(
+                    f"Could not instantiate analysis_project, no such path {project_dict['path']}."
+                )
+        if "filter" in job_dict["input"].keys():
+            self.pyiron_table.filter_function = _from_pickle(
+                job_dict["input"], "filter"
+            )
+        if "db_filter" in job_dict["input"].keys():
+            self.pyiron_table.db_filter_function = _from_pickle(
+                job_dict["input"], "db_filter"
+            )
+        bool_dict = job_dict["input"]["bool_dict"]
+        self._enforce_update = bool_dict["enforce_update"]
+        self._pyiron_table.convert_to_object = bool_dict["convert_to_object"]
+        self._pyiron_table.add._from_hdf(job_dict["input"])
+
     def to_hdf(self, hdf=None, group_name=None):
         """
         Store pyiron table job in HDF5
@@ -668,26 +726,6 @@ class TableJob(GenericJob):
 
         """
         super(TableJob, self).to_hdf(hdf=hdf, group_name=group_name)
-        with self.project_hdf5.open("input") as hdf5_input:
-            hdf5_input["bool_dict"] = {
-                "enforce_update": self._enforce_update,
-                "convert_to_object": self._pyiron_table.convert_to_object,
-            }
-            self._pyiron_table.add._to_hdf(hdf5_input)
-            if self._analysis_project is not None:
-                hdf5_input["project"] = {
-                    "path": self._analysis_project.path,
-                    "user": self._analysis_project.user,
-                    "sql_query": self._analysis_project.sql_query,
-                    "filter": self._analysis_project._filter,
-                    "inspect_mode": self._analysis_project._inspect_mode,
-                }
-            if self.pyiron_table._filter_function is not None:
-                _to_pickle(hdf5_input, "filter", self.pyiron_table._filter_function)
-            if self.pyiron_table._db_filter_function is not None:
-                _to_pickle(
-                    hdf5_input, "db_filter", self.pyiron_table._db_filter_function
-                )
         if len(self.pyiron_table._df) != 0:
             self._save_output()
 
@@ -701,46 +739,6 @@ class TableJob(GenericJob):
         """
         super(TableJob, self).from_hdf(hdf=hdf, group_name=group_name)
         hdf_version = self.project_hdf5.get("HDF_VERSION", "0.1.0")
-        with self.project_hdf5.open("input") as hdf5_input:
-            if "project" in hdf5_input.list_nodes():
-                project_dict = hdf5_input["project"]
-                if os.path.exists(project_dict["path"]):
-                    project = self.project.__class__(
-                        path=project_dict["path"],
-                        user=project_dict["user"],
-                        sql_query=project_dict["sql_query"],
-                    )
-                    project._filter = project_dict["filter"]
-                    project._inspect_mode = project_dict["inspect_mode"]
-                    self.analysis_project = project
-                else:
-                    self._logger.warning(
-                        f"Could not instantiate analysis_project, no such path {project_dict['path']}."
-                    )
-            if "filter" in hdf5_input.list_nodes():
-                if hdf_version == "0.1.0":
-                    self.pyiron_table._filter_function_str = hdf5_input["filter"]
-                    self.pyiron_table.filter_function = get_function_from_string(
-                        hdf5_input["filter"]
-                    )
-                else:
-                    self.pyiron_table.filter_function = _from_pickle(
-                        hdf5_input, "filter"
-                    )
-            if "db_filter" in hdf5_input.list_nodes():
-                if hdf_version == "0.1.0":
-                    self.pyiron_table._db_filter_function_str = hdf5_input["db_filter"]
-                    self.pyiron_table.db_filter_function = get_function_from_string(
-                        hdf5_input["db_filter"]
-                    )
-                else:
-                    self.pyiron_table.db_filter_function = _from_pickle(
-                        hdf5_input, "db_filter"
-                    )
-            bool_dict = hdf5_input["bool_dict"]
-            self._enforce_update = bool_dict["enforce_update"]
-            self._pyiron_table.convert_to_object = bool_dict["convert_to_object"]
-            self._pyiron_table.add._from_hdf(hdf5_input)
         if hdf_version == "0.3.0":
             with self.project_hdf5.open("output") as hdf5_output:
                 if "table" in hdf5_output.list_groups():
