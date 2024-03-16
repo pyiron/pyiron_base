@@ -67,18 +67,19 @@ class PythonFunctionContainerJob(PythonTemplateJob):
         self.run()
         return self.output["result"]
 
-    def to_hdf(self, hdf=None, group_name=None):
-        super().to_hdf(hdf=hdf, group_name=group_name)
-        self.project_hdf5["function"] = np.void(cloudpickle.dumps(self._function))
-        self.project_hdf5["_automatically_rename_on_save_using_input"] = (
+    def to_dict(self):
+        job_dict = super().to_dict()
+        job_dict["function"] = np.void(cloudpickle.dumps(self._function))
+        job_dict["_automatically_rename_on_save_using_input"] = (
             self._automatically_rename_on_save_using_input
         )
+        return job_dict
 
-    def from_hdf(self, hdf=None, group_name=None):
-        super().from_hdf(hdf=hdf, group_name=group_name)
-        self._function = cloudpickle.loads(self.project_hdf5["function"])
+    def from_dict(self, job_dict):
+        super().from_dict(job_dict=job_dict)
+        self._function = cloudpickle.loads(job_dict["function"])
         self._automatically_rename_on_save_using_input = bool(
-            self.project_hdf5["_automatically_rename_on_save_using_input"]
+            job_dict["_automatically_rename_on_save_using_input"]
         )
 
     def save(self):
