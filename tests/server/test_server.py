@@ -313,12 +313,12 @@ class TestServerHDF(unittest.TestCase):
         self.assertEqual(server_full.cores, 10)
         self.assertEqual(server_full.threads, 2)
         self.assertFalse(server_full.new_hdf)
-        hdf_dict_empty = {"server": server_empty.to_dict()}
-        hdf_dict_full = {"server": server_full.to_dict()}
+        hdf_dict_empty = server_empty.to_dict()
+        hdf_dict_full = server_full.to_dict()
         server_from_hdf = Server()
-        server_from_hdf.from_hdf(hdf=hdf_dict_full)
-        self.assertEqual(hdf_dict_full["server"]["gpus"], 10)
-        self.assertTrue("gpus" not in hdf_dict_empty["server"].keys())
+        server_from_hdf.from_dict(server_dict=hdf_dict_full)
+        self.assertEqual(hdf_dict_full["gpus"], 10)
+        self.assertTrue("gpus" not in hdf_dict_empty.keys())
         self.assertEqual(server_from_hdf.gpus, 10)
         self.assertEqual(server_from_hdf.cores, 10)
         self.assertEqual(server_from_hdf.threads, 2)
