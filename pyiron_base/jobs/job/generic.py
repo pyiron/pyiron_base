@@ -1125,9 +1125,7 @@ class GenericJob(JobCore, HasDict):
         if "executable" in self._hdf5.list_groups():
             exe_dict = self._hdf5["executable/executable"].to_object().to_builtin()
             exe_dict["READ_ONLY"] = self._hdf5["executable/executable/READ_ONLY"]
-            job_dict["executable"] = {
-                "executable": exe_dict
-            }
+            job_dict["executable"] = {"executable": exe_dict}
         self.from_dict(job_dict=job_dict)
 
     def save(self):
