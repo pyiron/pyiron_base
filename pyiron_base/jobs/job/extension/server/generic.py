@@ -656,35 +656,6 @@ class Server(
             self._accept_crash = server_dict["accept_crash"] == 1
         self._new_hdf = server_dict["new_h5"] == 1
 
-    def to_hdf(self, hdf, group_name=None):
-        """
-        Store Server object in HDF5 file
-
-        Args:
-            hdf: HDF5 object
-            group_name (str): node name in the HDF5 file
-        """
-        if group_name is not None:
-            with hdf.open(group_name) as hdf_group:
-                hdf_group["server"] = self.to_dict()
-        else:
-            hdf["server"] = self.to_dict()
-
-    def from_hdf(self, hdf, group_name=None):
-        """
-        Recover Server object in HDF5 file
-
-        Args:
-            hdf: HDF5 object
-            group_name: node name in the HDF5 file
-
-        """
-        if group_name is not None:
-            with hdf.open(group_name) as hdf_group:
-                self.from_dict(server_dict=hdf_group["server"])
-        else:
-            self.from_dict(server_dict=hdf["server"])
-
     def db_entry(self):
         """
         connect all the info regarding the server into a single word that can be used e.g. as entry in a database
