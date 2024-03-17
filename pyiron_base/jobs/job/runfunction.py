@@ -409,7 +409,9 @@ def run_job_with_runmode_queue(job):
     )
     if que_id is not None:
         job.server.queue_id = que_id
-        job._server.to_hdf(job._hdf5)
+        job.project_hdf5.write_dict(
+            data_dict={"server": job.server.to_dict()}
+        )
         print("Queue system id: ", que_id)
     else:
         job._logger.warning("Job aborted")
