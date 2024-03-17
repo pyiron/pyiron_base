@@ -65,7 +65,7 @@ class TestScriptJob(TestWithCleanProject):
         self.job.input['value'] = 300
         self.job.save()
         self.assertTrue(
-            "custom_dict" in self.job["input"].list_groups(),
+            "custom_dict" in self.job["input"].list_nodes(),
             msg="Input not saved in the 'custom_dict' group in HDF"
         )
 
