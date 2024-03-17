@@ -1,7 +1,7 @@
 # coding: utf-8
 # Copyright (c) Max-Planck-Institut für Eisenforschung GmbH - Computational Materials Design (CM) Department
 # Distributed under the terms of "New BSD License", see the LICENSE file.
-
+import platform
 import unittest
 import numpy as np
 
@@ -11,7 +11,10 @@ from pyiron_base._tests import TestWithProject, ToyJob
 
 try:
     import pympipool
-    skip_parallel_test = False
+    if platform.system() == "Linux":
+        skip_parallel_test = False
+    else:
+        skip_parallel_test = True
 except ImportError:
     skip_parallel_test = True
 
