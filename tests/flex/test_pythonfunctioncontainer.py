@@ -52,8 +52,8 @@ class TestPythonFunctionContainer(TestWithProject):
             self.assertTrue(job.server.run_mode.executor)
             job.run()
             self.assertFalse(job.server.future.done())
-            # self.assertIsNone(job.server.future.result())
-            # self.assertTrue(job.server.future.done())
+            self.assertIsNone(job.server.future.result())
+            self.assertTrue(job.server.future.done())
 
     @unittest.skipIf(
         os.name == "nt", "Starting subprocesses on windows take a long time."

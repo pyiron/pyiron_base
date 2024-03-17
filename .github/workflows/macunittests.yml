@@ -1,0 +1,51 @@
+# This workflow is used to run the unittest of pyiron
+
+name: Unittests
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ${{ matrix.operating-system }}
+    strategy:
+      matrix:
+        include:
+        - operating-system: macos-latest
+          python-version: '3.12'
+          label: osx-64-py-3-12
+          prefix: /Users/runner/miniconda3/envs/my-env
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Setup Mambaforge
+      uses: conda-incubator/setup-miniconda@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+        miniforge-variant: Mambaforge
+        channels: conda-forge
+        channel-priority: strict
+        activate-environment: my-env
+        environment-file: .ci_support/environment.yml
+        use-mamba: true
+    - name: Test
+      shell: bash -l {0}
+      timeout-minutes: 5
+      run: |
+        python .ci_support/pyironconfig.py
+        bash .ci_support/pip_install.sh
+        cd tests
+        for t in $(find . -name test_*.py); do echo $t; coverage run --omit="pyiron_base/_version.py,tests/*" -m unittest $t; done;
+        coverage xml
+    - name: Coveralls
+      if: matrix.label == 'linux-64-py-3-11'
+      uses: coverallsapp/github-action@v2
+    - name: Codacy
+      if:  matrix.label == 'linux-64-py-3-11' && github.event_name != 'push'
+      continue-on-error: True
+      shell: bash -l {0}
+      run: |
+        python-codacy-coverage -r coverage.xml
