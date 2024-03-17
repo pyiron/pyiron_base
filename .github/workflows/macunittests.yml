@@ -1,6 +1,6 @@
 # This workflow is used to run the unittest of pyiron
 
-name: Unittests
+name: Mac Test Debug
 
 on:
   push:
@@ -38,7 +38,7 @@ jobs:
         python .ci_support/pyironconfig.py
         bash .ci_support/pip_install.sh
         cd tests
-        for t in $(find . -name test_*.py); do echo $t; coverage run --omit="pyiron_base/_version.py,tests/*" -m unittest $t; done;
+        for t in $(find . -name "test_*.py"); do echo $t; coverage run --omit="pyiron_base/_version.py,tests/*" -m unittest $t; done;
         coverage xml
     - name: Coveralls
       if: matrix.label == 'linux-64-py-3-11'
