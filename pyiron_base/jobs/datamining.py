@@ -445,6 +445,7 @@ class PyironTable:
         Returns:
             list: List of JobCore objects
         """
+        print("collect_job_update_lst")
         if job_stored_ids is not None:
             job_id_lst = [
                 job_id
@@ -455,19 +456,23 @@ class PyironTable:
             job_id_lst = self._get_filtered_job_ids_from_project()
 
         job_update_lst = []
+        print("inspect loop", job_id_lst)
         for job_id in tqdm(job_id_lst, desc="Loading and filtering jobs"):
+            print("get:", job_id)
             try:
                 job = self._project.inspect(job_id)
             except (
                 IndexError
             ):  # In case the job was deleted while the pyiron table is running
                 job = None
+            print("check:", job.job_name)
             if (
                 job is not None
                 and job.status in job_status_list
                 and self.filter_function(job)
             ):
                 job_update_lst.append(job_id)
+        print(job_update_lst)
         return job_update_lst
 
     def _repr_html_(self):
