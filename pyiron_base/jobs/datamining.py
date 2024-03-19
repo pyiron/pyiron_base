@@ -379,12 +379,11 @@ class PyironTable:
             for job_id in job_id_lst
         ]
         if executor is not None:
-            diff_dict_lst = list(
-                tqdm(
-                    executor.map(_apply_list_of_functions_on_job, job_to_analyse_lst),
-                    total=len(job_to_analyse_lst),
-                )
-            )
+            future_lst = [
+                executor.submit(_apply_list_of_functions_on_job, job_tuple)
+                for job_tuple in tqdm(job_to_analyse_lst)
+            ]
+            diff_dict_lst = [f.result() for f in future_lst]
         else:
             diff_dict_lst = list(
                 tqdm(
