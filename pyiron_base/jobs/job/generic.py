@@ -1530,14 +1530,7 @@ class GenericJob(JobCore, HasDict):
             del self
 
     def _get_executor(self, max_workers=None):
-        if self._executor_type is None:
-            raise ValueError(
-                "No executor type defined - Please set self.executor_type."
-            )
-        elif isinstance(self._executor_type, str):
-            return import_class(self._executor_type)(max_workers=max_workers)
-        else:
-            raise TypeError("The self.executor_type has to be a string.")
+        return _get_executor(executor_type=self.executor_type, max_workers=max_worker)
 
 
 class GenericError(object):
@@ -1564,3 +1557,14 @@ class GenericError(object):
             return ""
         elif print_yes:
             return string.join(self._job[file_name])
+
+
+def _get_executor(executor_type, max_workers=None):
+    if executor_type is None:
+        raise ValueError(
+            "No executor type defined - Please set self.executor_type."
+        )
+    elif isinstance(executor_type, str):
+        return import_class(executor_type)(max_workers=max_workers)
+    else:
+        raise TypeError("The self.executor_type has to be a string.")
