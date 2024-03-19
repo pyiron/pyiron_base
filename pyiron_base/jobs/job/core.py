@@ -953,7 +953,7 @@ class JobCore(HasGroups):
             dict, list, float, int, :class:`.DataContainer`, None: data or data object; if nothing is found None is returned
         """
         # first try to access HDF5 directly to make the common case fast
-        value = recursive_load_from_hdf(self._project_hdf5, item)
+        value = recursive_load_from_hdf(self._hdf5, item)
         if value is not None:
             return value
 
