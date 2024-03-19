@@ -13,6 +13,7 @@ from typing import Union
 
 from pyiron_base.state import state
 from pyiron_base.interfaces.lockable import Lockable, sentinel
+from pyiron_base.interfaces.has_dict import HasDict
 from pyiron_base.utils.instance import static_isinstance
 from pyiron_base.jobs.job.extension.server.runmode import Runmode
 
@@ -29,7 +30,7 @@ __date__ = "Sep 1, 2017"
 
 
 class Server(
-    Lockable
+    Lockable, HasDict
 ):  # add the option to return the job id and the hold id to the server object
     """
     Generic Server object to handle the execution environment for the job
@@ -601,7 +602,8 @@ class Server(
             return None
 
     def to_dict(self):
-        server_dict = OrderedDict(
+        server_dict = self._type_to_dict()
+        server_dict.update(
             {
                 "user": self._user,
                 "host": self._host,
