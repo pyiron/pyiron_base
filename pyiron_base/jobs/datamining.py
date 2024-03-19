@@ -355,7 +355,11 @@ class PyironTable:
         print("get filtered job")
         project_table = self._project.job_table(recursive=recursive)
         filter_funct = self.db_filter_function
-        print("set filtered job")
+        print("set filtered job", project_table, filter_funct)
+        print(filter_funct(project_table))
+        print(project_table[filter_funct(project_table)])
+        print(project_table[filter_funct(project_table)]["id"])
+        print(project_table[filter_funct(project_table)]["id"].tolist())
         return project_table[filter_funct(project_table)]["id"].tolist()
 
     def _iterate_over_job_lst(
