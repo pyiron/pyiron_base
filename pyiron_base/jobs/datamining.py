@@ -271,8 +271,9 @@ class PyironTable:
         if not enforce_update:
             print("enforce update")
             new_user_functions, new_system_functions = self._get_new_functions(file)
-
+            print("before if")
             if len(new_user_functions) > 0 or len(new_system_functions) > 0:
+                print("after if")
                 function_lst = [
                     self.add._user_function_dict[k] for k in new_user_functions
                 ] + [
