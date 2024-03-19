@@ -108,6 +108,52 @@ _doc_str_job_core_attr = """\
 """
 
 
+def recursive_load_from_hdf(project_hdf5, item):
+    try:
+        group = project_hdf5[item]
+        if (
+            isinstance(group, ProjectHDFio)
+            and "NAME" in group
+            and group["NAME"] == "DataContainer"
+        ):
+            return group.to_object(lazy=True)
+        else:
+            return group
+    except ValueError:
+        pass
+
+    name_lst = item.split("/")
+
+    def successive_path_splits(name_lst):
+        """
+        Yield successive split/joins of a path, i.e.
+        /a/b/c/d
+        gives
+        /a/b/c, d
+        /a/b, c/d
+        /a, b/c/d
+        """
+        for i in range(1, len(name_lst)):
+            # where we are looking for the data container
+            container_path = "/".join(name_lst[:-i])
+            # where we are looking for data in the container
+            data_path = "/".join(name_lst[-1:])
+            yield container_path, data_path
+
+    for container_path, data_path in successive_path_splits(name_lst):
+        try:
+            group = project_hdf5[container_path]
+            if (
+                isinstance(group, ProjectHDFio)
+                and "NAME" in group
+                and group["NAME"] == "DataContainer"
+            ):
+                return group.to_object(lazy=True)[data_path]
+        except (ValueError, IndexError, KeyError):
+            # either group does not contain a data container or it is does, but it does not have the path we're
+            # looking for
+            pass
+
 class JobCore(HasGroups):
     __doc__ = (
         """
@@ -906,52 +952,10 @@ class JobCore(HasGroups):
         Returns:
             dict, list, float, int, :class:`.DataContainer`, None: data or data object; if nothing is found None is returned
         """
-
         # first try to access HDF5 directly to make the common case fast
-        try:
-            group = self._hdf5[item]
-            if (
-                isinstance(group, ProjectHDFio)
-                and "NAME" in group
-                and group["NAME"] == "DataContainer"
-            ):
-                return group.to_object(lazy=True)
-            else:
-                return group
-        except ValueError:
-            pass
-
-        name_lst = item.split("/")
-
-        def successive_path_splits(name_lst):
-            """
-            Yield successive split/joins of a path, i.e.
-            /a/b/c/d
-            gives
-            /a/b/c, d
-            /a/b, c/d
-            /a, b/c/d
-            """
-            for i in range(1, len(name_lst)):
-                # where we are looking for the data container
-                container_path = "/".join(name_lst[:-i])
-                # where we are looking for data in the container
-                data_path = "/".join(name_lst[-1:])
-                yield container_path, data_path
-
-        for container_path, data_path in successive_path_splits(name_lst):
-            try:
-                group = self._hdf5[container_path]
-                if (
-                    isinstance(group, ProjectHDFio)
-                    and "NAME" in group
-                    and group["NAME"] == "DataContainer"
-                ):
-                    return group.to_object(lazy=True)[data_path]
-            except (ValueError, IndexError, KeyError):
-                # either group does not contain a data container or it is does, but it does not have the path we're
-                # looking for
-                pass
+        value = recursive_load_from_hdf(self._project_hdf5, item)
+        if value is not None:
+            return value
 
         if item in self.files.list():
             warnings.warn(
@@ -1089,7 +1093,6 @@ class DatabaseProperties(object):
     def __repr__(self):
         return f"{self.__class__.__name__}({repr(self._job_dict)})"
 
-
 class HDF5Content(object):
     """
     Access the HDF5 file of the job
@@ -1099,12 +1102,20 @@ class HDF5Content(object):
         self._project_hdf5 = project_hdf5
 
     def __getattr__(self, name):
-        if name in self._project_hdf5.list_nodes():
-            return self._project_hdf5.__getitem__(name)
-        elif name in self._project_hdf5.list_groups():
-            return HDF5Content(self._project_hdf5.__getitem__(name))
+        try:
+            return self[name]
+        except KeyError:
+            raise AttributeError(name) from None
+
+    def __getitem__(self, item):
+        value = recursive_load_from_hdf(self._project_hdf5, item)
+        if value is not None:
+            return value
+
+        if name in self._project_hdf5.list_groups():
+            return HDF5Content(self._project_hdf5[item])
         else:
-            raise AttributeError
+            raise KeyError(item)
 
     def __dir__(self):
         return self._project_hdf5.list_nodes() + self._project_hdf5.list_groups()
