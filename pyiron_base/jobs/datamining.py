@@ -379,11 +379,13 @@ class PyironTable:
             for job_id in job_id_lst
         ]
         if executor is not None:
-            future_lst = [
-                executor.submit(_apply_list_of_functions_on_job, job_tuple)
-                for job_tuple in tqdm(job_to_analyse_lst)
-            ]
+            future_lst = []
+            for job_tuple in tqdm(job_to_analyse_lst):
+                print(job_tuple)
+                future_lst.append(executor.submit(_apply_list_of_functions_on_job, job_tuple))
+            print("wait for futures")
             diff_dict_lst = [f.result() for f in future_lst]
+            print("futures done")
         else:
             diff_dict_lst = list(
                 tqdm(
