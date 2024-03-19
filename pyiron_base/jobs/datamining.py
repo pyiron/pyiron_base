@@ -271,7 +271,7 @@ class PyironTable:
         if not enforce_update:
             print("enforce update")
             new_user_functions, new_system_functions = self._get_new_functions(file)
-            print("before if")
+            print("before if", new_user_functions, new_system_functions)
             if len(new_user_functions) > 0 or len(new_system_functions) > 0:
                 print("after if")
                 function_lst = [
@@ -290,10 +290,12 @@ class PyironTable:
                 if len(df_new_keys) > 0:
                     self._df = pandas.concat([self._df, df_new_keys], axis="columns")
 
+        print("collect")
         new_jobs = self._collect_job_update_lst(
             job_status_list=job_status_list,
             job_stored_ids=self._get_job_ids() if not enforce_update else None,
         )
+        print("list of new jobs", new_jobs)
         if len(new_jobs) > 0:
             df_new_ids = self._iterate_over_job_lst(
                 job_id_lst=new_jobs,
