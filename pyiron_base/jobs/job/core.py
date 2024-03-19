@@ -964,6 +964,7 @@ class JobCore(HasGroups):
             )
             return _job_read_file(self, item)
 
+        name_lst = item.split("/")
         item_obj = name_lst[0]
         if item_obj in self._list_ext_childs():
             # ToDo: Murn['strain_0.9'] - sucht im HDF5 file, dort gibt es aber die entsprechenden Gruppen noch nicht.
