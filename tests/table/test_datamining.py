@@ -84,12 +84,16 @@ class TestProjectDataParallel(TestWithProject):
         table.add['name'] = lambda j: j.name
         table.add['array'] = lambda j: np.arange(8)
         table.server.cores = 2
+        print("before run")
         table.run()
+        print("after run")
         df = table.get_dataframe()
         self.assertEqual(2, len(df), "Table not correctly filtered.")
         self.assertEqual(["test_a", "test_b"], df.name.to_list(),  "Table not correctly filtered.")
         self.assertTrue(table.status.finished)
+        print("after assert")
         self.project.remove_job(table.name)
+        print("done")
 
 
 if __name__ == '__main__':
