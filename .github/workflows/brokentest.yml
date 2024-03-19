@@ -1,6 +1,6 @@
 # This workflow is used to run the unittest of pyiron
 
-name: Unittests
+name: Broken Test
 
 on:
   push:
@@ -36,4 +36,4 @@ jobs:
       run: |
         python .ci_support/pyironconfig.py
         bash .ci_support/pip_install.sh
-        python -m unittest tests/table/test_datamining.py
+        python tests/table/test_datamining.py TestProjectDataParallel.test_parallel
