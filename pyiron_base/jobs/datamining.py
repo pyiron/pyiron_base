@@ -388,7 +388,7 @@ class PyironTable:
                 print(job_tuple)
                 future_lst.append(executor.submit(_apply_list_of_functions_on_job, job_tuple))
             print("wait for futures")
-            diff_dict_lst = [f.result() for f in tqdm(future_lst)]
+            diff_dict_lst = [f.result() for f in future_lst]
             print("futures done")
         else:
             diff_dict_lst = list(
