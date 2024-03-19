@@ -1782,7 +1782,7 @@ class Project(ProjectPath, HasGroups):
                 self.remove_job(job_specifier=job_id)
                 state.logger.debug("Remove job with ID {0} ".format(job_id))
             except (IndexError, Exception):
-                state.logger.debug("Could not remove job with ID {0} ".format(job_id))
+                state.logger.warning("Could not remove job with ID {0} ".format(job_id))
 
     def _remove_files(self, pattern="*"):
         """
