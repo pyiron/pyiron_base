@@ -739,7 +739,7 @@ class DatabaseAccess(IsDatabase):
         else:
             raise PermissionError("Not avilable in viewer mode.")
 
-    def delete_item(self, item_id):
+    def delete_item(self, item_id: int):
         """
         Delete Item from database
 
@@ -749,17 +749,20 @@ class DatabaseAccess(IsDatabase):
         Returns:
 
         """
-        if not self._view_mode:
-            self.conn.execute(
-                self.simulation_table.delete().where(
-                    self.simulation_table.c["id"] == int(item_id)
-                )
-            )
-            self.conn.commit()
-            if not self._keep_connection:
-                self.conn.close()
-        else:
+        if self._view_mode:
             raise PermissionError("Not avilable in viewer mode.")
+
+        res = self.conn.execute(
+            self.simulation_table.delete().where(
+                self.simulation_table.c["id"] == int(item_id)
+            )
+        )
+        if res.rowcount == 0:
+            raise RuntimeError(f"Failed to delete job ({item_id}) from database!")
+        self.conn.commit()
+
+        if not self._keep_connection:
+            self.conn.close()
 
     # IsDatabase impl'
     def _get_jobs(self, sql_query, user, project_path, recursive=True, columns=None):
