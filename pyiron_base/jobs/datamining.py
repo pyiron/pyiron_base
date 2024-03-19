@@ -269,6 +269,7 @@ class PyironTable:
 
         # if enforce_update is given we recalculate the whole table below anyway, no need to patch up new keys
         if not enforce_update:
+            print("enforce update")
             new_user_functions, new_system_functions = self._get_new_functions(file)
 
             if len(new_user_functions) > 0 or len(new_system_functions) > 0:
@@ -279,6 +280,7 @@ class PyironTable:
                     for funct in self.add._system_function_lst
                     if funct.__name__ in new_system_functions
                 ]
+                print("function_lst:", function_lst)
                 df_new_keys = self._iterate_over_job_lst(
                     job_id_lst=self._get_job_ids(),
                     function_lst=function_lst,
@@ -370,6 +372,7 @@ class PyironTable:
         Returns:
             list of dict: a list of the merged dicts from all functions for each job
         """
+        print("iterate over jobs")
         job_to_analyse_lst = [
             [
                 self._project.db.get_item_by_id(job_id),
@@ -380,6 +383,7 @@ class PyironTable:
         ]
         if executor is not None:
             future_lst = []
+            print("start loop")
             for job_tuple in tqdm(job_to_analyse_lst):
                 print(job_tuple)
                 future_lst.append(executor.submit(_apply_list_of_functions_on_job, job_tuple))
