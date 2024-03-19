@@ -103,9 +103,8 @@ class PythonFunctionContainerJob(PythonTemplateJob):
         ):
             input_dict = self.input.to_builtin()
             del input_dict["executor"]
-            output = self._function(
-                **input_dict, executor=self._get_executor(max_workers=self.server.cores)
-            )
+            with self._get_executor(max_workers=self.server.cores) as exe:
+                output = self._function(**input_dict, executor=exe)
         else:
             output = self._function(**self.input.to_builtin())
         self.output.update({"result": output})

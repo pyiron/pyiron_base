@@ -191,7 +191,10 @@ class TestDatabaseAccess(PyironTestCase):
         self.database.delete_item(key)
         self.assertRaises(
             Exception, self.database.delete_item, [key]
-        )  # use only str or int
+        )  # call function with unsupported list as argument
+        self.assertRaises(
+            RuntimeError, self.database.delete_item, 123456789
+        )  # remove non existent job id
         # self.assertRaises(Exception, self.database.get_item_by_id, key)  # ensure item does not exist anymore
 
     def test_get_item_by_id(self):
