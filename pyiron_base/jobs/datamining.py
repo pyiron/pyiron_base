@@ -352,8 +352,10 @@ class PyironTable:
             return np.array([])
 
     def _get_filtered_job_ids_from_project(self, recursive=True):
+        print("get filtered job")
         project_table = self._project.job_table(recursive=recursive)
         filter_funct = self.db_filter_function
+        print("set filtered job")
         return project_table[filter_funct(project_table)]["id"].tolist()
 
     def _iterate_over_job_lst(
