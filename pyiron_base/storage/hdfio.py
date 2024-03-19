@@ -854,7 +854,15 @@ class FileHDFio(HasGroups, Pointer):
                 hdf_group._walk(level=level + 1)
 
 
-class ProjectHDFio(FileHDFio):
+class BaseHDFio:
+    """
+    Dummy class to allow other code to type check if it received a ProjectHDFio
+    or DummyHDFio object.  Usually this is used to check if it is safe to call
+    `to_object` on this object.
+    """
+    pass
+
+class ProjectHDFio(FileHDFio, BaseHDFio):
     """
     The ProjectHDFio class connects the FileHDFio and the Project class, it is derived from the FileHDFio class but in
     addition the a project object instance is located at self.project enabling direct access to the database and other
@@ -1241,7 +1249,7 @@ class ProjectHDFio(FileHDFio):
         return self._project.__class__(path=self.file_path)
 
 
-class DummyHDFio(HasGroups):
+class DummyHDFio(HasGroups, BaseHDFio):
     """
     A dummy ProjectHDFio implementation to serialize objects into a dict
     instead of a HDF5 file.
@@ -1296,9 +1304,11 @@ class DummyHDFio(HasGroups):
                                          here, to make hdf['..'] work.
         """
         self._project = project
-        self._dict = cont or {}
+        self._dict = {}
         self._h5_path = h5_path
         self._root = root
+        if cont is not None:
+            self.write_dict_to_hdf(cont)
 
     def __getitem__(self, item: str) -> Union["DummyHDFio", Any]:
         """
@@ -1362,7 +1372,7 @@ class DummyHDFio(HasGroups):
         d = self._dict.get(name, None)
         if d is None:
             self._dict[name] = d = type(self)(
-                self.project, os.path.join(self.h5_path, name), cont={}, root=self
+                self._project, os.path.join(self.h5_path, name), cont={}, root=self
             )
         elif isinstance(d, DummyHDFio):
             pass
@@ -1466,6 +1476,31 @@ class DummyHDFio(HasGroups):
             self[g]._empty() for g in self.list_groups()
         )
 
+    def write_dict_to_hdf(self, data_dict):
+        for k, v in data_dict.items():
+            if isinstance(v, dict):
+                g = self.create_group(k)
+                g.write_dict_to_hdf(v)
+            else:
+                self[k] = v
+
+    def read_dict_from_hdf(self, group_paths=[], recursive=False):
+        if recursive:
+            return self.to_dict()
+
+        data = {}
+        for path in group_paths:
+            keys = path.split("/")
+            try:
+                d = self[key]
+                for key in keys[1:]:
+                    d = d[key]
+            except KeyError:
+                d = None
+            if isinstance(d, DummyHDFio):
+                d = d.to_object()
+            data[path] = d
+        return data
 
 def _get_safe_filename(file_name):
     file_path_no_ext, file_ext = os.path.splitext(file_name)
