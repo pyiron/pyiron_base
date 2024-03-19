@@ -1538,7 +1538,7 @@ class GenericJob(JobCore, HasDict):
         elif self._executor_type == "pympipool.mpi.executor.PyMPIExecutor" and platform.system() == "Darwin":
             # The Mac firewall might prevent connections based on the network address - especially Github CI
             return import_class(self._executor_type)(max_workers=max_workers, hostname_localhost=True)
-        elif isinstance(self._executor_type, str) and platform.system() == "Linux":
+        elif isinstance(self._executor_type, str):
             return import_class(self._executor_type)(max_workers=max_workers)
         else:
             raise TypeError("The self.executor_type has to be a string.")
