@@ -9,6 +9,7 @@ from concurrent.futures import Future, Executor
 from datetime import datetime
 from inspect import isclass
 import os
+import platform
 import posixpath
 import warnings
 
@@ -1533,6 +1534,14 @@ class GenericJob(JobCore, HasDict):
         if self._executor_type is None:
             raise ValueError(
                 "No executor type defined - Please set self.executor_type."
+            )
+        elif (
+            self._executor_type == "pympipool.mpi.executor.PyMPIExecutor"
+            and platform.system() == "Darwin"
+        ):
+            # The Mac firewall might prevent connections based on the network address - especially Github CI
+            return import_class(self._executor_type)(
+                max_workers=max_workers, hostname_localhost=True
             )
         elif isinstance(self._executor_type, str):
             return import_class(self._executor_type)(max_workers=max_workers)
