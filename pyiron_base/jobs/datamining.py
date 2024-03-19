@@ -788,12 +788,13 @@ class TableJob(GenericJob):
             if self._executor_type is None and self.server.cores > 1:
                 self._executor_type = "pympipool.mpi.executor.PyMPIExecutor"
             if self._executor_type is not None:
-                self._pyiron_table.create_table(
-                    file=hdf5_input,
-                    job_status_list=job_status_list,
-                    enforce_update=self._enforce_update,
-                    executor=self._get_executor(max_workers=self.server.cores),
-                )
+                with self._get_executor(max_workers=self.server.cores) as exe:
+                    self._pyiron_table.create_table(
+                        file=hdf5_input,
+                        job_status_list=job_status_list,
+                        enforce_update=self._enforce_update,
+                        executor=exe,
+                    )
             else:
                 self._pyiron_table.create_table(
                     file=hdf5_input,
