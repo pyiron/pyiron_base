@@ -1535,9 +1535,14 @@ class GenericJob(JobCore, HasDict):
             raise ValueError(
                 "No executor type defined - Please set self.executor_type."
             )
-        elif self._executor_type == "pympipool.mpi.executor.PyMPIExecutor" and platform.system() == "Darwin":
+        elif (
+            self._executor_type == "pympipool.mpi.executor.PyMPIExecutor"
+            and platform.system() == "Darwin"
+        ):
             # The Mac firewall might prevent connections based on the network address - especially Github CI
-            return import_class(self._executor_type)(max_workers=max_workers, hostname_localhost=True)
+            return import_class(self._executor_type)(
+                max_workers=max_workers, hostname_localhost=True
+            )
         elif isinstance(self._executor_type, str) and platform.system() == "Linux":
             return import_class(self._executor_type)(max_workers=max_workers)
         else:
