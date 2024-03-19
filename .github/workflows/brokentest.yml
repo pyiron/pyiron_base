@@ -16,8 +16,29 @@ jobs:
         include:
         - operating-system: macos-latest
           python-version: '3.12'
-          label: osx-64-py-3-12
+          label: osx-64-latest-py-3-12
           prefix: /Users/runner/miniconda3/envs/my-env
+
+        - operating-system: macos-11
+          python-version: '3.12'
+          label: osx-64-11-py-3-12
+          prefix: /Users/runner/miniconda3/envs/my-env
+
+        - operating-system: macos-12
+          python-version: '3.12'
+          label: osx-64-12-py-3-12
+          prefix: /Users/runner/miniconda3/envs/my-env
+
+        - operating-system: macos-13
+          python-version: '3.12'
+          label: osx-64-13-py-3-12
+          prefix: /Users/runner/miniconda3/envs/my-env
+
+        - operating-system: macos-14
+          python-version: '3.12'
+          label: osx-64-14-py-3-12
+          prefix: /Users/runner/miniconda3/envs/my-env
+
     steps:
     - uses: actions/checkout@v4
     - name: Setup Mambaforge
