@@ -32,7 +32,7 @@ class InspectTest(PyironTestCase):
             job_inspect.content.input.__repr__(), job_inspect["input"].__repr__()
         )
         self.assertEqual(
-            sorted(dir(job_inspect.content.input)),
+            sorted((job_inspect.content.input).keys()),
             sorted(job_inspect["input"].list_nodes()
                     + job_inspect["input"].list_groups())
         )
