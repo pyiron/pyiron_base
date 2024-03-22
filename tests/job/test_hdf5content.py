@@ -8,7 +8,7 @@ from pyiron_base.project.generic import Project
 from pyiron_base._tests import PyironTestCase
 
 
-class DatabasePropertyIntegration(PyironTestCase):
+class InspectTest(PyironTestCase):
     @classmethod
     def setUpClass(cls):
         cls.file_location = os.path.dirname(os.path.abspath(__file__))
