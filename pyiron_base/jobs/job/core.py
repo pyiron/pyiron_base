@@ -957,7 +957,14 @@ class JobCore(HasGroups):
         if value is not None:
             return value
 
-        if item in self.files.list():
+        # only try to read files when no slashes are present:
+        # downstream code will often do something like job['path/to/output'] to check if certain values exist and branch
+        # on that.  In cases where they don't exists this would then trigger us to decompress the job files in memory on
+        # every check which slows down things a lot.  Generally these value checks will be of the form output/.../...
+        # i.e. contain slashes and file access tend to be just the file name without slashes, so I separate those cases
+        # here like this.  In those cases where we actually have sub directories in the job folders we can beef up the
+        # file browser.
+        if "/" not in item and item in self.files.list():
             warnings.warn(
                 "Using __getitem__ on a job to access files in deprecated: use job.files instead!",
                 category=DeprecationWarning,
