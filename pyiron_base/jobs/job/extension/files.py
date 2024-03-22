@@ -132,9 +132,24 @@ class File:
         return self._read()
 
     def list(self, lines: int | None = None):
+        """
+        Return file content as list of lines.
+
+        Args:
+            lines (int): only return the first `lines` lines
+
+        Return:
+            list of str: file content
+        """
         return list(islice(iter(self), lines))
 
     def tail(self, lines: int = 100):
+        """
+        Print the last `lines` to stdout.
+
+        Args:
+            lines (int): number of output lines
+        """
         print(*self._read(tail=lines), sep="")
 
     def __eq__(self, other):
