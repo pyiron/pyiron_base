@@ -68,7 +68,7 @@ class FileBrowser:
     def _ipython_display_(self):
         path = self._job.working_directory + ":"
         files = [
-            "\t" + f
+            "\t" + str(f)
             for f in _working_directory_list_files(
                 working_directory=self._working_directory
             )
