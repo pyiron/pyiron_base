@@ -85,12 +85,7 @@ class FileBrowser:
         Raises:
             FileNotFoundError: if the given file does not exist
         """
-        print(
-            *_working_directory_read_file(
-                working_directory=self._working_directory, file_name=file, tail=lines
-            ),
-            sep="",
-        )
+        return self[file].tail(lines=lines)
 
     def __getitem__(self, item):
         if item in _working_directory_list_files(
