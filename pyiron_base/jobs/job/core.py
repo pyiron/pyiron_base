@@ -108,21 +108,35 @@ _doc_str_job_core_attr = """\
 """
 
 
-def recursive_load_from_hdf(project_hdf5, item):
-    try:
-        group = project_hdf5[item]
-        if (
-            isinstance(group, ProjectHDFio)
-            and "NAME" in group
-            and group["NAME"] == "DataContainer"
-        ):
-            return group.to_object(lazy=True)
-        else:
-            return group
-    except ValueError:
-        pass
+def recursive_load_from_hdf(project_hdf5: ProjectHDFio, item: str):
+    """
+    Load given item from HDF, but check also for DataContainer along the way.
 
-    name_lst = item.split("/")
+    If `item` exists as is in HDF, return it, otherwise break it up along every slash and try to load a
+    :class:`~.DataContainer` and then try to index with the remainder of the path, i.e.
+
+    >>> recursive_load_from_hdf(hdf, 'my/path/to/value')
+
+    is equivalent to one of (in this order)
+
+    >>> hdf['my/path/to'].to_object()['value']
+    >>> hdf['my/path'].to_object()['to/value']
+    >>> hdf['my'].to_object()['path/to/value']
+
+    in case
+
+    >>> hdf['/my/path/to/value']
+
+    doesn't exist.
+
+    Args:
+        project_hdf5 (ProjectHDFio): HDF file to access
+        item (str): path to value, may contain `/`
+
+    Returns:
+        object: whatever was found in the HDF file
+        None: if nothing was found in the HDF file
+    """
 
     def successive_path_splits(name_lst):
         """
@@ -139,6 +153,21 @@ def recursive_load_from_hdf(project_hdf5, item):
             # where we are looking for data in the container
             data_path = "/".join(name_lst[-1:])
             yield container_path, data_path
+
+    try:
+        group = project_hdf5[item]
+        if (
+            isinstance(group, ProjectHDFio)
+            and "NAME" in group
+            and group["NAME"] == "DataContainer"
+        ):
+            return group.to_object(lazy=True)
+        else:
+            return group
+    except ValueError:
+        pass
+
+    name_lst = item.split("/")
 
     for container_path, data_path in successive_path_splits(name_lst):
         try:
