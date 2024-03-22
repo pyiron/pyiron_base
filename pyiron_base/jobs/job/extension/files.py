@@ -89,6 +89,9 @@ class FileBrowser:
         return self[file].tail(lines=lines)
 
     def __getitem__(self, item):
+        sub = os.path.join(self._working_directory, item)
+        if os.path.isdir(sub):
+            return FileBrowser(sub)
         if item in _working_directory_list_files(
             working_directory=self._working_directory,
             include_archive=False,
@@ -129,7 +132,7 @@ class File:
         )
 
     def __iter__(self):
-        return self._read()
+        return iter(self._read())
 
     def list(self, lines: int | None = None):
         """
