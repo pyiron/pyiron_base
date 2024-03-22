@@ -1,6 +1,7 @@
 import os
 import posixpath
 from typing import List
+from itertools import islice
 from pyiron_base.jobs.job.util import (
     _working_directory_list_files,
     _working_directory_read_file,
@@ -120,15 +121,21 @@ class File:
     def __str__(self):
         return self._path
 
-    def tail(self, lines: int = 100):
-        print(
-            *_working_directory_read_file(
-                working_directory=os.path.dirname(self._path),
-                file_name=os.path.basename(self._path),
-                tail=lines,
-            ),
-            sep="",
+    def _read(self, tail=None):
+        return _working_directory_read_file(
+                working_directory=os.path.dirname(str(self)),
+                file_name=os.path.basename(str(self)),
+                tail=tail,
         )
+
+    def __iter__(self):
+        return self._read()
+
+    def list(self, lines: int | None = None):
+        return list(islice(iter(self), lines))
+
+    def tail(self, lines: int = 100):
+        print(*self._read(tail=lines), sep="")
 
     def __eq__(self, other):
         return self.__str__().__eq__(other)
