@@ -8,7 +8,7 @@ from pyiron_base.project.generic import Project
 from pyiron_base._tests import PyironTestCase
 
 
-class DatabasePropertyIntegration(PyironTestCase):
+class InspectTest(PyironTestCase):
     @classmethod
     def setUpClass(cls):
         cls.file_location = os.path.dirname(os.path.abspath(__file__))
@@ -32,7 +32,7 @@ class DatabasePropertyIntegration(PyironTestCase):
             job_inspect.content.input.__repr__(), job_inspect["input"].__repr__()
         )
         self.assertEqual(
-            sorted(dir(job_inspect.content.input)),
+            sorted((job_inspect.content.input).keys()),
             sorted(job_inspect["input"].list_nodes()
                     + job_inspect["input"].list_groups())
         )
