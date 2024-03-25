@@ -1048,10 +1048,8 @@ class GenericJob(JobCore, HasDict):
         data_dict = self._type_to_dict()
         data_dict["status"] = self.status.string
         data_dict["input/generic_dict"] = {
-            "restart_file_list": [str(f) for f in self._restart_file_list],
-            "restart_file_dict": {
-                str(f): n for f, n in self._restart_file_dict.items()
-            },
+            "restart_file_list": self._restart_file_list,
+            "restart_file_dict": self._restart_file_dict.items(),
             "exclude_nodes_hdf": self._exclude_nodes_hdf,
             "exclude_groups_hdf": self._exclude_groups_hdf,
         }
