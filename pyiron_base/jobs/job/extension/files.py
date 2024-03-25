@@ -126,9 +126,9 @@ class File:
 
     def _read(self, tail=None):
         return _working_directory_read_file(
-                working_directory=os.path.dirname(str(self)),
-                file_name=os.path.basename(str(self)),
-                tail=tail,
+            working_directory=os.path.dirname(str(self)),
+            file_name=os.path.basename(str(self)),
+            tail=tail,
         )
 
     def __iter__(self):
