@@ -43,24 +43,35 @@ def database():
     try:
         if "projectPath".lower() not in db.get_table_headings(db.table_name):
             print("add missing column: " + "projectPath")
-            db.add_column(col_name="projectPath", col_type="varchar(" + PROJECT_PATH_STR_LENGTH + ")")
+            db.add_column(
+                col_name="projectPath",
+                col_type="varchar(" + PROJECT_PATH_STR_LENGTH + ")",
+            )
         if "subJob".lower() not in db.get_table_headings(db.table_name):
             print("add missing column: " + "subJob")
-            db.add_column(col_name="subJob", col_type="varchar(" + SUBJOB_STR_LENGTH + ")")
+            db.add_column(
+                col_name="subJob", col_type="varchar(" + SUBJOB_STR_LENGTH + ")"
+            )
         else:
             print("change data type of subJob")
-            db.change_column_type(col_name="subJob", col_type="varchar(" + SUBJOB_STR_LENGTH + ")")
+            db.change_column_type(
+                col_name="subJob", col_type="varchar(" + SUBJOB_STR_LENGTH + ")"
+            )
         if "masterID".lower() not in db.get_table_headings(db.table_name):
             print("add missing column: " + "masterid")
             db.add_column(col_name="masterid", col_type="bigint")
 
         if "hamversion" in db.get_table_headings(db.table_name):
             print("change data type hamversion")
-            db.change_column_type(col_name="hamversion", col_type="varchar(" + HAMVERSION_STR_LENGTH + ")")
+            db.change_column_type(
+                col_name="hamversion", col_type="varchar(" + HAMVERSION_STR_LENGTH + ")"
+            )
 
         if "job" in db.get_table_headings(db.table_name):
             print("change data type job")
-            db.change_column_type(col_name="job", col_type="varchar(" + JOB_STR_LENGTH + ")")
+            db.change_column_type(
+                col_name="job", col_type="varchar(" + JOB_STR_LENGTH + ")"
+            )
         print(db.table_name, " - database successful updated")
     except ValueError:
         print(db.table_name, " - database failed")
