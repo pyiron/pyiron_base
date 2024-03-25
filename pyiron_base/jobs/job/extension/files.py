@@ -1,4 +1,5 @@
 import os
+import posixpath
 from typing import List
 from pyiron_base.jobs.job.util import (
     _working_directory_list_files,
@@ -96,12 +97,12 @@ class FileBrowser:
             working_directory=self._working_directory,
             include_archive=False,
         ):
-            return File(os.path.join(self._working_directory, item))
+            return File(posixpath.join(self._working_directory, item))
         elif item in _working_directory_list_files(
             working_directory=self._working_directory,
             include_archive=True,
         ):
-            return File(os.path.join(self._working_directory, item))
+            return File(posixpath.join(self._working_directory, item))
         else:
             raise FileNotFoundError(item)
 
@@ -115,13 +116,24 @@ class FileBrowser:
                 raise FileNotFoundError(item) from None
 
 
-class File(str):
+class File:
+    __slots__ = ("_path",)
+
+    def __init__(self, path):
+        self._path = path
+
+    def __str__(self):
+        return self._path
+
     def tail(self, lines: int = 100):
         print(
             *_working_directory_read_file(
-                working_directory=os.path.dirname(self),
-                file_name=os.path.basename(self),
+                working_directory=os.path.dirname(self._path),
+                file_name=os.path.basename(self._path),
                 tail=lines,
             ),
             sep="",
         )
+
+    def __eq__(self, other):
+        return self.__str__().__eq__(other)
