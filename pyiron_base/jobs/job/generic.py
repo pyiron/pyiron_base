@@ -276,7 +276,7 @@ class GenericJob(JobCore, HasDict):
         Returns:
             list: list of files
         """
-        return self._restart_file_list
+        return [str(f) if isinstance(f, File) else f for f in self._restart_file_list]
 
     @restart_file_list.setter
     def restart_file_list(self, filenames):
@@ -298,7 +298,7 @@ class GenericJob(JobCore, HasDict):
         """
         A dictionary of the new name of the copied restart files
         """
-        for actual_name in [os.path.basename(f) for f in self._restart_file_list]:
+        for actual_name in [os.path.basename(f) for f in self.restart_file_list]:
             if isinstance(actual_name, File):
                 actual_name = str(actual_name)
             if actual_name not in self._restart_file_dict.keys():
@@ -1048,8 +1048,8 @@ class GenericJob(JobCore, HasDict):
         data_dict = self._type_to_dict()
         data_dict["status"] = self.status.string
         data_dict["input/generic_dict"] = {
-            "restart_file_list": self._restart_file_list,
-            "restart_file_dict": self._restart_file_dict.items(),
+            "restart_file_list": self.restart_file_list,
+            "restart_file_dict": self._restart_file_dict,
             "exclude_nodes_hdf": self._exclude_nodes_hdf,
             "exclude_groups_hdf": self._exclude_groups_hdf,
         }
