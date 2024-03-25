@@ -92,12 +92,18 @@ class FileBrowser:
         )
 
     def __getitem__(self, item):
-        if item not in _working_directory_list_files(
-            working_directory=self._working_directory
+        if item in _working_directory_list_files(
+            working_directory=self._working_directory,
+            include_archive=False,
         ):
+            return File(os.path.join(self._working_directory, item))
+        elif item in _working_directory_list_files(
+            working_directory=self._working_directory,
+            include_archive=True,
+        ):
+            return File(os.path.join(self._working_directory, item))
+        else:
             raise FileNotFoundError(item)
-
-        return File(os.path.join(self._working_directory, item))
 
     def __getattr__(self, item):
         if item.startswith("__") and item.endswith("__"):
