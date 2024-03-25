@@ -97,7 +97,7 @@ class FileBrowser:
         ):
             raise FileNotFoundError(item)
 
-        return File(os.path.join(self._working_directory, item))
+        return File(os.path.join(self._working_directory, item).replace("/", "\\"))
 
     def __getattr__(self, item):
         if item.startswith("__") and item.endswith("__"):
