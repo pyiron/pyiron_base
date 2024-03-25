@@ -308,7 +308,13 @@ class GenericJob(JobCore, HasDict):
         if not isinstance(val, dict):
             raise ValueError("restart_file_dict should be a dictionary!")
         else:
-            self._restart_file_dict = val
+            self._restart_file_dict = {}
+            for k, v in val.items():
+                if isinstance(k, File):
+                    k = str(k)
+                if isinstance(v, File):
+                    v = str(v)
+                self._restart_file_dict[k] = v
 
     @property
     def exclude_nodes_hdf(self):
