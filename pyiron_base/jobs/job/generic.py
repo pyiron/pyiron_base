@@ -23,6 +23,7 @@ from pyiron_base.jobs.job.core import (
     _doc_str_job_core_attr,
 )
 from pyiron_base.jobs.job.extension.executable import Executable
+from pyiron_base.jobs.job.extension.files import File
 from pyiron_base.jobs.job.extension.jobstatus import JobStatus
 from pyiron_base.jobs.job.runfunction import (
     run_job_with_parameter_repair,
@@ -286,6 +287,8 @@ class GenericJob(JobCore, HasDict):
             filenames (list):
         """
         for f in filenames:
+            if isinstance(f, File):
+                f = str(f)
             if not (os.path.isfile(f)):
                 raise IOError("File: {} does not exist".format(f))
             self.restart_file_list.append(f)
@@ -296,6 +299,8 @@ class GenericJob(JobCore, HasDict):
         A dictionary of the new name of the copied restart files
         """
         for actual_name in [os.path.basename(f) for f in self._restart_file_list]:
+            if isinstance(actual_name, File):
+                actual_name = str(actual_name)
             if actual_name not in self._restart_file_dict.keys():
                 self._restart_file_dict[actual_name] = actual_name
         return self._restart_file_dict
