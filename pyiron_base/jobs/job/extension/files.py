@@ -96,12 +96,12 @@ class FileBrowser:
             working_directory=self._working_directory,
             include_archive=False,
         ):
-            return File(os.path.join(self._working_directory, item).replace("/", "\\"))
+            return File(os.path.join(self._working_directory, item).replace("\\", "/"))
         elif item in _working_directory_list_files(
             working_directory=self._working_directory,
             include_archive=True,
         ):
-            return File(os.path.join(self._working_directory, item).replace("/", "\\"))
+            return File(os.path.join(self._working_directory, item).replace("\\", "/"))
         else:
             raise FileNotFoundError(item)
 
