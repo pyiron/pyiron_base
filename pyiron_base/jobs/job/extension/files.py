@@ -128,5 +128,8 @@ class File:
             sep="",
         )
 
+    def replace(self, *args, **kwargs):
+        return self.__str__().replace(*args, **kwargs)
+
     def __eq__(self, other):
         return self.__str__().__eq__(other)

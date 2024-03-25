@@ -102,7 +102,7 @@ class TestExecutableContainer(TestWithProject):
         if os.name != "nt":
             self.assertEqual(job.files.error_out, output_file_path)
         else:
-            self.assertEqual(str(job.files.error_out).replace("/", "\\"), output_file_path)
+            self.assertEqual(job.files.error_out.replace("/", "\\"), output_file_path)
 
     def test_create_job_factory_typeerror(self):
         create_catjob = create_job_factory(
