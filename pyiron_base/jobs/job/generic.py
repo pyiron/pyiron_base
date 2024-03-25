@@ -299,8 +299,6 @@ class GenericJob(JobCore, HasDict):
         A dictionary of the new name of the copied restart files
         """
         for actual_name in [os.path.basename(f) for f in self.restart_file_list]:
-            if isinstance(actual_name, File):
-                actual_name = str(actual_name)
             if actual_name not in self._restart_file_dict.keys():
                 self._restart_file_dict[actual_name] = actual_name
         return self._restart_file_dict
