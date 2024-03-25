@@ -1,6 +1,6 @@
 import os
 import posixpath
-from typing import List
+from typing import List, Optional
 from itertools import islice
 from pyiron_base.jobs.job.util import (
     _working_directory_list_files,
@@ -134,7 +134,7 @@ class File:
     def __iter__(self):
         return iter(self._read())
 
-    def list(self, lines: int | None = None):
+    def list(self, lines: Optional[int] = None):
         """
         Return file content as list of lines.
 
