@@ -9,6 +9,7 @@ The core class in pyiron, linking python to the database to file storage.
 from abc import ABC
 from pyiron_base.storage.datacontainer import DataContainer
 from pyiron_base.interfaces.has_hdf import HasHDF
+from pyiron_base.interfaces.has_dict import HasDict
 from pyiron_base.storage.hdfio import ProjectHDFio
 from pyiron_base.state import state
 
@@ -24,13 +25,15 @@ __status__ = "development"
 __date__ = "Mar 23, 2021"
 
 
-class HasStorage(HasHDF, ABC):
+class HasStorage(HasDict, HasHDF, ABC):
     """
     A base class for objects that use HDF5 data serialization via the `DataContainer` class.
 
     Unless you know what you are doing sub classes should pass the `group_name` argument to :meth:`~.__init__` or
     override :meth:`~.get_hdf_group_name()` to force a default name for the HDF group the object should write itself to.
     """
+
+    __hdf_version__ = '0.2.0'
 
     def __init__(self, *args, group_name=None, **kwargs):
         """
@@ -49,11 +52,22 @@ class HasStorage(HasHDF, ABC):
     def _get_hdf_group_name(self) -> str:
         return self._group_name
 
+    def to_dict(self):
+        return self.storage.to_builtin()
+
+    def from_dict(self, obj_dict: dict, version: str = None):
+        self.storage.clear()
+        self.storage.update(obj_dict)
+
     def _to_hdf(self, hdf: ProjectHDFio):
         self.storage.to_hdf(hdf=hdf)
 
     def _from_hdf(self, hdf: ProjectHDFio, version: str = None):
-        self.storage.from_hdf(hdf=hdf)
+        if version == "0.1.0":
+            self.storage.from_hdf(hdf=hdf)
+        else:
+            data_dict = hdf.read_dict_from_hdf(recursive=True)
+            self.from_dict(data_dict, version)
 
 
 class HasDatabase(ABC):
