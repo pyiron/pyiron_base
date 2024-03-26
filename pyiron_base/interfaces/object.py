@@ -53,11 +53,14 @@ class HasStorage(HasDict, HasHDF, ABC):
         return self._group_name
 
     def to_dict(self):
-        return self.storage.to_builtin()
+        return {
+            "data": self.storage.to_builtin(),
+            **self._type_to_dict()
+        }
 
     def from_dict(self, obj_dict: dict, version: str = None):
         self.storage.clear()
-        self.storage.update(obj_dict)
+        self.storage.update(obj_dict["data"])
 
     def _to_hdf(self, hdf: ProjectHDFio):
         self.storage.to_hdf(hdf=hdf)
