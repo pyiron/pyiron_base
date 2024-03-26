@@ -26,6 +26,7 @@ class TestWrapExecutable(TestWithProject):
             input_file_lst=None,
             execute_job=True,
         )
+        self.assertTrue("Python" in python_version_step["error.out"][0])
         self.assertTrue(python_version_step.status.finished)
         self.assertEqual(
             python_version_step.files.error_out,
@@ -43,4 +44,5 @@ class TestWrapExecutable(TestWithProject):
         )
         job.input.energy = 2.0
         job.run()
+        self.assertEqual(job.output['stdout'], "")
         self.assertEqual(job.output.energy, 2.0)

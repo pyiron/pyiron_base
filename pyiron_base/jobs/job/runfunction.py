@@ -607,10 +607,11 @@ def run_time_decorator(func):
     def wrapper(job):
         if not state.database.database_is_disabled and job.job_id is not None:
             job.project.db.item_update({"timestart": datetime.now()}, job.job_id)
-            func(job)
+            output = func(job)
             job.project.db.item_update(job._runtime(), job.job_id)
         else:
-            func(job)
+            output = func(job)
+        return output
 
     return wrapper
 
@@ -683,6 +684,7 @@ def execute_job_with_external_executable(job):
     ) as f_err:
         f_err.write(out)
     handle_finished_job(job=job, job_crashed=job_crashed, collect_output=True)
+    return out
 
 
 def handle_finished_job(job, job_crashed=False, collect_output=True):

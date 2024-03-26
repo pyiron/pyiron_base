@@ -806,7 +806,7 @@ class GenericJob(JobCore, HasDict):
         """
         The run static function is called by run to execute the simulation.
         """
-        execute_job_with_external_executable(job=self)
+        return execute_job_with_external_executable(job=self)
 
     def run_if_scheduler(self):
         """
