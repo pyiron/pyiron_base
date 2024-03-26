@@ -46,4 +46,5 @@ class TestExecutableContainerConda(TestWithProject):
             self.project.conda_environment.create(env_name="py312", env_file="env.yaml")
         self.assertEqual(len(w), 1)
         job.run()
+        self.assertEqual(job.output['stdout'], "Python 3.12.1\n")
         self.assertEqual(job["error.out"][0], "Python 3.12.1\n")

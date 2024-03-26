@@ -15,6 +15,7 @@ import monty.io
 from typing import Optional, Union
 from pyiron_base.utils.instance import static_isinstance
 from pyiron_base.utils.safetar import safe_extract
+from pyiron_base.database.sqlcolumnlength import JOB_STR_LENGTH
 
 __author__ = "Jan Janssen"
 __copyright__ = (
@@ -208,10 +209,9 @@ def _is_valid_job_name(job_name):
         raise ValueError(
             f'Invalid name for a pyiron object, must be letters, digits (not as first character) and "_" only, not {job_name}'
         )
-    if len(job_name) > 50:
+    if len(job_name) > JOB_STR_LENGTH:
         raise ValueError(
-            "Invalid name for a PyIron object: must be less then or "
-            "equal to 50 characters"
+            f"Invalid name for a PyIron object: must be less then or equal to {JOB_STR_LENGTH} characters"
         )
 
 
@@ -351,7 +351,7 @@ def _job_is_compressed(job):
     return _working_directory_is_compressed(working_directory=job.working_directory)
 
 
-def _working_directory_list_files(working_directory):
+def _working_directory_list_files(working_directory, include_archive=True):
     """
     Returns list of files in the jobs working directory.
 
@@ -359,22 +359,24 @@ def _working_directory_list_files(working_directory):
 
     Args:
         working_directory (str): working directory of the job object to inspect files in
+        include_archive (bool): include files in the .tag.gz archive
 
     Returns:
         list of str: file names
     """
     if os.path.isdir(working_directory):
         uncompressed_files_lst = os.listdir(working_directory)
-        if _working_directory_is_compressed(working_directory=working_directory):
+        if include_archive and _working_directory_is_compressed(
+            working_directory=working_directory
+        ):
             compressed_job_name = _get_compressed_job_name(
                 working_directory=working_directory
             )
             with tarfile.open(compressed_job_name, "r") as tar:
-                job_archive_name = os.path.basename(compressed_job_name)
                 compressed_files_lst = [
                     member.name for member in tar.getmembers() if member.isfile()
                 ]
-                uncompressed_files_lst.remove(job_archive_name)
+                uncompressed_files_lst.remove(os.path.basename(compressed_job_name))
                 return uncompressed_files_lst + compressed_files_lst
         else:
             return uncompressed_files_lst

@@ -31,6 +31,7 @@ class TestExecutableContainer(TestWithProject):
         job = self.project.create.job.CatJob(job_name="job_test")
         job.input["energy"] = energy_value
         job.run()
+        self.assertEqual(job.output['stdout'], "")
         self.assertEqual(job.output["energy"], energy_value)
         job_reload = self.project.load(job.job_name)
         self.assertEqual(job_reload.input["energy"], energy_value)
@@ -45,8 +46,8 @@ class TestExecutableContainer(TestWithProject):
             'mpi': False,
             'accepted_return_codes': [0]
         }
-        self.assertEqual(job.executable._storage.to_builtin(), executable_dict)
-        self.assertEqual(job_reload.executable._storage.to_builtin(), executable_dict)
+        self.assertEqual(job.executable.storage.to_builtin(), executable_dict)
+        self.assertEqual(job_reload.executable.storage.to_builtin(), executable_dict)
         del JOB_CLASS_DICT["CatJob"]
 
     def test_create_job_factory_with_project(self):
@@ -96,13 +97,14 @@ class TestExecutableContainer(TestWithProject):
             job_name="job_output_files"
         )
         job.run()
+        self.assertEqual(job.output['stdout'], "")
         for file in ['error_out', 'input_file', 'output_file']:
             self.assertTrue(file in dir(job.files))
         output_file_path = os.path.abspath(os.path.join(__file__, "..", "test_executablecontainer", "job_output_files_hdf5", "job_output_files", "error.out"))
         if os.name != "nt":
-            self.assertEqual(job.files.error_out, output_file_path)
+            self.assertEqual(str(job.files.error_out), output_file_path)
         else:
-            self.assertEqual(job.files.error_out.replace("/", "\\"), output_file_path)
+            self.assertEqual(job.files.error_out, output_file_path.replace("\\", "/"))
 
     def test_create_job_factory_typeerror(self):
         create_catjob = create_job_factory(
@@ -125,6 +127,7 @@ class TestExecutableContainer(TestWithProject):
             job_name="job_no"
         )
         job.run()
+        self.assertTrue("Python" in job.output['stdout'])
         self.assertTrue(job.status.finished)
         self.assertEqual(os.listdir(job.working_directory), ['error.out'])
         with open(os.path.join(job.working_directory, 'error.out'), "r") as f:

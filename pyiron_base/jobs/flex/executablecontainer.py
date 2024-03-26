@@ -79,6 +79,9 @@ class ExecutableContainerJob(TemplateJob):
                 working_directory=self.working_directory,
             )
 
+    def run_static(self):
+        self.storage.output.stdout = super().run_static()
+
     def collect_output(self):
         if self._collect_output_funct is not None:
             self.output.update(
@@ -86,24 +89,25 @@ class ExecutableContainerJob(TemplateJob):
             )
             self.to_hdf()
 
-    def to_hdf(self, hdf=None, group_name=None):
-        super().to_hdf(hdf=hdf, group_name=group_name)
+    def to_dict(self):
+        job_dict = super().to_dict()
         if self._write_input_funct is not None:
-            self.project_hdf5["write_input_function"] = np.void(
+            job_dict["write_input_function"] = np.void(
                 cloudpickle.dumps(self._write_input_funct)
             )
         if self._collect_output_funct is not None:
-            self.project_hdf5["collect_output_function"] = np.void(
+            job_dict["collect_output_function"] = np.void(
                 cloudpickle.dumps(self._collect_output_funct)
             )
+        return job_dict
 
-    def from_hdf(self, hdf=None, group_name=None):
-        super().from_hdf(hdf=hdf, group_name=group_name)
-        if "write_input_function" in self.project_hdf5.list_nodes():
+    def from_dict(self, job_dict):
+        super().from_dict(job_dict=job_dict)
+        if "write_input_function" in job_dict.keys():
             self._write_input_funct = cloudpickle.loads(
-                self.project_hdf5["write_input_function"]
+                job_dict["write_input_function"]
             )
-        if "write_input_function" in self.project_hdf5.list_nodes():
+        if "write_input_function" in job_dict.keys():
             self._collect_output_funct = cloudpickle.loads(
-                self.project_hdf5["collect_output_function"]
+                job_dict["collect_output_function"]
             )

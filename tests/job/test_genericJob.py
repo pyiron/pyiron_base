@@ -625,7 +625,7 @@ class TestGenericJob(TestWithFilledProject):
         )
 
     def test_tail(self):
-        """job.tail should print the last lines of a file to stdout"""
+        """job.files.tail should print the last lines of a file to stdout"""
         job = self.project.load(self.project.get_job_ids()[0])
         job.decompress()
         content = ["Content", "More", "Lines"]
@@ -634,30 +634,64 @@ class TestGenericJob(TestWithFilledProject):
 
         for i in range(len(content)):
             with self.subTest(i=i):
+                reference_str = os.linesep.join(content[-i-1:]) + os.linesep
                 with contextlib.redirect_stdout(io.StringIO(newline=os.linesep)) as f:
                     job.files.tail("test_file", lines=i+1)
-                reference_str = os.linesep.join(content[-i-1:]) + os.linesep
                 self.assertEqual(f.getvalue().replace('\r', ''), reference_str.replace('\r', ''),
                                  "tail read incorrect lines from output file when job uncompressed!")
                 with contextlib.redirect_stdout(io.StringIO(newline=os.linesep)) as f:
                     job.files.test_file.tail(lines=i+1)
-                reference_str = os.linesep.join(content[-i-1:]) + os.linesep
                 self.assertEqual(f.getvalue().replace('\r', ''), reference_str.replace('\r', ''),
                                  "tail read incorrect lines from output file when job uncompressed!")
 
         job.compress()
         for i in range(len(content)):
+            reference_str = os.linesep.join(content[-i-1:]) + os.linesep
             with contextlib.redirect_stdout(io.StringIO()) as f:
                 job.files.tail("test_file", lines=i+1)
-            reference_str = os.linesep.join(content[-i-1:]) + os.linesep
             self.assertEqual(f.getvalue().replace('\r', ''), reference_str.replace('\r', ''),
                              "tail read incorrect lines from output file when job compressed!")
             with contextlib.redirect_stdout(io.StringIO()) as f:
                 job.files.test_file.tail(lines=i+1)
-            reference_str = os.linesep.join(content[-i-1:]) + os.linesep
             self.assertEqual(f.getvalue().replace('\r', ''), reference_str.replace('\r', ''),
                              "tail read incorrect lines from output file when job compressed!")
 
+    def test_file_lines(self):
+        """job.files....list/iter should return the (first) lines of a file"""
+        job = self.project.load(self.project.get_job_ids()[0])
+        job.decompress()
+        content = ["Content\n", "More\n", "Lines"]
+        with open(os.path.join(job.working_directory, "test_file"), "w") as f:
+            f.write("".join(content))
+
+        for count, (l, l_ref) in enumerate(zip(job.files.test_file, content)):
+            self.assertEqual(l.replace("\r", ""), l_ref,
+                             "Iterating over file doesn't return same line as was written!")
+        self.assertEqual(count + 1, len(content), "Iterating over file skipped some lines!")
+
+        for i in range(len(content)):
+            with self.subTest(i=i):
+                reference_str = "".join(content[:i+1])
+                test_str = ''.join(job.files.test_file.list(lines=i+1))
+                self.assertEqual(test_str.replace('\r', ''), reference_str.replace('\r', ''),
+                                 "list reads incorrect lines from output file when job uncompressed!")
+
+        job.compress()
+        for i in range(len(content)):
+            with self.subTest(i=i):
+                reference_str = "".join(content[:i+1])
+                test_str = ''.join(job.files.test_file.list(lines=i+1))
+                self.assertEqual(test_str.replace('\r', ''), reference_str.replace('\r', ''),
+                                 "list reads incorrect lines from output file when job uncompressed!")
+
+    def test_files_subdir(self):
+        """It should be possible to access sub directories of job folders with FileBrowser."""
+
+        job = self.project.load(self.project.get_job_ids()[0])
+        os.makedirs(job.working_directory + "/subdir")
+        self.assertTrue("subdir" in job.files.list(), "FileBrowser doesn't list sub directories.")
+        self.assertTrue(isinstance(job.files["subdir"], type(job.files)),
+                        "Accessing a sub directory via FileBrowser does not return another FileBrowser!")
 
 if __name__ == "__main__":
     unittest.main()

@@ -23,6 +23,7 @@ from pyiron_base.jobs.job.core import (
     _doc_str_job_core_attr,
 )
 from pyiron_base.jobs.job.extension.executable import Executable
+from pyiron_base.jobs.job.extension.files import File
 from pyiron_base.jobs.job.extension.jobstatus import JobStatus
 from pyiron_base.jobs.job.runfunction import (
     run_job_with_parameter_repair,
@@ -50,6 +51,7 @@ from pyiron_base.utils.deprecate import deprecate
 from pyiron_base.jobs.job.extension.server.generic import Server
 from pyiron_base.database.filetable import FileTable
 from pyiron_base.interfaces.has_dict import HasDict
+from pyiron_base.storage.datacontainer import DataContainer
 
 __author__ = "Joerg Neugebauer, Jan Janssen"
 __copyright__ = (
@@ -275,7 +277,7 @@ class GenericJob(JobCore, HasDict):
         Returns:
             list: list of files
         """
-        return self._restart_file_list
+        return [str(f) if isinstance(f, File) else f for f in self._restart_file_list]
 
     @restart_file_list.setter
     def restart_file_list(self, filenames):
@@ -286,6 +288,8 @@ class GenericJob(JobCore, HasDict):
             filenames (list):
         """
         for f in filenames:
+            if isinstance(f, File):
+                f = str(f)
             if not (os.path.isfile(f)):
                 raise IOError("File: {} does not exist".format(f))
             self.restart_file_list.append(f)
@@ -295,7 +299,7 @@ class GenericJob(JobCore, HasDict):
         """
         A dictionary of the new name of the copied restart files
         """
-        for actual_name in [os.path.basename(f) for f in self._restart_file_list]:
+        for actual_name in [os.path.basename(f) for f in self.restart_file_list]:
             if actual_name not in self._restart_file_dict.keys():
                 self._restart_file_dict[actual_name] = actual_name
         return self._restart_file_dict
@@ -305,7 +309,13 @@ class GenericJob(JobCore, HasDict):
         if not isinstance(val, dict):
             raise ValueError("restart_file_dict should be a dictionary!")
         else:
-            self._restart_file_dict = val
+            self._restart_file_dict = {}
+            for k, v in val.items():
+                if isinstance(k, File):
+                    k = str(k)
+                if isinstance(v, File):
+                    v = str(v)
+                self._restart_file_dict[k] = v
 
     @property
     def exclude_nodes_hdf(self):
@@ -797,7 +807,7 @@ class GenericJob(JobCore, HasDict):
         """
         The run static function is called by run to execute the simulation.
         """
-        execute_job_with_external_executable(job=self)
+        return execute_job_with_external_executable(job=self)
 
     def run_if_scheduler(self):
         """
@@ -1043,12 +1053,15 @@ class GenericJob(JobCore, HasDict):
         data_dict = self._type_to_dict()
         data_dict["status"] = self.status.string
         data_dict["input/generic_dict"] = {
-            "restart_file_list": self._restart_file_list,
+            "restart_file_list": self.restart_file_list,
             "restart_file_dict": self._restart_file_dict,
             "exclude_nodes_hdf": self._exclude_nodes_hdf,
             "exclude_groups_hdf": self._exclude_groups_hdf,
         }
         data_dict["server"] = self._server.to_dict()
+        self._executable_activate_mpi()
+        if self._executable is not None:
+            data_dict["executable"] = self._executable.to_dict()
         if self._import_directory is not None:
             data_dict["import_directory"] = self._import_directory
         if self._executor_type is not None:
@@ -1060,6 +1073,8 @@ class GenericJob(JobCore, HasDict):
         if "import_directory" in job_dict.keys():
             self._import_directory = job_dict["import_directory"]
         self._server.from_dict(server_dict=job_dict["server"])
+        if "executable" in job_dict.keys() and job_dict["executable"] is not None:
+            self.executable.from_dict(job_dict["executable"])
         input_dict = job_dict["input"]
         if "generic_dict" in input_dict.keys():
             generic_dict = input_dict["generic_dict"]
@@ -1087,16 +1102,8 @@ class GenericJob(JobCore, HasDict):
             hdf (ProjectHDFio): HDF5 group object - optional
             group_name (str): HDF5 subgroup name - optional
         """
-
         self._set_hdf(hdf=hdf, group_name=group_name)
-        self._executable_activate_mpi()
-
-        # Write combined dictionary to HDF5
         self._hdf5.write_dict(data_dict=self.to_dict())
-
-        # Write remaining objects to HDF5
-        if self._executable is not None:
-            self.executable.to_hdf(self._hdf5)
 
     @classmethod
     def from_hdf_args(cls, hdf):
@@ -1124,10 +1131,12 @@ class GenericJob(JobCore, HasDict):
         job_dict = self._hdf5.read_dict_from_hdf()
         with self._hdf5.open("input") as hdf5_input:
             job_dict["input"] = hdf5_input.read_dict_from_hdf(recursive=True)
-        self.from_dict(job_dict=job_dict)
-
+        # Backwards compatibility to the previous HasHDF based interface
         if "executable" in self._hdf5.list_groups():
-            self.executable.from_hdf(self._hdf5)
+            exe_dict = self._hdf5["executable/executable"].to_object().to_builtin()
+            exe_dict["READ_ONLY"] = self._hdf5["executable/executable/READ_ONLY"]
+            job_dict["executable"] = {"executable": exe_dict}
+        self.from_dict(job_dict=job_dict)
 
     def save(self):
         """

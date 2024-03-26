@@ -3,7 +3,8 @@
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
 import os
-from pyiron_base.interfaces.object import HasStorage
+from pyiron_base.interfaces.has_dict import HasDict
+from pyiron_base.storage.datacontainer import DataContainer
 from pyiron_base.state import state
 
 """
@@ -22,7 +23,9 @@ __status__ = "production"
 __date__ = "Sep 1, 2017"
 
 
-class Executable(HasStorage):
+class Executable(HasDict):
+    __hdf_version__ = "0.3.0"
+
     def __init__(
         self,
         path_binary_codes=None,
@@ -40,6 +43,7 @@ class Executable(HasStorage):
             overwrite_nt_flag (bool):
         """
         super().__init__()
+        self.storage = DataContainer()
         self.storage.table_name = "executable"
 
         if path_binary_codes is None:
@@ -216,6 +220,29 @@ class Executable(HasStorage):
             self.storage.mpi = True
         else:
             self.storage.mpi = False
+
+    def to_dict(self):
+        executable_dict = self._type_to_dict()
+        executable_storage_dict = self.storage._type_to_dict()
+        executable_storage_dict["READ_ONLY"] = self.storage._read_only
+        executable_storage_dict.update(self.storage.to_builtin())
+        executable_dict["executable"] = executable_storage_dict
+        return executable_dict
+
+    def from_dict(self, executable_dict):
+        data_container_keys = [
+            "version",
+            "name",
+            "operation_system_nt",
+            "executable",
+            "mpi",
+            "accepted_return_codes",
+        ]
+        for key in data_container_keys:
+            if key in executable_dict["executable"]:
+                self.storage[key] = executable_dict["executable"][key]
+        if executable_dict["executable"]["READ_ONLY"]:
+            self.storage.read_only = True
 
     def get_input_for_subprocess_call(self, cores, threads, gpus=None):
         """

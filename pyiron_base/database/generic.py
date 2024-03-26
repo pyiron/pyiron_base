@@ -33,6 +33,7 @@ from queue import SimpleQueue, Empty as QueueEmpty
 from pyiron_base.database.tables import get_historical_table
 from pyiron_base.utils.error import retry
 from pyiron_base.database.interface import IsDatabase
+from pyiron_base.database.sqlcolumnlength import CHEMICALFORMULA_STR_LENGTH
 
 __author__ = "Murat Han Celik"
 __copyright__ = (
@@ -215,7 +216,7 @@ class DatabaseAccess(IsDatabase):
         except Exception as except_msg:
             raise ValueError("Connection to database failed: " + str(except_msg))
 
-        self._chem_formula_lim_length = 50
+        self._chem_formula_lim_length = CHEMICALFORMULA_STR_LENGTH
 
         def _create_table():
             self.__reload_db()

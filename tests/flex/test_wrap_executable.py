@@ -1,4 +1,5 @@
 import os
+import posixpath
 from pyiron_base._tests import TestWithProject
 
 
@@ -25,10 +26,11 @@ class TestWrapExecutable(TestWithProject):
             input_file_lst=None,
             execute_job=True,
         )
+        self.assertTrue("Python" in python_version_step["error.out"][0])
         self.assertTrue(python_version_step.status.finished)
         self.assertEqual(
             python_version_step.files.error_out,
-            os.path.join(python_version_step.working_directory, "error.out")
+            posixpath.join(python_version_step.working_directory, "error.out")
         )
 
     def test_cat(self):
@@ -42,4 +44,5 @@ class TestWrapExecutable(TestWithProject):
         )
         job.input.energy = 2.0
         job.run()
+        self.assertEqual(job.output['stdout'], "")
         self.assertEqual(job.output.energy, 2.0)
