@@ -238,13 +238,9 @@ class Executable(HasDict):
             "mpi",
             "accepted_return_codes",
         ]
-        self.storage.update(
-            {
-                key: executable_dict["executable"][key]
-                for key in data_container_keys
-                if key in executable_dict["executable"].keys()
-            }
-        )
+        for key in data_container_keys:
+            if key in executable_dict["executable"]:
+                self.storage[key] = executable_dict["executable"][key]
         if executable_dict["executable"]["READ_ONLY"]:
             self.storage.read_only = True
 
