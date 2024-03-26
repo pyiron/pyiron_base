@@ -1,6 +1,7 @@
 import os
 import posixpath
-from typing import List
+from typing import List, Optional
+from itertools import islice
 from pyiron_base.jobs.job.util import (
     _working_directory_list_files,
     _working_directory_read_file,
@@ -67,7 +68,7 @@ class FileBrowser:
     def _ipython_display_(self):
         path = self._job.working_directory + ":"
         files = [
-            "\t" + f
+            "\t" + str(f)
             for f in _working_directory_list_files(
                 working_directory=self._working_directory
             )
@@ -85,14 +86,12 @@ class FileBrowser:
         Raises:
             FileNotFoundError: if the given file does not exist
         """
-        print(
-            *_working_directory_read_file(
-                working_directory=self._working_directory, file_name=file, tail=lines
-            ),
-            sep="",
-        )
+        return self[file].tail(lines=lines)
 
     def __getitem__(self, item):
+        sub = os.path.join(self._working_directory, item)
+        if os.path.isdir(sub):
+            return FileBrowser(sub)
         if item in _working_directory_list_files(
             working_directory=self._working_directory,
             include_archive=False,
@@ -125,15 +124,36 @@ class File:
     def __str__(self):
         return self._path
 
-    def tail(self, lines: int = 100):
-        print(
-            *_working_directory_read_file(
-                working_directory=os.path.dirname(self._path),
-                file_name=os.path.basename(self._path),
-                tail=lines,
-            ),
-            sep="",
+    def _read(self, tail=None):
+        return _working_directory_read_file(
+            working_directory=os.path.dirname(str(self)),
+            file_name=os.path.basename(str(self)),
+            tail=tail,
         )
+
+    def __iter__(self):
+        return iter(self._read())
+
+    def list(self, lines: Optional[int] = None):
+        """
+        Return file content as list of lines.
+
+        Args:
+            lines (int): only return the first `lines` lines
+
+        Return:
+            list of str: file content
+        """
+        return list(islice(iter(self), lines))
+
+    def tail(self, lines: int = 100):
+        """
+        Print the last `lines` to stdout.
+
+        Args:
+            lines (int): number of output lines
+        """
+        print(*self._read(tail=lines), sep="")
 
     def __eq__(self, other):
         return self.__str__().__eq__(other)

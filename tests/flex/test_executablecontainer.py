@@ -100,7 +100,7 @@ class TestExecutableContainer(TestWithProject):
             self.assertTrue(file in dir(job.files))
         output_file_path = os.path.abspath(os.path.join(__file__, "..", "test_executablecontainer", "job_output_files_hdf5", "job_output_files", "error.out"))
         if os.name != "nt":
-            self.assertEqual(job.files.error_out, output_file_path)
+            self.assertEqual(str(job.files.error_out), output_file_path)
         else:
             self.assertEqual(job.files.error_out, output_file_path.replace("\\", "/"))
 
