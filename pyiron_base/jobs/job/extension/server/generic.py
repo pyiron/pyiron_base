@@ -14,6 +14,7 @@ from typing import Union
 from pyiron_base.state import state
 from pyiron_base.interfaces.lockable import Lockable, sentinel
 from pyiron_base.interfaces.has_dict import HasDict
+from pyiron_base.utils.deprecate import deprecate
 from pyiron_base.utils.instance import static_isinstance
 from pyiron_base.jobs.job.extension.server.runmode import Runmode
 
@@ -657,6 +658,34 @@ class Server(
         if "accept_crash" in server_dict.keys():
             self._accept_crash = server_dict["accept_crash"] == 1
         self._new_hdf = server_dict["new_h5"] == 1
+
+    @deprecate(message="Use job.server.to_dict() instead of to_hdf()", version=0.9)
+    def to_hdf(self, hdf, group_name=None):
+        """
+        Store Server object in HDF5 file
+        Args:
+            hdf: HDF5 object
+            group_name (str): node name in the HDF5 file
+        """
+        if group_name is not None:
+            with hdf.open(group_name) as hdf_group:
+                hdf_group["server"] = self.to_dict()
+        else:
+            hdf["server"] = self.to_dict()
+
+    @deprecate(message="Use job.server.from_dict() instead of from_hdf()", version=0.9)
+    def from_hdf(self, hdf, group_name=None):
+        """
+        Recover Server object in HDF5 file
+        Args:
+            hdf: HDF5 object
+            group_name: node name in the HDF5 file
+        """
+        if group_name is not None:
+            with hdf.open(group_name) as hdf_group:
+                self.from_dict(server_dict=hdf_group["server"])
+        else:
+            self.from_dict(server_dict=hdf["server"])
 
     def db_entry(self):
         """
