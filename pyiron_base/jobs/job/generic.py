@@ -23,6 +23,7 @@ from pyiron_base.jobs.job.core import (
     _doc_str_job_core_attr,
 )
 from pyiron_base.jobs.job.extension.executable import Executable
+from pyiron_base.jobs.job.extension.files import File
 from pyiron_base.jobs.job.extension.jobstatus import JobStatus
 from pyiron_base.jobs.job.runfunction import (
     run_job_with_parameter_repair,
@@ -275,7 +276,7 @@ class GenericJob(JobCore, HasDict):
         Returns:
             list: list of files
         """
-        return self._restart_file_list
+        return [str(f) if isinstance(f, File) else f for f in self._restart_file_list]
 
     @restart_file_list.setter
     def restart_file_list(self, filenames):
@@ -286,6 +287,8 @@ class GenericJob(JobCore, HasDict):
             filenames (list):
         """
         for f in filenames:
+            if isinstance(f, File):
+                f = str(f)
             if not (os.path.isfile(f)):
                 raise IOError("File: {} does not exist".format(f))
             self.restart_file_list.append(f)
@@ -295,7 +298,7 @@ class GenericJob(JobCore, HasDict):
         """
         A dictionary of the new name of the copied restart files
         """
-        for actual_name in [os.path.basename(f) for f in self._restart_file_list]:
+        for actual_name in [os.path.basename(f) for f in self.restart_file_list]:
             if actual_name not in self._restart_file_dict.keys():
                 self._restart_file_dict[actual_name] = actual_name
         return self._restart_file_dict
@@ -305,7 +308,13 @@ class GenericJob(JobCore, HasDict):
         if not isinstance(val, dict):
             raise ValueError("restart_file_dict should be a dictionary!")
         else:
-            self._restart_file_dict = val
+            self._restart_file_dict = {}
+            for k, v in val.items():
+                if isinstance(k, File):
+                    k = str(k)
+                if isinstance(v, File):
+                    v = str(v)
+                self._restart_file_dict[k] = v
 
     @property
     def exclude_nodes_hdf(self):
@@ -1043,7 +1052,7 @@ class GenericJob(JobCore, HasDict):
         data_dict = self._type_to_dict()
         data_dict["status"] = self.status.string
         data_dict["input/generic_dict"] = {
-            "restart_file_list": self._restart_file_list,
+            "restart_file_list": self.restart_file_list,
             "restart_file_dict": self._restart_file_dict,
             "exclude_nodes_hdf": self._exclude_nodes_hdf,
             "exclude_groups_hdf": self._exclude_groups_hdf,
