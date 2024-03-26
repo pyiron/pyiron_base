@@ -51,6 +51,7 @@ from pyiron_base.utils.deprecate import deprecate
 from pyiron_base.jobs.job.extension.server.generic import Server
 from pyiron_base.database.filetable import FileTable
 from pyiron_base.interfaces.has_dict import HasDict
+from pyiron_base.storage.datacontainer import DataContainer
 
 __author__ = "Joerg Neugebauer, Jan Janssen"
 __copyright__ = (
@@ -1058,6 +1059,9 @@ class GenericJob(JobCore, HasDict):
             "exclude_groups_hdf": self._exclude_groups_hdf,
         }
         data_dict["server"] = self._server.to_dict()
+        self._executable_activate_mpi()
+        if self._executable is not None:
+            data_dict["executable"] = self._executable.to_dict()
         if self._import_directory is not None:
             data_dict["import_directory"] = self._import_directory
         if self._executor_type is not None:
@@ -1069,6 +1073,8 @@ class GenericJob(JobCore, HasDict):
         if "import_directory" in job_dict.keys():
             self._import_directory = job_dict["import_directory"]
         self._server.from_dict(server_dict=job_dict["server"])
+        if "executable" in job_dict.keys() and job_dict["executable"] is not None:
+            self.executable.from_dict(job_dict["executable"])
         input_dict = job_dict["input"]
         if "generic_dict" in input_dict.keys():
             generic_dict = input_dict["generic_dict"]
@@ -1096,16 +1102,8 @@ class GenericJob(JobCore, HasDict):
             hdf (ProjectHDFio): HDF5 group object - optional
             group_name (str): HDF5 subgroup name - optional
         """
-
         self._set_hdf(hdf=hdf, group_name=group_name)
-        self._executable_activate_mpi()
-
-        # Write combined dictionary to HDF5
         self._hdf5.write_dict(data_dict=self.to_dict())
-
-        # Write remaining objects to HDF5
-        if self._executable is not None:
-            self.executable.to_hdf(self._hdf5)
 
     @classmethod
     def from_hdf_args(cls, hdf):
@@ -1133,10 +1131,12 @@ class GenericJob(JobCore, HasDict):
         job_dict = self._hdf5.read_dict_from_hdf()
         with self._hdf5.open("input") as hdf5_input:
             job_dict["input"] = hdf5_input.read_dict_from_hdf(recursive=True)
-        self.from_dict(job_dict=job_dict)
-
+        # Backwards compatibility to the previous HasHDF based interface
         if "executable" in self._hdf5.list_groups():
-            self.executable.from_hdf(self._hdf5)
+            exe_dict = self._hdf5["executable/executable"].to_object().to_builtin()
+            exe_dict["READ_ONLY"] = self._hdf5["executable/executable/READ_ONLY"]
+            job_dict["executable"] = {"executable": exe_dict}
+        self.from_dict(job_dict=job_dict)
 
     def save(self):
         """
