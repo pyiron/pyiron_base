@@ -7,6 +7,18 @@ Functions to update existing pyiron installations - mainly modify the database c
 """
 
 from pyiron_base.state import state
+from pyiron_base.database.sqlcolumnlength import (
+    PROJECT_PATH_STR_LENGTH,
+    PROJECT_STR_LENGTH,
+    JOB_STR_LENGTH,
+    SUBJOB_STR_LENGTH,
+    CHEMICALFORMULA_STR_LENGTH,
+    STATUS_STR_LENGTH,
+    HAMILTON_STR_LENGTH,
+    HAMVERSION_STR_LENGTH,
+    USERNAME_STR_LENGTH,
+    COMPUTER_STR_LENGTH,
+)
 
 __author__ = "Joerg Neugebauer, Jan Janssen"
 __copyright__ = (
@@ -31,24 +43,35 @@ def database():
     try:
         if "projectPath".lower() not in db.get_table_headings(db.table_name):
             print("add missing column: " + "projectPath")
-            db.add_column(col_name="projectPath", col_type="varchar(255)")
+            db.add_column(
+                col_name="projectPath",
+                col_type="varchar(" + PROJECT_PATH_STR_LENGTH + ")",
+            )
         if "subJob".lower() not in db.get_table_headings(db.table_name):
             print("add missing column: " + "subJob")
-            db.add_column(col_name="subJob", col_type="varchar(255)")
+            db.add_column(
+                col_name="subJob", col_type="varchar(" + SUBJOB_STR_LENGTH + ")"
+            )
         else:
             print("change data type of subJob")
-            db.change_column_type(col_name="subJob", col_type="varchar(255)")
+            db.change_column_type(
+                col_name="subJob", col_type="varchar(" + SUBJOB_STR_LENGTH + ")"
+            )
         if "masterID".lower() not in db.get_table_headings(db.table_name):
             print("add missing column: " + "masterid")
             db.add_column(col_name="masterid", col_type="bigint")
 
         if "hamversion" in db.get_table_headings(db.table_name):
             print("change data type hamversion")
-            db.change_column_type(col_name="hamversion", col_type="varchar(50)")
+            db.change_column_type(
+                col_name="hamversion", col_type="varchar(" + HAMVERSION_STR_LENGTH + ")"
+            )
 
         if "job" in db.get_table_headings(db.table_name):
             print("change data type job")
-            db.change_column_type(col_name="job", col_type="varchar(50)")
+            db.change_column_type(
+                col_name="job", col_type="varchar(" + JOB_STR_LENGTH + ")"
+            )
         print(db.table_name, " - database successful updated")
     except ValueError:
         print(db.table_name, " - database failed")

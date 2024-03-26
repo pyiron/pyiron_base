@@ -15,6 +15,7 @@ import monty.io
 from typing import Optional, Union
 from pyiron_base.utils.instance import static_isinstance
 from pyiron_base.utils.safetar import safe_extract
+from pyiron_base.database.sqlcolumnlength import JOB_STR_LENGTH
 
 __author__ = "Jan Janssen"
 __copyright__ = (
@@ -208,10 +209,9 @@ def _is_valid_job_name(job_name):
         raise ValueError(
             f'Invalid name for a pyiron object, must be letters, digits (not as first character) and "_" only, not {job_name}'
         )
-    if len(job_name) > 50:
+    if len(job_name) > JOB_STR_LENGTH:
         raise ValueError(
-            "Invalid name for a PyIron object: must be less then or "
-            "equal to 50 characters"
+            f"Invalid name for a PyIron object: must be less then or equal to {JOB_STR_LENGTH} characters"
         )
 
 
