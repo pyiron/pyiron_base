@@ -43,5 +43,5 @@ class TestWrapExecutable(TestWithProject):
         )
         job.input.energy = 2.0
         job.run()
-        self.assertEqual(job.output['command_line'], "")
+        self.assertEqual(job.output['stdout'], "")
         self.assertEqual(job.output.energy, 2.0)

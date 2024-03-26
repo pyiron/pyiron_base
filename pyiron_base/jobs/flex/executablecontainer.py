@@ -80,7 +80,7 @@ class ExecutableContainerJob(TemplateJob):
             )
 
     def run_static(self):
-        self.storage.output.command_line = super().run_static()
+        self.storage.output.stdout = super().run_static()
 
     def collect_output(self):
         if self._collect_output_funct is not None:
