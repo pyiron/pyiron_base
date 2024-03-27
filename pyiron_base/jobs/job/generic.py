@@ -277,7 +277,10 @@ class GenericJob(JobCore, HasDict):
         Returns:
             list: list of files
         """
-        return [str(f) if isinstance(f, File) else f for f in self._restart_file_list]
+        self._restart_file_list = [
+            str(f) if isinstance(f, File) else f for f in self._restart_file_list
+        ]
+        return self._restart_file_list
 
     @restart_file_list.setter
     def restart_file_list(self, filenames):
