@@ -26,7 +26,7 @@ class TestExecutableContainerConda(TestWithProject):
         super().setUpClass()
         with open("env.yaml", "w") as f:
             f.writelines(conda_env)
-        cls.project.conda_environment.create(env_name="py312", env_file="env.yaml")
+        cls.project.conda_environment.create(env_name="py312", env_file="env.yaml", global_installation=False)
 
     @classmethod
     def tearDownClass(cls):
