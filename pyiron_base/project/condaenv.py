@@ -28,6 +28,7 @@ class CondaEnvironment:
     def create(self, env_name, env_file, use_mamba=False, global_installation=True):
         exe = "mamba" if use_mamba else "conda"
         env_lst = list_all_known_prefixes()
+        env_path = os.path.join(os.path.abspath(self._env_path), env_name)
         if env_name not in env_lst and env_path not in env_lst:
             command_lst = [
                 exe,
@@ -36,7 +37,6 @@ class CondaEnvironment:
             ]
             if not global_installation:
                 os.makedirs(self._env_path, exist_ok=True)
-                env_path = os.path.join(os.path.abspath(self._env_path), env_name)
                 command_lst += [
                     "--prefix",
                     env_path,
