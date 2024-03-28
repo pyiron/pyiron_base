@@ -1865,6 +1865,8 @@ class Project(ProjectPath, HasGroups):
             csv_file_name (str): the csv file from which the job_table is copied to the current project
             compress (bool): if True, it looks for a compressed file
         """
+        if isinstance(origin_path, Project):
+            origin_path = origin_path.path
         csv_path_origin = os.path.join(os.path.dirname(origin_path), csv_file_name)
         csv_path_project = os.path.join(self.path, csv_file_name)
         if os.path.exists(csv_file_name):
