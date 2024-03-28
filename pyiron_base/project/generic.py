@@ -1836,7 +1836,9 @@ class Project(ProjectPath, HasGroups):
         """
         destination_path_abs = os.path.abspath(destination_path)
         directory_to_transfer = os.path.dirname(self.path)
-        csv_file_path = os.path.join(os.path.dirname(destination_path_abs), csv_file_name)
+        csv_file_path = os.path.join(
+            os.path.dirname(destination_path_abs), csv_file_name
+        )
         if destination_path_abs == directory_to_transfer:
             raise ValueError(
                 "The destination_path cannot have the same name as the project to compress."
