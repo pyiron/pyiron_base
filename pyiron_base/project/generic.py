@@ -1834,20 +1834,21 @@ class Project(ProjectPath, HasGroups):
             compress (bool): if true, the function will compress the destination_path to a tar.gz file.
             copy_all_files (bool):
         """
-        directory_to_transfer = os.path.basename(self.path[:-1])
-        csv_file_path = os.path.join(os.path.dirname(destination_path), csv_file_name)
-        if destination_path == directory_to_transfer:
+        destination_path_abs = os.path.abspath(destination_path)
+        directory_to_transfer = os.path.dirname(self.path)
+        csv_file_path = os.path.join(os.path.dirname(destination_path_abs), csv_file_name)
+        if destination_path_abs == directory_to_transfer:
             raise ValueError(
                 "The destination_path cannot have the same name as the project to compress."
             )
         export_archive.copy_files_to_archive(
             directory_to_transfer,
-            destination_path,
+            destination_path_abs,
             compressed=compress,
             copy_all_files=copy_all_files,
         )
         df = export_archive.export_database(
-            self, directory_to_transfer, destination_path
+            self, directory_to_transfer, destination_path_abs
         )
         df.to_csv(csv_file_path)
 

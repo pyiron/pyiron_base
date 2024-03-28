@@ -79,10 +79,6 @@ def copy_files_to_archive(
         if not compressed:
             compressed = True
 
-    if directory_to_transfer[-1] != "/":
-        directory_to_transfer = os.path.basename(directory_to_transfer)
-    else:
-        directory_to_transfer = os.path.basename(directory_to_transfer[:-1])
     # print("directory to transfer: "+directory_to_transfer)
     if not copy_all_files:
         pfi = PyFileIndex(path=directory_to_transfer, filter_function=filter_function)
