@@ -35,7 +35,6 @@ class TestPack(PyironTestCase):
         uncompressed_pr.remove(enable=True, enforce=True)
         os.remove('export.csv')
 
-
     def test_exportedCSV(self):
         # in the first test, the csv file from the packing function is read
         # and is compared with the return dataframe from export_database
