@@ -1835,6 +1835,7 @@ class Project(ProjectPath, HasGroups):
             copy_all_files (bool):
         """
         directory_to_transfer = os.path.basename(self.path[:-1])
+        csv_file_path = os.path.join(os.path.dirname(destination_path), csv_file_name)
         if destination_path == directory_to_transfer:
             raise ValueError(
                 "The destination_path cannot have the same name as the project to compress."
@@ -1848,7 +1849,7 @@ class Project(ProjectPath, HasGroups):
         df = export_archive.export_database(
             self, directory_to_transfer, destination_path
         )
-        df.to_csv(csv_file_name)
+        df.to_csv(csv_file_path)
 
     def unpack(self, origin_path, csv_file_name="export.csv", compress=True):
         """
