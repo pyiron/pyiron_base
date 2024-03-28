@@ -1857,7 +1857,7 @@ class Project(ProjectPath, HasGroups):
         and also the content of project directory is copied from a given path
 
         Args:
-            origin_path (str): the relative path of a directory (or a compressed file without the tar.gz exention)
+            origin_path (str): the relative path of a directory (or a compressed file without the tar.gz extension)
                             from which the project directory is copied.
             csv_file_name (str): the csv file from which the job_table is copied to the current project
             compress (bool): if True, it looks for a compressed file
