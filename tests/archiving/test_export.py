@@ -35,7 +35,6 @@ class TestPack(PyironTestCase):
         uncompressed_pr.remove(enable=True, enforce=True)
         os.remove('export.csv')
 
-
     def test_exportedCSV(self):
         # in the first test, the csv file from the packing function is read
         # and is compared with the return dataframe from export_database
@@ -76,7 +75,7 @@ class TestPack(PyironTestCase):
 
     def test_export_with_targz_extension(self):
         os.makedirs(os.path.join(os.curdir, 'tmp'))
-        tmp_path = os.path.join(os.curdir, 'tmp')
+        tmp_path = os.path.abspath(os.path.join(os.curdir, 'tmp'))
         tar_arch = self.arch_dir_comp + '.tar.gz'
         self.pr.pack(destination_path=os.path.join(tmp_path, tar_arch),
                      csv_file_name=os.path.join(tmp_path, 'exported.csv'), compress=True)

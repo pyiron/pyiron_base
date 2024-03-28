@@ -59,6 +59,10 @@ class TestUnpacking(PyironTestCase):
         df_original["hamversion"] = float(df_original["hamversion"])
         assert_frame_equal(df_original, df_import)
 
+    def test_non_existing_unpack(self):
+        with self.assertRaises(FileNotFoundError):
+            self.imp_pr.unpack(origin_path=self.arch_dir_comp, csv_file_name="nofile.csv")
+
     def test_import_compressed(self):
         path_original = self.pr.path
         path_import = self.imp_pr.path
