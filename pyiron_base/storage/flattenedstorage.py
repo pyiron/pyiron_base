@@ -29,17 +29,21 @@ from pyiron_base.interfaces.has_hdf import HasHDF
 from pyiron_base.interfaces.lockable import Lockable, sentinel
 
 
+_CHARSIZE = np.dtype("U1").itemsize
+
 def _ensure_str_array_size(array, strlen):
     """
     Ensures that the given array can store at least string of length `strlen`.
 
     Args:
         array (ndarray): array of dtype <U
-        strlen (int): maximum length that should fit in it
+        strlen (int, ndarray): maximum length that should fit in it
     Returns:
         ndarray: either `array` or resized copy
     """
-    current_length = array.itemsize // np.dtype("1U").itemsize
+    current_length = array.itemsize // _CHARSIZE
+    if isinstance(strlen, np.ndarray):
+        strlen = strlen.itemsize // _CHARSIZE
     if current_length < strlen:
         return array.astype(f"{2 * strlen}U")
     else:
@@ -938,6 +942,8 @@ class FlattenedStorage(Lockable, HasHDF):
                 self.add_array(
                     name=k, dtype=dtype, shape=a.shape[1:], fill=fill, per="chunk"
                 )
+            elif a.dtype.char == "U":
+                self._per_chunk_arrays[k] = _ensure_str_array_size(self._per_chunk_arrays[k], a)
             self._per_chunk_arrays[k][self.num_chunks : combined_num_chunks] = a[
                 0 : other.num_chunks
             ]
@@ -948,6 +954,8 @@ class FlattenedStorage(Lockable, HasHDF):
                 self.add_array(
                     name=k, shape=a.shape[1:], dtype=dtype, fill=fill, per="element"
                 )
+            elif a.dtype.char == "U":
+                self._per_element_arrays[k] = _ensure_str_array_size(self._per_element_arrays[k], a)
             self._per_element_arrays[k][self.num_elements : combined_num_elements] = a[
                 0 : other.num_elements
             ]
