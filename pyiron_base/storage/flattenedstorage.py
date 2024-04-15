@@ -31,6 +31,7 @@ from pyiron_base.interfaces.lockable import Lockable, sentinel
 
 _CHARSIZE = np.dtype("U1").itemsize
 
+
 def _ensure_str_array_size(array, strlen):
     """
     Ensures that the given array can store at least string of length `strlen`.
@@ -943,7 +944,9 @@ class FlattenedStorage(Lockable, HasHDF):
                     name=k, dtype=dtype, shape=a.shape[1:], fill=fill, per="chunk"
                 )
             elif a.dtype.char == "U":
-                self._per_chunk_arrays[k] = _ensure_str_array_size(self._per_chunk_arrays[k], a)
+                self._per_chunk_arrays[k] = _ensure_str_array_size(
+                    self._per_chunk_arrays[k], a
+                )
             self._per_chunk_arrays[k][self.num_chunks : combined_num_chunks] = a[
                 0 : other.num_chunks
             ]
@@ -955,7 +958,9 @@ class FlattenedStorage(Lockable, HasHDF):
                     name=k, shape=a.shape[1:], dtype=dtype, fill=fill, per="element"
                 )
             elif a.dtype.char == "U":
-                self._per_element_arrays[k] = _ensure_str_array_size(self._per_element_arrays[k], a)
+                self._per_element_arrays[k] = _ensure_str_array_size(
+                    self._per_element_arrays[k], a
+                )
             self._per_element_arrays[k][self.num_elements : combined_num_elements] = a[
                 0 : other.num_elements
             ]
