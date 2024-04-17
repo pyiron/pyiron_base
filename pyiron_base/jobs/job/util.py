@@ -302,7 +302,7 @@ def _job_compress(job, files_to_compress=[], files_to_remove=[]):
                     if "tar" not in name and not stat.S_ISFIFO(os.stat(name).st_mode):
                         tar.add(name)
             for name in files_to_compress:
-                if "tar" not in name:
+                if name != _job_compressed_name(job):
                     delete_file_or_folder(
                         fullname=os.path.join(job.working_directory, name)
                     )
