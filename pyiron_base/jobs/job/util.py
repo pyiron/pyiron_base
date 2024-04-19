@@ -275,17 +275,25 @@ def _get_compressed_job_name(working_directory):
     )
 
 
-def _job_compress(job, files_to_compress=None):
+def _job_compress(job, files_to_compress=[], files_to_remove=[]):
     """
     Compress the output files of a job object.
 
     Args:
         job (JobCore): job object to compress
         files_to_compress (list): list of files to compress
+        files_to_remove (list): list of files to remove
     """
+
+    def delete_file_or_folder(fullname):
+        if os.path.isfile(fullname):
+            os.remove(fullname)
+        elif os.path.isdir(fullname):
+            shutil.rmtree(fullname)
+
     if not _job_is_compressed(job):
-        if files_to_compress is None:
-            files_to_compress = job.files.list()
+        for name in files_to_remove:
+            delete_file_or_folder(fullname=os.path.join(job.working_directory, name))
         cwd = os.getcwd()
         try:
             os.chdir(job.working_directory)
@@ -294,12 +302,10 @@ def _job_compress(job, files_to_compress=None):
                     if "tar" not in name and not stat.S_ISFIFO(os.stat(name).st_mode):
                         tar.add(name)
             for name in files_to_compress:
-                if "tar" not in name:
-                    fullname = os.path.join(job.working_directory, name)
-                    if os.path.isfile(fullname):
-                        os.remove(fullname)
-                    elif os.path.isdir(fullname):
-                        shutil.rmtree(fullname)
+                if name != _job_compressed_name(job):
+                    delete_file_or_folder(
+                        fullname=os.path.join(job.working_directory, name)
+                    )
         finally:
             os.chdir(cwd)
     else:

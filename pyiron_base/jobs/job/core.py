@@ -209,6 +209,8 @@ class JobCore(HasGroups):
         self._import_directory = None
         self._database_property = DatabaseProperties()
         self._hdf5_content = HDF5Content(project_hdf5=self._hdf5)
+        self._files_to_remove = list()
+        self._files_to_compress = list()
 
     @property
     def content(self):
@@ -384,6 +386,14 @@ class JobCore(HasGroups):
             project (ProjectHDFio): HDF5 project
         """
         self._hdf5 = project.copy()
+
+    @property
+    def files_to_compress(self):
+        return self._files_to_compress
+
+    @property
+    def files_to_remove(self):
+        return self._files_to_remove
 
     def relocate_hdf5(self, h5_path=None):
         """
@@ -1061,14 +1071,22 @@ class JobCore(HasGroups):
         childs = self.list_childs()
         return list(set(childs) - set(nodes))
 
-    def compress(self, files_to_compress=None):
+    def compress(self, files_to_compress=None, files_to_remove=None):
         """
         Compress the output files of a job object.
 
         Args:
             files_to_compress (list):
         """
-        _job_compress(job=self, files_to_compress=files_to_compress)
+        if files_to_compress is None and len(self._files_to_compress) != 0:
+            files_to_compress = self._files_to_compress
+        elif files_to_compress is None:
+            files_to_compress = self.files.list()
+        if files_to_remove is None:
+            files_to_remove = self._files_to_remove
+        else:
+            files_to_remove = []
+        _job_compress(job=self, files_to_compress=files_to_compress, files_to_remove=files_to_remove)
 
     def decompress(self):
         """
