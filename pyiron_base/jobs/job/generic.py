@@ -1585,7 +1585,8 @@ class GenericError(object):
         return self._print_error(file_name="error.out", string=string)
 
     def _print_error(self, file_name, string="", print_yes=True):
-        if os.path.join(self._working_directory, file_name) is None:
+        if not os.path.exists(os.path.join(self._working_directory, file_name)):
             return ""
         elif print_yes:
-            return string.join(os.path.join(self._working_directory, file_name))
+            with open(os.path.join(self._working_directory, file_name)) as f:
+                return string.join(f.readlines())
