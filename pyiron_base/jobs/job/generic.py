@@ -1552,7 +1552,7 @@ class GenericJob(JobCore, HasDict):
                 "No executor type defined - Please set self.executor_type."
             )
         elif (
-            self._executor_type == "pympipool.mpi.executor.PyMPIExecutor"
+            self._executor_type == "pympipool.Executor"
             and platform.system() == "Darwin"
         ):
             # The Mac firewall might prevent connections based on the network address - especially Github CI
