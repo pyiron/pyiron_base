@@ -1557,8 +1557,11 @@ class GenericJob(JobCore, HasDict):
         ):
             # The Mac firewall might prevent connections based on the network address - especially Github CI
             return import_class(self._executor_type)(
-                max_workers=max_workers, hostname_localhost=True
+                max_cores=max_workers, hostname_localhost=True
             )
+        elif self._executor_type == "pympipool.Executor":
+            # The pympipool Executor defines max_cores rather than max_workers
+            return import_class(self._executor_type)(max_cores=max_workers)
         elif isinstance(self._executor_type, str):
             return import_class(self._executor_type)(max_workers=max_workers)
         else:
