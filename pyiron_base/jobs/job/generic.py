@@ -166,7 +166,7 @@ class GenericJob(JobCore, HasDict):
         self._python_only_job = False
         self._write_work_dir_warnings = True
         self.interactive_cache = None
-        self.error = GenericError(job=self)
+        self.error = GenericError(working_directory=self.project_hdf5.working_directory)
 
     @property
     def version(self):
@@ -1569,8 +1569,8 @@ class GenericJob(JobCore, HasDict):
 
 
 class GenericError(object):
-    def __init__(self, job):
-        self._job = job
+    def __init__(self, working_directory):
+        self._working_directory = working_directory
 
     def __repr__(self):
         all_messages = ""
@@ -1588,7 +1588,8 @@ class GenericError(object):
         return self._print_error(file_name="error.out", string=string)
 
     def _print_error(self, file_name, string="", print_yes=True):
-        if self._job[file_name] is None:
+        if not os.path.exists(os.path.join(self._working_directory, file_name)):
             return ""
         elif print_yes:
-            return string.join(self._job[file_name])
+            with open(os.path.join(self._working_directory, file_name)) as f:
+                return string.join(f.readlines())
