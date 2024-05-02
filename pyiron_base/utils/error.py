@@ -144,8 +144,9 @@ def retry(
         try:
             return func()
         except error as e:
-            logger.warn(
-                f"{msg} Trying again in {delay}s. Tried {i + 1} times so far..."
+            logger.warning(
+                f"{msg} - Caused by {e.__class__.__name__}: {e}. Trying again in {delay}s. "
+                f"Tried {i + 1} times so far..."
             )
             time.sleep(delay)
             delay *= delay_factor

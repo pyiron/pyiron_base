@@ -156,7 +156,7 @@ class AutorestoredConnection:
         return retry(
             lambda: self.execute_once(*args, **kwargs),
             error=OperationalError,
-            msg="Database connection failed with operational error.",
+            msg="Database connection failed.",
             delay=5,
         )
 
@@ -229,7 +229,7 @@ class DatabaseAccess(IsDatabase):
         retry(
             _create_table,
             error=OperationalError,
-            msg="Database busy with too many connections.",
+            msg="Database connection failed (maybe busy).",
             at_most=10,
             delay=0.1,
             delay_factor=2,
