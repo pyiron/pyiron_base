@@ -184,3 +184,22 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ```
 
 ## Documentation
+
+* [Installation](https://pyiron-base.readthedocs.io/en/latest/installation.html)
+  * [Try pyiron_base online](https://pyiron-base.readthedocs.io/en/latest/installation.html#try-pyiron-base-online)
+  * [Workstation Installation](https://pyiron-base.readthedocs.io/en/latest/installation.html#workstation-installation)
+  * [HPC Cluster Installation](https://pyiron-base.readthedocs.io/en/latest/installation.html#hpc-cluster-installation)
+* [Tutorial](https://pyiron-base.readthedocs.io/en/latest/tutorial.html)
+  * [Jupyter Lab](https://pyiron-base.readthedocs.io/en/latest/tutorial.html#jupyter-lab)
+  * [Project](https://pyiron-base.readthedocs.io/en/latest/tutorial.html#project)
+  * [Job](https://pyiron-base.readthedocs.io/en/latest/tutorial.html#job)
+  * [Table](https://pyiron-base.readthedocs.io/en/latest/tutorial.html#table)
+* [Example](https://pyiron-base.readthedocs.io/en/latest/example.html)
+* [Command Line](https://pyiron-base.readthedocs.io/en/latest/commandline.html)
+* [Developers](https://pyiron-base.readthedocs.io/en/latest/developer.html)
+  * [Install from Source](https://pyiron-base.readthedocs.io/en/latest/developer.html#install-from-source)
+  * [HDF5 Serialization](https://pyiron-base.readthedocs.io/en/latest/developer.html#hdf5-serialization)
+  * [Run function](https://pyiron-base.readthedocs.io/en/latest/developer.html#run-function)
+  * [Queuing System](https://pyiron-base.readthedocs.io/en/latest/developer.html#queuing-system)
+  * [Command Line](https://pyiron-base.readthedocs.io/en/latest/developer.html#command-line)
+* [FAQ](https://pyiron-base.readthedocs.io/en/latest/faq.html)
