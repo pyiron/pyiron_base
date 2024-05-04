@@ -1,4 +1,4 @@
-# pyiron_base - Workflow Manager
+# pyiron_base
 
 [![Coverage Status](https://coveralls.io/repos/github/pyiron/pyiron_base/badge.svg?branch=main)](https://coveralls.io/github/pyiron/pyiron_base?branch=main)
 [![Release_Date](https://anaconda.org/conda-forge/pyiron_base/badges/latest_release_date.svg)](https://anaconda.org/conda-forge/pyiron_base/)
