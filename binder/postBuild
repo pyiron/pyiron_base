@@ -1,5 +1,6 @@
 # pip install master
-pip install .
+pip install versioneer[toml]==0.29
+pip install . --no-deps --no-build-isolation
 
 # clean up
 if [ -d "notebooks" ]; then
