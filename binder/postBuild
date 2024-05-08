@@ -2,11 +2,8 @@
 pip install versioneer[toml]==0.29
 pip install . --no-deps --no-build-isolation
 
+# copy notebooks
+mv notebooks/*.ipynb .
+
 # clean up
-if [ -d "notebooks" ]; then
-    mv notebooks/* .
-fi
-if [ -d "${HOME}/pyiron_base" ]; then
-    rm -r ${HOME}/binder ${HOME}/.ci_support ${HOME}/.github ${HOME}/pyiron_base ${HOME}/tests ${HOME}/notebooks
-    rm ${HOME}/LICENSE ${HOME}/MANIFEST.in ${HOME}/setup.cfg ${HOME}/setup.py ${HOME}/versioneer.py ${HOME}/CONTRIBUTING.rst ${HOME}/README.rst ${HOME}/CODE_OF_CONDUCT.md
-fi
+rm -rf .ci_support .github binder docs notebooks pyiron_base pyiron_base.egg-info specs test_benchmarks tests update_scripts .coveralls.yml .gitattributes .gitignore .gitpod .readthedocs.yml .wci.yml CHANGELOG.md CITATION.cff CODE_OF_CONDUCT.md CONTRIBUTING.rst LICENSE MANIFEST.in README.md pyproject.toml setup.py build
