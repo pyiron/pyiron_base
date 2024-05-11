@@ -35,11 +35,11 @@ dependencies = [
     "pint==0.23",
     "psutil==5.9.8",
     "pyfileindex==0.0.24",
-    "pympipool==0.8.1",
+    "pympipool==0.8.2",
     "pysqa==0.1.19",
     "sqlalchemy==2.0.30",
     "tables==3.9.2",
-    "tqdm==4.66.2",
+    "tqdm==4.66.4",
     "traitlets==5.14.3",
 ]
 dynamic = ["version"]

@@ -16,10 +16,10 @@ dependencies:
 - pint =0.23
 - psutil =5.9.8
 - pyfileindex =0.0.24
-- pympipool =0.8.1
+- pympipool =0.8.2
 - pysqa =0.1.19
 - pytables =3.9.2
 - sqlalchemy =2.0.30
-- tqdm =4.66.2
+- tqdm =4.66.4
 - traitlets =5.14.3
 - jupyter-book =1.0.0
