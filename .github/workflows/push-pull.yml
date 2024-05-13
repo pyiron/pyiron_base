@@ -11,6 +11,7 @@ jobs:
     secrets: inherit
     with:
       do-commit-updated-env: false
+      do-build-docs: false  # the build-docs action tries to use sphinx, not jupyterbook
       unit-test-dir: tests
       coveralls-and-codacy-test-dir: tests
       benchmark-test-dir: test_benchmarks
