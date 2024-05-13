@@ -13,7 +13,7 @@ jobs:
           python-version: '3.11'
       - uses: pyiron/actions/update-pyproject-dependencies@main
         with:
-          lower-bound-yaml: .ci_support/environment-old
+          lower-bound-yaml: .ci_support/environment-old.yml
           semantic-upper-bound: 'patch'
           output-toml: 'rewritten.toml'
 
