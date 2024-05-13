@@ -8,10 +8,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: pyiron/actions/cached-miniforge@main
+      - uses: pyiron/actions/cached-miniforge@pyiron_base_lessons
         with:
           python-version: '3.11'
-      - uses: pyiron/actions/update-pyproject-dependencies@main
+      - uses: pyiron/actions/update-pyproject-dependencies@pyiron_base_lessons
         with:
           lower-bound-yaml: .ci_support/environment-old.yml
           semantic-upper-bound: 'patch'

@@ -7,11 +7,12 @@ on:
 
 jobs:
   pyiron:
-    uses: pyiron/actions/.github/workflows/push-pull.yml@main
+    uses: pyiron/actions/.github/workflows/push-pull.yml@pyiron_base_lessons
     secrets: inherit
     with:
       do-commit-updated-env: false
-      alternate-tests-env-files: .ci_support/environment-old.yml
       unit-test-dir: tests
       coveralls-and-codacy-test-dir: tests
       benchmark-test-dir: test_benchmarks
+      alternate-tests-env-files: .ci_support/environment-old.yml
+      alternate-tests-python-version: '3.10'
