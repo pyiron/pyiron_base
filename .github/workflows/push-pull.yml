@@ -1,0 +1,17 @@
+name: Push-Pull
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+
+jobs:
+  pyiron:
+    uses: pyiron/actions/.github/workflows/push-pull.yml@main
+    secrets: inherit
+    with:
+      do-commit-updated-env: false
+      alternate-tests-env-files: .ci_support/environment-old.yml
+      unit-test-dir: tests
+      coveralls-and-codacy-test-dir: tests
+      benchmark-test-dir: test_benchmarks
