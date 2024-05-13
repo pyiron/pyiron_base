@@ -19,19 +19,13 @@ jobs:
       id-token: write
     steps:
     - uses: actions/checkout@v4
-    - uses: conda-incubator/setup-miniconda@v2.2.0
+    - uses: pyiron/actions/cached-miniforge@main
       with:
-        python-version: "3.12"
-        mamba-version: "*"
-        channels: conda-forge
-        miniforge-variant: Mambaforge
-        channel-priority: strict
-        auto-update-conda: true
-        environment-file: .ci_support/environment.yml
-    - name: Convert dependencies
-      run: |
-        cp .ci_support/environment-old.yml environment.yml
-        python .ci_support/release.py; cat pyproject.toml
+        python-version: '3.12'
+    - uses: pyiron/actions/update-pyproject-dependencies@main
+      with:
+        lower-bound-yaml: .ci_support/environment-old.yml
+        semantic-upper-bound: 'patch'
     - name: Build
       shell: bash -l {0}
       run: |
