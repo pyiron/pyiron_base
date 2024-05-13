@@ -1,0 +1,22 @@
+name: View release-updated pyproject
+
+on:
+  pull_request:
+
+jobs:
+  pyiron-actions:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pyiron/actions/cached-miniforge@main
+        with:
+          python-version: '3.11'
+      - uses: pyiron/actions/update-pyproject-dependencies@main
+        with:
+          lower-bound-yaml: .ci_support/environment-old
+          semantic-upper-bound: 'patch'
+          output-toml: 'rewritten.toml'
+
+      - name: Look at what we get
+        shell: bash -l {0}
+        run: cat rewritten.toml
