@@ -12,6 +12,10 @@ jobs:
     with:
       do-commit-updated-env: false
       do-build-docs: false  # the build-docs action tries to use sphinx, not jupyterbook
+      python-version: '3.12'
+      python-version-alt1: '3.11'
+      python-version-alt2: '3.10'
+      python-version-alt3: '3.9'
       unit-test-dir: tests
       coveralls-and-codacy-test-dir: tests
       benchmark-test-dir: test_benchmarks
