@@ -28,7 +28,7 @@ jobs:
         channel-priority: strict
         auto-update-conda: true
         environment-file: .ci_support/environment.yml
-    - uses: pyiron/actions/update-pyproject-dependencies@main
+    - uses: pyiron/actions/update-pyproject-dependencies@actions-2.0.7
       with:
         lower-bound-yaml: .ci_support/environment-old.yml
         semantic-upper-bound: 'patch'
