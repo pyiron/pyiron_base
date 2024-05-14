@@ -16,5 +16,5 @@ jobs:
       coveralls-and-codacy-test-dir: tests
       benchmark-test-dir: test_benchmarks
       alternate-tests-env-files: .ci_support/environment-old.yml
-      alternate-tests-python-version: '3.10'
+      alternate-tests-python-version: '3.9'
       omit-patterns: pyiron_base/_version.py,tests/*
