@@ -220,9 +220,8 @@ class ListMaster(GenericMaster):
         suspended previously, the job is going to be started again, to be continued.
         """
         self._logger.info(
-            "{}, status: {}, finished: {} parallel master " "refresh".format(
-                self.job_info_str, self.status, self.is_finished()
-            )
+            "{}, status: {}, finished: {} parallel master "
+            "refresh".format(self.job_info_str, self.status, self.is_finished())
         )
         if self.is_finished() and not self.server.run_mode.modal:
             self.status.finished = True

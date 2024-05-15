@@ -867,9 +867,9 @@ class FlattenedStorage(Lockable, HasHDF):
         # len of chunk to index into the initialized arrays
         i = self.current_element_index + n
 
-        self._per_chunk_arrays["start_index"][self.current_chunk_index] = (
-            self.current_element_index
-        )
+        self._per_chunk_arrays["start_index"][
+            self.current_chunk_index
+        ] = self.current_element_index
         self._per_chunk_arrays["length"][self.current_chunk_index] = n
         self._per_chunk_arrays["identifier"] = _ensure_str_array_size(
             self._per_chunk_arrays["identifier"], len(identifier)
