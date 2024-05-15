@@ -88,12 +88,11 @@ class TestJobType(PyironTestCase):
         class Toy(GenericJob):
             pass
 
-        self.assertNotIn('Toy', JobType._job_class_dict)
-        job = JobType(Toy, ProjectHDFio(Project('.'), 'job_name'), 'job_name')
+        self.assertNotIn("Toy", JobType._job_class_dict)
+        job = JobType(Toy, ProjectHDFio(Project("."), "job_name"), "job_name")
         self.assertIsInstance(job, Toy)
 
-        JobType.register('some.random.path', 'Toy')
+        JobType.register("some.random.path", "Toy")
 
         with self.assertRaises(ValueError):
-            job = JobType(Toy, ProjectHDFio(Project('.'), 'job_name'), 'job_name')
-
+            job = JobType(Toy, ProjectHDFio(Project("."), "job_name"), "job_name")

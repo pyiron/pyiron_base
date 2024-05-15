@@ -35,7 +35,8 @@ try:
 except ImportError:
     _has_imported["PIL"] = False
 try:
-    import nbformat, nbconvert
+    import nbformat
+    import nbconvert
 
     _has_imported["nbformat"] = True
 except ImportError:

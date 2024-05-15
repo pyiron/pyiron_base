@@ -3,21 +3,15 @@
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
 """
-Functions to update existing pyiron installations - mainly modify the database columns. 
+Functions to update existing pyiron installations - mainly modify the database columns.
 """
 
 from pyiron_base.state import state
 from pyiron_base.database.sqlcolumnlength import (
     PROJECT_PATH_STR_LENGTH,
-    PROJECT_STR_LENGTH,
     JOB_STR_LENGTH,
     SUBJOB_STR_LENGTH,
-    CHEMICALFORMULA_STR_LENGTH,
-    STATUS_STR_LENGTH,
-    HAMILTON_STR_LENGTH,
     HAMVERSION_STR_LENGTH,
-    USERNAME_STR_LENGTH,
-    COMPUTER_STR_LENGTH,
 )
 
 __author__ = "Joerg Neugebauer, Jan Janssen"

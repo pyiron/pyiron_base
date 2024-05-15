@@ -51,7 +51,6 @@ from pyiron_base.utils.deprecate import deprecate
 from pyiron_base.jobs.job.extension.server.generic import Server
 from pyiron_base.database.filetable import FileTable
 from pyiron_base.interfaces.has_dict import HasDict
-from pyiron_base.storage.datacontainer import DataContainer
 
 __author__ = "Joerg Neugebauer, Jan Janssen"
 __copyright__ = (

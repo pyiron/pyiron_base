@@ -19,9 +19,7 @@ class TestMaintenance(TestWithFilledProject):
         job_hdf = self.project["toy_1"].project_hdf5
         array = self.project["toy_1/user/some"]
         self.assertEqual(array, _test_array())
-        self.assertAlmostEqual(
-            job_hdf.file_size(), self.initial_toy_1_hdf_file_size
-        )
+        self.assertAlmostEqual(job_hdf.file_size(), self.initial_toy_1_hdf_file_size)
 
     def _assert_hdf_rewrite(self):
         job_hdf = self.project["toy_1"].project_hdf5

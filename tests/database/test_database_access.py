@@ -10,6 +10,7 @@ and specific extra for this class.
 
 Murat Han Celik
 """
+
 import unittest
 import os
 from datetime import datetime
@@ -41,7 +42,7 @@ class TestDatabaseAccess(PyironTestCase):
         Returns:
         """
         cls.database.conn.close()
-        if os.name != 'nt':
+        if os.name != "nt":
             # On windows we get PermissionError: [WinError 32] The process cannot access the
             # file because it is being used by another process: 'test_database.db'
             os.remove("test_database.db")

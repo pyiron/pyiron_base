@@ -11,8 +11,8 @@ class TestScriptJob(TestWithCleanProject):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        cls.simple_script = os.path.join(cls.file_location, 'simple.py')
-        cls.complex_script = os.path.join(cls.file_location, 'complex.py')
+        cls.simple_script = os.path.join(cls.file_location, "simple.py")
+        cls.complex_script = os.path.join(cls.file_location, "complex.py")
 
     @classmethod
     def tearDownClass(cls):
@@ -25,17 +25,17 @@ class TestScriptJob(TestWithCleanProject):
 
     def setUp(self):
         super().setUp()
-        self.job = self.project.create.job.ScriptJob('script')
+        self.job = self.project.create.job.ScriptJob("script")
 
     def tearDown(self):
         super().tearDown()
-        self.project.remove_job('script')
+        self.project.remove_job("script")
 
     def test_script_path(self):
         with self.assertRaises(TypeError):
             self.job.run()
 
-        with open(self.simple_script, 'w') as f:
+        with open(self.simple_script, "w") as f:
             f.write("print(42)")
         self.job.script_path = self.simple_script
         self.job.run(delete_existing_job=True)
@@ -43,7 +43,7 @@ class TestScriptJob(TestWithCleanProject):
     def test_project_data(self):
         self.project.data.in_ = 6
         self.project.data.write()
-        with open(self.complex_script, 'w') as f:
+        with open(self.complex_script, "w") as f:
             f.write("from pyiron_base import Project, state\n")
             f.write("state.settings.configuration['project_check_enabled'] = False\n")
             f.write(f"pr = Project('{self.project_path}')\n")
@@ -62,11 +62,11 @@ class TestScriptJob(TestWithCleanProject):
         hdf["input/custom_group"] as this is needed when running external
         Notebook jobs c.f. `Notebook.get_custom_dict()`.
         """
-        self.job.input['value'] = 300
+        self.job.input["value"] = 300
         self.job.save()
         self.assertTrue(
             "custom_dict" in self.job["input"].list_nodes(),
-            msg="Input not saved in the 'custom_dict' group in HDF"
+            msg="Input not saved in the 'custom_dict' group in HDF",
         )
 
     def test_python_input(self):
@@ -82,7 +82,7 @@ dump(output_dict)
             )
 
         with self.subTest("Use the written script"):
-            input_dict = {"a": 1, "b": [1,2,3]}
+            input_dict = {"a": 1, "b": [1, 2, 3]}
 
             self.job.script_path = os.path.abspath(file_name)
             self.job.input.update(input_dict)

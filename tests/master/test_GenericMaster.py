@@ -23,23 +23,15 @@ class TestGenericJob(PyironTestCase):
         project.remove(enforce=True, enable=True)
 
     def test_copy_to(self):
-        child = self.project.create_job(
-            job_type=GenericJob,
-            job_name='child'
-        )
-        master = self.project.create_job(
-            job_type=GenericMaster,
-            job_name='master'
-        )
+        child = self.project.create_job(job_type=GenericJob, job_name="child")
+        master = self.project.create_job(job_type=GenericMaster, job_name="master")
         master.append(child)
         master_copy = master.copy_to(
-            project=self.project,
-            new_job_name='copy',
-            new_database_entry=False
+            project=self.project, new_job_name="copy", new_database_entry=False
         )
         self.assertEqual(
             len(master._job_object_dict.keys()),
-            len(master_copy._job_object_dict.keys())
+            len(master_copy._job_object_dict.keys()),
         )
         self.assertTrue(isinstance(master[0], GenericJob))
         self.assertTrue(isinstance(master_copy[0], GenericJob))

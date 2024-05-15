@@ -63,5 +63,5 @@ class TestProjectData(PyironTestCase):
         self.assertEqual(2, len(data2.baz[-1]))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

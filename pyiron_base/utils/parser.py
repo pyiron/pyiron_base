@@ -345,7 +345,10 @@ class Logstatus(object):
                                 if "WARNING:" in line_read:
                                     break
                                 val_line = [
-                                    [ast.literal_eval(l) for l in line_read.split()]
+                                    [
+                                        ast.literal_eval(line)
+                                        for line in line_read.split()
+                                    ]
                                 ]
                                 if i_line == 0:
                                     val_array = np.array(val_line)
@@ -362,7 +365,10 @@ class Logstatus(object):
                                 except StopIteration:
                                     break
                                 val_line = [
-                                    [ast.literal_eval(l) for l in line_read.split()]
+                                    [
+                                        ast.literal_eval(line)
+                                        for line in line_read.split()
+                                    ]
                                 ]
                                 if i_line == 0:
                                     val_array = np.array(val_line)
@@ -618,17 +624,17 @@ class LogTag(object):
         Returns:
             bool: [True/False]
         """
-        l = item_line.strip()
-        if not l.startswith(
+        line = item_line.strip()
+        if not line.startswith(
             self.tag_first_word, start
         ):  # start -> line must start with tag
             return False
         tag = None
         for tag in self.tag_first_word:
-            if start == l.find(tag, start):
+            if start == line.find(tag, start):
                 break
 
-        items = [ls.strip() for ls in l[len(tag) :].split()]
+        items = [ls.strip() for ls in line[len(tag) :].split()]
         self.current = tag
         self.val_list = items
         return True
