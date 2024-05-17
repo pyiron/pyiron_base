@@ -21,6 +21,35 @@ __date__ = "May 15, 2020"
 
 
 class TemplateJob(GenericJob, HasStorage):
+    """
+    pyiron template job class for python codes.
+
+    Example:
+
+    >>> from pyiron_base import TemplateJob
+
+    >>> class MyJob(TemplateJob):
+    >>>     def __init__(self, project, job_name):
+    >>>         super().__init__(project, job_name)
+    >>>         self.executable = "touch test.dat"
+
+    >>>     def write_input(self):
+    >>>         pass
+
+    >>>     def collect_output(self):
+    >>>         pass
+
+    You can store information you need in `job.input` (or `self.input`) and
+    `job.output` (or `self.output`). The information assigned there will be
+    automatically stored in the database after a successful run. You can write
+    everything inside `run_static`, but optionally you can use the functions
+    `def write_input(self)` and `def collect_output(self)`, whichare called
+    before and after `run_static`, respectively.
+
+    If you have a code which requires an executable, take a look at
+    `TemplateJob` instead.
+
+    """
     def __init__(self, project, job_name):
         GenericJob.__init__(self, project, job_name)
         HasStorage.__init__(self, group_name="")
