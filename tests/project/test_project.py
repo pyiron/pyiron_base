@@ -11,7 +11,10 @@ import pickle
 from pyiron_base.project.generic import Project
 from pyiron_base.project.size import _size_conversion
 from pyiron_base._tests import (
-    PyironTestCase, TestWithProject, TestWithFilledProject, ToyJob
+    PyironTestCase,
+    TestWithProject,
+    TestWithFilledProject,
+    ToyJob,
 )
 from pyiron_base.jobs.job.toolkit import BaseTools
 
@@ -49,29 +52,36 @@ class TestProjectData(PyironTestCase):
         self.assertEqual(self.project.data.foo, project2.data.foo)
 
     def test_iterjobs(self):
-
         try:
             for j in self.project.iter_jobs():
                 pass
         except:
             self.fail("Iterating over empty project should not raise exception.")
 
-
         try:
             for j in self.project.iter_jobs(status="finished"):
                 pass
         except:
-            self.fail("Iterating over empty project with set status flag should not raise exception.")
+            self.fail(
+                "Iterating over empty project with set status flag should not raise exception."
+            )
 
     def test_create_job_name(self):
-        self.assertEqual(self.project.create.job_name(['job', 0.1]), 'job_0d1')
-        self.assertEqual(self.project.create.job_name(['job', 0.1], special_symbols={'.': 'c'}), 'job_0c1')
-        self.assertEqual(self.project.create.job_name(['job', 1.0000000000005]), 'job_1d0')
-        self.assertEqual(self.project.create.job_name(['job', 1.0000000000005], ndigits=None), 'job_1d0000000000005')
+        self.assertEqual(self.project.create.job_name(["job", 0.1]), "job_0d1")
+        self.assertEqual(
+            self.project.create.job_name(["job", 0.1], special_symbols={".": "c"}),
+            "job_0c1",
+        )
+        self.assertEqual(
+            self.project.create.job_name(["job", 1.0000000000005]), "job_1d0"
+        )
+        self.assertEqual(
+            self.project.create.job_name(["job", 1.0000000000005], ndigits=None),
+            "job_1d0000000000005",
+        )
 
 
 class TestProjectOperations(TestWithFilledProject):
-
     def test_size(self):
         self.assertTrue(self.project.size > 0)
 
@@ -98,7 +108,9 @@ class TestProjectOperations(TestWithFilledProject):
     def test_job_table(self):
         df = self.project.job_table()
         self.assertEqual(len(df), self.n_jobs_filled_with)
-        self.assertEqual(" ".join(df.status.sort_values().unique()), "aborted finished suspended")
+        self.assertEqual(
+            " ".join(df.status.sort_values().unique()), "aborted finished suspended"
+        )
 
     def test_filtered_job_table(self):
         # Here we test against the filled project
@@ -126,91 +138,106 @@ class TestProjectOperations(TestWithFilledProject):
         self.assertEqual(
             len(self.project.job_table(recursive=True)),
             n_jobs,
-            msg="Expected to find all the jobs the project was filled with"
+            msg="Expected to find all the jobs the project was filled with",
         )
         self.assertEqual(
             len(self.project.job_table(recursive=True, status="finished")),
-            n_finished_jobs
+            n_finished_jobs,
         )
         self.assertEqual(
             len(self.project.job_table(recursive=False, status="finished")),
-            n_top_finished_jobs
+            n_top_finished_jobs,
         )
         self.assertEqual(
             len(self.project.job_table(recursive=True, status="suspended")),
-            n_suspended_jobs
+            n_suspended_jobs,
         )
         self.assertEqual(
             len(self.project.job_table(recursive=True, status="aborted")),
-            n_aborted_jobs
+            n_aborted_jobs,
         )
         self.assertEqual(
             len(self.project.job_table(recursive=False, status="suspended")),
-            n_top_suspended_jobs
+            n_top_suspended_jobs,
         )
         self.assertEqual(
-            len(self.project.job_table(recursive=False, hamilton="ToyJob")),
-            n_top_jobs
+            len(self.project.job_table(recursive=False, hamilton="ToyJob")), n_top_jobs
         )
         self.assertEqual(
-            len(self.project.job_table(recursive=True, parentid=None)),
-            n_jobs
+            len(self.project.job_table(recursive=True, parentid=None)), n_jobs
         )
         self.assertEqual(
             len(self.project.job_table(recursive=True, status="finished", job="toy_1")),
-            n_jobs_named_toy_1
+            n_jobs_named_toy_1,
         )
         self.assertEqual(
-            len(self.project.job_table(recursive=True, job="toy*")),
-            n_jobs
+            len(self.project.job_table(recursive=True, job="toy*")), n_jobs
         )
         self.assertEqual(
-            len(self.project.job_table(recursive=True, job="*_1*")),
-            n_jobs_named_toy_1
+            len(self.project.job_table(recursive=True, job="*_1*")), n_jobs_named_toy_1
         )
-        self.assertEqual(
-            len(self.project.job_table(recursive=True, job="*_*")),
-            n_jobs
-        )
+        self.assertEqual(len(self.project.job_table(recursive=True, job="*_*")), n_jobs)
         self.assertEqual(
             len(
                 self.project.job_table(recursive=False, status="finished", job="toy_1")
             ),
-            n_top_jobs_named_toy_1
+            n_top_jobs_named_toy_1,
         )
         self.assertEqual(
-            len(self.project.job_table(recursive=True, status="^(?!finished)", mode="regex")),
+            len(
+                self.project.job_table(
+                    recursive=True, status="^(?!finished)", mode="regex"
+                )
+            ),
             n_suspended_jobs + n_aborted_jobs,
         )
         self.assertEqual(
-            len(self.project.job_table(recursive=True, status="^(?!aborted)", mode="regex")),
-            n_jobs - n_aborted_jobs
+            len(
+                self.project.job_table(
+                    recursive=True, status="^(?!aborted)", mode="regex"
+                )
+            ),
+            n_jobs - n_aborted_jobs,
         )
         self.assertEqual(
             len(self.project.job_table(recursive=True, job="^(?!toy_1)", mode="regex")),
-            n_jobs - n_jobs_named_toy_1
+            n_jobs - n_jobs_named_toy_1,
         )
         self.assertEqual(
             len(self.project.job_table(recursive=True, job="^(?!toy_)", mode="regex")),
-            0
+            0,
         )
         self.assertRaises(ValueError, self.project.job_table, gibberish=True)
 
     def test_get_iter_jobs(self):
         self.assertEqual(
             [
-                job.output.data_out for job in self.project.iter_jobs(
+                job.output.data_out
+                for job in self.project.iter_jobs(
                     recursive=True, convert_to_object=True
                 )
             ],
-            [101] * self.n_jobs_filled_with
+            [101] * self.n_jobs_filled_with,
         )
-        self.assertEqual([val for val in self.project.iter_jobs(recursive=False, status="suspended")], [])
-        self.assertIsInstance([val for val in self.project.iter_jobs(recursive=True, status="suspended",
-                                                                     convert_to_object=True)][0], ToyJob)
+        self.assertEqual(
+            [
+                val
+                for val in self.project.iter_jobs(recursive=False, status="suspended")
+            ],
+            [],
+        )
+        self.assertIsInstance(
+            [
+                val
+                for val in self.project.iter_jobs(
+                    recursive=True, status="suspended", convert_to_object=True
+                )
+            ][0],
+            ToyJob,
+        )
 
     def test_iter_jobs_without_database(self):
-        pr = Project('test_iter_jobs_without_database')
+        pr = Project("test_iter_jobs_without_database")
         database_disabled = pr.state.settings.configuration["disable_database"]
         pr.state.update({"disable_database": True})
 
@@ -229,7 +256,7 @@ class TestProjectOperations(TestWithFilledProject):
             self.assertListEqual(
                 ["toy1", "toy2"],
                 job_names,
-                msg="Expected to iterate among nested projects even without database"
+                msg="Expected to iterate among nested projects even without database",
             )
         finally:
             pr.remove_jobs(recursive=True, silently=True)
@@ -238,7 +265,7 @@ class TestProjectOperations(TestWithFilledProject):
 
     def test_maintenance_get_repository_status(self):
         df = self.project.maintenance.get_repository_status()
-        self.assertIn('pyiron_base', df.Module.values)
+        self.assertIn("pyiron_base", df.Module.values)
 
     def test_pickle(self):
         """Project should be pickle-able."""
@@ -247,7 +274,9 @@ class TestProjectOperations(TestWithFilledProject):
         self.assertEqual(project_reload.project_path, self.project.project_path)
 
 
-@unittest.skipUnless(os.name=="posix", "symlinking is only available on posix platforms")
+@unittest.skipUnless(
+    os.name == "posix", "symlinking is only available on posix platforms"
+)
 class TestProjectSymlink(TestWithFilledProject):
     """
     Test that Project.symlink creates a symlink and unlink removes it again.
@@ -264,7 +293,6 @@ class TestProjectSymlink(TestWithFilledProject):
         cls.temp.cleanup()
 
     def test_symlink(self):
-
         nodes = self.project.list_nodes()
         groups = self.project.list_groups()
 
@@ -275,24 +303,39 @@ class TestProjectSymlink(TestWithFilledProject):
         except Exception as e:
             self.fail(f"symlinking twice should have no effect, but raised {e}!")
 
-        with self.assertRaises(RuntimeError, msg="symlinking to another folder should raise an error"):
+        with self.assertRaises(
+            RuntimeError, msg="symlinking to another folder should raise an error"
+        ):
             self.project.symlink("asdf")
 
         path = self.project.path.rstrip(os.sep)
         self.assertTrue(islink(path), "symlink() did not create a symlink!")
-        self.assertEqual(os.readlink(path), join(self.temp.name, self.project.name),
-                        "symlink() created a wrong symlink!")
+        self.assertEqual(
+            os.readlink(path),
+            join(self.temp.name, self.project.name),
+            "symlink() created a wrong symlink!",
+        )
 
-        self.assertCountEqual(nodes, self.project.list_nodes(), "not all nodes present after symlink!")
-        self.assertCountEqual(groups, self.project.list_groups(), "not all groups present after symlink!")
+        self.assertCountEqual(
+            nodes, self.project.list_nodes(), "not all nodes present after symlink!"
+        )
+        self.assertCountEqual(
+            groups, self.project.list_groups(), "not all groups present after symlink!"
+        )
 
         self.project.unlink()
 
-        self.assertTrue(exists(self.project.path), "unlink() did not restore original directory!")
+        self.assertTrue(
+            exists(self.project.path), "unlink() did not restore original directory!"
+        )
         self.assertFalse(islink(path), "unlink() did not remove symlink!")
 
-        self.assertCountEqual(nodes, self.project.list_nodes(), "not all nodes present after unlink!")
-        self.assertCountEqual(groups, self.project.list_groups(), "not all groups present after unlink!")
+        self.assertCountEqual(
+            nodes, self.project.list_nodes(), "not all nodes present after unlink!"
+        )
+        self.assertCountEqual(
+            groups, self.project.list_groups(), "not all groups present after unlink!"
+        )
 
         try:
             self.project.unlink()
@@ -306,12 +349,12 @@ class TestToolRegistration(TestWithProject):
         self.tools = BaseTools(self.project)
 
     def test_registration(self):
-        self.project.register_tools('foo', self.tools)
+        self.project.register_tools("foo", self.tools)
         with self.assertRaises(AttributeError):
-            self.project.register_tools('foo', self.tools)  # Name taken
+            self.project.register_tools("foo", self.tools)  # Name taken
         with self.assertRaises(AttributeError):
-            self.project.register_tools('load', self.tools)  # Already another method
+            self.project.register_tools("load", self.tools)  # Already another method
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

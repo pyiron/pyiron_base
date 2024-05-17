@@ -4,8 +4,8 @@ from pyiron_base.storage.hdfstub import HDFStub
 
 import numpy as np
 
-class TestHDFStub(TestWithProject):
 
+class TestHDFStub(TestWithProject):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
@@ -17,9 +17,18 @@ class TestHDFStub(TestWithProject):
 
     def test_load(self):
         """Lazily and eagerly read values should be the same."""
-        self.assertEqual(HDFStub(self.hdf, "number").load(), self.hdf["number"],
-                         "Simple number read with load() not equal to eager read.")
-        self.assertTrue(np.all( HDFStub(self.hdf, "array").load() == self.hdf["array"] ),
-                        "Numpy array read with load() not equal to eager read.")
+        self.assertEqual(
+            HDFStub(self.hdf, "number").load(),
+            self.hdf["number"],
+            "Simple number read with load() not equal to eager read.",
+        )
+        self.assertTrue(
+            np.all(HDFStub(self.hdf, "array").load() == self.hdf["array"]),
+            "Numpy array read with load() not equal to eager read.",
+        )
         for v1, v2 in zip(HDFStub(self.hdf, "data").load(), self.data):
-            self.assertEqual(v1, v2, "Data container values read with load() not equal to original container.")
+            self.assertEqual(
+                v1,
+                v2,
+                "Data container values read with load() not equal to original container.",
+            )

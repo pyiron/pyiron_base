@@ -82,7 +82,7 @@ class DatabasePropertyIntegration(PyironTestCase):
     def setUpClass(cls):
         cls.file_location = os.path.dirname(os.path.abspath(__file__))
         cls.project = Project(os.path.join(cls.file_location, "database_prop"))
-        cls.ham = cls.project.create_job('ScriptJob', "job_test_run")
+        cls.ham = cls.project.create_job("ScriptJob", "job_test_run")
         cls.ham.save()
 
     @classmethod
@@ -109,7 +109,7 @@ class DatabasePropertyIntegration(PyironTestCase):
         self.assertEqual(self.ham.database_entry.job, "job_test_run")
         self.assertEqual(self.ham.database_entry.subjob, "/job_test_run")
         self.assertEqual(self.ham.database_entry.status, "created")
-        self.assertEqual(self.ham.database_entry.hamilton, 'Script')
+        self.assertEqual(self.ham.database_entry.hamilton, "Script")
         self.assertEqual(self.ham.database_entry.hamversion, "0.1")
         self.assertEqual(self.ham.database_entry.username, "pyiron")
 
@@ -123,7 +123,7 @@ class DatabasePropertyIntegration(PyironTestCase):
         self.assertEqual(job_inspect.database_entry.job, "job_test_run")
         self.assertEqual(job_inspect.database_entry.subjob, "/job_test_run")
         self.assertEqual(job_inspect.database_entry.status, "created")
-        self.assertEqual(job_inspect.database_entry.hamilton, 'Script')
+        self.assertEqual(job_inspect.database_entry.hamilton, "Script")
         self.assertEqual(job_inspect.database_entry.hamversion, "0.1")
         self.assertEqual(job_inspect.database_entry.username, "pyiron")
 

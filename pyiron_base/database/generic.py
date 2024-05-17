@@ -6,17 +6,12 @@ DatabaseAccess class deals with accessing the database
 """
 
 from pyiron_base.state.logger import logger
-from abc import ABC, abstractmethod
-from collections.abc import Iterable
-import warnings
 import numpy as np
 import re
 import os
 from datetime import datetime
 from pyiron_base.utils.deprecate import deprecate
 import pandas
-import typing
-import fnmatch
 from sqlalchemy import (
     create_engine,
     MetaData,
@@ -100,7 +95,7 @@ class ConnectionWatchDog(Thread):
                 with self._lock:
                     try:
                         self._conn.close()
-                    except:
+                    except (DatabaseError, OperationalError):
                         pass
                     break
 
@@ -678,7 +673,7 @@ class DatabaseAccess(IsDatabase):
                       'username': u'Test'}]
         """
         try:
-            if type(var) is list:
+            if isinstance(var, list):
                 var = var[-1]
             query = select(self.simulation_table).where(
                 self.simulation_table.c[str(col_name)] == var

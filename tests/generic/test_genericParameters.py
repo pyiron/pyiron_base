@@ -13,7 +13,6 @@ import unittest
 
 
 class TestGenericParameters(PyironTestCase):
-
     @classmethod
     def setUpClass(cls):
         super().setUpClass()

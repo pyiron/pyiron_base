@@ -11,7 +11,7 @@ class TestFactories(PyironTestCase):
     def test_pyiron_factory(self):
         factory = PyironFactory()
         factory.foo = "foo"
-        self.assertEqual(factory.foo, factory['foo'])
+        self.assertEqual(factory.foo, factory["foo"])
 
 
 if __name__ == "__main__":

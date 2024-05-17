@@ -311,9 +311,8 @@ class Executable(HasDict):
                             ]
                         ] = os.path.join(path, executable).replace("\\", "/")
             return executable_dict
-        except (
-            OSError
-        ):  # No executable exists - This is the case for GenericJob and other abstract job classes.
+        # No executable exists - This is the case for GenericJob and other abstract job classes.
+        except OSError:
             return dict()
 
     def _executable_select(self):

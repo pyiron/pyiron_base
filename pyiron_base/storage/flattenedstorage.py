@@ -539,7 +539,7 @@ class FlattenedStorage(Lockable, HasHDF):
         max_len = self._per_chunk_arrays["length"].max()
 
         def resize_and_pad(v):
-            l = len(v)
+            value_len = len(v)
             per_shape = self._per_element_arrays[name].shape[1:]
             v = np.resize(v, max_len * np.prod(per_shape, dtype=int))
             v = v.reshape((max_len,) + per_shape)
@@ -547,7 +547,7 @@ class FlattenedStorage(Lockable, HasHDF):
                 fill = self._fill_values[name]
             else:
                 fill = np.zeros(1, dtype=self._per_element_arrays[name].dtype)[0]
-            v[l:] = fill
+            v[value_len:] = fill
             return v
 
         return np.array([resize_and_pad(v) for v in values])
@@ -867,14 +867,14 @@ class FlattenedStorage(Lockable, HasHDF):
         # len of chunk to index into the initialized arrays
         i = self.current_element_index + n
 
-        self._per_chunk_arrays["start_index"][
-            self.current_chunk_index
-        ] = self.current_element_index
+        chunk_ind = self.current_chunk_index
+        el_ind = self.current_element_index
+        self._per_chunk_arrays["start_index"][chunk_ind] = el_ind
         self._per_chunk_arrays["length"][self.current_chunk_index] = n
         self._per_chunk_arrays["identifier"] = _ensure_str_array_size(
             self._per_chunk_arrays["identifier"], len(identifier)
         )
-        self._per_chunk_arrays["identifier"][self.current_chunk_index] = identifier
+        self._per_chunk_arrays["identifier"][chunk_ind] = identifier
 
         for k, a in arrays.items():
             a = np.asarray(a)

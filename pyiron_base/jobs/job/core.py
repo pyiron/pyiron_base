@@ -10,7 +10,6 @@ import math
 import os
 import posixpath
 import shutil
-from typing import List
 import warnings
 
 from pyiron_base.interfaces.has_groups import HasGroups
@@ -182,6 +181,7 @@ def recursive_load_from_hdf(project_hdf5: ProjectHDFio, item: str):
             # either group does not contain a data container or it is does, but it does not have the path we're
             # looking for
             pass
+
 
 class JobCore(HasGroups):
     __doc__ = (
@@ -1086,7 +1086,11 @@ class JobCore(HasGroups):
             files_to_remove = self._files_to_remove
         else:
             files_to_remove = []
-        _job_compress(job=self, files_to_compress=files_to_compress, files_to_remove=files_to_remove)
+        _job_compress(
+            job=self,
+            files_to_compress=files_to_compress,
+            files_to_remove=files_to_remove,
+        )
 
     def decompress(self):
         """
@@ -1148,6 +1152,7 @@ class DatabaseProperties(object):
     def __repr__(self):
         return f"{self.__class__.__name__}({repr(self._job_dict)})"
 
+
 class HDF5Content(object):
     """
     Access the HDF5 file of the job
@@ -1167,7 +1172,7 @@ class HDF5Content(object):
         if value is not None:
             return value
 
-        if name in self._project_hdf5.list_groups():
+        if item in self._project_hdf5.list_groups():
             return HDF5Content(self._project_hdf5[item])
         else:
             raise KeyError(item)

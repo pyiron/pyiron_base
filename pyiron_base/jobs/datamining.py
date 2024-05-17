@@ -19,7 +19,6 @@ from pyiron_base.utils.deprecate import deprecate
 from pyiron_base.jobs.job.generic import GenericJob
 from pyiron_base.jobs.job.extension import jobstatus
 from pyiron_base.storage.hdfio import FileHDFio
-from pyiron_base.jobs.master.generic import get_function_from_string
 
 
 __author__ = "Uday Gajera, Jan Janssen, Joerg Neugebauer"
@@ -236,7 +235,7 @@ class PyironTable:
                 for k, v in self.add._system_function_dict.items()
                 if v and not temp_system_function_dict[k]
             ]
-        except:
+        except (IndexError, ValueError, TypeError):
             new_user_functions = []
             new_system_functions = []
         return new_user_functions, new_system_functions

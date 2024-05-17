@@ -6,7 +6,12 @@ import sys
 import warnings
 from io import StringIO
 import numpy as np
-from pyiron_base.storage.hdfio import FileHDFio, _is_ragged_in_1st_dim_only, state, _import_class
+from pyiron_base.storage.hdfio import (
+    FileHDFio,
+    _is_ragged_in_1st_dim_only,
+    state,
+    _import_class,
+)
 from pyiron_base._tests import PyironTestCase, TestWithProject, ToyJob as BaseToyJob
 from pyiron_base import GenericJob, JobType
 import unittest
@@ -38,8 +43,8 @@ def _check_full_hdf_values(self, hdf, group="content"):
     with self.subTest(group + "/array_3d"):
         array = hdf[group]["array_3d"]
         self.assertEqual(
-                array,
-                np.array([[1, 2, 3], [4, 5, 6]]),
+            array,
+            np.array([[1, 2, 3], [4, 5, 6]]),
         )
         self.assertIsInstance(array, np.ndarray)
         self.assertEqual(array.dtype, np.dtype(int))
@@ -182,14 +187,20 @@ class TestFileHDFio(PyironTestCase):
 
         with self.subTest("object_array_with_lists"):
             array = hdf["object_array_with_lists"]
-            self.assertEqual(len(array), len(object_array_with_lists),
-                             msg="object array read with incorrect length!")
+            self.assertEqual(
+                len(array),
+                len(object_array_with_lists),
+                msg="object array read with incorrect length!",
+            )
             for a_read, a_written in zip(array, object_array_with_lists):
                 # ProjectHDFio coerces lists inside numpy object arrays to
                 # arrays, because h5io cannot write them otherwise, so we have
                 # to do the same here
-                self.assertEqual(a_read, np.asarray(a_written),
-                                 msg="object array contents not the same!")
+                self.assertEqual(
+                    a_read,
+                    np.asarray(a_written),
+                    msg="object array contents not the same!",
+                )
             self.assertIsInstance(array, np.ndarray)
             self.assertEqual(
                 array.dtype,
@@ -285,8 +296,9 @@ class TestFileHDFio(PyironTestCase):
         with self.full_hdf5.open("content") as opened_hdf:
             opened_hdf["dummy"] = 42
             del opened_hdf["dummy"]
-            self.assertNotIn("dummy", opened_hdf.list_nodes(), msg="Entry still in HDF after del!")
-
+            self.assertNotIn(
+                "dummy", opened_hdf.list_nodes(), msg="Entry still in HDF after del!"
+            )
 
     def test_get_from_table(self):
         pass
@@ -301,9 +313,9 @@ class TestFileHDFio(PyironTestCase):
             "default value not returned when value doesn't exist.",
         )
         self.assertEqual(
-                self.full_hdf5.get("content/array", default=42),
-                np.array([1, 2, 3, 4, 5, 6]),
-                "default value returned when value does exist.",
+            self.full_hdf5.get("content/array", default=42),
+            np.array([1, 2, 3, 4, 5, 6]),
+            "default value returned when value does exist.",
         )
         with self.assertRaises(ValueError):
             self.empty_hdf5.get("non_existing_key")
@@ -631,7 +643,6 @@ class TestProjectHDFio(TestWithProject):
         #    _check_full_hdf_values(self, new_hdf, group='job_sibling')
 
     def test_import_class(self):
-
         with self.subTest("import ToyJob without interfering:"):
             toy_job_cls = _import_class(BaseToyJob.__module__, BaseToyJob.__name__)
             self.assertIs(
@@ -643,7 +654,9 @@ class TestProjectHDFio(TestWithProject):
 
             with self.subTest("Import ToyJob while another ToyJob is registered"):
                 with self.assertLogs(state.logger) as log:
-                    toy_job_cls = _import_class(BaseToyJob.__module__, BaseToyJob.__name__)
+                    toy_job_cls = _import_class(
+                        BaseToyJob.__module__, BaseToyJob.__name__
+                    )
                     self.assertEqual(
                         len(log.output),
                         1,

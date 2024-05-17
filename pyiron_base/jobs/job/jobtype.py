@@ -13,7 +13,7 @@ from pyiron_base.storage.hdfio import ProjectHDFio
 from pyiron_base.interfaces.singleton import Singleton
 from pyiron_base.interfaces.factory import PyironFactory
 from pyiron_base.jobs.job.extension.jobstatus import job_status_finished_lst
-from typing import Type, Union
+from typing import Union
 
 __author__ = "Joerg Neugebauer, Jan Janssen"
 __copyright__ = (
@@ -189,7 +189,7 @@ class JobType:
             cls._job_class_dict[job_name] = cls_module_str
 
     @staticmethod
-    def convert_str_to_class(job_class_dict, class_name) -> Type["GenericJob"]:
+    def convert_str_to_class(job_class_dict, class_name):
         """
         convert the name of a class to the corresponding class object - only for pyiron internal classes.
 

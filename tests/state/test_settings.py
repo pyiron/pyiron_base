@@ -275,9 +275,9 @@ class TestSettings(TestCase):
             self.test_standard_credentials()
 
         with self.subTest("full update"):
-            cred_ref_dict[PYIRON_DICT_NAME][
-                "sql_view_user_key"
-            ] = None  # from standard configuration
+            cred_ref_dict[PYIRON_DICT_NAME]["sql_view_user_key"] = (
+                None  # from standard configuration
+            )
             s.update(env_dict)
             self.assertEqual(s.credentials, cred_ref_dict)
 

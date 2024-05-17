@@ -8,7 +8,6 @@ Jobclass to execute python scripts and jupyter notebooks
 import os
 import shutil
 from pyiron_base.jobs.job.generic import GenericJob
-from pyiron_base.storage.parameters import GenericParameters
 from pyiron_base.storage.datacontainer import DataContainer
 
 __author__ = "Jan Janssen"

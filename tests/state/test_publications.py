@@ -11,17 +11,28 @@ class TestPublications(TestCase):
         publications.reset()
 
     def test_list(self):
-        self.assertEqual(1, len(publications.list()), msg="Should only contain default pyiron publication")
+        self.assertEqual(
+            1,
+            len(publications.list()),
+            msg="Should only contain default pyiron publication",
+        )
 
     def test_show(self):
-        self.assertEqual(1, len(publications.show()), msg="Should only contain default pyiron publication")
+        self.assertEqual(
+            1,
+            len(publications.show()),
+            msg="Should only contain default pyiron publication",
+        )
 
     def test_add(self):
         publications.add(publications.pyiron_publication)
-        self.assertEqual(1, len(publications.list()), msg="Existing publication duplicated")
+        self.assertEqual(
+            1, len(publications.list()), msg="Existing publication duplicated"
+        )
         new_pub = dict(publications.pyiron_publication)
-        new_pub['a-new-name'] = dict(new_pub['pyiron'])
-        new_pub.pop('pyiron')
+        new_pub["a-new-name"] = dict(new_pub["pyiron"])
+        new_pub.pop("pyiron")
         publications.add(new_pub)
-        self.assertEqual(2, len(publications.list()), msg="New publication failed to add")
-
+        self.assertEqual(
+            2, len(publications.list()), msg="New publication failed to add"
+        )

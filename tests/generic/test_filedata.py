@@ -17,88 +17,94 @@ class TestLoadFile(PyironTestCase):
         cls.current_dir = os.path.dirname(os.path.abspath(__file__)).replace("\\", "/")
         hdf5 = FileHDFio(file_name=cls.current_dir + "/test_data.h5")
         with hdf5.open("content") as hdf:
-            hdf['key'] = "value"
+            hdf["key"] = "value"
         copyfile(cls.current_dir + "/test_data.h5", cls.current_dir + "/test_data")
-        with open(cls.current_dir + '/test_data.txt', 'w') as f:
+        with open(cls.current_dir + "/test_data.txt", "w") as f:
             f.write("some text")
-        with open(cls.current_dir + '/test_data2', 'w') as f:
+        with open(cls.current_dir + "/test_data2", "w") as f:
             f.write("some text")
-        with open(cls.current_dir + '/test_data.csv', 'w') as f:
+        with open(cls.current_dir + "/test_data.csv", "w") as f:
             f.write("id,status,chemicalformula")
             f.write("13,aborted,Al108")
-        with open(cls.current_dir + '/test_data.json', 'w') as f:
-            json.dump({'x': [0, 1]}, f)
+        with open(cls.current_dir + "/test_data.json", "w") as f:
+            json.dump({"x": [0, 1]}, f)
 
     @classmethod
     def tearDownClass(cls):
         cls.current_dir = os.path.dirname(os.path.abspath(__file__)).replace("\\", "/")
-        for file in ['/test_data', "/test_data.h5",  "/test_data.txt",
-                     "/test_data.csv", "/test_data.json", "/test_data2"]:
+        for file in [
+            "/test_data",
+            "/test_data.h5",
+            "/test_data.txt",
+            "/test_data.csv",
+            "/test_data.json",
+            "/test_data2",
+        ]:
             os.remove(cls.current_dir + file)
 
     def test_load_file_txt(self):
-        txt = load_file(self.current_dir+'/test_data.txt')
-        with open(self.current_dir+'/test_data.txt') as f:
+        txt = load_file(self.current_dir + "/test_data.txt")
+        with open(self.current_dir + "/test_data.txt") as f:
             content = f.readlines()
         self.assertEqual(txt, content)
 
     def test_load_file_stream_txt(self):
-        with open(self.current_dir + '/test_data.txt') as f:
+        with open(self.current_dir + "/test_data.txt") as f:
             content = f.readlines()
-        with open(self.current_dir + '/test_data.txt') as f:
+        with open(self.current_dir + "/test_data.txt") as f:
             txt = load_file(f)
         self.assertEqual(txt, content)
 
     def test_load_file_csv(self):
-        csv = load_file(self.current_dir+'/test_data.csv')
-        content = pd.read_csv(self.current_dir+'/test_data.csv')
+        csv = load_file(self.current_dir + "/test_data.csv")
+        content = pd.read_csv(self.current_dir + "/test_data.csv")
         self.assertTrue(content.equals(csv))
 
     def test_load_file_hdf(self):
-        hdf = load_file(self.current_dir+'/test_data.h5')
+        hdf = load_file(self.current_dir + "/test_data.h5")
         self.assertIsInstance(hdf, FileHDFio)
-        self.assertEqual(hdf['content/key'], 'value')
+        self.assertEqual(hdf["content/key"], "value")
 
     def test_load_file_ProjectHDF(self):
-        pr = Project(self.current_dir + '/test_pr')
-        pr_hdf = load_file(self.current_dir + '/test_data.h5', project=pr)
+        pr = Project(self.current_dir + "/test_pr")
+        pr_hdf = load_file(self.current_dir + "/test_data.h5", project=pr)
         self.assertIsInstance(pr_hdf, ProjectHDFio)
-        self.assertEqual(pr_hdf['content/key'], 'value')
+        self.assertEqual(pr_hdf["content/key"], "value")
         pr.remove(enable=True)
 
     def test_load_file_default(self):
         """Test default load for text file and h5 file without extension."""
-        filename = self.current_dir + '/test_data'
+        filename = self.current_dir + "/test_data"
         self.assertRaises(IOError, load_file, filename)
 
-        filename = self.current_dir + '/test_data2'
+        filename = self.current_dir + "/test_data2"
         default = load_file(filename)
         self.assertEqual(default, ["some text"])
 
     def test_filetype_option(self):
-        filename = self.current_dir + '/test_data'
+        filename = self.current_dir + "/test_data"
         hdf = load_file(filename, filetype="hdf")
         self.assertIsInstance(hdf, FileHDFio)
-        self.assertEqual(hdf['content/key'], 'value')
+        self.assertEqual(hdf["content/key"], "value")
 
     def test_load_file_json(self):
-        json_dict = load_file(self.current_dir+'/test_data.json')
-        self.assertEqual(json_dict, {'x': [0, 1]})
+        json_dict = load_file(self.current_dir + "/test_data.json")
+        self.assertEqual(json_dict, {"x": [0, 1]})
 
 
 class TestFileData(PyironTestCase):
     @classmethod
     def setUpClass(cls):
         cls.current_dir = os.path.dirname(os.path.abspath(__file__)).replace("\\", "/")
-        cls.filepath = os.path.join(cls.current_dir, 'test_data.txt').replace("\\", "/")
-        with open(cls.filepath, 'w') as f:
+        cls.filepath = os.path.join(cls.current_dir, "test_data.txt").replace("\\", "/")
+        with open(cls.filepath, "w") as f:
             f.write("some text")
         cls.data = FileData(file=cls.filepath)
 
     @classmethod
     def tearDownClass(cls):
         cls.current_dir = os.path.dirname(os.path.abspath(__file__)).replace("\\", "/")
-        filepath = os.path.join(cls.current_dir, 'test_data.txt').replace("\\", "/")
+        filepath = os.path.join(cls.current_dir, "test_data.txt").replace("\\", "/")
         os.remove(filepath)
 
     def test___init__(self):
@@ -125,7 +131,7 @@ class TestFileData(PyironTestCase):
         data = FileData(data=some_data, file="test_data.dat", filetype="txt")
         self.assertEqual(data.filetype, "txt")
 
-        data = FileData(data=some_data, file='foo')
+        data = FileData(data=some_data, file="foo")
         self.assertTrue(data.filetype is None)
 
     def test_data(self):
@@ -134,12 +140,12 @@ class TestFileData(PyironTestCase):
             some_data = f.readlines()
         self.assertEqual(self.data.data, some_data)
 
-        data = FileData(data=b'some string', file='foo.txt')
-        self.assertEqual(data.data, b'some string')
+        data = FileData(data=b"some string", file="foo.txt")
+        self.assertEqual(data.data, b"some string")
 
-        data = FileData(self.filepath, filetype='.txt')
+        data = FileData(self.filepath, filetype=".txt")
         self.assertEqual(data.data, some_data)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

@@ -219,10 +219,10 @@ class ListMaster(GenericMaster):
         Internal helper function the run if refresh function is called when the job status is 'refresh'. If the job was
         suspended previously, the job is going to be started again, to be continued.
         """
-        self._logger.info(
-            "{}, status: {}, finished: {} parallel master "
-            "refresh".format(self.job_info_str, self.status, self.is_finished())
+        log_str = "{}, status: {}, finished: {} parallel master " "refresh".format(
+            self.job_info_str, self.status, self.is_finished()
         )
+        self._logger.info(log_str)
         if self.is_finished() and not self.server.run_mode.modal:
             self.status.finished = True
         elif (

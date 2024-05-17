@@ -6,6 +6,7 @@
 Utility functions used in pyiron.
 In order to be accessible from anywhere in pyiron, they *must* remain free of any imports from pyiron!
 """
+
 from abc import ABCMeta
 
 __author__ = "Joerg Neugebauer, Jan Janssen"
