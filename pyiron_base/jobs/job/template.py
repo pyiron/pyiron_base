@@ -53,6 +53,7 @@ class TemplateJob(GenericJob, HasStorage):
     `TemplateJob` instead.
 
     """
+
     def __init__(self, project, job_name):
         GenericJob.__init__(self, project, job_name)
         HasStorage.__init__(self, group_name="")
@@ -108,6 +109,7 @@ class PythonTemplateJob(TemplateJob):
     `TemplateJob` instead.
 
     """
+
     def __init__(self, project, job_name):
         super().__init__(project, job_name)
         self._python_only_job = True
