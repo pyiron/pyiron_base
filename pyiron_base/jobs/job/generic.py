@@ -759,7 +759,8 @@ class GenericJob(JobCore, HasDict):
         """
         if not isinstance(delete_existing_job, bool):
             raise ValueError(
-                "We got delete_existing_job = " + str(delete_existing_job)
+                "We got delete_existing_job = "
+                + str(delete_existing_job)
                 + ". If you meant to delete the job, set delete_existing_job"
                 + " = True"
             )
