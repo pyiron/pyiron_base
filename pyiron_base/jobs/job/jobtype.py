@@ -67,6 +67,11 @@ class JobType:
         Returns:
             GenericJob: object of type class_name
         """
+        if not isinstance(delete_existing_job, bool):
+            raise ValueError(
+                "We got delete_existing_job = " + delete_existing_job + ". If"
+                " you meant to delete the job, set delete_existing_job = True"
+            )
         job_name = _get_safe_job_name(job_name)
         cls.job_class_dict = job_class_dict or cls._job_class_dict
         if isinstance(class_name, str):
