@@ -5,6 +5,7 @@
 A helper class to be assigned to the project, which facilitates tab-completion when
 loading jobs.
 """
+
 from __future__ import annotations
 
 from abc import ABC, abstractmethod

@@ -30,7 +30,7 @@ class TestWrapExecutable(TestWithProject):
         self.assertTrue(python_version_step.status.finished)
         self.assertEqual(
             python_version_step.files.error_out,
-            posixpath.join(python_version_step.working_directory, "error.out")
+            posixpath.join(python_version_step.working_directory, "error.out"),
         )
 
     def test_cat(self):
@@ -44,5 +44,5 @@ class TestWrapExecutable(TestWithProject):
         )
         job.input.energy = 2.0
         job.run()
-        self.assertEqual(job.output['stdout'], "")
+        self.assertEqual(job.output["stdout"], "")
         self.assertEqual(job.output.energy, 2.0)

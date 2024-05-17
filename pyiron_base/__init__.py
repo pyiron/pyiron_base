@@ -46,11 +46,12 @@ from pyiron_base.interfaces.has_hdf import HasHDF
 
 from pyiron_base.jobs.job.toolkit import Toolkit, BaseTools
 
-Project.register_tools("base", BaseTools)
-
 # Internal init
 from ._version import get_versions
 from pyiron_base.utils.jedi import fix_ipython_autocomplete
+
+
+Project.register_tools("base", BaseTools)
 
 # Set version of pyiron_base
 __version__ = get_versions()["version"]
@@ -63,3 +64,56 @@ warn_dynamic_job_classes(
     resource_folder_lst=state.settings.resource_paths,
     logger=state.logger,
 )
+
+__all__ = [
+    PyironFactory,
+    FlattenedStorage,
+    FileHDFio,
+    ProjectHDFio,
+    DataContainer,
+    HasStoredTraits,
+    InputList,
+    GenericParameters,
+    Deprecator,
+    deprecate,
+    deprecate_soon,
+    ImportAlarm,
+    Executable,
+    Notebook,
+    load,
+    dump,
+    create_job_factory,
+    validate_que_request,
+    GenericJob,
+    InteractiveBase,
+    JobStatus,
+    job_status_successful_lst,
+    job_status_finished_lst,
+    job_status_lst,
+    JOB_CLASS_DICT,
+    JobType,
+    JobTypeChoice,
+    TemplateJob,
+    PythonTemplateJob,
+    JobFactoryCore,
+    FlexibleMaster,
+    GenericMaster,
+    get_function_from_string,
+    InteractiveWrapper,
+    ListMaster,
+    ParallelMaster,
+    JobGenerator,
+    Creator,
+    Logstatus,
+    extract_data_from_file,
+    Settings,
+    install_dialog,
+    PyironTable,
+    TableJob,
+    HasDatabase,
+    HasStorage,
+    PyironObject,
+    HasGroups,
+    HasHDF,
+    Toolkit,
+]

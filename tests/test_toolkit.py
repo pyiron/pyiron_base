@@ -12,6 +12,6 @@ class TestToolkit(TestWithProject):
         self.tools = BaseTools(self.project)
 
     def test_job(self):
-        self.tools.job.ScriptJob('foo')
+        self.tools.job.ScriptJob("foo")
         with self.assertRaises(AttributeError):
-            self.tools.job.NotAJobAtAll('bar')
+            self.tools.job.NotAJobAtAll("bar")

@@ -17,4 +17,3 @@ class TestSingleton(TestCase):
         self.assertIs(f1, f2)
         f2.x = 2
         self.assertEqual(2, f1.x)
-

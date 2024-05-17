@@ -4,6 +4,7 @@
 """
 Worker Class to execute calculation in an asynchronous way
 """
+
 import os
 import psutil
 import time

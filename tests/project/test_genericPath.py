@@ -29,7 +29,6 @@ class TestGenericPath(PyironTestCase):
 
 
 class TestProject(PyironTestCase):
-
     @classmethod
     def setUpClass(cls):
         cls.current_dir = os.path.dirname(os.path.abspath(__file__)).replace("\\", "/")

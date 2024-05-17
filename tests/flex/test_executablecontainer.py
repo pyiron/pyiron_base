@@ -31,7 +31,7 @@ class TestExecutableContainer(TestWithProject):
         job = self.project.create.job.CatJob(job_name="job_test")
         job.input["energy"] = energy_value
         job.run()
-        self.assertEqual(job.output['stdout'], "")
+        self.assertEqual(job.output["stdout"], "")
         self.assertEqual(job.output["energy"], energy_value)
         job_reload = self.project.load(job.job_name)
         self.assertEqual(job_reload.input["energy"], energy_value)
@@ -39,12 +39,12 @@ class TestExecutableContainer(TestWithProject):
         self.assertEqual(str(job.executable), "cat input_file > output_file")
         self.assertEqual(str(job_reload.executable), "cat input_file > output_file")
         executable_dict = {
-            'version': 'cat input_file > output_file',
-            'name': 'executablecontainerjob',
-            'operation_system_nt': os.name == "nt",
-            'executable': None,
-            'mpi': False,
-            'accepted_return_codes': [0]
+            "version": "cat input_file > output_file",
+            "name": "executablecontainerjob",
+            "operation_system_nt": os.name == "nt",
+            "executable": None,
+            "mpi": False,
+            "accepted_return_codes": [0],
         }
         self.assertEqual(job.executable.storage.to_builtin(), executable_dict)
         self.assertEqual(job_reload.executable.storage.to_builtin(), executable_dict)
@@ -75,8 +75,10 @@ class TestExecutableContainer(TestWithProject):
             executable_str="cat input_file > output_file",
         )
         job = create_catjob(
-            project=ProjectHDFio(project=self.project, file_name="any.h5", h5_path=None, mode=None),
-            job_name="job_test"
+            project=ProjectHDFio(
+                project=self.project, file_name="any.h5", h5_path=None, mode=None
+            ),
+            job_name="job_test",
         )
         job.input["energy"] = energy_value
         job.run()
@@ -93,14 +95,25 @@ class TestExecutableContainer(TestWithProject):
             executable_str="cat input_file > output_file",
         )
         job = create_catjob(
-            project=ProjectHDFio(project=self.project, file_name="any.h5", h5_path=None, mode=None),
-            job_name="job_output_files"
+            project=ProjectHDFio(
+                project=self.project, file_name="any.h5", h5_path=None, mode=None
+            ),
+            job_name="job_output_files",
         )
         job.run()
-        self.assertEqual(job.output['stdout'], "")
-        for file in ['error_out', 'input_file', 'output_file']:
+        self.assertEqual(job.output["stdout"], "")
+        for file in ["error_out", "input_file", "output_file"]:
             self.assertTrue(file in dir(job.files))
-        output_file_path = os.path.abspath(os.path.join(__file__, "..", "test_executablecontainer", "job_output_files_hdf5", "job_output_files", "error.out"))
+        output_file_path = os.path.abspath(
+            os.path.join(
+                __file__,
+                "..",
+                "test_executablecontainer",
+                "job_output_files_hdf5",
+                "job_output_files",
+                "error.out",
+            )
+        )
         if os.name != "nt":
             self.assertEqual(str(job.files.error_out), output_file_path)
         else:
@@ -113,28 +126,29 @@ class TestExecutableContainer(TestWithProject):
             executable_str="cat input_file > output_file",
         )
         with self.assertRaises(TypeError):
-            create_catjob(
-                project="project",
-                job_name="job_test"
-            )
+            create_catjob(project="project", job_name="job_test")
 
     def test_create_job_factory_no_functions(self):
         create_catjob = create_job_factory(
             executable_str="python --version",
         )
         job = create_catjob(
-            project=ProjectHDFio(project=self.project, file_name="any.h5", h5_path=None, mode=None),
-            job_name="job_no"
+            project=ProjectHDFio(
+                project=self.project, file_name="any.h5", h5_path=None, mode=None
+            ),
+            job_name="job_no",
         )
         job.run()
-        self.assertTrue("Python" in job.output['stdout'])
+        self.assertTrue("Python" in job.output["stdout"])
         self.assertTrue(job.status.finished)
-        self.assertEqual(os.listdir(job.working_directory), ['error.out'])
-        with open(os.path.join(job.working_directory, 'error.out'), "r") as f:
+        self.assertEqual(os.listdir(job.working_directory), ["error.out"])
+        with open(os.path.join(job.working_directory, "error.out"), "r") as f:
             content = f.readlines()
         self.assertEqual(content[0].split()[0], "Python")
 
-    @unittest.skipIf(os.name == "nt", "Starting subprocesses on windows take a long time.")
+    @unittest.skipIf(
+        os.name == "nt", "Starting subprocesses on windows take a long time."
+    )
     def test_job_run_mode_manual(self):
         create_sleep_job = create_job_factory(
             executable_str="sleep 10",
@@ -146,14 +160,23 @@ class TestExecutableContainer(TestWithProject):
                 h5_path=None,
                 mode=None,
             ),
-            job_name="job_sleep"
+            job_name="job_sleep",
         )
         job.server.run_mode.manual = True
         job.run()
         self.assertTrue(job.status.submitted)
         self.assertTrue(os.path.exists(job.project_hdf5.file_name))
         process = subprocess.Popen(
-            ["python", "-m", "pyiron_base.cli", "wrapper", "-p", job.project.path, "-j", str(job.job_id)],
+            [
+                "python",
+                "-m",
+                "pyiron_base.cli",
+                "wrapper",
+                "-p",
+                job.project.path,
+                "-j",
+                str(job.job_id),
+            ],
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             cwd=job.project.path,
