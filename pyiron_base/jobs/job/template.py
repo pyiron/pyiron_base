@@ -50,7 +50,7 @@ class TemplateJob(GenericJob, HasStorage):
     before and after `run_static`, respectively.
 
     If you have a code which requires an executable, take a look at
-    `TemplateJob` instead.
+    :class:`~.TemplateJob` instead.
 
     """
 
