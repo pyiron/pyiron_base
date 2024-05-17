@@ -31,13 +31,16 @@ class TemplateJob(GenericJob, HasStorage):
     >>> class MyJob(TemplateJob):
     >>>     def __init__(self, project, job_name):
     >>>         super().__init__(project, job_name)
-    >>>         self.executable = "touch test.dat"
+    >>>         job.input.message = "hello!"
+    >>>         self.executable = "cat input.dat > output.dat"
 
     >>>     def write_input(self):
-    >>>         pass
+    >>>         with open(self.working_directory + "/input.dat", "w") as f:
+    >>>             f.write(job.input.message)
 
     >>>     def collect_output(self):
-    >>>         pass
+    >>>         with open(self.working_directory + "/output.dat", "w") as f:
+    >>>             job.output.message = f.read()
 
     You can store information you need in `job.input` (or `self.input`) and
     `job.output` (or `self.output`). The information assigned there will be
