@@ -22,7 +22,7 @@ __date__ = "May 15, 2020"
 
 class TemplateJob(GenericJob, HasStorage):
     """
-    pyiron template job class for python codes.
+    pyiron template job class for codes with an external executable.
 
     Example:
 
