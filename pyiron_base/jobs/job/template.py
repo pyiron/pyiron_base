@@ -45,6 +45,37 @@ class TemplateJob(GenericJob, HasStorage):
 
 
 class PythonTemplateJob(TemplateJob):
+    """
+    pyiron template job class for python codes.
+
+    Example:
+
+    >>> from pyiron_base import PythonTemplateJob
+
+    >>> class ToyJob(PythonTemplateJob):  # Create a custom job class
+    >>>     def __init__(self, project, job_name):
+    >>>         super().__init__(project, job_name)
+    >>>         self.input.energy = 100  # Define default input
+
+    >>>     def run_static(self):  # Call a python function and store stuff in the output
+    >>>         self.output.double = self.input.energy * 2
+    >>>         self.status.finished = True
+    >>>         self.to_hdf()
+
+    >>> job = pr.create_job(job_type=ToyJob, job_name="toy")  # Create job instance
+    >>> job.run()  # Execute Custom job class
+
+    You can store information you need in `job.input` (or `self.input`) and
+    `job.output` (or `self.output`). The information assigned there will be
+    automatically stored in the database after a successful run. You can write
+    everything inside `run_static`, but optionally you can use the functions
+    `def write_input(self)` and `def collect_output(self)`, whichare called
+    before and after `run_static`, respectively.
+
+    If you have a code which requires an executable, take a look at
+    `TemplateJob` instead.
+
+    """
     def __init__(self, project, job_name):
         super().__init__(project, job_name)
         self._python_only_job = True
