@@ -46,7 +46,7 @@ class TemplateJob(GenericJob, HasStorage):
     `job.output` (or `self.output`). The information assigned there will be
     automatically stored in the database after a successful run. You can write
     everything inside `run_static`, but optionally you can use the functions
-    `def write_input(self)` and `def collect_output(self)`, whichare called
+    `def write_input(self)` and `def collect_output(self)`, which are called
     before and after `run_static`, respectively.
 
     If you have a code which requires an executable, take a look at
