@@ -111,7 +111,12 @@ class Project(ProjectPath, HasGroups):
     """
 
     def __init__(
-        self, path="", user=None, sql_query=None, default_working_directory=False, unpack=False,
+        self,
+        path="",
+        user=None,
+        sql_query=None,
+        default_working_directory=False,
+        unpack=False,
     ):
         if default_working_directory and path == "":
             inputdict = Notebook.get_custom_dict()
@@ -1852,7 +1857,7 @@ class Project(ProjectPath, HasGroups):
 
     def _unpack(self, origin_path):
         import_archive.import_jobs(self, origin_path)
-        
+
     @classmethod
     def register_tools(cls, name: str, tools):
         """

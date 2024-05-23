@@ -1,11 +1,7 @@
 import os
 import pandas
 import numpy as np
-from shutil import rmtree
-from distutils.dir_util import copy_tree
 import tarfile
-from pyiron_base.project.archiving.shared import getdir
-from pyiron_base.utils.instance import static_isinstance
 from pyiron_base.state import state
 
 
@@ -25,32 +21,38 @@ def extract_archive(archive_directory):
     with tarfile.open(arch_comp_name, "r:gz") as tar:
         tar.extractall()
 
+
 def import_jobs_to_new_project(cls, archive_directory, compressed=True):
     pass
+
+
 def import_jobs_to_existing_project(pr, archive_directory, compressed=True):
     pass
+
 
 def prepare_path(pr, archive_directory):
     if archive_directory[-7:] == ".tar.gz":
         archive_directory = archive_directory[:-7]
-    elif not os.path.exists(archive_directory+".tar.gz"):
+    elif not os.path.exists(archive_directory + ".tar.gz"):
         raise FileNotFoundError("Cannot find archive")
 
     arch_comp_name = archive_directory + ".tar.gz"
     with tarfile.open(arch_comp_name, "r:gz") as tar:
-        target_folder = os.path.join(os.path.dirname(archive_directory), os.path.basename(tar.members[0].name))
+        target_folder = os.path.join(
+            os.path.dirname(archive_directory), os.path.basename(tar.members[0].name)
+        )
 
     if os.path.exists(target_folder):
         raise ValueError("Cannot extract to existing folder")
-    
+
     return target_folder, archive_directory
 
-def import_jobs(pr, archive_directory):
 
-    #now open and extract archive
+def import_jobs(pr, archive_directory):
+    # now open and extract archive
     extract_archive(archive_directory)
 
-    #read csv
+    # read csv
     csv_file_name = os.path.join(pr.path, "export.csv")
     df = pandas.read_csv(csv_file_name, index_col=0)
     df["project"] = [
@@ -76,8 +78,8 @@ def import_jobs(pr, archive_directory):
             entry["username"] = state.settings.login_user
         job_id = pr.db.add_item_dict(par_dict=entry)
         job_id_lst.append(job_id)
-    
-    #print(job_id_lst)
+
+    # print(job_id_lst)
     # Update parent and master ids
     for job_id, masterid, parentid in zip(
         job_id_lst,
