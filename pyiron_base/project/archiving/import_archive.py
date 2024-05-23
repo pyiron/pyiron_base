@@ -50,8 +50,6 @@ def import_jobs(project_instance, archive_directory, df, compressed=True):
     if compressed:
         extract_archive(os.path.relpath(archive_directory, os.getcwd()))
 
-    archive_name = getdir(path=archive_directory)
-
     # source folder; archive folder
     src = os.path.abspath(archive_directory)
     copy_tree(src, project_instance.path)
@@ -62,7 +60,10 @@ def import_jobs(project_instance, archive_directory, df, compressed=True):
     pr_import = project_instance.open(os.curdir)
 
     df["project"] = [
-        os.path.join(pr_import.project_path, os.path.relpath(p, archive_name)) + "/"
+        os.path.join(
+            pr_import.project_path,
+            os.path.relpath(p, getdir(path=archive_directory))
+        ) + "/"
         for p in df["project"].values
     ]
     df["projectpath"] = len(df) * [pr_import.root_path]
