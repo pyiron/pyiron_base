@@ -6,7 +6,6 @@ Server object class which is connected to each job containing the technical deta
 """
 
 from concurrent.futures import Executor, Future
-from collections import OrderedDict
 import numbers
 import socket
 from typing import Union

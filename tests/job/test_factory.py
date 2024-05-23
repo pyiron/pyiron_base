@@ -27,13 +27,15 @@ class TestJobFactory(TestWithCleanProject):
         self.factory = JobFactory(self.project)
 
     def test_core(self):
-        job = self.factory.ScriptJob('foo')
+        job = self.factory.ScriptJob("foo")
 
         job.status.aborted = True
-        self.assertLogs(self.factory.ScriptJob('foo'), level='WARNING')  # Job aborted warning
+        self.assertLogs(
+            self.factory.ScriptJob("foo"), level="WARNING"
+        )  # Job aborted warning
 
-        job.input.foo = 'foo'
-        job = self.factory.ScriptJob('foo', delete_existing_job=True)
+        job.input.foo = "foo"
+        job = self.factory.ScriptJob("foo", delete_existing_job=True)
         with self.assertRaises(Exception):
             job.input.foo  # Shouldn't exist after deleting existing job
 
@@ -41,22 +43,39 @@ class TestJobFactory(TestWithCleanProject):
         self.assertGreater(len(self.factory._job_class_dict), 0)
 
     def test_call_standard(self):
-        job = self.factory('ScriptJob', 'foo.bar')
-        self.assertIsInstance(job, ScriptJob, msg=f"Got a {type(job)} instead of a ScriptJob")
-        self.assertEqual('foodbar', job.name, msg=f"Job name failed to set, expected foo but got {job.name}")
+        job = self.factory("ScriptJob", "foo.bar")
+        self.assertIsInstance(
+            job, ScriptJob, msg=f"Got a {type(job)} instead of a ScriptJob"
+        )
         self.assertEqual(
-            state.settings.login_user, job.user,
-            msg=f"Expected user from settings, {state.settings.login_user}, but got user {job.user}."
+            "foodbar",
+            job.name,
+            msg=f"Job name failed to set, expected foo but got {job.name}",
+        )
+        self.assertEqual(
+            state.settings.login_user,
+            job.user,
+            msg=f"Expected user from settings, {state.settings.login_user}, but got user {job.user}.",
         )
 
     def test_call_custom(self):
-        job = self.factory(CustomJob, 'custom')
+        job = self.factory(CustomJob, "custom")
         job.run()
         table = self.project.job_table()
         self.assertIn(job.name, table.job.values, msg="Project failed to save job name")
-        self.assertIn(job.__class__.__name__, table.hamilton.values, msg="Project failed to save job type")
+        self.assertIn(
+            job.__class__.__name__,
+            table.hamilton.values,
+            msg="Project failed to save job type",
+        )
         self.assertEqual(7, job.output.bar, msg="Job failed to save output correctly")
 
         loaded = self.project.load(job.name)
-        self.assertIsInstance(loaded, CustomJob, msg="Loading caused custom job to lose its type")
-        self.assertEqual(7, loaded.output.bar, msg="Loading caused custom job to lose its stored output")
+        self.assertIsInstance(
+            loaded, CustomJob, msg="Loading caused custom job to lose its type"
+        )
+        self.assertEqual(
+            7,
+            loaded.output.bar,
+            msg="Loading caused custom job to lose its stored output",
+        )

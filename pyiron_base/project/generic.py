@@ -13,7 +13,6 @@ import shutil
 import stat
 from tqdm.auto import tqdm
 import pandas
-import math
 import numpy as np
 
 from pyiron_base.project.jobloader import JobLoader, JobInspector
@@ -54,7 +53,7 @@ from pyiron_base.project.archiving import export_archive, import_archive
 from typing import Generator, Union, Dict, TYPE_CHECKING, Literal
 
 if TYPE_CHECKING:
-    from pyiron_base.jobs.job.generic import GenericJob
+    pass
 
 __author__ = "Joerg Neugebauer, Jan Janssen"
 __copyright__ = (
@@ -218,7 +217,7 @@ class Project(ProjectPath, HasGroups):
     def conda_environment(self):
         try:
             from pyiron_base.project.condaenv import CondaEnvironment
-        except ImportError as e:
+        except ImportError:
             raise ImportError(
                 "You need to have the conda python package installed to access conda environments."
             ) from None

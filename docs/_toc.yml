@@ -1,0 +1,10 @@
+format: jb-book
+root: README
+chapters:
+- file: installation.md
+- file: tutorial.md
+- file: example.md
+- file: commandline.md
+- file: developer.md
+- file: faq.md
+- file: api.rst

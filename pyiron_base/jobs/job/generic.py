@@ -51,7 +51,6 @@ from pyiron_base.utils.deprecate import deprecate
 from pyiron_base.jobs.job.extension.server.generic import Server
 from pyiron_base.database.filetable import FileTable
 from pyiron_base.interfaces.has_dict import HasDict
-from pyiron_base.storage.datacontainer import DataContainer
 
 __author__ = "Joerg Neugebauer, Jan Janssen"
 __copyright__ = (
@@ -166,7 +165,7 @@ class GenericJob(JobCore, HasDict):
         self._python_only_job = False
         self._write_work_dir_warnings = True
         self.interactive_cache = None
-        self.error = GenericError(job=self)
+        self.error = GenericError(working_directory=self.project_hdf5.working_directory)
 
     @property
     def version(self):
@@ -758,6 +757,12 @@ class GenericJob(JobCore, HasDict):
             run_mode (str): ['modal', 'non_modal', 'queue', 'manual'] overwrites self.server.run_mode
             run_again (bool): Same as delete_existing_job (deprecated)
         """
+        if not isinstance(delete_existing_job, bool):
+            raise ValueError(
+                f"We got delete_existing_job = {delete_existing_job}. If you"
+                " meant to delete the job, set delete_existing_job"
+                " = True"
+            )
         with catch_signals(self.signal_intercept):
             if run_again:
                 delete_existing_job = True
@@ -1552,13 +1557,16 @@ class GenericJob(JobCore, HasDict):
                 "No executor type defined - Please set self.executor_type."
             )
         elif (
-            self._executor_type == "pympipool.mpi.executor.PyMPIExecutor"
+            self._executor_type == "pympipool.Executor"
             and platform.system() == "Darwin"
         ):
             # The Mac firewall might prevent connections based on the network address - especially Github CI
             return import_class(self._executor_type)(
-                max_workers=max_workers, hostname_localhost=True
+                max_cores=max_workers, hostname_localhost=True
             )
+        elif self._executor_type == "pympipool.Executor":
+            # The pympipool Executor defines max_cores rather than max_workers
+            return import_class(self._executor_type)(max_cores=max_workers)
         elif isinstance(self._executor_type, str):
             return import_class(self._executor_type)(max_workers=max_workers)
         else:
@@ -1566,8 +1574,8 @@ class GenericJob(JobCore, HasDict):
 
 
 class GenericError(object):
-    def __init__(self, job):
-        self._job = job
+    def __init__(self, working_directory):
+        self._working_directory = working_directory
 
     def __repr__(self):
         all_messages = ""
@@ -1585,7 +1593,8 @@ class GenericError(object):
         return self._print_error(file_name="error.out", string=string)
 
     def _print_error(self, file_name, string="", print_yes=True):
-        if self._job[file_name] is None:
+        if not os.path.exists(os.path.join(self._working_directory, file_name)):
             return ""
         elif print_yes:
-            return string.join(self._job[file_name])
+            with open(os.path.join(self._working_directory, file_name)) as f:
+                return string.join(f.readlines())

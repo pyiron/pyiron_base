@@ -38,28 +38,33 @@ class TestFileTable(PyironTestCase):
         ft_reinitialized = FileTable(self.loc1)
         second_initialization = time() - start
 
-        print([f"{t:.2e}" for t in [
-            # master_init, m2,
-            first_initialization, second_initialization
-        ]])
+        print(
+            [
+                f"{t:.2e}"
+                for t in [
+                    # master_init, m2,
+                    first_initialization,
+                    second_initialization,
+                ]
+            ]
+        )
 
         self.assertTrue(
             ft is ft_reinitialized,
             msg="This is an implementation sanity check -- we are used a path-dependent"
-                "singleton architecture, so reinitializations with the same path should"
-                "be the same object"
+            "singleton architecture, so reinitializations with the same path should"
+            "be the same object",
         )
         self.assertTrue(
             second_initialization < 0.1 * first_initialization,
             msg=f"We promise re-initialization to be much faster, but got times "
-                f"{first_initialization:.2e} for the first and "
-                f"{second_initialization:.2e} for the second"
+            f"{first_initialization:.2e} for the first and "
+            f"{second_initialization:.2e} for the second",
         )
 
         another_ft = FileTable(self.loc2)
         self.assertFalse(
-            ft is another_ft,
-            msg="New paths should create new FileTable instances"
+            ft is another_ft, msg="New paths should create new FileTable instances"
         )
 
     def test_job_table(self):
@@ -74,7 +79,7 @@ class TestFileTable(PyironTestCase):
                 len(pr.job_table()),
                 len(ft._job_table),
                 msg="We expect to see exactly the same job(s) that is in the project's "
-                    "database job table"
+                "database job table",
             )
 
             ft.update()
@@ -82,9 +87,9 @@ class TestFileTable(PyironTestCase):
                 len(pr.job_table()),
                 len(ft._job_table),
                 msg="update is called in each _get_job_table call, and if path "
-                    "comparisons fail -- e.g. because you're on windows but pyiron "
-                    "Projects force all the paths to use \\ instead of /, then the "
-                    "update can (and was before the PR where this test got added) "
-                    "duplicate jobs in the job table."
+                "comparisons fail -- e.g. because you're on windows but pyiron "
+                "Projects force all the paths to use \\ instead of /, then the "
+                "update can (and was before the PR where this test got added) "
+                "duplicate jobs in the job table.",
             )
         pr.remove_jobs(recursive=True, progress=False, silently=True)

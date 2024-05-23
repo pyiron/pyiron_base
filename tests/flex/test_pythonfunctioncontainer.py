@@ -7,12 +7,12 @@ from pyiron_base._tests import TestWithProject
 
 
 def my_function(a, b=8):
-    return a+b
+    return a + b
 
 
 def my_sleep_funct(a, b=8, sleep_time=0.01):
     sleep(sleep_time)
-    return a+b
+    return a + b
 
 
 def my_function_exe(a_lst, b_lst, executor):
@@ -93,12 +93,16 @@ class TestPythonFunctionContainer(TestWithProject):
         with self.assertRaises(ImportError):
             job.executor_type = "Executor"
         job.executor_type = ProcessPoolExecutor
-        self.assertTrue(isinstance(job._get_executor(max_workers=2), ProcessPoolExecutor))
+        self.assertTrue(
+            isinstance(job._get_executor(max_workers=2), ProcessPoolExecutor)
+        )
         job.executor_type = None
         with self.assertRaises(ValueError):
             job._get_executor(max_workers=2)
         job.executor_type = "concurrent.futures.ProcessPoolExecutor"
-        self.assertTrue(isinstance(job._get_executor(max_workers=2), ProcessPoolExecutor))
+        self.assertTrue(
+            isinstance(job._get_executor(max_workers=2), ProcessPoolExecutor)
+        )
         job.run()
         self.assertEqual(job.output["result"], [6, 8, 10, 12])
         self.assertTrue(job.status.finished)
@@ -112,7 +116,7 @@ class TestPythonFunctionContainer(TestWithProject):
             self.assertEqual(
                 my_function.__name__,
                 job.job_name,
-                msg="Docs claim job name takes function name by default"
+                msg="Docs claim job name takes function name by default",
             )
             pre_save_name = job.job_name
             try:
@@ -120,11 +124,11 @@ class TestPythonFunctionContainer(TestWithProject):
                 self.assertNotEqual(
                     pre_save_name,
                     job.job_name,
-                    msg="Docs claim default is to modify the name on save"
+                    msg="Docs claim default is to modify the name on save",
                 )
                 self.assertTrue(
                     pre_save_name in job.job_name,
-                    msg="The job name should still be based off the original name"
+                    msg="The job name should still be based off the original name",
                 )
             finally:
                 job.remove()
@@ -135,22 +139,18 @@ class TestPythonFunctionContainer(TestWithProject):
             job.input["a"] = 1
             job.input["b"] = 2
 
-            self.assertEqual(
-                name,
-                job.job_name,
-                msg="Provided name should be used"
-            )
+            self.assertEqual(name, job.job_name, msg="Provided name should be used")
             try:
                 job.save()
                 self.assertNotEqual(
                     name,
                     job.job_name,
-                    msg="Docs claim default is to modify the name on save"
+                    msg="Docs claim default is to modify the name on save",
                 )
                 print("NAME STUFF", name, job.job_name)
                 self.assertTrue(
                     name in job.job_name,
-                    msg="The job name should still be based off the original name"
+                    msg="The job name should still be based off the original name",
                 )
             finally:
                 job.remove()
@@ -168,14 +168,14 @@ class TestPythonFunctionContainer(TestWithProject):
                 self.assertEqual(
                     pre_save_name,
                     job.job_name,
-                    msg="We should be able to deactivate the automatic renaming"
+                    msg="We should be able to deactivate the automatic renaming",
                 )
                 n_ids = len(self.project.job_table())
                 job.save()
                 self.assertEqual(
                     n_ids,
                     len(self.project.job_table()),
-                    msg="When re-saving, the job should be found and loaded instead"
+                    msg="When re-saving, the job should be found and loaded instead",
                 )
             finally:
                 job.remove()

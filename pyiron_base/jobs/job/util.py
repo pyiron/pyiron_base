@@ -4,6 +4,7 @@
 """
 Helper functions for the JobCore and GenericJob objects
 """
+
 from itertools import islice
 import os
 import posixpath
@@ -449,8 +450,8 @@ def _working_directory_read_file(working_directory, file_name, tail=None):
             lines = list(
                 reversed(
                     [
-                        l + os.linesep
-                        for l in islice(monty.io.reverse_readfile(file_name), tail)
+                        line + os.linesep
+                        for line in islice(monty.io.reverse_readfile(file_name), tail)
                     ]
                 )
             )

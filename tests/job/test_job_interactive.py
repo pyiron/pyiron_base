@@ -13,7 +13,7 @@ class TestJobInteractive(TestWithProject):
         with self.assertRaises((TypeError, AttributeError)):
             with job as _:
                 pass
-                
+
     def test_job_interactive_with(self):
         job = self.project.create_job(InteractiveBase, "job_interactive")
         job.project.db.add_item_dict(job.db_entry())
