@@ -71,7 +71,7 @@ def import_jobs(project_instance, archive_directory, df, compressed=True):
     job_id_lst = []
     for entry in df.dropna(axis=1).to_dict(orient="records"):
         for tag in ["id", "parentid", "masterid"]:
-            if tag in entry
+            if tag in entry:
                 del entry[tag]
         if "timestart" in entry:
             entry["timestart"] = pandas.to_datetime(entry["timestart"])
