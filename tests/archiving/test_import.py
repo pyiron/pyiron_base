@@ -29,11 +29,15 @@ class TestUnpacking(PyironTestCase):
     @classmethod
     def tearDownClass(cls) -> None:
         super().tearDownClass()
+        # for job_id in cls.pr.job_table().id:
+        #     cls.pr.remove_job(job_id, _unprotect=True)
         cls.pr.remove(enable=True)
         uncompressed_pr = Project(cls.arch_dir)
         uncompressed_pr.remove(enable=True, enforce=True)
         os.remove("export.csv")
         os.remove(cls.arch_dir_comp + ".tar.gz")
+        # for job_id in cls.imp_pr.job_table().id:
+        #     cls.imp_pr.remove_job(job_id, _unprotect=True)
         cls.imp_pr.remove(enable=True)
 
     def setUp(self):
@@ -43,6 +47,8 @@ class TestUnpacking(PyironTestCase):
 
     def tearDown(self):
         super().tearDown()
+        # for job_id in self.imp_pr.job_table().id:
+        #     self.imp_pr.remove_job(job_id, _unprotect=True)
         self.imp_pr.remove_jobs(recursive=True, silently=True)
 
     def test_import_csv(self):
