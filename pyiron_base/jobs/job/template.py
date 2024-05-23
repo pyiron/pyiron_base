@@ -7,7 +7,6 @@ Template class to define jobs
 
 from pyiron_base.jobs.job.generic import GenericJob
 from pyiron_base.interfaces.object import HasStorage
-from pyiron_base.jobs.job.jobtype import JobType
 
 __author__ = "Jan Janssen"
 __copyright__ = (
@@ -22,6 +21,39 @@ __date__ = "May 15, 2020"
 
 
 class TemplateJob(GenericJob, HasStorage):
+    """
+    pyiron template job class for codes with an external executable.
+
+    Example:
+
+    >>> from pyiron_base import TemplateJob
+
+    >>> class MyJob(TemplateJob):
+    >>>     def __init__(self, project, job_name):
+    >>>         super().__init__(project, job_name)
+    >>>         job.input.message = "hello!"
+    >>>         self.executable = "cat input.dat > output.dat"
+
+    >>>     def write_input(self):
+    >>>         with open(self.working_directory + "/input.dat", "w") as f:
+    >>>             f.write(job.input.message)
+
+    >>>     def collect_output(self):
+    >>>         with open(self.working_directory + "/output.dat", "w") as f:
+    >>>             job.output.message = f.read()
+
+    You can store information you need in `job.input` (or `self.input`) and
+    `job.output` (or `self.output`). The information assigned there will be
+    automatically stored in the database after a successful run. You can write
+    everything inside `run_static`, but optionally you can use the functions
+    `def write_input(self)` and `def collect_output(self)`, which are called
+    before and after `run_static`, respectively.
+
+    If you have a code which requires an executable, take a look at
+    :class:`~.TemplateJob` instead.
+
+    """
+
     def __init__(self, project, job_name):
         GenericJob.__init__(self, project, job_name)
         HasStorage.__init__(self, group_name="")
@@ -46,9 +78,39 @@ class TemplateJob(GenericJob, HasStorage):
 
 
 class PythonTemplateJob(TemplateJob):
+    """
+    pyiron template job class for python codes.
+
+    Example:
+
+    >>> from pyiron_base import PythonTemplateJob
+
+    >>> class ToyJob(PythonTemplateJob):  # Create a custom job class
+    >>>     def __init__(self, project, job_name):
+    >>>         super().__init__(project, job_name)
+    >>>         self.input.energy = 100  # Define default input
+
+    >>>     def run_static(self):  # Call a python function and store stuff in the output
+    >>>         self.output.double = self.input.energy * 2
+    >>>         self.status.finished = True
+    >>>         self.to_hdf()
+
+    >>> job = pr.create_job(job_type=ToyJob, job_name="toy")  # Create job instance
+    >>> job.run()  # Execute Custom job class
+
+    You can store information you need in `job.input` (or `self.input`) and
+    `job.output` (or `self.output`). The information assigned there will be
+    automatically stored in the database after a successful run. You can write
+    everything inside `run_static`, but optionally you can use the functions
+    `def write_input(self)` and `def collect_output(self)`, whichare called
+    before and after `run_static`, respectively.
+
+    If you have a code which requires an executable, take a look at
+    `TemplateJob` instead.
+
+    """
+
     def __init__(self, project, job_name):
         super().__init__(project, job_name)
         self._python_only_job = True
-
-    def _check_if_input_should_be_written(self):
-        return False
+        self._write_work_dir_warnings = False

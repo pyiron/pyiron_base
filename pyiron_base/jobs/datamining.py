@@ -3,9 +3,9 @@
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
 import codecs
-from collections import OrderedDict
+import concurrent.futures
 from datetime import datetime
-import dill as pickle
+import cloudpickle
 import json
 import numpy as np
 import os
@@ -19,7 +19,6 @@ from pyiron_base.utils.deprecate import deprecate
 from pyiron_base.jobs.job.generic import GenericJob
 from pyiron_base.jobs.job.extension import jobstatus
 from pyiron_base.storage.hdfio import FileHDFio
-from pyiron_base.jobs.master.generic import get_function_from_string
 
 
 __author__ = "Uday Gajera, Jan Janssen, Joerg Neugebauer"
@@ -35,11 +34,18 @@ __date__ = "Sep 1, 2018"
 
 
 def _to_pickle(hdf, key, value):
-    hdf[key] = codecs.encode(pickle.dumps(value), "base64").decode()
+    hdf[key] = codecs.encode(
+        cloudpickle.dumps(obj=value, protocol=5, buffer_callback=None), "base64"
+    ).decode()
 
 
 def _from_pickle(hdf, key):
-    return pickle.loads(codecs.decode(hdf[key].encode(), "base64"))
+    try:
+        return cloudpickle.loads(codecs.decode(hdf[key].encode(), "base64"))
+    except ModuleNotFoundError:
+        import dill
+
+        return dill.loads(codecs.decode(hdf[key].encode(), "base64"))
 
 
 def get_job_id(job):
@@ -229,12 +235,12 @@ class PyironTable:
                 for k, v in self.add._system_function_dict.items()
                 if v and not temp_system_function_dict[k]
             ]
-        except:
+        except (IndexError, ValueError, TypeError):
             new_user_functions = []
             new_system_functions = []
         return new_user_functions, new_system_functions
 
-    def create_table(self, file, job_status_list, enforce_update=False):
+    def create_table(self, file, job_status_list, executor=None, enforce_update=False):
         """
         Create or update the table.
 
@@ -245,9 +251,16 @@ class PyironTable:
 
         The result is available via :meth:`.get_dataframe`.
 
+        .. warning::
+            The executor, if given, must not naively pickle the mapped functions or
+            arguments, as PyironTable relies on lambda functions internally.  Use
+            with executors that rely on dill or cloudpickle instead.  Pyiron
+            provides such executors in the `pympipool` sub packages.
+
         Args:
             file (FileHDFio): HDF were the previous state of the table is stored
             job_status_list (list of str): only consider jobs with these statuses
+            executor (concurrent.futures.Executor): executor for parallel execution
             enforce_update (bool): if True always regenerate the table completely.
         """
         # if there's new keys, apply the *new* functions to the old jobs and name the resulting table `df_new_keys`
@@ -266,8 +279,9 @@ class PyironTable:
                     if funct.__name__ in new_system_functions
                 ]
                 df_new_keys = self._iterate_over_job_lst(
-                    job_lst=map(self._project.inspect, self._get_job_ids()),
+                    job_id_lst=self._get_job_ids(),
                     function_lst=function_lst,
+                    executor=executor,
                 )
                 if len(df_new_keys) > 0:
                     self._df = pandas.concat([self._df, df_new_keys], axis="columns")
@@ -278,7 +292,9 @@ class PyironTable:
         )
         if len(new_jobs) > 0:
             df_new_ids = self._iterate_over_job_lst(
-                job_lst=new_jobs, function_lst=self.add._function_lst
+                job_id_lst=new_jobs,
+                function_lst=self.add._function_lst,
+                executor=executor,
             )
             if len(df_new_ids) > 0:
                 self._df = pandas.concat([self._df, df_new_ids], ignore_index=True)
@@ -334,44 +350,47 @@ class PyironTable:
         filter_funct = self.db_filter_function
         return project_table[filter_funct(project_table)]["id"].tolist()
 
-    @staticmethod
-    def _apply_function_on_job(funct, job):
-        try:
-            return funct(job)
-        except (ValueError, TypeError):
-            return {}
-
-    def _apply_list_of_functions_on_job(self, job, function_lst):
-        diff_dict = {}
-        for funct in function_lst:
-            funct_dict = self._apply_function_on_job(funct, job)
-            for key, value in funct_dict.items():
-                diff_dict[key] = value
-        return diff_dict
-
-    def _iterate_over_job_lst(self, job_lst: List, function_lst: List) -> List[dict]:
+    def _iterate_over_job_lst(
+        self,
+        job_id_lst: List,
+        function_lst: List,
+        executor: concurrent.futures.Executor = None,
+    ) -> List[dict]:
         """
         Apply functions to job.
 
         Any functions that raise an error are set to `None` in the final list.
 
         Args:
-            job_lst (list of JobPath): all jobs to analyze
-            function_lst (list of functions): all functions to apply on jobs.  Must return a dictionary.
+            job_id_lst (list of int): all job ids to analyze
+            function_lst (list of functions): all functions to apply on jobs. Must return a dictionary.
+            executor (concurrent.futures.Executor): executor for parallel execution
 
         Returns:
             list of dict: a list of the merged dicts from all functions for each job
         """
-        diff_dict_lst = []
-        for job_inspect in tqdm(job_lst, desc="Processing jobs"):
-            if self.convert_to_object:
-                job = job_inspect.to_object()
-            else:
-                job = job_inspect
-            diff_dict = self._apply_list_of_functions_on_job(
-                job=job, function_lst=function_lst
+        job_to_analyse_lst = [
+            [
+                self._project.db.get_item_by_id(job_id),
+                function_lst,
+                self.convert_to_object,
+            ]
+            for job_id in job_id_lst
+        ]
+        if executor is not None:
+            diff_dict_lst = list(
+                tqdm(
+                    executor.map(_apply_list_of_functions_on_job, job_to_analyse_lst),
+                    total=len(job_to_analyse_lst),
+                )
             )
-            diff_dict_lst.append(diff_dict)
+        else:
+            diff_dict_lst = list(
+                tqdm(
+                    map(_apply_list_of_functions_on_job, job_to_analyse_lst),
+                    total=len(job_to_analyse_lst),
+                )
+            )
         self.refill_dict(diff_dict_lst)
         return pandas.DataFrame(diff_dict_lst)
 
@@ -424,14 +443,16 @@ class PyironTable:
         for job_id in tqdm(job_id_lst, desc="Loading and filtering jobs"):
             try:
                 job = self._project.inspect(job_id)
-            except IndexError:  # In case the job was deleted while the pyiron table is running
+            except (
+                IndexError
+            ):  # In case the job was deleted while the pyiron table is running
                 job = None
             if (
                 job is not None
                 and job.status in job_status_list
                 and self.filter_function(job)
             ):
-                job_update_lst.append(job)
+                job_update_lst.append(job_id)
         return job_update_lst
 
     def _repr_html_(self):
@@ -633,8 +654,64 @@ class TableJob(GenericJob):
     def _save_output(self):
         with self.project_hdf5.open("output") as hdf5_output:
             self.pyiron_table._df.to_hdf(
-                hdf5_output.file_name, hdf5_output.h5_path + "/table"
+                hdf5_output.file_name, key=hdf5_output.h5_path + "/table"
             )
+
+    def to_dict(self):
+        job_dict = super().to_dict()
+        job_dict["input/bool_dict"] = {
+            "enforce_update": self._enforce_update,
+            "convert_to_object": self._pyiron_table.convert_to_object,
+        }
+        if self._analysis_project is not None:
+            job_dict["input/project"] = {
+                "path": self._analysis_project.path,
+                "user": self._analysis_project.user,
+                "sql_query": self._analysis_project.sql_query,
+                "filter": self._analysis_project._filter,
+                "inspect_mode": self._analysis_project._inspect_mode,
+            }
+        add_dict = {}
+        self._pyiron_table.add._to_hdf(add_dict)
+        for k, v in add_dict.items():
+            job_dict["input/" + k] = v
+        if self.pyiron_table._filter_function is not None:
+            _to_pickle(job_dict, "input/filter", self.pyiron_table._filter_function)
+        if self.pyiron_table._db_filter_function is not None:
+            _to_pickle(
+                job_dict, "input/db_filter", self.pyiron_table._db_filter_function
+            )
+        return job_dict
+
+    def from_dict(self, job_dict):
+        super().from_dict(job_dict=job_dict)
+        if "project" in job_dict["input"].keys():
+            project_dict = job_dict["input"]["project"]
+            if os.path.exists(project_dict["path"]):
+                project = self.project.__class__(
+                    path=project_dict["path"],
+                    user=project_dict["user"],
+                    sql_query=project_dict["sql_query"],
+                )
+                project._filter = project_dict["filter"]
+                project._inspect_mode = project_dict["inspect_mode"]
+                self.analysis_project = project
+            else:
+                self._logger.warning(
+                    f"Could not instantiate analysis_project, no such path {project_dict['path']}."
+                )
+        if "filter" in job_dict["input"].keys():
+            self.pyiron_table.filter_function = _from_pickle(
+                job_dict["input"], "filter"
+            )
+        if "db_filter" in job_dict["input"].keys():
+            self.pyiron_table.db_filter_function = _from_pickle(
+                job_dict["input"], "db_filter"
+            )
+        bool_dict = job_dict["input"]["bool_dict"]
+        self._enforce_update = bool_dict["enforce_update"]
+        self._pyiron_table.convert_to_object = bool_dict["convert_to_object"]
+        self._pyiron_table.add._from_hdf(job_dict["input"])
 
     def to_hdf(self, hdf=None, group_name=None):
         """
@@ -646,26 +723,6 @@ class TableJob(GenericJob):
 
         """
         super(TableJob, self).to_hdf(hdf=hdf, group_name=group_name)
-        with self.project_hdf5.open("input") as hdf5_input:
-            hdf5_input["bool_dict"] = {
-                "enforce_update": self._enforce_update,
-                "convert_to_object": self._pyiron_table.convert_to_object,
-            }
-            self._pyiron_table.add._to_hdf(hdf5_input)
-            if self._analysis_project is not None:
-                hdf5_input["project"] = {
-                    "path": self._analysis_project.path,
-                    "user": self._analysis_project.user,
-                    "sql_query": self._analysis_project.sql_query,
-                    "filter": self._analysis_project._filter,
-                    "inspect_mode": self._analysis_project._inspect_mode,
-                }
-            if self.pyiron_table._filter_function is not None:
-                _to_pickle(hdf5_input, "filter", self.pyiron_table._filter_function)
-            if self.pyiron_table._db_filter_function is not None:
-                _to_pickle(
-                    hdf5_input, "db_filter", self.pyiron_table._db_filter_function
-                )
         if len(self.pyiron_table._df) != 0:
             self._save_output()
 
@@ -679,41 +736,6 @@ class TableJob(GenericJob):
         """
         super(TableJob, self).from_hdf(hdf=hdf, group_name=group_name)
         hdf_version = self.project_hdf5.get("HDF_VERSION", "0.1.0")
-        with self.project_hdf5.open("input") as hdf5_input:
-            if "project" in hdf5_input.list_nodes():
-                project_dict = hdf5_input["project"]
-                project = self.project.__class__(
-                    path=project_dict["path"],
-                    user=project_dict["user"],
-                    sql_query=project_dict["sql_query"],
-                )
-                project._filter = project_dict["filter"]
-                project._inspect_mode = project_dict["inspect_mode"]
-                self.analysis_project = project
-            if "filter" in hdf5_input.list_nodes():
-                if hdf_version == "0.1.0":
-                    self.pyiron_table._filter_function_str = hdf5_input["filter"]
-                    self.pyiron_table.filter_function = get_function_from_string(
-                        hdf5_input["filter"]
-                    )
-                else:
-                    self.pyiron_table.filter_function = _from_pickle(
-                        hdf5_input, "filter"
-                    )
-            if "db_filter" in hdf5_input.list_nodes():
-                if hdf_version == "0.1.0":
-                    self.pyiron_table._db_filter_function_str = hdf5_input["db_filter"]
-                    self.pyiron_table.db_filter_function = get_function_from_string(
-                        hdf5_input["db_filter"]
-                    )
-                else:
-                    self.pyiron_table.db_filter_function = _from_pickle(
-                        hdf5_input, "db_filter"
-                    )
-            bool_dict = hdf5_input["bool_dict"]
-            self._enforce_update = bool_dict["enforce_update"]
-            self._pyiron_table.convert_to_object = bool_dict["convert_to_object"]
-            self._pyiron_table.add._from_hdf(hdf5_input)
         if hdf_version == "0.3.0":
             with self.project_hdf5.open("output") as hdf5_output:
                 if "table" in hdf5_output.list_groups():
@@ -762,18 +784,29 @@ class TableJob(GenericJob):
         if self.job_id is not None:
             self.project.db.item_update({"timestart": datetime.now()}, self.job_id)
         with self.project_hdf5.open("input") as hdf5_input:
-            self._pyiron_table.create_table(
-                file=hdf5_input,
-                job_status_list=job_status_list,
-                enforce_update=self._enforce_update,
-            )
+            if self._executor_type is None and self.server.cores > 1:
+                self._executor_type = "pympipool.Executor"
+            if self._executor_type is not None:
+                with self._get_executor(max_workers=self.server.cores) as exe:
+                    self._pyiron_table.create_table(
+                        file=hdf5_input,
+                        job_status_list=job_status_list,
+                        enforce_update=self._enforce_update,
+                        executor=exe,
+                    )
+            else:
+                self._pyiron_table.create_table(
+                    file=hdf5_input,
+                    job_status_list=job_status_list,
+                    enforce_update=self._enforce_update,
+                    executor=None,
+                )
         self.to_hdf()
         self._pyiron_table._df.to_csv(
             os.path.join(self.working_directory, "pyirontable.csv"), index=False
         )
         self._save_output()
-        if self.job_id is not None:
-            self.project.db.item_update(self._runtime(), self.job_id)
+        self.run_time_to_db()
 
     def get_dataframe(self):
         """
@@ -809,3 +842,26 @@ def always_true(_):
 
     """
     return True
+
+
+def _apply_function_on_job(funct, job):
+    try:
+        return funct(job)
+    except (ValueError, TypeError):
+        return {}
+
+
+def _apply_list_of_functions_on_job(input_parameters):
+    from pyiron_base.jobs.job.path import JobPath
+
+    db_entry, function_lst, convert_to_object = input_parameters
+    job = JobPath.from_db_entry(db_entry)
+    if convert_to_object:
+        job = job.to_object()
+        job.set_input_to_read_only()
+    diff_dict = {}
+    for funct in function_lst:
+        funct_dict = _apply_function_on_job(funct, job)
+        for key, value in funct_dict.items():
+            diff_dict[key] = value
+    return diff_dict

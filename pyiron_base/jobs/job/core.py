@@ -26,11 +26,15 @@ from pyiron_base.jobs.job.util import (
     _job_is_compressed,
     _job_compress,
     _job_decompress,
+    _job_list_files,
+    _job_read_file,
     _job_delete_files,
     _job_delete_hdf,
     _job_remove_folder,
 )
 from pyiron_base.state import state
+from pyiron_base.utils.deprecate import deprecate
+from pyiron_base.jobs.job.extension.files import FileBrowser
 
 __author__ = "Jan Janssen"
 __copyright__ = (
@@ -103,6 +107,82 @@ _doc_str_job_core_attr = """\
 """
 
 
+def recursive_load_from_hdf(project_hdf5: ProjectHDFio, item: str):
+    """
+    Load given item from HDF, but check also for DataContainer along the way.
+
+    If `item` exists as is in HDF, return it, otherwise break it up along every slash and try to load a
+    :class:`~.DataContainer` and then try to index with the remainder of the path, i.e.
+
+    >>> recursive_load_from_hdf(hdf, 'my/path/to/value')
+
+    is equivalent to one of (in this order)
+
+    >>> hdf['my/path/to'].to_object()['value']
+    >>> hdf['my/path'].to_object()['to/value']
+    >>> hdf['my'].to_object()['path/to/value']
+
+    in case
+
+    >>> hdf['/my/path/to/value']
+
+    doesn't exist.
+
+    Args:
+        project_hdf5 (ProjectHDFio): HDF file to access
+        item (str): path to value, may contain `/`
+
+    Returns:
+        object: whatever was found in the HDF file
+        None: if nothing was found in the HDF file
+    """
+
+    def successive_path_splits(name_lst):
+        """
+        Yield successive split/joins of a path, i.e.
+        /a/b/c/d
+        gives
+        /a/b/c, d
+        /a/b, c/d
+        /a, b/c/d
+        """
+        for i in range(1, len(name_lst)):
+            # where we are looking for the data container
+            container_path = "/".join(name_lst[:-i])
+            # where we are looking for data in the container
+            data_path = "/".join(name_lst[-1:])
+            yield container_path, data_path
+
+    try:
+        group = project_hdf5[item]
+        if (
+            isinstance(group, ProjectHDFio)
+            and "NAME" in group
+            and group["NAME"] == "DataContainer"
+        ):
+            return group.to_object(lazy=True)
+        else:
+            return group
+    except ValueError:
+        pass
+
+    name_lst = item.split("/")
+
+    for container_path, data_path in successive_path_splits(name_lst):
+        try:
+            group = project_hdf5[container_path]
+            if (
+                isinstance(group, ProjectHDFio)
+                and "NAME" in group
+                and group["NAME"] == "DataContainer"
+            ):
+                return group.to_object(lazy=True)[data_path]
+        except (ValueError, IndexError, KeyError):
+            # either group does not contain a data container or it is does, but it does not have the path we're
+            # looking for
+            pass
+
+
 class JobCore(HasGroups):
     __doc__ = (
         """
@@ -129,10 +209,18 @@ class JobCore(HasGroups):
         self._import_directory = None
         self._database_property = DatabaseProperties()
         self._hdf5_content = HDF5Content(project_hdf5=self._hdf5)
+        self._files_to_remove = list()
+        self._files_to_compress = list()
 
     @property
     def content(self):
         return self._hdf5_content
+
+    @property
+    def files(self):
+        return FileBrowser(working_directory=self.working_directory)
+
+    files.__doc__ = FileBrowser.__doc__
 
     @property
     def job_name(self):
@@ -225,12 +313,9 @@ class JobCore(HasGroups):
         Returns:
             int: parent id
         """
-        if self._parent_id:
-            return self._parent_id
-        elif self.job_id:
+        if self._parent_id is None and self.job_id is not None:
             return self.project.db.get_item_by_id(self.job_id)["parentid"]
-        else:
-            return None
+        return self._parent_id
 
     @parent_id.setter
     def parent_id(self, parent_id):
@@ -240,7 +325,7 @@ class JobCore(HasGroups):
         Args:
             parent_id (int): parent id
         """
-        if self.job_id:
+        if self.job_id is not None:
             self.project.db.item_update({"parentid": parent_id}, self.job_id)
         self._parent_id = parent_id
 
@@ -253,12 +338,9 @@ class JobCore(HasGroups):
         Returns:
             int: master id
         """
-        if self._master_id:
-            return self._master_id
-        elif self.job_id:
+        if self._master_id is None and self.job_id is not None:
             return self.project.db.get_item_by_id(self.job_id)["masterid"]
-        else:
-            return None
+        return self._master_id
 
     @master_id.setter
     def master_id(self, master_id):
@@ -269,7 +351,7 @@ class JobCore(HasGroups):
         Args:
             master_id (int): master id
         """
-        if self.job_id:
+        if self.job_id is not None:
             self.project.db.item_update({"masterid": master_id}, self.job_id)
         self._master_id = master_id
 
@@ -281,14 +363,9 @@ class JobCore(HasGroups):
         Returns:
             list: list of child job ids
         """
-        id_master = self.job_id
-        if id_master is None:
-            return []
-        else:
-            id_l = self.project.db.get_items_dict(
-                {"masterid": str(id_master)}, return_all_columns=False
-            )
-            return sorted([job["id"] for job in id_l])
+        return self.project.get_child_ids(
+            job_specifier=self.job_name, project=self.project.project_path
+        )
 
     @property
     def project_hdf5(self):
@@ -309,6 +386,14 @@ class JobCore(HasGroups):
             project (ProjectHDFio): HDF5 project
         """
         self._hdf5 = project.copy()
+
+    @property
+    def files_to_compress(self):
+        return self._files_to_compress
+
+    @property
+    def files_to_remove(self):
+        return self._files_to_remove
 
     def relocate_hdf5(self, h5_path=None):
         """
@@ -374,9 +459,9 @@ class JobCore(HasGroups):
         Returns:
             (bool): True / False
         """
-        if not job_name:
+        if job_name is None:
             job_name = self.job_name
-        if not project:
+        if project is None:
             project = self._hdf5
 
         where_dict = {
@@ -433,7 +518,7 @@ class JobCore(HasGroups):
                     )
                     raise ValueError("Child jobs are protected and cannot be deleted!")
             for job_id in self.child_ids:
-                job = self.project.load(job_id, convert_to_object=False)
+                job = self.project.inspect(job_id)
                 if len(job.child_ids) > 0:
                     job.remove(_protect_childs=False)
                 else:
@@ -488,7 +573,7 @@ class JobCore(HasGroups):
         _job_remove_folder(job=self)
 
         # Delete database entry
-        if self.job_id:
+        if self.job_id is not None:
             self.project.db.delete_item(self.job_id)
 
     def to_object(self, object_type=None, **qwargs):
@@ -558,7 +643,7 @@ class JobCore(HasGroups):
         Returns:
             JobCore: Access to the HDF5 object - not a GenericJob object - use load() instead.
         """
-        return self.project.load(job_specifier=job_specifier, convert_to_object=False)
+        return self.project.inspect(job_specifier=job_specifier)
 
     def is_master_id(self, job_id):
         """
@@ -592,24 +677,21 @@ class JobCore(HasGroups):
         Returns:
             int: job ID of the job
         """
-        if job_specifier:
+        if job_specifier is not None:
             return self.project.get_job_id(
                 job_specifier
             )  # , sub_job_name=self.project_hdf5.h5_path)
-        else:
-            where_dict = {
-                "job": str(self._name),
-                "project": str(self.project_hdf5.project_path),
-                "subjob": str(self.project_hdf5.h5_path),
-            }
-            response = self.project.db.get_items_dict(
-                where_dict, return_all_columns=False
-            )
-            if len(response) > 0:
-                return response[-1]["id"]
-            else:
-                return None
+        where_dict = {
+            "job": str(self._name),
+            "project": str(self.project_hdf5.project_path),
+            "subjob": str(self.project_hdf5.h5_path),
+        }
+        response = self.project.db.get_items_dict(where_dict, return_all_columns=False)
+        if len(response) > 0:
+            return response[-1]["id"]
+        return None
 
+    @deprecate("use job.files.list()")
     def list_files(self):
         """
         List files inside the working directory
@@ -620,9 +702,7 @@ class JobCore(HasGroups):
         Returns:
             list: list of file names
         """
-        if os.path.isdir(self.working_directory):
-            return os.listdir(self.working_directory)
-        return []
+        return _job_list_files(self)
 
     def list_childs(self):
         """
@@ -631,10 +711,7 @@ class JobCore(HasGroups):
         Returns:
             list: list of child jobs
         """
-        return [
-            self.project.load(child_id, convert_to_object=False).job_name
-            for child_id in self.child_ids
-        ]
+        return [self.project.inspect(child_id).job_name for child_id in self.child_ids]
 
     def _list_groups(self):
         return self.project_hdf5.list_groups() + self._list_ext_childs()
@@ -723,7 +800,7 @@ class JobCore(HasGroups):
             self.project_hdf5.copy_to(destination=hdf5_project, maintain_name=False)
 
         # Update the database entry
-        if self.job_id:
+        if self.job_id is not None:
             if new_database_entry:
                 _copy_database_entry(
                     new_job_core=new_job_core,
@@ -814,7 +891,7 @@ class JobCore(HasGroups):
             else:
                 self.project_hdf5.remove_group()
         self.project_hdf5 = new_job.project_hdf5.copy()
-        if self._job_id:
+        if self._job_id is not None:
             self.project.db.item_update(
                 {
                     "subjob": self.project_hdf5.h5_path,
@@ -849,6 +926,8 @@ class JobCore(HasGroups):
             job_id (int/ None):
 
         """
+        if job_id is not None:
+            job_id = int(job_id)
         self._job_id = job_id
 
     def save(self):
@@ -912,58 +991,26 @@ class JobCore(HasGroups):
         Returns:
             dict, list, float, int, :class:`.DataContainer`, None: data or data object; if nothing is found None is returned
         """
-
-        if item in self.list_files():
-            file_name = posixpath.join(self.working_directory, "{}".format(item))
-            with open(file_name) as f:
-                return f.readlines()
-
         # first try to access HDF5 directly to make the common case fast
-        try:
-            group = self._hdf5[item]
-            if (
-                isinstance(group, ProjectHDFio)
-                and "NAME" in group
-                and group["NAME"] == "DataContainer"
-            ):
-                return group.to_object(lazy=True)
-            else:
-                return group
-        except ValueError:
-            pass
+        value = recursive_load_from_hdf(self._hdf5, item)
+        if value is not None:
+            return value
+
+        # only try to read files when no slashes are present:
+        # downstream code will often do something like job['path/to/output'] to check if certain values exist and branch
+        # on that.  In cases where they don't exists this would then trigger us to decompress the job files in memory on
+        # every check which slows down things a lot.  Generally these value checks will be of the form output/.../...
+        # i.e. contain slashes and file access tend to be just the file name without slashes, so I separate those cases
+        # here like this.  In those cases where we actually have sub directories in the job folders we can beef up the
+        # file browser.
+        if "/" not in item and item in self.files.list():
+            warnings.warn(
+                "Using __getitem__ on a job to access files in deprecated: use job.files instead!",
+                category=DeprecationWarning,
+            )
+            return _job_read_file(self, item)
 
         name_lst = item.split("/")
-
-        def successive_path_splits(name_lst):
-            """
-            Yield successive split/joins of a path, i.e.
-            /a/b/c/d
-            gives
-            /a/b/c, d
-            /a/b, c/d
-            /a, b/c/d
-            """
-            for i in range(1, len(name_lst)):
-                # where we are looking for the data container
-                container_path = "/".join(name_lst[:-i])
-                # where we are looking for data in the container
-                data_path = "/".join(name_lst[-1:])
-                yield container_path, data_path
-
-        for container_path, data_path in successive_path_splits(name_lst):
-            try:
-                group = self._hdf5[container_path]
-                if (
-                    isinstance(group, ProjectHDFio)
-                    and "NAME" in group
-                    and group["NAME"] == "DataContainer"
-                ):
-                    return group.to_object(lazy=True)[data_path]
-            except (ValueError, IndexError, KeyError):
-                # either group does not contain a data container or it is does, but it does not have the path we're
-                # looking for
-                pass
-
         item_obj = name_lst[0]
         if item_obj in self._list_ext_childs():
             # ToDo: Murn['strain_0.9'] - sucht im HDF5 file, dort gibt es aber die entsprechenden Gruppen noch nicht.
@@ -1024,14 +1071,26 @@ class JobCore(HasGroups):
         childs = self.list_childs()
         return list(set(childs) - set(nodes))
 
-    def compress(self, files_to_compress=None):
+    def compress(self, files_to_compress=None, files_to_remove=None):
         """
         Compress the output files of a job object.
 
         Args:
             files_to_compress (list):
         """
-        _job_compress(job=self, files_to_compress=files_to_compress)
+        if files_to_compress is None and len(self._files_to_compress) != 0:
+            files_to_compress = self._files_to_compress
+        elif files_to_compress is None:
+            files_to_compress = self.files.list()
+        if files_to_remove is None:
+            files_to_remove = self._files_to_remove
+        else:
+            files_to_remove = []
+        _job_compress(
+            job=self,
+            files_to_compress=files_to_compress,
+            files_to_remove=files_to_remove,
+        )
 
     def decompress(self):
         """
@@ -1103,12 +1162,20 @@ class HDF5Content(object):
         self._project_hdf5 = project_hdf5
 
     def __getattr__(self, name):
-        if name in self._project_hdf5.list_nodes():
-            return self._project_hdf5.__getitem__(name)
-        elif name in self._project_hdf5.list_groups():
-            return HDF5Content(self._project_hdf5.__getitem__(name))
+        try:
+            return self[name]
+        except KeyError:
+            raise AttributeError(name) from None
+
+    def __getitem__(self, item):
+        value = recursive_load_from_hdf(self._project_hdf5, item)
+        if value is not None:
+            return value
+
+        if item in self._project_hdf5.list_groups():
+            return HDF5Content(self._project_hdf5[item])
         else:
-            raise AttributeError
+            raise KeyError(item)
 
     def __dir__(self):
         return self._project_hdf5.list_nodes() + self._project_hdf5.list_groups()

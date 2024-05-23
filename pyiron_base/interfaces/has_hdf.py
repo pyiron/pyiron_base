@@ -172,13 +172,16 @@ class HasHDF(ABC):
         """
         return {}
 
-    def _store_type_to_hdf(self, hdf: ProjectHDFio):
-        hdf["NAME"] = self.__class__.__name__
-        hdf["TYPE"] = str(type(self))
-        hdf["OBJECT"] = hdf["NAME"]  # unused alias
+    def _type_to_dict(self):
+        type_dict = {
+            "NAME": self.__class__.__name__,
+            "TYPE": str(type(self)),
+            "OBJECT": self.__class__.__name__,  # unused alias
+            "HDF_VERSION": self.__hdf_version__,
+        }
         if hasattr(self, "__version__"):
-            hdf["VERSION"] = self.__version__
-        hdf["HDF_VERSION"] = self.__hdf_version__
+            type_dict["VERSION"] = self.__version__
+        return type_dict
 
     def from_hdf(self, hdf: ProjectHDFio, group_name: str = None):
         """
@@ -213,11 +216,11 @@ class HasHDF(ABC):
         with _WithHDF(hdf, group_name) as hdf:
             if (
                 group_name is None
-                and (len(hdf.list_nodes()) > 0 or len(hdf.list_dirs())) > 0
+                and (len(hdf.list_nodes()) > 0 or len(hdf.list_groups())) > 0
             ):
                 raise ValueError("HDF group must be empty when group_name is not set.")
             self._to_hdf(hdf)
-            self._store_type_to_hdf(hdf)
+            hdf.write_dict_to_hdf(data_dict=self._type_to_dict())
 
     def rewrite_hdf(self, hdf: ProjectHDFio, group_name: str = None):
         """

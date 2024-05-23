@@ -34,6 +34,7 @@ cleaning and consistency checks.
 
 import ast
 import os
+import warnings
 from configparser import ConfigParser
 from pyiron_base.state.logger import logger
 from pyiron_base.state.publications import publications
@@ -53,6 +54,9 @@ __maintainer__ = "Liam Huber"
 __email__ = "huber@mpie.de"
 __status__ = "production"
 __date__ = "Sep 1, 2017"
+
+
+PYIRON_DICT_NAME = "PYIRON"
 
 
 class Settings(metaclass=Singleton):
@@ -89,6 +93,8 @@ class Settings(metaclass=Singleton):
             sources.
         write_work_dir_warnings / WRITE_WORK_DIR_WARNINGS / PYIRONWRITEWORKDIRWARNINGS (bool): Whether to write
             the working directory warning files to inform users about possibly modified content. (Default is True).
+        config_file_permissions_warning / CONFIG_FILE_PERMISSIONS_WARNING / PYIRONCONFIGFILEPERMISSIONSWARNING (bool):
+            Whether to print a warning message, when the permission of the .pyiron config file, let others access it.
 
 
     Properties:
@@ -108,11 +114,16 @@ class Settings(metaclass=Singleton):
 
     def __init__(self):
         self._configuration = None
+        self._credentials = None
         self.update()
 
     @property
     def configuration(self) -> Dict:
         return self._configuration
+
+    @property
+    def credentials(self) -> Dict:
+        return self._credentials
 
     def update(self, user_dict: Union[Dict, None] = None) -> None:
         """
@@ -130,12 +141,25 @@ class Settings(metaclass=Singleton):
         env_dict = self._get_config_from_environment()
         file_dict = self._get_config_from_file()
         if user_dict is not None:
-            user_dict = self._add_credentials_from_file(user_dict)
             self._update_from_dict(user_dict)
         elif env_dict is not None:
             self._update_from_dict(env_dict)
         elif file_dict is not None:
             self._update_from_dict(file_dict)
+
+        self._credentials = self._add_credentials_from_file()
+        self._update_credentials_from_std_pyiron_config()
+
+        if (
+            self._configuration["config_file_permissions_warning"]
+            and self._configuration["credentials_file"] is not None
+            and os.path.exists(self._configuration["credentials_file"])
+            and oct(os.stat(self._configuration["credentials_file"]).st_mode)[-2:]
+            != "00"
+        ):
+            logger.warning(
+                "Credentials file can be read by other users - check permissions."
+            )
 
         for k in ["CONDA_PREFIX", "CONDA_DIR"]:
             if k in os.environ.keys():
@@ -169,6 +193,7 @@ class Settings(metaclass=Singleton):
                 "disable_database": False,
                 "credentials_file": None,
                 "write_work_dir_warnings": True,
+                "config_file_permissions_warning": True,
             }
         )
 
@@ -194,6 +219,7 @@ class Settings(metaclass=Singleton):
             "PYIRONDISABLE": "disable_database",
             "PYIRONCREDENTIALSFILE": "credentials_file",
             "PYIRONWRITEWORKDIRWARNINGS": "write_work_dir_warnings",
+            "PYIRONCONFIGFILEPERMISSIONSWARNING": "config_file_permissions_warning",
         }
 
     @property
@@ -220,6 +246,7 @@ class Settings(metaclass=Singleton):
             "DISABLE_DATABASE": "disable_database",
             "CREDENTIALS_FILE": "credentials_file",
             "WRITE_WORK_DIR_WARNINGS": "write_work_dir_warnings",
+            "CONFIG_FILE_PERMISSIONS_WARNING": "config_file_permissions_warning",
         }
 
     @property
@@ -300,10 +327,8 @@ class Settings(metaclass=Singleton):
                     raise ValueError(
                         "For sql_type SQLite, the sql_file must not be None"
                     )
-                elif os.path.dirname(sql_file) != "" and not os.path.exists(
-                    os.path.dirname(sql_file)
-                ):
-                    os.makedirs(os.path.dirname(sql_file))
+                elif os.path.dirname(sql_file) != "":
+                    os.makedirs(os.path.dirname(sql_file), exist_ok=True)
             elif (
                 sql_type == "SQLalchemy"
                 and "sql_connection_string" not in config.keys()
@@ -321,7 +346,7 @@ class Settings(metaclass=Singleton):
     @staticmethod
     def _validate_viewer_configuration(config: Dict) -> None:
         key_group = ["sql_view_table_name", "sql_view_user", "sql_view_user_key"]
-        present = [k in config.keys() for k in key_group]
+        present = [k in config.keys() and config[k] is not None for k in key_group]
         if any(present):
             if not all(present):
                 raise ValueError(
@@ -358,25 +383,70 @@ class Settings(metaclass=Singleton):
             elif k in self.environment_credential_map:
                 config[self.environment_credential_map[k]] = v
         config = self._fix_boolean_var_in_config(config=config)
-        config = self._add_credentials_from_file(config)
         return config if len(config) > 0 else None
 
-    def _add_credentials_from_file(self, config: dict) -> Dict:
-        if "credentials_file" not in config:
-            return config
-        else:
+    def _get_remapped_credential_key(self, k):
+        """
+        Converts a key to the known key from the file_credential map or returns a .lower() variant of the unknown key.
+        This allows to stay consistent with the behavior of our current credentials and adds the possibility to add
+        additional credentials to the credentials file without the need to change pyiron_base.
+        """
+        if k.upper() in self.file_credential_map:
+            return self.file_credential_map[k.upper()]
+        elif k.upper() in self.file_configuration_map:
+            warnings.warn(
+                f"pyiron configuration key {k.upper()} used in the credentials file. "
+                "This does not take effect in the pyiron configuration!"
+            )
+
+        return k.lower()
+
+    def _add_credentials_from_file(self) -> Dict:
+        if (
+            "credentials_file" in self._configuration
+            and self._configuration["credentials_file"] is not None
+        ):
+            credential_file = self._configuration["credentials_file"]
+
+            # This gets all the entries in the credential file with the headers
+            # The key-value pairs in the [DEFAULT] section are added everywhere!
+            parser = ConfigParser(inline_comment_prefixes=(";",), interpolation=None)
+            parser.read(credential_file)
+            credentials = {}
+            for sec_name, section in parser.items():
+                credentials_w = {}
+
+                for k, v in section.items():
+                    credentials_w[self._get_remapped_credential_key(k)] = v
+                if len(credentials_w) > 0:
+                    credentials[sec_name.upper()] = credentials_w
+            return credentials
+
+    def _update_credentials_from_std_pyiron_config(self):
+        update_dict = {}
+        for key in self.file_credential_map.values():
+            if key in self._configuration:
+                update_dict[key] = self._configuration[key]
+
+        if len(update_dict) > 0:
+            if self._credentials is None:
+                self._credentials = {PYIRON_DICT_NAME: update_dict}
+            elif PYIRON_DICT_NAME in self._credentials:
+                self._credentials[PYIRON_DICT_NAME].update(update_dict)
+            else:
+                self._credentials[PYIRON_DICT_NAME] = update_dict
+
+    def _get_credentials_from_file(self, config: dict) -> Dict:
+        if "credentials_file" in config and config["credentials_file"] is not None:
             credential_file = config["credentials_file"]
 
-        if not os.path.isfile(credential_file):
-            raise FileNotFoundError(credential_file)
-        elif oct(os.stat(credential_file).st_mode)[-2:] != "00":
-            logger.warning(
-                "Credentials file can be read by other users - check permissions."
+            if not os.path.isfile(credential_file):
+                raise FileNotFoundError(credential_file)
+            credentials = (
+                self._parse_config_file(credential_file, self.file_credential_map) or {}
             )
-        credentials = (
-            self._parse_config_file(credential_file, self.file_credential_map) or {}
-        )
-        config.update(credentials)
+            config.update(credentials)
+
         return config
 
     def _get_config_from_file(self) -> Union[Dict, None]:
@@ -389,18 +459,12 @@ class Settings(metaclass=Singleton):
 
         if config is not None:
             config = self._fix_boolean_var_in_config(config=config)
-            config = self._add_credentials_from_file(config)
 
         return config
 
     @staticmethod
     def _parse_config_file(config_file, map_dict):
         if os.path.isfile(config_file):
-            if oct(os.stat(config_file).st_mode)[-2:] != "00":
-                logger.warning(
-                    "Configuration file may be read by others - check permissions to secure "
-                    "credential information!"
-                )
             parser = ConfigParser(inline_comment_prefixes=(";",), interpolation=None)
             parser.read(config_file)
             config = {}
@@ -418,6 +482,7 @@ class Settings(metaclass=Singleton):
 
         Non-string non-None items are converted to the expected type and paths are converted to absolute POSIX paths.
         """
+        config = self._get_credentials_from_file(config)
         self._validate_sql_configuration(config=config)
         self._validate_viewer_configuration(config=config)
         self._validate_no_database_configuration(config=config)
@@ -450,10 +515,12 @@ class Settings(metaclass=Singleton):
         if isinstance(paths, str):
             paths = paths.replace(",", os.pathsep).split(os.pathsep)
         return [
-            self.convert_path_to_abs_posix(p)
-            if ensure_ends_with is None
-            or self.convert_path_to_abs_posix(p).endswith(ensure_ends_with)
-            else self.convert_path_to_abs_posix(p) + ensure_ends_with
+            (
+                self.convert_path_to_abs_posix(p)
+                if ensure_ends_with is None
+                or self.convert_path_to_abs_posix(p).endswith(ensure_ends_with)
+                else self.convert_path_to_abs_posix(p) + ensure_ends_with
+            )
             for p in paths
         ]
 

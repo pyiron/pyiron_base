@@ -11,11 +11,12 @@ from pyiron_base._tests import PyironTestCase, ToyJob
 class TestUnpacking(PyironTestCase):
     @classmethod
     def setUpClass(cls):
+        super().setUpClass()
         # this is used to create a folder/a compressed file, are not path
-        cls.arch_dir = 'archive_folder'
+        cls.arch_dir = "archive_folder"
         # this is used to create a folder/a compressed file, are not path
-        cls.arch_dir_comp = cls.arch_dir+'_comp'
-        cls.pr = Project('test')
+        cls.arch_dir_comp = cls.arch_dir + "_comp"
+        cls.pr = Project("test")
         cls.pr.remove_jobs(recursive=True, silently=True)
         cls.job = cls.pr.create_job(job_type=ToyJob, job_name="toy")
         cls.job.run()
@@ -23,13 +24,25 @@ class TestUnpacking(PyironTestCase):
         cls.file_location = os.path.dirname(os.path.abspath(__file__)).replace(
             "\\", "/"
         )
+        cls.imp_pr = Project("imported")
+
+    @classmethod
+    def tearDownClass(cls) -> None:
+        super().tearDownClass()
+        cls.pr.remove(enable=True)
+        uncompressed_pr = Project(cls.arch_dir)
+        uncompressed_pr.remove(enable=True, enforce=True)
+        os.remove("export.csv")
+        os.remove(cls.arch_dir_comp + ".tar.gz")
+        cls.imp_pr.remove(enable=True)
 
     def setUp(self):
-        self.imp_pr = Project('imported')
+        super().setUp()
         self.imp_pr.remove_jobs(recursive=True, silently=True)
         self.imp_pr.unpack(origin_path=self.arch_dir_comp, compress=True)
 
     def tearDown(self):
+        super().tearDown()
         self.imp_pr.remove_jobs(recursive=True, silently=True)
 
     def test_import_csv(self):
@@ -37,10 +50,10 @@ class TestUnpacking(PyironTestCase):
         df_import = self.imp_pr.job_table()
         df_import.dropna(inplace=True, axis=1)
         df_original.dropna(inplace=True, axis=1)
-        df_import.drop('project', inplace=True, axis=1)
-        df_original.drop('project', inplace=True, axis=1)
-        df_import.drop('id', inplace=True, axis=1)
-        df_original.drop('id', inplace=True, axis=1)
+        df_import.drop("project", inplace=True, axis=1)
+        df_original.drop("project", inplace=True, axis=1)
+        df_import.drop("id", inplace=True, axis=1)
+        df_original.drop("id", inplace=True, axis=1)
         df_import["hamversion"] = float(df_import["hamversion"])
         df_original["hamversion"] = float(df_original["hamversion"])
         assert_frame_equal(df_original, df_import)
@@ -67,14 +80,18 @@ class TestUnpacking(PyironTestCase):
 
     def test_unpack_from_other_dir_uncompress(self):
         cwd = os.getcwd()
-        pack_path = os.path.join(cwd, 'exported')
-        os.mkdir(path=pack_path)
+        pack_path = os.path.join(cwd, "exported")
+        os.makedirs(name=pack_path)
         pack_path_comp = os.path.join(pack_path, self.arch_dir_comp)
-        pack_path_csv = os.path.join(pack_path, 'export.csv')
-        self.pr.pack(destination_path=pack_path_comp, csv_file_name=pack_path_csv, compress=False)
+        pack_path_csv = os.path.join(pack_path, "export.csv")
+        self.pr.pack(
+            destination_path=pack_path_comp, csv_file_name=pack_path_csv, compress=False
+        )
         pr = self.pr.open("nested")
         pr_imp = pr.open("imported")
-        pr_imp.unpack(origin_path=pack_path_comp, csv_file_name=pack_path_csv, compress=False)
+        pr_imp.unpack(
+            origin_path=pack_path_comp, csv_file_name=pack_path_csv, compress=False
+        )
         compare_obj = dircmp(pack_path_comp, pr_imp.path)
         self.assertEqual(len(compare_obj.diff_files), 0)
         try:
@@ -122,22 +139,32 @@ class TestUnpacking(PyironTestCase):
         self.pr.pack(destination_path=self.arch_dir_comp, compress=True)
         self.imp_pr.unpack(origin_path=self.arch_dir_comp, compress=True)
         j = self.imp_pr.load(self.job.name)
-        self.assertEqual(self.job.input["data_in"], j.input["data_in"],
-                         "Input values not properly copied to imported job.")
-        self.assertEqual(self.job["data_out"], j["data_out"],
-                         "Output values not properly copied to imported job.")
+        self.assertEqual(
+            self.job.input["data_in"],
+            j.input["data_in"],
+            "Input values not properly copied to imported job.",
+        )
+        self.assertEqual(
+            self.job["data_out"],
+            j["data_out"],
+            "Output values not properly copied to imported job.",
+        )
 
     def test_import_with_targz_extension(self):
         cwd = os.getcwd()
-        pack_path = os.path.join(cwd, 'exported_withTar')
-        os.mkdir(path=pack_path)
-        tar_arch = self.arch_dir_comp + '.tar.gz'
+        pack_path = os.path.join(cwd, "exported_withTar")
+        os.makedirs(name=pack_path)
+        tar_arch = self.arch_dir_comp + ".tar.gz"
         pack_path_comp = os.path.join(pack_path, tar_arch)
-        pack_path_csv = os.path.join(pack_path, 'export.csv')
-        self.pr.pack(destination_path=pack_path_comp, csv_file_name=pack_path_csv, compress=True)
+        pack_path_csv = os.path.join(pack_path, "export.csv")
+        self.pr.pack(
+            destination_path=pack_path_comp, csv_file_name=pack_path_csv, compress=True
+        )
         pr = self.pr.open("nested2")
         pr_imp = pr.open("imported2")
-        pr_imp.unpack(origin_path=pack_path_comp, csv_file_name=pack_path_csv, compress=True)
+        pr_imp.unpack(
+            origin_path=pack_path_comp, csv_file_name=pack_path_csv, compress=True
+        )
         # here the 7 is the length of '.tar.gz' string
         extract_archive(pack_path_comp[:-7])
         compare_obj = dircmp(pack_path_comp[:-7], pr_imp.path)

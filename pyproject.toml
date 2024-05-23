@@ -1,0 +1,72 @@
+[build-system]
+requires = ["cloudpickle", "gitpython", "h5io", "h5py", "jinja2", "numpy", "pandas", "pint", "psutil", "pyfileindex", "pysqa", "sqlalchemy", "tables", "tqdm", "traitlets", "setuptools", "versioneer[toml]==0.29"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pyiron_base"
+description = "Core components of the pyiron integrated development environment (IDE) for computational materials science"
+authors = [
+    { name = "Max-Planck-Institut für Eisenforschung GmbH - Computational Materials Design (CM) Department", email = "pyiron@mpie.de" },
+]
+readme = "README.md"
+license = { file = "LICENSE" }
+keywords = ["pyiron"]
+requires-python = ">=3.9, <3.13"
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Topic :: Scientific/Engineering :: Physics",
+    "License :: OSI Approved :: BSD License",
+    "Intended Audience :: Science/Research",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+dependencies = [
+    "cloudpickle==3.0.0",
+    "gitpython==3.1.43",
+    "h5io_browser==0.0.12",
+    "h5py==3.11.0",
+    "jinja2==3.1.4",
+    "numpy==1.26.4",
+    "monty==2024.4.17",
+    "pandas==2.2.2",
+    "pint==0.23",
+    "psutil==5.9.8",
+    "pyfileindex==0.0.24",
+    "pympipool==0.8.2",
+    "pysqa==0.1.20",
+    "sqlalchemy==2.0.30",
+    "tables==3.9.2",
+    "tqdm==4.66.4",
+    "traitlets==5.14.3",
+]
+dynamic = ["version"]
+
+[project.urls]
+Homepage = "https://github.com/pyiron/pyiron_base"
+Documentation = "https://github.com/pyiron/pyiron_base"
+Repository = "https://github.com/pyiron/pyiron_base"
+
+[project.optional-dependencies]
+conda = [
+    "conda==23.11.0",
+    "conda_subprocess==0.0.1",
+]
+
+[project.scripts]
+pyiron = "pyiron_base.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["pyiron_base*"]
+
+[tool.setuptools.dynamic]
+version = {attr = "pyiron_base.__version__"}
+
+[tool.versioneer]
+VCS = "git"
+style = "pep440-pre"
+versionfile_source = "pyiron_base/_version.py"
+parentdir_prefix = "pyiron_base"
+tag_prefix = "pyiron_base-"

@@ -6,11 +6,8 @@ DatabaseAccess class deals with accessing the database
 """
 
 from pyiron_base.state.logger import logger
-from abc import ABC, abstractmethod
-import warnings
 import numpy as np
 import re
-import time
 import os
 from datetime import datetime
 from pyiron_base.utils.deprecate import deprecate
@@ -28,8 +25,10 @@ from sqlalchemy.sql import select
 from sqlalchemy.exc import OperationalError, DatabaseError
 from threading import Thread, Lock
 from queue import SimpleQueue, Empty as QueueEmpty
-from pyiron_base.database.tables import HistoricalTable
+from pyiron_base.database.tables import get_historical_table
 from pyiron_base.utils.error import retry
+from pyiron_base.database.interface import IsDatabase
+from pyiron_base.database.sqlcolumnlength import CHEMICALFORMULA_STR_LENGTH
 
 __author__ = "Murat Han Celik"
 __copyright__ = (
@@ -41,241 +40,6 @@ __maintainer__ = "Jan Janssen"
 __email__ = "janssen@mpie.de"
 __status__ = "production"
 __date__ = "Sep 1, 2017"
-
-
-class IsDatabase(ABC):
-    """
-    Captures common interface for all database types in pyiron, e.g. SQL/SQLite/FileTable.
-    """
-
-    @abstractmethod
-    def _get_view_mode(self):
-        pass
-
-    @property
-    def view_mode(self):
-        """
-        Get view_mode - if view_moded is enable pyiron has read only access to the database.
-
-        Some implementations do not allow to set this value.
-
-        Returns:
-            bool: True when view_mode is enabled
-        """
-        return self._get_view_mode()
-
-    @property
-    @deprecate("use view_mode")
-    def viewer_mode(self):
-        return self.view_mode
-
-    viewer_mode.__doc__ = view_mode.__doc__
-
-    @abstractmethod
-    def _get_job_table(
-        self,
-        sql_query,
-        user,
-        project_path,
-        recursive=True,
-        columns=None,
-        element_lst=None,
-    ):
-        pass
-
-    @staticmethod
-    def _get_filtered_job_table(
-        df: pandas.DataFrame, **kwargs: dict
-    ) -> pandas.DataFrame:
-        """
-        Get a job table in a project based on matching values from any column in the project database
-
-        The values in `kwargs` can be wildcards, with the following special charaters:
-            - !value matches in the inverse of value
-            - *value matches anything that ends in value
-            - value* matches anything that starts with value
-            - *value* matches anything that contains value
-
-        Args:
-            df (pandas.DataFrame): DataFrame to be filtered
-            **kwargs (dict): Optional arguments for filtering with keys matching the project database column name
-                            (eg. status="finished")
-
-        Returns:
-            list: DataFrame containing filtered jobs
-        """
-        if len(kwargs) == 0 or df.empty:
-            return df
-        mask = np.ones_like(df.index, dtype=bool)
-        for key in kwargs.keys():
-            if key not in list(df.columns):
-                raise ValueError(
-                    f"Column name {key} does not exist in the project database!"
-                )
-        for key, val in kwargs.items():
-            invert = False
-            if val is not None and val[0] == "!":
-                invert = True
-                val = val[1:]
-            if val is None:
-                update = df[key].isnull()
-            elif str(val).startswith("*") and str(val).endswith("*"):
-                update = df[key].str.contains(str(val).replace("*", ""))
-            elif str(val).endswith("*"):
-                update = df[key].str.startswith(str(val).replace("*", ""))
-            elif str(val).startswith("*"):
-                update = df[key].str.endswith(str(val).replace("*", ""))
-            else:
-                update = df[key] == val
-            if invert:
-                update = ~update
-            mask &= update
-        return df[mask]
-
-    def job_table(
-        self,
-        sql_query,
-        user,
-        project_path,
-        recursive=True,
-        columns=None,
-        all_columns=False,
-        sort_by="id",
-        max_colwidth=200,
-        full_table=False,
-        element_lst=None,
-        job_name_contains="",
-        **kwargs,
-    ):
-        """
-        Access the job_table.
-
-        Args:
-            sql_query (str): SQL query to enter a more specific request
-            user (str): username of the user whoes user space should be searched
-            project_path (str): root_path - this is in contrast to the project_path in GenericPath
-            recursive (bool): search subprojects [True/False]
-            columns (list): by default only the columns ['job', 'project', 'chemicalformula'] are selected, but the
-                            user can select a subset of ['id', 'status', 'chemicalformula', 'job', 'subjob', 'project',
-                            'projectpath', 'timestart', 'timestop', 'totalcputime', 'computer', 'hamilton', 'hamversion',
-                            'parentid', 'masterid']
-            all_columns (bool): Select all columns - this overwrites the columns option.
-            sort_by (str): Sort by a specific column
-            max_colwidth (int): set the column width
-            full_table (bool): Whether to show the entire pandas table
-            element_lst (list): list of elements required in the chemical formular - by default None
-            job_name_contains (str): (deprecated) A string which should be contained in every job_name
-            **kwargs (dict): Optional arguments for filtering with keys matching the project database column name
-                            (eg. status="finished"). Asterisk can be used to denote a wildcard, for zero or more
-                            instances of any character
-
-        Returns:
-            pandas.Dataframe: Return the result as a pandas.Dataframe object
-        """
-        if columns is None:
-            columns = ["job", "project", "chemicalformula"]
-        if all_columns:
-            columns = [
-                "id",
-                "status",
-                "chemicalformula",
-                "job",
-                "subjob",
-                "projectpath",
-                "project",
-                "timestart",
-                "timestop",
-                "totalcputime",
-                "computer",
-                "hamilton",
-                "hamversion",
-                "parentid",
-                "masterid",
-            ]
-        if sort_by not in columns:
-            columns = list(columns) + [sort_by]
-        if full_table:
-            pandas.set_option("display.max_rows", None)
-            pandas.set_option("display.max_columns", None)
-        else:
-            pandas.reset_option("display.max_rows")
-            pandas.reset_option("display.max_columns")
-        pandas.set_option("display.max_colwidth", max_colwidth)
-        df = self._get_job_table(
-            user=user,
-            sql_query=sql_query,
-            project_path=project_path,
-            recursive=recursive,
-            columns=columns,
-        )
-        if job_name_contains != "":
-            warnings.warn(
-                "`job_name_contains` is deprecated - use `job='*term*'` instead"
-            )
-            kwargs["job"] = "*{}*".format(job_name_contains)
-        df = self._get_filtered_job_table(df, **kwargs)
-        if sort_by is not None:
-            return df.sort_values(by=sort_by)
-        return df
-
-    @abstractmethod
-    def _get_table_headings(self, table_name=None):
-        pass
-
-    def get_table_headings(self, table_name=None):
-        """
-        Get column names; if given table_name can select one of multiple tables defined in the database, but subclasses
-        may ignore it
-
-        Args:
-            table_name (str): simple string of a table_name like: 'jobs_username'
-
-        Returns:
-            list: list of column names like:
-                ['id',
-                'parentid',
-                'masterid',
-                'projectpath',
-                'project',
-                'job',
-                'subjob',
-                'chemicalformula',
-                'status',
-                'hamilton',
-                'hamversion',
-                'username',
-                'computer',
-                'timestart',
-                'timestop',
-                'totalcputime']
-        """
-        return self._get_table_headings(table_name=table_name)
-
-    @deprecate("use get_table_headings()")
-    def get_db_columns(self):
-        """
-        Get column names
-
-        Returns:
-            list: list of column names like:
-                ['id',
-                'parentid',
-                'masterid',
-                'projectpath',
-                'project',
-                'job',
-                'subjob',
-                'chemicalformula',
-                'status',
-                'hamilton',
-                'hamversion',
-                'username',
-                'computer',
-                'timestart',
-                'timestop',
-                'totalcputime']
-        """
-        return self.get_table_headings()
 
 
 class ConnectionWatchDog(Thread):
@@ -331,7 +95,7 @@ class ConnectionWatchDog(Thread):
                 with self._lock:
                     try:
                         self._conn.close()
-                    except:
+                    except (DatabaseError, OperationalError):
                         pass
                     break
 
@@ -395,6 +159,10 @@ class AutorestoredConnection:
         if self._conn is not None:
             self._conn.close()
 
+    def commit(self):
+        if self._conn is not None:
+            self._conn.commit()
+
 
 class DatabaseAccess(IsDatabase):
     """
@@ -431,25 +199,28 @@ class DatabaseAccess(IsDatabase):
                     connection_string,
                     connect_args={"connect_timeout": 15},
                     poolclass=NullPool,
+                    future=True,
                 )
                 self.conn = AutorestoredConnection(self._engine, timeout=self._timeout)
                 self._keep_connection = self._timeout > 0
             else:
-                self._engine = create_engine(connection_string)
+                self._engine = create_engine(connection_string, future=True)
                 self.conn = self._engine.connect()
                 self.conn.connection.create_function("like", 2, self.regexp)
                 self._keep_connection = True
         except Exception as except_msg:
             raise ValueError("Connection to database failed: " + str(except_msg))
 
-        self._chem_formula_lim_length = 50
+        self._chem_formula_lim_length = CHEMICALFORMULA_STR_LENGTH
 
         def _create_table():
             self.__reload_db()
-            self.simulation_table = HistoricalTable(str(table_name), self.metadata)
-            self.metadata.create_all()
+            self.simulation_table = get_historical_table(
+                table_name=str(table_name), metadata=self.metadata, extend_existing=True
+            )
+            self.metadata.create_all(bind=self._engine)
 
-        # too many jobs trying to talk to the database can cause this too fail.
+        # too many jobs trying to talk to the database can cause this to fail.
         retry(
             _create_table,
             error=OperationalError,
@@ -606,8 +377,8 @@ class DatabaseAccess(IsDatabase):
         Returns:
 
         """
-        self.metadata = MetaData(bind=self._engine)
-        self.metadata.reflect(self._engine)
+        self.metadata = MetaData()
+        self.metadata.reflect(bind=self._engine)
 
     @staticmethod
     def regexp(expr, item):
@@ -663,7 +434,6 @@ class DatabaseAccess(IsDatabase):
             simulation_list = Table(
                 str(table_name),
                 self.metadata,
-                autoload=True,
                 autoload_with=self._engine,
             )
         except Exception:
@@ -686,10 +456,13 @@ class DatabaseAccess(IsDatabase):
                 col_name = col_name[-1]
             if isinstance(col_type, list):
                 col_type = col_type[-1]
-            self._engine.execute(
-                "ALTER TABLE %s ADD COLUMN %s %s"
-                % (self.simulation_table.name, col_name, col_type)
+            self.conn.execute(
+                text(
+                    "ALTER TABLE %s ADD COLUMN %s %s"
+                    % (self.simulation_table.name, col_name, col_type)
+                )
             )
+            self.conn.commit()
         else:
             raise PermissionError("Not avilable in viewer mode.")
 
@@ -709,10 +482,13 @@ class DatabaseAccess(IsDatabase):
                 col_name = col_name[-1]
             if isinstance(col_type, list):
                 col_type = col_type[-1]
-            self._engine.execute(
-                "ALTER TABLE %s ALTER COLUMN %s TYPE %s"
-                % (self.simulation_table.name, col_name, col_type)
+            self.conn.execute(
+                text(
+                    "ALTER TABLE %s ALTER COLUMN %s TYPE %s"
+                    % (self.simulation_table.name, col_name, col_type)
+                )
             )
+            self.conn.commit()
         else:
             raise PermissionError("Not avilable in viewer mode.")
 
@@ -783,7 +559,7 @@ class DatabaseAccess(IsDatabase):
             result = self.conn.execute(text(sql_statement))
         else:
             result = self.conn.execute(text("select * from " + self.table_name))
-        row = result.fetchall()
+        row = result.mappings().all()
         if not self._keep_connection:
             self.conn.close()
 
@@ -793,10 +569,8 @@ class DatabaseAccess(IsDatabase):
             # ensures working with db entries, which are camel case
             timestop_index = [item.lower() for item in col.keys()].index("timestop")
             timestart_index = [item.lower() for item in col.keys()].index("timestart")
-            tmp_values = col.values()
-            if (
-                col.values()[timestop_index] and col.values()[timestart_index]
-            ) is not None:
+            tmp_values = list(col.values())
+            if (tmp_values[timestop_index] and tmp_values[timestart_index]) is not None:
                 # changes values
                 try:
                     tmp_values[timestop_index] = datetime.strptime(
@@ -859,8 +633,9 @@ class DatabaseAccess(IsDatabase):
                     (key.lower(), value) for key, value in par_dict.items()
                 )  # make keys lowercase
                 result = self.conn.execute(
-                    self.simulation_table.insert(par_dict)
+                    self.simulation_table.insert().values(**par_dict)
                 ).inserted_primary_key[-1]
+                self.conn.commit()
                 if not self._keep_connection:
                     self.conn.close()
                 return result
@@ -898,10 +673,10 @@ class DatabaseAccess(IsDatabase):
                       'username': u'Test'}]
         """
         try:
-            if type(var) is list:
+            if isinstance(var, list):
                 var = var[-1]
-            query = select(
-                [self.simulation_table], self.simulation_table.c[str(col_name)] == var
+            query = select(self.simulation_table).where(
+                self.simulation_table.c[str(col_name)] == var
             )
         except Exception:
             raise ValueError("There is no Column named: " + col_name)
@@ -917,9 +692,9 @@ class DatabaseAccess(IsDatabase):
         row = result.fetchall()
         if not self._keep_connection:
             self.conn.close()
-        return [dict(zip(col.keys(), col._mapping.values())) for col in row]
+        return [dict(zip(col._mapping.keys(), col._mapping.values())) for col in row]
 
-    def item_update(self, par_dict, item_id):
+    def _item_update(self, par_dict, item_id):
         """
         Modify Item in database
 
@@ -934,17 +709,18 @@ class DatabaseAccess(IsDatabase):
 
         """
         if not self._view_mode:
-            if type(item_id) is list:
-                item_id = item_id[-1]  # sometimes a list is given, make it int
             if np.issubdtype(type(item_id), np.integer):
                 item_id = int(item_id)
             # all items must be lower case, ensured here
             par_dict = dict((key.lower(), value) for key, value in par_dict.items())
-            query = self.simulation_table.update(
-                self.simulation_table.c["id"] == item_id
-            ).values()
+            query = (
+                self.simulation_table.update()
+                .where(self.simulation_table.c["id"] == item_id)
+                .values()
+            )
             try:
                 self.conn.execute(query, par_dict)
+                self.conn.commit()
             except (OperationalError, DatabaseError):
                 if not self._sql_lite:
                     self.conn = AutorestoredConnection(self._engine)
@@ -953,12 +729,13 @@ class DatabaseAccess(IsDatabase):
                     self.conn.connection.create_function("like", 2, self.regexp)
 
                 self.conn.execute(query, par_dict)
+                self.conn.commit()
             if not self._keep_connection:
                 self.conn.close()
         else:
             raise PermissionError("Not avilable in viewer mode.")
 
-    def delete_item(self, item_id):
+    def delete_item(self, item_id: int):
         """
         Delete Item from database
 
@@ -968,16 +745,33 @@ class DatabaseAccess(IsDatabase):
         Returns:
 
         """
-        if not self._view_mode:
-            self.conn.execute(
-                self.simulation_table.delete(
-                    self.simulation_table.c["id"] == int(item_id)
-                )
-            )
-            if not self._keep_connection:
-                self.conn.close()
-        else:
+        if self._view_mode:
             raise PermissionError("Not avilable in viewer mode.")
+
+        res = self.conn.execute(
+            self.simulation_table.delete().where(
+                self.simulation_table.c["id"] == int(item_id)
+            )
+        )
+        if res.rowcount == 0:
+            raise RuntimeError(f"Failed to delete job ({item_id}) from database!")
+        self.conn.commit()
+
+        if not self._keep_connection:
+            self.conn.close()
+
+    # IsDatabase impl'
+    def _get_jobs(self, sql_query, user, project_path, recursive=True, columns=None):
+        df = self.job_table(
+            sql_query=sql_query,
+            user=user,
+            project_path=project_path,
+            recursive=recursive,
+            columns=columns,
+        )
+        if len(df) == 0:
+            return {key: list() for key in columns}
+        return df.to_dict(orient="list")
 
     # Shortcut
     def get_item_by_id(self, item_id):
@@ -1107,9 +901,11 @@ class DatabaseAccess(IsDatabase):
                 ]
             elif isinstance(value, list):
                 or_statement = [
-                    self.simulation_table.c[str(key)] == element
-                    if "%" not in element
-                    else self.simulation_table.c[str(key)].like(element)
+                    (
+                        self.simulation_table.c[str(key)] == element
+                        if "%" not in element
+                        else self.simulation_table.c[str(key)].like(element)
+                    )
                     for element in value
                 ]
                 # here we wrap the given values in an sqlalchemy-type or_statement
@@ -1122,9 +918,11 @@ class DatabaseAccess(IsDatabase):
             # here all statements are wrapped together for the and statement
             and_statement += part_of_statement
         if return_all_columns:
-            query = select([self.simulation_table], and_(*and_statement))
+            query = select(self.simulation_table).where(and_(*and_statement))
         else:
-            query = select([self.simulation_table.columns["id"]], and_(*and_statement))
+            query = select(self.simulation_table.columns["id"]).where(
+                and_(*and_statement)
+            )
         try:
             result = self.conn.execute(query)
         except (OperationalError, DatabaseError):
@@ -1138,19 +936,13 @@ class DatabaseAccess(IsDatabase):
         row = result.fetchall()
         if not self._keep_connection:
             self.conn.close()
-        return [dict(zip(col.keys(), col._mapping.values())) for col in row]
+        return [dict(zip(col._mapping.keys(), col._mapping.values())) for col in row]
 
     def get_job_status(self, job_id):
         try:
             return self.get_item_by_id(item_id=job_id)["status"]
         except KeyError:
             return None
-
-    def set_job_status(self, job_id, status):
-        self.item_update(
-            {"status": str(status)},
-            job_id,
-        )
 
     def get_job_working_directory(self, job_id):
         try:

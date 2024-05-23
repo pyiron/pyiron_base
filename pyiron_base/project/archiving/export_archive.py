@@ -17,6 +17,24 @@ def new_job_id(job_id, job_translate_dict):
         return None
 
 
+def update_project(project_instance, directory_to_transfer, archive_directory, df):
+    directory_to_transfer = os.path.basename(directory_to_transfer)
+    pr_transfer = project_instance.open(os.curdir)
+    dir_name_transfer = getdir(path=directory_to_transfer)
+    dir_name_archive = getdir(path=archive_directory)
+    path_rel_lst = [
+        os.path.relpath(p, pr_transfer.project_path) for p in df["project"].values
+    ]
+    return [
+        (
+            os.path.join(dir_name_archive, dir_name_transfer, p)
+            if p != "."
+            else os.path.join(dir_name_archive, dir_name_transfer)
+        )
+        for p in path_rel_lst
+    ]
+
+
 def filter_function(file_name):
     return ".h5" in file_name
 
@@ -27,15 +45,16 @@ def generate_list_of_directories(df_files, directory_to_transfer):
     ]
     dir_name_transfer = getdir(path=directory_to_transfer)
     return [
-        os.path.join(dir_name_transfer, p)
-        if p != "."
-        else dir_name_transfer
+        (
+            os.path.join(archive_directory, dir_name_transfer, p)
+            if p != "."
+            else os.path.join(archive_directory, dir_name_transfer)
+        )
         for p in path_rel_lst
     ]
 
 
 def compress_dir(directory_to_transfer, archive_directory):
-
     arch_comp_name = archive_directory + ".tar.gz"
     with tarfile.open(arch_comp_name, "w:gz") as tar:
         tar.add(archive_directory, arcname=os.path.basename(directory_to_transfer))

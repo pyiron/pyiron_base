@@ -9,7 +9,7 @@ class TestWorker(TestWithCleanProject):
         super().setUpClass()
         cls.script_path = os.path.join(cls.project.path, "funct.py")
         with open(cls.script_path, "w") as f:
-            f.write("print(\"Hello\")")
+            f.write('print("Hello")')
         cls.project.remove_jobs(recursive=True, silently=True)
         cls.sub_project = cls.project.open("sub")
 

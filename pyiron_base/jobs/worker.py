@@ -4,6 +4,7 @@
 """
 Worker Class to execute calculation in an asynchronous way
 """
+
 import os
 import psutil
 import time
@@ -74,6 +75,7 @@ def worker_function(args):
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
             universal_newlines=True,
+            env=os.environ.copy(),
         )
     except subprocess.CalledProcessError:
         pass
@@ -135,6 +137,7 @@ class WorkerJob(PythonTemplateJob):
         self.input.sleep_interval = 10
         self.input.child_runtime = 0
         self.input.queue_limit_factor = 2
+        self.input.maxtasksperchild = 1
         self._python_only_job = True
 
     @property
@@ -194,7 +197,9 @@ class WorkerJob(PythonTemplateJob):
         active_job_ids, res_lst = [], []
         process = psutil.Process(os.getpid())
         number_tasks = int(self.server.cores / self.cores_per_job)
-        with Pool(processes=number_tasks) as pool:
+        with Pool(
+            processes=number_tasks, maxtasksperchild=self.input.maxtasksperchild
+        ) as pool:
             while True:
                 # Check the database if there are more calculation to execute
                 df = pr.job_table()

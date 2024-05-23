@@ -5,6 +5,7 @@ such arrays, but does not automatically save them.  This conversion script
 simply goes over all jobs and rewrites their HDF5 files, since it's read with
 the correct dtype, this then writes this correct dtype.
 """
+
 import glob
 import os
 import stat
@@ -64,9 +65,9 @@ def pyiron_base_03x_to_04x(project):
     """
     total_size = 0
     n_files = 0
-    for l in glob.iglob(project.path + "**/*.h5", recursive=True):
+    for file in glob.iglob(project.path + "**/*.h5", recursive=True):
         n_files += 1
-        total_size += os.stat(l)[stat.ST_SIZE]
+        total_size += os.stat(file)[stat.ST_SIZE]
 
     if n_files == 0:
         raise ValueError(f"no HDF5 files found in {project.path}!")

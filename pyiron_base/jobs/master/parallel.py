@@ -7,6 +7,7 @@ The parallel master class is a metajob consisting of a list of jobs which are ex
 
 from collections import OrderedDict
 from datetime import datetime
+from typing import Union
 
 import numpy as np
 import pandas
@@ -16,11 +17,10 @@ from pyiron_base.jobs.job.generic import GenericJob
 from pyiron_base.jobs.job.core import _doc_str_job_core_args
 from pyiron_base.jobs.master.generic import GenericMaster, _doc_str_generic_master_attr
 from pyiron_base.jobs.master.submissionstatus import SubmissionStatus
-from pyiron_base.storage.parameters import GenericParameters
 from pyiron_base.jobs.job.extension.jobstatus import JobStatus
-from pyiron_base.jobs.job.jobtype import JobType
 from pyiron_base.state import state
 from pyiron_base.jobs.job.wrapper import job_wrapper_function
+from pyiron_base.jobs.job.util import _get_safe_job_name
 from pyiron_base.utils.deprecate import deprecate
 
 __author__ = "Joerg Neugebauer, Jan Janssen"
@@ -225,7 +225,9 @@ class ParallelMaster(GenericMaster):
         """
         if len(self._job_name_lst) > 0:
             self._ref_job = self.pop(-1)
-            self._ref_job.job_name = self.job_name + "_" + self._ref_job.job_name
+            job_name = self.job_name + "_" + self._ref_job.job_name
+            self._ref_job.job_name = job_name
+            self._ref_job.project_hdf5 = self.child_hdf(job_name)
             if self._job_id is not None and self._ref_job._master_id is None:
                 self._ref_job.master_id = self.job_id
 
@@ -273,6 +275,8 @@ class ParallelMaster(GenericMaster):
             yield: Yield of GenericJob or JobCore
         """
         project_working_directory = self.project.open(self.job_name + "_hdf5")
+        if state.database.database_is_disabled:
+            project_working_directory.db.update()
         for job_id in self._get_jobs_sorted():
             yield project_working_directory.load(
                 job_id, convert_to_object=convert_to_object
@@ -303,10 +307,10 @@ class ParallelMaster(GenericMaster):
         Internal helper function the run if refresh function is called when the job status is 'refresh'. If the job was
         suspended previously, the job is going to be started again, to be continued.
         """
-        self._logger.info(
-            "{}, status: {}, finished: {} parallel master "
-            "refresh".format(self.job_info_str, self.status, self.is_finished())
+        log_str = "{}, status: {}, finished: {} parallel master " "refresh".format(
+            self.job_info_str, self.status, self.is_finished()
         )
+        self._logger.info(log_str)
         if self.is_finished():
             self.status.collect = True
             self.run()  # self.run_if_collect()
@@ -528,7 +532,9 @@ class ParallelMaster(GenericMaster):
         self.status.running = True
         self.submission_status.total_jobs = len(self._job_generator)
         self.submission_status.submitted_jobs = 0
-        if self.job_id and not self.is_finished():
+        if (
+            self.job_id or state.database.database_is_disabled
+        ) and not self.is_finished():
             self._logger.debug(
                 "{} child project {}".format(self.job_name, self.project.__str__())
             )
@@ -552,6 +558,10 @@ class ParallelMaster(GenericMaster):
                     self._run_if_master_modal_child_modal(job)
                 elif self.server.run_mode.modal and job.server.run_mode.non_modal:
                     self._run_if_master_modal_child_non_modal(job)
+                elif job.server.run_mode.executor:
+                    raise NotImplementedError(
+                        "Currently ParallelMaster jobs do not support child jobs with job.server.run_mode.executor."
+                    )
                 else:
                     raise TypeError()
         else:
@@ -817,7 +827,7 @@ class JobGenerator(object):
         """
         raise NotImplementedError("Implement in derived class")
 
-    def job_name(self, parameter):
+    def job_name(self, parameter) -> Union[str, tuple]:
         """
         Return new job name from parameter object.  The next child job created
         will have this name.  Subclasses may override this to give custom job
@@ -829,6 +839,8 @@ class JobGenerator(object):
 
         Returns:
             str: job name for the next child job
+            tuple: construct the job name via :func:`_get_safe_job_name`;
+                   allows any object that can be coerced to str inside the tuple
         """
         return self._master.ref_job.job_name + "_" + str(self._childcounter)
 
@@ -851,7 +863,7 @@ class JobGenerator(object):
         if len(self.parameter_list_cached) > self._childcounter:
             current_paramenter = self.parameter_list_cached[self._childcounter]
             job = self._master.create_child_job(
-                self.job_name(parameter=current_paramenter)
+                _get_safe_job_name(self.job_name(parameter=current_paramenter))
             )
             if job is not None:
                 self._childcounter += 1

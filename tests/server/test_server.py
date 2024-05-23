@@ -3,6 +3,7 @@
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
 import unittest
+from concurrent.futures import ProcessPoolExecutor
 from pyiron_base.jobs.job.extension.server.generic import Server
 from pyiron_base._tests import PyironTestCase
 from pyiron_base.state.queue_adapter import queue_adapters
@@ -47,6 +48,7 @@ class TestRunmode(PyironTestCase):
         queue_adapters.construct_adapters()
 
     def setUp(self) -> None:
+        super().setUp()
         self.server = Server()
         self.server_main = Server(queue="main")
 
@@ -258,6 +260,13 @@ class TestRunmode(PyironTestCase):
                 "setting run_time should not set a memory_limit",
             )
 
+    def test_server_executor_set(self):
+        self.server.executor = ProcessPoolExecutor()
+        self.assertTrue(self.server.run_mode.executor)
+        self.server.run_mode.modal = True
+        self.assertFalse(self.server.run_mode.executor)
+        self.assertIsNone(self.server.executor)
+
     def test_set_memory_limit(self):
         with self.subTest("None queue"):
             self.server.memory_limit = 25
@@ -287,6 +296,33 @@ class TestRunmode(PyironTestCase):
                 None,
                 "setting memory_limit should not set a run_time",
             )
+
+
+class TestServerHDF(unittest.TestCase):
+    def test_to_and_from_hdf(self):
+        server_empty = Server()
+        server_full = Server()
+        server_full.gpus = 10
+        server_full.cores = 10
+        server_full.threads = 2
+        server_full.new_hdf = False
+        self.assertTrue(server_empty.new_hdf)
+        self.assertFalse(server_full.new_hdf)
+        self.assertIsNone(server_empty.gpus)
+        self.assertEqual(server_full.gpus, 10)
+        self.assertEqual(server_full.cores, 10)
+        self.assertEqual(server_full.threads, 2)
+        self.assertFalse(server_full.new_hdf)
+        hdf_dict_empty = server_empty.to_dict()
+        hdf_dict_full = server_full.to_dict()
+        server_from_hdf = Server()
+        server_from_hdf.from_dict(server_dict=hdf_dict_full)
+        self.assertEqual(hdf_dict_full["gpus"], 10)
+        self.assertTrue("gpus" not in hdf_dict_empty.keys())
+        self.assertEqual(server_from_hdf.gpus, 10)
+        self.assertEqual(server_from_hdf.cores, 10)
+        self.assertEqual(server_from_hdf.threads, 2)
+        self.assertFalse(server_from_hdf.new_hdf)
 
 
 if __name__ == "__main__":

@@ -175,6 +175,16 @@ class GenericPath(object):
         """
         return self.path
 
+    def __getstate__(self):
+        return {
+            "root_path": self._root_path,
+            "project_path": self._project_path,
+        }
+
+    def __setstate__(self, state):
+        self._root_path = state["root_path"]
+        self._project_path = state["project_path"]
+
     @staticmethod
     def _windows_path_to_unix_path(path):
         """
@@ -348,6 +358,15 @@ class ProjectPath(GenericPath):
         """
         self.close()
 
+    def __getstate__(self):
+        state_dict = super().__getstate__()
+        state_dict["history"] = self._history
+        return state_dict
+
+    def __setstate__(self, state):
+        super().__setstate__(state)
+        self._history = state["history"]
+
     def _convert_str_to_generic_path(self, path):
         """
         Convert path in string representation to an GenericPath object.  If argument is string and the given path does
@@ -391,10 +410,7 @@ class ProjectPath(GenericPath):
         if rel_path:
             rel_path = self._windows_path_to_unix_path(rel_path)
             path = posixpath.join(path, rel_path)
-        try:
-            os.makedirs(path)
-        except os.error:
-            pass
+        os.makedirs(path, exist_ok=True)
 
     @staticmethod
     def _get_project_from_path(full_path):

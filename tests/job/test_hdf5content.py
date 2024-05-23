@@ -8,12 +8,12 @@ from pyiron_base.project.generic import Project
 from pyiron_base._tests import PyironTestCase
 
 
-class DatabasePropertyIntegration(PyironTestCase):
+class InspectTest(PyironTestCase):
     @classmethod
     def setUpClass(cls):
         cls.file_location = os.path.dirname(os.path.abspath(__file__))
         cls.project = Project(os.path.join(cls.file_location, "hdf5_content"))
-        cls.ham = cls.project.create_job('ScriptJob', "job_test_run")
+        cls.ham = cls.project.create_job("ScriptJob", "job_test_run")
         cls.ham.save()
 
     @classmethod
@@ -32,16 +32,17 @@ class DatabasePropertyIntegration(PyironTestCase):
             job_inspect.content.input.__repr__(), job_inspect["input"].__repr__()
         )
         self.assertEqual(
-            sorted(dir(job_inspect.content.input)),
-            sorted(job_inspect["input"].list_nodes()
-                    + job_inspect["input"].list_groups())
+            sorted((job_inspect.content.input).keys()),
+            sorted(
+                job_inspect["input"].list_nodes() + job_inspect["input"].list_groups()
+            ),
         )
 
     def test_setitem(self):
-        self.ham['user/output/some_value'] = 0.3
-        self.assertEqual(self.ham['user/output/some_value'], 0.3)
+        self.ham["user/output/some_value"] = 0.3
+        self.assertEqual(self.ham["user/output/some_value"], 0.3)
         with self.assertRaises(ValueError):
-            self.ham['input/value'] = 1
+            self.ham["input/value"] = 1
 
 
 if __name__ == "__main__":

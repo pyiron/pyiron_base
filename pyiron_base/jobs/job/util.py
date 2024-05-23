@@ -4,15 +4,19 @@
 """
 Helper functions for the JobCore and GenericJob objects
 """
+
+from itertools import islice
 import os
 import posixpath
 import psutil
 import tarfile
 import stat
 import shutil
-from typing import Union, Dict
+import monty.io
+from typing import Optional, Union
 from pyiron_base.utils.instance import static_isinstance
 from pyiron_base.utils.safetar import safe_extract
+from pyiron_base.database.sqlcolumnlength import JOB_STR_LENGTH
 
 __author__ = "Jan Janssen"
 __copyright__ = (
@@ -117,8 +121,25 @@ _special_symbol_replacements = {
 
 
 def _get_safe_job_name(
-    name: str, ndigits: Union[int, None] = 8, special_symbols: Union[Dict, None] = None
+    name: Union[str, tuple],
+    ndigits: Optional[int] = 8,
+    special_symbols: Optional[dict] = None,
 ):
+    """
+    Sanitize a job name, optionally appending numeric values.
+
+    Args:
+        name (str|tuple): The name to sanitize, or a tuple of the name and any number
+            of numeric values to append with '_' in between.
+        ndigits (int|None): How many digits to round any floating point values in a
+            `name` tuple to. (Default is 8; to not round at all use None.)
+        special_symbols (dict|None): Conversions of special symbols to apply. This will
+            be applied to the default conversion dict, which contains:
+            DEFAULT_CONV_DICT
+
+    Returns:
+        (str): The sanitized (and possibly rounded) name.
+    """
     d_special_symbols = _special_symbol_replacements.copy()
     if special_symbols is not None:
         d_special_symbols.update(special_symbols)
@@ -137,6 +158,11 @@ def _get_safe_job_name(
         job_name = job_name.replace(k, v)
     _is_valid_job_name(job_name=job_name)
     return job_name
+
+
+_get_safe_job_name.__doc__ = _get_safe_job_name.__doc__.replace(
+    "DEFAULT_CONV_DICT", f"{_special_symbol_replacements}"
+)
 
 
 def _rename_job(job, new_job_name):
@@ -184,10 +210,9 @@ def _is_valid_job_name(job_name):
         raise ValueError(
             f'Invalid name for a pyiron object, must be letters, digits (not as first character) and "_" only, not {job_name}'
         )
-    if len(job_name) > 50:
+    if len(job_name) > JOB_STR_LENGTH:
         raise ValueError(
-            "Invalid name for a PyIron object: must be less then or "
-            "equal to 50 characters"
+            f"Invalid name for a PyIron object: must be less then or equal to {JOB_STR_LENGTH} characters"
         )
 
 
@@ -239,38 +264,53 @@ def _kill_child(job):
                     job_process.kill()
 
 
-def _job_compress(job, files_to_compress=None):
+def _job_compressed_name(job):
+    """Return the canonical file name of a compressed job."""
+    return _get_compressed_job_name(working_directory=job.working_directory)
+
+
+def _get_compressed_job_name(working_directory):
+    """Return the canonical file name of a compressed job from the working directory."""
+    return os.path.join(
+        working_directory, os.path.basename(working_directory) + ".tar.bz2"
+    )
+
+
+def _job_compress(job, files_to_compress=[], files_to_remove=[]):
     """
     Compress the output files of a job object.
 
     Args:
         job (JobCore): job object to compress
         files_to_compress (list): list of files to compress
+        files_to_remove (list): list of files to remove
     """
+
+    def delete_file_or_folder(fullname):
+        if os.path.isfile(fullname):
+            os.remove(fullname)
+        elif os.path.isdir(fullname):
+            shutil.rmtree(fullname)
+
     if not _job_is_compressed(job):
-        if files_to_compress is None:
-            files_to_compress = list(job.list_files())
+        for name in files_to_remove:
+            delete_file_or_folder(fullname=os.path.join(job.working_directory, name))
         cwd = os.getcwd()
         try:
             os.chdir(job.working_directory)
-            with tarfile.open(
-                os.path.join(job.working_directory, job.job_name + ".tar.bz2"),
-                "w:bz2",
-            ) as tar:
+            with tarfile.open(_job_compressed_name(job), "w:bz2") as tar:
                 for name in files_to_compress:
                     if "tar" not in name and not stat.S_ISFIFO(os.stat(name).st_mode):
                         tar.add(name)
             for name in files_to_compress:
-                if "tar" not in name:
-                    fullname = os.path.join(job.working_directory, name)
-                    if os.path.isfile(fullname):
-                        os.remove(fullname)
-                    elif os.path.isdir(fullname):
-                        shutil.rmtree(fullname)
+                if name != _job_compressed_name(job):
+                    delete_file_or_folder(
+                        fullname=os.path.join(job.working_directory, name)
+                    )
         finally:
             os.chdir(cwd)
     else:
-        print("The files are already compressed!")
+        job.logger.info("The files are already compressed!")
 
 
 def _job_decompress(job):
@@ -280,13 +320,29 @@ def _job_decompress(job):
     Args:
         job (JobCore): job object to decompress
     """
+    tar_file_name = _job_compressed_name(job)
     try:
-        tar_file_name = os.path.join(job.working_directory, job.job_name + ".tar.bz2")
         with tarfile.open(tar_file_name, "r:bz2") as tar:
             safe_extract(tar, job.working_directory)
         os.remove(tar_file_name)
     except IOError:
         pass
+
+
+def _working_directory_is_compressed(working_directory):
+    """
+    Check if the working directory of a given job is already compressed or not.
+
+    Args:
+        working_directory (str): working directory of the job object
+
+    Returns:
+        bool: [True/False]
+    """
+    compressed_name = os.path.basename(
+        _get_compressed_job_name(working_directory=working_directory)
+    )
+    return compressed_name in os.listdir(working_directory)
 
 
 def _job_is_compressed(job):
@@ -299,11 +355,133 @@ def _job_is_compressed(job):
     Returns:
         bool: [True/False]
     """
-    compressed_name = job.job_name + ".tar.bz2"
-    for name in job.list_files():
-        if compressed_name in name:
-            return True
-    return False
+    return _working_directory_is_compressed(working_directory=job.working_directory)
+
+
+def _working_directory_list_files(working_directory, include_archive=True):
+    """
+    Returns list of files in the jobs working directory.
+
+    If the working directory is compressed, return a list of files in the archive.
+
+    Args:
+        working_directory (str): working directory of the job object to inspect files in
+        include_archive (bool): include files in the .tag.gz archive
+
+    Returns:
+        list of str: file names
+    """
+    if os.path.isdir(working_directory):
+        uncompressed_files_lst = os.listdir(working_directory)
+        if include_archive and _working_directory_is_compressed(
+            working_directory=working_directory
+        ):
+            compressed_job_name = _get_compressed_job_name(
+                working_directory=working_directory
+            )
+            with tarfile.open(compressed_job_name, "r") as tar:
+                compressed_files_lst = [
+                    member.name for member in tar.getmembers() if member.isfile()
+                ]
+                uncompressed_files_lst.remove(os.path.basename(compressed_job_name))
+                return uncompressed_files_lst + compressed_files_lst
+        else:
+            return uncompressed_files_lst
+    return []
+
+
+def _job_list_files(job):
+    """
+    Returns list of files in the jobs working directory.
+
+    If the job is compressed, return a list of files in the archive.
+
+    Args:
+        job (JobCore): job object to inspect files in
+
+    Returns:
+        list of str: file names
+    """
+    return _working_directory_list_files(working_directory=job.working_directory)
+
+
+def _working_directory_read_file(working_directory, file_name, tail=None):
+    """
+    Return list of lines of the given file.
+
+    Transparently decompresses the file if working directory is compressed.
+
+    If `tail` is given and job is decompressed, only read the last lines
+    instead of traversing the full file.
+
+    Args:
+        working_directory (str): working directory of the job object
+        file_name (str): the file to print
+        tail (int, optional): only return the last lines
+
+    Raises:
+        FileNotFoundError: if the given file name does not exist in the job folder
+    """
+    if file_name not in _working_directory_list_files(
+        working_directory=working_directory
+    ):
+        raise FileNotFoundError(file_name)
+
+    if _working_directory_is_compressed(
+        working_directory=working_directory
+    ) and file_name not in os.listdir(working_directory):
+        with tarfile.open(
+            _get_compressed_job_name(working_directory=working_directory),
+            encoding="utf8",
+        ) as f:
+            lines = [
+                line.decode("utf8") for line in f.extractfile(file_name).readlines()
+            ]
+            if tail is None:
+                return lines
+            else:
+                return lines[-tail:]
+    else:
+        file_name = posixpath.join(working_directory, file_name)
+        if tail is None:
+            with open(file_name) as f:
+                return f.readlines()
+        else:
+            lines = list(
+                reversed(
+                    [
+                        line + os.linesep
+                        for line in islice(monty.io.reverse_readfile(file_name), tail)
+                    ]
+                )
+            )
+            # compatibility with the other methods
+            # monty strips all newlines, where as reading the other ways does
+            # not.  So if a file does not end with a newline (as most text
+            # files) adding it to every line like above adds an additional one.
+            lines[-1] = lines[-1].rstrip(os.linesep)
+            return lines
+
+
+def _job_read_file(job, file_name, tail=None):
+    """
+    Return list of lines of the given file.
+
+    Transparently decompresses the file if job is compressed.
+
+    If `tail` is given and job is decompressed, only read the last lines
+    instead of traversing the full file.
+
+    Args:
+        file_name (str): the file to print
+        tail (int, optional): only return the last lines
+
+    Raises:
+        FileNotFoundError: if the given file name does not exist in the job folder
+    """
+    return _working_directory_read_file(
+        working_directory=job.working_directory, file_name=file_name, tail=tail
+    )
 
 
 def _job_archive(job):

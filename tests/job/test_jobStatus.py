@@ -256,7 +256,9 @@ class TestJobStatus(PyironTestCase):
         self.assertTrue(self.jobstatus.finished)
         self.assertEqual(str(self.jobstatus), "finished")
         self.assertEqual(self.jobstatus.string, "finished")
-        with self.assertRaises(ValueError, msg="No error raised when setting invalid job status!"):
+        with self.assertRaises(
+            ValueError, msg="No error raised when setting invalid job status!"
+        ):
             self.jobstatus.string = "xyzzy"
 
     def test_database_connection(self):
@@ -281,7 +283,7 @@ class JobStatusIntegration(PyironTestCase):
     def setUpClass(cls):
         cls.file_location = os.path.dirname(os.path.abspath(__file__))
         cls.project = Project(os.path.join(cls.file_location, "random_testing"))
-        cls.ham = cls.project.create_job('ScriptJob', "job_test_run")
+        cls.ham = cls.project.create_job("ScriptJob", "job_test_run")
 
     @classmethod
     def tearDownClass(cls):

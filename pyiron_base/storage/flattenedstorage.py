@@ -24,7 +24,12 @@ from typing import Callable, Iterable, List, Tuple, Any
 
 import numpy as np
 import h5py
+import pandas as pd
 from pyiron_base.interfaces.has_hdf import HasHDF
+from pyiron_base.interfaces.lockable import Lockable, sentinel
+
+
+_CHARSIZE = np.dtype("U1").itemsize
 
 
 def _ensure_str_array_size(array, strlen):
@@ -33,18 +38,20 @@ def _ensure_str_array_size(array, strlen):
 
     Args:
         array (ndarray): array of dtype <U
-        strlen (int): maximum length that should fit in it
+        strlen (int, ndarray): maximum length that should fit in it
     Returns:
         ndarray: either `array` or resized copy
     """
-    current_length = array.itemsize // np.dtype("1U").itemsize
+    current_length = array.itemsize // _CHARSIZE
+    if isinstance(strlen, np.ndarray):
+        strlen = strlen.itemsize // _CHARSIZE
     if current_length < strlen:
         return array.astype(f"{2 * strlen}U")
     else:
         return array
 
 
-class FlattenedStorage(HasHDF):
+class FlattenedStorage(Lockable, HasHDF):
     """
     Efficient storage of ragged arrays in flattened arrays.
 
@@ -120,7 +127,7 @@ class FlattenedStorage(HasHDF):
     >>> store.get_array("sum", 2)
     57
 
-    Finally you may add multiple arrays in one call to :method:`.add_chunk` by using keyword arguments
+    Finally you may add multiple arrays in one call to :meth:`.add_chunk` by using keyword arguments
 
     >>> store.add_chunk(4, even=[14, 16, 18, 20], odd=[13, 15, 17, 19], sum=119)
     >>> store.get_array("sum", 3)
@@ -128,7 +135,7 @@ class FlattenedStorage(HasHDF):
     >>> store.get_array("even", 3)
     array([14, 16, 18, 20])
 
-    It is usually not necessary to call :method:`.add_array` before :method:`.add_chunk`, the type of the array will be
+    It is usually not necessary to call :meth:`.add_array` before :meth:`.add_chunk`, the type of the array will be
     inferred in this case.
 
     If you skip the `frame` argument to :meth:`.get_array` it will return a flat array of all the values for that array
@@ -139,9 +146,9 @@ class FlattenedStorage(HasHDF):
     >>> store.get_array("even")
     array([ 0,  4,  6,  8, 10, 12, 14, 16, 18, 20])
 
-    Arrays may be of more complicated shape, too, see :method:`.add_array` for details.
+    Arrays may be of more complicated shape, too, see :meth:`.add_array` for details.
 
-    Use :method:`.copy` to obtain a deep copy of the storage, for shallow copies using the builting `copy.copy` is
+    Use :meth:`.copy` to obtain a deep copy of the storage, for shallow copies using the builting `copy.copy` is
     sufficient.
 
     >>> copy = store.copy()
@@ -152,7 +159,7 @@ class FlattenedStorage(HasHDF):
     >>> copy["even"]
     array([0, 4, 6, 8, 10, 12])
 
-    Storages can be :method:`.split` and :method:`.join` again as long as their internal chunk structure is consistent,
+    Storages can be :meth:`.split` and :meth:`.join` again as long as their internal chunk structure is consistent,
     i.e. same number of chunks and same chunk lengths.  If this is not the case a `ValueError` is raised.
 
     >>> even = store.split(["even"])
@@ -162,11 +169,11 @@ class FlattenedStorage(HasHDF):
     False
     >>> odd = store.split(["odd"])
 
-    :method:`.join` adds new arrays to the storage it is called on in-place.  To leave it unchanged, simply call copy
+    :meth:`.join` adds new arrays to the storage it is called on in-place.  To leave it unchanged, simply call copy
     before join.
     >>> both = even.copy().join(odd)
 
-    Chunks may be given string names, either by passing `identifier` to :method:`.add_chunk` or by setting to the
+    Chunks may be given string names, either by passing `identifier` to :meth:`.add_chunk` or by setting to the
     special per chunk array "identifier"
 
     >>> store.set_array("identifier", 1, "second")
@@ -194,6 +201,20 @@ class FlattenedStorage(HasHDF):
     array([ 7,  9, 11])
     >>> len(store)
     3
+
+    You can set storages as read-only via methods defined on
+    :class:`.Lockable`.
+
+    >>> store.lock()
+    >>> store.get_array("even", 0)
+    array([0])
+    >>> store.set_array("even", np.array([4]))
+    >>> store.get_array("even", 0)
+    array([0])
+    >>> with store.unlocked():
+    ...   store.set_array("even", np.array([4]))
+    >>> store.get_array("even", 0)
+    array([4])
     """
 
     __version__ = "0.2.0"
@@ -214,7 +235,7 @@ class FlattenedStorage(HasHDF):
         str: "_default",
     }
 
-    def __init__(self, num_chunks=1, num_elements=1, **kwargs):
+    def __init__(self, num_chunks=1, num_elements=1, lock_method="error", **kwargs):
         """
         Create new flattened storage.
 
@@ -222,6 +243,8 @@ class FlattenedStorage(HasHDF):
             num_chunks (int): pre-allocation for per chunk arrays
             num_elements (int): pre-allocation for per elements arrays
         """
+        super().__init__(lock_method=lock_method)
+
         # tracks allocated versed as yet used number of chunks/elements
         self._num_chunks_alloc = num_chunks
         self._num_elements_alloc = num_elements
@@ -269,6 +292,22 @@ class FlattenedStorage(HasHDF):
     def __len__(self):
         return self.current_chunk_index
 
+    def _internal_arrays(self) -> Tuple[str, ...]:
+        """
+        Names of "internal" arrays, i.e. arrays needed for the correct inner
+        working of the flattened storage and that not are not added by the
+        user via :meth:`.add_array`.
+
+        Subclasses can override this tuple, by calling `super()` and appending
+        to it.
+
+        This exists mostly to support :meth:`.to_pandas()`.
+        """
+        return (
+            "start_index",
+            "length",
+        )
+
     def copy(self):
         """
         Return a deep copy of the storage.
@@ -283,7 +322,7 @@ class FlattenedStorage(HasHDF):
         Return integer index for given identifier.
 
         Args:
-            identifier (str): name of chunk previously passed to :method:`.add_chunk`
+            identifier (str): name of chunk previously passed to :meth:`.add_chunk`
 
         Returns:
             int: integer index for chunk
@@ -301,6 +340,7 @@ class FlattenedStorage(HasHDF):
         end = start + self._per_chunk_arrays["length"][frame]
         return slice(start, end, 1)
 
+    @sentinel
     def _resize_elements(self, new):
         old_max = self._num_elements_alloc
         self._num_elements_alloc = new
@@ -315,6 +355,7 @@ class FlattenedStorage(HasHDF):
                 if k in self._fill_values.keys():
                     self._per_element_arrays[k][old_max:] = self._fill_values[k]
 
+    @sentinel
     def _resize_chunks(self, new):
         old_max = self._num_chunks_alloc
         self._num_chunks_alloc = new
@@ -329,6 +370,7 @@ class FlattenedStorage(HasHDF):
                 if k in self._fill_values.keys():
                     self._per_chunk_arrays[k][old_max:] = self._fill_values[k]
 
+    @sentinel
     def add_array(self, name, shape=(), dtype=np.float64, fill=None, per="element"):
         """
         Add a custom array to the container.
@@ -426,7 +468,7 @@ class FlattenedStorage(HasHDF):
 
         Args:
             name (str): name of the array to fetch
-            frame (int, str, optional): selects structure to fetch, as in :method:`.get_structure()`, if not given
+            frame (int, str, optional): selects structure to fetch, as in :meth:`.get_structure()`, if not given
                                         return a flat array of all values for either all chunks or elements
 
         Returns:
@@ -458,7 +500,7 @@ class FlattenedStorage(HasHDF):
         Return elements of array `name` in all chunks.  Values are returned in a ragged array of dtype=object.
 
         If `name` specifies a per chunk array, there's nothing to pad and this method is equivalent to
-        :method:`.get_array`.
+        :meth:`.get_array`.
 
         Args:
             name (str): name of array to fetch
@@ -480,10 +522,10 @@ class FlattenedStorage(HasHDF):
         Return elements of array `name` in all chunks.  Arrays are padded to be all of the same length.
 
         The padding value depends on the datatpye of the array or can be configured via the `fill` parameter of
-        :method:`.add_array`.
+        :meth:`.add_array`.
 
         If `name` specifies a per chunk array, there's nothing to pad and this method is equivalent to
-        :method:`.get_array`.
+        :meth:`.get_array`.
 
         Args:
             name (str): name of array to fetch
@@ -497,7 +539,7 @@ class FlattenedStorage(HasHDF):
         max_len = self._per_chunk_arrays["length"].max()
 
         def resize_and_pad(v):
-            l = len(v)
+            value_len = len(v)
             per_shape = self._per_element_arrays[name].shape[1:]
             v = np.resize(v, max_len * np.prod(per_shape, dtype=int))
             v = v.reshape((max_len,) + per_shape)
@@ -505,11 +547,12 @@ class FlattenedStorage(HasHDF):
                 fill = self._fill_values[name]
             else:
                 fill = np.zeros(1, dtype=self._per_element_arrays[name].dtype)[0]
-            v[l:] = fill
+            v[value_len:] = fill
             return v
 
         return np.array([resize_and_pad(v) for v in values])
 
+    @sentinel
     def set_array(self, name, frame, value):
         """
         Add array for given structure.
@@ -518,7 +561,7 @@ class FlattenedStorage(HasHDF):
 
         Args:
             name (str): name of array to set
-            frame (int, str): selects structure to set, as in :method:`.get_strucure()`
+            frame (int, str): selects structure to set, as in :meth:`.get_strucure()`
             value: value (for per chunk) or array of values (for per element); type and shape as per :meth:`.hasarray()`.
 
         Raises:
@@ -546,21 +589,48 @@ class FlattenedStorage(HasHDF):
         else:
             raise KeyError(f"no array named {name}")
 
+    @sentinel
+    def del_array(self, name: str, ignore_missing: bool = False):
+        """
+        Remove an array.
+
+        Works with both per chunk and per element arrays.
+
+        Args:
+            name (str): name of the array
+            ignore_missing (bool): if given do not raise an error if no array
+                                   of the given `name` exists
+
+        Raises:
+            KeyError: if no array with given `name` exists and `ignore_missing` is not given
+        """
+        if name in self._per_element_arrays:
+            del self._per_element_arrays[name]
+        elif name in self._per_chunk_arrays:
+            del self._per_chunk_arrays[name]
+        elif not ignore_missing:
+            raise KeyError(name)
+
     def __getitem__(self, index):
         if isinstance(index, tuple) and len(index) == 2:
             return self.get_array(index[0], index[1])
         else:
             return self.get_array(index)
 
+    @sentinel
     def __setitem__(self, index, value):
         if isinstance(index, tuple) and len(index) == 2:
             self.set_array(index[0], index[1], value)
         else:
             raise IndexError("Must specify chunk index.")
 
+    @sentinel
+    def __delitem__(self, index):
+        self.del_array(index)
+
     def has_array(self, name):
         """
-        Checks whether an array of the given name exists and returns meta data given to :method:`.add_array()`.
+        Checks whether an array of the given name exists and returns meta data given to :meth:`.add_array()`.
 
         >>> container.has_array("energy")
         {'shape': (), 'dtype': np.float64, 'per': 'chunk'}
@@ -572,7 +642,7 @@ class FlattenedStorage(HasHDF):
 
         Returns:
             None: if array does not exist
-            dict: if array exists, keys corresponds to the shape, dtype and per arguments of :method:`.add_array`
+            dict: if array exists, keys corresponds to the shape, dtype and per arguments of :meth:`.add_array`
         """
         if name in self._per_element_arrays:
             a = self._per_element_arrays[name]
@@ -584,14 +654,21 @@ class FlattenedStorage(HasHDF):
             return None
         return {"shape": a.shape[1:], "dtype": a.dtype, "per": per}
 
-    def list_arrays(self) -> List[str]:
+    def list_arrays(self, only_user=False) -> List[str]:
         """
         Return a list of names of arrays inside the storage.
+
+        Args:
+            only_user (bool): If `True` include only array names added by the
+            user via :meth:`.add_array` and the `identifier` array.
 
         Returns:
             list of str: array names
         """
-        return list(self._per_chunk_arrays) + list(self._per_element_arrays)
+        arrays = list(self._per_chunk_arrays) + list(self._per_element_arrays)
+        if only_user:
+            arrays = [a for a in arrays if a not in self._internal_arrays()]
+        return arrays
 
     def sample(
         self, selector: Callable[["FlattenedStorage", int], bool]
@@ -608,7 +685,7 @@ class FlattenedStorage(HasHDF):
         Returns:
             :class:`.FlattenedStorage` or subclass: storage with the selected chunks
         """
-        new = self.__class__()
+        new = type(self)()
         for k, a in self._per_chunk_arrays.items():
             if k not in ("start_index", "length", "identifier"):
                 new.add_array(k, shape=a.shape[1:], dtype=a.dtype, per="chunk")
@@ -660,6 +737,7 @@ class FlattenedStorage(HasHDF):
                 split._per_chunk_arrays[k] = np.copy(split._per_chunk_arrays[k])
         return split
 
+    @sentinel
     def join(
         self, store: "FlattenedStorage", lsuffix: str = "", rsuffix: str = ""
     ) -> "FlattenedStorage":
@@ -670,9 +748,19 @@ class FlattenedStorage(HasHDF):
 
         Args:
             store (:class:`.FlattenedStorage`): storage to join
+            lsuffix, rsuffix (str, optional): if either are given rename *all* arrays by appending the suffices to the
+                                              array name; `lsuffix` for arrays in this storage, `rsuffix` for arrays in
+                                              the added storage; in this case arrays are no longer available under the
+                                              old name
 
         Returns:
             :class:`.FlattenedStorage`: self
+
+        Raise:
+            ValueError: if the two stores do not have the same number of chunks
+            ValueError: if the two stores do not have equal chunk lengths
+            ValueError: if lsuffix and rsuffix are equal and different from ""
+            ValueError: if the stores share array names but `lsuffix` and `rsuffix` are not given
         """
         if len(self) != len(store):
             raise ValueError(
@@ -703,6 +791,8 @@ class FlattenedStorage(HasHDF):
         for k, a in store._per_element_arrays.items():
             if k in self._per_element_arrays and rename:
                 self._per_element_arrays[k + lsuffix] = self._per_element_arrays[k]
+                if lsuffix != "":
+                    del self._per_element_arrays[k]
                 k += rsuffix
             self._per_element_arrays[k] = a
 
@@ -710,6 +800,8 @@ class FlattenedStorage(HasHDF):
             if k not in ("start_index", "length", "identifier"):
                 if k in self._per_chunk_arrays and rename:
                     self._per_chunk_arrays[k + lsuffix] = self._per_chunk_arrays[k]
+                    if lsuffix != "":
+                        del self._per_chunk_arrays[k]
                     k += rsuffix
                 self._per_chunk_arrays[k] = a
 
@@ -717,6 +809,7 @@ class FlattenedStorage(HasHDF):
         self._resize_chunks(self._num_chunks_alloc)
         return self
 
+    @sentinel
     def add_chunk(self, chunk_length, identifier=None, **arrays):
         """
         Add a new chunk to the storeage.
@@ -743,10 +836,10 @@ class FlattenedStorage(HasHDF):
         >>> container.get_array("pressure", 2).shape
         (3, 3)
 
-        .. attention: Edge-case!
+        .. attention:: Edge-case!
 
             This will not work when the chunk length is also 1 and the array does not exist yet!  In this case the array
-            will be assumed to be per element and there is no way around explicitly calling :method:`.add_array()`.
+            will be assumed to be per element and there is no way around explicitly calling :meth:`.add_array()`.
 
 
         Args:
@@ -774,14 +867,14 @@ class FlattenedStorage(HasHDF):
         # len of chunk to index into the initialized arrays
         i = self.current_element_index + n
 
-        self._per_chunk_arrays["start_index"][
-            self.current_chunk_index
-        ] = self.current_element_index
+        chunk_ind = self.current_chunk_index
+        el_ind = self.current_element_index
+        self._per_chunk_arrays["start_index"][chunk_ind] = el_ind
         self._per_chunk_arrays["length"][self.current_chunk_index] = n
         self._per_chunk_arrays["identifier"] = _ensure_str_array_size(
             self._per_chunk_arrays["identifier"], len(identifier)
         )
-        self._per_chunk_arrays["identifier"][self.current_chunk_index] = identifier
+        self._per_chunk_arrays["identifier"][chunk_ind] = identifier
 
         for k, a in arrays.items():
             a = np.asarray(a)
@@ -808,7 +901,24 @@ class FlattenedStorage(HasHDF):
         self.current_element_index = i
         # return last_chunk_index, last_element_index
 
+    @sentinel
     def extend(self, other: "FlattenedStorage"):
+        """
+        Add chunks from `other` to this storage.
+
+        Afterwards the number of chunks and elements are the sum of the respective previous values.
+
+        If `other` defines new arrays or doesn't define some of the arrays they are padded by the fill values.
+
+        Args:
+            other (:class:`.FlattenedStorage`): other storage to add
+
+        Raises:
+            ValueError: if fill values between both storages are not compatible
+
+        Returns:
+            FlattenedStorage: return this storage
+        """
         self._check_compatible_fill_values(other=other)
 
         combined_num_chunks = self.num_chunks + other.num_chunks
@@ -833,6 +943,10 @@ class FlattenedStorage(HasHDF):
                 self.add_array(
                     name=k, dtype=dtype, shape=a.shape[1:], fill=fill, per="chunk"
                 )
+            elif a.dtype.char == "U":
+                self._per_chunk_arrays[k] = _ensure_str_array_size(
+                    self._per_chunk_arrays[k], a
+                )
             self._per_chunk_arrays[k][self.num_chunks : combined_num_chunks] = a[
                 0 : other.num_chunks
             ]
@@ -843,6 +957,10 @@ class FlattenedStorage(HasHDF):
                 self.add_array(
                     name=k, shape=a.shape[1:], dtype=dtype, fill=fill, per="element"
                 )
+            elif a.dtype.char == "U":
+                self._per_element_arrays[k] = _ensure_str_array_size(
+                    self._per_element_arrays[k], a
+                )
             self._per_element_arrays[k][self.num_elements : combined_num_elements] = a[
                 0 : other.num_elements
             ]
@@ -850,6 +968,8 @@ class FlattenedStorage(HasHDF):
         self.num_chunks = combined_num_chunks
         self.current_chunk_index = self.num_chunks
         self.current_element_index = self.num_elements
+
+        return self
 
     def _check_compatible_fill_values(self, other: "FlattenedStorage"):
         """
@@ -931,9 +1051,9 @@ class FlattenedStorage(HasHDF):
             num_elements = hdf["num_atoms"]
 
         self._num_chunks_alloc = self.num_chunks = self.current_chunk_index = num_chunks
-        self._num_elements_alloc = (
-            self.num_elements
-        ) = self.current_element_index = num_elements
+        self._num_elements_alloc = self.num_elements = self.current_element_index = (
+            num_elements
+        )
 
         if version == "0.1.0":
             with hdf.open("arrays") as hdf_arrays:
@@ -970,6 +1090,29 @@ class FlattenedStorage(HasHDF):
 
         if version >= "0.3.0":
             self._fill_values = hdf["_fill_values"]
+
+    def to_pandas(self, explode=False, include_index=False) -> pd.DataFrame:
+        """
+        Convert arrays to pandas dataframe.
+
+        Args:
+            explode (bool): If `False` values of per element arrays are stored
+                            in the dataframe as arrays, otherwise each row in the dataframe
+                            corresponds to an element in the original storage.
+
+        Returns:
+            :class:`pandas.DataFrame`: table of array values
+        """
+        arrays = self.list_arrays(only_user=True)
+        df = pd.DataFrame({a: self.get_array_ragged(a) for a in arrays})
+        if explode:
+            elem_arrays = [a for a in arrays if self.has_array(a)["per"] == "element"]
+            df = (
+                df.explode(elem_arrays)
+                .infer_objects(copy=False)
+                .reset_index(drop=not include_index)
+            )
+        return df
 
 
 def get_dtype_and_fill(storage: FlattenedStorage, name: str) -> Tuple[np.generic, Any]:

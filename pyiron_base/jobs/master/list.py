@@ -5,13 +5,11 @@
 The ListMaster behaves like a list, just for job objects.
 """
 
-from pyiron_base.storage.parameters import GenericParameters
 from pyiron_base.jobs.job.core import JobCore
 from pyiron_base.jobs.job.generic import GenericJob
 from pyiron_base.jobs.job.core import _doc_str_job_core_args
 from pyiron_base.jobs.master.generic import GenericMaster, _doc_str_generic_master_attr
 from pyiron_base.jobs.master.submissionstatus import SubmissionStatus
-from pyiron_base.jobs.job.jobtype import JobType
 
 __author__ = "Jan Janssen"
 __copyright__ = (
@@ -116,7 +114,7 @@ class ListMaster(GenericMaster):
                     self.submission_status.submit_next()
                     if len(self._job_name_lst) == 0:
                         self.status.finished = True
-                        self.project.db.item_update(self._runtime(), self.job_id)
+                        self.run_time_to_db()
                 else:
                     raise ValueError(
                         "This job ",
@@ -221,10 +219,10 @@ class ListMaster(GenericMaster):
         Internal helper function the run if refresh function is called when the job status is 'refresh'. If the job was
         suspended previously, the job is going to be started again, to be continued.
         """
-        self._logger.info(
-            "{}, status: {}, finished: {} parallel master "
-            "refresh".format(self.job_info_str, self.status, self.is_finished())
+        log_str = "{}, status: {}, finished: {} parallel master " "refresh".format(
+            self.job_info_str, self.status, self.is_finished()
         )
+        self._logger.info(log_str)
         if self.is_finished() and not self.server.run_mode.modal:
             self.status.finished = True
         elif (

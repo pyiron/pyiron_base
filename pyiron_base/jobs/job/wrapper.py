@@ -9,6 +9,7 @@ import os
 import logging
 from pyiron_base.project.generic import Project
 from pyiron_base.state import state
+from pyiron_base.state.signal import catch_signals
 from pyiron_base.database.filetable import (
     get_hamilton_from_file,
     get_hamilton_version_from_file,
@@ -49,9 +50,11 @@ class JobWrapper(object):
         submit_on_remote=False,
         debug=False,
         connection_string=None,
+        collect=False,
     ):
         self.working_directory = working_directory
         self._remote_flag = submit_on_remote
+        self._collect = collect
         if connection_string is not None:
             state.database.open_local_sqlite_connection(
                 connection_string=connection_string
@@ -120,12 +123,21 @@ class JobWrapper(object):
         if self._remote_flag and self.job.server.queue is not None:
             self.job.run_if_scheduler()
             self.job.status.submitted = True
+        elif self._collect:
+            self.job.status.collect = True
+            self.job.run()
         else:
-            self.job.run_static()
+            with catch_signals(self.job.signal_intercept):
+                self.job.run_static()
 
 
 def job_wrapper_function(
-    working_directory, job_id=None, file_path=None, submit_on_remote=False, debug=False
+    working_directory,
+    job_id=None,
+    file_path=None,
+    submit_on_remote=False,
+    debug=False,
+    collect=False,
 ):
     """
     Job Wrapper function - creates a JobWrapper object and calls run() on that object
@@ -136,6 +148,7 @@ def job_wrapper_function(
         file_path (str): path to the HDF5 file
         debug (bool): enable debug mode
         submit_on_remote (bool): submit to queuing system on remote host
+        collect (bool): collect output of calculation
     """
 
     # always close the database connection in calculations on the cluster to avoid high number of concurrent
@@ -150,6 +163,7 @@ def job_wrapper_function(
             job_id=job_id,
             submit_on_remote=submit_on_remote,
             debug=debug,
+            collect=collect,
         )
     elif file_path is not None:
         hdf5_file = (
@@ -165,6 +179,7 @@ def job_wrapper_function(
             h5_path="/" + h5_path,
             submit_on_remote=submit_on_remote,
             debug=debug,
+            collect=collect,
         )
     else:
         raise ValueError("Either job_id or file_path have to be not None.")

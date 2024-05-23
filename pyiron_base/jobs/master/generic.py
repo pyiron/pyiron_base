@@ -16,7 +16,6 @@ from pyiron_base.interfaces.object import HasStorage
 from pyiron_base.jobs.job.core import _doc_str_job_core_args
 from pyiron_base.jobs.job.generic import GenericJob, _doc_str_generic_job_attr
 from pyiron_base.jobs.job.extension.jobstatus import job_status_finished_lst
-from pyiron_base.jobs.job.jobtype import JobType
 
 __author__ = "Jan Janssen"
 __copyright__ = (
@@ -144,6 +143,7 @@ class GenericMaster(GenericJob):
 
     @wraps(GenericJob.set_input_to_read_only)
     def set_input_to_read_only(self):
+        super().set_input_to_read_only()
         self._input.read_only = True
 
     def first_child_name(self):
@@ -461,7 +461,7 @@ class GenericMaster(GenericJob):
             if len(name_lst) > 1:
                 return self.project.inspect(child_id)["/".join(name_lst[1:])]
             else:
-                return self.project.load(child_id, convert_to_object=True)
+                return self.project.load(child_id)
         elif item_obj in self._job_name_lst:
             child = self._load_job_from_cache(job_name=item_obj)
             if len(name_lst) == 1:

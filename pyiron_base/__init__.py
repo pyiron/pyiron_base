@@ -12,14 +12,15 @@ from pyiron_base.storage.datacontainer import DataContainer
 from pyiron_base.storage.has_stored_traits import HasStoredTraits
 from pyiron_base.storage.inputlist import InputList
 from pyiron_base.storage.parameters import GenericParameters
-from pyiron_base.storage.filedata import load_file, FileDataTemplate, FileData
 from pyiron_base.utils.deprecate import Deprecator, deprecate, deprecate_soon
 from pyiron_base.utils.error import ImportAlarm
 from pyiron_base.jobs.job.extension.executable import Executable
 from pyiron_base.project.external import Notebook, load, dump
+from pyiron_base.jobs.dynamic import warn_dynamic_job_classes
+from pyiron_base.jobs.flex.factory import create_job_factory
+from pyiron_base.jobs.job.extension.server.queuestatus import validate_que_request
 from pyiron_base.jobs.job.generic import GenericJob
 from pyiron_base.jobs.job.interactive import InteractiveBase
-from pyiron_base.jobs.master.interactivewrapper import InteractiveWrapper
 from pyiron_base.jobs.job.extension.jobstatus import (
     JobStatus,
     job_status_successful_lst,
@@ -29,39 +30,90 @@ from pyiron_base.jobs.job.extension.jobstatus import (
 from pyiron_base.jobs.job.jobtype import JOB_CLASS_DICT, JobType, JobTypeChoice
 from pyiron_base.jobs.job.template import TemplateJob, PythonTemplateJob
 from pyiron_base.jobs.job.factory import JobFactoryCore
+from pyiron_base.jobs.master.flexible import FlexibleMaster
 from pyiron_base.jobs.master.generic import GenericMaster, get_function_from_string
+from pyiron_base.jobs.master.interactivewrapper import InteractiveWrapper
 from pyiron_base.jobs.master.list import ListMaster
 from pyiron_base.jobs.master.parallel import ParallelMaster, JobGenerator
-from pyiron_base.jobs.master.serial import SerialMasterBase
-from pyiron_base.jobs.master.flexible import FlexibleMaster
 from pyiron_base.project.generic import Project, Creator
 from pyiron_base.utils.parser import Logstatus, extract_data_from_file
-from pyiron_base.jobs.job.extension.server.queuestatus import validate_que_request
 from pyiron_base.state.settings import Settings
 from pyiron_base.state.install import install_dialog
 from pyiron_base.jobs.datamining import PyironTable, TableJob
 from pyiron_base.interfaces.object import HasDatabase, HasStorage, PyironObject
-from pyiron_base.database.performance import get_database_statistics
 from pyiron_base.interfaces.has_groups import HasGroups
 from pyiron_base.interfaces.has_hdf import HasHDF
 
 from pyiron_base.jobs.job.toolkit import Toolkit, BaseTools
 
-Project.register_tools("base", BaseTools)
-
-# optional API of the pyiron_base module
-try:
-    from pyiron_base.project.gui import ProjectGUI
-except (ImportError, TypeError, AttributeError):
-    pass
-
 # Internal init
 from ._version import get_versions
 from pyiron_base.utils.jedi import fix_ipython_autocomplete
 
+
+Project.register_tools("base", BaseTools)
+
 # Set version of pyiron_base
 __version__ = get_versions()["version"]
-del get_versions
 
 # Jedi fix
 fix_ipython_autocomplete()
+
+# Dynamic job class definition is no longer supported in pyiron_base >=0.7.0
+warn_dynamic_job_classes(
+    resource_folder_lst=state.settings.resource_paths,
+    logger=state.logger,
+)
+
+__all__ = [
+    PyironFactory,
+    FlattenedStorage,
+    FileHDFio,
+    ProjectHDFio,
+    DataContainer,
+    HasStoredTraits,
+    InputList,
+    GenericParameters,
+    Deprecator,
+    deprecate,
+    deprecate_soon,
+    ImportAlarm,
+    Executable,
+    Notebook,
+    load,
+    dump,
+    create_job_factory,
+    validate_que_request,
+    GenericJob,
+    InteractiveBase,
+    JobStatus,
+    job_status_successful_lst,
+    job_status_finished_lst,
+    job_status_lst,
+    JOB_CLASS_DICT,
+    JobType,
+    JobTypeChoice,
+    TemplateJob,
+    PythonTemplateJob,
+    JobFactoryCore,
+    FlexibleMaster,
+    GenericMaster,
+    get_function_from_string,
+    InteractiveWrapper,
+    ListMaster,
+    ParallelMaster,
+    JobGenerator,
+    Creator,
+    Logstatus,
+    extract_data_from_file,
+    Settings,
+    install_dialog,
+    PyironTable,
+    TableJob,
+    HasDatabase,
+    HasStorage,
+    PyironObject,
+    HasGroups,
+    HasHDF,
+    Toolkit,
+]

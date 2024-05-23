@@ -91,8 +91,7 @@ def _write_config_file(
         project_path = os.path.normpath(
             os.path.abspath(os.path.expanduser(project_path))
         )
-        if not os.path.exists(project_path):
-            os.makedirs(project_path)
+        os.makedirs(project_path, exist_ok=True)
 
 
 def install_dialog(silently=False):
@@ -119,6 +118,9 @@ def install_dialog(silently=False):
                 giturl_for_zip_file="https://github.com/pyiron/pyiron-resources/releases/latest/download/resources.tar.gz",
                 git_folder_name="resources",
             )
+            print(
+                "pyiron resources installed - restart your server for the changes to be in effect"
+            )
         else:
             raise ValueError("pyiron was not installed!")
     else:
@@ -141,7 +143,9 @@ def install_pyiron(
         zip_file (str): name of the compressed file
         project_path (str): the location where pyiron is going to store the pyiron projects
         resource_directory (str): the location where the resouces (executables, potentials, ...) for pyiron are stored.
-        giturl_for_zip_file (str): url for the zipped resources file on github
+        giturl_for_zip_file (str/None): url for the zipped resources file on github.
+            (Default points to pyiron's github resource repository. If None, leaves the
+            resources directory *empty*.)
         git_folder_name (str): name of the extracted folder
     """
     _write_config_file(
@@ -149,9 +153,12 @@ def install_pyiron(
         project_path=project_path,
         resource_path=resource_directory,
     )
-    _download_resources(
-        zip_file=zip_file,
-        resource_directory=resource_directory,
-        giturl_for_zip_file=giturl_for_zip_file,
-        git_folder_name=git_folder_name,
-    )
+    if giturl_for_zip_file is not None:
+        _download_resources(
+            zip_file=zip_file,
+            resource_directory=resource_directory,
+            giturl_for_zip_file=giturl_for_zip_file,
+            git_folder_name=git_folder_name,
+        )
+    else:
+        os.makedirs(resource_directory)

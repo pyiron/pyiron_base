@@ -11,6 +11,7 @@ from pyiron_base.state import state
 class TestProjectPath(PyironTestCase):
     @classmethod
     def setUpClass(cls):
+        super().setUpClass()
         if os.name == "nt":
             cls.current_dir = os.path.dirname(os.path.abspath(__file__)).replace(
                 "\\", "/"
@@ -18,15 +19,19 @@ class TestProjectPath(PyironTestCase):
         else:
             cls.current_dir = os.path.dirname(os.path.abspath(__file__))
         cls.settings_configuration = state.settings.configuration.copy()
-        cls.project_path = ProjectPath(path=cls.current_dir)
-        cls.project_path = cls.project_path.open("test_project_path")
 
     def setUp(self) -> None:
-        state.settings.configuration["project_paths"] = [self.current_dir]
+        super().setUp()
+        state.settings.configuration["project_paths"] = [self.current_dir + "/"]
         state.settings.configuration["project_check_enabled"] = True
 
+        self.project_path = ProjectPath(path=self.current_dir)
+        self.project_path = self.project_path.open("test_project_path")
+
     def tearDown(self) -> None:
+        super().tearDown()
         state.settings.configuration.update(self.settings_configuration)
+        self.project_path.removedirs()
 
     def test_open(self):
         with self.project_path.open("test_open") as test_open:
@@ -67,7 +72,7 @@ class TestProjectPath(PyironTestCase):
         )
 
     def test_root_path(self):
-        root_paths = self.settings_configuration["project_paths"]
+        root_paths = state.settings.configuration["project_paths"]
         self.assertIn(
             self.project_path.root_path,
             root_paths,
@@ -75,7 +80,7 @@ class TestProjectPath(PyironTestCase):
         )
 
     def test_project_path(self):
-        root_paths = self.settings_configuration["project_paths"]
+        root_paths = state.settings.configuration["project_paths"]
         self.assertIn(
             self.current_dir + "/test_project_path/",
             [root_path + self.project_path.project_path for root_path in root_paths],

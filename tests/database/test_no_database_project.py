@@ -16,9 +16,8 @@ class TestNoDatabaseProject(TestWithProject):
 
     @classmethod
     def tearDownClass(cls):
-        state.update()
         super().tearDownClass()
-        
+
     def test_validate_database_is_disables(self):
         self.assertTrue(state.settings.configuration["disable_database"])
 
@@ -36,6 +35,7 @@ class TestNoDatabaseProject(TestWithProject):
         self.project.db.force_reset()
         df = self.project.job_table()
         self.assertEqual(len(df), 0)
+        job.remove()  # Clean up the orphaned job HDF
 
 
 if __name__ == "__main__":

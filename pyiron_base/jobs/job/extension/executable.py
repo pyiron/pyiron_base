@@ -3,7 +3,8 @@
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
 import os
-from pyiron_base.interfaces.object import HasStorage
+from pyiron_base.interfaces.has_dict import HasDict
+from pyiron_base.storage.datacontainer import DataContainer
 from pyiron_base.state import state
 
 """
@@ -22,7 +23,9 @@ __status__ = "production"
 __date__ = "Sep 1, 2017"
 
 
-class Executable(HasStorage):
+class Executable(HasDict):
+    __hdf_version__ = "0.3.0"
+
     def __init__(
         self,
         path_binary_codes=None,
@@ -40,6 +43,7 @@ class Executable(HasStorage):
             overwrite_nt_flag (bool):
         """
         super().__init__()
+        self.storage = DataContainer()
         self.storage.table_name = "executable"
 
         if path_binary_codes is None:
@@ -217,6 +221,55 @@ class Executable(HasStorage):
         else:
             self.storage.mpi = False
 
+    def to_dict(self):
+        executable_dict = self._type_to_dict()
+        executable_storage_dict = self.storage._type_to_dict()
+        executable_storage_dict["READ_ONLY"] = self.storage._read_only
+        executable_storage_dict.update(self.storage.to_builtin())
+        executable_dict["executable"] = executable_storage_dict
+        return executable_dict
+
+    def from_dict(self, executable_dict):
+        data_container_keys = [
+            "version",
+            "name",
+            "operation_system_nt",
+            "executable",
+            "mpi",
+            "accepted_return_codes",
+        ]
+        for key in data_container_keys:
+            if key in executable_dict["executable"]:
+                self.storage[key] = executable_dict["executable"][key]
+        if executable_dict["executable"]["READ_ONLY"]:
+            self.storage.read_only = True
+
+    def get_input_for_subprocess_call(self, cores, threads, gpus=None):
+        """
+        Get the input parameters for the subprocess call to execute the job
+
+        Args:
+            cores (int): number of cores
+            threads (int): number of threads
+            gpus (int/None): number of gpus
+
+        Returns:
+            str/ list, boolean:  executable and shell variables
+        """
+        if cores == 1 or not self.mpi:
+            executable = self.__str__()
+            shell = True
+        else:
+            if isinstance(self.executable_path, list):
+                executable = self.executable_path[:]
+            else:
+                executable = [self.executable_path]
+            executable += [str(cores), str(threads)]
+            if gpus is not None:
+                executable += [str(gpus)]
+            shell = False
+        return executable, shell
+
     def __repr__(self):
         """
         Executable path
@@ -258,7 +311,8 @@ class Executable(HasStorage):
                             ]
                         ] = os.path.join(path, executable).replace("\\", "/")
             return executable_dict
-        except OSError:  # No executable exists - This is the case for GenericJob and other abstract job classes.
+        # No executable exists - This is the case for GenericJob and other abstract job classes.
+        except OSError:
             return dict()
 
     def _executable_select(self):
@@ -271,7 +325,10 @@ class Executable(HasStorage):
         try:
             return self.executable_lst[self.version]
         except KeyError:
-            return ""
+            if isinstance(self.version, str):
+                return self.version
+            else:
+                return ""
 
     def _get_hdf_group_name(self):
         return "executable"

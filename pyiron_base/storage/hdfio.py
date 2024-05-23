@@ -6,25 +6,31 @@ Classes to map the Python objects to HDF5 data structures
 """
 
 import numbers
-import h5py
+from h5io_browser import Pointer
+from h5io_browser.base import (
+    _open_hdf,
+    _is_ragged_in_1st_dim_only,
+    _read_hdf,
+    _write_hdf5_with_json_support,
+)
 import os
-from collections.abc import MutableMapping
 import importlib
 import pandas
 import posixpath
-import h5io
 import numpy as np
 import sys
-import time
-from typing import Union
+from typing import Union, Optional, Any, Tuple
 
 from pyiron_base.utils.deprecate import deprecate
-from pyiron_base.utils.error import retry
-
+from pyiron_base.storage.helper_functions import (
+    get_h5_path,
+    list_groups_and_nodes,
+    read_dict_from_hdf,
+)
 from pyiron_base.interfaces.has_groups import HasGroups
 from pyiron_base.state import state
-from pyiron_base.jobs.dynamic import JOB_DYN_DICT, class_constructor
-import warnings
+from pyiron_base.jobs.job.util import _get_safe_job_name
+from pyiron_base.utils.instance import static_isinstance
 
 __author__ = "Joerg Neugebauer, Jan Janssen"
 __copyright__ = (
@@ -38,42 +44,109 @@ __status__ = "production"
 __date__ = "Sep 1, 2017"
 
 
-def _is_ragged_in_1st_dim_only(value: Union[np.ndarray, list]) -> bool:
-    """
-    Checks whether array or list of lists is ragged in the first dimension.
+# for historic reasons we write str(class) into the HDF 'TYPE' field of objects, so we need to parse this back out
+def _extract_fully_qualified_name(type_field: str) -> str:
+    return type_field.split("'")[1]
 
-    That means all other dimensions (except the first one) still have to match.
+
+def _extract_module_class_name(type_field: str) -> Tuple[str, str]:
+    fully_qualified_path = _extract_fully_qualified_name(type_field)
+    return fully_qualified_path.rsplit(".", maxsplit=1)
+
+
+def _import_class(module_path, class_name):
+    """
+    Import given class from fully qualified name and return class object.
 
     Args:
-        value (ndarray/list): array to check
+        module_path (str): fully qualified name of a pyiron class
+        class_name (str): fully qualified name of a pyiron class
 
     Returns:
-        bool: True if elements of value are not all of the same shape
+        type: class object of the given name
     """
-    if isinstance(value, np.ndarray) and value.dtype != np.dtype("O"):
-        return False
+    # ugly dynamic import, but only needed to log the warning anyway
+    from pyiron_base.jobs.job.jobtype import JobTypeChoice
+
+    job_class_dict = JobTypeChoice().job_class_dict  # access global singleton
+    if class_name in job_class_dict:
+        known_module_path = job_class_dict[class_name]
+        # entries in the job_class_dict are either strings of modules or fully
+        # loaded class object; in the latter case our work here is done we just
+        # return the class
+        if isinstance(known_module_path, type):
+            return known_module_path
+        if module_path != known_module_path:
+            state.logger.info(
+                f'Using registered module "{known_module_path}" instead of custom/old module "{module_path}" to'
+                f' import job type "{class_name}"!'
+            )
+            module_path = known_module_path
+    try:
+        return getattr(
+            importlib.import_module(module_path),
+            class_name,
+        )
+    except ImportError:
+        import pyiron_base.project.maintenance
+
+        if module_path in pyiron_base.project.maintenance._MODULE_CONVERSION_DICT:
+            raise RuntimeError(
+                f"Could not import {class_name} from {module_path}, but module path known to have changed. "
+                "Call project.maintenance.local.update_hdf_types() to upgrade storage!"
+            ) from None
+        else:
+            raise
+
+
+def _to_object(hdf, class_name=None, **kwargs):
+    """
+    Load the full pyiron object from an HDF5 file
+
+    Args:
+        class_name(str, optional): if the 'TYPE' node is not available in
+                    the HDF5 file a manual object type can be set,
+                    must be as reported by `str(type(obj))`
+        **kwargs: optional parameters optional parameters to override init
+                  parameters
+
+    Returns:
+        pyiron object of the given class_name
+    """
+    if "TYPE" not in hdf.list_nodes() and class_name is None:
+        raise ValueError("Objects can be only recovered from hdf5 if TYPE is given")
+    elif class_name is not None and class_name != hdf.get("TYPE"):
+        raise ValueError(
+            "Object type in hdf5-file must be identical to input parameter"
+        )
+    type_field = class_name or hdf.get("TYPE")
+    module_path, class_name = _extract_module_class_name(type_field)
+    class_object = _import_class(module_path, class_name)
+
+    # Backwards compatibility since the format of TYPE changed
+    if type_field != str(class_object):
+        hdf["TYPE"] = str(class_object)
+
+    if hasattr(class_object, "from_hdf_args"):
+        init_args = class_object.from_hdf_args(hdf)
     else:
+        init_args = {}
 
-        def extract_dims(v):
-            with warnings.catch_warnings():
-                warnings.simplefilter("ignore")
-                s = np.shape(v)
-            return s[0], s[1:]
+    init_args.update(kwargs)
 
-        dim1, dim_other = zip(*map(extract_dims, value))
-        return len(set(dim1)) > 1 and len(set(dim_other)) == 1
-
-
-def open_hdf5(filename, mode="r", swmr=False):
-    if swmr and mode != "r":
-        store = h5py.File(filename, mode=mode, libver="latest")
-        store.swmr = True
-        return store
-    else:
-        return h5py.File(filename, mode=mode, libver="latest", swmr=swmr)
+    obj = class_object(**init_args)
+    obj.from_hdf(hdf=hdf.open(".."), group_name=hdf.h5_path.split("/")[-1])
+    if static_isinstance(obj=obj, obj_type="pyiron_base.jobs.job.generic.GenericJob"):
+        module_name = module_path.split(".")[0]
+        module = importlib.import_module(module_name)
+        if hasattr(module, "Project"):
+            obj.project_hdf5._project = getattr(module, "Project")(
+                obj.project_hdf5.project.path
+            )
+    return obj
 
 
-class FileHDFio(HasGroups, MutableMapping):
+class FileHDFio(HasGroups, Pointer):
     """
     Class that provides all info to access a h5 file. This class is based on h5io.py, which allows to
     get and put a large variety of jobs to/from h5
@@ -107,13 +180,8 @@ class FileHDFio(HasGroups, MutableMapping):
     """
 
     def __init__(self, file_name, h5_path="/", mode="a"):
-        file_name += ".h5" if not file_name.endswith(".h5") else ""
-        if not os.path.isabs(file_name):
-            raise ValueError("file_name must be given as absolute path name")
-        self._file_name = None
-        self.file_name = file_name
+        Pointer.__init__(self=self, file_name=file_name, h5_path=h5_path)
         self.history = []
-        self.h5_path = h5_path
         self._filter = ["groups", "nodes", "objects"]
 
     # MutableMapping Impl
@@ -151,10 +219,9 @@ class FileHDFio(HasGroups, MutableMapping):
                 # underlying file once, this reduces the number of file opens in the most-likely case from 2 to 1 (1 to
                 # check whether the data is there and 1 to read it) and increases in the worst case from 1 to 2 (1 to
                 # try to read it here and one more time to verify it's not a group below).
-                obj = read_hdf5(self.file_name, title=self._get_h5_path(item))
-                if self._is_convertable_dtype_object_array(obj):
-                    obj = self._convert_dtype_obj_array(obj.copy())
-                return obj
+                return _read_hdf(
+                    hdf_filehandle=self.file_name, h5_path=self._get_h5_path(item)
+                )
             except (ValueError, OSError, RuntimeError, NotImplementedError):
                 # h5io couldn't find a dataset with name item, but there still might be a group with that name, which we
                 # check in the rest of the method
@@ -218,7 +285,10 @@ class FileHDFio(HasGroups, MutableMapping):
     # TODO: remove this function upon 1.0.0 release
     @staticmethod
     def _convert_dtype_obj_array(obj: np.ndarray):
-        result = np.array(obj.tolist())
+        try:
+            result = np.array(obj.tolist())
+        except ValueError:
+            result = np.array(obj.tolist(), dtype=object)
         if result.dtype != np.dtype(object):
             state.logger.warning(
                 f"Deprecated data structure! "
@@ -239,80 +309,16 @@ class FileHDFio(HasGroups, MutableMapping):
             key (str): key to store the data
             value (pandas.DataFrame, pandas.Series, dict, list, float, int): basically any kind of data is supported
         """
-        use_json = True
         if hasattr(value, "to_hdf") & (
             not isinstance(value, (pandas.DataFrame, pandas.Series))
         ):
             value.to_hdf(self, key)
-        elif (
-            isinstance(value, (list, np.ndarray))
-            and len(value) > 0
-            and isinstance(value[0], (list, np.ndarray))
-            and len(value[0]) > 0
-            and not isinstance(value[0][0], str)
-            and _is_ragged_in_1st_dim_only(value)
-        ):
-            # if the sub-arrays in value all share shape[1:], h5io comes up with a more efficient storage format than
-            # just writing a dataset for each element, by concatenating along the first axis and storing the indices
-            # where to break the concatenated array again
-            value = np.array([np.asarray(v) for v in value], dtype=object)
-            use_json = False
-        elif isinstance(value, tuple):
-            value = list(value)
-        write_hdf5(
-            self.file_name,
-            value,
-            title=self._get_h5_path(key),
-            overwrite="update",
-            use_json=use_json,
+            return
+        _write_hdf5_with_json_support(
+            hdf_filehandle=self.file_name,
+            h5_path=self._get_h5_path(key),
+            data=value,
         )
-
-    def __delitem__(self, key):
-        """
-        Delete item from the HDF5 file
-
-        Args:
-            key (str): key of the item to delete
-        """
-        if self.file_exists:
-            try:
-                with open_hdf5(self.file_name, mode="a") as store:
-                    del store[self._get_h5_path(key)]
-            except (AttributeError, KeyError):
-                pass
-
-    @property
-    def file_exists(self):
-        """
-        Check if the HDF5 file exists already
-
-        Returns:
-            bool: [True/False]
-        """
-        if os.path.isfile(self.file_name):
-            return True
-        else:
-            return False
-
-    @property
-    def file_name(self):
-        """
-        Get the file name of the HDF5 file
-
-        Returns:
-            str: absolute path to the HDF5 file
-        """
-        return self._file_name
-
-    @file_name.setter
-    def file_name(self, new_file_name):
-        """
-        Set the file name of the HDF5 file
-
-        Args:
-            new_file_name (str): absolute path to the HDF5 file
-        """
-        self._file_name = os.path.abspath(new_file_name).replace("\\", "/")
 
     @property
     def base_name(self):
@@ -333,80 +339,6 @@ class FileHDFio(HasGroups, MutableMapping):
             str: HDF5 file location
         """
         return posixpath.dirname(self.file_name)
-
-    @property
-    def h5_path(self):
-        """
-        Get the path in the HDF5 file starting from the root group - meaning this path starts with '/'
-
-        Returns:
-            str: HDF5 path
-        """
-        return self._h5_path
-
-    @h5_path.setter
-    def h5_path(self, path):
-        """
-        Set the path in the HDF5 file starting from the root group
-
-        Args:
-            path (str): HDF5 path
-        """
-        if (path is None) or (path == ""):
-            path = "/"
-        self._h5_path = posixpath.normpath(path)
-        if not posixpath.isabs(self._h5_path):
-            self._h5_path = "/" + self._h5_path
-
-    @property
-    def is_root(self):
-        """
-        Check if the current h5_path is pointing to the HDF5 root group.
-
-        Returns:
-            bool: [True/False]
-        """
-        return "/" == self.h5_path
-
-    # @property
-    # def is_open(self):
-    #     """
-    #     Check if the HDF5 file is currently opened in h5py
-    #
-    #     Returns:
-    #         bool: [True/False]
-    #     """
-    #     try:
-    #         return self._store.is_open
-    #     except AttributeError:
-    #         return False
-
-    @property
-    def is_empty(self):
-        """
-        Check if the HDF5 file is empty
-
-        Returns:
-            bool: [True/False]
-        """
-        if self.file_exists:
-            with open_hdf5(self.file_name) as h:
-                return len(h.keys()) == 0
-        else:
-            return True
-
-    @staticmethod
-    def file_size(hdf):
-        """
-        Get size of the HDF5 file
-
-        Args:
-            hdf (FileHDFio): hdf file
-
-        Returns:
-            float: file size in Bytes
-        """
-        return os.path.getsize(hdf.file_name)
 
     def get_size(self, hdf):
         """
@@ -434,92 +366,6 @@ class FileHDFio(HasGroups, MutableMapping):
         new_h5._filter = self._filter
         return new_h5
 
-    def copy_to(self, destination, file_name=None, maintain_name=True):
-        """
-        Copy the content of the HDF5 file to a new location
-
-        Args:
-            destination (FileHDFio): FileHDFio object pointing to the new location
-            file_name (str): name of the new HDF5 file - optional
-            maintain_name (bool): by default the names of the HDF5 groups are maintained
-
-        Returns:
-            FileHDFio: FileHDFio object pointing to a file which now contains the same content as file of the current
-                       FileHDFio object.
-        """
-
-        def _internal_copy(source, source_path, target, target_path, maintain_flag):
-            """
-            Internal function to copy content of one HDF5 file to another or copy a group within the same HDF5 file.
-
-            Args:
-                source (h5py.File): HDF5 File object
-                source_path (str): Path inside the source HDF5 file
-                target (h5py.File): HDF5 File object
-                target_path (str): Path inside the target HDF5 file
-                maintain_flag (bool): Maintain the same group name
-            """
-            if maintain_flag:
-                try:
-                    target.create_group(target_path)
-                except ValueError:
-                    pass  # In case the copy_to() function failed previously and the group already exists.
-
-            if target_path == "/":
-                source.copy(target_path, "/") if source == target else source.copy(
-                    target_path, target
-                )
-            else:
-                if maintain_flag:
-                    if dest_path != "":
-                        source.copy(source_path, target[dest_path])
-                    else:
-                        source.copy(source_path, target)
-                else:
-                    group_name_old = source_path.split("/")[-1]
-                    try:
-                        target.create_group("/tmp")
-                    except ValueError:
-                        pass
-                    source.copy(source_path, target["/tmp"])
-                    try:
-                        target.move("/tmp/" + group_name_old, target_path)
-                    except ValueError:
-                        del target[dest_path]
-                        target.move("/tmp/" + group_name_old, target_path)
-                    del target["/tmp"]
-
-        if file_name is None:
-            file_name = destination.file_name
-
-        if self.file_exists:
-            dest_path = (
-                destination.h5_path[1:]
-                if destination.h5_path[0] == "/"
-                else destination.h5_path
-            )
-            if self.file_name != file_name:
-                with open_hdf5(self.file_name, mode="r") as f_source:
-                    with open_hdf5(file_name, mode="a") as f_target:
-                        _internal_copy(
-                            source=f_source,
-                            source_path=self._h5_path,
-                            target=f_target,
-                            target_path=dest_path,
-                            maintain_flag=maintain_name,
-                        )
-            else:
-                with open_hdf5(file_name, mode="a") as f_target:
-                    _internal_copy(
-                        source=f_target,
-                        source_path=self._h5_path,
-                        target=f_target,
-                        target_path=dest_path,
-                        maintain_flag=maintain_name,
-                    )
-
-        return destination
-
     def create_group(self, name, track_order=False):
         """
         Create an HDF5 group - similar to a folder in the filesystem - the HDF5 groups allow the users to structure
@@ -534,7 +380,7 @@ class FileHDFio(HasGroups, MutableMapping):
             FileHDFio: FileHDFio object pointing to the new group
         """
         full_name = self._get_h5_path(name)
-        with open_hdf5(self.file_name, mode="a") as h:
+        with _open_hdf(self.file_name, mode="a") as h:
             try:
                 h.create_group(full_name, track_order=track_order)
             except ValueError:
@@ -547,7 +393,7 @@ class FileHDFio(HasGroups, MutableMapping):
         Remove an HDF5 group - if it exists. If the group does not exist no error message is raised.
         """
         try:
-            with open_hdf5(self.file_name, mode="a") as hdf_file:
+            with _open_hdf(self.file_name, mode="a") as hdf_file:
                 del hdf_file[self.h5_path]
         except KeyError:
             pass
@@ -673,22 +519,12 @@ class FileHDFio(HasGroups, MutableMapping):
             dict: {'groups': [list of groups], 'nodes': [list of nodes]}
         """
         if self.file_exists:
-            groups = set()
-            nodes = set()
-            with open_hdf5(self.file_name) as h:
-                try:
-                    h = h[self.h5_path]
-                    for k in h.keys():
-                        if isinstance(h[k], h5py.Group):
-                            groups.add(k)
-                        else:
-                            nodes.add(k)
-                except KeyError:
-                    pass
-            iopy_nodes = self._filter_io_objects(groups)
+            with _open_hdf(self.file_name) as hdf:
+                groups, nodes = list_groups_and_nodes(hdf=hdf, h5_path=self.h5_path)
+            iopy_nodes = self._filter_io_objects(set(groups))
             return {
-                "groups": sorted(list(groups - iopy_nodes)),
-                "nodes": sorted(list((nodes - groups).union(iopy_nodes))),
+                "groups": sorted(list(set(groups) - iopy_nodes)),
+                "nodes": sorted(list((set(nodes) - set(groups)).union(iopy_nodes))),
             }
         else:
             return {"groups": [], "nodes": []}
@@ -797,22 +633,12 @@ class FileHDFio(HasGroups, MutableMapping):
                 (set(hdf_old.list_nodes()) ^ set(check_nodes))
                 & set(hdf_old.list_nodes())
             )
-        for p in node_list:
-            hdf_new[p] = hdf_old[p]
+        hdf_new.write_dict(data_dict={p: hdf_old[p] for p in node_list})
         for p in group_list:
             h_new = hdf_new.create_group(p)
             ex_n = [e[-1] for e in exclude_nodes_split if p == e[0] or len(e) == 1]
             ex_g = [e[-1] for e in exclude_groups_split if p == e[0] or len(e) == 1]
             self.hd_copy(hdf_old[p], h_new, exclude_nodes=ex_n, exclude_groups=ex_g)
-        ### old ###
-        # for p in hdf_old.list_nodes():
-        #     if p not in exclude_nodes:
-        #         hdf_new[p] = hdf_old[p]
-        #
-        # for p in hdf_old.list_groups():
-        #     if p not in exclude_groups:
-        #         h_new = hdf_new.create_group(p)
-        #         self.hd_copy(hdf_old[p], h_new, exclude_groups=exclude_groups, exclude_nodes=exclude_nodes)
         return hdf_new
 
     @deprecate(job_name="ignored!", exclude_groups="ignored!", exclude_nodes="ignored!")
@@ -877,12 +703,6 @@ class FileHDFio(HasGroups, MutableMapping):
         del self.history
         del self._h5_path
 
-    def __enter__(self):
-        """
-        Compatibility function for the with statement
-        """
-        return self
-
     def __exit__(self, exc_type, exc_val, exc_tb):
         """
         Compatibility function for the with statement
@@ -903,30 +723,38 @@ class FileHDFio(HasGroups, MutableMapping):
         Returns:
             dict, list, float, int: data or data object
         """
-        return read_hdf5(self.file_name, title=self._get_h5_path(item))
+        return _read_hdf(hdf_filehandle=self.file_name, h5_path=self._get_h5_path(item))
 
-    # def _open_store(self, mode="r"):
-    #     """
-    #     Internal function to open the HDF5 file
-    #
-    #     Args:
-    #         mode (str): file mode can be either 'w': write, 'r': read or 'a': append
-    #     """
-    #     try:
-    #         if not self._store:
-    #             self._store = HDFStoreIO(self.file_name, mode=mode)
-    #     except AttributeError:
-    #         self._store = HDFStoreIO(self.file_name, mode=mode)
-    #
-    # def _close_store(self):
-    #     """
-    #     Internal function to close the HDF5 file
-    #     """
-    #     try:
-    #         self._store.close()
-    #         self._store = None
-    #     except AttributeError:
-    #         pass
+    def write_dict_to_hdf(self, data_dict):
+        """
+        Write a dictionary to HDF5
+
+        Args:
+            data_dict (dict): dictionary with objects which should be written to HDF5
+        """
+        self.write_dict(data_dict=data_dict)
+
+    def read_dict_from_hdf(self, group_paths=[], recursive=False):
+        """
+        Read data from HDF5 file into a dictionary - by default only the nodes are converted to dictionaries, additional
+        sub groups can be specified using the group_paths parameter.
+
+        Args:
+            group_paths (list): list of additional groups to be included in the dictionary, for example:
+                                ["input", "output", "output/generic"]
+                                These groups are defined relative to the h5_path.
+            recursive (bool): Load all subgroups recursively
+
+        Returns:
+            dict:     The loaded data. Can be of any type supported by ``write_hdf5``.
+        """
+        return read_dict_from_hdf(
+            file_name=self.file_name,
+            h5_path=self.h5_path,
+            group_paths=group_paths,
+            recursive=recursive,
+            slash="ignore",
+        )
 
     def create_project_from_hdf5(self):
         """
@@ -949,7 +777,7 @@ class FileHDFio(HasGroups, MutableMapping):
         Returns:
             str: combined path
         """
-        return posixpath.join(self.h5_path, name)
+        return get_h5_path(h5_path=self.h5_path, name=name)
 
     def _get_h5io_type(self, name):
         """
@@ -961,7 +789,7 @@ class FileHDFio(HasGroups, MutableMapping):
         Returns:
             str: h5io type
         """
-        with open_hdf5(self.file_name) as store:
+        with _open_hdf(self.file_name) as store:
             return str(store[self.h5_path][name].attrs.get("TITLE", ""))
 
     def _filter_io_objects(self, groups):
@@ -1093,8 +921,7 @@ class ProjectHDFio(FileHDFio):
     """
 
     def __init__(self, project, file_name, h5_path=None, mode=None):
-        file_name += ".h5" if not file_name.endswith(".h5") else ""
-        self._file_name = file_name.replace("\\", "/")
+        self._file_name = _get_safe_filename(file_name)
         if h5_path is None:
             h5_path = "/"
         self._project = project.copy()
@@ -1296,63 +1123,9 @@ class ProjectHDFio(FileHDFio):
         """
         Create the working directory on the file system if it does not exist already.
         """
-        if not os.path.isdir(self.working_directory):
-            os.makedirs(self.working_directory)
+        os.makedirs(self.working_directory, exist_ok=True)
 
-    def import_class(self, class_name):
-        """
-        Import given class from fully qualified name and return class object.
-
-        Args:
-            class_name (str): fully qualified name of a pyiron class
-
-        Returns:
-            type: class object of the given name
-        """
-        internal_class_name = class_name.split(".")[-1][:-2]
-        class_path = class_name.split()[-1].split(".")[:-1]
-        class_path[0] = class_path[0][1:]
-        class_module_path = ".".join(class_path)
-        if internal_class_name in self._project.job_type.job_class_dict:
-            module_path = self._project.job_type.job_class_dict[internal_class_name]
-            if class_module_path != module_path:
-                state.logger.info(
-                    f'Using registered module "{module_path}" instead of custom/old module "{class_module_path}" to'
-                    f' import job type "{internal_class_name}"!'
-                )
-        else:
-            module_path = class_module_path
-        return getattr(
-            importlib.import_module(module_path),
-            internal_class_name,
-        )
-
-    def create_instance(self, cls, **kwargs):
-        """
-        Create new instance of the given class from current group.
-
-        Uses the given **kwargs and a special classmethod "from_hdf_args" that
-        may be defined on cls to construct a dictionary of arguments and then
-        instatiate cls with them.
-
-        Args:
-            cls (type): pyiron type to instantiate
-            **kwargs: arguments for instance creation
-
-        Returns:
-            cls: instance of the given type
-        """
-
-        if hasattr(cls, "from_hdf_args"):
-            init_args = cls.from_hdf_args(self)
-        else:
-            init_args = {}
-
-        init_args.update(kwargs)
-
-        return cls(**init_args)
-
-    def to_object(self, class_name=None, **qwargs):
+    def to_object(self, class_name=None, **kwargs):
         """
         Load the full pyiron object from an HDF5 file
 
@@ -1360,40 +1133,13 @@ class ProjectHDFio(FileHDFio):
             class_name(str, optional): if the 'TYPE' node is not available in
                         the HDF5 file a manual object type can be set,
                         must be as reported by `str(type(obj))`
-            **qwargs: optional parameters optional parameters to override init
+            **kwargs: optional parameters optional parameters to override init
                       parameters
 
         Returns:
             pyiron object of the given class_name
         """
-        if "TYPE" not in self.list_nodes() and class_name is None:
-            raise ValueError("Objects can be only recovered from hdf5 if TYPE is given")
-        elif class_name is not None and class_name != self.get("TYPE"):
-            raise ValueError(
-                "Object type in hdf5-file must be identical to input parameter"
-            )
-        class_name = class_name or self.get("TYPE")
-        class_path = class_name.split("<class '")[-1].split("'>")[0]
-        class_convert_dict = {  # Fix backwards compatibility
-            "pyiron_base.generic.datacontainer.DataContainer": "pyiron_base.storage.datacontainer.DataContainer",
-            "pyiron_base.generic.inputlist.InputList": "pyiron_base.storage.inputlist.InputList",
-            "pyiron_base.generic.flattenedstorage.FlattenedStorage": "pyiron_base.storage.flattenedstorage.FlattenedStorage",
-        }
-        if class_path in class_convert_dict.keys():
-            class_name_new = "<class '" + class_convert_dict[class_path] + "'>"
-            class_object = self.import_class(class_name_new)
-        elif not class_path.startswith("abc."):
-            class_object = self.import_class(class_name)
-        else:
-            class_object = class_constructor(cp=JOB_DYN_DICT[class_path.split(".")[-1]])
-
-        # Backwards compatibility since the format of TYPE changed
-        if class_name != str(class_object):
-            self["TYPE"] = str(class_object)
-
-        obj = self.create_instance(class_object, **qwargs)
-        obj.from_hdf(hdf=self.open(".."), group_name=self.h5_path.split("/")[-1])
-        return obj
+        return _to_object(self, class_name, **kwargs)
 
     def get_job_id(self, job_specifier):
         """
@@ -1475,41 +1221,235 @@ class ProjectHDFio(FileHDFio):
         return self._project.__class__(path=self.file_path)
 
 
-def read_hdf5(fname, title="h5io", slash="ignore"):
-    return retry(
-        lambda: h5io.read_hdf5(
-            fname=fname,
-            title=title,
-            slash=slash,
-        ),
-        error=BlockingIOError,
-        msg=f"Two or more processes tried to access the file {fname}.",
-        at_most=10,
-        delay=1,
-    )
+class DummyHDFio(HasGroups):
+    """
+    A dummy ProjectHDFio implementation to serialize objects into a dict
+    instead of a HDF5 file.
+
+    It is modeled after ProjectHDFio, but supports just enough methods to
+    successfully write objects.
+
+    After all desired objects have been written to it, you may extract a pure
+    dict from with with `.to_dict`.
+
+    A simple example for storing data containers:
+
+    >>> from pyiron_base import DataContainer, Project
+    >>> pr = Project(...)
+    >>> hdf = DummyHDFio(pr, '/', {})
+    >>> d = DataContainer({'a': 42, 'b':{'c':4, 'g':33}})
+    >>> d.to_hdf(hdf)
+    >>> hdf.to_dict()
+    {'READ_ONLY': False,
+     'a__index_0': 42,
+     'b__index_1': {
+         'READ_ONLY': False,
+         'c__index_0': 4,
+         'g__index_1': 33,
+         'NAME': 'DataContainer',
+         'TYPE': "<class
+         'pyiron_base.storage.datacontainer.DataContainer'>",
+         'OBJECT': 'DataContainer',
+         'VERSION': '0.1.0',
+         'HDF_VERSION': '0.2.0'
+     },
+     'NAME': 'DataContainer',
+     'TYPE': "<class
+     'pyiron_base.storage.datacontainer.DataContainer'>",
+     'OBJECT': 'DataContainer',
+     'VERSION': '0.1.0',
+     'HDF_VERSION': '0.2.0'}
+    """
+
+    def __init__(self, project, h5_path: str, cont: Optional[dict] = None, root=None):
+        """
+
+        Args:
+            project (Project): the project this object should advertise itself
+                               belong to; in practice it is not often used for
+                               writing objects
+            h5_path (str): the path of the HDF group this object fakes
+            cont (dict, optional): dict to save written values into, make a new
+                                   one if not given
+            root (DummyHDFio, optional): if this object will be a child of
+                                         another one, the parent must be passed
+                                         here, to make hdf['..'] work.
+        """
+        self._project = project
+        self._dict = cont or {}
+        self._h5_path = h5_path
+        self._root = root
+
+    def __getitem__(self, item: str) -> Union["DummyHDFio", Any]:
+        """
+        Return a value from storage.
+
+        If `item` is in :meth:`.list_groups()` this must return another :class:`.GenericStorage`.
+
+        Args:
+            item (str): name of value
+
+        Returns:
+            :class:`.GenericStorage`: if `item` refers to a sub group
+            object: value that is stored under `item`
+
+        Raises:
+            ValueError: `item` is neither a node or a sub group of this group
+        """
+        try:
+            v = self._dict[item]
+            if isinstance(v, DummyHDFio) and v._empty():
+                raise KeyError()
+            else:
+                return v
+        except KeyError:
+            if item == "..":
+                return self._root
+            # compat with ProjectHDFio with for some reasons raises ValueErrors
+            raise ValueError(item) from None
+
+    def get(self, key, default=None):
+        """
+        Internal wrapper function for __getitem__() - self[name]
+
+        Args:
+            key (str, slice): path to the data or key of the data object
+            default (object): default value to return if key doesn't exist
+
+        Returns:
+            dict, list, float, int: data or data object
+        """
+        try:
+            return self[key]
+        except ValueError:
+            if default is not None:
+                return default
+            else:
+                raise
+
+    def __setitem__(self, item: str, value: Any):
+        self._dict[item] = value
+
+    def create_group(self, name: str):
+        """
+        Create a new sub group.
+
+        Args:
+            name (str): name of the new group
+        """
+        if name == "..":
+            return self._root
+        d = self._dict.get(name, None)
+        if d is None:
+            self._dict[name] = d = type(self)(
+                self.project, os.path.join(self.h5_path, name), cont={}, root=self
+            )
+        elif isinstance(d, DummyHDFio):
+            pass
+        else:
+            raise RuntimeError(f"'{name}' is already a node!")
+        return d
+
+    def _list_nodes(self):
+        return [k for k, v in self._dict.items() if not isinstance(v, DummyHDFio)]
+
+    def _list_groups(self):
+        return [
+            k
+            for k, v in self._dict.items()
+            if isinstance(v, DummyHDFio) and not v._empty()
+        ]
+
+    def __contains__(self, item):
+        return item in self._dict
+
+    @property
+    def project(self):
+        return self._project
+
+    @property
+    def h5_path(self):
+        return self._h5_path
+
+    def open(self, name: str) -> "DummyHDFio":
+        """
+        Descend into a sub group.
+
+        If `name` does not exist yet, create a new group.  Calling :meth:`~.close` on the returned object returns this
+        object.
+
+        Args:
+            name (str): name of sub group
+
+        Returns:
+            :class:`.GenericStorage`: sub group
+        """
+        # FIXME: what if name in self.list_nodes()
+        new = self.create_group(name)
+        new._prev = self
+        return new
+
+    def close(self) -> "DummyHDFio":
+        """
+        Surface from a sub group.
+
+        If this object was not returned from a previous call to :meth:`.open` it returns itself silently.
+        """
+        try:
+            return self._prev
+        except AttributeError:
+            return self
+
+    def __enter__(self):
+        """
+        Compatibility function for the with statement
+        """
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        """
+        Compatibility function for the with statement
+        """
+        self.close()
+
+    def to_dict(self) -> dict:
+        def unwrap(v):
+            if isinstance(v, DummyHDFio):
+                return v.to_dict()
+            return v
+
+        return {k: unwrap(v) for k, v in self._dict.items()}
+
+    def to_object(self, class_name=None, **kwargs):
+        """
+        Load the full pyiron object from an HDF5 file
+
+        Args:
+            class_name(str, optional): if the 'TYPE' node is not available in
+                        the HDF5 file a manual object type can be set,
+                        must be as reported by `str(type(obj))`
+            **kwargs: optional parameters optional parameters to override init
+                      parameters
+
+        Returns:
+            pyiron object of the given class_name
+        """
+        return _to_object(self, class_name, **kwargs)
+
+    def _empty(self):
+        if len(self._dict) == 0:
+            return True
+        return len(self.list_nodes()) == 0 and all(
+            self[g]._empty() for g in self.list_groups()
+        )
 
 
-def write_hdf5(
-    fname,
-    data,
-    overwrite=False,
-    compression=4,
-    title="h5io",
-    slash="error",
-    use_json=False,
-):
-    retry(
-        lambda: h5io.write_hdf5(
-            fname=fname,
-            data=data,
-            overwrite=overwrite,
-            compression=compression,
-            title=title,
-            slash=slash,
-            use_json=use_json,
-        ),
-        error=BlockingIOError,
-        msg=f"Two or more processes tried to access the file {fname}.",
-        at_most=10,
-        delay=1,
+def _get_safe_filename(file_name):
+    file_path_no_ext, file_ext = os.path.splitext(file_name)
+    file_path = os.path.dirname(file_path_no_ext)
+    file_name_no_ext = os.path.basename(file_path_no_ext)
+    file_name = os.path.join(
+        file_path, _get_safe_job_name(name=file_name_no_ext) + file_ext
     )
+    file_name += ".h5" if not file_name.endswith(".h5") else ""
+    return file_name.replace("\\", "/")

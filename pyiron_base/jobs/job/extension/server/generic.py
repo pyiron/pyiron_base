@@ -5,11 +5,17 @@
 Server object class which is connected to each job containing the technical details how the job is executed.
 """
 
-from collections import OrderedDict
+from concurrent.futures import Executor, Future
 import numbers
-from pyiron_base.state import state
-from pyiron_base.jobs.job.extension.server.runmode import Runmode
 import socket
+from typing import Union
+
+from pyiron_base.state import state
+from pyiron_base.interfaces.lockable import Lockable, sentinel
+from pyiron_base.interfaces.has_dict import HasDict
+from pyiron_base.utils.deprecate import deprecate
+from pyiron_base.utils.instance import static_isinstance
+from pyiron_base.jobs.job.extension.server.runmode import Runmode
 
 __author__ = "Jan Janssen"
 __copyright__ = (
@@ -23,7 +29,9 @@ __status__ = "production"
 __date__ = "Sep 1, 2017"
 
 
-class Server:  # add the option to return the job id and the hold id to the server object
+class Server(
+    Lockable, HasDict
+):  # add the option to return the job id and the hold id to the server object
     """
     Generic Server object to handle the execution environment for the job
 
@@ -71,17 +79,37 @@ class Server:  # add the option to return the job id and the hold id to the serv
         .. attribute:: new_hdf
 
             defines whether a subjob should be stored in the same HDF5 file or in a new one.
+
+        .. attribute:: executor
+
+            the executor can be used to execute the job object
+
+        .. attribute:: future
+
+            the concurrent.futures.Future object for monitoring the execution of the job object
     """
 
     def __init__(
-        self, host=None, queue=None, cores=1, threads=1, run_mode="modal", new_hdf=True
+        self,
+        host=None,
+        queue=None,
+        cores=1,
+        threads=1,
+        gpus=None,
+        run_mode="modal",
+        new_hdf=True,
     ):
+        super().__init__()
         self._cores = cores
         self._threads = threads
+        self._active_queue = None
+        self._gpus = gpus
         self._run_time = None
         self._memory_limit = None
         self._host = self._init_host(host=host)
         self._run_mode = Runmode()
+        self._executor: Union[Executor, None] = None
+        self._future: Union[Future, None] = None
 
         self.queue = queue
 
@@ -94,6 +122,9 @@ class Server:  # add the option to return the job id and the hold id to the serv
         self._send_to_db = False
         self._structure_id = None
         self._accept_crash = False
+        self._environment_name = None
+        self._environment_path = None
+        self.additional_arguments = {}
 
     @property
     def send_to_db(self):
@@ -106,6 +137,7 @@ class Server:  # add the option to return the job id and the hold id to the serv
         return self._send_to_db
 
     @send_to_db.setter
+    @sentinel
     def send_to_db(self, send):
         """
         Set the boolean option to decide which jobs should be store in the external/public database
@@ -120,6 +152,7 @@ class Server:  # add the option to return the job id and the hold id to the serv
         return self._accept_crash
 
     @accept_crash.setter
+    @sentinel
     def accept_crash(self, accept):
         self._accept_crash = accept
 
@@ -134,6 +167,7 @@ class Server:  # add the option to return the job id and the hold id to the serv
         return self._structure_id
 
     @structure_id.setter
+    @sentinel
     def structure_id(self, structure_id):
         """
         Set the structure ID to be linked to an external/public database
@@ -154,6 +188,7 @@ class Server:  # add the option to return the job id and the hold id to the serv
         return self._active_queue
 
     @queue.setter
+    @sentinel
     def queue(self, new_scheduler):
         """
         Set a queue for the current simulation, by choosing one of the options
@@ -212,6 +247,7 @@ class Server:  # add the option to return the job id and the hold id to the serv
         return self._queue_id
 
     @queue_id.setter
+    @sentinel
     def queue_id(self, qid):
         """
         Set the queue ID
@@ -223,11 +259,45 @@ class Server:  # add the option to return the job id and the hold id to the serv
 
     @property
     def threads(self):
+        """
+        The number of threads selected for the current simulation
+
+        Returns:
+            (int): number of threads
+        """
         return self._threads
 
     @threads.setter
+    @sentinel
     def threads(self, number_of_threads):
+        """
+        The number of threads selected for the current simulation
+
+        Args:
+            number_of_threads (int): number of threads
+        """
         self._threads = number_of_threads
+
+    @property
+    def gpus(self):
+        """
+        Total number of GPUs to use for this calculation.
+
+        Returns:
+            int: Total number of GPUs to use for this calculation.
+        """
+        return self._gpus
+
+    @gpus.setter
+    @sentinel
+    def gpus(self, number_of_gpus):
+        """
+        Total number of GPUs to use for this calculation.
+
+        Args:
+            number_of_gpus (int): Total number of GPUs to use for this calculation.
+        """
+        self._gpus = number_of_gpus
 
     @property
     def cores(self):
@@ -240,6 +310,7 @@ class Server:  # add the option to return the job id and the hold id to the serv
         return self._cores
 
     @cores.setter
+    @sentinel
     def cores(self, new_cores):
         """
         The number of cores selected for the current simulation
@@ -279,6 +350,7 @@ class Server:  # add the option to return the job id and the hold id to the serv
         return self._run_time
 
     @run_time.setter
+    @sentinel
     def run_time(self, new_run_time):
         """
         The run time in seconds selected for the current simulation
@@ -310,6 +382,7 @@ class Server:  # add the option to return the job id and the hold id to the serv
         return self._memory_limit
 
     @memory_limit.setter
+    @sentinel
     def memory_limit(self, limit):
         if state.queue_adapter is not None and self._active_queue is not None:
             memory_max = state.queue_adapter.check_queue_parameters(
@@ -332,17 +405,20 @@ class Server:  # add the option to return the job id and the hold id to the serv
         Get the run mode of the job
 
         Returns:
-            (str/pyiron_base.server.runmode.Runmode): ['modal', 'non_modal', 'queue', 'manual']
+            (str/pyiron_base.server.runmode.Runmode): ['modal', 'non_modal', 'queue', 'manual', 'thread', 'worker',
+                        'interactive', 'interactive_non_modal', 'srun', 'executor']
         """
         return self._run_mode
 
     @run_mode.setter
+    @sentinel
     def run_mode(self, new_mode):
         """
         Set the run mode of the job
 
         Args:
-            new_mode (str): ['modal', 'non_modal', 'queue', 'manual']
+            new_mode (str): ['modal', 'non_modal', 'queue', 'manual', 'thread', 'worker', 'interactive',
+                        'interactive_non_modal', 'srun', 'executor']
         """
         self._run_mode.mode = new_mode
         if new_mode == "queue":
@@ -363,6 +439,7 @@ class Server:  # add the option to return the job id and the hold id to the serv
         return self._new_hdf
 
     @new_hdf.setter
+    @sentinel
     def new_hdf(self, new_hdf_bool):
         """
         New_hdf5 defines whether a subjob should be stored in the same HDF5 file or in a new one.
@@ -397,6 +474,107 @@ class Server:  # add the option to return the job id and the hold id to the serv
         """
         return self.view_queues()
 
+    @property
+    def executor(self) -> Union[Executor, None]:
+        """
+        Executor to execute the job object this server object is attached to in the background.
+
+        Returns:
+            concurrent.futures.Executor:
+        """
+        if not self.run_mode.executor and self._executor is not None:
+            self._executor = None
+        return self._executor
+
+    @executor.setter
+    @sentinel
+    def executor(self, exe: Union[Executor, None]):
+        """
+        Executor to execute the job object this server object is attached to in the background.
+
+        Args:
+            exe (concurrent.futures.Executor):
+        """
+        if isinstance(exe, Executor):
+            self.run_mode.executor = True
+        elif static_isinstance(exe, "flux.job.executor.FluxExecutor"):
+            self.run_mode.executor = True
+        elif exe is None and self.run_mode.executor:
+            self.run_mode.modal = True
+        elif exe is not None:
+            raise TypeError(
+                "The executor has to be derived from the concurrent.futures.Executor class."
+            )
+        self._executor = exe
+
+    @property
+    def future(self) -> Union[Future, None]:
+        """
+        Python concurrent.futures.Future object to track the status of the execution of the job this server object is
+        attached to. This is an internal pyiron feature and most users never have to interact with the future object
+        directly.
+
+        Returns:
+             concurrent.futures.Future: future object to track the status of the execution
+        """
+        return self._future
+
+    # We don't wrap future in sentinel, to allow it later to be dropped to
+    # None, once execution is finished
+    @future.setter
+    def future(self, future_obj: Future):
+        """
+        Set a python concurrent.futures.Future object to track the status of the execution of the job this server object
+        is attached to. This is an internal pyiron feature and most users never have to interact with the future object
+        directly.
+
+        Args:
+            future_obj (concurrent.futures.Future): future object to track the status of the execution
+        """
+        self._future = future_obj
+
+    @property
+    def conda_environment_name(self):
+        """
+        Get name of the conda environment the job should be executed in.
+
+        Returns:
+            str: name of the conda environment
+        """
+        return self._environment_name
+
+    @conda_environment_name.setter
+    @sentinel
+    def conda_environment_name(self, environment_name):
+        """
+        Set name of the conda environment the job should be executed in.
+
+        Args:
+            environment_name (str): name of the conda environment
+        """
+        self._environment_name = environment_name
+
+    @property
+    def conda_environment_path(self):
+        """
+        Get path of the conda environment the job should be executed in.
+
+        Returns:
+            str: path of the conda environment
+        """
+        return self._environment_path
+
+    @conda_environment_path.setter
+    @sentinel
+    def conda_environment_path(self, environment_path):
+        """
+        Set path of the conda environment the job should be executed in.
+
+        Args:
+            environment_path (str): path of the conda environment
+        """
+        self._environment_path = environment_path
+
     @staticmethod
     def list_queues():
         """
@@ -423,69 +601,90 @@ class Server:  # add the option to return the job id and the hold id to the serv
         else:
             return None
 
+    def to_dict(self):
+        server_dict = self._type_to_dict()
+        server_dict.update(
+            {
+                "user": self._user,
+                "host": self._host,
+                "run_mode": self.run_mode.mode,
+                "queue": self.queue,
+                "qid": self._queue_id,
+                "cores": self.cores,
+                "threads": self.threads,
+                "new_h5": self.new_hdf,
+                "structure_id": self.structure_id,
+                "run_time": self.run_time,
+                "memory_limit": self.memory_limit,
+                "accept_crash": self.accept_crash,
+            }
+        )
+        if len(self.additional_arguments) > 0:
+            server_dict["additional_arguments"] = self.additional_arguments
+        if self._gpus is not None:
+            server_dict["gpus"] = self._gpus
+        if self._environment_name is not None:
+            server_dict["conda_environment_name"] = self._environment_name
+        if self._environment_path is not None:
+            server_dict["conda_environment_path"] = self._environment_path
+        return server_dict
+
+    def from_dict(self, server_dict):
+        self._user = server_dict["user"]
+        self._host = server_dict["host"]
+        self._run_mode.mode = server_dict["run_mode"]
+        if self.run_mode.queue:
+            self._active_queue = server_dict["queue"]
+            if "qid" in server_dict.keys():
+                self._queue_id = server_dict["qid"]
+            else:
+                self._queue_id = None
+        self._cores = server_dict["cores"]
+        h5_mapping = {
+            "structure_id": "_structure_id",
+            "run_time": "_run_time",
+            "memory_limit": "_memory_limit",
+            "threads": "_threads",
+            "additional_arguments": "additional_arguments",
+            "gpus": "_gpus",
+            "conda_environment_name": "_environment_name",
+            "conda_environment_path": "_environment_path",
+        }
+        for h5_key, obj_attr in h5_mapping.items():
+            if h5_key in server_dict.keys():
+                setattr(self, obj_attr, server_dict[h5_key])
+
+        if "accept_crash" in server_dict.keys():
+            self._accept_crash = server_dict["accept_crash"] == 1
+        self._new_hdf = server_dict["new_h5"] == 1
+
+    @deprecate(message="Use job.server.to_dict() instead of to_hdf()", version=0.9)
     def to_hdf(self, hdf, group_name=None):
         """
         Store Server object in HDF5 file
-
         Args:
             hdf: HDF5 object
             group_name (str): node name in the HDF5 file
         """
-        hdf_dict = OrderedDict()
-        hdf_dict["user"] = self._user
-        hdf_dict["host"] = self._host
-        hdf_dict["run_mode"] = self.run_mode.mode
-        hdf_dict["queue"] = self.queue
-        hdf_dict["qid"] = self._queue_id
-        hdf_dict["cores"] = self.cores
-        hdf_dict["threads"] = self.threads
-        hdf_dict["new_h5"] = self.new_hdf
-        hdf_dict["structure_id"] = self.structure_id
-        hdf_dict["run_time"] = self.run_time
-        hdf_dict["memory_limit"] = self.memory_limit
-        hdf_dict["accept_crash"] = self.accept_crash
-
         if group_name is not None:
             with hdf.open(group_name) as hdf_group:
-                hdf_group["server"] = hdf_dict
+                hdf_group["server"] = self.to_dict()
         else:
-            hdf["server"] = hdf_dict
+            hdf["server"] = self.to_dict()
 
+    @deprecate(message="Use job.server.from_dict() instead of from_hdf()", version=0.9)
     def from_hdf(self, hdf, group_name=None):
         """
         Recover Server object in HDF5 file
-
         Args:
             hdf: HDF5 object
             group_name: node name in the HDF5 file
-
         """
         if group_name is not None:
             with hdf.open(group_name) as hdf_group:
-                hdf_dict = hdf_group["server"]
+                self.from_dict(server_dict=hdf_group["server"])
         else:
-            hdf_dict = hdf["server"]
-        self._user = hdf_dict["user"]
-        self._host = hdf_dict["host"]
-        self._run_mode.mode = hdf_dict["run_mode"]
-        if self.run_mode.queue:
-            self._active_queue = hdf_dict["queue"]
-            if "qid" in hdf_dict.keys():
-                self._queue_id = hdf_dict["qid"]
-            else:
-                self._queue_id = None
-        if "structure_id" in hdf_dict.keys():
-            self._structure_id = hdf_dict["structure_id"]
-        self._cores = hdf_dict["cores"]
-        if "run_time" in hdf_dict.keys():
-            self._run_time = hdf_dict["run_time"]
-        if "memory_limit" in hdf_dict.keys():
-            self._memory_limit = hdf_dict["memory_limit"]
-        if "accept_crash" in hdf_dict.keys():
-            self._accept_crash = hdf_dict["accept_crash"] == 1
-        if "threads" in hdf_dict.keys():
-            self._threads = hdf_dict["threads"]
-        self._new_hdf = hdf_dict["new_h5"] == 1
+            self.from_dict(server_dict=hdf["server"])
 
     def db_entry(self):
         """

@@ -11,5 +11,5 @@ class TestTestWithProject(TestWithCleanProject):
         self.assertEqual(
             dirname(abspath(__file__)).replace("\\", "/"),
             self.file_location,
-            msg="Projects will not be instantiated where their invoking script is."
+            msg="Projects will not be instantiated where their invoking script is.",
         )

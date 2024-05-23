@@ -6,6 +6,7 @@
 Utility functions used in pyiron.
 In order to be accessible from anywhere in pyiron, they *must* remain free of any imports from pyiron!
 """
+
 import functools
 from itertools import count
 import time
@@ -92,7 +93,7 @@ class ImportAlarm:
         return self
 
     def __exit__(self, exc_type, exc_value, traceback):
-        if exc_type == exc_value == traceback == None:
+        if exc_type is None and exc_value is None and traceback is None:
             # import successful, so silence our warning
             self.message = None
             return

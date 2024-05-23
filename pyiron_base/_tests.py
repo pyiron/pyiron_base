@@ -9,10 +9,11 @@ import doctest
 from io import StringIO
 import unittest
 import os
-from pyiron_base import PythonTemplateJob
+from pyiron_base import PythonTemplateJob, state
 from pyiron_base.project.generic import Project
 from abc import ABC
 from inspect import getfile
+import numpy as np
 
 
 __author__ = "Liam Huber"
@@ -28,16 +29,35 @@ __date__ = "Mar 23, 2021"
 
 
 class PyironTestCase(unittest.TestCase, ABC):
+    """
+    Base class for all pyiron unit tets.
 
+    Registers utility type equality functions:
+        - np.testing.assert_array_equal
+
+    Optionally includes testing the docstrings in the specified module by
+    overloading :attr:`~.docstring_module`.
     """
-    Tests that also include testing the docstrings in the specified modules
-    """
+
+    def setUp(self):
+        self.addTypeEqualityFunc(np.ndarray, self._assert_equal_numpy)
+
+    def _assert_equal_numpy(self, a, b, msg=None):
+        try:
+            np.testing.assert_array_equal(a, b, err_msg=msg)
+        except AssertionError as e:
+            raise self.failureException(*e.args) from None
 
     @classmethod
     def setUpClass(cls):
+        cls._initial_settings_configuration = state.settings.configuration.copy()
         if any([cls is c for c in _TO_SKIP]):
             raise unittest.SkipTest(f"{cls.__name__} tests, it's a base class")
         super().setUpClass()
+
+    @classmethod
+    def tearDownClass(cls) -> None:
+        state.update(cls._initial_settings_configuration)
 
     @property
     def docstring_module(self):
@@ -73,6 +93,7 @@ class TestWithProject(PyironTestCase, ABC):
 
     @classmethod
     def tearDownClass(cls):
+        super().tearDownClass()
         cls.project.remove(enable=True)
         try:
             os.remove(os.path.join(cls.file_location, "pyiron.log"))
@@ -86,6 +107,7 @@ class TestWithCleanProject(TestWithProject, ABC):
     """
 
     def tearDown(self):
+        super().tearDown()
         self.project.remove_jobs(recursive=True, progress=False, silently=True)
 
 
@@ -120,7 +142,6 @@ class ToyJob(PythonTemplateJob):
 
 
 class TestWithFilledProject(TestWithProject, ABC):
-
     """
     Tests that creates a projects, creates jobs and sub jobs in it, and at the end of unit testing,
     removes the project.
@@ -135,12 +156,19 @@ class TestWithFilledProject(TestWithProject, ABC):
         job.run()
         job.status.aborted = True
 
-        with cls.project.open("sub_project") as pr_sub:
-            job = pr_sub.create_job(job_type=ToyJob, job_name="toy_1")
-            job.run()
-            job = pr_sub.create_job(job_type=ToyJob, job_name="toy_2")
-            job.run()
-            job.status.suspended = True
+        cls.pr_sub = cls.project.open("sub_project")
+        job = cls.pr_sub.create_job(job_type=ToyJob, job_name="toy_1")
+        job.run()
+        job = cls.pr_sub.create_job(job_type=ToyJob, job_name="toy_2")
+        job.run()
+        job.status.suspended = True
+        job = cls.pr_sub.create_job(job_type=ToyJob, job_name="toy_3")
+        job.run()
+
+        cls.n_jobs_filled_with = 5
+        # In a number of tests we compare the found jobs to an expected number of jobs
+        # Let's code that number once here instead of magic-numbering it throughout
+        # the tests
 
 
 _TO_SKIP = [

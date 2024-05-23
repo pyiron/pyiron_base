@@ -35,7 +35,7 @@ def register(parser):
     parser.add_argument(
         "-u",
         "--url",
-        default="https://github.com/pyiron/pyiron-resources/releases/download/0.0.3/resources-0.0.3.tar.gz",
+        default="https://github.com/pyiron/pyiron-resources/releases/latest/download/resources.tar.gz",
         help="url to download zipped resources",
     )
     parser.add_argument(

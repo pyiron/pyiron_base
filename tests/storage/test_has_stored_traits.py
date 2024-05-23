@@ -12,7 +12,7 @@ from traitlets import (
     TraitError,
     TraitType,
     Unicode,
-    validate
+    validate,
 )
 
 from pyiron_base._tests import TestWithProject
@@ -30,7 +30,7 @@ class Omelette(HasStoredTraits):
     acceptable = Bool()
     ingredients = List(default_value=[], trait=Unicode())
 
-    @default('acceptable')
+    @default("acceptable")
     def wait_for_a_complaint(self):
         """
         Default values can be assigned using the keyword, for mutable defaults always use a separate function decorated
@@ -38,20 +38,20 @@ class Omelette(HasStoredTraits):
         """
         return True
 
-    @validate('n_eggs')
+    @validate("n_eggs")
     def _gotta_crack_some_eggs(self, proposal):
         """
         Validation proposals have the keys `['trait', 'value', 'owner']`.
         The returned value is assigned to the trait, so you can do coercion here, or if all is well simply
         return `proposal['value']`
         """
-        if proposal['value'] <= 0:
+        if proposal["value"] <= 0:
             raise TraitError(
                 f"You gotta crack some eggs to make a omelette, but asked for {proposal['value']}."
             )
-        return proposal['value']
+        return proposal["value"]
 
-    @observe('ingredients')
+    @observe("ingredients")
     def _picky_eater(self, change):
         """
         Observation changes have the keys `['name', 'old', 'new', 'owner', 'type']`.
@@ -59,9 +59,9 @@ class Omelette(HasStoredTraits):
         `self.observe(_picky_eater, names=['ingredients']`.
         They don't need to return anything.
         """
-        wont_eat = ['mushrooms', 'zucchini']
+        wont_eat = ["mushrooms", "zucchini"]
         for picky in wont_eat:
-            if picky in change['new']:
+            if picky in change["new"]:
                 self.acceptable = False
 
 
@@ -72,9 +72,10 @@ class Beverage(HasHDF):
     handle, or they'll need to have `to_hdf` and `from_hdf` methods, e.g. by inheriting from `pyiron_base.HasHDF` or
     `pyiron_base.HasStorage`.
     """
-    _types = ['coffee', 'tea', 'orange juice', 'water']
 
-    def __init__(self, type_='coffee'):
+    _types = ["coffee", "tea", "orange juice", "water"]
+
+    def __init__(self, type_="coffee"):
         if type_ not in self._types:
             raise ValueError(f"The beverage type must be chosen from {self._types}")
         self.type_ = type_
@@ -83,10 +84,10 @@ class Beverage(HasHDF):
         return self.type_
 
     def _to_hdf(self, hdf):
-        hdf['drink_type'] = self.type_
+        hdf["drink_type"] = self.type_
 
     def _from_hdf(self, hdf, version=None):
-        self.type_ = hdf['drink_type']
+        self.type_ = hdf["drink_type"]
 
 
 class CaffeinatedTrait(TraitType):
@@ -99,9 +100,10 @@ class CaffeinatedTrait(TraitType):
 
     (This is not well documented in readthedocs for traitlets, but is easy to see in the source code for `TraitType`)
     """
+
     # default_value = Beverage('coffee')  # DON'T DO THIS WITH MUTABLE DEFAULTS
     def make_dynamic_default(self):  # Do this instead
-        return Beverage('coffee')
+        return Beverage("coffee")
 
     def validate(self, obj, value):
         """
@@ -112,7 +114,7 @@ class CaffeinatedTrait(TraitType):
         """
         if not isinstance(value, Beverage):
             self.error(obj, value)
-        elif value.type_ not in ['coffee', 'tea']:
+        elif value.type_ not in ["coffee", "tea"]:
             raise TraitError(f"Expected a caffeinated beverage, but got {value.type_}")
         return value
 
@@ -123,23 +125,24 @@ class HasDrink(HasStoredTraits):
     to the `Instance` trait type. In this case we can accomplish the same functionality with `@default` and
     `@validate` decorators.
     """
+
     drink1 = CaffeinatedTrait()
     drink2 = Instance(klass=Beverage)
 
-    @default('drink2')
+    @default("drink2")
     def _default_drink2(self):
         """
         Similar to the danger with a custom `TraitType`, we can't just use
         """
-        return Beverage('orange juice')
+        return Beverage("orange juice")
 
-    @validate('drink2')
+    @validate("drink2")
     def _non_caffeinated(self, proposal):
-        if proposal['value'].type_ not in ['orange juice', 'water']:
+        if proposal["value"].type_ not in ["orange juice", "water"]:
             raise TraitError(
                 f"Expected a beverage of type 'orange juice' or 'water', but got {proposal['value'].type_}"
             )
-        return proposal['value']
+        return proposal["value"]
 
 
 class ComposedBreakfast(Omelette, HasDrink):
@@ -148,6 +151,7 @@ class ComposedBreakfast(Omelette, HasDrink):
     Just don't forget to call `super().__init__(*args, **kwargs)` any time you override `__init__` to make sure
     initialization of the traits gets passed through the MRO appropriately.
     """
+
     pass
 
 
@@ -158,21 +162,20 @@ class NestedBreakfast(Omelette):
     Again, since our trait is an instance of something mutable, we want to use the `@default` decorator instead of the
     `default_value` kwarg.
     """
+
     drinks = Instance(klass=HasDrink)
 
-    @default('drinks')
+    @default("drinks")
     def _drinks_default(self):
         return HasDrink()
 
 
 class TestInput(TestWithProject):
-    @classmethod
-    def setUpClass(cls):
-        super().setUpClass()
-
     def setUp(self) -> None:
         super().setUp()
-        self.hdf = self.project.create_hdf(path=self.project.path, job_name='h5_storage')
+        self.hdf = self.project.create_hdf(
+            path=self.project.path, job_name="h5_storage"
+        )
         self.omelette = Omelette()
         self.drinks = HasDrink()
 
@@ -195,15 +198,21 @@ class TestInput(TestWithProject):
 
         with self.subTest("Test standard coercion"):
             self.omelette.ingredients = "ham"
-            self.assertEqual(['ham'], self.omelette.ingredients, msg="Simple assignments to list are coerced")
-            self.omelette.ingredients = ('cheese', 'ham')
             self.assertEqual(
-                ['cheese', 'ham'],
+                ["ham"],
                 self.omelette.ingredients,
-                msg="This coercion is a bit flexible"
+                msg="Simple assignments to list are coerced",
+            )
+            self.omelette.ingredients = ("cheese", "ham")
+            self.assertEqual(
+                ["cheese", "ham"],
+                self.omelette.ingredients,
+                msg="This coercion is a bit flexible",
             )
 
-        with self.subTest("But *because we specified our trait type*, not just any list will do"):
+        with self.subTest(
+            "But *because we specified our trait type*, not just any list will do"
+        ):
             with self.assertRaises(TraitError):
                 self.omelette.ingredients = [5]
 
@@ -217,38 +226,40 @@ class TestInput(TestWithProject):
             with self.assertRaises(TraitError):
                 self.drinks.drink2 = "not a beverage"
             with self.assertRaises(TraitError):
-                self.drinks.drink1 = Beverage('water')  # Not caffeinated
+                self.drinks.drink1 = Beverage("water")  # Not caffeinated
             with self.assertRaises(TraitError):
-                self.drinks.drink2 = Beverage('coffee')  # Caffeinated
+                self.drinks.drink2 = Beverage("coffee")  # Caffeinated
 
     def test_observe(self):
         with self.subTest("Observe catches modifications to the trait value"):
             self.assertEqual(True, self.omelette.acceptable)
-            self.omelette.ingredients = ['ham', 'mushrooms']
+            self.omelette.ingredients = ["ham", "mushrooms"]
             self.assertEqual(False, self.omelette.acceptable)
 
         with self.subTest(
-                "But not at instantiation, which [is tricky](https://github.com/ipython/traitlets/issues/389)"
+            "But not at instantiation, which [is tricky](https://github.com/ipython/traitlets/issues/389)"
         ):
-            omelette2 = Omelette(ingredients=['ham', 'mushrooms'])
+            omelette2 = Omelette(ingredients=["ham", "mushrooms"])
             self.assertEqual(False, omelette2.acceptable)
 
         with self.subTest("And changes within mutable types are ignored"):
             another_omelette = Omelette()
-            another_omelette.ingredients.append('zucchini')
+            another_omelette.ingredients.append("zucchini")
             self.assertEqual(True, another_omelette.acceptable)
 
     def test_architectures_and_mutability(self):
         cb = ComposedBreakfast()
         nb = NestedBreakfast()
 
-        with self.subTest("Make sure our mutable defaults for the custom trait are separate instances"):
+        with self.subTest(
+            "Make sure our mutable defaults for the custom trait are separate instances"
+        ):
             self.assertNotEqual(cb.drink1, nb.drinks.drink1)
-            cb.drink1.type_ = 'tea'
+            cb.drink1.type_ = "tea"
             self.assertNotEqual(
                 nb.drinks.drink1.type_,
                 cb.drink1.type_,
-                msg="Mutating separate instances should work fine"
+                msg="Mutating separate instances should work fine",
             )
 
         with self.subTest("Using `Instance` and the `@default` decorator also works"):
@@ -264,13 +275,13 @@ class TestInput(TestWithProject):
 
         with self.subTest("Save and load from some other group name"):
             self.omelette.n_eggs = 13
-            self.omelette.to_hdf(self.hdf, group_name='my_group')
+            self.omelette.to_hdf(self.hdf, group_name="my_group")
             loaded_omelette = Omelette()
-            loaded_omelette.from_hdf(self.hdf, group_name='my_group')
+            loaded_omelette.from_hdf(self.hdf, group_name="my_group")
             self.assertEqual(self.omelette.n_eggs, loaded_omelette.n_eggs)
 
     def test_composed_serialization(self):
-        breakfast = ComposedBreakfast(ingredients=['ham'], drink2=Beverage('water'))
+        breakfast = ComposedBreakfast(ingredients=["ham"], drink2=Beverage("water"))
         breakfast.to_hdf(self.hdf)
         loaded_breakfast = ComposedBreakfast()
         loaded_breakfast.from_hdf(self.hdf)
@@ -278,24 +289,26 @@ class TestInput(TestWithProject):
         self.assertEqual(breakfast.drink2.type_, loaded_breakfast.drink2.type_)
 
     def test_nested_serialization(self):
-        breakfast = NestedBreakfast(ingredients=['ham'])
-        breakfast.drinks.drink2 = Beverage('water')
+        breakfast = NestedBreakfast(ingredients=["ham"])
+        breakfast.drinks.drink2 = Beverage("water")
         breakfast.to_hdf(self.hdf)
         loaded_breakfast = NestedBreakfast()
         loaded_breakfast.from_hdf(self.hdf)
         self.assertEqual(breakfast.ingredients, loaded_breakfast.ingredients)
-        self.assertEqual(breakfast.drinks.drink2.type_, loaded_breakfast.drinks.drink2.type_)
+        self.assertEqual(
+            breakfast.drinks.drink2.type_, loaded_breakfast.drinks.drink2.type_
+        )
 
     def test_locking(self):
         nb = NestedBreakfast()
-        nb.drinks.drink2 = Beverage('water')
+        nb.drinks.drink2 = Beverage("water")
         nb.lock()
         with self.assertRaises(RuntimeError):
             # Test lock
             nb.n_eggs = 12
         with self.assertRaises(RuntimeError):
             # Test recursion of lock
-            nb.drinks.drink2 = Beverage('orange juice')
+            nb.drinks.drink2 = Beverage("orange juice")
         nb.to_hdf(self.hdf)
 
         loaded_nb = NestedBreakfast()
@@ -306,14 +319,14 @@ class TestInput(TestWithProject):
             loaded_nb.n_eggs = 12
         with self.assertRaises(RuntimeError):
             # Test recursion of lock
-            loaded_nb.drinks.drink2 = Beverage('orange juice')
+            loaded_nb.drinks.drink2 = Beverage("orange juice")
 
         loaded_nb.unlock()
         # Test unlock
         loaded_nb.n_eggs = 12
         # Test recursion of unlock
-        loaded_nb.drinks.drink1 = Beverage('tea')
+        loaded_nb.drinks.drink1 = Beverage("tea")
 
         with self.subTest("We can't lock mutability though"):
             loaded_nb.lock()
-            loaded_nb.drinks.drink1.type_ = 'coffee'
+            loaded_nb.drinks.drink1.type_ = "coffee"

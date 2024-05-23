@@ -7,7 +7,6 @@ import warnings
 
 from pyiron_base.storage.parameters import GenericParameters
 from pyiron_base.jobs.job.generic import GenericJob
-from pyiron_base.jobs.job.jobtype import JobType
 from pyiron_base.jobs.master.generic import GenericMaster
 
 __author__ = "Jan Janssen"
@@ -60,6 +59,7 @@ class InteractiveWrapper(GenericMaster):
         self.append(ref_job)
 
     def set_input_to_read_only(self):
+        super().set_input_to_read_only()
         self.input.read_only = True
 
     set_input_to_read_only.__doc__ = GenericMaster.set_input_to_read_only.__doc__
