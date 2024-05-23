@@ -52,11 +52,9 @@ def import_jobs(project_instance, archive_directory, df, compressed=True):
 
     archive_name = getdir(path=archive_directory)
 
-    # destination folder
-    des = project_instance.path
     # source folder; archive folder
     src = os.path.abspath(archive_directory)
-    copy_tree(src, des)
+    copy_tree(src, project_instance.path)
     if compressed:
         rmtree(src)
 
