@@ -111,7 +111,12 @@ class Project(ProjectPath, HasGroups):
     """
 
     def __init__(
-        self, path="", user=None, sql_query=None, default_working_directory=False
+        self,
+        path="",
+        user=None,
+        sql_query=None,
+        default_working_directory=False,
+        unpack=False,
     ):
         if default_working_directory and path == "":
             inputdict = Notebook.get_custom_dict()
@@ -119,6 +124,9 @@ class Project(ProjectPath, HasGroups):
                 path = inputdict["project_dir"]
             else:
                 path = "."
+
+        if unpack:
+            path, archive_directory = import_archive.prepare_path(self, path)
 
         super(Project, self).__init__(path=path)
 
@@ -134,6 +142,9 @@ class Project(ProjectPath, HasGroups):
         self.job_type = JobTypeChoice()
 
         self._maintenance = None
+
+        if unpack:
+            self._unpack(archive_directory)
 
     @property
     def state(self):
@@ -1819,7 +1830,7 @@ class Project(ProjectPath, HasGroups):
 
     def pack(
         self,
-        destination_path,
+        destination_path=None,
         csv_file_name="export.csv",
         compress=True,
         copy_all_files=False,
@@ -1834,37 +1845,18 @@ class Project(ProjectPath, HasGroups):
             copy_all_files (bool):
         """
         directory_to_transfer = os.path.basename(self.path[:-1])
-        if destination_path == directory_to_transfer:
-            raise ValueError(
-                "The destination_path cannot have the same name as the project to compress."
-            )
+        if destination_path is None:
+            destination_path = directory_to_transfer
         export_archive.copy_files_to_archive(
+            self,
             directory_to_transfer,
             destination_path,
             compressed=compress,
             copy_all_files=copy_all_files,
         )
-        df = export_archive.export_database(
-            self, directory_to_transfer, destination_path
-        )
-        df.to_csv(csv_file_name)
 
-    def unpack(self, origin_path, csv_file_name="export.csv", compress=True):
-        """
-        by this function, job table is imported from a given csv file,
-        and also the content of project directory is copied from a given path
-
-        Args:
-            origin_path (str): the relative path of a directory (or a compressed file without the tar.gz exention)
-                            from which the project directory is copied.
-            csv_file_name (str): the csv file from which the job_table is copied to the current project
-            compress (bool): if True, it looks for a compressed file
-        """
-        csv_path = csv_file_name
-        df = pandas.read_csv(csv_path, index_col=0)
-        import_archive.import_jobs(
-            self, archive_directory=origin_path, df=df, compressed=compress
-        )
+    def _unpack(self, origin_path):
+        import_archive.import_jobs(self, origin_path)
 
     @classmethod
     def register_tools(cls, name: str, tools):
