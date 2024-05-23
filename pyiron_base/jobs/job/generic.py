@@ -757,6 +757,12 @@ class GenericJob(JobCore, HasDict):
             run_mode (str): ['modal', 'non_modal', 'queue', 'manual'] overwrites self.server.run_mode
             run_again (bool): Same as delete_existing_job (deprecated)
         """
+        if not isinstance(delete_existing_job, bool):
+            raise ValueError(
+                f"We got delete_existing_job = {delete_existing_job}. If you"
+                " meant to delete the job, set delete_existing_job"
+                " = True"
+            )
         with catch_signals(self.signal_intercept):
             if run_again:
                 delete_existing_job = True

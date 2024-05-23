@@ -422,6 +422,18 @@ class TestGenericJob(TestWithFilledProject):
     def test_run_if_finished(self):
         pass
 
+    def test_delete_existing_job_to_be_bool(self):
+        with self.assertRaises(
+            ValueError, msg="`delete_existing_job = like_this` must not pass"
+        ):
+            job = self.project.create_job(ToyJob, "set_non_bool", "like_this")
+        with self.assertRaises(
+            ValueError, msg="`delete_existing_job = 10` must not pass"
+        ):
+            job = self.project.create_job(ToyJob, "set_non_bool_10")
+            job.input.data_in = 10
+            job.run(job.input.data_in)
+
     def test_run_with_delete_existing_job_for_aborted_jobs(self):
         job = self.project.create_job(ToyJob, "rerun_aborted")
         with self.subTest("Drop to aborted if validate_ready_to_run fails"):
