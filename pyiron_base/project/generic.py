@@ -1833,21 +1833,25 @@ class Project(ProjectPath, HasGroups):
             compress (bool): if true, the function will compress the destination_path to a tar.gz file.
             copy_all_files (bool):
         """
-        directory_to_transfer = os.path.basename(self.path[:-1])
-        if destination_path == directory_to_transfer:
+        destination_path_abs = os.path.abspath(destination_path)
+        directory_to_transfer = os.path.dirname(self.path)
+        csv_file_path = os.path.join(
+            os.path.dirname(destination_path_abs), csv_file_name
+        )
+        if destination_path_abs == directory_to_transfer:
             raise ValueError(
                 "The destination_path cannot have the same name as the project to compress."
             )
         export_archive.copy_files_to_archive(
             directory_to_transfer,
-            destination_path,
+            destination_path_abs,
             compressed=compress,
             copy_all_files=copy_all_files,
         )
         df = export_archive.export_database(
-            self, directory_to_transfer, destination_path
+            self, directory_to_transfer, destination_path_abs
         )
-        df.to_csv(csv_file_name)
+        df.to_csv(csv_file_path)
 
     def unpack(self, origin_path, csv_file_name="export.csv", compress=True):
         """
@@ -1855,12 +1859,25 @@ class Project(ProjectPath, HasGroups):
         and also the content of project directory is copied from a given path
 
         Args:
-            origin_path (str): the relative path of a directory (or a compressed file without the tar.gz exention)
+            origin_path (str): the relative path of a directory (or a compressed file without the tar.gz extension)
                             from which the project directory is copied.
             csv_file_name (str): the csv file from which the job_table is copied to the current project
             compress (bool): if True, it looks for a compressed file
         """
-        csv_path = csv_file_name
+        if isinstance(origin_path, Project):
+            origin_path = origin_path.path
+        csv_path_origin = os.path.join(os.path.dirname(origin_path), csv_file_name)
+        csv_path_project = os.path.join(self.path, csv_file_name)
+        if os.path.exists(csv_file_name):
+            csv_path = os.path.abspath(csv_file_name)
+        elif os.path.exists(csv_path_origin):
+            csv_path = csv_path_origin
+        elif os.path.exists(csv_path_project):
+            csv_path = csv_path_project
+        else:
+            raise FileNotFoundError(
+                f"File: {csv_file_name} was not found. Looked for {os.path.abspath(csv_file_name)}, {csv_path_origin} and {csv_path_project}."
+            )
         df = pandas.read_csv(csv_path, index_col=0)
         import_archive.import_jobs(
             self, archive_directory=origin_path, df=df, compressed=compress

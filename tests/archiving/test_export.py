@@ -74,7 +74,7 @@ class TestPack(PyironTestCase):
 
     def test_export_with_targz_extension(self):
         os.makedirs(os.path.join(os.curdir, "tmp"))
-        tmp_path = os.path.join(os.curdir, "tmp")
+        tmp_path = os.path.abspath(os.path.join(os.curdir, "tmp"))
         tar_arch = self.arch_dir_comp + ".tar.gz"
         self.pr.pack(
             destination_path=os.path.join(tmp_path, tar_arch),
