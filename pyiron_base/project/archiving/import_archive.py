@@ -70,12 +70,9 @@ def import_jobs(project_instance, archive_directory, df, compressed=True):
     # Add jobs to database
     job_id_lst = []
     for entry in df.dropna(axis=1).to_dict(orient="records"):
-        if "id" in entry:
-            del entry["id"]
-        if "parentid" in entry:
-            del entry["parentid"]
-        if "masterid" in entry:
-            del entry["masterid"]
+        for tag in ["id", "parentid", "masterid"]:
+            if tag in entry
+                del entry[tag]
         if "timestart" in entry:
             entry["timestart"] = pandas.to_datetime(entry["timestart"])
         if "timestop" in entry:
