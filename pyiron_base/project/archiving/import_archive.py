@@ -40,8 +40,7 @@ def import_jobs(project_instance, archive_directory, df, compressed=True):
     elif isinstance(archive_directory, str):
         if archive_directory[-7:] == ".tar.gz":
             archive_directory = archive_directory[:-7]
-            if not compressed:
-                compressed = True
+            compressed = True
     else:
         raise RuntimeError(
             """the given path for importing from,
