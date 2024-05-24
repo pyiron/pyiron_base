@@ -116,41 +116,6 @@ class TestSettings(TestCase):
 
         s._validate_sql_configuration({"user": "nothing_about_sql_type"})
 
-    def test_validate_viewer_configuration_completeness(self):
-        s._validate_viewer_configuration(
-            {
-                "sql_type": "Postgres",
-                "sql_view_table_name": "something",
-                "sql_view_user": "something",
-                "sql_view_user_key": "something",
-            }
-        )
-
-        with self.assertRaises(ValueError):
-            s._validate_viewer_configuration(
-                {
-                    "sql_type": "Postgres",
-                    # "sql_view_table_name": "something",
-                    "sql_view_user": "something",
-                    "sql_view_user_key": "something",
-                }
-            )
-
-        with self.assertRaises(ValueError):
-            s._validate_viewer_configuration(
-                {
-                    "sql_type": "MySQL",  # Right now it ONLY works for postgres
-                    "sql_view_table_name": "something",
-                    "sql_view_user": "something",
-                    "sql_view_user_key": "something",
-                }
-            )
-
-        s._validate_sql_configuration({"user": "nothing_about_sql_view"})
-
-        with self.assertRaises(ValueError):
-            s._validate_sql_configuration({"sql_type": "not_a_valid_type"})
-
     def test_validate_no_database_configuration(self):
         with self.assertRaises(ValueError):
             s._validate_no_database_configuration(
@@ -234,7 +199,7 @@ class TestSettings(TestCase):
     def test_standard_credentials(self):
         self.assertEqual(
             s.credentials,
-            {PYIRON_DICT_NAME: {"sql_user_key": None, "sql_view_user_key": None}},
+            {PYIRON_DICT_NAME: {"sql_user_key": None}},
         )
 
     def test_update_from_env_with_credential_check(self):
@@ -275,9 +240,6 @@ class TestSettings(TestCase):
             self.test_standard_credentials()
 
         with self.subTest("full update"):
-            cred_ref_dict[PYIRON_DICT_NAME]["sql_view_user_key"] = (
-                None  # from standard configuration
-            )
             s.update(env_dict)
             self.assertEqual(s.credentials, cred_ref_dict)
 

@@ -235,28 +235,6 @@ class DatabaseAccess(IsDatabase):
             delay=0.1,
             delay_factor=2,
         )
-        self._view_mode = False
-
-    def _get_view_mode(self) -> bool:
-        return self._view_mode
-
-    @IsDatabase.view_mode.setter
-    def view_mode(self, value: bool) -> None:
-        """
-        Set view_mode - if view_mode is enable pyiron has read only access to the database.
-
-        Args:
-            value (bool): TRUE or FALSE
-        """
-        if isinstance(value, bool):
-            self._view_mode = value
-        else:
-            raise TypeError("Viewmode can only be TRUE or FALSE.")
-
-    @IsDatabase.viewer_mode.setter
-    @deprecate("use view_mode")
-    def viewer_mode(self, value: bool) -> None:
-        self.view_mode = value
 
     def _job_dict(
         self,
@@ -479,20 +457,17 @@ class DatabaseAccess(IsDatabase):
         Returns:
 
         """
-        if not self._view_mode:
-            if isinstance(col_name, list):
-                col_name = col_name[-1]
-            if isinstance(col_type, list):
-                col_type = col_type[-1]
-            self.conn.execute(
-                text(
-                    "ALTER TABLE %s ADD COLUMN %s %s"
-                    % (self.simulation_table.name, col_name, col_type)
-                )
+        if isinstance(col_name, list):
+            col_name = col_name[-1]
+        if isinstance(col_type, list):
+            col_type = col_type[-1]
+        self.conn.execute(
+            text(
+                "ALTER TABLE %s ADD COLUMN %s %s"
+                % (self.simulation_table.name, col_name, col_type)
             )
-            self.conn.commit()
-        else:
-            raise PermissionError("Not avilable in viewer mode.")
+        )
+        self.conn.commit()
 
     def change_column_type(
         self, col_name: Union[str, List[str]], col_type: Union[str, List[str]]
@@ -507,20 +482,17 @@ class DatabaseAccess(IsDatabase):
         Returns:
 
         """
-        if not self._view_mode:
-            if isinstance(col_name, list):
-                col_name = col_name[-1]
-            if isinstance(col_type, list):
-                col_type = col_type[-1]
-            self.conn.execute(
-                text(
-                    "ALTER TABLE %s ALTER COLUMN %s TYPE %s"
-                    % (self.simulation_table.name, col_name, col_type)
-                )
+        if isinstance(col_name, list):
+            col_name = col_name[-1]
+        if isinstance(col_type, list):
+            col_type = col_type[-1]
+        self.conn.execute(
+            text(
+                "ALTER TABLE %s ALTER COLUMN %s TYPE %s"
+                % (self.simulation_table.name, col_name, col_type)
             )
-            self.conn.commit()
-        else:
-            raise PermissionError("Not avilable in viewer mode.")
+        )
+        self.conn.commit()
 
     def _check_chem_formula_length(self, par_dict: dict) -> dict:
         """
@@ -581,26 +553,23 @@ class DatabaseAccess(IsDatabase):
         Returns:
             int: Database ID of the item created as an int, like: 3
         """
-        if not self._view_mode:
-            try:
-                if check_duplicates and self._check_duplidates(par_dict):
-                    warnings.warn(f"Duplicate entry found in database: {par_dict}")
-                    return None
-                par_dict = self._check_chem_formula_length(par_dict)
-                par_dict = dict(
-                    (key.lower(), value) for key, value in par_dict.items()
-                )  # make keys lowercase
-                result = self.conn.execute(
-                    self.simulation_table.insert().values(**par_dict)
-                ).inserted_primary_key[-1]
-                self.conn.commit()
-                if not self._keep_connection:
-                    self.conn.close()
-                return result
-            except Exception as except_msg:
-                raise ValueError("Error occurred: " + str(except_msg))
-        else:
-            raise PermissionError("Not avilable in viewer mode.")
+        try:
+            if check_duplicates and self._check_duplidates(par_dict):
+                warnings.warn(f"Duplicate entry found in database: {par_dict}")
+                return None
+            par_dict = self._check_chem_formula_length(par_dict)
+            par_dict = dict(
+                (key.lower(), value) for key, value in par_dict.items()
+            )  # make keys lowercase
+            result = self.conn.execute(
+                self.simulation_table.insert().values(**par_dict)
+            ).inserted_primary_key[-1]
+            self.conn.commit()
+            if not self._keep_connection:
+                self.conn.close()
+            return result
+        except Exception as except_msg:
+            raise ValueError("Error occurred: " + str(except_msg))
 
     def __get_items(self, col_name: str, var: Union[str, int]) -> List[dict]:
         """
@@ -666,32 +635,29 @@ class DatabaseAccess(IsDatabase):
         Returns:
 
         """
-        if not self._view_mode:
-            if np.issubdtype(type(item_id), np.integer):
-                item_id = int(item_id)
-            # all items must be lower case, ensured here
-            par_dict = dict((key.lower(), value) for key, value in par_dict.items())
-            query = (
-                self.simulation_table.update()
-                .where(self.simulation_table.c["id"] == item_id)
-                .values()
-            )
-            try:
-                self.conn.execute(query, par_dict)
-                self.conn.commit()
-            except (OperationalError, DatabaseError):
-                if not self._sql_lite:
-                    self.conn = AutorestoredConnection(self._engine)
-                else:
-                    self.conn = self._engine.connect()
-                    self.conn.connection.create_function("like", 2, self.regexp)
+        if np.issubdtype(type(item_id), np.integer):
+            item_id = int(item_id)
+        # all items must be lower case, ensured here
+        par_dict = dict((key.lower(), value) for key, value in par_dict.items())
+        query = (
+            self.simulation_table.update()
+            .where(self.simulation_table.c["id"] == item_id)
+            .values()
+        )
+        try:
+            self.conn.execute(query, par_dict)
+            self.conn.commit()
+        except (OperationalError, DatabaseError):
+            if not self._sql_lite:
+                self.conn = AutorestoredConnection(self._engine)
+            else:
+                self.conn = self._engine.connect()
+                self.conn.connection.create_function("like", 2, self.regexp)
 
-                self.conn.execute(query, par_dict)
-                self.conn.commit()
-            if not self._keep_connection:
-                self.conn.close()
-        else:
-            raise PermissionError("Not avilable in viewer mode.")
+            self.conn.execute(query, par_dict)
+            self.conn.commit()
+        if not self._keep_connection:
+            self.conn.close()
 
     def delete_item(self, item_id: int) -> None:
         """
@@ -703,8 +669,6 @@ class DatabaseAccess(IsDatabase):
         Returns:
 
         """
-        if self._view_mode:
-            raise PermissionError("Not avilable in viewer mode.")
 
         res = self.conn.execute(
             self.simulation_table.delete().where(

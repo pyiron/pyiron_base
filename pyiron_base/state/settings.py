@@ -77,10 +77,6 @@ class Settings(metaclass=Singleton):
         connection_timeout / CONNECTION_TIMEOUT / PYIRONCONNECTIONTIMEOUT (int):
         sql_connection_string / CONNECTION / PYIRONSQLCONNECTIONSTRING (str):
         sql_table_name / JOB_TABLE / PYIRONSQLTABLENAME (str):
-        sql_view_connection_string / - / - (str): Constructed, not available to be set in config files or sys env.
-        sql_view_table_name / VIEWER_TABLE / PYIRONSQLVIEWTABLENAME (str):
-        sql_view_user / VIEWERUSER / PYIRONSQLVIEWUSER (str):
-        sql_view_user_key / VIEWERPASSWD / PYIRONSQLVIEWUSERKEY (str):
         sql_file / FILE / PYIRONSQLFILE (str):
         sql_host / HOST / PYIRONSQHOST (str):
         sql_type / TYPE / PYIRONSQLTYPE ("SQLite"|"Postgres"|"MySQL"): What type of SQL database to use. (Default is
@@ -182,10 +178,6 @@ class Settings(metaclass=Singleton):
                 "connection_timeout": 60,
                 "sql_connection_string": None,
                 "sql_table_name": "jobs_pyiron",
-                "sql_view_connection_string": None,
-                "sql_view_table_name": None,
-                "sql_view_user": None,
-                "sql_view_user_key": None,
                 "sql_file": self.convert_path_to_abs_posix("~/pyiron.db"),
                 "sql_host": None,
                 "sql_type": "SQLite",
@@ -208,10 +200,6 @@ class Settings(metaclass=Singleton):
             "PYIRONCONNECTIONTIMEOUT": "connection_timeout",
             "PYIRONSQLCONNECTIONSTRING": "sql_connection_string",
             "PYIRONSQLTABLENAME": "sql_table_name",
-            "PYIRONSQLVIEWCONNECTIONSTRING": "INVALID_KEY_PYIRONSQLVIEWCONNECTIONSTRING",  # Constructed, not settable
-            "PYIRONSQLVIEWTABLENAME": "sql_view_table_name",
-            "PYIRONSQLVIEWUSER": "sql_view_user",
-            "PYIRONSQLVIEWUSERKEY": "sql_view_user_key",
             "PYIRONSQLFILE": "sql_file",
             "PYIRONSQHOST": "sql_host",
             "PYIRONSQLTYPE": "sql_type",
@@ -234,10 +222,6 @@ class Settings(metaclass=Singleton):
             "CONNECTION_TIMEOUT": "connection_timeout",
             "CONNECTION": "sql_connection_string",
             "JOB_TABLE": "sql_table_name",
-            "SQL_VIEW_CONNECTION_STRING": "INVALID_KEY_SQL_VIEW_CONNECTION_STRING",  # Constructed, not settable
-            "VIEWER_TABLE": "sql_view_table_name",
-            "VIEWERUSER": "sql_view_user",
-            "VIEWERPASSWD": "sql_view_user_key",
             "FILE": "sql_file",
             "DATABASE_FILE": "sql_file",  # Alternative name
             "HOST": "sql_host",
@@ -255,13 +239,11 @@ class Settings(metaclass=Singleton):
     def file_credential_map(self) -> Dict:
         return {
             "PASSWD": "sql_user_key",
-            "VIEWERPASSWD": "sql_view_user_key",
         }
 
     @property
     def environment_credential_map(self) -> Dict:
         return {
-            "PYIRONSQLVIEWUSERKEY": "sql_view_user_key",
             "PYIRONSQLUSERKEY": "sql_user_key",
         }
 
@@ -344,20 +326,6 @@ class Settings(metaclass=Singleton):
                 )
         except KeyError:
             pass
-
-    @staticmethod
-    def _validate_viewer_configuration(config: Dict) -> None:
-        key_group = ["sql_view_table_name", "sql_view_user", "sql_view_user_key"]
-        present = [k in config.keys() and config[k] is not None for k in key_group]
-        if any(present):
-            if not all(present):
-                raise ValueError(
-                    f"If any of {key_group} is included they all must be, but got {config.keys()}"
-                )
-            if "sql_type" not in config or config["sql_type"] != "Postgres":
-                # Note: This requirement is *implicit* when the sql_view_connection_string is constructed
-                #       I don't actually understand the constraint, I am just making it *explicit* as I refactor. -Liam
-                raise ValueError("Got sql_view arguments, but sql_type is not Postgres")
 
     @staticmethod
     def _validate_no_database_configuration(config: Dict) -> None:
@@ -486,7 +454,6 @@ class Settings(metaclass=Singleton):
         """
         config = self._get_credentials_from_file(config)
         self._validate_sql_configuration(config=config)
-        self._validate_viewer_configuration(config=config)
         self._validate_no_database_configuration(config=config)
 
         for key, value in config.items():

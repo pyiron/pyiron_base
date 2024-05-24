@@ -114,10 +114,6 @@ class DatabaseManager(metaclass=Singleton):
     def sql_table_name(self) -> str:
         return s.configuration["sql_table_name"]
 
-    @property
-    def sql_view_table_name(self) -> str:
-        return s.configuration["sql_view_table_name"]
-
     def open_connection(self) -> None:
         """
         Internal function to open the connection to the database. Only after this function is called the database is
@@ -174,45 +170,15 @@ class DatabaseManager(metaclass=Singleton):
         """
         Switch from user mode to viewer mode - if view_mode is enable pyiron has read only access to the database.
         """
-        if (
-            self.sql_view_connection_string is not None
-            and not self.database_is_disabled
-        ):
-            if self._database.view_mode:
-                logger.info("Database is already in viewer mode!")
-            else:
-                from pyiron_base.database.generic import DatabaseAccess
-
-                self.close_connection()
-                self._database = DatabaseAccess(
-                    self.sql_view_connection_string,
-                    self.sql_view_table_name,
-                )
-                self._database.view_mode = True
-        else:
-            print("Viewer Mode is not available on this pyiron installation.")
+        logger.info("Viewer Mode is not available any more!")
+        raise DeprecationWarning("Viewer Mode is not available any more!")
 
     def switch_to_user_mode(self) -> None:
         """
         Switch from viewer mode to user mode - if view_mode is enable pyiron has read only access to the database.
         """
-        if (
-            self.sql_view_connection_string is not None
-            and not self.database_is_disabled
-        ):
-            if self._database.view_mode:
-                from pyiron_base.database.generic import DatabaseAccess
-
-                self.close_connection()
-                self._database = DatabaseAccess(
-                    self.sql_connection_string,
-                    self.sql_table_name,
-                )
-                self._database.view_mode = False
-            else:
-                logger.info("Database is already in user mode!")
-        else:
-            print("Viewer Mode is not available on this pyiron installation.")
+        logger.info("Database is already in user mode!")
+        raise DeprecationWarning("Viewer Mode is not available any more: already in user_mode!")
 
     def close_connection(self) -> None:
         """
