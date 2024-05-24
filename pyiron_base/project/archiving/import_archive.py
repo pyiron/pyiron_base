@@ -63,9 +63,9 @@ def import_jobs(project_instance, archive_directory, df, compressed=True):
 
     df["project"] = [
         os.path.join(
-            pr_import.project_path,
-            os.path.relpath(p, getdir(path=archive_directory))
-        ) + "/"
+            pr_import.project_path, os.path.relpath(p, getdir(path=archive_directory))
+        )
+        + "/"
         for p in df["project"].values
     ]
     df["projectpath"] = len(df) * [pr_import.root_path]
