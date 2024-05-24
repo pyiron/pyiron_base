@@ -178,7 +178,9 @@ class DatabaseManager(metaclass=Singleton):
         Switch from viewer mode to user mode - if view_mode is enable pyiron has read only access to the database.
         """
         logger.info("Database is already in user mode!")
-        raise DeprecationWarning("Viewer Mode is not available any more: already in user_mode!")
+        raise DeprecationWarning(
+            "Viewer Mode is not available any more: already in user_mode!"
+        )
 
     def close_connection(self) -> None:
         """

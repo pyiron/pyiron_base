@@ -1575,14 +1575,16 @@ class Project(ProjectPath, HasGroups):
         """
         return [self[key] for key in self.keys()]
 
-    @deprecate('The viewer mode is not used any longer. The functionality is already present in user mode. Doing nothing')
+    @deprecate(
+        "The viewer mode is not used any longer. The functionality is already present in user mode. Doing nothing"
+    )
     def switch_to_viewer_mode(self) -> None:
         """
         Switch from user mode to viewer mode - if viewer_mode is enable pyiron has read only access to the database.
         """
         pass
 
-    @deprecate('Not doing anything any more (always in user mode).')
+    @deprecate("Not doing anything any more (always in user mode).")
     def switch_to_user_mode(self) -> None:
         """
         Switch from viewer mode to user mode - if viewer_mode is enable pyiron has read only access to the database.
