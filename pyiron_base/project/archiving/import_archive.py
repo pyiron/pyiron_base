@@ -1,8 +1,7 @@
 import os
 import pandas
 import numpy as np
-from shutil import rmtree
-from distutils.dir_util import copy_tree
+from shutil import rmtree, copytree
 import tarfile
 from pyiron_base.project.archiving.shared import getdir
 from pyiron_base.utils.instance import static_isinstance
@@ -57,7 +56,7 @@ def import_jobs(project_instance, archive_directory, df, compressed=True):
     des = project_instance.path
     # source folder; archive folder
     src = os.path.abspath(archive_directory)
-    copy_tree(src, des)
+    copytree(src, des, dirs_exist_ok=True)
     if compressed:
         rmtree(src)
 
