@@ -14,5 +14,6 @@ class TestStrtobool(unittest.TestCase):
         with self.assertRaises(ValueError):
             strtobool("Vegetarians do not eat Bratwurst")
 
+
 if __name__ == "__main__":
     unittest.main()

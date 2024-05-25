@@ -8,7 +8,6 @@ In order to be accessible from anywhere in pyiron, they *must* remain free of
 any imports from pyiron!
 """
 
-
 __author__ = "Joerg Neugebauer, Jan Janssen"
 __copyright__ = (
     "Copyright 2020, Max-Planck-Institut für Eisenforschung GmbH - "
