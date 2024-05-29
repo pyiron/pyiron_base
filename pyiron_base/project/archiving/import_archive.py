@@ -27,8 +27,6 @@ def extract_archive(archive_directory):
 
 
 def import_jobs(project_instance, archive_directory, df, compressed=True):
-    if len(set(df["job"]) & set(project_instance.job_table().job)) > 0:
-        raise ValueError("Overlapping", df["job"], project_instance.job_table().job)
     # Copy HDF5 files
     # if the archive_directory is a path(string)/name of the compressed file
     if static_isinstance(
