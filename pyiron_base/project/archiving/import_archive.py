@@ -39,8 +39,7 @@ def import_jobs(project_instance, archive_directory, df, compressed=True):
     elif isinstance(archive_directory, str):
         if archive_directory[-7:] == ".tar.gz":
             archive_directory = archive_directory[:-7]
-            if not compressed:
-                compressed = True
+            compressed = True
     else:
         raise RuntimeError(
             """the given path for importing from,
@@ -50,13 +49,9 @@ def import_jobs(project_instance, archive_directory, df, compressed=True):
     if compressed:
         extract_archive(os.path.relpath(archive_directory, os.getcwd()))
 
-    archive_name = getdir(path=archive_directory)
-
-    # destination folder
-    des = project_instance.path
     # source folder; archive folder
     src = os.path.abspath(archive_directory)
-    copytree(src, des, dirs_exist_ok=True)
+    copytree(src, project_instance.path, dirs_exist_ok=True)
     if compressed:
         rmtree(src)
 
@@ -64,19 +59,19 @@ def import_jobs(project_instance, archive_directory, df, compressed=True):
     pr_import = project_instance.open(os.curdir)
 
     df["project"] = [
-        os.path.join(pr_import.project_path, os.path.relpath(p, archive_name)) + "/"
+        os.path.join(
+            pr_import.project_path, os.path.relpath(p, getdir(path=archive_directory))
+        )
+        + "/"
         for p in df["project"].values
     ]
     df["projectpath"] = len(df) * [pr_import.root_path]
     # Add jobs to database
     job_id_lst = []
     for entry in df.dropna(axis=1).to_dict(orient="records"):
-        if "id" in entry:
-            del entry["id"]
-        if "parentid" in entry:
-            del entry["parentid"]
-        if "masterid" in entry:
-            del entry["masterid"]
+        for tag in ["id", "parentid", "masterid"]:
+            if tag in entry:
+                del entry[tag]
         if "timestart" in entry:
             entry["timestart"] = pandas.to_datetime(entry["timestart"])
         if "timestop" in entry:
