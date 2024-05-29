@@ -26,7 +26,7 @@ class TemplateJob(GenericJob, HasStorage):
 
     Example:
 
-    >>> from pyiron_base import TemplateJob
+    >>> from pyiron_base import TemplateJob, Project
 
     >>> class MyJob(TemplateJob):
     >>>     def __init__(self, project, job_name):
@@ -41,6 +41,10 @@ class TemplateJob(GenericJob, HasStorage):
     >>>     def collect_output(self):
     >>>         with open(self.working_directory + "/output.dat", "w") as f:
     >>>             job.output.message = f.read()
+
+    >>> pr = Project("my_project")
+    >>> job = pr.create_job(MyJob, "my_job")
+    >>> job.run()
 
     You can store information you need in `job.input` (or `self.input`) and
     `job.output` (or `self.output`). The information assigned there will be
@@ -83,7 +87,7 @@ class PythonTemplateJob(TemplateJob):
 
     Example:
 
-    >>> from pyiron_base import PythonTemplateJob
+    >>> from pyiron_base import PythonTemplateJob, Project
 
     >>> class ToyJob(PythonTemplateJob):  # Create a custom job class
     >>>     def __init__(self, project, job_name):
