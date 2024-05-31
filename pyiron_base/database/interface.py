@@ -11,8 +11,8 @@ from collections.abc import Iterable
 import warnings
 import numpy as np
 import re
-from pyiron_base.utils.deprecate import deprecate
 import pandas
+from pyiron_snippets.deprecate import deprecate
 import typing
 import fnmatch
 

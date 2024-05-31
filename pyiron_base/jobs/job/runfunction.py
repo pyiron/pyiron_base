@@ -9,8 +9,8 @@ import posixpath
 import subprocess
 
 from jinja2 import Template
+from pyiron_snippets.deprecate import deprecate
 
-from pyiron_base.utils.deprecate import deprecate
 from pyiron_base.jobs.job.wrapper import JobWrapper
 from pyiron_base.state import state
 from pyiron_base.state.signal import catch_signals

@@ -10,8 +10,8 @@ import numpy as np
 import re
 import os
 from datetime import datetime
-from pyiron_base.utils.deprecate import deprecate
 import pandas
+from pyiron_snippets.deprecate import deprecate
 from sqlalchemy import (
     create_engine,
     MetaData,

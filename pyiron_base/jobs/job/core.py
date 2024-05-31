@@ -12,6 +12,8 @@ import posixpath
 import shutil
 import warnings
 
+from pyiron_snippets.deprecate import deprecate
+
 from pyiron_base.interfaces.has_groups import HasGroups
 from pyiron_base.storage.hdfio import ProjectHDFio
 from pyiron_base.jobs.job.util import (
@@ -33,7 +35,6 @@ from pyiron_base.jobs.job.util import (
     _job_remove_folder,
 )
 from pyiron_base.state import state
-from pyiron_base.utils.deprecate import deprecate
 from pyiron_base.jobs.job.extension.files import FileBrowser
 
 __author__ = "Jan Janssen"

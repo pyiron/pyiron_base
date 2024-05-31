@@ -11,11 +11,11 @@ import numpy as np
 import os
 import pandas
 from pandas.errors import EmptyDataError
+from pyiron_snippets.deprecate import deprecate
 from tqdm.auto import tqdm
 import types
 from typing import List, Tuple
 
-from pyiron_base.utils.deprecate import deprecate
 from pyiron_base.jobs.job.generic import GenericJob
 from pyiron_base.jobs.job.extension import jobstatus
 from pyiron_base.storage.hdfio import FileHDFio

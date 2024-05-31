@@ -14,6 +14,7 @@ import posixpath
 import warnings
 
 from h5io_browser.base import _read_hdf, _write_hdf
+from pyiron_snippets.deprecate import deprecate
 
 from pyiron_base.state import state
 from pyiron_base.state.signal import catch_signals
@@ -47,7 +48,6 @@ from pyiron_base.jobs.job.util import (
     _job_reload_after_copy,
 )
 from pyiron_base.utils.instance import static_isinstance, import_class
-from pyiron_base.utils.deprecate import deprecate
 from pyiron_base.jobs.job.extension.server.generic import Server
 from pyiron_base.database.filetable import FileTable
 from pyiron_base.interfaces.has_dict import HasDict
