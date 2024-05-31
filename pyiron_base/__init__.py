@@ -44,9 +44,49 @@ from pyiron_base.interfaces.has_hdf import HasHDF
 
 from pyiron_base.jobs.job.toolkit import Toolkit, BaseTools
 
-# Expose snippets references in base API for backwards compatibility
-from pyiron_snippets.import_alarm import ImportAlarm
-from pyiron_snippets.deprecate import Deprecator, deprecate, deprecate_soon
+
+# Give clear deprecation errors for objects removed from the 0.8.4 API
+from pyiron_snippets.import_alarm import ImportAlarm as _ImportAlarm
+from pyiron_snippets.deprecate import (
+    Deprecator as _Deprecator,
+    deprecate as _deprecate,  # Just silently guaranteeing it's where we expect
+    deprecate_soon as _deprecate_soon  # Just silently guaranteeing it's where we expect
+)
+
+
+def _snippets_deprecation_string(obj, old_name):
+    return
+
+
+def ImportAlarm(*args, **kwargs):
+    raise ValueError(
+        f"pyiron_base.ImportAlarm is deprecated. Please use "
+        f"{_ImportAlarm.__module__}.{_ImportAlarm.__name__}"
+    ) from None
+
+
+def Deprecator(*args, **kwargs):
+    raise ValueError(
+        f"pyiron_base.Deprecator is deprecated. Please use "
+        f"{_Deprecator.__module__}.{_Deprecator.__name__}"
+    ) from None
+
+
+def deprecate(*args, **kwargs):
+    # The wrapper nature makes this not so easy to automate the message
+    raise ValueError(
+        f"pyiron_base.deprecate is deprecated. Please use "
+        f"pyiron_snippets.deprecate.deprecate"
+    ) from None
+
+
+def deprecate_soon(*args, **kwargs):
+    # The wrapper nature makes this not so easy to automate the message
+    raise ValueError(
+        f"pyiron_base.deprecate_soon is deprecated. Please use "
+        f"pyiron_snippets.deprecate.deprecate_soon"
+    ) from None
+
 
 # Internal init
 from ._version import get_versions
