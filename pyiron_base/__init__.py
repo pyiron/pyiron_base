@@ -50,7 +50,7 @@ from pyiron_snippets.import_alarm import ImportAlarm as _ImportAlarm
 from pyiron_snippets.deprecate import (
     Deprecator as _Deprecator,
     deprecate as _deprecate,  # Just silently guaranteeing it's where we expect
-    deprecate_soon as _deprecate_soon  # Just silently guaranteeing it's where we expect
+    deprecate_soon as _deprecate_soon,  # Just silently guaranteeing it's where we expect
 )
 
 
@@ -75,16 +75,16 @@ def Deprecator(*args, **kwargs):
 def deprecate(*args, **kwargs):
     # The wrapper nature makes this not so easy to automate the message
     raise ValueError(
-        f"pyiron_base.deprecate is deprecated. Please use "
-        f"pyiron_snippets.deprecate.deprecate"
+        "pyiron_base.deprecate is deprecated. Please use "
+        "pyiron_snippets.deprecate.deprecate"
     ) from None
 
 
 def deprecate_soon(*args, **kwargs):
     # The wrapper nature makes this not so easy to automate the message
     raise ValueError(
-        f"pyiron_base.deprecate_soon is deprecated. Please use "
-        f"pyiron_snippets.deprecate.deprecate_soon"
+        "pyiron_base.deprecate_soon is deprecated. Please use "
+        "pyiron_snippets.deprecate.deprecate_soon"
     ) from None
 
 
