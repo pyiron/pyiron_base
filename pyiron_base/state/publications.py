@@ -10,7 +10,7 @@ your project for a list of everything you should cite.
 """
 
 import pandas
-from pyiron_base.interfaces.singleton import Singleton
+from pyiron_snippets.singleton import Singleton
 from typing import Dict, Union, List
 from typing_extensions import Literal
 
