@@ -7,11 +7,9 @@ Utility functions used in pyiron.
 In order to be accessible from anywhere in pyiron, they *must* remain free of any imports from pyiron!
 """
 
-import functools
 from itertools import count
 import time
 from typing import Callable, TypeVar, Type, Tuple, Optional, Union
-import warnings
 
 from pyiron_base.state.logger import logger
 
