@@ -16,7 +16,7 @@ dependencies:
 - pint =0.23
 - psutil =5.9.8
 - pyfileindex =0.0.24
-- pyiron_snippets =0.1.0
+- pyiron_snippets =0.1.1
 - pympipool =0.8.3
 - pysqa =0.1.20
 - pytables =3.9.2
