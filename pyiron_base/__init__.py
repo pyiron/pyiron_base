@@ -13,7 +13,6 @@ from pyiron_base.storage.has_stored_traits import HasStoredTraits
 from pyiron_base.storage.inputlist import InputList
 from pyiron_base.storage.parameters import GenericParameters
 from pyiron_base.utils.deprecate import Deprecator, deprecate, deprecate_soon
-from pyiron_base.utils.error import ImportAlarm
 from pyiron_base.jobs.job.extension.executable import Executable
 from pyiron_base.project.external import Notebook, load, dump
 from pyiron_base.jobs.dynamic import warn_dynamic_job_classes
@@ -77,7 +76,6 @@ __all__ = [
     Deprecator,
     deprecate,
     deprecate_soon,
-    ImportAlarm,
     Executable,
     Notebook,
     load,
