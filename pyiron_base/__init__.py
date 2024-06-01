@@ -50,7 +50,8 @@ from pyiron_snippets.import_alarm import ImportAlarm as _ImportAlarm
 from pyiron_snippets.deprecate import (
     Deprecator as _Deprecator,
     deprecate as _deprecate,  # Just silently guaranteeing it's where we expect
-    deprecate_soon as _deprecate_soon,  # Just silently guaranteeing it's where we expect
+    deprecate_soon as _deprecate_soon,
+    # Just silently guaranteeing it's where we expect
 )
 
 
