@@ -45,6 +45,11 @@ from pyiron_base.interfaces.has_hdf import HasHDF
 from pyiron_base.jobs.job.toolkit import Toolkit, BaseTools
 
 
+# Internal init
+from ._version import get_versions
+from pyiron_base.utils.jedi import fix_ipython_autocomplete
+
+
 # Give clear deprecation errors for objects removed from the 0.8.4 API
 from pyiron_snippets.import_alarm import ImportAlarm as _ImportAlarm
 from pyiron_snippets.deprecate import (
@@ -87,11 +92,6 @@ def deprecate_soon(*args, **kwargs):
         f"pyiron_base.deprecate_soon (a {_deprecate_soon.__class__.__name__} instance) "
         f"is deprecated. Please use pyiron_snippets.deprecate.deprecate_soon"
     ) from None
-
-
-# Internal init
-from ._version import get_versions
-from pyiron_base.utils.jedi import fix_ipython_autocomplete
 
 
 Project.register_tools("base", BaseTools)
