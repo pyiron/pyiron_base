@@ -75,16 +75,16 @@ def Deprecator(*args, **kwargs):
 def deprecate(*args, **kwargs):
     # The wrapper nature makes this not so easy to automate the message
     raise ValueError(
-        "pyiron_base.deprecate is deprecated. Please use "
-        "pyiron_snippets.deprecate.deprecate"
+        f"pyiron_base.deprecate (a {_deprecate.__class__.__name__} instance) is "
+        f"deprecated. Please use pyiron_snippets.deprecate.deprecate"
     ) from None
 
 
 def deprecate_soon(*args, **kwargs):
     # The wrapper nature makes this not so easy to automate the message
     raise ValueError(
-        "pyiron_base.deprecate_soon is deprecated. Please use "
-        "pyiron_snippets.deprecate.deprecate_soon"
+        f"pyiron_base.deprecate_soon (a {_deprecate_soon.__class__.__name__} instance) "
+        f"is deprecated. Please use pyiron_snippets.deprecate.deprecate_soon"
     ) from None
 
 
