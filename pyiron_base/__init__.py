@@ -44,10 +44,6 @@ from pyiron_base.interfaces.has_hdf import HasHDF
 
 from pyiron_base.jobs.job.toolkit import Toolkit, BaseTools
 
-# Expose snippets references in base API for backwards compatibility
-from pyiron_snippets.import_alarm import ImportAlarm
-from pyiron_snippets.deprecate import Deprecator, deprecate, deprecate_soon
-
 # Internal init
 from ._version import get_versions
 from pyiron_base.utils.jedi import fix_ipython_autocomplete
@@ -76,10 +72,6 @@ __all__ = [
     HasStoredTraits,
     InputList,
     GenericParameters,
-    Deprecator,
-    deprecate,
-    deprecate_soon,
-    ImportAlarm,
     Executable,
     Notebook,
     load,

@@ -36,10 +36,10 @@ import ast
 import os
 import warnings
 from configparser import ConfigParser
-from pyiron_base.state.logger import logger
 from pyiron_base.state.publications import publications
 from pyiron_base.utils.strtobool import strtobool
 from pathlib import Path
+from pyiron_snippets.logger import logger
 from pyiron_snippets.singleton import Singleton
 from typing import Union, Dict, List
 from copy import deepcopy

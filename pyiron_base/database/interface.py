@@ -5,7 +5,6 @@
 DatabaseAccess class deals with accessing the database
 """
 
-from pyiron_base.state.logger import logger
 from abc import ABC, abstractmethod
 from collections.abc import Iterable
 import warnings
@@ -13,6 +12,7 @@ import numpy as np
 import re
 import pandas
 from pyiron_snippets.deprecate import deprecate
+from pyiron_snippets.logger import logger
 import typing
 import fnmatch
 
