@@ -53,6 +53,11 @@ class TemplateJob(GenericJob, HasStorage):
     `def write_input(self)` and `def collect_output(self)`, which are called
     before and after `run_static`, respectively.
 
+    Important: The job runs in the working directory of the pyiron job. In the
+    example above, it is placed under `my_project/my_job_hdf5/my_job/`. It is
+    therefore important to use the absolute path, or `self.working_directory`
+    to make sure that the files are found correctly
+
     If you have a code which requires an executable, take a look at
     :class:`~.TemplateJob` instead.
 
