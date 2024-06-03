@@ -25,8 +25,8 @@ from sqlalchemy.sql import select
 from sqlalchemy.exc import OperationalError, DatabaseError
 from threading import Thread, Lock
 from queue import SimpleQueue, Empty as QueueEmpty
+from pyiron_snippets.retry import retry
 from pyiron_base.database.tables import get_historical_table
-from pyiron_base.utils.error import retry
 from pyiron_base.database.interface import IsDatabase
 from pyiron_base.database.sqlcolumnlength import CHEMICALFORMULA_STR_LENGTH
 
