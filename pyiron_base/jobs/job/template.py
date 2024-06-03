@@ -41,6 +41,7 @@ class TemplateJob(GenericJob, HasStorage):
     >>>     def collect_output(self):
     >>>         with open(self.working_directory + "/output.dat", "w") as f:
     >>>             job.output.message = f.read()
+    >>>         job.to_hdf()
 
     >>> pr = Project("my_project")
     >>> job = pr.create_job(MyJob, "my_job")
