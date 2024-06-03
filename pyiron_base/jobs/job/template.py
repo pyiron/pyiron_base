@@ -41,6 +41,7 @@ class TemplateJob(GenericJob, HasStorage):
     >>>     def collect_output(self):
     >>>         with open(self.working_directory + "/output.dat", "w") as f:
     >>>             job.output.message = f.read()
+    >>>         job.to_hdf()
 
     >>> pr = Project("my_project")
     >>> job = pr.create_job(MyJob, "my_job")
@@ -52,6 +53,11 @@ class TemplateJob(GenericJob, HasStorage):
     everything inside `run_static`, but optionally you can use the functions
     `def write_input(self)` and `def collect_output(self)`, which are called
     before and after `run_static`, respectively.
+
+    Important: The job runs in the working directory of the pyiron job. In the
+    example above, it is placed under `my_project/my_job_hdf5/my_job/`. It is
+    therefore important to use the absolute path, or `self.working_directory`
+    to make sure that the files are found correctly
 
     If you have a code which requires an executable, take a look at
     :class:`~.TemplateJob` instead.
