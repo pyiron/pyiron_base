@@ -13,6 +13,7 @@ import shutil
 import stat
 from tqdm.auto import tqdm
 import pandas
+from pyiron_snippets.deprecate import deprecate
 import numpy as np
 
 from pyiron_base.project.jobloader import JobLoader, JobInspector
@@ -27,7 +28,6 @@ from pyiron_base.database.jobtable import (
     get_job_status,
 )
 from pyiron_base.storage.hdfio import ProjectHDFio
-from pyiron_base.utils.deprecate import deprecate
 from pyiron_base.interfaces.has_groups import HasGroups
 from pyiron_base.jobs.flex.factory import create_job_factory
 from pyiron_base.jobs.job.util import _special_symbol_replacements, _get_safe_job_name

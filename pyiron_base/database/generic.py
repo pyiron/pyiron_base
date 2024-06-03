@@ -5,13 +5,13 @@
 DatabaseAccess class deals with accessing the database
 """
 
-from pyiron_base.state.logger import logger
 import numpy as np
 import re
 import os
 from datetime import datetime
-from pyiron_base.utils.deprecate import deprecate
 import pandas
+from pyiron_snippets.deprecate import deprecate
+from pyiron_snippets.logger import logger
 from sqlalchemy import (
     create_engine,
     MetaData,

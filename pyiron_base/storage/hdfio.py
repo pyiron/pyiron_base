@@ -17,11 +17,11 @@ import os
 import importlib
 import pandas
 import posixpath
+from pyiron_snippets.deprecate import deprecate
 import numpy as np
 import sys
 from typing import Union, Optional, Any, Tuple
 
-from pyiron_base.utils.deprecate import deprecate
 from pyiron_base.storage.helper_functions import (
     get_h5_path,
     list_groups_and_nodes,

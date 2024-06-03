@@ -10,10 +10,11 @@ import numbers
 import socket
 from typing import Union
 
+from pyiron_snippets.deprecate import deprecate
+
 from pyiron_base.state import state
 from pyiron_base.interfaces.lockable import Lockable, sentinel
 from pyiron_base.interfaces.has_dict import HasDict
-from pyiron_base.utils.deprecate import deprecate
 from pyiron_base.utils.instance import static_isinstance
 from pyiron_base.jobs.job.extension.server.runmode import Runmode
 

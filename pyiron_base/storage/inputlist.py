@@ -2,8 +2,9 @@
 Backwards compatible way of importing the DataContainer.
 """
 
+from pyiron_snippets.deprecate import deprecate
+
 from pyiron_base.storage.datacontainer import DataContainer
-from pyiron_base.utils.deprecate import deprecate
 
 
 class InputList(DataContainer):

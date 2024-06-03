@@ -12,7 +12,6 @@ from pyiron_base.storage.datacontainer import DataContainer
 from pyiron_base.storage.has_stored_traits import HasStoredTraits
 from pyiron_base.storage.inputlist import InputList
 from pyiron_base.storage.parameters import GenericParameters
-from pyiron_base.utils.deprecate import Deprecator, deprecate, deprecate_soon
 from pyiron_base.jobs.job.extension.executable import Executable
 from pyiron_base.project.external import Notebook, load, dump
 from pyiron_base.jobs.dynamic import warn_dynamic_job_classes
@@ -45,9 +44,6 @@ from pyiron_base.interfaces.has_hdf import HasHDF
 
 from pyiron_base.jobs.job.toolkit import Toolkit, BaseTools
 
-# Expose snippets references in base API for backwards compatibility
-from pyiron_snippets.import_alarm import ImportAlarm
-
 # Internal init
 from ._version import get_versions
 from pyiron_base.utils.jedi import fix_ipython_autocomplete
@@ -76,10 +72,6 @@ __all__ = [
     HasStoredTraits,
     InputList,
     GenericParameters,
-    Deprecator,
-    deprecate,
-    deprecate_soon,
-    ImportAlarm,
     Executable,
     Notebook,
     load,
