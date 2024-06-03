@@ -1,3 +1,5 @@
+# Redirect to snippets implementation for backwards compatibility
+from pyiron_snippets.logger import logger
 # coding: utf-8
 # Copyright (c) Max-Planck-Institut für Eisenforschung GmbH - Computational Materials Design (CM) Department
 # Distributed under the terms of "New BSD License", see the LICENSE file.

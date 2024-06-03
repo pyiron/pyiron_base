@@ -11,7 +11,7 @@ from itertools import count
 import time
 from typing import Callable, TypeVar, Type, Tuple, Optional, Union
 
-from pyiron_base.state.logger import logger
+from pyiron_snippets.logger import logger
 
 __author__ = "Joerg Neugebauer, Jan Janssen"
 __copyright__ = (
