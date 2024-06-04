@@ -57,7 +57,6 @@ class InspectTest(PyironTestCase):
         without explicit to_object() from job.content."""
         for i in range(len(test_keys)):
             container_path = "/".join(test_keys[:i])
-            data_path = "/".join(test_keys[i:])
             with self.subTest(container_path=container_path):
                 try:
                     val = self.ham.content["user/test/" + container_path]
