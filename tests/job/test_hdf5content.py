@@ -9,12 +9,17 @@ from pyiron_base.project.generic import Project
 from pyiron_base._tests import PyironTestCase
 
 test_keys = ["my", "recursive", "test", "data"]
+
+
 def _wrap(k, *vs):
     if vs == ():
         return k
     else:
         return {k: _wrap(*vs)}
+
+
 test_data = _wrap(*test_keys)
+
 
 class InspectTest(PyironTestCase):
     @classmethod
@@ -57,19 +62,23 @@ class InspectTest(PyironTestCase):
                 try:
                     val = self.ham.content["user/test/" + container_path]
                     self.assertEqual(
-                            _wrap(*test_keys[i:]), val,
-                            "HDF5Content did not return correct value from "
-                            "recursive DataContainer!"
+                        _wrap(*test_keys[i:]),
+                        val,
+                        "HDF5Content did not return correct value from "
+                        "recursive DataContainer!",
                     )
                     # last val we get will be a str
                     if i + 1 != len(test_keys):
                         self.assertIsInstance(
-                                val, DataContainer,
-                                "HDF5Content did not return a DataContainers!"
+                            val,
+                            DataContainer,
+                            "HDF5Content did not return a DataContainers!",
                         )
                 except KeyError:
-                    self.fail("HDF5Content should not raise errors in partial "
-                              "access to recursive DataContainers")
+                    self.fail(
+                        "HDF5Content should not raise errors in partial "
+                        "access to recursive DataContainers"
+                    )
 
     def test_setitem(self):
         self.ham["user/output/some_value"] = 0.3
