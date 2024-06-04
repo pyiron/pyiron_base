@@ -4,9 +4,17 @@
 
 import unittest
 import os
+from pyiron_base import DataContainer
 from pyiron_base.project.generic import Project
 from pyiron_base._tests import PyironTestCase
 
+test_keys = ["my", "recursive", "test", "data"]
+def _wrap(k, *vs):
+    if vs == ():
+        return k
+    else:
+        return {k: _wrap(*vs)}
+test_data = _wrap(*test_keys)
 
 class InspectTest(PyironTestCase):
     @classmethod
@@ -14,6 +22,7 @@ class InspectTest(PyironTestCase):
         cls.file_location = os.path.dirname(os.path.abspath(__file__))
         cls.project = Project(os.path.join(cls.file_location, "hdf5_content"))
         cls.ham = cls.project.create_job("ScriptJob", "job_test_run")
+        cls.ham["user/test"] = DataContainer(test_data)
         cls.ham.save()
 
     @classmethod
@@ -37,6 +46,30 @@ class InspectTest(PyironTestCase):
                 job_inspect["input"].list_nodes() + job_inspect["input"].list_groups()
             ),
         )
+
+    def test_recusive_load(self):
+        """DataContainer values should be accessible at any (recursive) level
+        without explicit to_object() from job.content."""
+        for i in range(len(test_keys)):
+            container_path = "/".join(test_keys[:i])
+            data_path = "/".join(test_keys[i:])
+            with self.subTest(container_path=container_path):
+                try:
+                    val = self.ham.content["user/test/" + container_path]
+                    self.assertEqual(
+                            _wrap(*test_keys[i:]), val,
+                            "HDF5Content did not return correct value from "
+                            "recursive DataContainer!"
+                    )
+                    # last val we get will be a str
+                    if i + 1 != len(test_keys):
+                        self.assertIsInstance(
+                                val, DataContainer,
+                                "HDF5Content did not return a DataContainers!"
+                        )
+                except KeyError:
+                    self.fail("HDF5Content should not raise errors in partial "
+                              "access to recursive DataContainers")
 
     def test_setitem(self):
         self.ham["user/output/some_value"] = 0.3

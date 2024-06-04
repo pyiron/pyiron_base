@@ -151,7 +151,7 @@ def recursive_load_from_hdf(project_hdf5: ProjectHDFio, item: str):
             # where we are looking for the data container
             container_path = "/".join(name_lst[:-i])
             # where we are looking for data in the container
-            data_path = "/".join(name_lst[-1:])
+            data_path = "/".join(name_lst[-i:])
             yield container_path, data_path
 
     try:
