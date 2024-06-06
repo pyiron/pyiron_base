@@ -4,8 +4,8 @@ import posixpath
 
 
 # DataTypes implemented by h5io which are not supported by h5py are stored as HDF5 groups rather than HDF5 nodes.
-# We thread these special HDF5 groups as HDF5 nodes unless they are of type list, dict, tuple or custom classes 
-# stored with __set_state__()/__reduce__(). 
+# We thread these special HDF5 groups as HDF5 nodes unless they are of type list, dict, tuple or custom classes
+# stored with __set_state__()/__reduce__().
 h5io_group_types = (
     "csc_matrix",
     "csr_matrix",
