@@ -7,7 +7,6 @@ Data structure for versatile data handling.
 
 import copy
 import json
-import warnings
 from collections.abc import Sequence, Set, Mapping, MutableMapping
 
 import numpy as np
@@ -817,6 +816,7 @@ class DataContainerBase(MutableMapping, Lockable, HasGroups):
         warnings.warn("Unlock previously locked object!")
         super()._on_unlock()
 
+
 class DataContainer(DataContainerBase, HasHDF):
     __doc__ = f"""{DataContainerBase.__doc__}
 
@@ -930,7 +930,10 @@ class DataContainer(DataContainerBase, HasHDF):
                     if n in _internal_hdf_nodes:
                         continue
                     items.append(
-                        (*normalize_key(n), hdf[n] if not self._lazy else HDFStub(hdf, n))
+                        (
+                            *normalize_key(n),
+                            hdf[n] if not self._lazy else HDFStub(hdf, n),
+                        )
                     )
                 for g in hdf.list_groups():
                     items.append(
