@@ -7,8 +7,8 @@ Data structure for versatile data handling.
 
 import copy
 import json
-import warnings
 from collections.abc import Sequence, Set, Mapping, MutableMapping
+import warnings
 
 import numpy as np
 import pandas
@@ -814,7 +814,24 @@ class DataContainerBase(MutableMapping, Lockable, HasGroups):
 
     # Lockable overload
     def _on_unlock(self):
-        warnings.warn("Unlock previously locked object!")
+        from sys import version_info as python_version
+
+        # a little dance to ensure that warning appear at the correct call
+        # site, i.e. where someone either calls unlocked() or sets read_only
+        if python_version[0] == 3 and python_version[1] >= 12:
+            from pyiron_base.interfaces.lockable import __file__ as lock_file
+
+            warnings.warn(
+                "Unlock previously locked object!",
+                skip_file_prefixes=(__file__, lock_file),
+            )
+        else:
+            # stacklevel is so high, because _on_unlock is called after several
+            # layers of Lockable and DataContainer.__setattr__ when used to set
+            # read_only; when used with unlocked() a fixed stack level still
+            # emits it at the wrong place, but we cannot do better without
+            # Python 3.12
+            warnings.warn("Unlock previously locked object!", stacklevel=5)
         super()._on_unlock()
 
 
@@ -904,46 +921,50 @@ class DataContainer(DataContainerBase, HasHDF):
                 del hdf[n]
 
     def _from_hdf(self, hdf, version=None):
-        self.clear()
+        with self.unlocked():
+            self.clear()
 
-        if version == "0.1.0":
-            self.update(hdf["data"], wrap=True)
-            self.read_only = bool(hdf.get("read_only", False))
-        else:
+            if version == "0.1.0":
+                self.update(hdf["data"], wrap=True)
+                self.read_only = bool(hdf.get("read_only", False))
+            else:
 
-            def normalize_key(name):
-                # split a dataset/group name into the position in the list and
-                # the key
-                if "__index_" in name:
-                    k, i = name.split("__index_", maxsplit=1)
-                else:
-                    k = name
-                    i = -1
-                i = int(i)
-                if k == "":
-                    return i, i
-                else:
-                    return i, k
+                def normalize_key(name):
+                    # split a dataset/group name into the position in the list and
+                    # the key
+                    if "__index_" in name:
+                        k, i = name.split("__index_", maxsplit=1)
+                    else:
+                        k = name
+                        i = -1
+                    i = int(i)
+                    if k == "":
+                        return i, i
+                    else:
+                        return i, k
 
-            items = []
-            for n in hdf.list_nodes():
-                if n in _internal_hdf_nodes:
-                    continue
-                items.append(
-                    (*normalize_key(n), hdf[n] if not self._lazy else HDFStub(hdf, n))
-                )
-            for g in hdf.list_groups():
-                items.append(
-                    (
-                        *normalize_key(g),
-                        to_object(hdf[g]) if not self._lazy else HDFStub(hdf, g),
+                items = []
+                for n in hdf.list_nodes():
+                    if n in _internal_hdf_nodes:
+                        continue
+                    items.append(
+                        (
+                            *normalize_key(n),
+                            hdf[n] if not self._lazy else HDFStub(hdf, n),
+                        )
                     )
-                )
+                for g in hdf.list_groups():
+                    items.append(
+                        (
+                            *normalize_key(g),
+                            to_object(hdf[g]) if not self._lazy else HDFStub(hdf, g),
+                        )
+                    )
 
-            for _, k, v in sorted(items, key=lambda x: x[0]):
-                self[k] = v
+                for _, k, v in sorted(items, key=lambda x: x[0]):
+                    self[k] = v
 
-            self.read_only = bool(hdf.get("READ_ONLY", False))
+                self.read_only = bool(hdf.get("READ_ONLY", False))
 
     # HDFStub compat
     def __getitem__(self, key):

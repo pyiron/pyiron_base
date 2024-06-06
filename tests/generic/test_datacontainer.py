@@ -688,8 +688,10 @@ class TestDataContainer(TestWithCleanProject):
 
         with warnings.catch_warnings(record=True) as w:
             pl.read_only = False
-            self.assertEqual(
-                len(w), 1, "Trying to change read-only flag back didn't raise warning."
+            # since read_only is propageted recursively through sub data
+            # containers, this can raise more than one warning
+            self.assertGreater(
+                len(w), 0, "Trying to change read-only flag back didn't raise warning."
             )
 
     def test_recursive_append(self):
