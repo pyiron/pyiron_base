@@ -534,7 +534,7 @@ class FileHDFio(HasGroups, Pointer):
             dict: {'groups': [list of groups], 'nodes': [list of nodes]}
         """
         if self.file_exists:
-            nodes, groups = _list_groups_and_nodes(
+            groups, nodes = _list_groups_and_nodes(
                 file_name=self.file_name,
                 h5_path=self.h5_path,
             )
