@@ -2,10 +2,8 @@ import os
 import posixpath
 import h5py
 from unittest import TestCase
-from pyiron_base.storage.helper_functions import (
-    list_groups_and_nodes,
-    read_dict_from_hdf,
-)
+from pyiron_base.storage.hdfio import _list_groups_and_nodes
+from h5io_browser import read_nested_dict_from_hdf
 from h5io_browser.base import write_dict_to_hdf, _read_hdf, _write_hdf
 
 
@@ -44,11 +42,11 @@ class TestWriteHdfIO(TestCase):
     def test_read_dict_hierarchical(self):
         self.assertEqual(
             {"key_b": 3},
-            read_dict_from_hdf(file_name=self.file_name, h5_path=self.h5_path),
+            read_nested_dict_from_hdf(file_name=self.file_name, h5_path=self.h5_path),
         )
         self.assertEqual(
             {"key_a": {"idx_0": 1, "idx_1": 2}, "key_b": 3, "key_c": {"key_d": 4}},
-            read_dict_from_hdf(
+            read_nested_dict_from_hdf(
                 file_name=self.file_name,
                 h5_path=self.h5_path,
                 group_paths=["key_a", "key_c"],
@@ -60,7 +58,7 @@ class TestWriteHdfIO(TestCase):
                 "key_b": 3,
                 "key_c": {"key_d": 4, "key_e": {"key_f": 5}},
             },
-            read_dict_from_hdf(
+            read_nested_dict_from_hdf(
                 file_name=self.file_name,
                 h5_path=self.h5_path,
                 group_paths=["key_a", "key_c", "key_c/key_e"],
@@ -72,7 +70,7 @@ class TestWriteHdfIO(TestCase):
                 "key_b": 3,
                 "key_c": {"key_d": 4, "key_e": {"key_f": 5}},
             },
-            read_dict_from_hdf(
+            read_nested_dict_from_hdf(
                 file_name=self.file_name,
                 h5_path=self.h5_path,
                 recursive=True,
@@ -105,8 +103,7 @@ class TestWriteHdfIO(TestCase):
         )
 
     def test_list_groups(self):
-        with h5py.File(self.file_name, "r") as f:
-            groups, nodes = list_groups_and_nodes(hdf=f, h5_path="data_hierarchical")
+        groups, nodes = _list_groups_and_nodes(file_name=self.file_name, h5_path="data_hierarchical")
         self.assertEqual(list(sorted(groups)), ["key_a", "key_c"])
         self.assertEqual(nodes, ["key_b"])
 
@@ -134,7 +131,7 @@ class TestWriteDictHdfIO(TestCase):
     def test_read_dict_hierarchical(self):
         self.assertEqual(
             self.data_hierarchical,
-            read_dict_from_hdf(file_name=self.file_name, h5_path=self.h5_path),
+            read_nested_dict_from_hdf(file_name=self.file_name, h5_path=self.h5_path),
         )
 
     def test_hdf5_structure(self):
@@ -149,7 +146,9 @@ class TestWriteDictHdfIO(TestCase):
         )
 
     def test_list_groups(self):
-        with h5py.File(self.file_name, "r") as f:
-            groups, nodes = list_groups_and_nodes(hdf=f, h5_path="data_hierarchical")
+        groups, nodes = _list_groups_and_nodes(
+            file_name=self.file_name,
+            h5_path="data_hierarchical",
+        )
         self.assertEqual(groups, [])
         self.assertEqual(list(sorted(nodes)), ["a", "b", "c"])
