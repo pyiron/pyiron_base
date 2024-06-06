@@ -8,10 +8,7 @@ h5io_group_types = (
     "csr_matrix",
     "csc_array",
     "csr_array",
-    "dict",
-    "list",
     "multiarray",
-    "tuple",
 )
 
 
