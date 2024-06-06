@@ -3,6 +3,18 @@ import h5py
 import posixpath
 
 
+h5io_group_types = (
+    "csc_matrix",
+    "csr_matrix",
+    "csc_array",
+    "csr_array",
+    "dict",
+    "list",
+    "multiarray",
+    "tuple",
+)
+
+
 def list_groups_and_nodes(hdf, h5_path):
     """
     Get the list of groups and list of nodes from an open HDF5 file
@@ -20,7 +32,14 @@ def list_groups_and_nodes(hdf, h5_path):
         h = hdf[h5_path]
         for k in h.keys():
             if isinstance(h[k], h5py.Group):
-                groups.add(k)
+                group_attrs_dict = h[k].attrs
+                if (
+                    "TITLE" in group_attrs_dict.keys()
+                    and group_attrs_dict["TITLE"] in h5io_group_types
+                ):
+                    nodes.add(k)
+                else:
+                    groups.add(k)
             else:
                 nodes.add(k)
     except KeyError:
@@ -97,7 +116,14 @@ def read_dict_from_hdf(
             h = hdf[h5_path]
             group_lst = []
             for group in [h[k].name for k in h.keys() if isinstance(h[k], h5py.Group)]:
-                group_lst += [group] + get_groups_hdf(hdf=hdf, h5_path=group)
+                group_attrs_dict = h[group].attrs
+                if (
+                    "TITLE" in group_attrs_dict.keys()
+                    and group_attrs_dict["TITLE"] not in h5io_group_types
+                ):
+                    group_lst += [group] + get_groups_hdf(hdf=hdf, h5_path=group)
+                elif "TITLE" not in group_attrs_dict.keys():
+                    group_lst += [group] + get_groups_hdf(hdf=hdf, h5_path=group)
             return group_lst
         except KeyError:
             return []
