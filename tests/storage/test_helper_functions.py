@@ -103,7 +103,9 @@ class TestWriteHdfIO(TestCase):
         )
 
     def test_list_groups(self):
-        groups, nodes = _list_groups_and_nodes(file_name=self.file_name, h5_path="data_hierarchical")
+        groups, nodes = _list_groups_and_nodes(
+            file_name=self.file_name, h5_path="data_hierarchical"
+        )
         self.assertEqual(list(sorted(groups)), ["key_a", "key_c"])
         self.assertEqual(nodes, ["key_b"])
 
