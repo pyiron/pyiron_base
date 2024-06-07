@@ -6,9 +6,9 @@ Classes to map the Python objects to HDF5 data structures
 """
 
 import numbers
+import h5py
 from h5io_browser import Pointer, read_nested_dict_from_hdf
 from h5io_browser.base import (
-    _get_hdf_content,
     _open_hdf,
     _is_ragged_in_1st_dim_only,
     _read_hdf,
@@ -53,21 +53,24 @@ def _extract_module_class_name(type_field: str) -> Tuple[str, str]:
 def _list_groups_and_nodes(hdf, h5_path):
     """
     Get the list of groups and list of nodes from an open HDF5 file
-
     Args:
         hdf (h5py.File): file handle of an open HDF5 file
         h5_path (str): path inside the HDF5 file
-
     Returns:
         list, list: list of groups and list of nodes
     """
-    if h5_path[0] != "/":
-        h5_path = "/" + h5_path
-    nodes, groups = _get_hdf_content(hdf=hdf[h5_path], recursive=False)
-    return (
-        [group[len(h5_path) + 1 :] for group in groups],
-        [node[len(h5_path) + 1 :] for node in nodes],
-    )
+    groups = set()
+    nodes = set()
+    try:
+        h = hdf[h5_path]
+        for k in h.keys():
+            if isinstance(h[k], h5py.Group):
+                groups.add(k)
+            else:
+                nodes.add(k)
+    except KeyError:
+        pass
+    return list(groups), list(nodes)
 
 
 def _import_class(module_path, class_name):
