@@ -6,8 +6,9 @@ Classes to map the Python objects to HDF5 data structures
 """
 
 import numbers
-from h5io_browser import Pointer, list_hdf, read_nested_dict_from_hdf
+from h5io_browser import Pointer, read_nested_dict_from_hdf
 from h5io_browser.base import (
+    _get_hdf_content,
     _open_hdf,
     _is_ragged_in_1st_dim_only,
     _read_hdf,
@@ -49,12 +50,12 @@ def _extract_module_class_name(type_field: str) -> Tuple[str, str]:
     return fully_qualified_path.rsplit(".", maxsplit=1)
 
 
-def _list_groups_and_nodes(file_name, h5_path):
+def _list_groups_and_nodes(hdf, h5_path):
     """
     Get the list of groups and list of nodes from an open HDF5 file
 
     Args:
-        file_name (str): file name of the HDF5 file
+        hdf (h5py.File): file handle of an open HDF5 file
         h5_path (str): path inside the HDF5 file
 
     Returns:
@@ -62,7 +63,7 @@ def _list_groups_and_nodes(file_name, h5_path):
     """
     if h5_path[0] != "/":
         h5_path = "/" + h5_path
-    nodes, groups = list_hdf(file_name=file_name, h5_path=h5_path, recursive=False)
+    nodes, groups = _get_hdf_content(hdf=hdf[h5_path], recursive=False)
     return (
         [group[len(h5_path) + 1 :] for group in groups],
         [node[len(h5_path) + 1 :] for node in nodes],
@@ -534,10 +535,8 @@ class FileHDFio(HasGroups, Pointer):
             dict: {'groups': [list of groups], 'nodes': [list of nodes]}
         """
         if self.file_exists:
-            groups, nodes = _list_groups_and_nodes(
-                file_name=self.file_name,
-                h5_path=self.h5_path,
-            )
+            with _open_hdf(self.file_name) as hdf:
+                groups, nodes = _list_groups_and_nodes(hdf=hdf, h5_path=self.h5_path)
             iopy_nodes = self._filter_io_objects(set(groups))
             return {
                 "groups": sorted(list(set(groups) - iopy_nodes)),
