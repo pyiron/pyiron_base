@@ -26,7 +26,7 @@ classifiers = [
 dependencies = [
     "cloudpickle==3.0.0",
     "gitpython==3.1.43",
-    "h5io_browser==0.0.12",
+    "h5io_browser==0.0.14",
     "h5py==3.11.0",
     "jinja2==3.1.4",
     "numpy==1.26.4",
