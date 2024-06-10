@@ -425,6 +425,18 @@ class GenericJob(JobCore, HasDict):
 
     def write_input(self):
         """
+        Call routines that generate the code specific input files
+        Returns:
+        """
+        input_dict = self.get_input_file_dict()
+        for file_name, content in input_dict["files_to_create"].items():
+            with open(os.path.join(self.working_directory, file_name), "w") as f:
+                f.writelines(content)
+        for file_name, source in input_dict["files_to_copy"].items():
+            shutil.copy(source, os.path.join(self.working_directory, file_name))
+
+    def get_input_file_dict(self):
+        """
         Write the input files for the external executable. This method has to be implemented in the individual
         hamiltonians.
         """
@@ -433,18 +445,23 @@ class GenericJob(JobCore, HasDict):
             and self._write_work_dir_warnings
             and not self._python_only_job
         ):
-            with open(
-                os.path.join(self.working_directory, "WARNING_pyiron_modified_content"),
-                "w",
-            ) as f:
-                f.write(
-                    "Files in this directory are intended to be written and read by pyiron. \n\n"
-                    "pyiron may transform user input to enhance performance, thus, use these files with care!\n"
-                    "Consult the log and/or the documentation to gain further information.\n\n"
-                    "To disable writing these warning files, specify \n"
-                    "WRITE_WORK_DIR_WARNINGS=False in the .pyiron configuration file (or set the "
-                    "PYIRONWRITEWORKDIRWARNINGS environment variable accordingly)."
-                )
+            content = [
+                "Files in this directory are intended to be written and read by pyiron. \n\n",
+                "pyiron may transform user input to enhance performance, thus, use these files with care!\n",
+                "Consult the log and/or the documentation to gain further information.\n\n",
+                "To disable writing these warning files, specify \n",
+                "WRITE_WORK_DIR_WARNINGS=False in the .pyiron configuration file (or set the ",
+                "PYIRONWRITEWORKDIRWARNINGS environment variable accordingly).",
+            ]
+            return {
+                "files_to_create": {"WARNING_pyiron_modified_content": "".join(content)},
+                "files_to_copy": {},
+            }
+        else:
+            return {
+                "files_to_create": {},
+                "files_to_copy": {},
+            }
 
     def collect_output(self):
         """
