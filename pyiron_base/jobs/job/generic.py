@@ -43,7 +43,7 @@ from pyiron_base.jobs.job.runfunction import (
     execute_job_with_external_executable,
 )
 from pyiron_base.jobs.job.util import (
-    _copy_restart_files,
+    _get_restart_copy_dict,
     _kill_child,
     _job_store_before_copy,
     _job_reload_after_copy,
@@ -458,12 +458,12 @@ class GenericJob(JobCore, HasDict):
                 "files_to_create": {
                     "WARNING_pyiron_modified_content": "".join(content)
                 },
-                "files_to_copy": {},
+                "files_to_copy": _get_restart_copy_dict(job=self),
             }
         else:
             return {
                 "files_to_create": {},
-                "files_to_copy": {},
+                "files_to_copy": _get_restart_copy_dict(job=self),
             }
 
     def collect_output(self):
@@ -1193,7 +1193,6 @@ class GenericJob(JobCore, HasDict):
         if self._check_if_input_should_be_written():
             self.project_hdf5.create_working_directory()
             self.write_input()
-            _copy_restart_files(job=self)
         self.status.created = True
         self._calculate_predecessor()
         print(
