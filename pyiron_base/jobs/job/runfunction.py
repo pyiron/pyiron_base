@@ -650,7 +650,7 @@ def execute_job_with_external_executable(job):
                 env=os.environ.copy(),
             ).stdout
         except (subprocess.CalledProcessError, FileNotFoundError) as e:
-            out, job_crashed = handle_failed_job(job=job, error=e)
+            job_crashed, out = handle_failed_job(job=job, error=e)
     else:
         import conda_subprocess
 
@@ -672,7 +672,7 @@ def execute_job_with_external_executable(job):
                 prefix_path=prefix_path,
             ).stdout
         except (subprocess.CalledProcessError, FileNotFoundError) as e:
-            out, job_crashed = handle_failed_job(job=job, error=e)
+            job_crashed, out = handle_failed_job(job=job, error=e)
 
     job._logger.info(
         "{}, status: {}, output: {}".format(job.job_info_str, job.status, out)
