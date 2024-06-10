@@ -454,7 +454,9 @@ class GenericJob(JobCore, HasDict):
                 "PYIRONWRITEWORKDIRWARNINGS environment variable accordingly).",
             ]
             return {
-                "files_to_create": {"WARNING_pyiron_modified_content": "".join(content)},
+                "files_to_create": {
+                    "WARNING_pyiron_modified_content": "".join(content)
+                },
                 "files_to_copy": {},
             }
         else:
