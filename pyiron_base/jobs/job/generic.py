@@ -1175,7 +1175,6 @@ class GenericJob(JobCore, HasDict):
             self.write_input()
             _copy_restart_files(job=self)
         self.status.created = True
-        self._calculate_predecessor()
         print(
             "The job "
             + self.job_name
@@ -1469,42 +1468,6 @@ class GenericJob(JobCore, HasDict):
                 "No multi core executable found falling back to the single core executable.",
                 RuntimeWarning,
             )
-
-    def _calculate_predecessor(self):
-        """
-        Internal helper function to calculate the predecessor of the current job if it was not calculated before. This
-        function is used to execute a series of jobs based on their parent relationship - marked by the parent ID.
-        Mainly used by the ListMaster job type.
-        """
-        parent_id = self.parent_id
-        if parent_id is not None:
-            if self._hdf5.db.get_item_by_id(parent_id)["status"] in [
-                "initialized",
-                "created",
-            ]:
-                self.status.suspended = True
-                parent_job = self._hdf5.load(parent_id)
-                parent_job.run()
-
-    def _calculate_successor(self):
-        """
-        Internal helper function to calculate the successor of the current job. This function is used to execute a
-        series of jobs based on their parent relationship - marked by the parent ID. Mainly used by the ListMaster job
-        type.
-        """
-        for child_id in sorted(
-            [
-                job["id"]
-                for job in self.project.db.get_items_dict(
-                    {"parentid": str(self.job_id)}, return_all_columns=False
-                )
-            ]
-        ):
-            if self._hdf5.db.get_item_by_id(child_id)["status"] in ["suspended"]:
-                child = self._hdf5.load(child_id)
-                child.status.created = True
-                self._before_successor_calc(child)
-                child.run()
 
     @deprecate("Use job.save()")
     def _create_job_structure(self, debug=False):
