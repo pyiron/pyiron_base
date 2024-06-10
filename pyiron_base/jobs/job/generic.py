@@ -11,6 +11,7 @@ from inspect import isclass
 import os
 import platform
 import posixpath
+import shutil
 import warnings
 
 from h5io_browser.base import _read_hdf, _write_hdf
