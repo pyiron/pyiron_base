@@ -622,7 +622,6 @@ def execute_subprocess(
     conda_environment_name: Optional[str] = None,
     conda_environment_path: Optional[str] = None,
 ) -> str:
-    job_crashed, out = False, None
     if conda_environment_name is None and conda_environment_path is None:
         out = subprocess.run(
             executable,
