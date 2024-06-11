@@ -636,12 +636,10 @@ def execute_subprocess(
     else:
         import conda_subprocess
 
-        if job.server.conda_environment_name is not None:
-            prefix_name = job.server.conda_environment_name
-            prefix_path = None
+        if conda_environment_name is not None:
+            conda_environment_path = None
         else:
-            prefix_name = None
-            prefix_path = job.server.conda_environment_path
+            conda_environment_name = None
 
         out = conda_subprocess.run(
             executable,
@@ -650,8 +648,8 @@ def execute_subprocess(
             stderr=subprocess.STDOUT,
             universal_newlines=True,
             check=True,
-            prefix_name=prefix_name,
-            prefix_path=prefix_path,
+            prefix_name=conda_environment_name,
+            prefix_path=conda_environment_path,
         ).stdout
 
     return out
