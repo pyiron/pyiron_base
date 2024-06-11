@@ -787,6 +787,7 @@ def multiprocess_wrapper(
 
 def generate_calculate_function(write_input_funct=None, collect_output_funct=None):
     def calculate(input_dict, executable_dict, output_dict={}):
+        os.makedirs(executable_dict["working_directory"], exist_ok=True)
         if write_input_funct is not None:
             write_input_funct(
                 input_dict=input_dict,

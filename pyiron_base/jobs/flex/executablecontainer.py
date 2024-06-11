@@ -50,6 +50,7 @@ class ExecutableContainerJob(TemplateJob):
         super().__init__(project, job_name)
         self._write_input_funct = None
         self._collect_output_funct = None
+        self._python_only_job = True
 
     def set_job_type(
         self,
@@ -88,14 +89,17 @@ class ExecutableContainerJob(TemplateJob):
         shell_output, parsed_output, error = calc_funct(
             input_dict=self.input.to_builtin(),
             executable_dict={
-                "executable": self.executable,
+                "executable": self.executable.executable_path,
                 "shell": True,
                 "working_directory": self.working_directory,
                 "conda_environment_name": self.server.conda_environment_name,
                 "conda_environment_path": self.server.conda_environment_path,
             },
         )
-        shell_output, job_crashed = handle_failed_job(job=self, error=error)
+        if error is not None:
+            shell_output, job_crashed = handle_failed_job(job=self, error=error)
+        else:
+            job_crashed = False
         self._logger.info(
             "{}, status: {}, output: {}".format(
                 self.job_info_str, self.status, shell_output
