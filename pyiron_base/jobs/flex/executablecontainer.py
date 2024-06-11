@@ -1,7 +1,10 @@
+import posixpath
+
 import cloudpickle
 import numpy as np
+
 from pyiron_base.jobs.job.template import TemplateJob
-from pyiron_base.jobs.job.runfunction import generate_calculate_function
+from pyiron_base.jobs.job.runfunction import generate_calculate_function, handle_failed_job
 
 
 class ExecutableContainerJob(TemplateJob):
@@ -90,7 +93,7 @@ class ExecutableContainerJob(TemplateJob):
             },
         )
         shell_output, job_crashed = handle_failed_job(job=self, error=error)
-        job._logger.info(
+        self._logger.info(
             "{}, status: {}, output: {}".format(
                 self.job_info_str, self.status, shell_output
             )
