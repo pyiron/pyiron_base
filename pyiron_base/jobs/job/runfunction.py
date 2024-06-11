@@ -7,6 +7,7 @@ import multiprocessing
 import os
 import posixpath
 import subprocess
+from typing import Optional
 
 from jinja2 import Template
 from pyiron_snippets.deprecate import deprecate
@@ -615,13 +616,17 @@ def run_time_decorator(func):
 
 
 def execute_subprocess(
-    executable, shell, conda_environment_name=None, conda_environment_path=None
-):
+    executable: str,
+    shell: bool,
+    working_directory: str,
+    conda_environment_name: Optional[str] = None,
+    conda_environment_path: Optional[str] = None,
+) -> str:
     job_crashed, out = False, None
     if conda_environment_name is None and conda_environment_path is None:
         out = subprocess.run(
             executable,
-            cwd=job.project_hdf5.working_directory,
+            cwd=working_directory,
             shell=shell,
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
@@ -641,7 +646,7 @@ def execute_subprocess(
 
         out = conda_subprocess.run(
             executable,
-            cwd=job.project_hdf5.working_directory,
+            cwd=working_directory,
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
             universal_newlines=True,
@@ -677,6 +682,7 @@ def execute_job_with_external_executable(job):
         execute_subprocess(
             executable=executable,
             shell=shell,
+            working_directory=job.working_directory,
             conda_environment_name=job.server.conda_environment_name,
             conda_environment_path=job.server.conda_environment_path,
         )
