@@ -74,7 +74,7 @@ class ExecutableContainerJob(TemplateJob):
             self.input.update(default_input_dict)
 
     def run_static(self):
-        job.set_input_to_read_only()
+        self.set_input_to_read_only()
         calc_funct = generate_calculate_function(
             write_input_funct=self._write_input_funct,
             collect_output_funct=self._collect_output_funct,
@@ -92,11 +92,11 @@ class ExecutableContainerJob(TemplateJob):
         shell_output, job_crashed = handle_failed_job(job=self, error=error)
         job._logger.info(
             "{}, status: {}, output: {}".format(
-                job.job_info_str, job.status, shell_output
+                self.job_info_str, self.status, shell_output
             )
         )
         with open(
-            posixpath.join(job.project_hdf5.working_directory, "error.out"), mode="w"
+            posixpath.join(self.project_hdf5.working_directory, "error.out"), mode="w"
         ) as f_err:
             f_err.write(shell_output)
 
@@ -104,11 +104,11 @@ class ExecutableContainerJob(TemplateJob):
             self.storage.output.stdout = shell_output
             if parsed_output is not None:
                 self.output.update(parsed_output)
-            job.status.finished = True
+            self.status.finished = True
             self.to_hdf()
         else:
-            job.status.aborted = True
-            job._hdf5["status"] = job.status.string
+            self.status.aborted = True
+            self._hdf5["status"] = job.status.string
 
     def to_dict(self):
         job_dict = super().to_dict()
