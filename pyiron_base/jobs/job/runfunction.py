@@ -785,6 +785,37 @@ def multiprocess_wrapper(
         job_wrap.job.run_static()
 
 
+def generate_calculate_function(write_input_funct=None, collect_output_funct=None):
+    def calculate(input_dict, executable_dict, output_dict={}):
+        if write_input_funct is not None:
+            write_input_funct(
+                input_dict=input_dict,
+                working_directory=executable_dict["working_directory"],
+            )
+        try:
+            shell_output = execute_subprocess(**executable_dict)
+            error = None
+        except (subprocess.CalledProcessError, FileNotFoundError) as e:
+            shell_output = None
+            parsed_output = None
+            error = e
+        else:
+            if collect_output_funct is not None and len(output_dict) > 0:
+                parsed_output = collect_output_funct(
+                    working_directory=executable_dict["working_directory"]
+                    ** output_dict,
+                )
+            elif collect_output_funct is not None:
+                parsed_output = collect_output_funct(
+                    working_directory=executable_dict["working_directory"]
+                )
+            else:
+                parsed_output = None
+        return shell_output, parsed_output, error
+
+    return calculate
+
+
 def _generate_flux_execute_string(job, database_is_disabled):
     if not database_is_disabled:
         executable_template = Template(

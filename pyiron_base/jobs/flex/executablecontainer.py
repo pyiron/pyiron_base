@@ -1,6 +1,7 @@
 import cloudpickle
 import numpy as np
 from pyiron_base.jobs.job.template import TemplateJob
+from pyiron_base.jobs.job.runfunction import generate_calculate_function
 
 
 class ExecutableContainerJob(TemplateJob):
@@ -72,22 +73,42 @@ class ExecutableContainerJob(TemplateJob):
         if default_input_dict is not None:
             self.input.update(default_input_dict)
 
-    def write_input(self):
-        if self._write_input_funct is not None:
-            self._write_input_funct(
-                input_dict=self.input.to_builtin(),
-                working_directory=self.working_directory,
-            )
-
     def run_static(self):
-        self.storage.output.stdout = super().run_static()
-
-    def collect_output(self):
-        if self._collect_output_funct is not None:
-            self.output.update(
-                self._collect_output_funct(working_directory=self.working_directory)
+        job.set_input_to_read_only()
+        calc_funct = generate_calculate_function(
+            write_input_funct=self._write_input_funct,
+            collect_output_funct=self._collect_output_funct,
+        )
+        shell_output, parsed_output, error = calc_funct(
+            input_dict=self.input.to_builtin(),
+            executable_dict={
+                "executable": self.executable,
+                "shell": True,
+                "working_directory": self.working_directory,
+                "conda_environment_name": self.server.conda_environment_name,
+                "conda_environment_path": self.server.conda_environment_path,
+            },
+        )
+        shell_output, job_crashed = handle_failed_job(job=self, error=error)
+        job._logger.info(
+            "{}, status: {}, output: {}".format(
+                job.job_info_str, job.status, shell_output
             )
+        )
+        with open(
+            posixpath.join(job.project_hdf5.working_directory, "error.out"), mode="w"
+        ) as f_err:
+            f_err.write(shell_output)
+
+        if not job_crashed:
+            self.storage.output.stdout = shell_output
+            if parsed_output is not None:
+                self.output.update(parsed_output)
+            job.status.finished = True
             self.to_hdf()
+        else:
+            job.status.aborted = True
+            job._hdf5["status"] = job.status.string
 
     def to_dict(self):
         job_dict = super().to_dict()
