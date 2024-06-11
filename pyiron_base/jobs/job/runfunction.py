@@ -676,7 +676,7 @@ def execute_job_with_external_executable(job):
     )
     job_crashed, out = False, None
     try:
-        execute_subprocess(
+        out = execute_subprocess(
             executable=executable,
             shell=shell,
             working_directory=job.working_directory,
