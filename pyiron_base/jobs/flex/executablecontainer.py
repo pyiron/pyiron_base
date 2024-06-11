@@ -4,7 +4,10 @@ import cloudpickle
 import numpy as np
 
 from pyiron_base.jobs.job.template import TemplateJob
-from pyiron_base.jobs.job.runfunction import generate_calculate_function, handle_failed_job
+from pyiron_base.jobs.job.runfunction import (
+    generate_calculate_function,
+    handle_failed_job,
+)
 
 
 class ExecutableContainerJob(TemplateJob):
