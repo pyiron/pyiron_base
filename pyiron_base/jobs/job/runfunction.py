@@ -614,6 +614,45 @@ def run_time_decorator(func):
     return wrapper
 
 
+def execute_subprocess(
+    executable, shell, conda_environment_name=None, conda_environment_path=None
+):
+    job_crashed, out = False, None
+    if conda_environment_name is None and conda_environment_path is None:
+        out = subprocess.run(
+            executable,
+            cwd=job.project_hdf5.working_directory,
+            shell=shell,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            universal_newlines=True,
+            check=True,
+            env=os.environ.copy(),
+        ).stdout
+    else:
+        import conda_subprocess
+
+        if job.server.conda_environment_name is not None:
+            prefix_name = job.server.conda_environment_name
+            prefix_path = None
+        else:
+            prefix_name = None
+            prefix_path = job.server.conda_environment_path
+
+        out = conda_subprocess.run(
+            executable,
+            cwd=job.project_hdf5.working_directory,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            universal_newlines=True,
+            check=True,
+            prefix_name=prefix_name,
+            prefix_path=prefix_path,
+        ).stdout
+
+    return out
+
+
 @run_time_decorator
 def execute_job_with_external_executable(job):
     """
@@ -634,45 +673,15 @@ def execute_job_with_external_executable(job):
         cores=job.server.cores, threads=job.server.threads, gpus=job.server.gpus
     )
     job_crashed, out = False, None
-    if (
-        job.server.conda_environment_name is None
-        and job.server.conda_environment_path is None
-    ):
-        try:
-            out = subprocess.run(
-                executable,
-                cwd=job.project_hdf5.working_directory,
-                shell=shell,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.STDOUT,
-                universal_newlines=True,
-                check=True,
-                env=os.environ.copy(),
-            ).stdout
-        except (subprocess.CalledProcessError, FileNotFoundError) as e:
-            job_crashed, out = handle_failed_job(job=job, error=e)
-    else:
-        import conda_subprocess
-
-        if job.server.conda_environment_name is not None:
-            prefix_name = job.server.conda_environment_name
-            prefix_path = None
-        else:
-            prefix_name = None
-            prefix_path = job.server.conda_environment_path
-        try:
-            out = conda_subprocess.run(
-                executable,
-                cwd=job.project_hdf5.working_directory,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.STDOUT,
-                universal_newlines=True,
-                check=True,
-                prefix_name=prefix_name,
-                prefix_path=prefix_path,
-            ).stdout
-        except (subprocess.CalledProcessError, FileNotFoundError) as e:
-            job_crashed, out = handle_failed_job(job=job, error=e)
+    try:
+        execute_subprocess(
+            executable=executable,
+            shell=shell,
+            conda_environment_name=job.server.conda_environment_name,
+            conda_environment_path=job.server.conda_environment_path,
+        )
+    except (subprocess.CalledProcessError, FileNotFoundError) as e:
+        job_crashed, out = handle_failed_job(job=job, error=e)
 
     job._logger.info(
         "{}, status: {}, output: {}".format(job.job_info_str, job.status, out)
