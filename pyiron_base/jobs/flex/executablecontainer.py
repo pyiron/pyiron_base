@@ -111,7 +111,7 @@ class ExecutableContainerJob(TemplateJob):
             self.to_hdf()
         else:
             self.status.aborted = True
-            self._hdf5["status"] = job.status.string
+            self._hdf5["status"] = self.status.string
 
     def to_dict(self):
         job_dict = super().to_dict()
