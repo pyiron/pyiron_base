@@ -436,10 +436,15 @@ class GenericJob(JobCore, HasDict):
         for file_name, source in input_dict["files_to_copy"].items():
             shutil.copy(source, os.path.join(self.working_directory, file_name))
 
-    def get_input_file_dict(self):
+    def get_input_file_dict(self) -> dict:
         """
-        Write the input files for the external executable. This method has to be implemented in the individual
-        hamiltonians.
+        Get an hierarchical dictionary of input files. On the first level the dictionary is divided in file_to_create
+        and files_to_copy. Both are dictionaries use the file names as keys. In file_to_create the values are strings
+        which represent the content which is going to be written to the corresponding file. In files_to_copy the values
+        are the paths to the source files to be copied.
+
+        Returns:
+            dict: hierarchical dictionary of input files
         """
         if (
             state.settings.configuration["write_work_dir_warnings"]
