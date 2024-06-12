@@ -313,6 +313,7 @@ class ScriptJob(GenericJob):
             )
             if self._enable_mpi4py:
                 self.executable._mpi = True
+        return input_file_dict
 
     def collect_output(self):
         """
