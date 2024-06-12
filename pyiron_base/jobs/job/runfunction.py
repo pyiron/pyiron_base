@@ -799,14 +799,10 @@ def generate_calculate_function(write_input_funct=None, collect_output_funct=Non
                 input_dict=input_dict,
                 working_directory=working_directory,
             )
+        accept_crash = executable_dict.pop("accept_crash", False)
+        accepted_return_codes = executable_dict.pop("accepted_return_codes", [])
         try:
-            shell_output = execute_subprocess(
-                **{
-                    k: v
-                    for k, v in executable_dict.items()
-                    if k not in ["accepted_return_codes", "accept_crash"]
-                }
-            )
+            shell_output = execute_subprocess(**executable_dict)
             error = None
             job_crashed = False
         except (subprocess.CalledProcessError, FileNotFoundError) as error:
