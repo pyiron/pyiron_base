@@ -134,7 +134,7 @@ class ExecutableContainerJob(TemplateJob):
             self.set_input_to_read_only()
             if job_crashed:
                 self.status.aborted = True
-                self._hdf5["status"] = job.status.string
+                self._hdf5["status"] = self.status.string
             else:
                 self.status.finished = True
                 self._store_output(output_dict=parsed_output, shell_output=shell_output)

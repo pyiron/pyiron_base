@@ -816,7 +816,7 @@ def generate_calculate_function(write_input_funct=None, collect_output_funct=Non
                 shell_output = error.output
                 if error.returncode in accepted_return_codes:
                     job_crashed = False
-                elif not job.server.accept_crash:
+                elif not accept_crash:
                     error_file = posixpath.join(working_directory, "error.msg")
                     with open(error_file, "w") as f:
                         f.write(error.output)
