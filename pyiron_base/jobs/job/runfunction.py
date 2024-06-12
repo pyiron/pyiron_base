@@ -6,6 +6,7 @@ from datetime import datetime
 import multiprocessing
 import os
 import posixpath
+import shutil
 import subprocess
 
 from jinja2 import Template
@@ -771,6 +772,14 @@ def multiprocess_wrapper(
         raise ValueError("Either job_id or file_path have to be not None.")
     with catch_signals(job_wrap.job.signal_intercept):
         job_wrap.job.run_static()
+
+
+def write_input_files_from_input_dict(input_dict: dict, working_directory: str):
+    for file_name, content in input_dict["files_to_create"].items():
+        with open(os.path.join(working_directory, file_name), "w") as f:
+            f.writelines(content)
+    for file_name, source in input_dict["files_to_copy"].items():
+        shutil.copy(source, os.path.join(working_directory, file_name))
 
 
 def _generate_flux_execute_string(job, database_is_disabled):

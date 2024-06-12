@@ -216,6 +216,19 @@ def _is_valid_job_name(job_name):
         )
 
 
+def _get_restart_copy_dict(job):
+    copy_dict = {}
+    for i, actual_name in enumerate(
+        [os.path.basename(f) for f in job.restart_file_list]
+    ):
+        if actual_name in job.restart_file_dict.keys():
+            new_name = job.restart_file_dict[actual_name]
+        else:
+            new_name = os.path.basename(job.restart_file_list[i])
+        copy_dict[new_name] = job.restart_file_list[i]
+    return copy_dict
+
+
 def _copy_restart_files(job):
     """
     Internal helper function to copy the files required for the restart job.
@@ -224,17 +237,11 @@ def _copy_restart_files(job):
         raise ValueError(
             "The working directory is not yet available to copy restart files"
         )
-    for i, actual_name in enumerate(
-        [os.path.basename(f) for f in job.restart_file_list]
-    ):
-        if actual_name in job.restart_file_dict.keys():
-            new_name = job.restart_file_dict[actual_name]
-            shutil.copy(
-                job.restart_file_list[i],
-                posixpath.join(job.working_directory, new_name),
-            )
-        else:
-            shutil.copy(job.restart_file_list[i], job.working_directory)
+    for file_name, source in _get_restart_copy_dict(job=job).items():
+        shutil.copy(
+            source,
+            posixpath.join(job.working_directory, file_name),
+        )
 
 
 def _kill_child(job):
