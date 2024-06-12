@@ -6,7 +6,6 @@ from pyiron_base.jobs.job.template import TemplateJob
 from pyiron_base.jobs.job.runfunction import (
     execute_calculate_function,
     generate_calculate_function,
-    raise_runtimeerror_for_failed_job,
 )
 
 
