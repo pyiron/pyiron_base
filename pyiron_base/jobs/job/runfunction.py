@@ -731,27 +731,25 @@ def handle_failed_job(job, error):
         if error.returncode in job.executable.accepted_return_codes:
             return False, out
         elif not job.server.accept_crash:
-            job._logger.warning("Job aborted")
             job._logger.warning(error.output)
-            job.status.aborted = True
-            job._hdf5["status"] = job.status.string
-            job.run_time_to_db()
             error_file = posixpath.join(job.project_hdf5.working_directory, "error.msg")
             with open(error_file, "w") as f:
                 f.write(error.output)
-            if job.server.run_mode.non_modal:
-                state.database.close_connection()
-            raise RuntimeError("Job aborted")
+            raise_runtimeerror_for_failed_job(job=job)
         else:
             return True, out
     else:
-        job._logger.warning("Job aborted")
-        job.status.aborted = True
-        job._hdf5["status"] = job.status.string
-        job.run_time_to_db()
-        if job.server.run_mode.non_modal:
-            state.database.close_connection()
-        raise RuntimeError("Job aborted")
+        raise_runtimeerror_for_failed_job(job=job)
+
+
+def raise_runtimeerror_for_failed_job(job):
+    job._logger.warning("Job aborted")
+    job.status.aborted = True
+    job._hdf5["status"] = job.status.string
+    job.run_time_to_db()
+    if job.server.run_mode.non_modal:
+        state.database.close_connection()
+    raise RuntimeError("Job aborted")
 
 
 def multiprocess_wrapper(
@@ -787,32 +785,63 @@ def multiprocess_wrapper(
 
 def generate_calculate_function(write_input_funct=None, collect_output_funct=None):
     def calculate(input_dict, executable_dict, output_dict={}):
-        os.makedirs(executable_dict["working_directory"], exist_ok=True)
+        working_directory = executable_dict["working_directory"]
+        if "accepted_return_codes" in executable_dict.keys():
+            accepted_return_codes = executable_dict["accepted_return_codes"]
+        else:
+            accepted_return_codes = []
+        if "accept_crash" in executable_dict.keys():
+            accept_crash = executable_dict["accept_crash"]
+        else:
+            accept_crash = False
+        os.makedirs(working_directory, exist_ok=True)
         if write_input_funct is not None:
             write_input_funct(
                 input_dict=input_dict,
-                working_directory=executable_dict["working_directory"],
+                working_directory=working_directory,
             )
         try:
-            shell_output = execute_subprocess(**executable_dict)
+            shell_output = execute_subprocess(
+                **{
+                    k: v
+                    for k, v in executable_dict.items()
+                    if k not in ["accepted_return_codes", "accept_crash"]
+                }
+            )
             error = None
-        except (subprocess.CalledProcessError, FileNotFoundError) as e:
-            shell_output = None
-            parsed_output = None
-            error = e
-        else:
-            if collect_output_funct is not None and len(output_dict) > 0:
-                parsed_output = collect_output_funct(
-                    working_directory=executable_dict["working_directory"]
-                    ** output_dict,
-                )
-            elif collect_output_funct is not None:
-                parsed_output = collect_output_funct(
-                    working_directory=executable_dict["working_directory"]
-                )
+            job_crashed = False
+        except (subprocess.CalledProcessError, FileNotFoundError) as error:
+            if hasattr(error, "output"):
+                shell_output = error.output
+                if error.returncode in accepted_return_codes:
+                    job_crashed = False
+                elif not job.server.accept_crash:
+                    error_file = posixpath.join(working_directory, "error.msg")
+                    with open(error_file, "w") as f:
+                        f.write(error.output)
+                    raise RuntimeError("External executable failed")
+                else:
+                    job_crashed = True
             else:
-                parsed_output = None
-        return shell_output, parsed_output, error
+                raise RuntimeError("Job aborted")
+        with open(posixpath.join(working_directory, "error.out"), mode="w") as f_err:
+            f_err.write(shell_output)
+        if (
+            not job_crashed
+            and collect_output_funct is not None
+            and len(output_dict) > 0
+        ):
+            parsed_output = collect_output_funct(
+                working_directory=working_directory,
+                **output_dict,
+            )
+        elif not job_crashed and collect_output_funct is not None:
+            parsed_output = collect_output_funct(
+                working_directory=working_directory,
+            )
+        else:
+            parsed_output = None
+        return shell_output, parsed_output, job_crashed
 
     return calculate
 
