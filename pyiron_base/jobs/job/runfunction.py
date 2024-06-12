@@ -845,6 +845,35 @@ def generate_calculate_function(write_input_funct=None, collect_output_funct=Non
     return calculate
 
 
+def execute_calculate_function(job):
+    """
+    The run_static() function is called internally in pyiron to trigger the execution of the executable. This is
+    typically divided into three steps: (1) the generation of the calculate function and its inputs, (2) the
+    execution of this function and (3) storing the output of this function in the HDF5 file.
+
+    In future the execution of the calculate function might be transferred to a separate process, so the separation
+    in these three distinct steps is necessary to simplify the submission to an external executor.
+    """
+    try:
+        (
+            shell_output,
+            parsed_output,
+            job_crashed,
+        ) = job.generate_calculate_function()(
+            **job.generate_calculate_function_kwargs()
+        )
+    except RuntimeError:
+        raise_runtimeerror_for_failed_job(job=job)
+    else:
+        job.set_input_to_read_only()
+        if job_crashed:
+            job.status.aborted = True
+            job._hdf5["status"] = job.status.string
+        else:
+            job.status.finished = True
+            job._store_output(output_dict=parsed_output, shell_output=shell_output)
+
+
 def write_input_files_from_input_dict(input_dict: dict, working_directory: str):
     for file_name, content in input_dict["files_to_create"].items():
         with open(os.path.join(working_directory, file_name), "w") as f:
