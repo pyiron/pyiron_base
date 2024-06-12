@@ -639,8 +639,6 @@ def execute_subprocess(
 
         if conda_environment_name is not None:
             conda_environment_path = None
-        else:
-            conda_environment_name = None
 
         out = conda_subprocess.run(
             executable,

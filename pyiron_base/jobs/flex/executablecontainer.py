@@ -1,5 +1,3 @@
-import posixpath
-
 import cloudpickle
 import numpy as np
 from typing import Optional
