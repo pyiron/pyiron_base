@@ -6,6 +6,7 @@ from datetime import datetime
 import multiprocessing
 import os
 import posixpath
+import shutil
 import subprocess
 from typing import Optional
 
@@ -844,6 +845,14 @@ def generate_calculate_function(write_input_funct=None, collect_output_funct=Non
         return shell_output, parsed_output, job_crashed
 
     return calculate
+
+
+def write_input_files_from_input_dict(input_dict: dict, working_directory: str):
+    for file_name, content in input_dict["files_to_create"].items():
+        with open(os.path.join(working_directory, file_name), "w") as f:
+            f.writelines(content)
+    for file_name, source in input_dict["files_to_copy"].items():
+        shutil.copy(source, os.path.join(working_directory, file_name))
 
 
 def _generate_flux_execute_string(job, database_is_disabled):

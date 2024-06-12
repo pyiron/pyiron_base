@@ -40,9 +40,10 @@ from pyiron_base.jobs.job.runfunction import (
     run_job_with_runmode_modal,
     run_job_with_runmode_queue,
     execute_job_with_external_executable,
+    write_input_files_from_input_dict,
 )
 from pyiron_base.jobs.job.util import (
-    _copy_restart_files,
+    _get_restart_copy_dict,
     _kill_child,
     _job_store_before_copy,
     _job_reload_after_copy,
@@ -425,26 +426,48 @@ class GenericJob(JobCore, HasDict):
 
     def write_input(self):
         """
-        Write the input files for the external executable. This method has to be implemented in the individual
-        hamiltonians.
+        Call routines that generate the code specific input files
+        Returns:
+        """
+        write_input_files_from_input_dict(
+            input_dict=self.get_input_file_dict(),
+            working_directory=self.working_directory,
+        )
+
+    def get_input_file_dict(self) -> dict:
+        """
+        Get an hierarchical dictionary of input files. On the first level the dictionary is divided in file_to_create
+        and files_to_copy. Both are dictionaries use the file names as keys. In file_to_create the values are strings
+        which represent the content which is going to be written to the corresponding file. In files_to_copy the values
+        are the paths to the source files to be copied.
+
+        Returns:
+            dict: hierarchical dictionary of input files
         """
         if (
             state.settings.configuration["write_work_dir_warnings"]
             and self._write_work_dir_warnings
             and not self._python_only_job
         ):
-            with open(
-                os.path.join(self.working_directory, "WARNING_pyiron_modified_content"),
-                "w",
-            ) as f:
-                f.write(
-                    "Files in this directory are intended to be written and read by pyiron. \n\n"
-                    "pyiron may transform user input to enhance performance, thus, use these files with care!\n"
-                    "Consult the log and/or the documentation to gain further information.\n\n"
-                    "To disable writing these warning files, specify \n"
-                    "WRITE_WORK_DIR_WARNINGS=False in the .pyiron configuration file (or set the "
-                    "PYIRONWRITEWORKDIRWARNINGS environment variable accordingly)."
-                )
+            content = [
+                "Files in this directory are intended to be written and read by pyiron. \n\n",
+                "pyiron may transform user input to enhance performance, thus, use these files with care!\n",
+                "Consult the log and/or the documentation to gain further information.\n\n",
+                "To disable writing these warning files, specify \n",
+                "WRITE_WORK_DIR_WARNINGS=False in the .pyiron configuration file (or set the ",
+                "PYIRONWRITEWORKDIRWARNINGS environment variable accordingly).",
+            ]
+            return {
+                "files_to_create": {
+                    "WARNING_pyiron_modified_content": "".join(content)
+                },
+                "files_to_copy": _get_restart_copy_dict(job=self),
+            }
+        else:
+            return {
+                "files_to_create": {},
+                "files_to_copy": _get_restart_copy_dict(job=self),
+            }
 
     def collect_output(self):
         """
@@ -1173,7 +1196,6 @@ class GenericJob(JobCore, HasDict):
         if self._check_if_input_should_be_written():
             self.project_hdf5.create_working_directory()
             self.write_input()
-            _copy_restart_files(job=self)
         self.status.created = True
         print(
             "The job "
