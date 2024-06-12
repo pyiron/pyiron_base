@@ -41,6 +41,7 @@ from pyiron_base.jobs.job.runfunction import (
     run_job_with_runmode_modal,
     run_job_with_runmode_queue,
     execute_job_with_external_executable,
+    write_input_files_from_input_dict,
 )
 from pyiron_base.jobs.job.util import (
     _get_restart_copy_dict,
@@ -429,12 +430,10 @@ class GenericJob(JobCore, HasDict):
         Call routines that generate the code specific input files
         Returns:
         """
-        input_dict = self.get_input_file_dict()
-        for file_name, content in input_dict["files_to_create"].items():
-            with open(os.path.join(self.working_directory, file_name), "w") as f:
-                f.writelines(content)
-        for file_name, source in input_dict["files_to_copy"].items():
-            shutil.copy(source, os.path.join(self.working_directory, file_name))
+        write_input_files_from_input_dict(
+            input_dict=self.get_input_file_dict(),
+            working_directory=self.working_directory,
+        )
 
     def get_input_file_dict(self) -> dict:
         """
