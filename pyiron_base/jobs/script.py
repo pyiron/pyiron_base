@@ -6,8 +6,15 @@ Jobclass to execute python scripts and jupyter notebooks
 """
 
 import os
+from typing import Optional
+
 from pyiron_base.jobs.job.generic import GenericJob
 from pyiron_base.storage.datacontainer import DataContainer
+from pyiron_base.jobs.job.runfunction import (
+    execute_calculate_function,
+    generate_calculate_function,
+    write_input_files_from_input_dict,
+)
 
 __author__ = "Jan Janssen"
 __copyright__ = (
@@ -264,6 +271,65 @@ class ScriptJob(GenericJob):
                 + "running."
             )
 
+    def generate_calculate_function_kwargs(self) -> dict:
+        """
+        Generate keyword arguments for the calculate() function
+        Returns:
+            dict: keyword arguments for the calculate() function
+        """
+        input_dict = self.get_input_file_dict()
+        executable, shell = self.executable.get_input_for_subprocess_call(
+            cores=self.server.cores, threads=self.server.threads, gpus=self.server.gpus
+        )
+        return {
+            "input_dict": input_dict,
+            "executable_dict": {
+                "executable": executable,
+                "shell": shell,
+                "accepted_return_codes": self.executable.accept_crash,
+                "accept_crash": self.server.accept_crash,
+                "working_directory": self.working_directory,
+                "conda_environment_name": self.server.conda_environment_name,
+                "conda_environment_path": self.server.conda_environment_path,
+            },
+        }
+
+    def generate_calculate_function(self) -> callable:
+        """
+        Generate calculate() function
+        Returns:
+            callable: calculate() functione
+        """
+        return generate_calculate_function(
+            write_input_funct=write_input_files_from_input_dict,
+            collect_output_funct=None,
+        )
+
+    def run_static(self):
+        """
+        The run_static() function is called internally in pyiron to trigger the execution of the executable. This is
+        typically divided into three steps: (1) the generation of the calculate function and its inputs, (2) the
+        execution of this function and (3) storing the output of this function in the HDF5 file.
+
+        In future the execution of the calculate function might be transferred to a separate process, so the separation
+        in these three distinct steps is necessary to simplify the submission to an external executor.
+        """
+        execute_calculate_function(job=self)
+        # Update masterid for all jobs created in the working directory of the script job
+        for job in self.project.iter_jobs(recursive=False, convert_to_object=False):
+            pr_job = self.project.open(
+                os.path.relpath(job.working_directory, self.project.path)
+            )
+            for subjob_id in pr_job.get_job_ids(recursive=False):
+                if pr_job.db.get_item_by_id(subjob_id)["masterid"] is None:
+                    pr_job.db.item_update({"masterid": str(job.job_id)}, subjob_id)
+
+    def _store_output(
+        self, output_dict: Optional[dict] = None, shell_output: Optional[str] = None
+    ):
+        # The execution of the jupyter notebook with papermill does not generate any valuable output.
+        pass
+
     def set_input_to_read_only(self):
         """
         This function enforces read-only mode for the input classes, but it has to be implement in the individual
@@ -314,19 +380,6 @@ class ScriptJob(GenericJob):
             if self._enable_mpi4py:
                 self.executable._mpi = True
         return input_file_dict
-
-    def collect_output(self):
-        """
-        Collect output function updates the master ID entries for all the child jobs created by this script job, if the
-        child job is already assigned to an master job nothing happens - master IDs are not overwritten.
-        """
-        for job in self.project.iter_jobs(recursive=False, convert_to_object=False):
-            pr_job = self.project.open(
-                os.path.relpath(job.working_directory, self.project.path)
-            )
-            for subjob_id in pr_job.get_job_ids(recursive=False):
-                if pr_job.db.get_item_by_id(subjob_id)["masterid"] is None:
-                    pr_job.db.item_update({"masterid": str(job.job_id)}, subjob_id)
 
     def run_if_lib(self):
         """
