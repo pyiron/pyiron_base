@@ -301,9 +301,10 @@ class ScriptJob(GenericJob):
         """
         input_file_dict = super().get_input_file_dict()
         if self._script_path is not None:
-            input_file_dict["files_to_copy"][os.path.basename(self._script_path)] = (
-                self._script_path
-            )
+            files_to_copy_dict = {
+                os.path.basename(self._script_path): self._script_path
+            }
+            input_file_dict["files_to_copy"].update(files_to_copy_dict)
             self.executable = self._executable_command(
                 working_directory=self.working_directory,
                 script_path=self._script_path,
