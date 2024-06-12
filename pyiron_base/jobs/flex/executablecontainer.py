@@ -4,6 +4,7 @@ from typing import Optional
 
 from pyiron_base.jobs.job.template import TemplateJob
 from pyiron_base.jobs.job.runfunction import (
+    execute_calculate_function,
     generate_calculate_function,
     raise_runtimeerror_for_failed_job,
 )
@@ -118,24 +119,7 @@ class ExecutableContainerJob(TemplateJob):
         In future the execution of the calculate function might be transferred to a separate process, so the separation
         in these three distinct steps is necessary to simplify the submission to an external executor.
         """
-        try:
-            (
-                shell_output,
-                parsed_output,
-                job_crashed,
-            ) = self.generate_calculate_function()(
-                **self.generate_calculate_function_kwargs()
-            )
-        except RuntimeError:
-            raise_runtimeerror_for_failed_job(job=self)
-        else:
-            self.set_input_to_read_only()
-            if job_crashed:
-                self.status.aborted = True
-                self._hdf5["status"] = self.status.string
-            else:
-                self.status.finished = True
-                self._store_output(output_dict=parsed_output, shell_output=shell_output)
+        execute_calculate_function(job=self)
 
     def _store_output(
         self, output_dict: Optional[dict] = None, shell_output: Optional[str] = None
