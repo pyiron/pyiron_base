@@ -6,7 +6,6 @@ Jobclass to execute python scripts and jupyter notebooks
 """
 
 import os
-import shutil
 from pyiron_base.jobs.job.generic import GenericJob
 from pyiron_base.storage.datacontainer import DataContainer
 
@@ -302,9 +301,9 @@ class ScriptJob(GenericJob):
         """
         input_file_dict = super().get_input_file_dict()
         if self._script_path is not None:
-            input_file_dict["files_to_copy"][
-                os.path.basename(self._script_path)
-            ] = self._script_path
+            input_file_dict["files_to_copy"][os.path.basename(self._script_path)] = (
+                self._script_path
+            )
             self.executable = self._executable_command(
                 working_directory=self.working_directory,
                 script_path=self._script_path,
