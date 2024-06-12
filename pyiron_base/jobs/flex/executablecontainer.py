@@ -1,6 +1,12 @@
 import cloudpickle
 import numpy as np
+from typing import Optional
+
 from pyiron_base.jobs.job.template import TemplateJob
+from pyiron_base.jobs.job.runfunction import (
+    generate_calculate_function,
+    raise_runtimeerror_for_failed_job,
+)
 
 
 class ExecutableContainerJob(TemplateJob):
@@ -43,6 +49,7 @@ class ExecutableContainerJob(TemplateJob):
         super().__init__(project, job_name)
         self._write_input_funct = None
         self._collect_output_funct = None
+        self._python_only_job = True
 
     def set_job_type(
         self,
@@ -72,22 +79,72 @@ class ExecutableContainerJob(TemplateJob):
         if default_input_dict is not None:
             self.input.update(default_input_dict)
 
-    def write_input(self):
-        if self._write_input_funct is not None:
-            self._write_input_funct(
-                input_dict=self.input.to_builtin(),
-                working_directory=self.working_directory,
-            )
+    def generate_calculate_function_kwargs(self) -> dict:
+        """
+        Generate keyword arguments for the calculate() function
+
+        Returns:
+            dict: keyword arguments for the calculate() function
+        """
+        return {
+            "input_dict": self.input.to_builtin(),
+            "executable_dict": {
+                "executable": self.executable.executable_path,
+                "shell": True,
+                "working_directory": self.working_directory,
+                "conda_environment_name": self.server.conda_environment_name,
+                "conda_environment_path": self.server.conda_environment_path,
+            },
+        }
+
+    def generate_calculate_function(self) -> callable:
+        """
+        Generate calculate() function
+
+        Returns:
+            callable: calculate() functione
+        """
+        return generate_calculate_function(
+            write_input_funct=self._write_input_funct,
+            collect_output_funct=self._collect_output_funct,
+        )
 
     def run_static(self):
-        self.storage.output.stdout = super().run_static()
+        """
+        The run_static() function is called internally in pyiron to trigger the execution of the executable. This is
+        typically divided into three steps: (1) the generation of the calculate function and its inputs, (2) the
+        execution of this function and (3) storing the output of this function in the HDF5 file.
 
-    def collect_output(self):
-        if self._collect_output_funct is not None:
-            self.output.update(
-                self._collect_output_funct(working_directory=self.working_directory)
+        In future the execution of the calculate function might be transferred to a separate process, so the separation
+        in these three distinct steps is necessary to simplify the submission to an external executor.
+        """
+        try:
+            (
+                shell_output,
+                parsed_output,
+                job_crashed,
+            ) = self.generate_calculate_function()(
+                **self.generate_calculate_function_kwargs()
             )
-            self.to_hdf()
+        except RuntimeError:
+            raise_runtimeerror_for_failed_job(job=self)
+        else:
+            self.set_input_to_read_only()
+            if job_crashed:
+                self.status.aborted = True
+                self._hdf5["status"] = self.status.string
+            else:
+                self.status.finished = True
+                self._store_output(output_dict=parsed_output, shell_output=shell_output)
+
+    def _store_output(
+        self, output_dict: Optional[dict] = None, shell_output: Optional[str] = None
+    ):
+        if shell_output is not None:
+            self.storage.output.stdout = shell_output
+        if output_dict is not None:
+            self.output.update(output_dict)
+        self.to_hdf()
 
     def to_dict(self):
         job_dict = super().to_dict()

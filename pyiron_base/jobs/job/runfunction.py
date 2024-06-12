@@ -782,6 +782,69 @@ def multiprocess_wrapper(
         job_wrap.job.run_static()
 
 
+def generate_calculate_function(write_input_funct=None, collect_output_funct=None):
+    def calculate(input_dict, executable_dict, output_dict={}):
+        working_directory = executable_dict["working_directory"]
+        if "accepted_return_codes" in executable_dict.keys():
+            accepted_return_codes = executable_dict["accepted_return_codes"]
+        else:
+            accepted_return_codes = []
+        if "accept_crash" in executable_dict.keys():
+            accept_crash = executable_dict["accept_crash"]
+        else:
+            accept_crash = False
+        os.makedirs(working_directory, exist_ok=True)
+        if write_input_funct is not None:
+            write_input_funct(
+                input_dict=input_dict,
+                working_directory=working_directory,
+            )
+        try:
+            shell_output = execute_subprocess(
+                **{
+                    k: v
+                    for k, v in executable_dict.items()
+                    if k not in ["accepted_return_codes", "accept_crash"]
+                }
+            )
+            error = None
+            job_crashed = False
+        except (subprocess.CalledProcessError, FileNotFoundError) as error:
+            if hasattr(error, "output"):
+                shell_output = error.output
+                if error.returncode in accepted_return_codes:
+                    job_crashed = False
+                elif not accept_crash:
+                    error_file = posixpath.join(working_directory, "error.msg")
+                    with open(error_file, "w") as f:
+                        f.write(error.output)
+                    raise RuntimeError("External executable failed")
+                else:
+                    job_crashed = True
+            else:
+                raise RuntimeError("Job aborted")
+        with open(posixpath.join(working_directory, "error.out"), mode="w") as f_err:
+            f_err.write(shell_output)
+        if (
+            not job_crashed
+            and collect_output_funct is not None
+            and len(output_dict) > 0
+        ):
+            parsed_output = collect_output_funct(
+                working_directory=working_directory,
+                **output_dict,
+            )
+        elif not job_crashed and collect_output_funct is not None:
+            parsed_output = collect_output_funct(
+                working_directory=working_directory,
+            )
+        else:
+            parsed_output = None
+        return shell_output, parsed_output, job_crashed
+
+    return calculate
+
+
 def write_input_files_from_input_dict(input_dict: dict, working_directory: str):
     for file_name, content in input_dict["files_to_create"].items():
         with open(os.path.join(working_directory, file_name), "w") as f:
