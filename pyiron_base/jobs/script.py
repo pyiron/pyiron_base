@@ -286,7 +286,7 @@ class ScriptJob(GenericJob):
             "executable_dict": {
                 "executable": executable,
                 "shell": shell,
-                "accepted_return_codes": self.executable.accept_crash,
+                "accepted_return_codes": self.executable.accepted_return_codes,
                 "accept_crash": self.server.accept_crash,
                 "working_directory": self.working_directory,
                 "conda_environment_name": self.server.conda_environment_name,
