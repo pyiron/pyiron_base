@@ -641,6 +641,22 @@ class TestDataContainer(TestWithCleanProject):
         pl2 = self.hdf["pandas"].to_object()
         self.assertEqual(type(pl[0]), type(pl2[0]))
 
+
+    def test_dict_empty_list(self):
+        """HasDict interface should work"""
+        with self.subTest("empty list could not use to_dict interface"):
+            l = DataContainer(table_name="empty_list")
+            data = l.to_dict()
+            l.from_dict(data)
+            self.assertEqual(len(l), 0, "Empty list read from HDF not empty.")
+
+        with self.subTest("to/from_dict should give back the same list as written."):
+            data = self.pl.to_dict()
+            l = DataContainer(table_name="input")
+            l.from_dict(data)
+            self.assertEqual(self.pl, l)
+
+
     def test_groups_nodes(self):
         self.assertTrue(
             isinstance(self.pl.nodes(), Iterator), "nodes does not return an Iterator"
