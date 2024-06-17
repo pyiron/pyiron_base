@@ -6,7 +6,6 @@ Jobclass to execute python scripts and jupyter notebooks
 """
 
 import os
-import shutil
 from pyiron_base.jobs.job.generic import GenericJob
 from pyiron_base.storage.datacontainer import DataContainer
 
@@ -290,17 +289,22 @@ class ScriptJob(GenericJob):
         if "custom_dict" in job_dict["input"].keys():
             self.input.update(job_dict["input"]["custom_dict"])
 
-    def write_input(self):
+    def get_input_file_dict(self):
         """
-        Copy the script to the working directory - only python scripts and jupyter notebooks are supported
+        Get an hierarchical dictionary of input files. On the first level the dictionary is divided in file_to_create
+        and files_to_copy. Both are dictionaries use the file names as keys. In file_to_create the values are strings
+        which represent the content which is going to be written to the corresponding file. In files_to_copy the values
+        are the paths to the source files to be copied.
+
+        Returns:
+            dict: hierarchical dictionary of input files
         """
-        super().write_input()
+        input_file_dict = super().get_input_file_dict()
         if self._script_path is not None:
-            file_name = os.path.basename(self._script_path)
-            shutil.copyfile(
-                src=self._script_path,
-                dst=os.path.join(self.working_directory, file_name),
-            )
+            files_to_copy_dict = {
+                os.path.basename(self._script_path): self._script_path
+            }
+            input_file_dict["files_to_copy"].update(files_to_copy_dict)
             self.executable = self._executable_command(
                 working_directory=self.working_directory,
                 script_path=self._script_path,
@@ -309,6 +313,7 @@ class ScriptJob(GenericJob):
             )
             if self._enable_mpi4py:
                 self.executable._mpi = True
+        return input_file_dict
 
     def collect_output(self):
         """
