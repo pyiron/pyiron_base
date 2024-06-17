@@ -785,14 +785,8 @@ def multiprocess_wrapper(
 def generate_calculate_function(write_input_funct=None, collect_output_funct=None):
     def calculate(input_dict, executable_dict, output_dict={}):
         working_directory = executable_dict["working_directory"]
-        if "accepted_return_codes" in executable_dict.keys():
-            accepted_return_codes = executable_dict["accepted_return_codes"]
-        else:
-            accepted_return_codes = []
-        if "accept_crash" in executable_dict.keys():
-            accept_crash = executable_dict["accept_crash"]
-        else:
-            accept_crash = False
+        accept_crash = executable_dict.pop("accept_crash", False)
+        accepted_return_codes = executable_dict.pop("accepted_return_codes", [])
         os.makedirs(working_directory, exist_ok=True)
         if write_input_funct is not None:
             write_input_funct(
@@ -800,13 +794,7 @@ def generate_calculate_function(write_input_funct=None, collect_output_funct=Non
                 working_directory=working_directory,
             )
         try:
-            shell_output = execute_subprocess(
-                **{
-                    k: v
-                    for k, v in executable_dict.items()
-                    if k not in ["accepted_return_codes", "accept_crash"]
-                }
-            )
+            shell_output = execute_subprocess(**executable_dict)
             error = None
             job_crashed = False
         except (subprocess.CalledProcessError, FileNotFoundError) as error:
