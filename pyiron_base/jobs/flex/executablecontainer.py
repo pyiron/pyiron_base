@@ -84,7 +84,14 @@ class ExecutableContainerJob(TemplateJob):
 
     def generate_calculate_function_kwargs(self) -> dict:
         """
-        Generate keyword arguments for the calculate() function
+        Generate keyword arguments for the calculate() function.
+
+        Example:
+
+        >>> calculate_function = job.generate_calculate_function()
+        >>> kwargs = job.generate_calculate_function_kwargs()
+        >>> shell_output, parsed_output, job_crashed = calculate_function(**kwargs)
+        >>> job._store_output(output_dict=parsed_output, shell_output=shell_output)
 
         Returns:
             dict: keyword arguments for the calculate() function
@@ -103,6 +110,13 @@ class ExecutableContainerJob(TemplateJob):
     def generate_calculate_function(self) -> callable:
         """
         Generate calculate() function
+
+        Example:
+
+        >>> calculate_function = job.generate_calculate_function()
+        >>> kwargs = job.generate_calculate_function_kwargs()
+        >>> shell_output, parsed_output, job_crashed = calculate_function(**kwargs)
+        >>> job._store_output(output_dict=parsed_output, shell_output=shell_output)
 
         Returns:
             callable: calculate() functione
@@ -126,6 +140,13 @@ class ExecutableContainerJob(TemplateJob):
     def _store_output(
         self, output_dict: Optional[dict] = None, shell_output: Optional[str] = None
     ):
+        """
+        Store output of the calculate function in the HDF5 file.
+
+        Args:
+            output_dict (dict): hierarchical output dictionary to be stored in the HDF5 file.
+            shell_output (str): shell output from calling the external executable to be stored in the HDF5 file.
+        """
         if shell_output is not None:
             self.storage.output.stdout = shell_output
         if output_dict is not None:
