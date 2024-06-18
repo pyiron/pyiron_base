@@ -658,6 +658,7 @@ def execute_subprocess(
             stderr=subprocess.STDOUT,
             universal_newlines=True,
             check=True,
+            env=environment_dict,
             prefix_name=conda_environment_name,
             prefix_path=conda_environment_path,
         ).stdout
