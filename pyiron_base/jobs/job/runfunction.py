@@ -12,6 +12,7 @@ from typing import Optional
 
 from jinja2 import Template
 from pyiron_snippets.deprecate import deprecate
+from pyiron_snippets.tempenv import TemporaryEnvironment
 
 from pyiron_base.jobs.job.wrapper import JobWrapper
 from pyiron_base.state import state
@@ -674,14 +675,21 @@ def execute_job_with_external_executable(job):
         cores=job.server.cores, threads=job.server.threads, gpus=job.server.gpus
     )
     job_crashed, out = False, None
+
+
     try:
-        out = execute_subprocess(
-            executable=executable,
-            shell=shell,
-            working_directory=job.working_directory,
-            conda_environment_name=job.server.conda_environment_name,
-            conda_environment_path=job.server.conda_environment_path,
-        )
+        with TemporaryEnvironment(
+                PYIRON_SERVER_CORES=str(job.server.cores),
+                PYIRON_SERVER_THREADS=str(job.server.threads),
+                PYIRON_SERVER_GPUS=str(job.server.gpus),
+        ):
+            out = execute_subprocess(
+                executable=executable,
+                shell=shell,
+                working_directory=job.working_directory,
+                conda_environment_name=job.server.conda_environment_name,
+                conda_environment_path=job.server.conda_environment_path,
+            )
     except (subprocess.CalledProcessError, FileNotFoundError) as e:
         job_crashed, out = handle_failed_job(job=job, error=e)
 
