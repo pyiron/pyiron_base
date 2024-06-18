@@ -676,12 +676,11 @@ def execute_job_with_external_executable(job):
     )
     job_crashed, out = False, None
 
-
     try:
         with TemporaryEnvironment(
-                PYIRON_SERVER_CORES=str(job.server.cores),
-                PYIRON_SERVER_THREADS=str(job.server.threads),
-                PYIRON_SERVER_GPUS=str(job.server.gpus),
+            PYIRON_SERVER_CORES=str(job.server.cores),
+            PYIRON_SERVER_THREADS=str(job.server.threads),
+            PYIRON_SERVER_GPUS=str(job.server.gpus),
         ):
             out = execute_subprocess(
                 executable=executable,
