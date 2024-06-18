@@ -627,11 +627,13 @@ def execute_subprocess(
     conda_environment_path: Optional[str] = None,
 ) -> str:
     environment_dict = os.environ.copy()
-    environment_dict.update({
-        "PYIRON_CORES": str(cores),
-        "PYIRON_THREADS": str(threads),
-        "PYIRON_GPUS": str(gpus),
-    })
+    environment_dict.update(
+        {
+            "PYIRON_CORES": str(cores),
+            "PYIRON_THREADS": str(threads),
+            "PYIRON_GPUS": str(gpus),
+        }
+    )
     if conda_environment_name is None and conda_environment_path is None:
         out = subprocess.run(
             executable,
