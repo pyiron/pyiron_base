@@ -620,9 +620,16 @@ def execute_subprocess(
     executable: str,
     shell: bool,
     working_directory: str,
+    cores: int = 1,
+    threads: int = 1,
+    gpus: int = 1,
     conda_environment_name: Optional[str] = None,
     conda_environment_path: Optional[str] = None,
 ) -> str:
+    environment_dict = os.environ.copy()
+    environment_dict["PYIRON_CORES"] = str(cores)
+    environment_dict["PYIRON_THREADS"] = str(threads)
+    environment_dict["PYIRON_GPUS"] = str(gpus)
     if conda_environment_name is None and conda_environment_path is None:
         out = subprocess.run(
             executable,
@@ -632,7 +639,7 @@ def execute_subprocess(
             stderr=subprocess.STDOUT,
             universal_newlines=True,
             check=True,
-            env=os.environ.copy(),
+            env=environment_dict,
         ).stdout
     else:
         import conda_subprocess
@@ -681,6 +688,9 @@ def execute_job_with_external_executable(job):
             working_directory=job.working_directory,
             conda_environment_name=job.server.conda_environment_name,
             conda_environment_path=job.server.conda_environment_path,
+            cores=job.server.cores,
+            threads=job.server.threads,
+            gpus=job.server.gpus,
         )
     except (subprocess.CalledProcessError, FileNotFoundError) as e:
         job_crashed, out = handle_failed_job(job=job, error=e)
