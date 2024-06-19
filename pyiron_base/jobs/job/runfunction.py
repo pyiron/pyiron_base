@@ -782,45 +782,41 @@ def multiprocess_wrapper(
         job_wrap.job.run_static()
 
 
-def generate_calculate_function(write_input_funct=None, collect_output_funct=None):
-    def calculate(input_dict, executable_dict, output_dict={}):
-        working_directory = executable_dict["working_directory"]
-        accept_crash = executable_dict.pop("accept_crash", False)
-        accepted_return_codes = executable_dict.pop("accepted_return_codes", [])
+def generate_calculate_function(write_input_funct: callable = write_input_files_from_input_dict, collect_output_funct: callable = None):
+    def calculate(
+        working_directory: str,
+        input_parameter_dict: dict,
+        executable_script: str,
+        shell_parameter: bool,
+        conda_environment_name: Optional[str] = None,
+        conda_environment_path: Optional[str] = None,
+        accept_crash: bool = False,
+        accepted_return_codes: List[int] = [],
+        output_parameter_dict: dict = {},
+    ):
         os.makedirs(working_directory, exist_ok=True)
         if write_input_funct is not None:
             write_input_funct(
-                input_dict=input_dict,
+                input_dict=input_parameter_dict,
                 working_directory=working_directory,
             )
-        try:
-            shell_output = execute_subprocess(**executable_dict)
-            error = None
-            job_crashed = False
-        except (subprocess.CalledProcessError, FileNotFoundError) as error:
-            if hasattr(error, "output"):
-                shell_output = error.output
-                if error.returncode in accepted_return_codes:
-                    job_crashed = False
-                elif not accept_crash:
-                    error_file = posixpath.join(working_directory, "error.msg")
-                    with open(error_file, "w") as f:
-                        f.write(error.output)
-                    raise RuntimeError("External executable failed")
-                else:
-                    job_crashed = True
-            else:
-                raise RuntimeError("Job aborted")
-        with open(posixpath.join(working_directory, "error.out"), mode="w") as f_err:
-            f_err.write(shell_output)
+        job_crashed, shell_output = execute_command_with_error_handling(
+            executable=executable_script,
+            shell=shell_parameter,
+            working_directory=working_directory,
+            conda_environment_name=conda_environment_name,
+            conda_environment_path=conda_environment_path,
+            accepted_return_codes=accepted_return_codes,
+            accept_crash=accept_crash,
+        )
         if (
             not job_crashed
             and collect_output_funct is not None
-            and len(output_dict) > 0
+            and len(output_parameter_dict) > 0
         ):
             parsed_output = collect_output_funct(
                 working_directory=working_directory,
-                **output_dict,
+                **output_parameter_dict,
             )
         elif not job_crashed and collect_output_funct is not None:
             parsed_output = collect_output_funct(
@@ -831,6 +827,35 @@ def generate_calculate_function(write_input_funct=None, collect_output_funct=Non
         return shell_output, parsed_output, job_crashed
 
     return calculate
+
+
+def execute_command_with_error_handling(
+    executable: str,
+    shell: bool,
+    working_directory: str,
+    conda_environment_name: Optional[str] = None,
+    conda_environment_path: Optional[str] = None,
+    accepted_return_codes: List[int] = [],
+    accept_crash: bool = False,
+):
+    job_crashed = False
+    try:
+        shell_output = execute_subprocess(**executable_dict)
+    except (subprocess.CalledProcessError, FileNotFoundError) as error:
+        if hasattr(error, "output"):
+            shell_output = error.output
+            if error.returncode not in accepted_return_codes and not accept_crash:
+                error_file = posixpath.join(working_directory, "error.msg")
+                with open(error_file, "w") as f:
+                    f.write(error.output)
+                raise RuntimeError("External executable failed")
+            else:
+                job_crashed = True
+        else:
+            raise RuntimeError("Job aborted")
+    with open(posixpath.join(working_directory, "error.out"), mode="w") as f_err:
+        f_err.write(shell_output)
+    return job_crashed, shell_output
 
 
 def execute_calculate_function(job):
