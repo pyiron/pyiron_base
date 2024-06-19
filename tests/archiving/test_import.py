@@ -72,7 +72,6 @@ class TestUnpacking(PyironTestCase):
         compare_obj = dircmp(path_original, path_import)
         self.assertEqual(len(compare_obj.diff_files), 0)
 
-    @unittest.skip("Imports the same name fails")
     def test_unpack_to_nested_project(self):
         pr = self.pr.open("nested")
         pr_imp = pr.open("imported")
@@ -105,6 +104,7 @@ class TestUnpacking(PyironTestCase):
             rmtree(pack_path)
         except Exception as err_msg:
             print(f"deleting unsuccessful: {err_msg}")
+        pr.remove(enable=True)
 
     def test_import_uncompress(self):
         self.pr.pack(destination_path=self.arch_dir, compress=False)
