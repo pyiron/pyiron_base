@@ -782,7 +782,10 @@ def multiprocess_wrapper(
         job_wrap.job.run_static()
 
 
-def generate_calculate_function(write_input_funct: callable = write_input_files_from_input_dict, collect_output_funct: callable = None):
+def generate_calculate_function(
+    write_input_funct: callable = write_input_files_from_input_dict,
+    collect_output_funct: callable = None,
+):
     def calculate(
         working_directory: str,
         input_parameter_dict: dict,
