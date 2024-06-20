@@ -184,6 +184,16 @@ to the queuing system by configuring the same `job.server` property. Still it is
 string `executable_str` variable to use `mpiexec` or other means of parallelization to execute the external executable
 in parallel. 
 
+If the `executable_str` supports multiple cores, multiple threads or GPUs acceleration, then these can be accessed via 
+the environment variables `PYIRON_CORES` for CPU cores, `PYIRON_THREADS` for threads and `PYIRON_GPUS` for number of 
+GPUs. So you can wrap MPI parallel executables using `mpirun -n ${PYIRON_CORES} executable` and then set the number of
+cores on the `job` object using `job.server.cores=10`. Alternatively you can create a shell script like `executable.sh`:
+```bash
+#!/bin/bash
+mpirun -n ${PYIRON_CORES} executable
+```
+This shell script can then be set as `executable_str`.
+
 ### Jupyter Notebook
 The third category of job objects the `pyiron_base` workflow manager supports are the `ScriptJob` which are used to 
 submit Jupyter notebooks to the queuing system. While it is recommended to use the `wrap_python_function()` to wrap the
