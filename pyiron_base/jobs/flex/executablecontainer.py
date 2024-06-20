@@ -67,11 +67,13 @@ class ExecutableContainerJob(TemplateJob):
             dict: keyword arguments for the calculate() function
         """
         kwargs = super().calculate_kwargs
-        kwargs.update({
-            "input_parameter_dict": self.input.to_builtin(),
-            "executable_script": self.executable.executable_path,
-            "shell_parameter": True,
-        })
+        kwargs.update(
+            {
+                "input_parameter_dict": self.input.to_builtin(),
+                "executable_script": self.executable.executable_path,
+                "shell_parameter": True,
+            }
+        )
         return kwargs
 
     def set_job_type(
