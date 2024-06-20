@@ -1,6 +1,5 @@
 import cloudpickle
 import numpy as np
-from typing import Optional
 
 from pyiron_base.jobs.job.template import TemplateJob
 from pyiron_base.jobs.job.runfunction import generate_calculate_function
