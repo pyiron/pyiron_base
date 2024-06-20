@@ -6,7 +6,6 @@ Jobclass to execute python scripts and jupyter notebooks
 """
 
 import os
-from typing import Optional
 
 from pyiron_base.jobs.job.generic import GenericJob
 from pyiron_base.storage.datacontainer import DataContainer
