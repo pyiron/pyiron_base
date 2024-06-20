@@ -8,7 +8,7 @@ import os
 import posixpath
 import shutil
 import subprocess
-from typing import Optional, List
+from typing import Optional, List, Tuple
 
 from jinja2 import Template
 from pyiron_snippets.deprecate import deprecate
@@ -783,6 +783,16 @@ def multiprocess_wrapper(
 
 
 def write_input_files_from_input_dict(input_dict: dict, working_directory: str):
+    """
+    Write input files based on hierarchical input dictionary. On the first level the input dictionary is divided in
+    file_to_create and files_to_copy. Both are dictionaries use the file names as keys. In file_to_create the values are
+    strings which represent the content which is going to be written to the corresponding file. In files_to_copy the
+    values are the paths to the source files to be copied.
+
+    Args:
+        input_dict (dict): hierarchical input dictionary with files_to_create and files_to_copy.
+        working_directory (str): path to the working directory
+    """
     for file_name, content in input_dict["files_to_create"].items():
         with open(os.path.join(working_directory, file_name), "w") as f:
             f.writelines(content)
@@ -790,10 +800,24 @@ def write_input_files_from_input_dict(input_dict: dict, working_directory: str):
         shutil.copy(source, os.path.join(working_directory, file_name))
 
 
-def generate_calculate_function(
+def get_calculate_function(
     write_input_funct: callable = write_input_files_from_input_dict,
     collect_output_funct: callable = None,
 ):
+    """
+    Function to dynamically generate a calculate() function for a given job, by inserting the write_input_funct and
+    collect_output_funct.
+
+    Args:
+        write_input_funct (callable): A function which takes the working_directory and the input_parameter_dict as an
+                                      input and writes the input files into the workin_directory.
+        collect_output_funct (callable): The collect output directory takes the working_directory and the
+                                         output_parameter_dict as an input, parses the output files in the
+                                         working_directory and returns the output as hierarchical dictionary.
+
+    Returns:
+        callable: The calculate function
+    """
     def calculate(
         working_directory: str,
         input_parameter_dict: dict,
@@ -804,7 +828,31 @@ def generate_calculate_function(
         accept_crash: bool = False,
         accepted_return_codes: List[int] = [],
         output_parameter_dict: dict = {},
-    ):
+    ) -> Tuple[str, dict, bool]:
+        """
+        Generic calculate function, which writes the input files into the working_directory, executes the
+        executable_script and parses the output using the output_parameter_dict.
+
+        Args:
+            working_directory (str): Directory the calculation is executed in.
+            input_parameter_dict (dict): Dictionary with parameters for the write_input function. By default this is a
+                                         hierarchical dictionary with two keys files_to_write and files_to_copy on the
+                                         first level. The files_to_write dictionary contains the file names and their
+                                         content as strings, while the files_to_copy dictionary contains the file names
+                                         and the links to the files which should be copied.
+            executable_script (str): Executable to be executed in the working directory.
+            shell_parameter (bool): The shell parameter from the subprocess.Popen() function of the python standard
+                                    library.
+            conda_environment_name (str): Name of a conda environment to execute the executable in.
+            conda_environment_path (str): Path of a conda environment to execute the executable in.
+            accept_crash (bool): Boolean flag to accept crashes.
+            accepted_return_codes (list): List of accepted return codes.
+            output_parameter_dict (dict): Additional parameters for the collect_output function.
+
+        Returns:
+            str, dict, bool: Tuple consisting of the shell output (str), the parsed output (dict) and a boolean flag if
+                             the execution raised an accepted error.
+        """
         os.makedirs(working_directory, exist_ok=True)
         if write_input_funct is not None:
             write_input_funct(
@@ -848,7 +896,22 @@ def execute_command_with_error_handling(
     conda_environment_path: Optional[str] = None,
     accepted_return_codes: List[int] = [],
     accept_crash: bool = False,
-):
+) -> Tuple[bool, str]:
+    """
+    Execute command including error handling and support for execution in separate conda environment
+
+    Args:
+        executable (str): Executable to be executed in the working directory.
+        shell (bool): The shell parameter from the subprocess.Popen() function of the python standard library.
+        working_directory (str): Directory the calculation is executed in.
+        conda_environment_name (str): Name of a conda environment to execute the executable in.
+        conda_environment_path (str): Path of a conda environment to execute the executable in.
+        accept_crash (bool): Boolean flag to accept crashes.
+        accepted_return_codes (list): List of accepted return codes.
+
+    Returns:
+        bool, str: boolean flag if the execution crashed with an acceptable error and string output of the command line
+    """
     job_crashed = False
     try:
         shell_output = execute_subprocess(
@@ -875,7 +938,8 @@ def execute_command_with_error_handling(
     return job_crashed, shell_output
 
 
-def execute_calculate_function(job):
+@run_time_decorator
+def execute_job_with_calculate_function(job):
     """
     The run_static() function is called internally in pyiron to trigger the execution of the executable. This is
     typically divided into three steps: (1) the generation of the calculate function and its inputs, (2) the
@@ -889,8 +953,8 @@ def execute_calculate_function(job):
             shell_output,
             parsed_output,
             job_crashed,
-        ) = job.generate_calculate_function()(
-            **job.generate_calculate_function_kwargs()
+        ) = job.get_calculate_function()(
+            **job.calculate_kwargs
         )
     except RuntimeError:
         raise_runtimeerror_for_failed_job(job=job)
@@ -901,7 +965,7 @@ def execute_calculate_function(job):
             job._hdf5["status"] = job.status.string
         else:
             job.status.finished = True
-            job._store_output(output_dict=parsed_output, shell_output=shell_output)
+            job.save_output(output_dict=parsed_output, shell_output=shell_output)
 
 
 def _generate_flux_execute_string(job, database_is_disabled):
