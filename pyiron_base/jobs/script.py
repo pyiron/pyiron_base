@@ -244,7 +244,9 @@ class ScriptJob(GenericJob):
             path (str): relative or absolute path to the python script or a corresponding notebook
         """
         if isinstance(path, str):
-            self._script_path = os.path.normpath(os.path.join(os.path.abspath(os.path.curdir), path))
+            self._script_path = os.path.normpath(
+                os.path.join(os.path.abspath(os.path.curdir), path)
+            )
             self.executable = self._executable_command(
                 working_directory=self.working_directory,
                 script_path=self._script_path,
