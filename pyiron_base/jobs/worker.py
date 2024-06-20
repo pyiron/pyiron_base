@@ -138,7 +138,7 @@ class WorkerJob(PythonTemplateJob):
         self.input.child_runtime = 0
         self.input.queue_limit_factor = 2
         self.input.maxtasksperchild = 1
-        self._python_only_job = True
+        self._job_with_calculate_function = True
 
     @property
     def project_to_watch(self):

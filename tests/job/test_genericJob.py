@@ -353,7 +353,7 @@ class TestGenericJob(TestWithFilledProject):
                 self.project.state.settings.configuration[wd_warn_key] = True
                 job = self.project.create_job(ToyJob, "test_write_warning_file")
                 job._create_working_directory()
-                job._python_only_job = False
+                job._job_with_calculate_function = False
                 job._write_work_dir_warnings = True
                 job.write_input()
                 self.assertCountEqual(
