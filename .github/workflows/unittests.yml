@@ -52,7 +52,7 @@ jobs:
         use-mamba: true
     - name: Test
       shell: bash -l {0}
-      timeout-minutes: 6
+      timeout-minutes: 10
       run: |
         python .ci_support/pyironconfig.py
         bash .ci_support/pip_install.sh
