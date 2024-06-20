@@ -334,6 +334,11 @@ class ScriptJob(GenericJob):
                 if pr_job.db.get_item_by_id(subjob_id)["masterid"] is None:
                     pr_job.db.item_update({"masterid": str(job.job_id)}, subjob_id)
 
+    def save_output(
+            self, output_dict: Optional[dict] = None, shell_output: Optional[str] = None
+    ):
+        pass
+
     def set_input_to_read_only(self):
         """
         This function enforces read-only mode for the input classes, but it has to be implement in the individual
