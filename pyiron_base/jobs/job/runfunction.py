@@ -81,12 +81,12 @@ def write_input_files_from_input_dict(input_dict: dict, working_directory: str):
 
 
 class CalculateFunctionCaller:
-    __slots__ = ('write_input_funct', 'collect_output_funct')
+    __slots__ = ("write_input_funct", "collect_output_funct")
 
     def __init__(
         self,
         write_input_funct: callable = write_input_files_from_input_dict,
-        collect_output_funct: callable = None
+        collect_output_funct: callable = None,
     ):
         self.write_input_funct = write_input_funct
         self.collect_output_funct = collect_output_funct
@@ -158,6 +158,7 @@ class CalculateFunctionCaller:
                 **output_parameter_dict,
             )
         return shell_output, parsed_output, job_crashed
+
 
 # Parameter
 def run_job_with_parameter_repair(job):
