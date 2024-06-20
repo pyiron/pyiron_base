@@ -61,7 +61,7 @@ class GenericMaster(GenericJob):
         self._job_object_dict = {}
         self._child_id_func = None
         self._child_id_func_str = None
-        self._python_only_job = True
+        self._job_with_calculate_function = True
 
     @property
     def child_names(self):

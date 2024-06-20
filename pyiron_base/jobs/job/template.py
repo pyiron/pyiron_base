@@ -122,5 +122,5 @@ class PythonTemplateJob(TemplateJob):
 
     def __init__(self, project, job_name):
         super().__init__(project, job_name)
-        self._python_only_job = True
+        self._job_with_calculate_function = True
         self._write_work_dir_warnings = False
