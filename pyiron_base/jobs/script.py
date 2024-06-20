@@ -13,7 +13,6 @@ from pyiron_base.storage.datacontainer import DataContainer
 from pyiron_base.jobs.job.runfunction import (
     execute_calculate_function,
     generate_calculate_function,
-    write_input_files_from_input_dict,
 )
 
 __author__ = "Jan Janssen"
