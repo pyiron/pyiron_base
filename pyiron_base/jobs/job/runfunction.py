@@ -152,15 +152,10 @@ class CalculateFunctionCaller:
         if (
                 not job_crashed
                 and self.collect_output_funct is not None
-                and len(output_parameter_dict) > 0
         ):
             parsed_output = self.collect_output_funct(
                 working_directory=working_directory,
                 **output_parameter_dict,
-            )
-        elif not job_crashed and self.collect_output_funct is not None:
-            parsed_output = self.collect_output_funct(
-                working_directory=working_directory,
             )
         return shell_output, parsed_output, job_crashed
 
