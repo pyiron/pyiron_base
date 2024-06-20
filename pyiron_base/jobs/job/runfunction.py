@@ -62,6 +62,108 @@ Finally for jobs which call an external executable the execution is implemented 
 """
 
 
+def write_input_files_from_input_dict(input_dict: dict, working_directory: str):
+    """
+    Write input files based on hierarchical input dictionary. On the first level the input dictionary is divided in
+    file_to_create and files_to_copy. Both are dictionaries use the file names as keys. In file_to_create the values are
+    strings which represent the content which is going to be written to the corresponding file. In files_to_copy the
+    values are the paths to the source files to be copied.
+
+    Args:
+        input_dict (dict): hierarchical input dictionary with files_to_create and files_to_copy.
+        working_directory (str): path to the working directory
+    """
+    for file_name, content in input_dict["files_to_create"].items():
+        with open(os.path.join(working_directory, file_name), "w") as f:
+            f.writelines(content)
+    for file_name, source in input_dict["files_to_copy"].items():
+        shutil.copy(source, os.path.join(working_directory, file_name))
+
+
+class CalculateFunctionCaller:
+    __slots__ = ('write_input_funct', 'collect_output_funct')
+
+    def __init__(
+        self,
+        write_input_funct: callable = write_input_files_from_input_dict,
+        collect_output_funct: callable = None
+    ):
+        self.write_input_funct = write_input_funct
+        self.collect_output_funct = collect_output_funct
+
+    def __call__(
+        self,
+        working_directory: str,
+        input_parameter_dict: dict,
+        executable_script: str,
+        shell_parameter: bool,
+        cores: int = 1,
+        threads: int = 1,
+        gpus: int = 1,
+        conda_environment_name: Optional[str] = None,
+        conda_environment_path: Optional[str] = None,
+        accept_crash: bool = False,
+        accepted_return_codes: List[int] = [],
+        output_parameter_dict: dict = {},
+    ) -> Tuple[str, dict, bool]:
+        """
+        Generic calculate function, which writes the input files into the working_directory, executes the
+        executable_script and parses the output using the output_parameter_dict.
+
+        Args:
+            working_directory (str): Directory the calculation is executed in.
+            input_parameter_dict (dict): Dictionary with parameters for the write_input function. By default this is a
+                                         hierarchical dictionary with two keys files_to_write and files_to_copy on the
+                                         first level. The files_to_write dictionary contains the file names and their
+                                         content as strings, while the files_to_copy dictionary contains the file names
+                                         and the links to the files which should be copied.
+            executable_script (str): Executable to be executed in the working directory.
+            shell_parameter (bool): The shell parameter from the subprocess.Popen() function of the python standard
+                                    library.
+            conda_environment_name (str): Name of a conda environment to execute the executable in.
+            conda_environment_path (str): Path of a conda environment to execute the executable in.
+            accept_crash (bool): Boolean flag to accept crashes.
+            accepted_return_codes (list): List of accepted return codes.
+            output_parameter_dict (dict): Additional parameters for the collect_output function.
+
+        Returns:
+            str, dict, bool: Tuple consisting of the shell output (str), the parsed output (dict) and a boolean flag if
+                             the execution raised an accepted error.
+        """
+        os.makedirs(working_directory, exist_ok=True)
+        if self.write_input_funct is not None:
+            self.write_input_funct(
+                input_dict=input_parameter_dict,
+                working_directory=working_directory,
+            )
+        job_crashed, shell_output = execute_command_with_error_handling(
+            executable=executable_script,
+            shell=shell_parameter,
+            working_directory=working_directory,
+            cores=cores,
+            threads=threads,
+            gpus=gpus,
+            conda_environment_name=conda_environment_name,
+            conda_environment_path=conda_environment_path,
+            accepted_return_codes=accepted_return_codes,
+            accept_crash=accept_crash,
+        )
+        parsed_output = None
+        if (
+                not job_crashed
+                and self.collect_output_funct is not None
+                and len(output_parameter_dict) > 0
+        ):
+            parsed_output = self.collect_output_funct(
+                working_directory=working_directory,
+                **output_parameter_dict,
+            )
+        elif not job_crashed and self.collect_output_funct is not None:
+            parsed_output = self.collect_output_funct(
+                working_directory=working_directory,
+            )
+        return shell_output, parsed_output, job_crashed
+
 # Parameter
 def run_job_with_parameter_repair(job):
     """
@@ -795,118 +897,6 @@ def multiprocess_wrapper(
         raise ValueError("Either job_id or file_path have to be not None.")
     with catch_signals(job_wrap.job.signal_intercept):
         job_wrap.job.run_static()
-
-
-def write_input_files_from_input_dict(input_dict: dict, working_directory: str):
-    """
-    Write input files based on hierarchical input dictionary. On the first level the input dictionary is divided in
-    file_to_create and files_to_copy. Both are dictionaries use the file names as keys. In file_to_create the values are
-    strings which represent the content which is going to be written to the corresponding file. In files_to_copy the
-    values are the paths to the source files to be copied.
-
-    Args:
-        input_dict (dict): hierarchical input dictionary with files_to_create and files_to_copy.
-        working_directory (str): path to the working directory
-    """
-    for file_name, content in input_dict["files_to_create"].items():
-        with open(os.path.join(working_directory, file_name), "w") as f:
-            f.writelines(content)
-    for file_name, source in input_dict["files_to_copy"].items():
-        shutil.copy(source, os.path.join(working_directory, file_name))
-
-
-def get_calculate_function(
-    write_input_funct: callable = write_input_files_from_input_dict,
-    collect_output_funct: callable = None,
-):
-    """
-    Function to dynamically generate a calculate() function for a given job, by inserting the write_input_funct and
-    collect_output_funct.
-
-    Args:
-        write_input_funct (callable): A function which takes the working_directory and the input_parameter_dict as an
-                                      input and writes the input files into the workin_directory.
-        collect_output_funct (callable): The collect output directory takes the working_directory and the
-                                         output_parameter_dict as an input, parses the output files in the
-                                         working_directory and returns the output as hierarchical dictionary.
-
-    Returns:
-        callable: The calculate function
-    """
-
-    def calculate(
-        working_directory: str,
-        input_parameter_dict: dict,
-        executable_script: str,
-        shell_parameter: bool,
-        cores: int = 1,
-        threads: int = 1,
-        gpus: int = 1,
-        conda_environment_name: Optional[str] = None,
-        conda_environment_path: Optional[str] = None,
-        accept_crash: bool = False,
-        accepted_return_codes: List[int] = [],
-        output_parameter_dict: dict = {},
-    ) -> Tuple[str, dict, bool]:
-        """
-        Generic calculate function, which writes the input files into the working_directory, executes the
-        executable_script and parses the output using the output_parameter_dict.
-
-        Args:
-            working_directory (str): Directory the calculation is executed in.
-            input_parameter_dict (dict): Dictionary with parameters for the write_input function. By default this is a
-                                         hierarchical dictionary with two keys files_to_write and files_to_copy on the
-                                         first level. The files_to_write dictionary contains the file names and their
-                                         content as strings, while the files_to_copy dictionary contains the file names
-                                         and the links to the files which should be copied.
-            executable_script (str): Executable to be executed in the working directory.
-            shell_parameter (bool): The shell parameter from the subprocess.Popen() function of the python standard
-                                    library.
-            conda_environment_name (str): Name of a conda environment to execute the executable in.
-            conda_environment_path (str): Path of a conda environment to execute the executable in.
-            accept_crash (bool): Boolean flag to accept crashes.
-            accepted_return_codes (list): List of accepted return codes.
-            output_parameter_dict (dict): Additional parameters for the collect_output function.
-
-        Returns:
-            str, dict, bool: Tuple consisting of the shell output (str), the parsed output (dict) and a boolean flag if
-                             the execution raised an accepted error.
-        """
-        os.makedirs(working_directory, exist_ok=True)
-        if write_input_funct is not None:
-            write_input_funct(
-                input_dict=input_parameter_dict,
-                working_directory=working_directory,
-            )
-        job_crashed, shell_output = execute_command_with_error_handling(
-            executable=executable_script,
-            shell=shell_parameter,
-            working_directory=working_directory,
-            cores=cores,
-            threads=threads,
-            gpus=gpus,
-            conda_environment_name=conda_environment_name,
-            conda_environment_path=conda_environment_path,
-            accepted_return_codes=accepted_return_codes,
-            accept_crash=accept_crash,
-        )
-        parsed_output = None
-        if (
-            not job_crashed
-            and collect_output_funct is not None
-            and len(output_parameter_dict) > 0
-        ):
-            parsed_output = collect_output_funct(
-                working_directory=working_directory,
-                **output_parameter_dict,
-            )
-        elif not job_crashed and collect_output_funct is not None:
-            parsed_output = collect_output_funct(
-                working_directory=working_directory,
-            )
-        return shell_output, parsed_output, job_crashed
-
-    return calculate
 
 
 def execute_command_with_error_handling(

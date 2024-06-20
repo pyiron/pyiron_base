@@ -28,9 +28,9 @@ from pyiron_base.jobs.job.extension.executable import Executable
 from pyiron_base.jobs.job.extension.files import File
 from pyiron_base.jobs.job.extension.jobstatus import JobStatus
 from pyiron_base.jobs.job.runfunction import (
+    CalculateFunctionCaller,
     execute_job_with_calculate_function,
     execute_job_with_external_executable,
-    get_calculate_function,
     run_job_with_parameter_repair,
     run_job_with_status_initialized,
     run_job_with_status_created,
@@ -520,7 +520,9 @@ class GenericJob(JobCore, HasDict):
         Returns:
             callable: calculate() functione
         """
-        return get_calculate_function(collect_output_funct=self._collect_output_funct)
+        return CalculateFunctionCaller(
+            collect_output_funct=self._collect_output_funct,
+        )
 
     def get_input_parameter_dict(self) -> dict:
         """
