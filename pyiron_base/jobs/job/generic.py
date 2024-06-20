@@ -11,6 +11,7 @@ from inspect import isclass
 import os
 import platform
 import posixpath
+from typing import Optional
 import warnings
 
 from h5io_browser.base import _read_hdf, _write_hdf
@@ -562,7 +563,7 @@ class GenericJob(JobCore, HasDict):
         )
 
     def save_output(
-            self, output_dict: Optional[dict] = None, shell_output: Optional[str] = None
+        self, output_dict: Optional[dict] = None, shell_output: Optional[str] = None
     ):
         """
         Store output of the calculate function in the HDF5 file.
