@@ -289,21 +289,19 @@ class ScriptJob(GenericJob):
         Returns:
             dict: keyword arguments for the calculate() function
         """
-        input_dict = self.get_input_file_dict()
         executable, shell = self.executable.get_input_for_subprocess_call(
             cores=self.server.cores, threads=self.server.threads, gpus=self.server.gpus
         )
         return {
-            "input_dict": input_dict,
-            "executable_dict": {
-                "executable": executable,
-                "shell": shell,
-                "accepted_return_codes": self.executable.accepted_return_codes,
-                "accept_crash": self.server.accept_crash,
-                "working_directory": self.working_directory,
-                "conda_environment_name": self.server.conda_environment_name,
-                "conda_environment_path": self.server.conda_environment_path,
-            },
+            "working_directory": self.working_directory,
+            "input_parameter_dict": self.get_input_file_dict(),
+            "executable_script": executable,
+            "shell_parameter": shell,
+            "conda_environment_name": self.server.conda_environment_name,
+            "conda_environment_path": self.server.conda_environment_path,
+            "accept_crash": self.server.accept_crash,
+            "accepted_return_codes": self.executable.accepted_return_codes,
+            "output_parameter_dict": {},
         }
 
     def generate_calculate_function(self) -> callable:
@@ -320,10 +318,7 @@ class ScriptJob(GenericJob):
         Returns:
             callable: calculate() functione
         """
-        return generate_calculate_function(
-            write_input_funct=write_input_files_from_input_dict,
-            collect_output_funct=None,
-        )
+        return generate_calculate_function()
 
     def run_static(self):
         """
