@@ -818,6 +818,7 @@ def get_calculate_function(
     Returns:
         callable: The calculate function
     """
+
     def calculate(
         working_directory: str,
         input_parameter_dict: dict,
@@ -953,9 +954,7 @@ def execute_job_with_calculate_function(job):
             shell_output,
             parsed_output,
             job_crashed,
-        ) = job.get_calculate_function()(
-            **job.calculate_kwargs
-        )
+        ) = job.get_calculate_function()(**job.calculate_kwargs)
     except RuntimeError:
         raise_runtimeerror_for_failed_job(job=job)
     else:

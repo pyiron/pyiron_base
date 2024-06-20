@@ -562,7 +562,7 @@ class GenericJob(JobCore, HasDict):
         )
 
     def save_output(
-            self, output_dict: Optional[dict] = None, shell_output: Optional[str] = None
+        self, output_dict: Optional[dict] = None, shell_output: Optional[str] = None
     ):
         """
         Store output of the calculate function in the HDF5 file.
