@@ -8,7 +8,7 @@ import os
 import posixpath
 import shutil
 import subprocess
-from typing import Optional
+from typing import Optional, List
 
 from jinja2 import Template
 from pyiron_snippets.deprecate import deprecate
