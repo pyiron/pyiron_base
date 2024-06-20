@@ -3,7 +3,7 @@ import numpy as np
 from typing import Optional
 
 from pyiron_base.jobs.job.template import TemplateJob
-from pyiron_base.jobs.job.runfunction import generate_calculate_function
+from pyiron_base.jobs.job.runfunction import get_calculate_function
 
 
 class ExecutableContainerJob(TemplateJob):
@@ -117,7 +117,7 @@ class ExecutableContainerJob(TemplateJob):
         Returns:
             callable: calculate() functione
         """
-        return generate_calculate_function(
+        return get_calculate_function(
             write_input_funct=self._write_input_funct,
             collect_output_funct=self._collect_output_funct,
         )
