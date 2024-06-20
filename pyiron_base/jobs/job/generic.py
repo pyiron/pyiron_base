@@ -163,6 +163,7 @@ class GenericJob(JobCore, HasDict):
         self._restart_file_dict = dict()
         self._exclude_nodes_hdf = list()
         self._exclude_groups_hdf = list()
+        self._collect_output_funct = None
         self._executor_type = None
         self._process = None
         self._compress_by_default = False
@@ -516,7 +517,7 @@ class GenericJob(JobCore, HasDict):
         Returns:
             callable: calculate() functione
         """
-        return get_calculate_function()
+        return get_calculate_function(collect_output_funct=self._collect_output_funct)
 
     def get_input_dict(self) -> dict:
         """
