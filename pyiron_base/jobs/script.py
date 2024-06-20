@@ -336,7 +336,7 @@ class ScriptJob(GenericJob):
                     pr_job.db.item_update({"masterid": str(job.job_id)}, subjob_id)
 
     def save_output(
-            self, output_dict: Optional[dict] = None, shell_output: Optional[str] = None
+        self, output_dict: Optional[dict] = None, shell_output: Optional[str] = None
     ):
         pass
 
