@@ -790,7 +790,10 @@ def write_input_files_from_input_dict(input_dict: dict, working_directory: str):
         shutil.copy(source, os.path.join(working_directory, file_name))
 
 
-def generate_calculate_function(write_input_funct: callable = write_input_files_from_input_dict, collect_output_funct: callable = None):
+def generate_calculate_function(
+    write_input_funct: callable = write_input_files_from_input_dict,
+    collect_output_funct: callable = None,
+):
     def calculate(
         working_directory: str,
         input_parameter_dict: dict,
