@@ -883,8 +883,6 @@ def get_calculate_function(
             parsed_output = collect_output_funct(
                 working_directory=working_directory,
             )
-        else:
-            parsed_output = None
         return shell_output, parsed_output, job_crashed
 
     return calculate
