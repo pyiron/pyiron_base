@@ -782,6 +782,14 @@ def multiprocess_wrapper(
         job_wrap.job.run_static()
 
 
+def write_input_files_from_input_dict(input_dict: dict, working_directory: str):
+    for file_name, content in input_dict["files_to_create"].items():
+        with open(os.path.join(working_directory, file_name), "w") as f:
+            f.writelines(content)
+    for file_name, source in input_dict["files_to_copy"].items():
+        shutil.copy(source, os.path.join(working_directory, file_name))
+
+
 def generate_calculate_function(write_input_funct: callable = write_input_files_from_input_dict, collect_output_funct: callable = None):
     def calculate(
         working_directory: str,
@@ -885,14 +893,6 @@ def execute_calculate_function(job):
         else:
             job.status.finished = True
             job._store_output(output_dict=parsed_output, shell_output=shell_output)
-
-
-def write_input_files_from_input_dict(input_dict: dict, working_directory: str):
-    for file_name, content in input_dict["files_to_create"].items():
-        with open(os.path.join(working_directory, file_name), "w") as f:
-            f.writelines(content)
-    for file_name, source in input_dict["files_to_copy"].items():
-        shutil.copy(source, os.path.join(working_directory, file_name))
 
 
 def _generate_flux_execute_string(job, database_is_disabled):
