@@ -869,6 +869,7 @@ def get_calculate_function(
             accepted_return_codes=accepted_return_codes,
             accept_crash=accept_crash,
         )
+        parsed_output = None
         if (
             not job_crashed
             and collect_output_funct is not None
