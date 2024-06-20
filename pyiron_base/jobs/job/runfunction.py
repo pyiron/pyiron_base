@@ -149,10 +149,7 @@ class CalculateFunctionCaller:
             accept_crash=accept_crash,
         )
         parsed_output = None
-        if (
-                not job_crashed
-                and self.collect_output_funct is not None
-        ):
+        if not job_crashed and self.collect_output_funct is not None:
             parsed_output = self.collect_output_funct(
                 working_directory=working_directory,
                 **output_parameter_dict,
