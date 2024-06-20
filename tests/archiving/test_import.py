@@ -104,6 +104,7 @@ class TestUnpacking(PyironTestCase):
             rmtree(pack_path)
         except Exception as err_msg:
             print(f"deleting unsuccessful: {err_msg}")
+        pr.remove(enable=True)
 
     def test_import_uncompress(self):
         self.pr.pack(destination_path=self.arch_dir, compress=False)
