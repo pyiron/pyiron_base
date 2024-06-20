@@ -282,7 +282,7 @@ class ScriptJob(GenericJob):
         if "custom_dict" in job_dict["input"].keys():
             self.input.update(job_dict["input"]["custom_dict"])
 
-    def get_input_dict(self):
+    def get_input_parameter_dict(self):
         """
         Get an hierarchical dictionary of input files. On the first level the dictionary is divided in file_to_create
         and files_to_copy. Both are dictionaries use the file names as keys. In file_to_create the values are strings
@@ -292,7 +292,7 @@ class ScriptJob(GenericJob):
         Returns:
             dict: hierarchical dictionary of input files
         """
-        input_file_dict = super().get_input_dict()
+        input_file_dict = super().get_input_parameter_dict()
         if self._script_path is not None:
             files_to_copy_dict = {
                 os.path.basename(self._script_path): self._script_path

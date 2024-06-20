@@ -425,8 +425,8 @@ class GenericJob(JobCore, HasDict):
     def calculate_kwargs(self) -> dict:
         """
         Generate keyword arguments for the calculate() function. A new simulation code only has to extend the
-        get_input_dict() function which by default specifies an hierarchical dictionary with files_to_write and
-        files_to_copy.
+        get_input_parameter_dict() function which by default specifies an hierarchical dictionary with files_to_write
+        and files_to_copy.
 
         Example:
 
@@ -442,14 +442,14 @@ class GenericJob(JobCore, HasDict):
         )
         return {
             "working_directory": self.working_directory,
-            "input_parameter_dict": self.get_input_dict(),
+            "input_parameter_dict": self.get_input_parameter_dict(),
             "executable_script": executable,
             "shell_parameter": shell,
             "conda_environment_name": self.server.conda_environment_name,
             "conda_environment_path": self.server.conda_environment_path,
             "accept_crash": self.server.accept_crash,
             "accepted_return_codes": self.executable.accepted_return_codes,
-            "output_parameter_dict": {},
+            "output_parameter_dict": self.get_output_parameter_dict(),
         }
 
     def clear_job(self):
@@ -519,7 +519,7 @@ class GenericJob(JobCore, HasDict):
         """
         return get_calculate_function(collect_output_funct=self._collect_output_funct)
 
-    def get_input_dict(self) -> dict:
+    def get_input_parameter_dict(self) -> dict:
         """
         Get an hierarchical dictionary of input files. On the first level the dictionary is divided in file_to_create
         and files_to_copy. Both are dictionaries use the file names as keys. In file_to_create the values are strings
@@ -553,6 +553,9 @@ class GenericJob(JobCore, HasDict):
                 "files_to_create": {},
                 "files_to_copy": _get_restart_copy_dict(job=self),
             }
+
+    def get_output_parameter_dict(self):
+        return {}
 
     def collect_output(self):
         """
@@ -625,7 +628,7 @@ class GenericJob(JobCore, HasDict):
         Returns:
         """
         write_input_files_from_input_dict(
-            input_dict=self.get_input_dict(),
+            input_dict=self.get_input_parameter_dict(),
             working_directory=self.working_directory,
         )
 
