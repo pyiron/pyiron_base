@@ -851,7 +851,13 @@ def execute_command_with_error_handling(
 ):
     job_crashed = False
     try:
-        shell_output = execute_subprocess(**executable_dict)
+        shell_output = execute_subprocess(
+            executable=executable,
+            shell=shell,
+            working_directory=working_directory,
+            conda_environment_name=conda_environment_name,
+            conda_environment_path=conda_environment_path,
+        )
     except (subprocess.CalledProcessError, FileNotFoundError) as error:
         if hasattr(error, "output"):
             shell_output = error.output
