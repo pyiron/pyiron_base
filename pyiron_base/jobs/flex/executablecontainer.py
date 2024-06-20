@@ -101,7 +101,6 @@ class ExecutableContainerJob(TemplateJob):
             "input_parameter_dict": self.input.to_builtin(),
             "executable_script": self.executable.executable_path,
             "shell_parameter": True,
-            "working_directory": self.working_directory,
             "conda_environment_name": self.server.conda_environment_name,
             "conda_environment_path": self.server.conda_environment_path,
             "accept_crash": False,
