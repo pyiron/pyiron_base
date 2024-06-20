@@ -2,7 +2,7 @@ import cloudpickle
 import numpy as np
 
 from pyiron_base.jobs.job.template import TemplateJob
-from pyiron_base.jobs.job.runfunction import get_calculate_function
+from pyiron_base.jobs.job.runfunction import CalculateFunctionCaller
 
 
 class ExecutableContainerJob(TemplateJob):
@@ -115,7 +115,7 @@ class ExecutableContainerJob(TemplateJob):
         Returns:
             callable: calculate() functione
         """
-        return get_calculate_function(
+        return CalculateFunctionCaller(
             write_input_funct=self._write_input_funct,
             collect_output_funct=self._collect_output_funct,
         )
