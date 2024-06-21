@@ -317,8 +317,14 @@ def run_job_with_status_collect(job):
     Args:
         job (GenericJob): pyiron job object
     """
-    job.collect_output()
-    job.collect_logfiles()
+    if job._job_with_calculate_function and job._collect_output_funct is not None:
+        parsed_output = job._collect_output_funct(
+            working_directory=job.working_directory, **job.get_output_parameter_dict()
+        )
+        job.save_output(output_dict=parsed_output)
+    else:
+        job.collect_output()
+        job.collect_logfiles()
     job.run_time_to_db()
     if job.status.collect:
         if not job.convergence_check():
@@ -372,6 +378,12 @@ def run_job_with_runmode_manually(job, _manually_print=True):
         job (GenericJob): pyiron job object
         _manually_print (bool): [True/False] print command for execution - default=True
     """
+    if job._job_with_calculate_function:
+        job.project_hdf5.create_working_directory()
+        write_input_files_from_input_dict(
+            input_dict=job.get_input_parameter_dict(),
+            working_directory=job.working_directory,
+        )
     if _manually_print:
         abs_working = posixpath.abspath(job.project_hdf5.working_directory)
         if not state.database.database_is_disabled:
