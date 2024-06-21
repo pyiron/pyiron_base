@@ -984,8 +984,13 @@ def execute_job_with_calculate_function(job):
             job.status.aborted = True
             job._hdf5["status"] = job.status.string
         else:
-            job.status.finished = True
             job.save_output(output_dict=parsed_output, shell_output=shell_output)
+            if not job.convergence_check():
+                job.status.not_converged = True
+            else:
+                if job._compress_by_default:
+                    job.compress()
+                job.status.finished = True
 
 
 def _generate_flux_execute_string(job, database_is_disabled):
