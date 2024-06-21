@@ -319,8 +319,7 @@ def run_job_with_status_collect(job):
     """
     if job._job_with_calculate_function and job._collect_output_funct is not None:
         parsed_output = job._collect_output_funct(
-            working_directory=job.working_directory,
-            **job.get_output_parameter_dict()
+            working_directory=job.working_directory, **job.get_output_parameter_dict()
         )
         job.save_output(output_dict=parsed_output)
     else:
