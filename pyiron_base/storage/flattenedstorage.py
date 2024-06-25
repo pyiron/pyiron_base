@@ -1104,7 +1104,9 @@ class FlattenedStorage(Lockable, HasHDF):
             :class:`pandas.DataFrame`: table of array values
         """
         arrays = self.list_arrays(only_user=True)
-        df = pd.DataFrame({a: self.get_array_ragged(a) for a in arrays})
+        # convert to list for the case where shape!=(); in this case pandas
+        # complains about multidimensional arrays
+        df = pd.DataFrame({a: list(self.get_array_ragged(a)) for a in arrays})
         if explode:
             elem_arrays = [a for a in arrays if self.has_array(a)["per"] == "element"]
             df = (
