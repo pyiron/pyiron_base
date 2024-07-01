@@ -154,7 +154,7 @@ class FlexibleMaster(GenericMaster):
         """
         super(FlexibleMaster, self).to_hdf(hdf=hdf, group_name=group_name)
         with self.project_hdf5.open("input") as hdf5_input:
-            if self._step_function_lst is not []:
+            if self._step_function_lst != []:
                 try:
                     hdf5_input["funct_lst"] = [
                         inspect.getsource(funct) for funct in self._step_function_lst
