@@ -482,18 +482,20 @@ class Project(ProjectPath, HasGroups):
         return table
 
     def wrap_python_function(
-        self, python_function, job_name=None, automatically_rename=True
+        self, python_function, *args, job_name=None, automatically_rename=True, **kwargs
     ):
         """
         Create a pyiron job object from any python function
 
         Args:
             python_function (callable): python function to create a job object from
+            *args: Arguments for the user-defined python function
             job_name (str | None): The name for the created job. (Default is None, use
                 the name of the function.)
             automatically_rename (bool): Whether to automatically rename the job at
                 save-time to append a string based on the input values. (Default is
                 True.)
+            **kwargs: Keyword-arguments for the user-defined python function
 
         Returns:
             pyiron_base.jobs.flex.pythonfunctioncontainer.PythonFunctionContainerJob: pyiron job object
@@ -520,7 +522,7 @@ class Project(ProjectPath, HasGroups):
         )
         job._automatically_rename_on_save_using_input = automatically_rename
         job.python_function = python_function
-        return job
+        return job(*args, **kwargs)
 
     def get_child_ids(self, job_specifier, project=None):
         """

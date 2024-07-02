@@ -43,6 +43,14 @@ class TestPythonFunctionContainer(TestWithProject):
         self.assertEqual(job_reload.input["b"], 6)
         self.assertEqual(job_reload.output["result"], 11)
 
+    def test_direct_function_call(self):
+        result = self.project.wrap_python_function(my_function, 5, b=6)
+        self.assertEqual(result, 11)
+        job_reload = self.project.load(self.project.get_job_ids()[-1])
+        self.assertEqual(job_reload.input["a"], 5)
+        self.assertEqual(job_reload.input["b"], 6)
+        self.assertEqual(job_reload.output["result"], 11)
+
     def test_with_executor(self):
         with ProcessPoolExecutor() as exe:
             job = self.project.wrap_python_function(my_sleep_funct)
