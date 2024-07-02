@@ -56,7 +56,9 @@ class PythonCalculateFunctionCaller:
         ):
             if "executor" in kwargs.keys():
                 del kwargs["executor"]
-            with get_executor(executor_type=self._executor_type, max_workers=self._cores) as exe:
+            with get_executor(
+                executor_type=self._executor_type, max_workers=self._cores
+            ) as exe:
                 result = self._function(*args, executor=exe, **kwargs)
         else:
             result = self._function(*args, **kwargs)

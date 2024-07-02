@@ -1647,13 +1647,8 @@ class GenericError(object):
 
 def get_executor(executor_type=None, max_workers=None):
     if executor_type is None:
-        raise ValueError(
-            "No executor type defined - Please set self.executor_type."
-        )
-    elif (
-        executor_type == "pympipool.Executor"
-        and platform.system() == "Darwin"
-    ):
+        raise ValueError("No executor type defined - Please set self.executor_type.")
+    elif executor_type == "pympipool.Executor" and platform.system() == "Darwin":
         # The Mac firewall might prevent connections based on the network address - especially Github CI
         return import_class(executor_type)(
             max_cores=max_workers, hostname_localhost=True
