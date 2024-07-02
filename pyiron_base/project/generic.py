@@ -47,6 +47,7 @@ from pyiron_base.jobs.job.extension.server.queuestatus import (
     queue_enable_reservation,
     queue_check_job_is_waiting_or_running,
 )
+from pyiron_base.project.delayed import DelayedObject
 from pyiron_base.project.external import Notebook
 from pyiron_base.project.data import ProjectData
 from pyiron_base.project.archiving import export_archive, import_archive
@@ -482,7 +483,7 @@ class Project(ProjectPath, HasGroups):
         return table
 
     def wrap_python_function(
-        self, python_function, *args, job_name=None, automatically_rename=True, **kwargs
+        self, python_function, *args, job_name=None, automatically_rename=True, delayed=False, output_file_lst=[], output_key_lst=[], **kwargs
     ):
         """
         Create a pyiron job object from any python function
@@ -517,15 +518,37 @@ class Project(ProjectPath, HasGroups):
         >>> test_function_wrapped(4, b=6)
 
         """
-        job = self.create.job.PythonFunctionContainerJob(
-            job_name=python_function.__name__ if job_name is None else job_name
-        )
-        job._automatically_rename_on_save_using_input = automatically_rename
-        job.python_function = python_function
-        if not args and len(kwargs) == 0:
-            return job
+        def create_function_job(*args, **kwargs):
+            job = self.create.job.PythonFunctionContainerJob(
+                job_name=python_function.__name__ if job_name is None else job_name
+            )
+            job._automatically_rename_on_save_using_input = automatically_rename
+            job.python_function = python_function
+            if not args and len(kwargs) == 0:
+                return job
+            else:
+                return job(*args, **kwargs)
+
+        if delayed:
+            return DelayedObject(
+                function=create_function_job,
+                *args,
+                output_key=None,
+                output_file=None,
+                output_file_lst=output_file_lst,
+                output_key_lst=output_key_lst,
+                **kwargs
+            )
         else:
-            return job(*args, **kwargs)
+            job = self.create.job.PythonFunctionContainerJob(
+                job_name=python_function.__name__ if job_name is None else job_name
+            )
+            job._automatically_rename_on_save_using_input = automatically_rename
+            job.python_function = python_function
+            if not args and len(kwargs) == 0:
+                return job
+            else:
+                return job(*args, **kwargs)
 
     def get_child_ids(self, job_specifier, project=None):
         """
