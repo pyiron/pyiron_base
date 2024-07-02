@@ -21,7 +21,7 @@ def get_hash(binary):
 
 
 class PythonCalculateFunctionCaller:
-    __slots__ = ("funct")
+    __slots__ = "funct"
 
     def __init__(
         self,
@@ -46,7 +46,6 @@ class PythonCalculateFunctionCaller:
                              the execution raised an accepted error.
         """
         return None, {"result": self.funct(*args, **kwargs)}, False
-
 
 
 class PythonFunctionContainerJob(PythonTemplateJob):
