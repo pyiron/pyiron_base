@@ -2,7 +2,6 @@ import inspect
 import hashlib
 import re
 import cloudpickle
-import numpy as np
 
 
 def get_function_parameter_dict(funct):

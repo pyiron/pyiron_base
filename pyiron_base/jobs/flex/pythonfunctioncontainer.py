@@ -1,6 +1,4 @@
 import inspect
-import hashlib
-import re
 from typing import Tuple
 import cloudpickle
 import numpy as np
