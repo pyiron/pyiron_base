@@ -522,7 +522,10 @@ class Project(ProjectPath, HasGroups):
         )
         job._automatically_rename_on_save_using_input = automatically_rename
         job.python_function = python_function
-        return job(*args, **kwargs)
+        if not args and len(kwargs) == 0:
+            return job
+        else:
+            return job(*args, **kwargs)
 
     def get_child_ids(self, job_specifier, project=None):
         """
