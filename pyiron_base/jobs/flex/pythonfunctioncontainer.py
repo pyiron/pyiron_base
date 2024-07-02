@@ -5,6 +5,7 @@ from typing import Tuple
 import cloudpickle
 import numpy as np
 from pyiron_base.jobs.job.template import PythonTemplateJob
+from pyiron_base.jobs.job.generic import get_executor
 
 
 def get_function_parameter_dict(funct):
@@ -21,13 +22,17 @@ def get_hash(binary):
 
 
 class PythonCalculateFunctionCaller:
-    __slots__ = "funct"
+    __slots__ = ("_function", "_executor_type", "_cores")
 
     def __init__(
         self,
         funct: callable = None,
+        executor_type: str = None,
+        cores: int = 1,
     ):
-        self.funct = funct
+        self._function = funct
+        self._executor_type = executor_type
+        self._cores = cores
 
     def __call__(
         self,
@@ -45,7 +50,17 @@ class PythonCalculateFunctionCaller:
             str, dict, bool: Tuple consisting of the shell output (str), the parsed output (dict) and a boolean flag if
                              the execution raised an accepted error.
         """
-        return None, {"result": self.funct(*args, **kwargs)}, False
+        if (
+            self._executor_type is not None
+            and "executor" in inspect.signature(self._function).parameters.keys()
+        ):
+            if "executor" in kwargs.keys():
+                del kwargs["executor"]
+            with get_executor(executor_type=self._executor_type, max_workers=self._cores) as exe:
+                result = self._function(*args, executor=exe, **kwargs)
+        else:
+            result = self._function(*args, **kwargs)
+        return None, {"result": result}, False
 
 
 class PythonFunctionContainerJob(PythonTemplateJob):
@@ -103,15 +118,7 @@ class PythonFunctionContainerJob(PythonTemplateJob):
         Returns:
             dict: keyword arguments for the calculate() function
         """
-        if (
-            self._executor_type is not None
-            and "executor" in inspect.signature(self._function).parameters.keys()
-        ):
-            input_dict = self.input.to_builtin()
-            input_dict["executor"] = self._get_executor(max_workers=self.server.cores)
-            return input_dict
-        else:
-            return self.input.to_builtin()
+        return self.input.to_builtin()
 
     def get_calculate_function(self):
         """

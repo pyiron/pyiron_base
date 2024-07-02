@@ -1615,25 +1615,7 @@ class GenericJob(JobCore, HasDict):
             del self
 
     def _get_executor(self, max_workers=None):
-        if self._executor_type is None:
-            raise ValueError(
-                "No executor type defined - Please set self.executor_type."
-            )
-        elif (
-            self._executor_type == "pympipool.Executor"
-            and platform.system() == "Darwin"
-        ):
-            # The Mac firewall might prevent connections based on the network address - especially Github CI
-            return import_class(self._executor_type)(
-                max_cores=max_workers, hostname_localhost=True
-            )
-        elif self._executor_type == "pympipool.Executor":
-            # The pympipool Executor defines max_cores rather than max_workers
-            return import_class(self._executor_type)(max_cores=max_workers)
-        elif isinstance(self._executor_type, str):
-            return import_class(self._executor_type)(max_workers=max_workers)
-        else:
-            raise TypeError("The self.executor_type has to be a string.")
+        return get_executor(executor_type=self._executor_type, max_workers=max_workers)
 
 
 class GenericError(object):
@@ -1661,3 +1643,25 @@ class GenericError(object):
         elif print_yes:
             with open(os.path.join(self._working_directory, file_name)) as f:
                 return string.join(f.readlines())
+
+
+def get_executor(executor_type=None, max_workers=None):
+    if executor_type is None:
+        raise ValueError(
+            "No executor type defined - Please set self.executor_type."
+        )
+    elif (
+        executor_type == "pympipool.Executor"
+        and platform.system() == "Darwin"
+    ):
+        # The Mac firewall might prevent connections based on the network address - especially Github CI
+        return import_class(executor_type)(
+            max_cores=max_workers, hostname_localhost=True
+        )
+    elif executor_type == "pympipool.Executor":
+        # The pympipool Executor defines max_cores rather than max_workers
+        return import_class(executor_type)(max_cores=max_workers)
+    elif isinstance(executor_type, str):
+        return import_class(executor_type)(max_workers=max_workers)
+    else:
+        raise TypeError("The self.executor_type has to be a string.")
