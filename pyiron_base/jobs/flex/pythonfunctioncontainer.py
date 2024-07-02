@@ -108,7 +108,7 @@ class PythonFunctionContainerJob(PythonTemplateJob):
             and "executor" in inspect.signature(self._function).parameters.keys()
         ):
             input_dict = self.input.to_builtin()
-            del input_dict["executor"]
+            input_dict["executor"] = self._get_executor(max_workers=self.server.cores)
             return input_dict
         else:
             return self.input.to_builtin()
