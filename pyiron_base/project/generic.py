@@ -483,7 +483,15 @@ class Project(ProjectPath, HasGroups):
         return table
 
     def wrap_python_function(
-        self, python_function, *args, job_name=None, automatically_rename=True, delayed=False, output_file_lst=[], output_key_lst=[], **kwargs
+        self,
+        python_function,
+        *args,
+        job_name=None,
+        automatically_rename=True,
+        delayed=False,
+        output_file_lst=[],
+        output_key_lst=[],
+        **kwargs,
     ):
         """
         Create a pyiron job object from any python function
@@ -518,6 +526,7 @@ class Project(ProjectPath, HasGroups):
         >>> test_function_wrapped(4, b=6)
 
         """
+
         def create_function_job(*args, **kwargs):
             job = self.create.job.PythonFunctionContainerJob(
                 job_name=python_function.__name__ if job_name is None else job_name
@@ -537,7 +546,7 @@ class Project(ProjectPath, HasGroups):
                 output_file=None,
                 output_file_lst=output_file_lst,
                 output_key_lst=output_key_lst,
-                **kwargs
+                **kwargs,
             )
         else:
             job = self.create.job.PythonFunctionContainerJob(

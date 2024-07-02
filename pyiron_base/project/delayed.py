@@ -39,7 +39,7 @@ def get_graph(obj, obj_name=None, nodes_dict={}, edges_lst=[], link_node=None):
                         obj_name=sk,
                         nodes_dict=nodes_dict,
                         edges_lst=edges_lst,
-                        link_node=node_name
+                        link_node=node_name,
                     )
             else:
                 nodes_dict, edges_lst = get_graph(
@@ -47,7 +47,7 @@ def get_graph(obj, obj_name=None, nodes_dict={}, edges_lst=[], link_node=None):
                     obj_name=k,
                     nodes_dict=nodes_dict,
                     edges_lst=edges_lst,
-                    link_node=node_name
+                    link_node=node_name,
                 )
     return nodes_dict, edges_lst
 
@@ -71,7 +71,7 @@ def draw(node_dict: dict, edge_lst: list):
 
     graph = nx.DiGraph()
     for k, v in node_dict.items():
-        graph.add_node(k, label=k.rsplit('_', 1)[0] + "=" + str(v))
+        graph.add_node(k, label=k.rsplit("_", 1)[0] + "=" + str(v))
     for edge in edge_lst:
         graph.add_edge(edge[1], edge[0])
     svg = nx.nx_agraph.to_agraph(graph).draw(prog="dot", format="svg")
@@ -106,8 +106,16 @@ class Selector:
 
 
 class DelayedObject:
-    def __init__(self, function, *args, output_key=None, output_file=None, output_file_lst=[], output_key_lst=[],
-                 **kwargs):
+    def __init__(
+        self,
+        function,
+        *args,
+        output_key=None,
+        output_file=None,
+        output_file_lst=[],
+        output_key_lst=[],
+        **kwargs,
+    ):
         self._input = {}
         self._function = function
         try:
