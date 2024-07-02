@@ -1,22 +1,54 @@
 import inspect
-import hashlib
-import re
+from typing import Tuple
 import cloudpickle
 import numpy as np
 from pyiron_base.jobs.job.template import PythonTemplateJob
+from pyiron_base.jobs.job.generic import get_executor
+from pyiron_base.project.delayed import get_function_parameter_dict, get_hash
 
 
-def get_function_parameter_dict(funct):
-    return {
-        k: None if v.default == inspect._empty else v.default
-        for k, v in inspect.signature(funct).parameters.items()
-    }
+class PythonCalculateFunctionCaller:
+    __slots__ = ("_function", "_executor_type", "_cores")
 
+    def __init__(
+        self,
+        funct: callable = None,
+        executor_type: str = None,
+        cores: int = 1,
+    ):
+        self._function = funct
+        self._executor_type = executor_type
+        self._cores = cores
 
-def get_hash(binary):
-    # Remove specification of jupyter kernel from hash to be deterministic
-    binary_no_ipykernel = re.sub(b"(?<=/ipykernel_)(.*)(?=/)", b"", binary)
-    return str(hashlib.md5(binary_no_ipykernel).hexdigest())
+    def __call__(
+        self,
+        *args,
+        **kwargs,
+    ) -> Tuple[str, dict, bool]:
+        """
+        Generic calculate function, which writes the input files into the working_directory, executes the
+        executable_script and parses the output using the output_parameter_dict.
+
+        Args:
+            Arguments of the user defined function
+
+        Returns:
+            str, dict, bool: Tuple consisting of the shell output (str), the parsed output (dict) and a boolean flag if
+                             the execution raised an accepted error.
+        """
+        if (
+            self._executor_type is not None
+            and "executor" in inspect.signature(self._function).parameters.keys()
+        ):
+            if "executor" in kwargs.keys():
+                del kwargs["executor"]
+            with get_executor(
+                executor_type=self._executor_type, max_workers=self._cores
+            ) as exe:
+                result = self._function(*args, executor=exe, **kwargs)
+        else:
+            result = self._function(*args, **kwargs)
+        return None, {"result": result}, False
 
 
 class PythonFunctionContainerJob(PythonTemplateJob):
@@ -60,12 +92,40 @@ class PythonFunctionContainerJob(PythonTemplateJob):
         self.input.update(get_function_parameter_dict(funct=funct))
         self._function = funct
 
-    def __call__(self, *args, **kwargs):
-        self.input.update(
-            inspect.signature(self._function).bind(*args, **kwargs).arguments
+    @property
+    def calculate_kwargs(self) -> dict:
+        """
+        Generate keyword arguments for the calculate() function.
+
+        Example:
+
+        >>> calculate_function = job.get_calculate_function()
+        >>> shell_output, parsed_output, job_crashed = calculate_function(**job.calculate_kwargs)
+        >>> job.save_output(output_dict=parsed_output, shell_output=shell_output)
+
+        Returns:
+            dict: keyword arguments for the calculate() function
+        """
+        return self.input.to_builtin()
+
+    def get_calculate_function(self):
+        """
+        Generate calculate() function
+
+        Example:
+
+        >>> calculate_function = job.get_calculate_function()
+        >>> shell_output, parsed_output, job_crashed = calculate_function(**job.calculate_kwargs)
+        >>> job.save_output(output_dict=parsed_output, shell_output=shell_output)
+
+        Returns:
+            callable: calculate() functione
+        """
+        return PythonCalculateFunctionCaller(
+            funct=self._function,
+            executor_type=self._executor_type,
+            cores=self.server.cores,
         )
-        self.run()
-        return self.output["result"]
 
     def to_dict(self):
         job_dict = super().to_dict()
@@ -83,6 +143,11 @@ class PythonFunctionContainerJob(PythonTemplateJob):
         )
 
     def save(self):
+        """
+        Automatically rename job using function and input values at save time. This is useful for the edge case where
+        these jobs are created from a wrapper and automatically assigned a name based on the function name, but multiple
+        jobs are created from the same function (and thus distinguished only by their input).
+        """
         if self._automatically_rename_on_save_using_input:
             self.job_name = self.job_name + get_hash(
                 binary=cloudpickle.dumps(
@@ -96,17 +161,9 @@ class PythonFunctionContainerJob(PythonTemplateJob):
             return  # Without saving
         super().save()
 
-    def run_static(self):
-        if (
-            self._executor_type is not None
-            and "executor" in inspect.signature(self._function).parameters.keys()
-        ):
-            input_dict = self.input.to_builtin()
-            del input_dict["executor"]
-            with self._get_executor(max_workers=self.server.cores) as exe:
-                output = self._function(**input_dict, executor=exe)
-        else:
-            output = self._function(**self.input.to_builtin())
-        self.output.update({"result": output})
-        self.to_hdf()
-        self.status.finished = True
+    def __call__(self, *args, **kwargs):
+        self.input.update(
+            inspect.signature(self._function).bind(*args, **kwargs).arguments
+        )
+        self.run()
+        return self.output["result"]
