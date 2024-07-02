@@ -18,6 +18,17 @@ def collect_output(working_directory="."):
         return {"energy": float(f.readline())}
 
 
+def write_input_series(working_directory, input_dict):
+    for k, v in input_dict.items():
+        with open(os.path.join(working_directory, k + ".txt"), "w") as f:
+            f.writelines(str(v))
+
+
+def collect_output_series(working_directory):
+    with open(os.path.join(working_directory, "result.txt"), "r") as f:
+        return {"result": int(f.readlines()[0])}
+
+
 class TestExecutableContainer(TestWithProject):
     def test_create_job_class(self):
         energy_value = 2.0
@@ -190,3 +201,28 @@ class TestExecutableContainer(TestWithProject):
         process.terminate()
         sleep(1)
         self.assertTrue(job.status.aborted)
+
+    def test_series_of_jobs(self):
+        z = self.project.wrap_executable(
+            job_name="job_xy",
+            executable_str="x=$(cat x.txt); y=$(cat y.txt); echo $(($x + $y)) > result.txt",
+            write_input_funct=write_input_series,
+            collect_output_funct=collect_output_series,
+            input_dict={"x": 1, "y": 2},
+            conda_environment_path=None,
+            conda_environment_name=None,
+            input_file_lst=None,
+            execute_job=True,
+        )
+        w = self.project.wrap_executable(
+            job_name="job_xyz",
+            executable_str="x=$(cat x.txt); y=$(cat y.txt); z=$(cat result.txt); echo $(($x + $y + $z)) > result.txt",
+            write_input_funct=write_input_series,
+            collect_output_funct=collect_output_series,
+            input_dict={"x": 1, "y": z.output.result},
+            conda_environment_path=None,
+            conda_environment_name=None,
+            input_file_lst=[z.files.result_txt],
+            execute_job=True,
+        )
+        self.assertEqual(w.output.result, 7)

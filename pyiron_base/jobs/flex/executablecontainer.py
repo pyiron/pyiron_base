@@ -115,16 +115,17 @@ class ExecutableContainerJob(TemplateJob):
         Returns:
             callable: calculate() functione
         """
-        def get_combined_write_input_funct(input_job_dict, write_input_funct):
+        def get_combined_write_input_funct(input_job_dict, write_input_funct=None):
             def write_input_combo_funct(working_directory, input_dict):
                 write_input_files_from_input_dict(
                     input_dict=input_job_dict,
                     working_directory=working_directory,
                 )
-                write_input_funct(
-                    working_directory=working_directory,
-                    input_dict=input_dict,
-                )
+                if write_input_funct is not None:
+                    write_input_funct(
+                        working_directory=working_directory,
+                        input_dict=input_dict,
+                    )
 
             return write_input_combo_funct
 
