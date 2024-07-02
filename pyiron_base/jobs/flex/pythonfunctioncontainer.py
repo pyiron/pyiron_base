@@ -135,7 +135,11 @@ class PythonFunctionContainerJob(PythonTemplateJob):
         Returns:
             callable: calculate() functione
         """
-        return PythonCalculateFunctionCaller(funct=self._function)
+        return PythonCalculateFunctionCaller(
+            funct=self._function,
+            executor_type=self._executor_type,
+            cores=self.server.cores,
+        )
 
     def to_dict(self):
         job_dict = super().to_dict()
