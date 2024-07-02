@@ -202,6 +202,10 @@ class TestExecutableContainer(TestWithProject):
         sleep(1)
         self.assertTrue(job.status.aborted)
 
+    @unittest.skipIf(
+        os.name == "nt",
+        "shell script test is skipped on windows.",
+    )
     def test_series_of_jobs(self):
         z = self.project.wrap_executable(
             job_name="job_xy",
