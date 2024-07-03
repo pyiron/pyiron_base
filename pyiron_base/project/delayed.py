@@ -185,11 +185,11 @@ class DelayedObject:
         return get_graph(obj=self, nodes_dict={}, edges_lst=[], link_node=None)
 
     def __copy__(self):
-        obj_copy = DelayedObject(function=self._obj._function)
-        obj_copy._input = self._obj._input
-        obj_copy._function = self._obj._function
-        obj_copy._output_key_lst = self._obj._output_key_lst
-        obj_copy._output_file_lst = self._obj._output_file_lst
+        obj_copy = DelayedObject(function=self._function)
+        obj_copy._input = self._input
+        obj_copy._function = self._function
+        obj_copy._output_key_lst = self._output_key_lst
+        obj_copy._output_file_lst = self._output_file_lst
         obj_copy._result = self._result
         obj_copy._output_key = self._output_key
         obj_copy._output_file = self._output_file
