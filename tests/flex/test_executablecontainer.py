@@ -230,3 +230,44 @@ class TestExecutableContainer(TestWithProject):
             execute_job=True,
         )
         self.assertEqual(w.output.result, 7)
+
+    @unittest.skipIf(
+        os.name == "nt",
+        "delayed shell script test is skipped on windows.",
+    )
+    def test_delayed_series_of_jobs(self):
+        z = self.project.wrap_executable(
+            job_name="job_xy",
+            executable_str="x=$(cat x.txt); y=$(cat y.txt); echo $(($x + $y)) > result.txt",
+            write_input_funct=write_input_series,
+            collect_output_funct=collect_output_series,
+            input_dict={"x": 1, "y": 2},
+            conda_environment_path=None,
+            conda_environment_name=None,
+            input_file_lst=None,
+            delayed=True,
+            output_file_lst=["result.txt"],
+            output_key_lst=["result"],
+        )
+        w = self.project.wrap_executable(
+            job_name="job_xyz",
+            executable_str="x=$(cat x.txt); y=$(cat y.txt); z=$(cat result.txt); echo $(($x + $y + $z)) > result.txt",
+            write_input_funct=write_input_series,
+            collect_output_funct=collect_output_series,
+            input_dict={"x": 1, "y": z.output.result},
+            conda_environment_path=None,
+            conda_environment_name=None,
+            input_file_lst=[z.files.result_txt],
+            delayed=True,
+            output_file_lst=["result.txt"],
+            output_key_lst=["result"],
+        )
+        self.assertEqual(w.output.result.result(), 7)
+        nodes_dict, edges_lst = w.get_graph()
+        self.assertEqual(len(nodes_dict), 6)
+        self.assertEqual(len(edges_lst), 5)
+        job_w = w.result()
+        job_z = z.result()
+        self.assertEqual(job_w.output.result, 7)
+        self.project.remove_job(job_z.job_name)
+        self.project.remove_job(job_w.job_name)
