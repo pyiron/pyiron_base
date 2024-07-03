@@ -196,13 +196,9 @@ class TestPythonFunctionContainer(TestWithProject):
                 job.remove()
 
     def test_series(self):
-        c = self.project.wrap_python_function(
-            python_function=my_function, a=1, b=2
-        )
+        c = self.project.wrap_python_function(python_function=my_function, a=1, b=2)
         self.assertEqual(c, 3)
-        d = self.project.wrap_python_function(
-            python_function=my_function, a=c, b=3
-        )
+        d = self.project.wrap_python_function(python_function=my_function, a=c, b=3)
         self.assertEqual(d, 6)
 
     def test_delayed(self):
