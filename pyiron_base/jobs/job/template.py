@@ -79,7 +79,7 @@ class TemplateJob(GenericJob, HasStorage):
         return self.storage.output
 
     def to_dict(self):
-        job_dict = GenericJob.to_dict(self=self)
+        job_dict = super().to_dict()
         job_dict["input/data"] = self.storage.input.to_builtin()
         return job_dict
 
