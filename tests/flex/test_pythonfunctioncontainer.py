@@ -46,7 +46,7 @@ class TestPythonFunctionContainer(TestWithProject):
         self.project.remove_job(job_reload.job_name)
 
     def test_direct_function_call(self):
-        result = self.project.wrap_python_function(my_function, 7, b=8)
+        result = self.project.wrap_python_function(my_function, 7, b=8, execute_job=True)
         self.assertEqual(result, 15)
         job_reload = self.project.load(self.project.get_job_ids()[-1])
         self.assertEqual(job_reload.input["a"], 7)
