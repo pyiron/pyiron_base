@@ -193,7 +193,7 @@ class DelayedObject:
         obj_copy._result = self._result
         obj_copy._output_key = self._output_key
         obj_copy._output_file = self._output_file
-        return self
+        return obj_copy
 
     def __getattr__(self, name):
         if name == "files":
