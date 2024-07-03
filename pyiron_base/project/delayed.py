@@ -219,4 +219,6 @@ class DelayedObject:
                 obj._list_index = i
                 yield obj
         else:
-            raise TypeError("'DelayedObject' object is not iterable, when self._list_length = None.")
+            raise TypeError(
+                "'DelayedObject' object is not iterable, when self._list_length = None."
+            )
