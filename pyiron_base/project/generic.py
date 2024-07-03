@@ -47,6 +47,7 @@ from pyiron_base.jobs.job.extension.server.queuestatus import (
     queue_enable_reservation,
     queue_check_job_is_waiting_or_running,
 )
+from pyiron_base.project.delayed import DelayedObject
 from pyiron_base.project.external import Notebook
 from pyiron_base.project.data import ProjectData
 from pyiron_base.project.archiving import export_archive, import_archive
@@ -374,6 +375,9 @@ class Project(ProjectPath, HasGroups):
         conda_environment_name=None,
         input_file_lst=None,
         execute_job=False,
+        delayed=False,
+        output_file_lst=[],
+        output_key_lst=[],
     ):
         """
         Wrap any executable into a pyiron job object using the ExecutableContainerJob.
@@ -416,23 +420,62 @@ class Project(ProjectPath, HasGroups):
         Returns:
             pyiron_base.jobs.flex.ExecutableContainerJob: pyiron job object
         """
-        job_factory = create_job_factory(
-            write_input_funct=write_input_funct,
-            collect_output_funct=collect_output_funct,
-            default_input_dict=input_dict,
-            executable_str=executable_str,
-        )
-        job = job_factory(project=self, job_name=job_name)
-        if conda_environment_path is not None:
-            job.server.conda_environment_path = conda_environment_path
-        elif conda_environment_name is not None:
-            job.server.conda_environment_name = conda_environment_name
-        if input_file_lst is not None and len(input_file_lst) > 0:
-            for file in input_file_lst:
-                job.restart_file_list.append(file)
-        if execute_job:
-            job.run()
-        return job
+
+        def create_exeuctable_job(
+            project,
+            input_internal_dict,
+            executable_internal_str,
+            internal_file_lst,
+            execute_job=True,
+        ):
+            job_id = get_job_id(
+                database=project.db,
+                sql_query=project.sql_query,
+                user=project.user,
+                project_path=project.project_path,
+                job_specifier=job_name,
+            )
+            if job_id is None:
+                job = create_job_factory(
+                    write_input_funct=write_input_funct,
+                    collect_output_funct=collect_output_funct,
+                    default_input_dict=input_internal_dict,
+                    executable_str=executable_internal_str,
+                )(project=project, job_name=job_name)
+            else:
+                return project.load(job_specifier=job_name)
+            if conda_environment_path is not None:
+                job.server.conda_environment_path = conda_environment_path
+            elif conda_environment_name is not None:
+                job.server.conda_environment_name = conda_environment_name
+            if internal_file_lst is not None and len(internal_file_lst) > 0:
+                for file in internal_file_lst:
+                    job.restart_file_list.append(file)
+            if execute_job:
+                job.run()
+            return job
+
+        if delayed:
+            return DelayedObject(
+                function=create_exeuctable_job,
+                output_key=None,
+                output_file=None,
+                output_file_lst=[f.replace(".", "_") for f in output_file_lst],
+                output_key_lst=output_key_lst,
+                project=self,
+                input_internal_dict=input_dict,
+                executable_internal_str=executable_str,
+                internal_file_lst=input_file_lst,
+                execute_job=True,
+            )
+        else:
+            return create_exeuctable_job(
+                project=self,
+                input_internal_dict=input_dict,
+                executable_internal_str=executable_str,
+                internal_file_lst=input_file_lst,
+                execute_job=execute_job,
+            )
 
     def create_job(self, job_type, job_name, delete_existing_job=False):
         """
@@ -482,7 +525,13 @@ class Project(ProjectPath, HasGroups):
         return table
 
     def wrap_python_function(
-        self, python_function, *args, job_name=None, automatically_rename=True, **kwargs
+        self,
+        python_function,
+        *args,
+        job_name=None,
+        automatically_rename=True,
+        delayed=False,
+        **kwargs,
     ):
         """
         Create a pyiron job object from any python function
@@ -495,6 +544,7 @@ class Project(ProjectPath, HasGroups):
             automatically_rename (bool): Whether to automatically rename the job at
                 save-time to append a string based on the input values. (Default is
                 True.)
+            delayed (bool): delayed execution
             **kwargs: Keyword-arguments for the user-defined python function
 
         Returns:
@@ -517,15 +567,38 @@ class Project(ProjectPath, HasGroups):
         >>> test_function_wrapped(4, b=6)
 
         """
-        job = self.create.job.PythonFunctionContainerJob(
-            job_name=python_function.__name__ if job_name is None else job_name
-        )
-        job._automatically_rename_on_save_using_input = automatically_rename
-        job.python_function = python_function
-        if not args and len(kwargs) == 0:
-            return job
+
+        def create_function_job(*args, **kwargs):
+            job = self.create.job.PythonFunctionContainerJob(
+                job_name=python_function.__name__ if job_name is None else job_name
+            )
+            job._automatically_rename_on_save_using_input = automatically_rename
+            job.python_function = python_function
+            if not args and len(kwargs) == 0:
+                return job
+            else:
+                return job(*args, **kwargs)
+
+        if delayed:
+            return DelayedObject(
+                function=create_function_job,
+                *args,
+                output_key=None,
+                output_file=None,
+                output_file_lst=[],
+                output_key_lst=[],
+                **kwargs,
+            )
         else:
-            return job(*args, **kwargs)
+            job = self.create.job.PythonFunctionContainerJob(
+                job_name=python_function.__name__ if job_name is None else job_name
+            )
+            job._automatically_rename_on_save_using_input = automatically_rename
+            job.python_function = python_function
+            if not args and len(kwargs) == 0:
+                return job
+            else:
+                return job(*args, **kwargs)
 
     def get_child_ids(self, job_specifier, project=None):
         """
