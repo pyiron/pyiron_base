@@ -186,7 +186,8 @@ def run_job_with_status_initialized(job, debug=False):
         print("job exists already and therefore was not created!")
     else:
         job.save()
-        job.run()
+        if not job.status.finished:
+            job.run()
 
 
 def run_job_with_status_created(job):
