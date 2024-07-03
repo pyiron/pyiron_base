@@ -106,7 +106,7 @@ def draw(node_dict: dict, edge_lst: list):
 
     graph = nx.DiGraph()
     for k, v in node_dict.items():
-        graph.add_node(k, label=k.rsplit("_", 1)[0] + "=" + str(v))
+        graph.add_node(k, label=str(k).rsplit("_", 1)[0] + "=" + str(v))
     for edge in edge_lst:
         graph.add_edge(edge[1], edge[0])
     svg = nx.nx_agraph.to_agraph(graph).draw(prog="dot", format="svg")
