@@ -141,6 +141,8 @@ class DelayedObject:
         output_file=None,
         output_file_lst=[],
         output_key_lst=[],
+        list_length=None,
+        list_index=None,
         **kwargs,
     ):
         self._input = {}
@@ -157,6 +159,8 @@ class DelayedObject:
         self._output_file = output_file
         self._output_key_lst = output_key_lst
         self._output_file_lst = output_file_lst
+        self._list_length = list_length
+        self._list_index = list_index
 
     def get_python_result(self):
         return self._result.output.__getattr__(self._output_key)
@@ -178,6 +182,8 @@ class DelayedObject:
             return self.get_python_result()
         elif self._output_file is not None:
             return self.get_file_result()
+        elif self._list_index is not None:
+            return self._result[self._list_index]
         else:
             return self._result
 
@@ -185,15 +191,18 @@ class DelayedObject:
         return get_graph(obj=self, nodes_dict={}, edges_lst=[], link_node=None)
 
     def __copy__(self):
-        obj_copy = DelayedObject(function=self._obj._function)
-        obj_copy._input = self._obj._input
-        obj_copy._function = self._obj._function
-        obj_copy._output_key_lst = self._obj._output_key_lst
-        obj_copy._output_file_lst = self._obj._output_file_lst
+        obj_copy = DelayedObject(
+            function=self._function,
+            output_key=self._output_key,
+            output_file=self._output_file,
+            output_file_lst=self._output_file_lst,
+            output_key_lst=self._output_key_lst,
+            list_length=self._list_length,
+            list_index=self._list_index,
+        )
+        obj_copy._input = self._input
         obj_copy._result = self._result
-        obj_copy._output_key = self._output_key
-        obj_copy._output_file = self._output_file
-        return self
+        return obj_copy
 
     def __getattr__(self, name):
         if name == "files":
@@ -202,3 +211,12 @@ class DelayedObject:
             return Selector(obj=self, selector=name)
         else:
             raise AttributeError()
+
+    def __iter__(self):
+        if self._list_length is not None and self._list_index is None:
+            for i in range(self._list_length):
+                obj = self.__copy__()
+                obj._list_index = i
+                yield obj
+        else:
+            raise TypeError("'DelayedObject' object is not iterable, when self._list_length = None.")
