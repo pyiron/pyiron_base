@@ -19,7 +19,10 @@ def get_hash(binary):
 
 def get_graph(obj, obj_name=None, nodes_dict={}, edges_lst=[], link_node=None):
     if isinstance(obj, DelayedObject):
-        obj_name = obj._function.__name__
+        try:
+            obj_name = obj._function.__name__ + "_" + get_hash(binary=cloudpickle.dumps(obj))
+        except TypeError:
+            obj_name = str(obj).replace("<", "").replace("<", "").replace(" object at ", "")
     if obj_name is None:
         try:
             obj_name = obj.__name__
@@ -51,6 +54,24 @@ def get_graph(obj, obj_name=None, nodes_dict={}, edges_lst=[], link_node=None):
                     edges_lst=edges_lst,
                     link_node=node_name,
                 )
+    elif isinstance(obj, dict) and any([isinstance(v, DelayedObject) for v in obj.values()]):
+        for k, v in obj.items():
+            nodes_dict, edges_lst = get_graph(
+                obj=v,
+                obj_name=k,
+                nodes_dict=nodes_dict,
+                edges_lst=edges_lst,
+                link_node=node_name,
+            )
+    elif isinstance(obj, list) and any([isinstance(v, DelayedObject) for v in obj]):
+        for k, v in enumerate(obj):
+            nodes_dict, edges_lst = get_graph(
+                obj=v,
+                obj_name=k,
+                nodes_dict=nodes_dict,
+                edges_lst=edges_lst,
+                link_node=node_name,
+            )
     return nodes_dict, edges_lst
 
 
