@@ -482,7 +482,13 @@ class Project(ProjectPath, HasGroups):
         return table
 
     def wrap_python_function(
-        self, python_function, *args, job_name=None, automatically_rename=True, execute_job=False, **kwargs
+        self,
+        python_function,
+        *args,
+        job_name=None,
+        automatically_rename=True,
+        execute_job=False,
+        **kwargs,
     ):
         """
         Create a pyiron job object from any python function
