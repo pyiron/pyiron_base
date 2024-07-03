@@ -486,6 +486,7 @@ def run_job_with_runmode_queue(job):
             + job.project_hdf5.h5_path
             + " --submit"
         )
+        job.write_input()
         state.queue_adapter.transfer_file_to_remote(
             file=job.project_hdf5.file_name, transfer_back=False
         )
