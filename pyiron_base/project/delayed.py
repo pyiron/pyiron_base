@@ -163,10 +163,10 @@ class DelayedObject:
         self._list_index = list_index
 
     def get_python_result(self):
-        return self._result.output.__getattr__(self._output_key)
+        return getattr(self._result.output, self._output_key)
 
     def get_file_result(self):
-        return self._result.files.__getattr__(self._output_file)
+        return getattr(self._result.files, self._output_file)
 
     def result(self):
         if self._result is None:
@@ -205,9 +205,7 @@ class DelayedObject:
         return obj_copy
 
     def __getattr__(self, name):
-        if name == "files":
-            return Selector(obj=self, selector=name)
-        elif name == "output":
+        if name in ["files", "output"]:
             return Selector(obj=self, selector=name)
         else:
             raise AttributeError()
