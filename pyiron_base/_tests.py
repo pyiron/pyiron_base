@@ -4,17 +4,18 @@
 
 """Classes to help developers avoid code duplication when writing tests for pyiron."""
 
-from contextlib import redirect_stdout
 import doctest
-from io import StringIO
-import unittest
 import os
-from pyiron_base import PythonTemplateJob, state
-from pyiron_base.project.generic import Project
+import unittest
 from abc import ABC
+from contextlib import redirect_stdout
 from inspect import getfile
+from io import StringIO
+
 import numpy as np
 
+from pyiron_base import PythonTemplateJob, state
+from pyiron_base.project.generic import Project
 
 __author__ = "Liam Huber"
 __copyright__ = (

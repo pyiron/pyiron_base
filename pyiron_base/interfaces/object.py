@@ -7,10 +7,11 @@ The core class in pyiron, linking python to the database to file storage.
 """
 
 from abc import ABC
-from pyiron_base.storage.datacontainer import DataContainer
+
 from pyiron_base.interfaces.has_hdf import HasHDF
-from pyiron_base.storage.hdfio import ProjectHDFio
 from pyiron_base.state import state
+from pyiron_base.storage.datacontainer import DataContainer
+from pyiron_base.storage.hdfio import ProjectHDFio
 
 __author__ = "Liam Huber"
 __copyright__ = (

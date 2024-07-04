@@ -6,6 +6,7 @@ General purpose output parser
 """
 
 import ast
+
 import numpy as np
 
 __author__ = "Joerg Neugebauer"

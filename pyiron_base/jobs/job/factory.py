@@ -5,18 +5,18 @@
 Factories for creating jobs, which may already exist in the database/storage.
 """
 
-from pyiron_base.project.generic import Project
-from pyiron_base.interfaces.factory import PyironFactory
 from abc import ABC, abstractmethod
-from pyiron_base.jobs.job.jobtype import JobType
-from pyiron_base.jobs.job.generic import GenericJob
-from typing import Type, Dict, List, Union
+from typing import Dict, List, Type, Union
 
+from pyiron_base.interfaces.factory import PyironFactory
+from pyiron_base.jobs.datamining import TableJob
+from pyiron_base.jobs.job.generic import GenericJob
+from pyiron_base.jobs.job.jobtype import JobType
 from pyiron_base.jobs.master.flexible import FlexibleMaster
 from pyiron_base.jobs.script import ScriptJob
-from pyiron_base.jobs.datamining import TableJob
-from pyiron_base.storage.hdfio import ProjectHDFio
+from pyiron_base.project.generic import Project
 from pyiron_base.state import state
+from pyiron_base.storage.hdfio import ProjectHDFio
 
 __author__ = "Liam Huber, Jan Janssen"
 __copyright__ = (

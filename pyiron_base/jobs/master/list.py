@@ -5,9 +5,8 @@
 The ListMaster behaves like a list, just for job objects.
 """
 
-from pyiron_base.jobs.job.core import JobCore
+from pyiron_base.jobs.job.core import JobCore, _doc_str_job_core_args
 from pyiron_base.jobs.job.generic import GenericJob
-from pyiron_base.jobs.job.core import _doc_str_job_core_args
 from pyiron_base.jobs.master.generic import GenericMaster, _doc_str_generic_master_attr
 from pyiron_base.jobs.master.submissionstatus import SubmissionStatus
 

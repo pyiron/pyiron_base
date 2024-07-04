@@ -15,10 +15,10 @@ and `object.__getattribute__` to avoid any overloading attribute access that
 sibling classes may bring in.
 """
 
-from contextlib import nullcontext
-from typing import Optional, Literal
-from functools import wraps
 import warnings
+from contextlib import nullcontext
+from functools import wraps
+from typing import Literal, Optional
 
 from pyiron_base.interfaces.has_groups import HasGroups
 

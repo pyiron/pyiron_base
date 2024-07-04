@@ -8,7 +8,7 @@ import argparse
 import os
 import warnings
 
-from pyiron_base.cli import cp, ls, mv, rm, install, reloadfile, wrapper
+from pyiron_base.cli import cp, install, ls, mv, reloadfile, rm, wrapper
 
 __author__ = "Marvin Poul"
 __copyright__ = (
