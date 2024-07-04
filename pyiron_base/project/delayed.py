@@ -59,9 +59,7 @@ def get_graph(
     """
     if isinstance(obj, DelayedObject) and obj_name is None:
         try:
-            obj_name = (
-                obj._function.__name__ + "_" + get_hash(binary=cloudpickle.dumps(obj))
-            )
+            obj_name = obj._function.__name__
         except TypeError:
             obj_name = str(obj).replace("<", "").replace(" object at ", "")
     if obj_name is None:
