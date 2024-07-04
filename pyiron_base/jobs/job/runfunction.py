@@ -188,7 +188,11 @@ def run_job_with_status_initialized(job, debug=False):
         # The PythonFunctionContainerJob can generate the job_name during job.save(). In particular, this can lead to
         # the job being reloaded from the database resulting in the job status to change from initialized to finished.
         # Skipping the job.run() prevents raising a warning by calling job.run() on an already finished job.
-        if not job.status.finished and not job.status.aborted and not job.status.not_converged:
+        if (
+            not job.status.finished
+            and not job.status.aborted
+            and not job.status.not_converged
+        ):
             job.run()
 
 
