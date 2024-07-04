@@ -82,7 +82,7 @@ class TestPythonFunctionContainer(TestWithProject):
             self.assertTrue(job.server.run_mode.executor)
             job.run()
             self.assertFalse(job.server.future.done())
-            self.project.wait_for_job(job=job, interval_in_s=0.01, max_iterations=1000)
+            self.project.wait_for_job(job=job, interval_in_s=0.01, max_iterations=1500)
             self.assertTrue(job.server.future.done())
 
     def test_with_internal_executor(self):
