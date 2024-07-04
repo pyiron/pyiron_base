@@ -530,6 +530,7 @@ class Project(ProjectPath, HasGroups):
         *args,
         job_name=None,
         automatically_rename=True,
+        execute_job=False,
         delayed=False,
         **kwargs,
     ):
@@ -545,6 +546,7 @@ class Project(ProjectPath, HasGroups):
                 save-time to append a string based on the input values. (Default is
                 True.)
             delayed (bool): delayed execution
+            execute_job (boolean): automatically call run() on the job object - default false
             **kwargs: Keyword-arguments for the user-defined python function
 
         Returns:
@@ -595,10 +597,13 @@ class Project(ProjectPath, HasGroups):
             )
             job._automatically_rename_on_save_using_input = automatically_rename
             job.python_function = python_function
-            if not args and len(kwargs) == 0:
-                return job
+            if args or len(kwargs) != 0:
+                job.set_input(*args, **kwargs)
+            if execute_job:
+                job.run()
+                return job.output["result"]
             else:
-                return job(*args, **kwargs)
+                return job
 
     def get_child_ids(self, job_specifier, project=None):
         """
