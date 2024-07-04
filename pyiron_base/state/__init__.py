@@ -14,13 +14,15 @@ ultimately should probably be relocated here (work is ongoing on our database in
 compatibility.
 """
 
+from typing import Dict, Union
+
+from pyiron_snippets.logger import logger as _logger
+from pyiron_snippets.singleton import Singleton
+
 from pyiron_base.database.manager import database as _database
 from pyiron_base.state.publications import publications as _publications
 from pyiron_base.state.queue_adapter import queue_adapters as _queue_adapters
 from pyiron_base.state.settings import settings as _settings
-from pyiron_snippets.logger import logger as _logger
-from pyiron_snippets.singleton import Singleton
-from typing import Dict, Union
 
 __author__ = "Liam Huber"
 __copyright__ = (

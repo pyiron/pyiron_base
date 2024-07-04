@@ -20,14 +20,14 @@ __date__ = "Jul 16, 2020"
 
 import copy
 import warnings
-from typing import Callable, Iterable, List, Tuple, Any
+from typing import Any, Callable, Iterable, List, Tuple
 
-import numpy as np
 import h5py
+import numpy as np
 import pandas as pd
+
 from pyiron_base.interfaces.has_hdf import HasHDF
 from pyiron_base.interfaces.lockable import Lockable, sentinel
-
 
 _CHARSIZE = np.dtype("U1").itemsize
 

@@ -5,13 +5,15 @@
 Set of functions to interact with the queuing system directly from within pyiron - optimized for the Sun grid engine.
 """
 
-from concurrent.futures import Future
-import pandas
 import time
+from concurrent.futures import Future
+
 import numpy as np
+import pandas
+
+from pyiron_base.jobs.job.extension.jobstatus import job_status_finished_lst
 from pyiron_base.state import state
 from pyiron_base.utils.instance import static_isinstance
-from pyiron_base.jobs.job.extension.jobstatus import job_status_finished_lst
 
 __author__ = "Jan Janssen"
 __copyright__ = (

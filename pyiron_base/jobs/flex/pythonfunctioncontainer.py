@@ -1,8 +1,10 @@
-import inspect
 import hashlib
+import inspect
 import re
+
 import cloudpickle
 import numpy as np
+
 from pyiron_base.jobs.job.template import PythonTemplateJob
 
 

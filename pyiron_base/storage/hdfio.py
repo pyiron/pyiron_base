@@ -5,27 +5,28 @@
 Classes to map the Python objects to HDF5 data structures
 """
 
+import importlib
 import numbers
+import os
+import posixpath
+import sys
+from typing import Any, Optional, Tuple, Union
+
 import h5py
+import numpy as np
+import pandas
 from h5io_browser import Pointer, read_nested_dict_from_hdf
 from h5io_browser.base import (
-    _open_hdf,
     _is_ragged_in_1st_dim_only,
+    _open_hdf,
     _read_hdf,
     _write_hdf5_with_json_support,
 )
-import os
-import importlib
-import pandas
-import posixpath
 from pyiron_snippets.deprecate import deprecate
-import numpy as np
-import sys
-from typing import Union, Optional, Any, Tuple
 
 from pyiron_base.interfaces.has_groups import HasGroups
-from pyiron_base.state import state
 from pyiron_base.jobs.job.util import _get_safe_job_name
+from pyiron_base.state import state
 from pyiron_base.utils.instance import static_isinstance
 
 __author__ = "Joerg Neugebauer, Jan Janssen"
