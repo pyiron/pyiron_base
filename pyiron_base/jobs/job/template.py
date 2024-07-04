@@ -78,13 +78,24 @@ class TemplateJob(GenericJob, HasStorage):
     def output(self):
         return self.storage.output
 
+    def to_dict(self):
+        job_dict = super().to_dict()
+        job_dict["input/data"] = self.storage.input.to_builtin()
+        return job_dict
+
+    def from_dict(self, job_dict):
+        super().from_dict(job_dict=job_dict)
+        input_dict = job_dict["input"]
+        if "data" in input_dict.keys():
+            self.storage.input.update(input_dict["data"])
+
     def to_hdf(self, hdf=None, group_name=None):
-        GenericJob.to_hdf(self, hdf=hdf, group_name=group_name)
-        HasStorage.to_hdf(self, hdf=self.project_hdf5)
+        GenericJob.to_hdf(self=self, hdf=hdf, group_name=group_name)
+        HasStorage.to_hdf(self=self, hdf=self.project_hdf5)
 
     def from_hdf(self, hdf=None, group_name=None):
-        GenericJob.from_hdf(self, hdf=hdf, group_name=group_name)
-        HasStorage.from_hdf(self, hdf=self.project_hdf5)
+        GenericJob.from_hdf(self=self, hdf=hdf, group_name=group_name)
+        HasStorage.from_hdf(self=self, hdf=self.project_hdf5)
 
 
 class PythonTemplateJob(TemplateJob):
