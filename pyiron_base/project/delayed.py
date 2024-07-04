@@ -57,7 +57,7 @@ def get_graph(
     Returns:
         dict, list: dictionary of nodes and list of edges
     """
-    if isinstance(obj, DelayedObject):
+    if isinstance(obj, DelayedObject) and obj_name is not None:
         try:
             obj_name = (
                 obj._function.__name__ + "_" + get_hash(binary=cloudpickle.dumps(obj))
