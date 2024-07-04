@@ -1,6 +1,7 @@
-import inspect
 import hashlib
+import inspect
 import re
+
 import cloudpickle
 
 
@@ -100,9 +101,9 @@ def recursive_dict_resolve(input_dict):
 
 
 def draw(node_dict: dict, edge_lst: list):
-    from IPython.display import SVG, display
     import matplotlib.pyplot as plt
     import networkx as nx
+    from IPython.display import SVG, display
 
     graph = nx.DiGraph()
     for k, v in node_dict.items():
