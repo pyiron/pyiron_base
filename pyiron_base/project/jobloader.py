@@ -13,9 +13,9 @@ from typing import TYPE_CHECKING
 
 import numpy as np
 
-from pyiron_base.state import state
 from pyiron_base.database.jobtable import get_job_id
 from pyiron_base.jobs.job.util import _get_safe_job_name
+from pyiron_base.state import state
 
 if TYPE_CHECKING:
     from pyiron_base.jobs.job.generic import GenericJob

@@ -5,20 +5,20 @@
 Generic Job class extends the JobCore class with all the functionality to run the job object.
 """
 
-from concurrent.futures import Future, Executor
-from datetime import datetime
-from inspect import isclass
 import os
 import platform
 import posixpath
-from typing import Optional
 import warnings
+from concurrent.futures import Executor, Future
+from datetime import datetime
+from inspect import isclass
+from typing import Optional
 
 from h5io_browser.base import _read_hdf, _write_hdf
 from pyiron_snippets.deprecate import deprecate
 
-from pyiron_base.state import state
-from pyiron_base.state.signal import catch_signals
+from pyiron_base.database.filetable import FileTable
+from pyiron_base.interfaces.has_dict import HasDict
 from pyiron_base.jobs.job.core import (
     JobCore,
     _doc_str_job_core_args,
@@ -27,34 +27,34 @@ from pyiron_base.jobs.job.core import (
 from pyiron_base.jobs.job.extension.executable import Executable
 from pyiron_base.jobs.job.extension.files import File
 from pyiron_base.jobs.job.extension.jobstatus import JobStatus
+from pyiron_base.jobs.job.extension.server.generic import Server
 from pyiron_base.jobs.job.runfunction import (
     CalculateFunctionCaller,
     execute_job_with_calculate_function,
     execute_job_with_external_executable,
     run_job_with_parameter_repair,
-    run_job_with_status_initialized,
-    run_job_with_status_created,
-    run_job_with_status_submitted,
-    run_job_with_status_running,
-    run_job_with_status_refresh,
-    run_job_with_status_busy,
-    run_job_with_status_collect,
-    run_job_with_status_suspended,
-    run_job_with_status_finished,
     run_job_with_runmode_modal,
     run_job_with_runmode_queue,
+    run_job_with_status_busy,
+    run_job_with_status_collect,
+    run_job_with_status_created,
+    run_job_with_status_finished,
+    run_job_with_status_initialized,
+    run_job_with_status_refresh,
+    run_job_with_status_running,
+    run_job_with_status_submitted,
+    run_job_with_status_suspended,
     write_input_files_from_input_dict,
 )
 from pyiron_base.jobs.job.util import (
     _get_restart_copy_dict,
-    _kill_child,
-    _job_store_before_copy,
     _job_reload_after_copy,
+    _job_store_before_copy,
+    _kill_child,
 )
-from pyiron_base.utils.instance import static_isinstance, import_class
-from pyiron_base.jobs.job.extension.server.generic import Server
-from pyiron_base.database.filetable import FileTable
-from pyiron_base.interfaces.has_dict import HasDict
+from pyiron_base.state import state
+from pyiron_base.state.signal import catch_signals
+from pyiron_base.utils.instance import import_class, static_isinstance
 
 __author__ = "Joerg Neugebauer, Jan Janssen"
 __copyright__ = (

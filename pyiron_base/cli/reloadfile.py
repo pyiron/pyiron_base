@@ -2,8 +2,10 @@
 # Copyright (c) Max-Planck-Institut für Eisenforschung GmbH - Computational Materials Design (CM) Department
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 import os
-from h5io_browser.base import _open_hdf
 import shutil
+
+from h5io_browser.base import _open_hdf
+
 from pyiron_base import Project
 from pyiron_base.state import state
 

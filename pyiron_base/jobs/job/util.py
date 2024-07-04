@@ -5,18 +5,20 @@
 Helper functions for the JobCore and GenericJob objects
 """
 
-from itertools import islice
 import os
 import posixpath
-import psutil
-import tarfile
-import stat
 import shutil
-import monty.io
+import stat
+import tarfile
+from itertools import islice
 from typing import Optional, Union
+
+import monty.io
+import psutil
+
+from pyiron_base.database.sqlcolumnlength import JOB_STR_LENGTH
 from pyiron_base.utils.instance import static_isinstance
 from pyiron_base.utils.safetar import safe_extract
-from pyiron_base.database.sqlcolumnlength import JOB_STR_LENGTH
 
 __author__ = "Jan Janssen"
 __copyright__ = (

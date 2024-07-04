@@ -1,8 +1,10 @@
-import inspect
 import hashlib
+import inspect
 import re
+
 import cloudpickle
 import numpy as np
+
 from pyiron_base.jobs.job.template import PythonTemplateJob
 
 
@@ -60,10 +62,13 @@ class PythonFunctionContainerJob(PythonTemplateJob):
         self.input.update(get_function_parameter_dict(funct=funct))
         self._function = funct
 
-    def __call__(self, *args, **kwargs):
+    def set_input(self, *args, **kwargs):
         self.input.update(
             inspect.signature(self._function).bind(*args, **kwargs).arguments
         )
+
+    def __call__(self, *args, **kwargs):
+        self.set_input(*args, **kwargs)
         self.run()
         return self.output["result"]
 

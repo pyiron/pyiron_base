@@ -5,18 +5,18 @@
 Server object class which is connected to each job containing the technical details how the job is executed.
 """
 
-from concurrent.futures import Executor, Future
 import numbers
 import socket
+from concurrent.futures import Executor, Future
 from typing import Union
 
 from pyiron_snippets.deprecate import deprecate
 
-from pyiron_base.state import state
-from pyiron_base.interfaces.lockable import Lockable, sentinel
 from pyiron_base.interfaces.has_dict import HasDict
-from pyiron_base.utils.instance import static_isinstance
+from pyiron_base.interfaces.lockable import Lockable, sentinel
 from pyiron_base.jobs.job.extension.server.runmode import Runmode
+from pyiron_base.state import state
+from pyiron_base.utils.instance import static_isinstance
 
 __author__ = "Jan Janssen"
 __copyright__ = (

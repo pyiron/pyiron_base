@@ -5,15 +5,17 @@
 GenericParameters class defines the typical input file with a key value structure plus an additional column for comments.
 """
 
-from collections import OrderedDict
-import numpy as np
 import os
-import pandas
 import posixpath
 import warnings
 from ast import literal_eval
-from pyiron_base.state import state
+from collections import OrderedDict
+
+import numpy as np
+import pandas
+
 from pyiron_base.interfaces.has_dict import HasDict
+from pyiron_base.state import state
 
 __author__ = "Joerg Neugebauer"
 __copyright__ = (
