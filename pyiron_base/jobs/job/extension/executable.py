@@ -7,6 +7,7 @@ import os
 from pyiron_base.interfaces.has_dict import HasDict
 from pyiron_base.state import state
 from pyiron_base.storage.datacontainer import DataContainer
+from pyiron_snippets.resources import ExecutableResolver
 
 """
 Executable class loading executables from static/bin/<code>/
@@ -49,26 +50,11 @@ class Executable(HasDict):
         if path_binary_codes is None:
             path_binary_codes = state.settings.resource_paths
         self.storage.version = None
-        if codename is not None and module is not None:
-            self.storage.name = codename.lower()
-            code_path_lst = [
-                os.path.join(path, module, "bin") for path in path_binary_codes
-            ]
-            backwards_compatible_path_lst = [
-                os.path.join(path, self.storage.name) for path in path_binary_codes
-            ]
-            self.path_bin = [
-                exe_path
-                for exe_path in (code_path_lst + backwards_compatible_path_lst)
-                if os.path.exists(exe_path)
-            ]
-        else:  # Backwards compatibility
-            self.storage.name = codename.lower()
-            self.path_bin = [
-                os.path.join(path, self.storage.name)
-                for path in path_binary_codes
-                if os.path.exists(os.path.join(path, self.storage.name))
-            ]
+        self.storage.name = codename.lower()
+        if module is None:
+            module = self.storage.name
+        self._module = module
+        self.path_bin = path_binary_codes
         if overwrite_nt_flag:
             self.storage.operation_system_nt = False
         else:
@@ -284,31 +270,11 @@ class Executable(HasDict):
         Returns:
             dict: list of the available version
         """
-        if self.storage.operation_system_nt:
-            extension = ".bat"
-        else:
-            extension = ".sh"
-        try:
-            executable_dict = {}
-            for path in self.path_bin:
-                for executable in os.listdir(path):
-                    if (
-                        executable.startswith("run_" + self.storage.name + "_")
-                        & executable.endswith(extension)
-                        and executable[
-                            len("run_" + self.storage.name) + 1 : -len(extension)
-                        ]
-                        not in executable_dict.keys()
-                    ):
-                        executable_dict[
-                            executable[
-                                len("run_" + self.storage.name) + 1 : -len(extension)
-                            ]
-                        ] = os.path.join(path, executable).replace("\\", "/")
-            return executable_dict
-        # No executable exists - This is the case for GenericJob and other abstract job classes.
-        except OSError:
-            return dict()
+        return ExecutableResolver(
+            resource_paths=self.path_bin,
+            code=self.storage.name,
+            module=self._module,
+        ).dict()
 
     def _executable_select(self):
         """
