@@ -2,12 +2,13 @@
 # Copyright (c) Max-Planck-Institut für Eisenforschung GmbH - Computational Materials Design (CM) Department
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
-import numpy as np
-import os
-import ipywidgets as widgets
-from IPython.display import display
 import html
+import os
+
+import ipywidgets as widgets
+import numpy as np
 import pandas
+from IPython.display import display
 
 __author__ = "Joerg Neugebauer, Jan Janssen"
 __copyright__ = (

@@ -5,8 +5,8 @@
 Template class to define jobs
 """
 
-from pyiron_base.jobs.job.generic import GenericJob
 from pyiron_base.interfaces.object import HasStorage
+from pyiron_base.jobs.job.generic import GenericJob
 
 __author__ = "Jan Janssen"
 __copyright__ = (

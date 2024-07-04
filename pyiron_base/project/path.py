@@ -5,9 +5,10 @@
 Classes for representing the file system path in pyiron
 """
 
-from copy import copy
 import os
 import posixpath
+from copy import copy
+
 from pyiron_base.state import state
 
 __author__ = "Jan Janssen, Joerg Neugebauer"

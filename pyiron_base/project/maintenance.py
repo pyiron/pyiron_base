@@ -1,16 +1,15 @@
 import importlib
 import os
 import pkgutil
-import warnings
 import sys
+import warnings
 
 import pandas
 
+import pyiron_base.storage.hdfio
 from pyiron_base import state
 from pyiron_base.database.performance import get_database_statistics
-import pyiron_base.storage.hdfio
 from pyiron_base.project.update.pyiron_base_03x_to_04x import pyiron_base_03x_to_04x
-
 
 # we sometimes move classes between modules; this would break HDF storage,
 # since objects save there the module path from which their classes can be
@@ -82,7 +81,7 @@ class Maintenance:
         Returns:
             pandas.DataFrame: The name of each module and the hash and version for its current git head.
         """
-        from git import Repo, InvalidGitRepositoryError
+        from git import InvalidGitRepositoryError, Repo
 
         module_names = [
             name for _, name, _ in pkgutil.iter_modules() if name.startswith("pyiron")

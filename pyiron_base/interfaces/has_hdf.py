@@ -3,9 +3,9 @@
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 """Interface for classes to serialize to HDF5."""
 
-from pyiron_base.storage.hdfio import ProjectHDFio
-
 from abc import ABC, abstractmethod
+
+from pyiron_base.storage.hdfio import ProjectHDFio
 
 __author__ = "Marvin Poul"
 __copyright__ = (

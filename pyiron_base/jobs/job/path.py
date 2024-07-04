@@ -6,9 +6,10 @@ The JobPath class enables quick access to the HDF5 data file without loading the
 """
 
 import os
-from pyiron_base.storage.hdfio import ProjectHDFio
+
 from pyiron_base.jobs.job.core import JobCore
 from pyiron_base.project.generic import Project
+from pyiron_base.storage.hdfio import ProjectHDFio
 
 __author__ = "Joerg Neugebauer, Jan Janssen"
 __copyright__ = (

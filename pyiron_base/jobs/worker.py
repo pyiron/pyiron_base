@@ -6,14 +6,15 @@ Worker Class to execute calculation in an asynchronous way
 """
 
 import os
-import psutil
 import time
 from datetime import datetime
 from multiprocessing import Pool
-import numpy as np
-from pyiron_base.state import state
-from pyiron_base.jobs.job.template import PythonTemplateJob
 
+import numpy as np
+import psutil
+
+from pyiron_base.jobs.job.template import PythonTemplateJob
+from pyiron_base.state import state
 
 __author__ = "Jan Janssen"
 __copyright__ = (

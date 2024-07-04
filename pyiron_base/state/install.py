@@ -3,11 +3,12 @@
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
 import os
-import tarfile
-from shutil import copytree, rmtree
-import tempfile
 import stat
+import tarfile
+import tempfile
 import urllib.request as urllib2
+from shutil import copytree, rmtree
+
 from pyiron_base.utils.safetar import safe_extract
 
 __author__ = "Jan Janssen"
