@@ -532,6 +532,8 @@ class Project(ProjectPath, HasGroups):
         automatically_rename=True,
         execute_job=False,
         delayed=False,
+        output_file_lst=[],
+        output_key_lst=[],
         **kwargs,
     ):
         """
@@ -587,8 +589,8 @@ class Project(ProjectPath, HasGroups):
                 *args,
                 output_key=None,
                 output_file=None,
-                output_file_lst=[],
-                output_key_lst=[],
+                output_file_lst=output_file_lst,
+                output_key_lst=output_key_lst,
                 **kwargs,
             )
         else:
