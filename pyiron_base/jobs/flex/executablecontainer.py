@@ -1,11 +1,11 @@
 import cloudpickle
 import numpy as np
 
-from pyiron_base.jobs.job.template import TemplateJob
 from pyiron_base.jobs.job.runfunction import (
     CalculateFunctionCaller,
     write_input_files_from_input_dict,
 )
+from pyiron_base.jobs.job.template import TemplateJob
 
 
 class ExecutableContainerJob(TemplateJob):
