@@ -1,24 +1,62 @@
 import hashlib
 import inspect
 import re
+from typing import Optional, Tuple
 
 import cloudpickle
 
 
-def get_function_parameter_dict(funct):
+def get_function_parameter_dict(funct: callable) -> dict:
+    """
+    Get dictionary of parameters for a function
+
+    Args:
+        funct (callable): the function to get the parameters for
+
+    Returns:
+        dict: parameters for the function
+    """
     return {
         k: None if v.default == inspect._empty else v.default
         for k, v in inspect.signature(funct).parameters.items()
     }
 
 
-def get_hash(binary):
-    # Remove specification of jupyter kernel from hash to be deterministic
+def get_hash(binary: bytes) -> str:
+    """
+    Get the hash of a binary string - remove the specification of jupyter kernel from hash to be deterministic
+
+    Args:
+        binary (bytes): binary string to hash
+
+    Returns:
+        str: hash of the binary string
+    """
     binary_no_ipykernel = re.sub(b"(?<=/ipykernel_)(.*)(?=/)", b"", binary)
     return str(hashlib.md5(binary_no_ipykernel).hexdigest())
 
 
-def get_graph(obj, obj_name=None, nodes_dict={}, edges_lst=[], link_node=None):
+def get_graph(
+    obj: object,
+    obj_name: str = None,
+    nodes_dict: dict = {},
+    edges_lst: list = [],
+    link_node: Optional[str] = None,
+) -> Tuple[dict, list]:
+    """
+    Get dictionary of nodes with node names as keys and node objects as values. In addition, generate a list of edges,
+    consisting of pairs of node names which are linked together.
+
+    Args:
+        obj (object): Object to generate dictionary of nodes and list of edges
+        obj_name (str): Name of the object
+        nodes_dict (dict): Dictionary of nodes
+        edges_lst (list): List of edges
+        link_node (str): Name of the node to link to
+
+    Returns:
+        dict, list: dictionary of nodes and list of edges
+    """
     if isinstance(obj, DelayedObject):
         try:
             obj_name = (
@@ -74,7 +112,7 @@ def get_graph(obj, obj_name=None, nodes_dict={}, edges_lst=[], link_node=None):
         for k, v in enumerate(obj):
             nodes_dict, edges_lst = get_graph(
                 obj=v,
-                obj_name=k,
+                obj_name=str(k),
                 nodes_dict=nodes_dict,
                 edges_lst=edges_lst,
                 link_node=node_name,
@@ -82,7 +120,16 @@ def get_graph(obj, obj_name=None, nodes_dict={}, edges_lst=[], link_node=None):
     return nodes_dict, edges_lst
 
 
-def recursive_dict_resolve(input_dict):
+def recursive_dict_resolve(input_dict: dict) -> dict:
+    """
+    Recursively resolve the dictionary to call result() on all objects of type DelayedObject
+
+    Args:
+        input_dict (dict): dictionary to recursively resolve
+
+    Returns:
+        dict: resolved dictionary
+    """
     output_dict = {}
     for k, v in input_dict.items():
         if isinstance(v, DelayedObject):
@@ -101,6 +148,13 @@ def recursive_dict_resolve(input_dict):
 
 
 def draw(node_dict: dict, edge_lst: list):
+    """
+    Draw graph of nodes and edges
+
+    Args:
+        node_dict (dict): Dictionary of nodes
+        edge_lst (list): List of edges
+    """
     import matplotlib.pyplot as plt
     import networkx as nx
     from IPython.display import SVG, display
@@ -116,11 +170,11 @@ def draw(node_dict: dict, edge_lst: list):
 
 
 class Selector:
-    def __init__(self, obj, selector):
+    def __init__(self, obj: object, selector: str):
         self._obj = obj
         self._selector = selector
 
-    def __getattr__(self, name):
+    def __getattr__(self, name: str):
         if self._selector == "files" and name in self._obj._output_file_lst:
             obj_copy = self._obj.__copy__()
             obj_copy._output_file = name
@@ -136,14 +190,14 @@ class Selector:
 class DelayedObject:
     def __init__(
         self,
-        function,
+        function: callable,
         *args,
-        output_key=None,
-        output_file=None,
-        output_file_lst=[],
-        output_key_lst=[],
-        list_length=None,
-        list_index=None,
+        output_key: Optional[str] = None,
+        output_file: Optional[str] = None,
+        output_file_lst: list = [],
+        output_key_lst: list = [],
+        list_length: Optional[int] = None,
+        list_index: Optional[int] = None,
         **kwargs,
     ):
         self._input = {}
