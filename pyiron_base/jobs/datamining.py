@@ -4,22 +4,22 @@
 
 import codecs
 import concurrent.futures
-from datetime import datetime
-import cloudpickle
 import json
-import numpy as np
 import os
+import types
+from datetime import datetime
+from typing import List, Tuple
+
+import cloudpickle
+import numpy as np
 import pandas
 from pandas.errors import EmptyDataError
 from pyiron_snippets.deprecate import deprecate
 from tqdm.auto import tqdm
-import types
-from typing import List, Tuple
 
-from pyiron_base.jobs.job.generic import GenericJob
 from pyiron_base.jobs.job.extension import jobstatus
+from pyiron_base.jobs.job.generic import GenericJob
 from pyiron_base.storage.hdfio import FileHDFio
-
 
 __author__ = "Uday Gajera, Jan Janssen, Joerg Neugebauer"
 __copyright__ = (

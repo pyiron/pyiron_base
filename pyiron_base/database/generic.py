@@ -5,30 +5,33 @@
 DatabaseAccess class deals with accessing the database
 """
 
-import numpy as np
-import re
 import os
+import re
 from datetime import datetime
+from queue import Empty as QueueEmpty
+from queue import SimpleQueue
+from threading import Lock, Thread
+
+import numpy as np
 import pandas
 from pyiron_snippets.deprecate import deprecate
 from pyiron_snippets.logger import logger
+from pyiron_snippets.retry import retry
 from sqlalchemy import (
-    create_engine,
     MetaData,
     Table,
-    text,
     and_,
+    create_engine,
     or_,
+    text,
 )
+from sqlalchemy.exc import DatabaseError, OperationalError
 from sqlalchemy.pool import NullPool
 from sqlalchemy.sql import select
-from sqlalchemy.exc import OperationalError, DatabaseError
-from threading import Thread, Lock
-from queue import SimpleQueue, Empty as QueueEmpty
-from pyiron_snippets.retry import retry
-from pyiron_base.database.tables import get_historical_table
+
 from pyiron_base.database.interface import IsDatabase
 from pyiron_base.database.sqlcolumnlength import CHEMICALFORMULA_STR_LENGTH
+from pyiron_base.database.tables import get_historical_table
 
 __author__ = "Murat Han Celik"
 __copyright__ = (

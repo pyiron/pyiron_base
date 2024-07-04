@@ -5,15 +5,16 @@ __copyright__ = (
 
 import pandas as pd
 from sqlalchemy import (
-    create_engine,
-    select,
-    distinct,
     MetaData,
     Table,
+    create_engine,
+    distinct,
+    false,
     func,
     or_,
-    false,
+    select,
 )
+
 from pyiron_base.state import state
 
 __author__ = "Muhammad Hassani"

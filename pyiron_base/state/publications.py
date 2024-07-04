@@ -9,9 +9,10 @@ your project for a list of everything you should cite.
 `Publications` is the way we work towards this goal.
 """
 
+from typing import Dict, List, Union
+
 import pandas
 from pyiron_snippets.singleton import Singleton
-from typing import Dict, Union, List
 from typing_extensions import Literal
 
 __author__ = "Joerg Neugebauer, Jan Janssen"
