@@ -64,7 +64,7 @@ def get_graph(
             )
         except TypeError:
             obj_name = (
-                str(obj).replace("<", "").replace("<", "").replace(" object at ", "")
+                str(obj).replace("<", "").replace(" object at ", "")
             )
     if obj_name is None:
         try:
