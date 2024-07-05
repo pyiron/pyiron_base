@@ -36,9 +36,36 @@ def get_hash(binary: bytes) -> str:
     return str(hashlib.md5(binary_no_ipykernel).hexdigest())
 
 
+def get_node_name(node: object, node_name: Optional[str] = None) -> str:
+    """
+    Get name of the node
+
+    Args:
+        node (object): Node to get the name for
+        node_name (str): Name of the node in case it is already defined
+
+    Returns:
+        str: name of the node
+    """
+    if isinstance(node, DelayedObject) and node_name is None:
+        try:
+            node_name = node._function.__name__
+        except TypeError:
+            node_name = str(node).replace("<", "").replace(" object at ", "")
+    if node_name is None:
+        try:
+            node_name = node.__name__
+        except AttributeError:
+            node_name = str(type(node))
+    try:
+        return node_name + "_" + get_hash(binary=cloudpickle.dumps(node))
+    except TypeError:
+        return node_name
+
+
 def get_graph(
     obj: object,
-    obj_name: str = None,
+    obj_name: Optional[str] = None,
     nodes_dict: dict = {},
     edges_lst: list = [],
     link_node: Optional[str] = None,
@@ -57,20 +84,7 @@ def get_graph(
     Returns:
         dict, list: dictionary of nodes and list of edges
     """
-    if isinstance(obj, DelayedObject) and obj_name is None:
-        try:
-            obj_name = obj._function.__name__
-        except TypeError:
-            obj_name = str(obj).replace("<", "").replace(" object at ", "")
-    if obj_name is None:
-        try:
-            obj_name = obj.__name__
-        except AttributeError:
-            obj_name = str(type(obj))
-    try:
-        node_name = obj_name + "_" + get_hash(binary=cloudpickle.dumps(obj))
-    except TypeError:
-        node_name = obj_name
+    node_name = get_node_name(node=obj, node_name=obj_name)
     nodes_dict.update({node_name: obj})
     if link_node is not None:
         edges_lst.append([link_node, node_name])
@@ -151,7 +165,6 @@ def draw(node_dict: dict, edge_lst: list):
         node_dict (dict): Dictionary of nodes
         edge_lst (list): List of edges
     """
-    import matplotlib.pyplot as plt
     import networkx as nx
     from IPython.display import SVG, display
 
