@@ -6,6 +6,47 @@ from typing import Optional, Tuple
 import cloudpickle
 
 
+def draw(node_dict: dict, edge_lst: list):
+    """
+    Draw graph of nodes and edges
+
+    Args:
+        node_dict (dict): Dictionary of nodes
+        edge_lst (list): List of edges
+    """
+    import networkx as nx
+    from IPython.display import SVG, display
+
+    graph = nx.DiGraph()
+    for k, v in node_dict.items():
+        graph.add_node(k, label=str(k).rsplit("_", 1)[0] + "=" + str(v))
+    for edge in edge_lst:
+        graph.add_edge(edge[1], edge[0])
+    svg = nx.nx_agraph.to_agraph(graph).draw(prog="dot", format="svg")
+    return display(SVG(svg))
+
+
+def evaluate_function(funct: callable, input_dict: dict) -> object:
+    """
+    Evaluate python function by using the input dictionary as *args and **kwargs
+
+    Args:
+        funct (callable): the function to evaluate
+        input_dict (dict): input dictionary
+
+    Returns:
+        object: output of the evaluated function
+    """
+    input_dict = recursive_dict_resolve(input_dict=input_dict)
+    if "kwargs" in input_dict.keys():
+        input_dict.update(input_dict.pop("kwargs"))
+    if "args" in input_dict.keys():
+        args = input_dict.pop("args")
+        return funct(*args, **input_dict)
+    else:
+        return funct(**input_dict)
+
+
 def get_function_parameter_dict(funct: callable) -> dict:
     """
     Get dictionary of parameters for a function
@@ -20,47 +61,6 @@ def get_function_parameter_dict(funct: callable) -> dict:
         k: None if v.default == inspect._empty else v.default
         for k, v in inspect.signature(funct).parameters.items()
     }
-
-
-def get_hash(binary: bytes) -> str:
-    """
-    Get the hash of a binary string - remove the specification of jupyter kernel from hash to be deterministic
-
-    Args:
-        binary (bytes): binary string to hash
-
-    Returns:
-        str: hash of the binary string
-    """
-    binary_no_ipykernel = re.sub(b"(?<=/ipykernel_)(.*)(?=/)", b"", binary)
-    return str(hashlib.md5(binary_no_ipykernel).hexdigest())
-
-
-def get_node_name(node: object, node_name: Optional[str] = None) -> str:
-    """
-    Get name of the node
-
-    Args:
-        node (object): Node to get the name for
-        node_name (str): Name of the node in case it is already defined
-
-    Returns:
-        str: name of the node
-    """
-    if isinstance(node, DelayedObject) and node_name is None:
-        try:
-            node_name = node._function.__name__
-        except TypeError:
-            node_name = str(node).replace("<", "").replace(" object at ", "")
-    if node_name is None:
-        try:
-            node_name = node.__name__
-        except AttributeError:
-            node_name = str(type(node))
-    try:
-        return node_name + "_" + get_hash(binary=cloudpickle.dumps(node))
-    except TypeError:
-        return node_name
 
 
 def get_graph(
@@ -130,6 +130,47 @@ def get_graph(
     return nodes_dict, edges_lst
 
 
+def get_hash(binary: bytes) -> str:
+    """
+    Get the hash of a binary string - remove the specification of jupyter kernel from hash to be deterministic
+
+    Args:
+        binary (bytes): binary string to hash
+
+    Returns:
+        str: hash of the binary string
+    """
+    binary_no_ipykernel = re.sub(b"(?<=/ipykernel_)(.*)(?=/)", b"", binary)
+    return str(hashlib.md5(binary_no_ipykernel).hexdigest())
+
+
+def get_node_name(node: object, node_name: Optional[str] = None) -> str:
+    """
+    Get name of the node
+
+    Args:
+        node (object): Node to get the name for
+        node_name (str): Name of the node in case it is already defined
+
+    Returns:
+        str: name of the node
+    """
+    if isinstance(node, DelayedObject) and node_name is None:
+        try:
+            node_name = node._function.__name__
+        except TypeError:
+            node_name = str(node).replace("<", "").replace(" object at ", "")
+    if node_name is None:
+        try:
+            node_name = node.__name__
+        except AttributeError:
+            node_name = str(type(node))
+    try:
+        return node_name + "_" + get_hash(binary=cloudpickle.dumps(node))
+    except TypeError:
+        return node_name
+
+
 def recursive_dict_resolve(input_dict: dict) -> dict:
     """
     Recursively resolve the dictionary to call result() on all objects of type DelayedObject
@@ -155,27 +196,6 @@ def recursive_dict_resolve(input_dict: dict) -> dict:
         else:
             output_dict[k] = v
     return output_dict
-
-
-def draw(node_dict: dict, edge_lst: list):
-    """
-    Draw graph of nodes and edges
-
-    Args:
-        node_dict (dict): Dictionary of nodes
-        edge_lst (list): List of edges
-    """
-    import networkx as nx
-    from IPython.display import SVG, display
-
-    graph = nx.DiGraph()
-    for k, v in node_dict.items():
-        graph.add_node(k, label=str(k).rsplit("_", 1)[0] + "=" + str(v))
-    for edge in edge_lst:
-        graph.add_edge(edge[1], edge[0])
-    svg = nx.nx_agraph.to_agraph(graph).draw(prog="dot", format="svg")
-    return display(SVG(svg))
-
 
 class Selector:
     def __init__(self, obj: object, selector: str):
@@ -233,14 +253,9 @@ class DelayedObject:
 
     def result(self):
         if self._result is None:
-            input_dict = recursive_dict_resolve(input_dict=self._input)
-            if "kwargs" in input_dict.keys():
-                input_dict.update(input_dict.pop("kwargs"))
-            if "args" in input_dict.keys():
-                args = input_dict.pop("args")
-                self._result = self._function(*args, **input_dict)
-            else:
-                self._result = self._function(**input_dict)
+            self._result = evaluate_function(
+                funct=self._function, input_dict=self._input
+            )
         if self._output_key is not None:
             return self.get_python_result()
         elif self._output_file is not None:
