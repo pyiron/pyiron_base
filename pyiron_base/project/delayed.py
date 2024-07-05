@@ -179,7 +179,7 @@ class Selector:
             obj_copy._output_key = name
             return obj_copy
         else:
-            raise AttributeError()
+            return self.__getattribute__(name)
 
 
 class DelayedObject:
