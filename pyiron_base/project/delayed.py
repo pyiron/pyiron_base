@@ -184,7 +184,7 @@ def recursive_dict_resolve(input_dict: dict) -> dict:
     output_dict = {}
     for k, v in input_dict.items():
         if isinstance(v, DelayedObject):
-            output_dict[k] = v.result()
+            output_dict[k] = v.pull()
         elif isinstance(v, dict):
             output_dict[k] = recursive_dict_resolve(input_dict=v)
         elif isinstance(v, list):
@@ -252,7 +252,7 @@ class DelayedObject:
     def get_file_result(self):
         return getattr(self._result.files, self._output_file)
 
-    def result(self):
+    def pull(self):
         if self._result is None:
             self._result = evaluate_function(
                 funct=self._function, input_dict=self._input
