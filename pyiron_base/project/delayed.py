@@ -161,8 +161,7 @@ def draw(node_dict: dict, edge_lst: list):
     for edge in edge_lst:
         graph.add_edge(edge[1], edge[0])
     svg = nx.nx_agraph.to_agraph(graph).draw(prog="dot", format="svg")
-    display(SVG(svg))
-    plt.show()
+    return display(SVG(svg))
 
 
 class Selector:
