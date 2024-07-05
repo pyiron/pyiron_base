@@ -258,7 +258,7 @@ class DelayedObject:
         if name in ["files", "output"]:
             return Selector(obj=self, selector=name)
         else:
-            raise AttributeError()
+            return self.__getattribute__(name)
 
     def __iter__(self):
         if self._list_length is not None and self._list_index is None:
