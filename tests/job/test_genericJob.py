@@ -677,7 +677,7 @@ class TestGenericJob(TestWithFilledProject):
         j.server.executor = ProcessPoolExecutor()
         self.assertTrue(j.server.run_mode.executor)
         j.run()
-        j.server.future.result()
+        j.server.future.pull()
         self.assertTrue(j.server.future.done())
         self.assertTrue(j.status.finished)
 

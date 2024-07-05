@@ -262,12 +262,12 @@ class TestExecutableContainer(TestWithProject):
             output_file_lst=["result.txt"],
             output_key_lst=["result"],
         )
-        self.assertEqual(w.output.result.result(), 7)
+        self.assertEqual(w.output.result.pull(), 7)
         nodes_dict, edges_lst = w.get_graph()
         self.assertEqual(len(nodes_dict), 12)
         self.assertEqual(len(edges_lst), 18)
-        job_w = w.result()
-        job_z = z.result()
+        job_w = w.pull()
+        job_z = z.pull()
         self.assertEqual(job_w.output.result, 7)
         self.project.remove_job(job_z.job_name)
         self.project.remove_job(job_w.job_name)
