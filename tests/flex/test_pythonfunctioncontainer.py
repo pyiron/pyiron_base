@@ -196,3 +196,25 @@ class TestPythonFunctionContainer(TestWithProject):
                 )
             finally:
                 job.remove()
+
+    def test_series(self):
+        c = self.project.wrap_python_function(
+            python_function=my_function, a=1, b=2, execute_job=True
+        )
+        self.assertEqual(c, 3)
+        d = self.project.wrap_python_function(
+            python_function=my_function, a=c, b=3, execute_job=True
+        )
+        self.assertEqual(d, 6)
+
+    def test_delayed(self):
+        c = self.project.wrap_python_function(
+            python_function=my_function, a=1, b=2, delayed=True
+        )
+        d = self.project.wrap_python_function(
+            python_function=my_function, a=c, b=3, delayed=True
+        )
+        self.assertEqual(d.result(), 6)
+        nodes_dict, edges_lst = d.get_graph()
+        self.assertEqual(len(nodes_dict), 5)
+        self.assertEqual(len(edges_lst), 4)
