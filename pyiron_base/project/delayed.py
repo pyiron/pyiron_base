@@ -197,6 +197,7 @@ def recursive_dict_resolve(input_dict: dict) -> dict:
             output_dict[k] = v
     return output_dict
 
+
 class Selector:
     def __init__(self, obj: object, selector: str):
         self._obj = obj
