@@ -1,8 +1,11 @@
 import cloudpickle
 import numpy as np
 
+from pyiron_base.jobs.job.runfunction import (
+    CalculateFunctionCaller,
+    write_input_files_from_input_dict,
+)
 from pyiron_base.jobs.job.template import TemplateJob
-from pyiron_base.jobs.job.runfunction import CalculateFunctionCaller
 
 
 class ExecutableContainerJob(TemplateJob):
@@ -115,8 +118,26 @@ class ExecutableContainerJob(TemplateJob):
         Returns:
             callable: calculate() functione
         """
+
+        def get_combined_write_input_funct(input_job_dict, write_input_funct=None):
+            def write_input_combo_funct(working_directory, input_dict):
+                write_input_files_from_input_dict(
+                    input_dict=input_job_dict,
+                    working_directory=working_directory,
+                )
+                if write_input_funct is not None:
+                    write_input_funct(
+                        working_directory=working_directory,
+                        input_dict=input_dict,
+                    )
+
+            return write_input_combo_funct
+
         return CalculateFunctionCaller(
-            write_input_funct=self._write_input_funct,
+            write_input_funct=get_combined_write_input_funct(
+                input_job_dict=self.get_input_parameter_dict(),
+                write_input_funct=self._write_input_funct,
+            ),
             collect_output_funct=self._collect_output_funct,
         )
 

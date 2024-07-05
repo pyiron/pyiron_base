@@ -1,7 +1,8 @@
 import os
 import posixpath
-from typing import List, Optional
 from itertools import islice
+from typing import List, Optional
+
 from pyiron_base.jobs.job.util import (
     _working_directory_list_files,
     _working_directory_read_file,

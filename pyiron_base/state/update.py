@@ -6,13 +6,13 @@
 Functions to update existing pyiron installations - mainly modify the database columns.
 """
 
-from pyiron_base.state import state
 from pyiron_base.database.sqlcolumnlength import (
-    PROJECT_PATH_STR_LENGTH,
-    JOB_STR_LENGTH,
-    SUBJOB_STR_LENGTH,
     HAMVERSION_STR_LENGTH,
+    JOB_STR_LENGTH,
+    PROJECT_PATH_STR_LENGTH,
+    SUBJOB_STR_LENGTH,
 )
+from pyiron_base.state import state
 
 __author__ = "Joerg Neugebauer, Jan Janssen"
 __copyright__ = (

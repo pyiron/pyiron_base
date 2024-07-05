@@ -9,7 +9,7 @@ A parent class for managing input to pyiron jobs.
 from __future__ import annotations
 
 from abc import ABC, ABCMeta
-from typing import Optional, TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 from traitlets import HasTraits, MetaHasTraits
 

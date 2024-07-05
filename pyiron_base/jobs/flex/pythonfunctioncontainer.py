@@ -1,9 +1,11 @@
-import inspect
 import hashlib
+import inspect
 import re
 from typing import Tuple
+
 import cloudpickle
 import numpy as np
+
 from pyiron_base.jobs.job.template import PythonTemplateJob
 from pyiron_base.jobs.job.generic import get_executor
 
@@ -141,6 +143,16 @@ class PythonFunctionContainerJob(PythonTemplateJob):
             cores=self.server.cores,
         )
 
+    def set_input(self, *args, **kwargs):
+        self.input.update(
+            inspect.signature(self._function).bind(*args, **kwargs).arguments
+        )
+
+    def __call__(self, *args, **kwargs):
+        self.set_input(*args, **kwargs)
+        self.run()
+        return self.output["result"]
+
     def to_dict(self):
         job_dict = super().to_dict()
         job_dict["function"] = np.void(cloudpickle.dumps(self._function))
@@ -174,10 +186,3 @@ class PythonFunctionContainerJob(PythonTemplateJob):
             self.status.finished = True
             return  # Without saving
         super().save()
-
-    def __call__(self, *args, **kwargs):
-        self.input.update(
-            inspect.signature(self._function).bind(*args, **kwargs).arguments
-        )
-        self.run()
-        return self.output["result"]

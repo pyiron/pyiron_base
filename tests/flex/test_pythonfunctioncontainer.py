@@ -32,6 +32,7 @@ class TestPythonFunctionContainer(TestWithProject):
         self.assertEqual(job_reload.input["a"], 4)
         self.assertEqual(job_reload.input["b"], 5)
         self.assertEqual(job_reload.output["result"], 9)
+        self.project.remove_job(job.job_name)
 
     def test_as_function(self):
         my_function_as_job = self.project.wrap_python_function(my_function)
@@ -42,6 +43,18 @@ class TestPythonFunctionContainer(TestWithProject):
         self.assertEqual(job_reload.input["a"], 5)
         self.assertEqual(job_reload.input["b"], 6)
         self.assertEqual(job_reload.output["result"], 11)
+        self.project.remove_job(job_reload.job_name)
+
+    def test_direct_function_call(self):
+        result = self.project.wrap_python_function(
+            my_function, 7, b=8, execute_job=True
+        )
+        self.assertEqual(result, 15)
+        job_reload = self.project.load(self.project.get_job_ids()[-1])
+        self.assertEqual(job_reload.input["a"], 7)
+        self.assertEqual(job_reload.input["b"], 8)
+        self.assertEqual(job_reload.output["result"], 15)
+        self.project.remove_job(job_reload.job_name)
 
     def test_with_executor(self):
         with ProcessPoolExecutor() as exe:
@@ -54,6 +67,7 @@ class TestPythonFunctionContainer(TestWithProject):
             self.assertFalse(job.server.future.done())
             self.assertIsNone(job.server.future.result())
             self.assertTrue(job.server.future.done())
+            self.project.remove_job(job.job_name)
 
     @unittest.skipIf(
         os.name == "nt", "Starting subprocesses on windows take a long time."
@@ -71,6 +85,7 @@ class TestPythonFunctionContainer(TestWithProject):
         sleep(1)
         self.assertTrue(job.status.aborted)
         self.assertEqual(job["status"], "aborted")
+        self.project.remove_job(job.job_name)
 
     @unittest.skipIf(sys.version_info < (3, 11), reason="requires python3.11 or higher")
     def test_with_executor_wait(self):
@@ -84,6 +99,7 @@ class TestPythonFunctionContainer(TestWithProject):
             self.assertFalse(job.server.future.done())
             self.project.wait_for_job(job=job, interval_in_s=0.01, max_iterations=1500)
             self.assertTrue(job.server.future.done())
+            self.project.remove_job(job.job_name)
 
     def test_with_internal_executor(self):
         job = self.project.wrap_python_function(my_function_exe)
@@ -106,6 +122,7 @@ class TestPythonFunctionContainer(TestWithProject):
         job.run()
         self.assertEqual(job.output["result"], [6, 8, 10, 12])
         self.assertTrue(job.status.finished)
+        self.project.remove_job(job.job_name)
 
     def test_name_options(self):
         with self.subTest("Auto name and rename"):

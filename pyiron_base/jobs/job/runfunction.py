@@ -1,14 +1,14 @@
 # coding: utf-8
 # Copyright (c) Max-Planck-Institut für Eisenforschung GmbH - Computational Materials Design (CM) Department
 # Distributed under the terms of "New BSD License", see the LICENSE file.
-from concurrent.futures import ProcessPoolExecutor
-from datetime import datetime
 import multiprocessing
 import os
 import posixpath
 import shutil
 import subprocess
-from typing import Optional, List, Tuple
+from concurrent.futures import ProcessPoolExecutor
+from datetime import datetime
+from typing import List, Optional, Tuple
 
 from jinja2 import Template
 from pyiron_snippets.deprecate import deprecate
@@ -17,7 +17,6 @@ from pyiron_base.jobs.job.wrapper import JobWrapper
 from pyiron_base.state import state
 from pyiron_base.state.signal import catch_signals
 from pyiron_base.utils.instance import static_isinstance
-
 
 try:
     import flux.job
@@ -186,7 +185,15 @@ def run_job_with_status_initialized(job, debug=False):
         print("job exists already and therefore was not created!")
     else:
         job.save()
-        job.run()
+        # The PythonFunctionContainerJob can generate the job_name during job.save(). In particular, this can lead to
+        # the job being reloaded from the database resulting in the job status to change from initialized to finished.
+        # Skipping the job.run() prevents raising a warning by calling job.run() on an already finished job.
+        if (
+            not job.status.finished
+            and not job.status.aborted
+            and not job.status.not_converged
+        ):
+            job.run()
 
 
 def run_job_with_status_created(job):

@@ -9,8 +9,8 @@ the correct dtype, this then writes this correct dtype.
 import glob
 import os
 import stat
-import h5py
 
+import h5py
 from tqdm.auto import tqdm
 
 

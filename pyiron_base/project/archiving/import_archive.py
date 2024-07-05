@@ -1,11 +1,13 @@
 import os
-import pandas
-import numpy as np
-from shutil import rmtree, copytree
 import tarfile
+from shutil import copytree, rmtree
+
+import numpy as np
+import pandas
+
 from pyiron_base.project.archiving.shared import getdir
-from pyiron_base.utils.instance import static_isinstance
 from pyiron_base.state import state
+from pyiron_base.utils.instance import static_isinstance
 
 
 def update_id_lst(record_lst, job_id_lst):
