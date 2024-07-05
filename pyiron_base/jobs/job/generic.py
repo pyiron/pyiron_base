@@ -168,7 +168,6 @@ class GenericJob(JobCore, HasDict):
         self._process = None
         self._compress_by_default = False
         self._job_with_calculate_function = False
-        self._input_is_written = False
         self._write_work_dir_warnings = True
         self.interactive_cache = None
         self.error = GenericError(working_directory=self.project_hdf5.working_directory)
@@ -633,15 +632,10 @@ class GenericJob(JobCore, HasDict):
         Call routines that generate the code specific input files
         Returns:
         """
-        if not self._input_is_written:
-            write_input_files_from_input_dict(
-                input_dict=self.get_input_parameter_dict(),
-                working_directory=self.working_directory,
-            )
-        else:
-            self._logger.info(
-                "write_input was called, but input has already been written."
-            )
+        write_input_files_from_input_dict(
+            input_dict=self.get_input_parameter_dict(),
+            working_directory=self.working_directory,
+        )
 
     def _internal_copy_to(
         self,
@@ -1172,7 +1166,6 @@ class GenericJob(JobCore, HasDict):
             "restart_file_dict": self._restart_file_dict,
             "exclude_nodes_hdf": self._exclude_nodes_hdf,
             "exclude_groups_hdf": self._exclude_groups_hdf,
-            "input_is_written": self._input_is_written,
         }
         data_dict["server"] = self._server.to_dict()
         self._executable_activate_mpi()
@@ -1202,7 +1195,6 @@ class GenericJob(JobCore, HasDict):
             self._restart_file_dict = generic_dict["restart_file_dict"]
             self._exclude_nodes_hdf = generic_dict["exclude_nodes_hdf"]
             self._exclude_groups_hdf = generic_dict["exclude_groups_hdf"]
-            self._input_is_written = generic_dict["input_is_written"]
         # Backwards compatbility
         if "restart_file_list" in input_dict.keys():
             self._restart_file_list = input_dict["restart_file_list"]
