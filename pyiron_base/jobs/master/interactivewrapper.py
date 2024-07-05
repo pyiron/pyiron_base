@@ -2,12 +2,12 @@
 # Copyright (c) Max-Planck-Institut für Eisenforschung GmbH - Computational Materials Design (CM) Department
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
-from datetime import datetime
 import warnings
+from datetime import datetime
 
-from pyiron_base.storage.parameters import GenericParameters
 from pyiron_base.jobs.job.generic import GenericJob
 from pyiron_base.jobs.master.generic import GenericMaster
+from pyiron_base.storage.parameters import GenericParameters
 
 __author__ = "Jan Janssen"
 __copyright__ = (

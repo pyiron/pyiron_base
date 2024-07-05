@@ -5,16 +5,17 @@
 The job wrapper is called from the run_job.py script, it restores the job from hdf5 and executes it.
 """
 
-import os
 import logging
-from pyiron_base.project.generic import Project
-from pyiron_base.state import state
-from pyiron_base.state.signal import catch_signals
+import os
+
 from pyiron_base.database.filetable import (
     get_hamilton_from_file,
     get_hamilton_version_from_file,
     get_job_status_from_file,
 )
+from pyiron_base.project.generic import Project
+from pyiron_base.state import state
+from pyiron_base.state.signal import catch_signals
 
 __author__ = "Joerg Neugebauer"
 __copyright__ = (

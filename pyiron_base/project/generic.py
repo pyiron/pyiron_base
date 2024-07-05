@@ -11,46 +11,47 @@ import os
 import posixpath
 import shutil
 import stat
-from tqdm.auto import tqdm
+from typing import TYPE_CHECKING, Dict, Generator, Literal, Union
+
+import numpy as np
 import pandas
 from pyiron_snippets.deprecate import deprecate
-import numpy as np
+from tqdm.auto import tqdm
 
-from pyiron_base.project.jobloader import JobLoader, JobInspector
-from pyiron_base.project.path import ProjectPath
 from pyiron_base.database.filetable import FileTable
-from pyiron_base.state import state
 from pyiron_base.database.jobtable import (
-    get_job_id,
-    set_job_status,
     get_child_ids,
-    get_job_working_directory,
+    get_job_id,
     get_job_status,
+    get_job_working_directory,
+    set_job_status,
 )
-from pyiron_base.storage.hdfio import ProjectHDFio
 from pyiron_base.interfaces.has_groups import HasGroups
 from pyiron_base.jobs.flex.factory import create_job_factory
-from pyiron_base.jobs.job.util import _special_symbol_replacements, _get_safe_job_name
-from pyiron_base.jobs.job.jobtype import (
-    JobType,
-    JobTypeChoice,
-    JobFactory,
-    JOB_CLASS_DICT,
-)
 from pyiron_base.jobs.job.extension.server.queuestatus import (
+    queue_check_job_is_waiting_or_running,
     queue_delete_job,
+    queue_enable_reservation,
     queue_is_empty,
     queue_table,
+    update_from_remote,
     wait_for_job,
     wait_for_jobs,
-    update_from_remote,
-    queue_enable_reservation,
-    queue_check_job_is_waiting_or_running,
 )
-from pyiron_base.project.external import Notebook
-from pyiron_base.project.data import ProjectData
+from pyiron_base.jobs.job.jobtype import (
+    JOB_CLASS_DICT,
+    JobFactory,
+    JobType,
+    JobTypeChoice,
+)
+from pyiron_base.jobs.job.util import _get_safe_job_name, _special_symbol_replacements
 from pyiron_base.project.archiving import export_archive, import_archive
-from typing import Generator, Union, Dict, TYPE_CHECKING, Literal
+from pyiron_base.project.data import ProjectData
+from pyiron_base.project.external import Notebook
+from pyiron_base.project.jobloader import JobInspector, JobLoader
+from pyiron_base.project.path import ProjectPath
+from pyiron_base.state import state
+from pyiron_base.storage.hdfio import ProjectHDFio
 
 if TYPE_CHECKING:
     pass
@@ -482,18 +483,27 @@ class Project(ProjectPath, HasGroups):
         return table
 
     def wrap_python_function(
-        self, python_function, job_name=None, automatically_rename=True
+        self,
+        python_function,
+        *args,
+        job_name=None,
+        automatically_rename=True,
+        execute_job=False,
+        **kwargs,
     ):
         """
         Create a pyiron job object from any python function
 
         Args:
             python_function (callable): python function to create a job object from
+            *args: Arguments for the user-defined python function
             job_name (str | None): The name for the created job. (Default is None, use
                 the name of the function.)
             automatically_rename (bool): Whether to automatically rename the job at
                 save-time to append a string based on the input values. (Default is
                 True.)
+            execute_job (boolean): automatically call run() on the job object - default false
+            **kwargs: Keyword-arguments for the user-defined python function
 
         Returns:
             pyiron_base.jobs.flex.pythonfunctioncontainer.PythonFunctionContainerJob: pyiron job object
@@ -520,7 +530,13 @@ class Project(ProjectPath, HasGroups):
         )
         job._automatically_rename_on_save_using_input = automatically_rename
         job.python_function = python_function
-        return job
+        if args or len(kwargs) != 0:
+            job.set_input(*args, **kwargs)
+        if execute_job:
+            job.run()
+            return job.output["result"]
+        else:
+            return job
 
     def get_child_ids(self, job_specifier, project=None):
         """
