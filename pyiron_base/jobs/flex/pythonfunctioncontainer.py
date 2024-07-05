@@ -6,8 +6,8 @@ from typing import Tuple
 import cloudpickle
 import numpy as np
 
-from pyiron_base.jobs.job.template import PythonTemplateJob
 from pyiron_base.jobs.job.generic import get_executor
+from pyiron_base.jobs.job.template import PythonTemplateJob
 
 
 def get_function_parameter_dict(funct):
