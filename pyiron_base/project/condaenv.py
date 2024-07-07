@@ -30,11 +30,7 @@ class CondaEnvironment:
         env_lst = list_all_known_prefixes()
         env_path = os.path.join(os.path.abspath(self._env_path), env_name)
         if env_name not in env_lst and env_path not in env_lst:
-            command_lst = [
-                exe,
-                "env",
-                "create",
-            ]
+            command_lst = [exe, "create"]
             if not global_installation:
                 os.makedirs(self._env_path, exist_ok=True)
                 command_lst += [
