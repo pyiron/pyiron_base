@@ -1,0 +1,36 @@
+name: Usecase ADIS
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Merge Notebook environment
+      run: |
+        cp .ci_support/environment.yml environment.yml
+        tail --lines=+4 tests/usecases/ADIS/environment.yml >> environment.yml
+    - uses: conda-incubator/setup-miniconda@v3
+      with:
+        python-version: "3.11"
+        miniforge-variant: Mambaforge
+        channels: conda-forge
+        channel-priority: strict
+        activate-environment: my-env
+        environment-file: environment.yml
+        use-mamba: true
+    - name: Tests
+      shell: bash -l {0}
+      run: |
+        bash .ci_support/pip_install.sh
+        conda install -c conda-forge jupyter papermill
+        cd tests/usecases/ADIS
+        export ESPRESSO_PSEUDO=$(pwd)/espresso/pseudo
+        papermill notebook.ipynb notebook-out.ipynb -k "python3"
