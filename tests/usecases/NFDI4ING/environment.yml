@@ -1,10 +1,6 @@
 channels:
 - conda-forge
 dependencies:
-- python=3.11
-- conda =23.11.0
-- conda_subprocess =0.0.4
-- versioneer =0.28
 - matplotlib =3.8.4
 - pygraphviz =1.13
 - networkx =3.3
