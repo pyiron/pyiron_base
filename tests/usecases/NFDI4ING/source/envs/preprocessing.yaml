@@ -1,0 +1,6 @@
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - gmsh=4.6.0=hd134328_0
+  - meshio=5.0.5=pyhd8ed1ab_0
