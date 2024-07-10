@@ -1,14 +1,8 @@
 channels:
 - conda-forge
 dependencies:
-- python=3.11
-- pyiron_base=0.9.6
 - qe=7.2
 - qe-tools=2.0.0
 - ase=3.23.0
 - matplotlib=3.8.4
 - xmlschema=3.3.1
-- jobflow=0.1.17
-- pymatgen=2024.3.1
-- aiida-core=2.5.2
-- aiida-core.services
