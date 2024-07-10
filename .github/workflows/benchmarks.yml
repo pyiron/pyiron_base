@@ -46,4 +46,4 @@ jobs:
       run: |
         python .ci_support/pyironconfig.py
         bash .ci_support/pip_install.sh
-        python -m unittest discover test_benchmarks
+        python -m unittest discover tests/benchmarks
