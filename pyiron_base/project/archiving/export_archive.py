@@ -105,7 +105,7 @@ def copy_files_to_archive(
         copytree(tempdir.name, archive_directory)
 
 
-def export_files(directory_to_transfer, compressed, copy_all_files=False):
+def export_files(directory_to_transfer, copy_all_files=False):
     if not copy_all_files:
         pfi = PyFileIndex(path=directory_to_transfer, filter_function=filter_function)
     else:
