@@ -19,7 +19,7 @@ jobs:
         tail --lines=+4 tests/usecases/ADIS/environment.yml >> environment.yml
     - uses: conda-incubator/setup-miniconda@v3
       with:
-        python-version: "3.11"
+        python-version: "3.12"
         miniforge-variant: Mambaforge
         channels: conda-forge
         channel-priority: strict
@@ -30,7 +30,6 @@ jobs:
       shell: bash -l {0}
       run: |
         bash .ci_support/pip_install.sh
-        conda install -c conda-forge jupyter papermill
         cd tests/usecases/ADIS
         export ESPRESSO_PSEUDO=$(pwd)/espresso/pseudo
         papermill notebook.ipynb notebook-out.ipynb -k "python3"
