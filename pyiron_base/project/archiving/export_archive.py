@@ -1,8 +1,10 @@
 import os
 import tarfile
+from shutil import copyfile, copytree, rmtree
+
 import numpy as np
 from pyfileindex import PyFileIndex
-from shutil import copyfile, rmtree, copytree
+
 from pyiron_base.project.archiving.shared import getdir
 
 
