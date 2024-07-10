@@ -8,9 +8,11 @@ That behaviour is maintained, but now with `QueueAdapters` we can trivially exte
 multiple adapters.
 """
 
-from pyiron_base.interfaces.singleton import Singleton
-from pysqa import QueueAdapter as PySQAAdpter
 import os
+
+from pyiron_snippets.singleton import Singleton
+from pysqa import QueueAdapter as PySQAAdpter
+
 from pyiron_base.state.settings import settings
 
 __author__ = "Liam Huber"

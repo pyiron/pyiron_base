@@ -1,0 +1,9 @@
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - fenics=2019.1.0=py39hf3d152e_26
+  - gmsh=4.6.0=hd134328_0
+  - meshio=5.0.5=pyhd8ed1ab_0
+  - paraview=5.9.1=hfc1cbd4_3_egl
+  - tectonic=0.8.0=ha1fef3e_1

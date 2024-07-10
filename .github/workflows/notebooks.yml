@@ -6,7 +6,6 @@ on:
   push:
     branches: [ main ]
   pull_request:
-    branches: [ main ]
 
 jobs:
   build:
@@ -17,7 +16,7 @@ jobs:
       run: |
         cp .ci_support/environment.yml environment.yml
         tail --lines=+4 .ci_support/environment-notebooks.yml >> environment.yml
-    - uses: conda-incubator/setup-miniconda@v2.2.0
+    - uses: conda-incubator/setup-miniconda@v3
       with:
         python-version: "3.12"
         mamba-version: "*"

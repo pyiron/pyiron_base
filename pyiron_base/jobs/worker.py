@@ -6,14 +6,15 @@ Worker Class to execute calculation in an asynchronous way
 """
 
 import os
-import psutil
 import time
 from datetime import datetime
 from multiprocessing import Pool
-import numpy as np
-from pyiron_base.state import state
-from pyiron_base.jobs.job.template import PythonTemplateJob
 
+import numpy as np
+import psutil
+
+from pyiron_base.jobs.job.template import PythonTemplateJob
+from pyiron_base.state import state
 
 __author__ = "Jan Janssen"
 __copyright__ = (
@@ -138,7 +139,7 @@ class WorkerJob(PythonTemplateJob):
         self.input.child_runtime = 0
         self.input.queue_limit_factor = 2
         self.input.maxtasksperchild = 1
-        self._python_only_job = True
+        self._job_with_calculate_function = True
 
     @property
     def project_to_watch(self):

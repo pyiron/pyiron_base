@@ -6,7 +6,6 @@ on:
   push:
     branches: [ main ]
   pull_request:
-    branches: [ main ]
 
 jobs:
   build:
@@ -27,27 +26,23 @@ jobs:
         - operating-system: ubuntu-latest
           python-version: '3.12'
           label: linux-64-py-3-12
-          prefix: /usr/share/miniconda3/envs/my-env
           
         - operating-system: ubuntu-latest
           python-version: '3.11'
           label: linux-64-py-3-11
-          prefix: /usr/share/miniconda3/envs/my-env
           
         - operating-system: ubuntu-latest
           python-version: '3.10'
           label: linux-64-py-3-10
-          prefix: /usr/share/miniconda3/envs/my-env
-          
+
         - operating-system: ubuntu-latest
           python-version: 3.9
           label: linux-64-py-3-9
-          prefix: /usr/share/miniconda3/envs/my-env
 
     steps:
     - uses: actions/checkout@v4
     - name: Setup Mambaforge
-      uses: conda-incubator/setup-miniconda@v2
+      uses: conda-incubator/setup-miniconda@v3
       with:
         python-version: ${{ matrix.python-version }}
         miniforge-variant: Mambaforge
@@ -58,11 +53,11 @@ jobs:
         use-mamba: true
     - name: Test
       shell: bash -l {0}
-      timeout-minutes: 5
+      timeout-minutes: 10
       run: |
         python .ci_support/pyironconfig.py
         bash .ci_support/pip_install.sh
-        coverage run --omit="pyiron_base/_version.py,tests/*" -m unittest discover tests
+        coverage run --omit="pyiron_base/_version.py,tests/*" -m unittest discover tests/unit
         coverage xml
     - name: Coveralls
       if: matrix.label == 'linux-64-py-3-11'

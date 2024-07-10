@@ -1,9 +1,8 @@
 import os
-import numpy as np
-from shutil import copyfile, rmtree, copytree
-from pyfileindex import PyFileIndex
 import tarfile
-import tempfile
+import numpy as np
+from pyfileindex import PyFileIndex
+from shutil import copyfile, rmtree, copytree
 from pyiron_base.project.archiving.shared import getdir
 
 
@@ -81,7 +80,6 @@ def copy_files_to_archive(
         archive_directory = archive_directory[:-7]
         if not compressed:
             compressed = True
-
     directory_to_transfer = os.path.normpath(directory_to_transfer)
     archive_directory = os.path.normpath(archive_directory)
 

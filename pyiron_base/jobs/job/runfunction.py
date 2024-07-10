@@ -1,21 +1,22 @@
 # coding: utf-8
 # Copyright (c) Max-Planck-Institut für Eisenforschung GmbH - Computational Materials Design (CM) Department
 # Distributed under the terms of "New BSD License", see the LICENSE file.
-from concurrent.futures import ProcessPoolExecutor
-from datetime import datetime
 import multiprocessing
 import os
 import posixpath
+import shutil
 import subprocess
+from concurrent.futures import ProcessPoolExecutor
+from datetime import datetime
+from typing import List, Optional, Tuple
 
 from jinja2 import Template
+from pyiron_snippets.deprecate import deprecate
 
-from pyiron_base.utils.deprecate import deprecate
 from pyiron_base.jobs.job.wrapper import JobWrapper
 from pyiron_base.state import state
 from pyiron_base.state.signal import catch_signals
 from pyiron_base.utils.instance import static_isinstance
-
 
 try:
     import flux.job
@@ -60,6 +61,106 @@ Finally for jobs which call an external executable the execution is implemented 
 """
 
 
+def write_input_files_from_input_dict(input_dict: dict, working_directory: str):
+    """
+    Write input files based on hierarchical input dictionary. On the first level the input dictionary is divided in
+    file_to_create and files_to_copy. Both are dictionaries use the file names as keys. In file_to_create the values are
+    strings which represent the content which is going to be written to the corresponding file. In files_to_copy the
+    values are the paths to the source files to be copied.
+
+    Args:
+        input_dict (dict): hierarchical input dictionary with files_to_create and files_to_copy.
+        working_directory (str): path to the working directory
+    """
+    if len(os.listdir(working_directory)) == 0:
+        for file_name, content in input_dict["files_to_create"].items():
+            with open(os.path.join(working_directory, file_name), "w") as f:
+                f.writelines(content)
+        for file_name, source in input_dict["files_to_copy"].items():
+            shutil.copy(source, os.path.join(working_directory, file_name))
+    else:
+        state.logger.info(
+            "The working directory is not empty, assuming that input has already been written."
+        )
+
+
+class CalculateFunctionCaller:
+    __slots__ = ("write_input_funct", "collect_output_funct")
+
+    def __init__(
+        self,
+        write_input_funct: callable = write_input_files_from_input_dict,
+        collect_output_funct: callable = None,
+    ):
+        self.write_input_funct = write_input_funct
+        self.collect_output_funct = collect_output_funct
+
+    def __call__(
+        self,
+        working_directory: str,
+        input_parameter_dict: dict,
+        executable_script: str,
+        shell_parameter: bool,
+        cores: int = 1,
+        threads: int = 1,
+        gpus: int = 1,
+        conda_environment_name: Optional[str] = None,
+        conda_environment_path: Optional[str] = None,
+        accept_crash: bool = False,
+        accepted_return_codes: List[int] = [],
+        output_parameter_dict: dict = {},
+    ) -> Tuple[str, dict, bool]:
+        """
+        Generic calculate function, which writes the input files into the working_directory, executes the
+        executable_script and parses the output using the output_parameter_dict.
+
+        Args:
+            working_directory (str): Directory the calculation is executed in.
+            input_parameter_dict (dict): Dictionary with parameters for the write_input function. By default this is a
+                                         hierarchical dictionary with two keys files_to_write and files_to_copy on the
+                                         first level. The files_to_write dictionary contains the file names and their
+                                         content as strings, while the files_to_copy dictionary contains the file names
+                                         and the links to the files which should be copied.
+            executable_script (str): Executable to be executed in the working directory.
+            shell_parameter (bool): The shell parameter from the subprocess.Popen() function of the python standard
+                                    library.
+            conda_environment_name (str): Name of a conda environment to execute the executable in.
+            conda_environment_path (str): Path of a conda environment to execute the executable in.
+            accept_crash (bool): Boolean flag to accept crashes.
+            accepted_return_codes (list): List of accepted return codes.
+            output_parameter_dict (dict): Additional parameters for the collect_output function.
+
+        Returns:
+            str, dict, bool: Tuple consisting of the shell output (str), the parsed output (dict) and a boolean flag if
+                             the execution raised an accepted error.
+        """
+        os.makedirs(working_directory, exist_ok=True)
+        if self.write_input_funct is not None:
+            self.write_input_funct(
+                input_dict=input_parameter_dict,
+                working_directory=working_directory,
+            )
+        job_crashed, shell_output = execute_command_with_error_handling(
+            executable=executable_script,
+            shell=shell_parameter,
+            working_directory=working_directory,
+            cores=cores,
+            threads=threads,
+            gpus=gpus,
+            conda_environment_name=conda_environment_name,
+            conda_environment_path=conda_environment_path,
+            accepted_return_codes=accepted_return_codes,
+            accept_crash=accept_crash,
+        )
+        parsed_output = None
+        if not job_crashed and self.collect_output_funct is not None:
+            parsed_output = self.collect_output_funct(
+                working_directory=working_directory,
+                **output_parameter_dict,
+            )
+        return shell_output, parsed_output, job_crashed
+
+
 # Parameter
 def run_job_with_parameter_repair(job):
     """
@@ -89,7 +190,15 @@ def run_job_with_status_initialized(job, debug=False):
         print("job exists already and therefore was not created!")
     else:
         job.save()
-        job.run()
+        # The PythonFunctionContainerJob can generate the job_name during job.save(). In particular, this can lead to
+        # the job being reloaded from the database resulting in the job status to change from initialized to finished.
+        # Skipping the job.run() prevents raising a warning by calling job.run() on an already finished job.
+        if (
+            not job.status.finished
+            and not job.status.aborted
+            and not job.status.not_converged
+        ):
+            job.run()
 
 
 def run_job_with_status_created(job):
@@ -220,8 +329,14 @@ def run_job_with_status_collect(job):
     Args:
         job (GenericJob): pyiron job object
     """
-    job.collect_output()
-    job.collect_logfiles()
+    if job._job_with_calculate_function and job._collect_output_funct is not None:
+        parsed_output = job._collect_output_funct(
+            working_directory=job.working_directory, **job.get_output_parameter_dict()
+        )
+        job.save_output(output_dict=parsed_output)
+    else:
+        job.collect_output()
+        job.collect_logfiles()
     job.run_time_to_db()
     if job.status.collect:
         if not job.convergence_check():
@@ -231,8 +346,6 @@ def run_job_with_status_collect(job):
                 job.compress()
             job.status.finished = True
     job._hdf5["status"] = job.status.string
-    if job.job_id is not None:
-        job._calculate_successor()
     job.send_to_database()
     job.update_master()
 
@@ -277,6 +390,12 @@ def run_job_with_runmode_manually(job, _manually_print=True):
         job (GenericJob): pyiron job object
         _manually_print (bool): [True/False] print command for execution - default=True
     """
+    if job._job_with_calculate_function:
+        job.project_hdf5.create_working_directory()
+        write_input_files_from_input_dict(
+            input_dict=job.get_input_parameter_dict(),
+            working_directory=job.working_directory,
+        )
     if _manually_print:
         abs_working = posixpath.abspath(job.project_hdf5.working_directory)
         if not state.database.database_is_disabled:
@@ -379,6 +498,8 @@ def run_job_with_runmode_queue(job):
             + job.project_hdf5.h5_path
             + " --submit"
         )
+        job.project_hdf5.create_working_directory()
+        job.write_input()
         state.queue_adapter.transfer_file_to_remote(
             file=job.project_hdf5.file_name, transfer_back=False
         )
@@ -616,6 +737,56 @@ def run_time_decorator(func):
     return wrapper
 
 
+def execute_subprocess(
+    executable: str,
+    shell: bool,
+    working_directory: str,
+    cores: int = 1,
+    threads: int = 1,
+    gpus: int = 1,
+    conda_environment_name: Optional[str] = None,
+    conda_environment_path: Optional[str] = None,
+) -> str:
+    environment_dict = os.environ.copy()
+    environment_dict.update(
+        {
+            "PYIRON_CORES": str(cores),
+            "PYIRON_THREADS": str(threads),
+            "PYIRON_GPUS": str(gpus),
+        }
+    )
+    if conda_environment_name is None and conda_environment_path is None:
+        out = subprocess.run(
+            executable,
+            cwd=working_directory,
+            shell=shell,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            universal_newlines=True,
+            check=True,
+            env=environment_dict,
+        ).stdout
+    else:
+        import conda_subprocess
+
+        if conda_environment_name is not None:
+            conda_environment_path = None
+
+        out = conda_subprocess.run(
+            executable,
+            cwd=working_directory,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            universal_newlines=True,
+            check=True,
+            env=environment_dict,
+            prefix_name=conda_environment_name,
+            prefix_path=conda_environment_path,
+        ).stdout
+
+    return out
+
+
 @run_time_decorator
 def execute_job_with_external_executable(job):
     """
@@ -636,45 +807,19 @@ def execute_job_with_external_executable(job):
         cores=job.server.cores, threads=job.server.threads, gpus=job.server.gpus
     )
     job_crashed, out = False, None
-    if (
-        job.server.conda_environment_name is None
-        and job.server.conda_environment_path is None
-    ):
-        try:
-            out = subprocess.run(
-                executable,
-                cwd=job.project_hdf5.working_directory,
-                shell=shell,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.STDOUT,
-                universal_newlines=True,
-                check=True,
-                env=os.environ.copy(),
-            ).stdout
-        except (subprocess.CalledProcessError, FileNotFoundError) as e:
-            out, job_crashed = handle_failed_job(job=job, error=e)
-    else:
-        import conda_subprocess
-
-        if job.server.conda_environment_name is not None:
-            prefix_name = job.server.conda_environment_name
-            prefix_path = None
-        else:
-            prefix_name = None
-            prefix_path = job.server.conda_environment_path
-        try:
-            out = conda_subprocess.run(
-                executable,
-                cwd=job.project_hdf5.working_directory,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.STDOUT,
-                universal_newlines=True,
-                check=True,
-                prefix_name=prefix_name,
-                prefix_path=prefix_path,
-            ).stdout
-        except (subprocess.CalledProcessError, FileNotFoundError) as e:
-            out, job_crashed = handle_failed_job(job=job, error=e)
+    try:
+        out = execute_subprocess(
+            executable=executable,
+            shell=shell,
+            working_directory=job.working_directory,
+            conda_environment_name=job.server.conda_environment_name,
+            conda_environment_path=job.server.conda_environment_path,
+            cores=job.server.cores,
+            threads=job.server.threads,
+            gpus=job.server.gpus,
+        )
+    except (subprocess.CalledProcessError, FileNotFoundError) as e:
+        job_crashed, out = handle_failed_job(job=job, error=e)
 
     job._logger.info(
         "{}, status: {}, output: {}".format(job.job_info_str, job.status, out)
@@ -721,27 +866,25 @@ def handle_failed_job(job, error):
         if error.returncode in job.executable.accepted_return_codes:
             return False, out
         elif not job.server.accept_crash:
-            job._logger.warning("Job aborted")
             job._logger.warning(error.output)
-            job.status.aborted = True
-            job._hdf5["status"] = job.status.string
-            job.run_time_to_db()
             error_file = posixpath.join(job.project_hdf5.working_directory, "error.msg")
             with open(error_file, "w") as f:
                 f.write(error.output)
-            if job.server.run_mode.non_modal:
-                state.database.close_connection()
-            raise RuntimeError("Job aborted")
+            raise_runtimeerror_for_failed_job(job=job)
         else:
             return True, out
     else:
-        job._logger.warning("Job aborted")
-        job.status.aborted = True
-        job._hdf5["status"] = job.status.string
-        job.run_time_to_db()
-        if job.server.run_mode.non_modal:
-            state.database.close_connection()
-        raise RuntimeError("Job aborted")
+        raise_runtimeerror_for_failed_job(job=job)
+
+
+def raise_runtimeerror_for_failed_job(job):
+    job._logger.warning("Job aborted")
+    job.status.aborted = True
+    job._hdf5["status"] = job.status.string
+    job.run_time_to_db()
+    if job.server.run_mode.non_modal:
+        state.database.close_connection()
+    raise RuntimeError("Job aborted")
 
 
 def multiprocess_wrapper(
@@ -773,6 +916,95 @@ def multiprocess_wrapper(
         raise ValueError("Either job_id or file_path have to be not None.")
     with catch_signals(job_wrap.job.signal_intercept):
         job_wrap.job.run_static()
+
+
+def execute_command_with_error_handling(
+    executable: str,
+    shell: bool,
+    working_directory: str,
+    cores: int = 1,
+    threads: int = 1,
+    gpus: int = 1,
+    conda_environment_name: Optional[str] = None,
+    conda_environment_path: Optional[str] = None,
+    accepted_return_codes: List[int] = [],
+    accept_crash: bool = False,
+) -> Tuple[bool, str]:
+    """
+    Execute command including error handling and support for execution in separate conda environment
+
+    Args:
+        executable (str): Executable to be executed in the working directory.
+        shell (bool): The shell parameter from the subprocess.Popen() function of the python standard library.
+        working_directory (str): Directory the calculation is executed in.
+        conda_environment_name (str): Name of a conda environment to execute the executable in.
+        conda_environment_path (str): Path of a conda environment to execute the executable in.
+        accept_crash (bool): Boolean flag to accept crashes.
+        accepted_return_codes (list): List of accepted return codes.
+
+    Returns:
+        bool, str: boolean flag if the execution crashed with an acceptable error and string output of the command line
+    """
+    job_crashed = False
+    try:
+        shell_output = execute_subprocess(
+            executable=executable,
+            shell=shell,
+            working_directory=working_directory,
+            conda_environment_name=conda_environment_name,
+            conda_environment_path=conda_environment_path,
+            cores=cores,
+            threads=threads,
+            gpus=gpus,
+        )
+    except (subprocess.CalledProcessError, FileNotFoundError) as error:
+        if hasattr(error, "output"):
+            shell_output = error.output
+            if error.returncode not in accepted_return_codes and not accept_crash:
+                error_file = posixpath.join(working_directory, "error.msg")
+                with open(error_file, "w") as f:
+                    f.write(error.output)
+                raise RuntimeError("External executable failed")
+            else:
+                job_crashed = True
+        else:
+            raise RuntimeError("Job aborted")
+    with open(posixpath.join(working_directory, "error.out"), mode="w") as f_err:
+        f_err.write(shell_output)
+    return job_crashed, shell_output
+
+
+@run_time_decorator
+def execute_job_with_calculate_function(job):
+    """
+    The run_static() function is called internally in pyiron to trigger the execution of the executable. This is
+    typically divided into three steps: (1) the generation of the calculate function and its inputs, (2) the
+    execution of this function and (3) storing the output of this function in the HDF5 file.
+
+    In future the execution of the calculate function might be transferred to a separate process, so the separation
+    in these three distinct steps is necessary to simplify the submission to an external executor.
+    """
+    try:
+        (
+            shell_output,
+            parsed_output,
+            job_crashed,
+        ) = job.get_calculate_function()(**job.calculate_kwargs)
+    except RuntimeError:
+        raise_runtimeerror_for_failed_job(job=job)
+    else:
+        job.set_input_to_read_only()
+        if job_crashed:
+            job.status.aborted = True
+            job._hdf5["status"] = job.status.string
+        else:
+            job.save_output(output_dict=parsed_output, shell_output=shell_output)
+            if not job.convergence_check():
+                job.status.not_converged = True
+            else:
+                if job._compress_by_default:
+                    job.compress()
+                job.status.finished = True
 
 
 def _generate_flux_execute_string(job, database_is_disabled):

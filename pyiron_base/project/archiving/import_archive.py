@@ -1,8 +1,12 @@
 import os
-import pandas
-import numpy as np
 import tarfile
+from shutil import copytree, rmtree
+import numpy as np
+import pandas
+
+from pyiron_base.project.archiving.shared import getdir
 from pyiron_base.state import state
+from pyiron_base.utils.instance import static_isinstance
 
 
 def update_id_lst(record_lst, job_id_lst):
@@ -41,7 +45,6 @@ def prepare_path(pr, archive_directory):
         target_folder = os.path.join(
             os.path.dirname(archive_directory), os.path.basename(tar.members[0].name)
         )
-
     if os.path.exists(target_folder):
         raise ValueError("Cannot extract to existing folder")
 
@@ -64,12 +67,9 @@ def import_jobs(pr, archive_directory):
     job_id_lst = []
 
     for entry in df.dropna(axis=1).to_dict(orient="records"):
-        if "id" in entry:
-            del entry["id"]
-        if "parentid" in entry:
-            del entry["parentid"]
-        if "masterid" in entry:
-            del entry["masterid"]
+        for tag in ["id", "parentid", "masterid"]:
+            if tag in entry:
+                del entry[tag]
         if "timestart" in entry:
             entry["timestart"] = pandas.to_datetime(entry["timestart"])
         if "timestop" in entry:

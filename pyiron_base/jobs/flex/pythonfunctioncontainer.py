@@ -1,22 +1,10 @@
 import inspect
-import hashlib
-import re
+
 import cloudpickle
 import numpy as np
+
 from pyiron_base.jobs.job.template import PythonTemplateJob
-
-
-def get_function_parameter_dict(funct):
-    return {
-        k: None if v.default == inspect._empty else v.default
-        for k, v in inspect.signature(funct).parameters.items()
-    }
-
-
-def get_hash(binary):
-    # Remove specification of jupyter kernel from hash to be deterministic
-    binary_no_ipykernel = re.sub(b"(?<=/ipykernel_)(.*)(?=/)", b"", binary)
-    return str(hashlib.md5(binary_no_ipykernel).hexdigest())
+from pyiron_base.project.delayed import get_function_parameter_dict, get_hash
 
 
 class PythonFunctionContainerJob(PythonTemplateJob):
@@ -60,10 +48,13 @@ class PythonFunctionContainerJob(PythonTemplateJob):
         self.input.update(get_function_parameter_dict(funct=funct))
         self._function = funct
 
-    def __call__(self, *args, **kwargs):
+    def set_input(self, *args, **kwargs):
         self.input.update(
             inspect.signature(self._function).bind(*args, **kwargs).arguments
         )
+
+    def __call__(self, *args, **kwargs):
+        self.set_input(*args, **kwargs)
         self.run()
         return self.output["result"]
 

@@ -5,23 +5,24 @@
 The parallel master class is a metajob consisting of a list of jobs which are executed in parallel.
 """
 
+import importlib
+import multiprocessing
 from collections import OrderedDict
 from datetime import datetime
 from typing import Union
 
 import numpy as np
 import pandas
-import multiprocessing
-import importlib
-from pyiron_base.jobs.job.generic import GenericJob
+from pyiron_snippets.deprecate import deprecate
+
 from pyiron_base.jobs.job.core import _doc_str_job_core_args
+from pyiron_base.jobs.job.extension.jobstatus import JobStatus
+from pyiron_base.jobs.job.generic import GenericJob
+from pyiron_base.jobs.job.util import _get_safe_job_name
+from pyiron_base.jobs.job.wrapper import job_wrapper_function
 from pyiron_base.jobs.master.generic import GenericMaster, _doc_str_generic_master_attr
 from pyiron_base.jobs.master.submissionstatus import SubmissionStatus
-from pyiron_base.jobs.job.extension.jobstatus import JobStatus
 from pyiron_base.state import state
-from pyiron_base.jobs.job.wrapper import job_wrapper_function
-from pyiron_base.jobs.job.util import _get_safe_job_name
-from pyiron_base.utils.deprecate import deprecate
 
 __author__ = "Joerg Neugebauer, Jan Janssen"
 __copyright__ = (

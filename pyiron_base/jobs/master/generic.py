@@ -10,12 +10,12 @@ import textwrap
 from functools import wraps
 from typing import Union
 
-from pyiron_base.storage.parameters import GenericParameters
-from pyiron_base.storage.datacontainer import DataContainer
 from pyiron_base.interfaces.object import HasStorage
 from pyiron_base.jobs.job.core import _doc_str_job_core_args
-from pyiron_base.jobs.job.generic import GenericJob, _doc_str_generic_job_attr
 from pyiron_base.jobs.job.extension.jobstatus import job_status_finished_lst
+from pyiron_base.jobs.job.generic import GenericJob, _doc_str_generic_job_attr
+from pyiron_base.storage.datacontainer import DataContainer
+from pyiron_base.storage.parameters import GenericParameters
 
 __author__ = "Jan Janssen"
 __copyright__ = (
@@ -61,7 +61,7 @@ class GenericMaster(GenericJob):
         self._job_object_dict = {}
         self._child_id_func = None
         self._child_id_func_str = None
-        self._python_only_job = True
+        self._job_with_calculate_function = True
 
     @property
     def child_names(self):

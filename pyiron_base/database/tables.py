@@ -13,17 +13,18 @@ from sqlalchemy import (
     String,
     Table,
 )
+
 from pyiron_base.database.sqlcolumnlength import (
-    PROJECT_PATH_STR_LENGTH,
-    PROJECT_STR_LENGTH,
-    JOB_STR_LENGTH,
-    SUBJOB_STR_LENGTH,
     CHEMICALFORMULA_STR_LENGTH,
-    STATUS_STR_LENGTH,
+    COMPUTER_STR_LENGTH,
     HAMILTON_STR_LENGTH,
     HAMVERSION_STR_LENGTH,
+    JOB_STR_LENGTH,
+    PROJECT_PATH_STR_LENGTH,
+    PROJECT_STR_LENGTH,
+    STATUS_STR_LENGTH,
+    SUBJOB_STR_LENGTH,
     USERNAME_STR_LENGTH,
-    COMPUTER_STR_LENGTH,
 )
 
 __author__ = "Murat Han Celik, Liam Huber"

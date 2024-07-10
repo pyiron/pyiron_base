@@ -8,12 +8,14 @@ Jobtype class to create GenericJob type objects
 import importlib
 import inspect
 import os
-from pyiron_base.jobs.job.util import _get_safe_job_name
-from pyiron_base.storage.hdfio import ProjectHDFio
-from pyiron_base.interfaces.singleton import Singleton
+from typing import Union
+
+from pyiron_snippets.singleton import Singleton
+
 from pyiron_base.interfaces.factory import PyironFactory
 from pyiron_base.jobs.job.extension.jobstatus import job_status_finished_lst
-from typing import Union
+from pyiron_base.jobs.job.util import _get_safe_job_name
+from pyiron_base.storage.hdfio import ProjectHDFio
 
 __author__ = "Joerg Neugebauer, Jan Janssen"
 __copyright__ = (

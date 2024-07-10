@@ -4,7 +4,6 @@ on:
   push:
     branches: [ main ]
   pull_request:
-    branches: [ main ]
 
 jobs:
   build:
@@ -12,7 +11,7 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - name: Setup Mambaforge
-      uses: conda-incubator/setup-miniconda@v2
+      uses: conda-incubator/setup-miniconda@v3
       with:
         python-version: '3.9'
         miniforge-variant: Mambaforge
@@ -26,4 +25,4 @@ jobs:
       timeout-minutes: 30
       run: |
         bash .ci_support/pip_install.sh
-        python -m unittest discover tests
+        python -m unittest discover tests/unit

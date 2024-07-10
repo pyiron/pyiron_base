@@ -1,10 +1,10 @@
 repos:
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.4.4
+    rev: v0.5.1
     hooks:
       - id: ruff
         name: ruff lint
-        args: ["--fix"]
+        args: ["--select", "I", "--fix"]
         files: ^pyiron_base/
       - id: ruff-format
         name: ruff format

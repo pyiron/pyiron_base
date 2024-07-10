@@ -5,6 +5,7 @@ Remove jobs from pyiron project or whole project.
 """
 
 import os
+
 from pyiron_base.project.generic import Project
 
 __author__ = "Marvin Poul"

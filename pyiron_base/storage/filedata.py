@@ -9,9 +9,9 @@ from abc import ABC, abstractmethod
 from functools import lru_cache
 
 import pandas
+from pyiron_snippets.import_alarm import ImportAlarm
 
 from pyiron_base.storage.hdfio import FileHDFio, ProjectHDFio
-from pyiron_base.utils.error import ImportAlarm
 
 __author__ = "Niklas Siemer"
 __copyright__ = (
@@ -35,8 +35,8 @@ try:
 except ImportError:
     _has_imported["PIL"] = False
 try:
-    import nbformat
     import nbconvert
+    import nbformat
 
     _has_imported["nbformat"] = True
 except ImportError:

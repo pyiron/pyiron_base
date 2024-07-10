@@ -15,9 +15,10 @@ and `object.__getattribute__` to avoid any overloading attribute access that
 sibling classes may bring in.
 """
 
-from typing import Optional, Literal
-from functools import wraps
 import warnings
+from contextlib import nullcontext
+from functools import wraps
+from typing import Literal, Optional
 
 from pyiron_base.interfaces.has_groups import HasGroups
 
@@ -348,4 +349,7 @@ class Lockable:
 
             There is a small asymmetry between these two methods.  :meth:`.lock` can only be done once (meaningfully), while :meth:`.unlocked` is a context manager and can be called multiple times.
         """
-        return _UnlockContext(self)
+        if self.read_only:
+            return _UnlockContext(self)
+        else:
+            return nullcontext(self)

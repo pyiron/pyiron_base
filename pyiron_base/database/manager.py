@@ -5,11 +5,13 @@
 A class for mediating connections to SQL databases.
 """
 
-from urllib.parse import quote_plus
-from pyiron_base.state.logger import logger
-from pyiron_base.interfaces.singleton import Singleton
-from pyiron_base.state.settings import settings as s
 import os
+from urllib.parse import quote_plus
+
+from pyiron_snippets.logger import logger
+from pyiron_snippets.singleton import Singleton
+
+from pyiron_base.state.settings import settings as s
 
 __author__ = "Jan Janssen, Liam Huber"
 __copyright__ = (

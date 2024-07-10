@@ -5,31 +5,28 @@
 Classes to map the Python objects to HDF5 data structures
 """
 
+import importlib
 import numbers
-from h5io_browser import Pointer
+import os
+import posixpath
+import sys
+from typing import Any, Optional, Tuple, Union
+
+import h5py
+import numpy as np
+import pandas
+from h5io_browser import Pointer, read_nested_dict_from_hdf
 from h5io_browser.base import (
-    _open_hdf,
     _is_ragged_in_1st_dim_only,
+    _open_hdf,
     _read_hdf,
     _write_hdf5_with_json_support,
 )
-import os
-import importlib
-import pandas
-import posixpath
-import numpy as np
-import sys
-from typing import Union, Optional, Any, Tuple
+from pyiron_snippets.deprecate import deprecate
 
-from pyiron_base.utils.deprecate import deprecate
-from pyiron_base.storage.helper_functions import (
-    get_h5_path,
-    list_groups_and_nodes,
-    read_dict_from_hdf,
-)
 from pyiron_base.interfaces.has_groups import HasGroups
-from pyiron_base.state import state
 from pyiron_base.jobs.job.util import _get_safe_job_name
+from pyiron_base.state import state
 from pyiron_base.utils.instance import static_isinstance
 
 __author__ = "Joerg Neugebauer, Jan Janssen"
@@ -52,6 +49,29 @@ def _extract_fully_qualified_name(type_field: str) -> str:
 def _extract_module_class_name(type_field: str) -> Tuple[str, str]:
     fully_qualified_path = _extract_fully_qualified_name(type_field)
     return fully_qualified_path.rsplit(".", maxsplit=1)
+
+
+def _list_groups_and_nodes(hdf, h5_path):
+    """
+    Get the list of groups and list of nodes from an open HDF5 file
+    Args:
+        hdf (h5py.File): file handle of an open HDF5 file
+        h5_path (str): path inside the HDF5 file
+    Returns:
+        list, list: list of groups and list of nodes
+    """
+    groups = set()
+    nodes = set()
+    try:
+        h = hdf[h5_path]
+        for k in h.keys():
+            if isinstance(h[k], h5py.Group):
+                groups.add(k)
+            else:
+                nodes.add(k)
+    except KeyError:
+        pass
+    return list(groups), list(nodes)
 
 
 def _import_class(module_path, class_name):
@@ -520,7 +540,7 @@ class FileHDFio(HasGroups, Pointer):
         """
         if self.file_exists:
             with _open_hdf(self.file_name) as hdf:
-                groups, nodes = list_groups_and_nodes(hdf=hdf, h5_path=self.h5_path)
+                groups, nodes = _list_groups_and_nodes(hdf=hdf, h5_path=self.h5_path)
             iopy_nodes = self._filter_io_objects(set(groups))
             return {
                 "groups": sorted(list(set(groups) - iopy_nodes)),
@@ -748,7 +768,7 @@ class FileHDFio(HasGroups, Pointer):
         Returns:
             dict:     The loaded data. Can be of any type supported by ``write_hdf5``.
         """
-        return read_dict_from_hdf(
+        return read_nested_dict_from_hdf(
             file_name=self.file_name,
             h5_path=self.h5_path,
             group_paths=group_paths,
@@ -777,7 +797,7 @@ class FileHDFio(HasGroups, Pointer):
         Returns:
             str: combined path
         """
-        return get_h5_path(h5_path=self.h5_path, name=name)
+        return posixpath.join(self.h5_path, name)
 
     def _get_h5io_type(self, name):
         """

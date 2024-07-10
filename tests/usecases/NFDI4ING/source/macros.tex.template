@@ -1,0 +1,3 @@
+\newcommand{\domainSize}{${DOMAINSIZE}}
+\newcommand{\numDofs}{${NUMDOFS}}
+\newcommand{\plotDataPath}{${PLOTDATAPATH}}

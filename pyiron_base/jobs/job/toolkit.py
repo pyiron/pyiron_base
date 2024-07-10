@@ -6,6 +6,7 @@ Builtin tools that come with pyiron base.
 """
 
 from abc import ABC
+
 from pyiron_base.jobs.job.factory import JobFactory
 
 __author__ = "Liam Huber"

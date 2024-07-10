@@ -6,9 +6,10 @@ The Flexible master uses a list of functions to connect multiple jobs in a serie
 """
 
 import inspect
+
 from pyiron_base.jobs.job.core import _doc_str_job_core_args
-from pyiron_base.jobs.master.generic import GenericMaster, _doc_str_generic_master_attr
 from pyiron_base.jobs.job.extension.jobstatus import job_status_finished_lst
+from pyiron_base.jobs.master.generic import GenericMaster, _doc_str_generic_master_attr
 
 __author__ = "Jan Janssen, Liam Huber"
 __copyright__ = (
@@ -154,7 +155,7 @@ class FlexibleMaster(GenericMaster):
         """
         super(FlexibleMaster, self).to_hdf(hdf=hdf, group_name=group_name)
         with self.project_hdf5.open("input") as hdf5_input:
-            if self._step_function_lst is not []:
+            if self._step_function_lst != []:
                 try:
                     hdf5_input["funct_lst"] = [
                         inspect.getsource(funct) for funct in self._step_function_lst

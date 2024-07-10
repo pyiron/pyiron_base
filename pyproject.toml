@@ -26,18 +26,19 @@ classifiers = [
 dependencies = [
     "cloudpickle==3.0.0",
     "gitpython==3.1.43",
-    "h5io_browser==0.0.12",
+    "h5io_browser==0.0.15",
     "h5py==3.11.0",
     "jinja2==3.1.4",
     "numpy==1.26.4",
-    "monty==2024.4.17",
+    "monty==2024.5.24",
     "pandas==2.2.2",
-    "pint==0.23",
-    "psutil==5.9.8",
-    "pyfileindex==0.0.24",
-    "pympipool==0.8.2",
-    "pysqa==0.1.20",
-    "sqlalchemy==2.0.30",
+    "pint==0.24.1",
+    "psutil==6.0.0",
+    "pyfileindex==0.0.25",
+    "pyiron_snippets==0.1.2",
+    "pympipool==0.8.5",
+    "pysqa==0.1.21",
+    "sqlalchemy==2.0.31",
     "tables==3.9.2",
     "tqdm==4.66.4",
     "traitlets==5.14.3",
@@ -51,8 +52,8 @@ Repository = "https://github.com/pyiron/pyiron_base"
 
 [project.optional-dependencies]
 conda = [
-    "conda==23.11.0",
-    "conda_subprocess==0.0.1",
+    "conda==24.5.0",
+    "conda_subprocess==0.0.4",
 ]
 
 [project.scripts]

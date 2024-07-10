@@ -1,0 +1,34 @@
+name: Usecase NFDI4Ing
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Merge Notebook environment
+      run: |
+        cp .ci_support/environment.yml environment.yml
+        tail --lines=+4 .ci_support/environment-notebooks.yml >> environment.yml
+    - name: Setup Mambaforge
+      uses: conda-incubator/setup-miniconda@v3
+      with:
+        python-version: "3.12"
+        miniforge-variant: Mambaforge
+        channels: conda-forge
+        channel-priority: strict
+        activate-environment: my-env
+        environment-file: environment.yml
+        use-mamba: true
+    - name: Test
+      shell: bash -l {0}
+      timeout-minutes: 60
+      run: |
+        bash .ci_support/pip_install.sh
+        sudo apt-get install -y $(cat tests/usecases/NFDI4ING/apt.txt)
+        cd tests/usecases/NFDI4ING
+        papermill notebook.ipynb notebook.ipynb -k "python3"

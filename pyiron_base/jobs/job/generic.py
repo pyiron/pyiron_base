@@ -5,18 +5,20 @@
 Generic Job class extends the JobCore class with all the functionality to run the job object.
 """
 
-from concurrent.futures import Future, Executor
-from datetime import datetime
-from inspect import isclass
 import os
 import platform
 import posixpath
 import warnings
+from concurrent.futures import Executor, Future
+from datetime import datetime
+from inspect import isclass
+from typing import Optional
 
 from h5io_browser.base import _read_hdf, _write_hdf
+from pyiron_snippets.deprecate import deprecate
 
-from pyiron_base.state import state
-from pyiron_base.state.signal import catch_signals
+from pyiron_base.database.filetable import FileTable
+from pyiron_base.interfaces.has_dict import HasDict
 from pyiron_base.jobs.job.core import (
     JobCore,
     _doc_str_job_core_args,
@@ -25,32 +27,34 @@ from pyiron_base.jobs.job.core import (
 from pyiron_base.jobs.job.extension.executable import Executable
 from pyiron_base.jobs.job.extension.files import File
 from pyiron_base.jobs.job.extension.jobstatus import JobStatus
+from pyiron_base.jobs.job.extension.server.generic import Server
 from pyiron_base.jobs.job.runfunction import (
+    CalculateFunctionCaller,
+    execute_job_with_calculate_function,
+    execute_job_with_external_executable,
     run_job_with_parameter_repair,
-    run_job_with_status_initialized,
-    run_job_with_status_created,
-    run_job_with_status_submitted,
-    run_job_with_status_running,
-    run_job_with_status_refresh,
-    run_job_with_status_busy,
-    run_job_with_status_collect,
-    run_job_with_status_suspended,
-    run_job_with_status_finished,
     run_job_with_runmode_modal,
     run_job_with_runmode_queue,
-    execute_job_with_external_executable,
+    run_job_with_status_busy,
+    run_job_with_status_collect,
+    run_job_with_status_created,
+    run_job_with_status_finished,
+    run_job_with_status_initialized,
+    run_job_with_status_refresh,
+    run_job_with_status_running,
+    run_job_with_status_submitted,
+    run_job_with_status_suspended,
+    write_input_files_from_input_dict,
 )
 from pyiron_base.jobs.job.util import (
-    _copy_restart_files,
-    _kill_child,
-    _job_store_before_copy,
+    _get_restart_copy_dict,
     _job_reload_after_copy,
+    _job_store_before_copy,
+    _kill_child,
 )
-from pyiron_base.utils.instance import static_isinstance, import_class
-from pyiron_base.utils.deprecate import deprecate
-from pyiron_base.jobs.job.extension.server.generic import Server
-from pyiron_base.database.filetable import FileTable
-from pyiron_base.interfaces.has_dict import HasDict
+from pyiron_base.state import state
+from pyiron_base.state.signal import catch_signals
+from pyiron_base.utils.instance import import_class, static_isinstance
 
 __author__ = "Joerg Neugebauer, Jan Janssen"
 __copyright__ = (
@@ -159,10 +163,11 @@ class GenericJob(JobCore, HasDict):
         self._restart_file_dict = dict()
         self._exclude_nodes_hdf = list()
         self._exclude_groups_hdf = list()
+        self._collect_output_funct = None
         self._executor_type = None
         self._process = None
         self._compress_by_default = False
-        self._python_only_job = False
+        self._job_with_calculate_function = False
         self._write_work_dir_warnings = True
         self.interactive_cache = None
         self.error = GenericError(working_directory=self.project_hdf5.working_directory)
@@ -416,83 +421,39 @@ class GenericJob(JobCore, HasDict):
                 f"Expected an executor class or string representing one, but got {exe}"
             )
 
-    def collect_logfiles(self):
+    @property
+    def calculate_kwargs(self) -> dict:
         """
-        Collect the log files of the external executable and store the information in the HDF5 file. This method has
-        to be implemented in the individual hamiltonians.
-        """
-        pass
+        Generate keyword arguments for the calculate() function. A new simulation code only has to extend the
+        get_input_parameter_dict() function which by default specifies an hierarchical dictionary with files_to_write
+        and files_to_copy.
 
-    def write_input(self):
-        """
-        Write the input files for the external executable. This method has to be implemented in the individual
-        hamiltonians.
-        """
-        if (
-            state.settings.configuration["write_work_dir_warnings"]
-            and self._write_work_dir_warnings
-            and not self._python_only_job
-        ):
-            with open(
-                os.path.join(self.working_directory, "WARNING_pyiron_modified_content"),
-                "w",
-            ) as f:
-                f.write(
-                    "Files in this directory are intended to be written and read by pyiron. \n\n"
-                    "pyiron may transform user input to enhance performance, thus, use these files with care!\n"
-                    "Consult the log and/or the documentation to gain further information.\n\n"
-                    "To disable writing these warning files, specify \n"
-                    "WRITE_WORK_DIR_WARNINGS=False in the .pyiron configuration file (or set the "
-                    "PYIRONWRITEWORKDIRWARNINGS environment variable accordingly)."
-                )
+        Example:
 
-    def collect_output(self):
+        >>> calculate_function = job.get_calculate_function()
+        >>> shell_output, parsed_output, job_crashed = calculate_function(**job.calculate_kwargs)
+        >>> job.save_output(output_dict=parsed_output, shell_output=shell_output)
+
+        Returns:
+            dict: keyword arguments for the calculate() function
         """
-        Collect the output files of the external executable and store the information in the HDF5 file. This method has
-        to be implemented in the individual hamiltonians.
-        """
-        raise NotImplementedError(
-            "read procedure must be defined for derived Hamilton!"
+        executable, shell = self.executable.get_input_for_subprocess_call(
+            cores=self.server.cores, threads=self.server.threads, gpus=self.server.gpus
         )
-
-    def suspend(self):
-        """
-        Suspend the job by storing the object and its state persistently in HDF5 file and exit it.
-        """
-        self.to_hdf()
-        self.status.suspended = True
-        self._logger.info(
-            "{}, status: {}, job has been suspended".format(
-                self.job_info_str, self.status
-            )
-        )
-        self.clear_job()
-
-    def refresh_job_status(self):
-        """
-        Refresh job status by updating the job status with the status from the database if a job ID is available.
-        """
-        if self.job_id:
-            self._status = JobStatus(
-                initial_status=self.project.db.get_job_status(self.job_id),
-                db=self.project.db,
-                job_id=self.job_id,
-            )
-        elif state.database.database_is_disabled:
-            self._status = JobStatus(
-                initial_status=_read_hdf(
-                    self.project_hdf5.file_name, self.job_name + "/status"
-                )
-            )
-        if (
-            isinstance(self.server.future, Future)
-            and not self.status.finished
-            and self.server.future.done()
-        ):
-            if self.server.future.cancelled():
-                self.status.aborted = True
-            else:
-                self.status.finished = True
+        return {
+            "working_directory": self.working_directory,
+            "input_parameter_dict": self.get_input_parameter_dict(),
+            "executable_script": executable,
+            "shell_parameter": shell,
+            "cores": self.server.cores,
+            "threads": self.server.threads,
+            "gpus": self.server.gpus,
+            "conda_environment_name": self.server.conda_environment_name,
+            "conda_environment_path": self.server.conda_environment_path,
+            "accept_crash": self.server.accept_crash,
+            "accepted_return_codes": self.executable.accepted_return_codes,
+            "output_parameter_dict": self.get_output_parameter_dict(),
+        }
 
     def clear_job(self):
         """
@@ -538,6 +499,143 @@ class GenericJob(JobCore, HasDict):
                 "Jobs whose server has executor and future attributes cannot be copied unless the future is `done()`"
             )
         return copied_self
+
+    def collect_logfiles(self):
+        """
+        Collect the log files of the external executable and store the information in the HDF5 file. This method has
+        to be implemented in the individual hamiltonians.
+        """
+        pass
+
+    def get_calculate_function(self) -> callable:
+        """
+        Generate calculate() function
+
+        Example:
+
+        >>> calculate_function = job.get_calculate_function()
+        >>> shell_output, parsed_output, job_crashed = calculate_function(**job.calculate_kwargs)
+        >>> job.save_output(output_dict=parsed_output, shell_output=shell_output)
+
+        Returns:
+            callable: calculate() functione
+        """
+        return CalculateFunctionCaller(
+            collect_output_funct=self._collect_output_funct,
+        )
+
+    def get_input_parameter_dict(self) -> dict:
+        """
+        Get an hierarchical dictionary of input files. On the first level the dictionary is divided in file_to_create
+        and files_to_copy. Both are dictionaries use the file names as keys. In file_to_create the values are strings
+        which represent the content which is going to be written to the corresponding file. In files_to_copy the values
+        are the paths to the source files to be copied.
+
+        Returns:
+            dict: hierarchical dictionary of input files
+        """
+        if (
+            state.settings.configuration["write_work_dir_warnings"]
+            and self._write_work_dir_warnings
+            and not self._job_with_calculate_function
+        ):
+            content = [
+                "Files in this directory are intended to be written and read by pyiron. \n\n",
+                "pyiron may transform user input to enhance performance, thus, use these files with care!\n",
+                "Consult the log and/or the documentation to gain further information.\n\n",
+                "To disable writing these warning files, specify \n",
+                "WRITE_WORK_DIR_WARNINGS=False in the .pyiron configuration file (or set the ",
+                "PYIRONWRITEWORKDIRWARNINGS environment variable accordingly).",
+            ]
+            return {
+                "files_to_create": {
+                    "WARNING_pyiron_modified_content": "".join(content)
+                },
+                "files_to_copy": _get_restart_copy_dict(job=self),
+            }
+        else:
+            return {
+                "files_to_create": {},
+                "files_to_copy": _get_restart_copy_dict(job=self),
+            }
+
+    def get_output_parameter_dict(self):
+        return {}
+
+    def collect_output(self):
+        """
+        Collect the output files of the external executable and store the information in the HDF5 file. This method has
+        to be implemented in the individual hamiltonians.
+        """
+        raise NotImplementedError(
+            "read procedure must be defined for derived Hamilton!"
+        )
+
+    def save_output(
+        self, output_dict: Optional[dict] = None, shell_output: Optional[str] = None
+    ):
+        """
+        Store output of the calculate function in the HDF5 file.
+
+        Args:
+            output_dict (dict): hierarchical output dictionary to be stored in the HDF5 file.
+            shell_output (str): shell output from calling the external executable to be stored in the HDF5 file.
+        """
+        if shell_output is not None:
+            self.storage.output.stdout = shell_output
+        if output_dict is not None:
+            self.output.update(output_dict)
+        if shell_output is not None or output_dict is not None:
+            self.to_hdf()
+
+    def suspend(self):
+        """
+        Suspend the job by storing the object and its state persistently in HDF5 file and exit it.
+        """
+        self.to_hdf()
+        self.status.suspended = True
+        self._logger.info(
+            "{}, status: {}, job has been suspended".format(
+                self.job_info_str, self.status
+            )
+        )
+        self.clear_job()
+
+    def refresh_job_status(self):
+        """
+        Refresh job status by updating the job status with the status from the database if a job ID is available.
+        """
+        if self.job_id:
+            self._status = JobStatus(
+                initial_status=self.project.db.get_job_status(self.job_id),
+                db=self.project.db,
+                job_id=self.job_id,
+            )
+        elif state.database.database_is_disabled:
+            self._status = JobStatus(
+                initial_status=_read_hdf(
+                    self.project_hdf5.file_name, self.job_name + "/status"
+                )
+            )
+        if (
+            isinstance(self.server.future, Future)
+            and not self.status.finished
+            and self.server.future.done()
+        ):
+            if self.server.future.cancelled():
+                self.status.aborted = True
+            else:
+                self.status.finished = True
+
+    def write_input(self):
+        """
+        Call routines that generate the code specific input files
+        Returns:
+        """
+        write_input_files_from_input_dict(
+            input_dict=self.get_input_parameter_dict(),
+            working_directory=self.working_directory,
+        )
 
     def _internal_copy_to(
         self,
@@ -815,7 +913,10 @@ class GenericJob(JobCore, HasDict):
         """
         The run static function is called by run to execute the simulation.
         """
-        return execute_job_with_external_executable(job=self)
+        if self._job_with_calculate_function:
+            execute_job_with_calculate_function(job=self)
+        else:
+            return execute_job_with_external_executable(job=self)
 
     def run_if_scheduler(self):
         """
@@ -1173,9 +1274,7 @@ class GenericJob(JobCore, HasDict):
         if self._check_if_input_should_be_written():
             self.project_hdf5.create_working_directory()
             self.write_input()
-            _copy_restart_files(job=self)
         self.status.created = True
-        self._calculate_predecessor()
         print(
             "The job "
             + self.job_name
@@ -1470,42 +1569,6 @@ class GenericJob(JobCore, HasDict):
                 RuntimeWarning,
             )
 
-    def _calculate_predecessor(self):
-        """
-        Internal helper function to calculate the predecessor of the current job if it was not calculated before. This
-        function is used to execute a series of jobs based on their parent relationship - marked by the parent ID.
-        Mainly used by the ListMaster job type.
-        """
-        parent_id = self.parent_id
-        if parent_id is not None:
-            if self._hdf5.db.get_item_by_id(parent_id)["status"] in [
-                "initialized",
-                "created",
-            ]:
-                self.status.suspended = True
-                parent_job = self._hdf5.load(parent_id)
-                parent_job.run()
-
-    def _calculate_successor(self):
-        """
-        Internal helper function to calculate the successor of the current job. This function is used to execute a
-        series of jobs based on their parent relationship - marked by the parent ID. Mainly used by the ListMaster job
-        type.
-        """
-        for child_id in sorted(
-            [
-                job["id"]
-                for job in self.project.db.get_items_dict(
-                    {"parentid": str(self.job_id)}, return_all_columns=False
-                )
-            ]
-        ):
-            if self._hdf5.db.get_item_by_id(child_id)["status"] in ["suspended"]:
-                child = self._hdf5.load(child_id)
-                child.status.created = True
-                self._before_successor_calc(child)
-                child.run()
-
     @deprecate("Use job.save()")
     def _create_job_structure(self, debug=False):
         """
@@ -1517,7 +1580,7 @@ class GenericJob(JobCore, HasDict):
         self.save()
 
     def _check_if_input_should_be_written(self):
-        if self._python_only_job:
+        if self._job_with_calculate_function:
             return False
         else:
             return not (

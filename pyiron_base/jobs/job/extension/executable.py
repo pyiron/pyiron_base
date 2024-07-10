@@ -3,9 +3,10 @@
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
 import os
+
 from pyiron_base.interfaces.has_dict import HasDict
-from pyiron_base.storage.datacontainer import DataContainer
 from pyiron_base.state import state
+from pyiron_base.storage.datacontainer import DataContainer
 
 """
 Executable class loading executables from static/bin/<code>/
@@ -31,7 +32,6 @@ class Executable(HasDict):
         path_binary_codes=None,
         codename=None,
         module=None,
-        code=None,
         overwrite_nt_flag=False,
     ):
         """
@@ -49,11 +49,6 @@ class Executable(HasDict):
         if path_binary_codes is None:
             path_binary_codes = state.settings.resource_paths
         self.storage.version = None
-        if code is not None:  # Backwards compatibility
-            if not isinstance(code.__name__, str):
-                raise TypeError("The codename should be a string.")
-            codename = code.__name__
-            module = code.__module__.split(".")[1]
         if codename is not None and module is not None:
             self.storage.name = codename.lower()
             code_path_lst = [

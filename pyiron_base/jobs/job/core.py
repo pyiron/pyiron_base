@@ -12,29 +12,30 @@ import posixpath
 import shutil
 import warnings
 
+from pyiron_snippets.deprecate import deprecate
+
 from pyiron_base.interfaces.has_groups import HasGroups
-from pyiron_base.storage.hdfio import ProjectHDFio
+from pyiron_base.jobs.job.extension.files import FileBrowser
 from pyiron_base.jobs.job.util import (
-    _get_project_for_copy,
     _copy_database_entry,
     _copy_to_delete_existing,
-    _rename_job,
+    _get_project_for_copy,
     _get_safe_job_name,
-    _job_is_archived,
     _job_archive,
-    _job_unarchive,
-    _job_is_compressed,
     _job_compress,
     _job_decompress,
-    _job_list_files,
-    _job_read_file,
     _job_delete_files,
     _job_delete_hdf,
+    _job_is_archived,
+    _job_is_compressed,
+    _job_list_files,
+    _job_read_file,
     _job_remove_folder,
+    _job_unarchive,
+    _rename_job,
 )
 from pyiron_base.state import state
-from pyiron_base.utils.deprecate import deprecate
-from pyiron_base.jobs.job.extension.files import FileBrowser
+from pyiron_base.storage.hdfio import ProjectHDFio
 
 __author__ = "Jan Janssen"
 __copyright__ = (
@@ -150,7 +151,7 @@ def recursive_load_from_hdf(project_hdf5: ProjectHDFio, item: str):
             # where we are looking for the data container
             container_path = "/".join(name_lst[:-i])
             # where we are looking for data in the container
-            data_path = "/".join(name_lst[-1:])
+            data_path = "/".join(name_lst[-i:])
             yield container_path, data_path
 
     try:

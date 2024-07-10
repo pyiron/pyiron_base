@@ -5,16 +5,17 @@
 DatabaseAccess class deals with accessing the database
 """
 
-from pyiron_base.state.logger import logger
+import fnmatch
+import re
+import typing
+import warnings
 from abc import ABC, abstractmethod
 from collections.abc import Iterable
-import warnings
+
 import numpy as np
-import re
-from pyiron_base.utils.deprecate import deprecate
 import pandas
-import typing
-import fnmatch
+from pyiron_snippets.deprecate import deprecate
+from pyiron_snippets.logger import logger
 
 __author__ = "Murat Han Celik"
 __copyright__ = (
