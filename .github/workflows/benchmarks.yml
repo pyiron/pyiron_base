@@ -15,18 +15,12 @@ jobs:
         include:
         - operating-system: macos-latest
           python-version: '3.12'
-          label: osx-64-py-3-12
-          prefix: /Users/runner/miniconda3/envs/my-env
 
         - operating-system: windows-latest
           python-version: '3.12'
-          label: win-64-py-3-12
-          prefix: C:\Miniconda3\envs\my-env
           
         - operating-system: ubuntu-latest
           python-version: '3.12'
-          label: linux-64-py-3-12
-          prefix: /usr/share/miniconda3/envs/my-env
 
     steps:
     - uses: actions/checkout@v4
@@ -46,4 +40,4 @@ jobs:
       run: |
         python .ci_support/pyironconfig.py
         bash .ci_support/pip_install.sh
-        python -m unittest discover test_benchmarks
+        python -m unittest discover tests/benchmarks

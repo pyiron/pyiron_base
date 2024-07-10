@@ -88,7 +88,9 @@ class TestFileHDFio(PyironTestCase):
         cls.empty_hdf5 = FileHDFio(file_name=cls.current_dir + "/filehdfio_empty.h5")
         cls.full_hdf5 = FileHDFio(file_name=cls.current_dir + "/filehdfio_full.h5")
         cls.i_o_hdf5 = FileHDFio(file_name=cls.current_dir + "/filehdfio_io.h5")
-        cls.es_hdf5 = FileHDFio(file_name=cls.current_dir + "/../static/dft/es_hdf.h5")
+        cls.es_hdf5 = FileHDFio(
+            file_name=cls.current_dir + "/../../static/dft/es_hdf.h5"
+        )
         with cls.full_hdf5.open("content") as hdf:
             _write_full_hdf_content(hdf=hdf)
         with cls.i_o_hdf5.open("content") as hdf:
