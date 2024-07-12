@@ -4,10 +4,11 @@
 
 import os
 
+from pyiron_snippets.resources import ExecutableResolver
+
 from pyiron_base.interfaces.has_dict import HasDict
 from pyiron_base.state import state
 from pyiron_base.storage.datacontainer import DataContainer
-from pyiron_snippets.resources import ExecutableResolver
 
 """
 Executable class loading executables from static/bin/<code>/
