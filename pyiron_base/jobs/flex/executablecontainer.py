@@ -6,6 +6,7 @@ from pyiron_base.jobs.job.runfunction import (
     write_input_files_from_input_dict,
 )
 from pyiron_base.jobs.job.template import TemplateJob
+from pyiron_base.project.delayed import get_hash
 
 
 class ExecutableContainerJob(TemplateJob):
@@ -52,6 +53,12 @@ class ExecutableContainerJob(TemplateJob):
         # interface with write_input() and collect_output(). Finally, the output dictionary is stored in the HDF5 file
         # using self.save_output(output_dict, shell_output)
         self._job_with_calculate_function = True
+        # Automatically rename job using function and input values at save time
+        # This is useful for the edge case where these jobs are created from a wrapper
+        # and automatically assigned a name based on the function name, but multiple
+        # jobs are created from the same function (and thus distinguished only by their
+        # input)
+        self._automatically_rename_on_save_using_input = False
 
     @property
     def calculate_kwargs(self) -> dict:
@@ -76,6 +83,24 @@ class ExecutableContainerJob(TemplateJob):
             }
         )
         return kwargs
+
+    def save(self):
+        if self._automatically_rename_on_save_using_input:
+            self.job_name = self.job_name + "_" + get_hash(
+                binary=cloudpickle.dumps(
+                    {
+                        "write_input": self._write_input_funct,
+                        "collect_output": self._collect_output_funct,
+                        "kwargs": self.calculate_kwargs,
+                    }
+                )
+            )
+
+        if self.job_name in self.project.list_nodes():
+            self.from_hdf()
+            self.status.finished = True
+            return  # Without saving
+        super().save()
 
     def set_job_type(
         self,

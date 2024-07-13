@@ -367,14 +367,15 @@ class Project(ProjectPath, HasGroups):
 
     def wrap_executable(
         self,
-        job_name,
         executable_str,
+        job_name="exe",
         write_input_funct=None,
         collect_output_funct=None,
         input_dict=None,
         conda_environment_path=None,
         conda_environment_name=None,
         input_file_lst=None,
+        automatically_rename=True,
         execute_job=False,
         delayed=False,
         output_file_lst=[],
@@ -384,8 +385,8 @@ class Project(ProjectPath, HasGroups):
         Wrap any executable into a pyiron job object using the ExecutableContainerJob.
 
         Args:
-            job_name (str): name of the new job object
             executable_str (str): call to an external executable
+            job_name (str): name of the new job object
             write_input_funct (callable): The write input function write_input(input_dict, working_directory)
             collect_output_funct (callable): The collect output function collect_output(working_directory)
             input_dict (dict): Default input for the newly created job class
@@ -393,6 +394,12 @@ class Project(ProjectPath, HasGroups):
             conda_environment_name (str): name of the conda environment
             input_file_lst (list): list of files to be copied to the working directory before executing it\
             execute_job (boolean): automatically call run() on the job object - default false
+            automatically_rename (bool): Whether to automatically rename the job at
+                save-time to append a string based on the input values. (Default is
+                True.)
+            delayed (bool): delayed execution
+            output_file_lst (list):
+            output_key_lst (list):
 
         Example:
 
@@ -452,6 +459,8 @@ class Project(ProjectPath, HasGroups):
             if internal_file_lst is not None and len(internal_file_lst) > 0:
                 for file in internal_file_lst:
                     job.restart_file_list.append(file)
+            if automatically_rename:
+                job._automatically_rename_on_save_using_input = automatically_rename
             if execute_job:
                 job.run()
             return job

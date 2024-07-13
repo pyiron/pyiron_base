@@ -215,11 +215,40 @@ class TestExecutableContainer(TestWithProject):
             input_dict={"x": 1, "y": 2},
             conda_environment_path=None,
             conda_environment_name=None,
+            automatically_rename=False,
             input_file_lst=None,
             execute_job=True,
         )
         w = self.project.wrap_executable(
             job_name="job_xyz",
+            executable_str="x=$(cat x.txt); y=$(cat y.txt); z=$(cat result.txt); echo $(($x + $y + $z)) > result.txt",
+            write_input_funct=write_input_series,
+            collect_output_funct=collect_output_series,
+            input_dict={"x": 1, "y": z.output.result},
+            conda_environment_path=None,
+            conda_environment_name=None,
+            automatically_rename=False,
+            input_file_lst=[z.files.result_txt],
+            execute_job=True,
+        )
+        self.assertEqual(w.output.result, 7)
+
+    @unittest.skipIf(
+        os.name == "nt",
+        "shell script test is skipped on windows.",
+    )
+    def test_series_of_jobs(self):
+        z = self.project.wrap_executable(
+            executable_str="x=$(cat x.txt); y=$(cat y.txt); echo $(($x + $y)) > result.txt",
+            write_input_funct=write_input_series,
+            collect_output_funct=collect_output_series,
+            input_dict={"x": 1, "y": 2},
+            conda_environment_path=None,
+            conda_environment_name=None,
+            input_file_lst=None,
+            execute_job=True,
+        )
+        w = self.project.wrap_executable(
             executable_str="x=$(cat x.txt); y=$(cat y.txt); z=$(cat result.txt); echo $(($x + $y + $z)) > result.txt",
             write_input_funct=write_input_series,
             collect_output_funct=collect_output_series,
