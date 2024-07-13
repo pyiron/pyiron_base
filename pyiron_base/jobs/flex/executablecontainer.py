@@ -86,13 +86,17 @@ class ExecutableContainerJob(TemplateJob):
 
     def save(self):
         if self._automatically_rename_on_save_using_input:
-            self.job_name = self.job_name + "_" + get_hash(
-                binary=cloudpickle.dumps(
-                    {
-                        "write_input": self._write_input_funct,
-                        "collect_output": self._collect_output_funct,
-                        "kwargs": self.calculate_kwargs,
-                    }
+            self.job_name = (
+                self.job_name
+                + "_"
+                + get_hash(
+                    binary=cloudpickle.dumps(
+                        {
+                            "write_input": self._write_input_funct,
+                            "collect_output": self._collect_output_funct,
+                            "kwargs": self.calculate_kwargs,
+                        }
+                    )
                 )
             )
 
