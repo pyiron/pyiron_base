@@ -6,7 +6,6 @@ from pyiron_base.jobs.job.runfunction import (
     write_input_files_from_input_dict,
 )
 from pyiron_base.jobs.job.template import TemplateJob
-from pyiron_base.project.delayed import get_hash
 
 
 class ExecutableContainerJob(TemplateJob):
