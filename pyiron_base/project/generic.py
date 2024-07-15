@@ -435,16 +435,16 @@ class Project(ProjectPath, HasGroups):
             input_internal_dict,
             executable_internal_str,
             internal_file_lst,
-            job_name=None,
-            automatically_rename=False,
-            execute_job=True,
+            internal_job_name=None,
+            internal_auto_rename=False,
+            internal_execute_job=True,
         ):
-            if job_name is None:
-                job_name = "exe"
-                automatically_rename = True
-            if automatically_rename:
-                job_name = (
-                    job_name
+            if internal_job_name is None:
+                internal_job_name = "exe"
+                internal_auto_rename = True
+            if internal_auto_rename:
+                internal_job_name = (
+                    internal_job_name
                     + "_"
                     + get_hash(
                         binary=cloudpickle.dumps(
@@ -461,7 +461,7 @@ class Project(ProjectPath, HasGroups):
                 sql_query=project.sql_query,
                 user=project.user,
                 project_path=project.project_path,
-                job_specifier=job_name,
+                job_specifier=internal_job_name,
             )
             if job_id is None:
                 job = create_job_factory(
@@ -469,9 +469,9 @@ class Project(ProjectPath, HasGroups):
                     collect_output_funct=collect_output_funct,
                     default_input_dict=input_internal_dict,
                     executable_str=executable_internal_str,
-                )(project=project, job_name=job_name)
+                )(project=project, job_name=internal_job_name)
             else:
-                return project.load(job_specifier=job_name)
+                return project.load(job_specifier=job_id)
             if conda_environment_path is not None:
                 job.server.conda_environment_path = conda_environment_path
             elif conda_environment_name is not None:
@@ -479,7 +479,7 @@ class Project(ProjectPath, HasGroups):
             if internal_file_lst is not None and len(internal_file_lst) > 0:
                 for file in internal_file_lst:
                     job.restart_file_list.append(file)
-            if execute_job:
+            if internal_execute_job:
                 job.run()
             return job
 
@@ -494,9 +494,9 @@ class Project(ProjectPath, HasGroups):
                 input_internal_dict=input_dict,
                 executable_internal_str=executable_str,
                 internal_file_lst=input_file_lst,
-                job_name=job_name,
-                automatically_rename=automatically_rename,
-                execute_job=True,
+                internal_job_name=job_name,
+                internal_auto_rename=automatically_rename,
+                internal_execute_job=True,
             )
         else:
             return create_executable_job(
@@ -504,9 +504,9 @@ class Project(ProjectPath, HasGroups):
                 input_internal_dict=input_dict,
                 executable_internal_str=executable_str,
                 internal_file_lst=input_file_lst,
-                job_name=job_name,
-                automatically_rename=automatically_rename,
-                execute_job=execute_job,
+                internal_job_name=job_name,
+                internal_auto_rename=automatically_rename,
+                internal_execute_job=execute_job,
             )
 
     def create_job(self, job_type, job_name, delete_existing_job=False):
