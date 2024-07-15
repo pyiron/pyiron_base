@@ -429,6 +429,7 @@ class Project(ProjectPath, HasGroups):
         Returns:
             pyiron_base.jobs.flex.ExecutableContainerJob: pyiron job object
         """
+
         def generate_job_hash(
             project,
             input_internal_dict,
@@ -446,9 +447,10 @@ class Project(ProjectPath, HasGroups):
                 for file in internal_file_lst:
                     job.restart_file_list.append(file)
             return (
-                    internal_job_name
-                    + "_"
-                    + get_hash(binary=cloudpickle.dumps(
+                internal_job_name
+                + "_"
+                + get_hash(
+                    binary=cloudpickle.dumps(
                         {
                             "write_input": write_input_funct,
                             "collect_output": collect_output_funct,
