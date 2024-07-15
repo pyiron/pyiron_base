@@ -443,13 +443,17 @@ class Project(ProjectPath, HasGroups):
                 job_name = "exe"
                 automatically_rename = True
             if automatically_rename:
-                job_name = job_name + "_" + get_hash(
-                    binary=cloudpickle.dumps(
-                        {
-                            "write_input": write_input_funct,
-                            "collect_output": collect_output_funct,
-                            "kwargs": input_internal_dict,
-                        }
+                job_name = (
+                    job_name
+                    + "_"
+                    + get_hash(
+                        binary=cloudpickle.dumps(
+                            {
+                                "write_input": write_input_funct,
+                                "collect_output": collect_output_funct,
+                                "kwargs": input_internal_dict,
+                            }
+                        )
                     )
                 )
             job_id = get_job_id(
