@@ -368,14 +368,14 @@ class Project(ProjectPath, HasGroups):
     def wrap_executable(
         self,
         executable_str,
-        job_name="exe",
+        job_name=None,
         write_input_funct=None,
         collect_output_funct=None,
         input_dict=None,
         conda_environment_path=None,
         conda_environment_name=None,
         input_file_lst=None,
-        automatically_rename=True,
+        automatically_rename=False,
         execute_job=False,
         delayed=False,
         output_file_lst=[],
@@ -429,13 +429,18 @@ class Project(ProjectPath, HasGroups):
             pyiron_base.jobs.flex.ExecutableContainerJob: pyiron job object
         """
 
-        def create_exeuctable_job(
+        def create_executable_job(
             project,
             input_internal_dict,
             executable_internal_str,
             internal_file_lst,
+            job_name=None,
+            automatically_rename=False,
             execute_job=True,
         ):
+            if job_name is None:
+                job_name = "exe"
+                automatically_rename = True
             job_id = get_job_id(
                 database=project.db,
                 sql_query=project.sql_query,
@@ -467,7 +472,7 @@ class Project(ProjectPath, HasGroups):
 
         if delayed:
             return DelayedObject(
-                function=create_exeuctable_job,
+                function=create_executable_job,
                 output_key=None,
                 output_file=None,
                 output_file_lst=[f.replace(".", "_") for f in output_file_lst],
@@ -476,14 +481,18 @@ class Project(ProjectPath, HasGroups):
                 input_internal_dict=input_dict,
                 executable_internal_str=executable_str,
                 internal_file_lst=input_file_lst,
+                job_name=job_name,
+                automatically_rename=automatically_rename,
                 execute_job=True,
             )
         else:
-            return create_exeuctable_job(
+            return create_executable_job(
                 project=self,
                 input_internal_dict=input_dict,
                 executable_internal_str=executable_str,
                 internal_file_lst=input_file_lst,
+                job_name=job_name,
+                automatically_rename=automatically_rename,
                 execute_job=execute_job,
             )
 
