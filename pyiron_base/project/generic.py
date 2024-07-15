@@ -464,8 +464,7 @@ class Project(ProjectPath, HasGroups):
             if internal_file_lst is not None and len(internal_file_lst) > 0:
                 for file in internal_file_lst:
                     job.restart_file_list.append(file)
-            if automatically_rename:
-                job._automatically_rename_on_save_using_input = automatically_rename
+            job._automatically_rename_on_save_using_input = automatically_rename
             if execute_job:
                 job.run()
             return job
