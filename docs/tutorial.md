@@ -131,7 +131,7 @@ selected. Still it is important to mention, that assigning 120 CPU cores does no
 function. Only by implementing internal parallelization inside the python functions with solutions like 
 [concurrent.futures.ProcessPoolExecutor](https://docs.python.org/3/library/concurrent.futures.html#processpoolexecutor)
 it is possible to parallelize the execution of python functions on a single compute node. Finally, the pyiron developers
-released the [pympipool](https://pympipool.readthedocs.io) to enable parallelization of python functions as well as the
+released the [pympipool](https://executorlib.readthedocs.io) to enable parallelization of python functions as well as the
 direct assignment of GPU resources inside a given queuing system allocation over multiple compute nodes using the 
 hierarchical queuing system [flux](https://flux-framework.org). 
 
