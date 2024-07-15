@@ -396,7 +396,7 @@ class Project(ProjectPath, HasGroups):
             execute_job (boolean): automatically call run() on the job object - default false
             automatically_rename (bool): Whether to automatically rename the job at
                 save-time to append a string based on the input values. (Default is
-                True.)
+                False.)
             delayed (bool): delayed execution
             output_file_lst (list):
             output_key_lst (list):
