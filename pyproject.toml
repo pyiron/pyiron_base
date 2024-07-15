@@ -1,5 +1,5 @@
 [build-system]
-requires = ["cloudpickle", "gitpython", "h5io", "h5py", "jinja2", "numpy", "pandas", "pint", "psutil", "pyfileindex", "pysqa", "sqlalchemy", "tables", "tqdm", "traitlets", "setuptools", "versioneer[toml]==0.29"]
+requires = ["cloudpickle", "executorlib", "gitpython", "h5io", "h5py", "jinja2", "numpy", "pandas", "pint", "psutil", "pyfileindex", "pysqa", "sqlalchemy", "tables", "tqdm", "traitlets", "setuptools", "versioneer[toml]==0.29"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -25,6 +25,7 @@ classifiers = [
 ]
 dependencies = [
     "cloudpickle==3.0.0",
+    "executorlib==0.0.1",
     "gitpython==3.1.43",
     "h5io_browser==0.0.15",
     "h5py==3.11.0",
@@ -36,7 +37,6 @@ dependencies = [
     "psutil==6.0.0",
     "pyfileindex==0.0.25",
     "pyiron_snippets==0.1.2",
-    "pympipool==0.8.5",
     "pysqa==0.1.21",
     "sqlalchemy==2.0.31",
     "tables==3.9.2",
