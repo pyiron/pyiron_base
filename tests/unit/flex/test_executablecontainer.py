@@ -215,7 +215,6 @@ class TestExecutableContainer(TestWithProject):
             input_dict={"x": 1, "y": 2},
             conda_environment_path=None,
             conda_environment_name=None,
-            automatically_rename=False,
             input_file_lst=None,
             execute_job=True,
         )
@@ -227,7 +226,6 @@ class TestExecutableContainer(TestWithProject):
             input_dict={"x": 1, "y": z.output.result},
             conda_environment_path=None,
             conda_environment_name=None,
-            automatically_rename=False,
             input_file_lst=[z.files.result_txt],
             execute_job=True,
         )
