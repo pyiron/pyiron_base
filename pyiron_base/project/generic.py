@@ -429,33 +429,15 @@ class Project(ProjectPath, HasGroups):
         Returns:
             pyiron_base.jobs.flex.ExecutableContainerJob: pyiron job object
         """
-
         def create_executable_job(
             project,
             input_internal_dict,
             executable_internal_str,
             internal_file_lst,
             internal_job_name=None,
-            internal_auto_rename=False,
             internal_execute_job=True,
         ):
-            if internal_job_name is None:
-                internal_job_name = "exe"
-                internal_auto_rename = True
-            if internal_auto_rename:
-                internal_job_name = (
-                    internal_job_name
-                    + "_"
-                    + get_hash(
-                        binary=cloudpickle.dumps(
-                            {
-                                "write_input": write_input_funct,
-                                "collect_output": collect_output_funct,
-                                "kwargs": input_internal_dict,
-                            }
-                        )
-                    )
-                )
+
             job_id = get_job_id(
                 database=project.db,
                 sql_query=project.sql_query,
@@ -483,6 +465,23 @@ class Project(ProjectPath, HasGroups):
                 job.run()
             return job
 
+        if job_name is None:
+            job_name = "exe"
+            automatically_rename = True
+        if automatically_rename:
+            job_name = (
+                    job_name
+                    + "_"
+                    + get_hash(binary=cloudpickle.dumps(
+                        {
+                            "write_input": write_input_funct,
+                            "collect_output": collect_output_funct,
+                            "kwargs": input_dict,
+                        }
+                    )
+                )
+            )
+
         if delayed:
             return DelayedObject(
                 function=create_executable_job,
@@ -495,7 +494,6 @@ class Project(ProjectPath, HasGroups):
                 executable_internal_str=executable_str,
                 internal_file_lst=input_file_lst,
                 internal_job_name=job_name,
-                internal_auto_rename=automatically_rename,
                 internal_execute_job=True,
             )
         else:
@@ -505,7 +503,6 @@ class Project(ProjectPath, HasGroups):
                 executable_internal_str=executable_str,
                 internal_file_lst=input_file_lst,
                 internal_job_name=job_name,
-                internal_auto_rename=automatically_rename,
                 internal_execute_job=execute_job,
             )
 
