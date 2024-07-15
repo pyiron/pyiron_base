@@ -429,6 +429,34 @@ class Project(ProjectPath, HasGroups):
         Returns:
             pyiron_base.jobs.flex.ExecutableContainerJob: pyiron job object
         """
+        def generate_job_hash(
+            project,
+            input_internal_dict,
+            executable_internal_str,
+            internal_file_lst,
+            internal_job_name=None,
+        ):
+            job = create_job_factory(
+                write_input_funct=write_input_funct,
+                collect_output_funct=collect_output_funct,
+                default_input_dict=input_internal_dict,
+                executable_str=executable_internal_str,
+            )(project=project, job_name=internal_job_name)
+            if internal_file_lst is not None and len(internal_file_lst) > 0:
+                for file in internal_file_lst:
+                    job.restart_file_list.append(file)
+            return (
+                    internal_job_name
+                    + "_"
+                    + get_hash(binary=cloudpickle.dumps(
+                        {
+                            "write_input": write_input_funct,
+                            "collect_output": collect_output_funct,
+                            "kwargs": job.calculate_kwargs,
+                        }
+                    )
+                )
+            )
 
         def create_executable_job(
             project,
@@ -437,7 +465,19 @@ class Project(ProjectPath, HasGroups):
             internal_file_lst,
             internal_job_name=None,
             internal_execute_job=True,
+            internal_auto_rename=False,
         ):
+            if internal_job_name is None:
+                internal_job_name = "exe"
+                internal_auto_rename = True
+            if internal_auto_rename:
+                internal_job_name = generate_job_hash(
+                    project=project,
+                    input_internal_dict=input_internal_dict,
+                    executable_internal_str=executable_internal_str,
+                    internal_file_lst=internal_file_lst,
+                    internal_job_name=internal_job_name,
+                )
             job_id = get_job_id(
                 database=project.db,
                 sql_query=project.sql_query,
@@ -465,24 +505,6 @@ class Project(ProjectPath, HasGroups):
                 job.run()
             return job
 
-        if job_name is None:
-            job_name = "exe"
-            automatically_rename = True
-        if automatically_rename:
-            job_name = (
-                job_name
-                + "_"
-                + get_hash(
-                    binary=cloudpickle.dumps(
-                        {
-                            "write_input": write_input_funct,
-                            "collect_output": collect_output_funct,
-                            "kwargs": input_dict,
-                        }
-                    )
-                )
-            )
-
         if delayed:
             return DelayedObject(
                 function=create_executable_job,
@@ -495,6 +517,7 @@ class Project(ProjectPath, HasGroups):
                 executable_internal_str=executable_str,
                 internal_file_lst=input_file_lst,
                 internal_job_name=job_name,
+                internal_auto_rename=automatically_rename,
                 internal_execute_job=True,
             )
         else:
@@ -504,6 +527,7 @@ class Project(ProjectPath, HasGroups):
                 executable_internal_str=executable_str,
                 internal_file_lst=input_file_lst,
                 internal_job_name=job_name,
+                internal_auto_rename=automatically_rename,
                 internal_execute_job=execute_job,
             )
 
