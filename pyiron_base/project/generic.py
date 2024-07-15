@@ -13,6 +13,7 @@ import shutil
 import stat
 from typing import TYPE_CHECKING, Dict, Generator, Literal, Union
 
+import cloudpickle
 import numpy as np
 import pandas
 from pyiron_snippets.deprecate import deprecate
@@ -47,7 +48,7 @@ from pyiron_base.jobs.job.jobtype import (
 from pyiron_base.jobs.job.util import _get_safe_job_name, _special_symbol_replacements
 from pyiron_base.project.archiving import export_archive, import_archive
 from pyiron_base.project.data import ProjectData
-from pyiron_base.project.delayed import DelayedObject
+from pyiron_base.project.delayed import DelayedObject, get_hash
 from pyiron_base.project.external import Notebook
 from pyiron_base.project.jobloader import JobInspector, JobLoader
 from pyiron_base.project.path import ProjectPath
@@ -441,6 +442,16 @@ class Project(ProjectPath, HasGroups):
             if job_name is None:
                 job_name = "exe"
                 automatically_rename = True
+            if automatically_rename:
+                job_name = job_name + "_" + get_hash(
+                    binary=cloudpickle.dumps(
+                        {
+                            "write_input": write_input_funct,
+                            "collect_output": collect_output_funct,
+                            "kwargs": input_internal_dict,
+                        }
+                    )
+                )
             job_id = get_job_id(
                 database=project.db,
                 sql_query=project.sql_query,
@@ -464,7 +475,6 @@ class Project(ProjectPath, HasGroups):
             if internal_file_lst is not None and len(internal_file_lst) > 0:
                 for file in internal_file_lst:
                     job.restart_file_list.append(file)
-            job._automatically_rename_on_save_using_input = automatically_rename
             if execute_job:
                 job.run()
             return job
