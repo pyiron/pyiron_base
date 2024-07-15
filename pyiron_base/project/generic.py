@@ -429,6 +429,7 @@ class Project(ProjectPath, HasGroups):
         Returns:
             pyiron_base.jobs.flex.ExecutableContainerJob: pyiron job object
         """
+
         def create_executable_job(
             project,
             input_internal_dict,
@@ -437,7 +438,6 @@ class Project(ProjectPath, HasGroups):
             internal_job_name=None,
             internal_execute_job=True,
         ):
-
             job_id = get_job_id(
                 database=project.db,
                 sql_query=project.sql_query,
@@ -470,9 +470,10 @@ class Project(ProjectPath, HasGroups):
             automatically_rename = True
         if automatically_rename:
             job_name = (
-                    job_name
-                    + "_"
-                    + get_hash(binary=cloudpickle.dumps(
+                job_name
+                + "_"
+                + get_hash(
+                    binary=cloudpickle.dumps(
                         {
                             "write_input": write_input_funct,
                             "collect_output": collect_output_funct,
