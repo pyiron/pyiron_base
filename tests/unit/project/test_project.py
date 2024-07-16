@@ -27,6 +27,14 @@ except ImportError:
     pint_not_available = True
 
 
+try:
+    import git
+
+    git_not_available = False
+except ImportError:
+    git_not_available = True
+
+
 class TestProjectData(PyironTestCase):
     @classmethod
     def setUpClass(cls):
@@ -279,6 +287,10 @@ class TestProjectOperations(TestWithFilledProject):
             pr.remove(enable=True)
             pr.state.update({"disable_database": database_disabled})
 
+    @unittest.skipIf(
+        git_not_available,
+        "gitpython is not available so the gitpython related tests are skipped.",
+    )
     def test_maintenance_get_repository_status(self):
         df = self.project.maintenance.get_repository_status()
         self.assertIn("pyiron_base", df.Module.values)
