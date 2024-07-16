@@ -6,10 +6,8 @@ import unittest
 from os.path import dirname, join, abspath, exists, islink
 import os
 import tempfile
-import pint
 import pickle
 from pyiron_base.project.generic import Project
-from pyiron_base.project.size import _size_conversion
 from pyiron_base._tests import (
     PyironTestCase,
     TestWithProject,
@@ -17,6 +15,24 @@ from pyiron_base._tests import (
     ToyJob,
 )
 from pyiron_base.jobs.job.toolkit import BaseTools
+
+
+try:
+    import pint
+
+    from pyiron_base.project.size import _size_conversion
+
+    pint_not_available = False
+except ImportError:
+    pint_not_available = True
+
+
+try:
+    import git
+
+    git_not_available = False
+except ImportError:
+    git_not_available = True
 
 
 class TestProjectData(PyironTestCase):
@@ -82,9 +98,17 @@ class TestProjectData(PyironTestCase):
 
 
 class TestProjectOperations(TestWithFilledProject):
+    @unittest.skipIf(
+        pint_not_available,
+        "pint is not installed so the pint related tests are skipped.",
+    )
     def test_size(self):
         self.assertTrue(self.project.size > 0)
 
+    @unittest.skipIf(
+        pint_not_available,
+        "pint is not installed so the pint related tests are skipped.",
+    )
     def test__size_conversion(self):
         conv_check = {
             -2000: (-1.953125, "kibibyte"),
@@ -263,6 +287,10 @@ class TestProjectOperations(TestWithFilledProject):
             pr.remove(enable=True)
             pr.state.update({"disable_database": database_disabled})
 
+    @unittest.skipIf(
+        git_not_available,
+        "gitpython is not available so the gitpython related tests are skipped.",
+    )
     def test_maintenance_get_repository_status(self):
         df = self.project.maintenance.get_repository_status()
         self.assertIn("pyiron_base", df.Module.values)
