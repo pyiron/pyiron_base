@@ -43,7 +43,7 @@ class PyironTestCase(unittest.TestCase, ABC):
     def setUp(self):
         self.addTypeEqualityFunc(np.ndarray, self._assert_equal_numpy)
 
-    def _assert_equal_numpy(self, a, b, msg=""):
+    def _assert_equal_numpy(self, a, b, msg=None):
         try:
             np.testing.assert_array_equal(a, b, err_msg=msg if msg is not None else "")
         except AssertionError as e:
