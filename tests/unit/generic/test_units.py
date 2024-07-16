@@ -17,7 +17,9 @@ except ImportError:
     pint_not_available = True
 
 
-@unittest.skipIf(pint_not_available, "pint is not available, so the pint related tests are skipped.")
+@unittest.skipIf(
+    pint_not_available, "pint is not available, so the pint related tests are skipped."
+)
 class TestUnits(PyironTestCase):
     @property
     def docstring_module(self):
