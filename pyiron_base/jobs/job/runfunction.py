@@ -1008,6 +1008,7 @@ def execute_job_with_calculate_function(job):
 
 def _generate_flux_execute_string(job, database_is_disabled):
     from jinja2 import Template
+
     if not database_is_disabled:
         executable_template = Template(
             "#!/bin/bash\n"
