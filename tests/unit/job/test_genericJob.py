@@ -16,6 +16,7 @@ try:
     import jinja2
 
     from pyiron_base.jobs.job.runfunction import _generate_flux_execute_string
+
     jinja2_not_available = False
 except ImportError:
     jinja2_not_available = True
