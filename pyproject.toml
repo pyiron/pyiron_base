@@ -1,5 +1,5 @@
 [build-system]
-requires = ["cloudpickle", "executorlib", "h5io", "h5py", "numpy", "pandas", "psutil", "pyfileindex", "pysqa", "sqlalchemy", "tables", "tqdm", "traitlets", "setuptools", "versioneer[toml]==0.29"]
+requires = ["cloudpickle", "executorlib", "h5io_browser", "h5py", "numpy", "monty", "pandas", "psutil", "pyfileindex", "pyiron_snippets", "pysqa", "sqlalchemy", "tables", "tqdm", "traitlets", "setuptools", "versioneer[toml]==0.29"]
 build-backend = "setuptools.build_meta"
 
 [project]
