@@ -725,7 +725,10 @@ class TestGenericJob(TestWithFilledProject):
         with self.assertRaises(RuntimeError):
             j2.copy()
 
-    @unittest.skipIf(jinja2_not_available, "jinja2 is not available, so the jinja2 related tests are skipped.")
+    @unittest.skipIf(
+        jinja2_not_available,
+        "jinja2 is not available, so the jinja2 related tests are skipped.",
+    )
     def test_generate_flux_execute_string(self):
         job_disable = self.project.create_job(ReturnCodeJob, "job_db_disable")
         executor_str, job_name = _generate_flux_execute_string(

@@ -37,7 +37,10 @@ class TestMaintenance(TestWithFilledProject):
         self.assertEqual(array, _test_array())
         self.assertLess(job_hdf.file_size(), self.initial_toy_1_hdf_file_size)
 
-    @unittest.skipIf(git_not_available, "gitpython is not available so the gitpython related tests are skipped.")
+    @unittest.skipIf(
+        git_not_available,
+        "gitpython is not available so the gitpython related tests are skipped.",
+    )
     def test_repository_status(self):
         df = self.project.maintenance.get_repository_status()
         self.assertIn(
