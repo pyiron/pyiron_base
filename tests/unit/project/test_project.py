@@ -90,6 +90,10 @@ class TestProjectData(PyironTestCase):
 
 
 class TestProjectOperations(TestWithFilledProject):
+    @unittest.skipIf(
+        pint_not_available,
+        "pint is not installed so the pint related tests are skipped.",
+    )
     def test_size(self):
         self.assertTrue(self.project.size > 0)
 
