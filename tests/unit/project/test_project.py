@@ -9,7 +9,6 @@ import tempfile
 import pint
 import pickle
 from pyiron_base.project.generic import Project
-from pyiron_base.project.size import _size_conversion
 from pyiron_base._tests import (
     PyironTestCase,
     TestWithProject,
@@ -17,6 +16,13 @@ from pyiron_base._tests import (
     ToyJob,
 )
 from pyiron_base.jobs.job.toolkit import BaseTools
+
+
+try:
+    from pyiron_base.project.size import _size_conversion
+    pint_not_available = False
+except ImportError:
+    pint_not_available = True
 
 
 class TestProjectData(PyironTestCase):
@@ -85,6 +91,7 @@ class TestProjectOperations(TestWithFilledProject):
     def test_size(self):
         self.assertTrue(self.project.size > 0)
 
+    @unittest.skipIf(pint_not_available, "pint is not installed so the pint related tests are skipped.")
     def test__size_conversion(self):
         conv_check = {
             -2000: (-1.953125, "kibibyte"),

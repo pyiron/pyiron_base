@@ -5,13 +5,20 @@
 import contextlib
 import unittest
 import os
-from time import sleep
 from concurrent.futures import Future, ProcessPoolExecutor
 import io
 from pyiron_base.storage.parameters import GenericParameters
 from pyiron_base.jobs.job.generic import GenericJob
 from pyiron_base.jobs.job.runfunction import _generate_flux_execute_string
 from pyiron_base._tests import TestWithFilledProject, ToyJob
+
+
+try:
+    import jinja2
+
+    jinja2_not_available = False
+except ImportError:
+    jinja2_not_available = True
 
 
 class ReturnCodeJob(GenericJob):
@@ -718,6 +725,7 @@ class TestGenericJob(TestWithFilledProject):
         with self.assertRaises(RuntimeError):
             j2.copy()
 
+    @unittest.skipIf(jinja2_not_available, "jinja2 is not available, so the jinja2 related tests are skipped.")
     def test_generate_flux_execute_string(self):
         job_disable = self.project.create_job(ReturnCodeJob, "job_db_disable")
         executor_str, job_name = _generate_flux_execute_string(
