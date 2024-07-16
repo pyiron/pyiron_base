@@ -6,7 +6,6 @@ import unittest
 from os.path import dirname, join, abspath, exists, islink
 import os
 import tempfile
-import pint
 import pickle
 from pyiron_base.project.generic import Project
 from pyiron_base._tests import (
@@ -19,6 +18,8 @@ from pyiron_base.jobs.job.toolkit import BaseTools
 
 
 try:
+    import pint
+
     from pyiron_base.project.size import _size_conversion
     pint_not_available = False
 except ImportError:
