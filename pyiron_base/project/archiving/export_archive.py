@@ -77,8 +77,8 @@ def copy_files_to_archive(
         compressed (bool): if True compress archive_directory as a tarball; default True
         copy_all_files (bool): if True include job output files in archive, otherwise just include .h5 files; default False
     """
-    if archive_directory[-7:] == ".tar.gz":
-        archive_directory = archive_directory[:-7]
+    if ".tar.gz" in archive_directory:
+        archive_directory = archive_directory.split(".tar.gz")[0]
         compressed = True
     directory_to_transfer = os.path.normpath(directory_to_transfer)
     archive_directory = os.path.normpath(archive_directory)
