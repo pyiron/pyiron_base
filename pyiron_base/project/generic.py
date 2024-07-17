@@ -1973,7 +1973,6 @@ class Project(ProjectPath, HasGroups):
     def pack(
         self,
         destination_path=None,
-        csv_file_name="export.csv",
         compress=True,
         copy_all_files=False,
     ):
@@ -1982,7 +1981,6 @@ class Project(ProjectPath, HasGroups):
 
         Args:
             destination_path (str): gives the relative path, in which the project folder is copied and compressed
-            csv_file_name (str): is the name of the csv file used to store the project table.
             compress (bool): if true, the function will compress the destination_path to a tar.gz file.
             copy_all_files (bool):
         """
