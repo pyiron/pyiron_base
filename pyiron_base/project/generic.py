@@ -13,6 +13,7 @@ import shutil
 import stat
 from typing import TYPE_CHECKING, Dict, Generator, Literal, Union
 
+import cloudpickle
 import numpy as np
 import pandas
 from pyiron_snippets.deprecate import deprecate
@@ -47,7 +48,7 @@ from pyiron_base.jobs.job.jobtype import (
 from pyiron_base.jobs.job.util import _get_safe_job_name, _special_symbol_replacements
 from pyiron_base.project.archiving import export_archive, import_archive
 from pyiron_base.project.data import ProjectData
-from pyiron_base.project.delayed import DelayedObject
+from pyiron_base.project.delayed import DelayedObject, get_hash
 from pyiron_base.project.external import Notebook
 from pyiron_base.project.jobloader import JobInspector, JobLoader
 from pyiron_base.project.path import ProjectPath
@@ -378,14 +379,15 @@ class Project(ProjectPath, HasGroups):
 
     def wrap_executable(
         self,
-        job_name,
         executable_str,
+        job_name=None,
         write_input_funct=None,
         collect_output_funct=None,
         input_dict=None,
         conda_environment_path=None,
         conda_environment_name=None,
         input_file_lst=None,
+        automatically_rename=False,
         execute_job=False,
         delayed=False,
         output_file_lst=[],
@@ -395,8 +397,8 @@ class Project(ProjectPath, HasGroups):
         Wrap any executable into a pyiron job object using the ExecutableContainerJob.
 
         Args:
-            job_name (str): name of the new job object
             executable_str (str): call to an external executable
+            job_name (str): name of the new job object
             write_input_funct (callable): The write input function write_input(input_dict, working_directory)
             collect_output_funct (callable): The collect output function collect_output(working_directory)
             input_dict (dict): Default input for the newly created job class
@@ -404,6 +406,12 @@ class Project(ProjectPath, HasGroups):
             conda_environment_name (str): name of the conda environment
             input_file_lst (list): list of files to be copied to the working directory before executing it\
             execute_job (boolean): automatically call run() on the job object - default false
+            automatically_rename (bool): Whether to automatically rename the job at
+                save-time to append a string based on the input values. (Default is
+                False.)
+            delayed (bool): delayed execution
+            output_file_lst (list):
+            output_key_lst (list):
 
         Example:
 
@@ -433,19 +441,62 @@ class Project(ProjectPath, HasGroups):
             pyiron_base.jobs.flex.ExecutableContainerJob: pyiron job object
         """
 
-        def create_exeuctable_job(
+        def generate_job_hash(
             project,
             input_internal_dict,
             executable_internal_str,
             internal_file_lst,
-            execute_job=True,
+            internal_job_name=None,
         ):
+            job = create_job_factory(
+                write_input_funct=write_input_funct,
+                collect_output_funct=collect_output_funct,
+                default_input_dict=input_internal_dict,
+                executable_str=executable_internal_str,
+            )(project=project, job_name=internal_job_name)
+            if internal_file_lst is not None and len(internal_file_lst) > 0:
+                for file in internal_file_lst:
+                    job.restart_file_list.append(file)
+            return (
+                internal_job_name
+                + "_"
+                + get_hash(
+                    binary=cloudpickle.dumps(
+                        {
+                            "write_input": write_input_funct,
+                            "collect_output": collect_output_funct,
+                            "kwargs": job.calculate_kwargs,
+                        }
+                    )
+                )
+            )
+
+        def create_executable_job(
+            project,
+            input_internal_dict,
+            executable_internal_str,
+            internal_file_lst,
+            internal_job_name=None,
+            internal_execute_job=True,
+            internal_auto_rename=False,
+        ):
+            if internal_job_name is None:
+                internal_job_name = "exe"
+                internal_auto_rename = True
+            if internal_auto_rename:
+                internal_job_name = generate_job_hash(
+                    project=project,
+                    input_internal_dict=input_internal_dict,
+                    executable_internal_str=executable_internal_str,
+                    internal_file_lst=internal_file_lst,
+                    internal_job_name=internal_job_name,
+                )
             job_id = get_job_id(
                 database=project.db,
                 sql_query=project.sql_query,
                 user=project.user,
                 project_path=project.project_path,
-                job_specifier=job_name,
+                job_specifier=internal_job_name,
             )
             if job_id is None:
                 job = create_job_factory(
@@ -453,9 +504,9 @@ class Project(ProjectPath, HasGroups):
                     collect_output_funct=collect_output_funct,
                     default_input_dict=input_internal_dict,
                     executable_str=executable_internal_str,
-                )(project=project, job_name=job_name)
+                )(project=project, job_name=internal_job_name)
             else:
-                return project.load(job_specifier=job_name)
+                return project.load(job_specifier=job_id)
             if conda_environment_path is not None:
                 job.server.conda_environment_path = conda_environment_path
             elif conda_environment_name is not None:
@@ -463,13 +514,13 @@ class Project(ProjectPath, HasGroups):
             if internal_file_lst is not None and len(internal_file_lst) > 0:
                 for file in internal_file_lst:
                     job.restart_file_list.append(file)
-            if execute_job:
+            if internal_execute_job:
                 job.run()
             return job
 
         if delayed:
             return DelayedObject(
-                function=create_exeuctable_job,
+                function=create_executable_job,
                 output_key=None,
                 output_file=None,
                 output_file_lst=[f.replace(".", "_") for f in output_file_lst],
@@ -478,15 +529,19 @@ class Project(ProjectPath, HasGroups):
                 input_internal_dict=input_dict,
                 executable_internal_str=executable_str,
                 internal_file_lst=input_file_lst,
-                execute_job=True,
+                internal_job_name=job_name,
+                internal_auto_rename=automatically_rename,
+                internal_execute_job=True,
             )
         else:
-            return create_exeuctable_job(
+            return create_executable_job(
                 project=self,
                 input_internal_dict=input_dict,
                 executable_internal_str=executable_str,
                 internal_file_lst=input_file_lst,
-                execute_job=execute_job,
+                internal_job_name=job_name,
+                internal_auto_rename=automatically_rename,
+                internal_execute_job=execute_job,
             )
 
     def create_job(self, job_type, job_name, delete_existing_job=False):

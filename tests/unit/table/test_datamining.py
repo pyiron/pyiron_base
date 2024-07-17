@@ -10,7 +10,7 @@ from pyiron_base._tests import TestWithProject, ToyJob
 
 
 try:
-    import pympipool
+    import executorlib
 
     skip_parallel_test = False
 except ImportError:
@@ -73,7 +73,7 @@ class TestProjectData(TestWithProject):
 
 @unittest.skipIf(
     skip_parallel_test,
-    "pympipool is not installed, so the pympipool based tests are skipped.",
+    "executorlib is not installed, so the executorlib based tests are skipped.",
 )
 class TestProjectDataParallel(TestWithProject):
     @classmethod
