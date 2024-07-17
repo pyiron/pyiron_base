@@ -939,11 +939,14 @@ class TestFlattenedStorage(TestWithProject):
         arrays = store.list_arrays(only_user=True)
         try:
             dfc = store.to_pandas()
-        except:
+        except ValueError as err:
             # Regression test
-            self.fail(
-                "to_pandas must not fail when multidimensional arrays are present!"
-            )
+            if err.args[0] == "Per-column arrays must each be 1-dimensional":
+                self.fail(
+                    "to_pandas must not fail when multidimensional arrays are present!"
+                )
+            else:
+                raise
         self.assertEqual(
             np.stack(dfc["chunk_array"]),
             store["chunk_array"],
@@ -965,11 +968,14 @@ class TestFlattenedStorage(TestWithProject):
 
         try:
             dfe = store.to_pandas(explode=True)
-        except:
+        except ValueError as err:
             # Regression test
-            self.fail(
-                "to_pandas must not fail when multidimensional arrays are present!"
-            )
+            if err.args[0] == "Per-column arrays must each be 1-dimensional":
+                self.fail(
+                    "to_pandas must not fail when multidimensional arrays are present!"
+                )
+            else:
+                raise
         self.assertEqual(
             np.stack(dfe["elem_array"]),
             store["elem_array"],
