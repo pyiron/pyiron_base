@@ -83,7 +83,7 @@ def copy_files_to_archive(
     archive_directory = os.path.normpath(archive_directory)
 
     tempdir = export_files(
-        directory_to_transfer, compressed, copy_all_files=copy_all_files
+        directory_to_transfer, copy_all_files=copy_all_files
     )
     df = export_database(project, directory_to_transfer, archive_directory)
     csv_file_name = os.path.join(tempdir.name, "export.csv")
