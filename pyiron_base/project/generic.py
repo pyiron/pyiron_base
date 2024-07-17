@@ -8,6 +8,7 @@ The project object is the central import point of pyiron - all other objects can
 from __future__ import annotations
 
 import os
+from pathlib import Path
 import posixpath
 import shutil
 import stat
@@ -1985,7 +1986,7 @@ class Project(ProjectPath, HasGroups):
             compress (bool): if true, the function will compress the destination_path to a tar.gz file.
             copy_all_files (bool):
         """
-        directory_to_transfer = os.path.basename(self.path[:-1])
+        directory_to_transfer = Path(self.path).name
         if destination_path is None:
             destination_path = directory_to_transfer
         destination_path_abs = os.path.abspath(destination_path)
