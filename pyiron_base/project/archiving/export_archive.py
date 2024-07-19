@@ -1,9 +1,9 @@
 import os
 import tarfile
+import tempfile
 from shutil import copyfile, copytree, rmtree
 
 import numpy as np
-import tempfile
 from pyfileindex import PyFileIndex
 
 from pyiron_base.project.archiving.shared import getdir
@@ -85,9 +85,7 @@ def copy_files_to_archive(
     directory_to_transfer = os.path.normpath(directory_to_transfer)
     archive_directory = os.path.normpath(archive_directory)
 
-    tempdir = export_files(
-        directory_to_transfer, copy_all_files=copy_all_files
-    )
+    tempdir = export_files(directory_to_transfer, copy_all_files=copy_all_files)
     df = export_database(project, directory_to_transfer, archive_directory)
     df.to_csv(os.path.join(tempdir.name, "export.csv"))
 

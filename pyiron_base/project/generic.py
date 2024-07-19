@@ -8,10 +8,10 @@ The project object is the central import point of pyiron - all other objects can
 from __future__ import annotations
 
 import os
-from pathlib import Path
 import posixpath
 import shutil
 import stat
+from pathlib import Path
 from typing import TYPE_CHECKING, Dict, Generator, Literal, Union
 
 import cloudpickle
