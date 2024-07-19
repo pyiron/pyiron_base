@@ -87,8 +87,7 @@ def copy_files_to_archive(
         directory_to_transfer, copy_all_files=copy_all_files
     )
     df = export_database(project, directory_to_transfer, archive_directory)
-    csv_file_name = os.path.join(tempdir.name, "export.csv")
-    df.to_csv(csv_file_name)
+    df.to_csv(os.path.join(tempdir.name, "export.csv"))
 
     if compressed:
         archived_file = compress_dir(directory_to_transfer, tempdir.name)
