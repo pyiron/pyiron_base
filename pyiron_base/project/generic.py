@@ -1977,8 +1977,7 @@ class Project(ProjectPath, HasGroups):
         destination_path_abs = os.path.abspath(destination_path)
         if ".tar.gz" in destination_path_abs:
             destination_path_abs = destination_path_abs.split(".tar.gz")[0]
-            if not compressed:
-                compressed = True
+            compress = True
         directory_to_transfer = os.path.dirname(self.path)
         csv_file_path = os.path.join(
             os.path.dirname(destination_path_abs), csv_file_name
