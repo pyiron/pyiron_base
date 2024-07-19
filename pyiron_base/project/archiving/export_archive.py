@@ -75,10 +75,6 @@ def copy_files_to_archive(
         compressed (bool): if True compress archive_directory as a tarball; default True
         copy_all_files (bool): if True include job output files in archive, otherwise just include .h5 files; default False
     """
-    if archive_directory[-7:] == ".tar.gz":
-        archive_directory = archive_directory[:-7]
-        if not compressed:
-            compressed = True
 
     # print("directory to transfer: "+directory_to_transfer)
     if not copy_all_files:
@@ -111,29 +107,10 @@ def copy_files_to_archive(
         compress_dir(archive_directory)
 
 
-def export_database(project_instance, directory_to_transfer, archive_directory):
+def export_database(pr, directory_to_transfer, archive_directory):
     # here we first check wether the archive directory is a path
     # or a project object
-    if isinstance(archive_directory, str):
-        if archive_directory[-7:] == ".tar.gz":
-            archive_directory = archive_directory[:-7]
-        archive_directory = os.path.basename(archive_directory)
-    # if the archive_directory is a project
-    elif static_isinstance(
-        obj=archive_directory.__class__,
-        obj_type=[
-            "pyiron_base.project.generic.Project",
-        ],
-    ):
-        archive_directory = archive_directory.path
-    else:
-        raise RuntimeError(
-            """the given path for exporting to,
-            does not have the correct format paths as string
-            or pyiron Project objects are expected"""
-        )
     directory_to_transfer = os.path.basename(directory_to_transfer)
-    pr = project_instance.open(os.curdir)
     df = pr.job_table()
     job_ids_sorted = sorted(df.id.values)
     new_job_ids = list(range(len(job_ids_sorted)))
@@ -151,7 +128,7 @@ def export_database(project_instance, directory_to_transfer, archive_directory):
         for job_id in df.parentid
     ]
     df["project"] = update_project(
-        project_instance,
+        pr,
         directory_to_transfer=directory_to_transfer,
         archive_directory=archive_directory,
         df=df,
