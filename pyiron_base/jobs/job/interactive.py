@@ -280,7 +280,9 @@ class InteractiveBase(GenericJob):
                     else:
                         self._extend_hdf(h5=h5, path=path, key=key, data=np.array(data))
                 except ValueError:
-                    self._extend_hdf(h5=h5, path=path, key=key, data=np.array(data, dtype="object"))
+                    self._extend_hdf(
+                        h5=h5, path=path, key=key, data=np.array(data, dtype="object")
+                    )
                 self.interactive_cache[key] = []
 
     def interactive_open(self):
