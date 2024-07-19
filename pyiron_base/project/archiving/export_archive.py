@@ -76,7 +76,7 @@ def copy_files_to_archive(
         copy_all_files (bool): if True include job output files in archive, otherwise just include .h5 files; default False
     """
 
-    assert ".tar.gz" not in archive_directory
+    assert isinstance(archive_directory, str) and ".tar.gz" not in archive_directory
     # print("directory to transfer: "+directory_to_transfer)
     if not copy_all_files:
         pfi = PyFileIndex(path=directory_to_transfer, filter_function=filter_function)
@@ -111,7 +111,7 @@ def copy_files_to_archive(
 def export_database(pr, directory_to_transfer, archive_directory):
     # here we first check wether the archive directory is a path
     # or a project object
-    assert ".tar.gz" not in archive_directory
+    assert isinstance(archive_directory, str) and ".tar.gz" not in archive_directory
     directory_to_transfer = os.path.basename(directory_to_transfer)
     df = pr.job_table()
     job_ids_sorted = sorted(df.id.values)
