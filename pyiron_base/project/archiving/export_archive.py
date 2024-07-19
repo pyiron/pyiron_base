@@ -1,6 +1,7 @@
 import os
 import tarfile
 from shutil import copyfile, rmtree
+import tempfile
 
 import numpy as np
 from pyfileindex import PyFileIndex
