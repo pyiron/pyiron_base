@@ -46,7 +46,7 @@ class TestPack(PyironTestCase):
         df_read["timestart"] = pd.to_datetime(df_read["timestart"])
         df_read["hamversion"] = float(df_read["hamversion"])
         df_exp = export_database(
-            self.pr.job_table(), directory_to_transfer, "archive_folder"
+            self.pr, directory_to_transfer, "archive_folder"
         ).dropna(axis=1)
         df_exp["hamversion"] = float(df_exp["hamversion"])
         assert_frame_equal(df_exp, df_read)

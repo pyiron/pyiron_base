@@ -107,10 +107,11 @@ def copy_files_to_archive(
         compress_dir(archive_directory)
 
 
-def export_database(df, directory_to_transfer, archive_directory):
+def export_database(pr, directory_to_transfer, archive_directory):
     # here we first check wether the archive directory is a path
     # or a project object
     directory_to_transfer = os.path.basename(directory_to_transfer)
+    df = pr.job_table()
     job_ids_sorted = sorted(df.id.values)
     new_job_ids = list(range(len(job_ids_sorted)))
     job_translate_dict = {j: n for j, n in zip(job_ids_sorted, new_job_ids)}
@@ -127,7 +128,7 @@ def export_database(df, directory_to_transfer, archive_directory):
         for job_id in df.parentid
     ]
     df["project"] = update_project(
-        project_instance,
+        pr,
         directory_to_transfer=directory_to_transfer,
         archive_directory=archive_directory,
         df=df,
