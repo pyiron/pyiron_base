@@ -1994,7 +1994,7 @@ class Project(ProjectPath, HasGroups):
             copy_all_files=copy_all_files,
         )
         df = export_archive.export_database(
-            self.job_table(), directory_to_transfer, destination_path_abs
+            self, directory_to_transfer, destination_path_abs
         )
         df.to_csv(csv_file_path)
 
