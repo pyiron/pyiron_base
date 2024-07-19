@@ -76,7 +76,7 @@ def copy_files_to_archive(
         copy_all_files (bool): if True include job output files in archive, otherwise just include .h5 files; default False
     """
 
-    assert ".tar.gz" not archive_directory
+    assert ".tar.gz" not in archive_directory
     # print("directory to transfer: "+directory_to_transfer)
     if not copy_all_files:
         pfi = PyFileIndex(path=directory_to_transfer, filter_function=filter_function)
