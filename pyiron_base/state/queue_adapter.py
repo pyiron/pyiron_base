@@ -46,13 +46,13 @@ class QueueAdapters(metaclass=Singleton):
 
     def construct_adapters(self) -> None:
         """Read through the resources and construct queue adapters for all the queue configuration files found."""
-        queue_files = ResourceResolver(
+        queue_folders = set(map(os.path.dirname, ResourceResolver(
             settings.resource_paths,
             "queues",
-        ).search(["queue.yaml", "clusters.yaml"])
+        ).search(["queue.yaml", "clusters.yaml"])))
         self._adapters = [
-            PySQAAdpter(directory=os.path.dirname(queue_file))
-            for queue_file in queue_files
+            PySQAAdpter(directory=queue_folder)
+            for queue_folder in queue_folders
         ]
 
     @property
