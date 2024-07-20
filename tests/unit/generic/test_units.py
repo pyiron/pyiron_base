@@ -1,16 +1,25 @@
 # coding: utf-8
 # Copyright (c) Max-Planck-Institut für Eisenforschung GmbH - Computational Materials Design (CM) Department
 # Distributed under the terms of "New BSD License", see the LICENSE file.
+import unittest
 
 import numpy as np
 from pyiron_base._tests import PyironTestCase
 import pyiron_base
-from pyiron_base.utils.units import PyironUnitRegistry, UnitConverter
-import pint
 
-pint_registry = pint.UnitRegistry()
+try:
+    import pint
+    from pyiron_base.utils.units import PyironUnitRegistry, UnitConverter
+
+    pint_registry = pint.UnitRegistry()
+    pint_not_available = False
+except ImportError:
+    pint_not_available = True
 
 
+@unittest.skipIf(
+    pint_not_available, "pint is not available, so the pint related tests are skipped."
+)
 class TestUnits(PyironTestCase):
     @property
     def docstring_module(self):

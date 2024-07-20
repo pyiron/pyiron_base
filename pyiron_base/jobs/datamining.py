@@ -255,7 +255,7 @@ class PyironTable:
             The executor, if given, must not naively pickle the mapped functions or
             arguments, as PyironTable relies on lambda functions internally.  Use
             with executors that rely on dill or cloudpickle instead.  Pyiron
-            provides such executors in the `pympipool` sub packages.
+            provides such executors in the `executorlib` sub packages.
 
         Args:
             file (FileHDFio): HDF were the previous state of the table is stored
@@ -785,7 +785,7 @@ class TableJob(GenericJob):
             self.project.db.item_update({"timestart": datetime.now()}, self.job_id)
         with self.project_hdf5.open("input") as hdf5_input:
             if self._executor_type is None and self.server.cores > 1:
-                self._executor_type = "pympipool.Executor"
+                self._executor_type = "executorlib.Executor"
             if self._executor_type is not None:
                 with self._get_executor(max_workers=self.server.cores) as exe:
                     self._pyiron_table.create_table(
