@@ -130,7 +130,7 @@ def export_database(pr, directory_to_transfer, archive_directory):
         for job_id in df.parentid
     ]
     df["project"] = update_project(
-        pr,
+        project_instance=pr,
         directory_to_transfer=directory_to_transfer,
         archive_directory=archive_directory,
         df=df,
