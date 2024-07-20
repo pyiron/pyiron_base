@@ -57,7 +57,7 @@ class TestQueueAdapters(TestCase):
 
     def test_construction(self):
         self.assertEqual(
-            2,
+            3,
             len(queue_adapters._adapters),
             msg="The zeroth resource does not have yaml files and should not produce a queue",
         )
