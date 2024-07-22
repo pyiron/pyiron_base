@@ -10,6 +10,7 @@ multiple adapters.
 
 import os
 
+from pyiron_snippets.resources import ResourceResolver
 from pyiron_snippets.singleton import Singleton
 from pysqa import QueueAdapter as PySQAAdpter
 
@@ -45,20 +46,18 @@ class QueueAdapters(metaclass=Singleton):
 
     def construct_adapters(self) -> None:
         """Read through the resources and construct queue adapters for all the queue configuration files found."""
-        self._adapters = []
-        for resource_path in settings.configuration["resource_paths"]:
-            if (
-                os.path.exists(resource_path)
-                and "queues" in os.listdir(resource_path)
-                and (
-                    "queue.yaml" in os.listdir(os.path.join(resource_path, "queues"))
-                    or "clusters.yaml"
-                    in os.listdir(os.path.join(resource_path, "queues"))
-                )
-            ):
-                self._adapters.append(
-                    PySQAAdpter(directory=os.path.join(resource_path, "queues"))
-                )
+        queue_folders = set(
+            map(
+                os.path.dirname,
+                ResourceResolver(
+                    settings.resource_paths,
+                    "queues",
+                ).search(["queue.yaml", "clusters.yaml"]),
+            )
+        )
+        self._adapters = [
+            PySQAAdpter(directory=queue_folder) for queue_folder in queue_folders
+        ]
 
     @property
     def adapter(self) -> PySQAAdpter:

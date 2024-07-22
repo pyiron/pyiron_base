@@ -59,6 +59,7 @@ def compress_dir(directory_to_transfer, archive_directory):
     arch_comp_name = archive_directory + ".tar.gz"
     with tarfile.open(arch_comp_name, "w:gz") as tar:
         tar.add(archive_directory, arcname=os.path.basename(directory_to_transfer))
+        # tar.add(os.path.relpath(archive_directory, os.getcwd()))
     rmtree(archive_directory)
     return arch_comp_name
 
@@ -79,9 +80,7 @@ def copy_files_to_archive(
         compressed (bool): if True compress archive_directory as a tarball; default True
         copy_all_files (bool): if True include job output files in archive, otherwise just include .h5 files; default False
     """
-    if ".tar.gz" in archive_directory:
-        archive_directory = archive_directory.split(".tar.gz")[0]
-        compressed = True
+    assert isinstance(archive_directory, str) and ".tar.gz" not in archive_directory
     directory_to_transfer = os.path.normpath(directory_to_transfer)
     archive_directory = os.path.normpath(archive_directory)
 
@@ -140,9 +139,8 @@ def export_files(directory_to_transfer, copy_all_files=False):
 def export_database(pr, directory_to_transfer, archive_directory):
     # here we first check wether the archive directory is a path
     # or a project object
-
+    assert isinstance(archive_directory, str) and ".tar.gz" not in archive_directory
     directory_to_transfer = os.path.basename(directory_to_transfer)
-
     df = pr.job_table()
     job_ids_sorted = sorted(df.id.values)
     new_job_ids = list(range(len(job_ids_sorted)))

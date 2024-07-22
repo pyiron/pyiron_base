@@ -268,16 +268,21 @@ class InteractiveBase(GenericJob):
                     step=self.interactive_write_frequency,
                     include_last=include_last_step,
                 )
-                if (
-                    len(data) > 0
-                    and isinstance(data[0], list)
-                    and len(np.shape(data)) == 1
-                ):
-                    self._extend_hdf(h5=h5, path=path, key=key, data=data)
-                elif np.array(data).dtype == np.dtype("O"):
-                    self._extend_hdf(h5=h5, path=path, key=key, data=data)
-                else:
-                    self._extend_hdf(h5=h5, path=path, key=key, data=np.array(data))
+                try:
+                    if (
+                        len(data) > 0
+                        and isinstance(data[0], list)
+                        and len(np.shape(data)) == 1
+                    ):
+                        self._extend_hdf(h5=h5, path=path, key=key, data=data)
+                    elif np.array(data).dtype == np.dtype("O"):
+                        self._extend_hdf(h5=h5, path=path, key=key, data=data)
+                    else:
+                        self._extend_hdf(h5=h5, path=path, key=key, data=np.array(data))
+                except ValueError:
+                    self._extend_hdf(
+                        h5=h5, path=path, key=key, data=np.array(data, dtype="object")
+                    )
                 self.interactive_cache[key] = []
 
     def interactive_open(self):

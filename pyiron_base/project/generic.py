@@ -1977,6 +1977,9 @@ class Project(ProjectPath, HasGroups):
         if destination_path is None:
             destination_path = directory_to_transfer
         destination_path_abs = os.path.abspath(destination_path)
+        if ".tar.gz" in destination_path_abs:
+            destination_path_abs = destination_path_abs.split(".tar.gz")[0]
+            compress = True
         export_archive.copy_files_to_archive(
             self,
             directory_to_transfer,

@@ -928,9 +928,30 @@ class TestFlattenedStorage(TestWithProject):
             even_sum=self.even_sum,
             odd_sum=self.odd_sum,
         )
+        store.add_array("elem_array", shape=(2,), dtype=int, per="element")
+        store.add_array("chunk_array", shape=(3,), dtype=int, per="chunk")
+        for i in range(len(store)):
+            store.set_array(
+                "elem_array", i, np.array([[i, 2 * i]] * store["length", i])
+            )
+            store.set_array("chunk_array", i, np.array([i, 2 * i, 3 * i]))
 
         arrays = store.list_arrays(only_user=True)
-        dfc = store.to_pandas()
+        try:
+            dfc = store.to_pandas()
+        except ValueError as err:
+            # Regression test
+            if err.args[0] == "Per-column arrays must each be 1-dimensional":
+                self.fail(
+                    "to_pandas must not fail when multidimensional arrays are present!"
+                )
+            else:
+                raise
+        self.assertEqual(
+            np.stack(dfc["chunk_array"]),
+            store["chunk_array"],
+            msg="to_pandas of multidimensional array not correct!",
+        )
         self.assertEqual(
             sorted(arrays), sorted(dfc.columns), "Not all columns present in dataframe!"
         )
@@ -945,8 +966,24 @@ class TestFlattenedStorage(TestWithProject):
                         f"Element {i} in dataframe not equal to original: {elem_df}!={elem_st}!",
                     )
 
-        dfe = store.to_pandas(explode=True)
+        try:
+            dfe = store.to_pandas(explode=True)
+        except ValueError as err:
+            # Regression test
+            if err.args[0] == "Per-column arrays must each be 1-dimensional":
+                self.fail(
+                    "to_pandas must not fail when multidimensional arrays are present!"
+                )
+            else:
+                raise
+        self.assertEqual(
+            np.stack(dfe["elem_array"]),
+            store["elem_array"],
+            msg="to_pandas of multidimensional array not correct!",
+        )
         for a in arrays:
+            if store.has_array(a)["shape"] != ():
+                continue
             with self.subTest(array=a):
                 if a == "identifier":
                     self.assertEqual(
