@@ -63,13 +63,16 @@ def copy_files_to_archive(
     if copy_all_files:
         copytree(directory_to_transfer, dst, dirs_exist_ok=True)
     else:
-        copytree(directory_to_transfer, dst, ignore=ignore_non_h5_files, dirs_exist_ok=True)
+        copytree(
+            directory_to_transfer, dst, ignore=ignore_non_h5_files, dirs_exist_ok=True
+        )
     if compressed:
         compress_dir(archive_directory)
 
 
 def ignore_non_h5_files(dir, files):
     return [f for f in files if not f.endswith(".h5")]
+
 
 def export_database(pr, directory_to_transfer, archive_directory):
     # here we first check wether the archive directory is a path
