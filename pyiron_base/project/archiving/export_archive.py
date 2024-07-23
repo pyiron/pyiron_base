@@ -84,8 +84,7 @@ def copy_files_to_archive(
 
 
 def ignore_non_h5_files(dir, files):
-    return [f for f in files if not f.endswith('.h5')]
-
+    return [f for f in files if not f.endswith(".h5")]
 
 
 def export_database(pr, directory_to_transfer, archive_directory):
