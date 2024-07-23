@@ -1,6 +1,6 @@
 import os
 import tarfile
-from shutil import copyfile, rmtree, copytree
+from shutil import copyfile, copytree
 import tempfile
 
 import numpy as np
@@ -52,11 +52,11 @@ def generate_list_of_directories(df_files, directory_to_transfer, archive_direct
     ]
 
 
-def compress_dir(archive_directory):
-    arch_comp_name = archive_directory + ".tar.gz"
+def compress_dir(archive_directory, arch_comp_name, base_name):
+    if ".tar.gz" not in arch_comp_name:
+        arch_comp_name += ".tar.gz"
     with tarfile.open(arch_comp_name, "w:gz") as tar:
-        tar.add(os.path.relpath(archive_directory, os.getcwd()))
-    rmtree(archive_directory)
+        tar.add(archive_directory, arcname=base_name)
     return arch_comp_name
 
 
