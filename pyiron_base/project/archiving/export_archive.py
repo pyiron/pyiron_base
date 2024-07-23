@@ -78,7 +78,7 @@ def copy_files_to_archive(
     if copy_all_files:
         copytree(directory_to_transfer, dst)
     else:
-        copytree(directory_to_transfer, dst, ignore=ignore_unlisted_files)
+        copytree(directory_to_transfer, dst, ignore=ignore_non_h5_files)
     if compressed:
         compress_dir(archive_directory)
 
