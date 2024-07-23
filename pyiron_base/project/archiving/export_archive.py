@@ -82,8 +82,6 @@ def copy_files_to_archive(
     """
 
     assert isinstance(archive_directory, str) and ".tar.gz" not in archive_directory
-    directory_to_transfer = os.path.normpath(directory_to_transfer)
-    archive_directory = os.path.normpath(archive_directory)
 
     with tempfile.TemporaryDirectory() as tempdir:
         df_files = get_all_files_to_transfer(directory_to_transfer, copy_all_files=False)
@@ -107,9 +105,8 @@ def copy_files_to_archive(
                     os.path.relpath(f, directory_to_transfer),
                 ),
             )
-
-    if compressed:
-        compress_dir(archive_directory)
+        if compressed:
+            compress_dir(archive_directory)
 
 
 def export_database(pr, directory_to_transfer, archive_directory):
