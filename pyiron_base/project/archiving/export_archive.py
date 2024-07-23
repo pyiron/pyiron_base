@@ -90,7 +90,6 @@ def copy_files_to_archive(
             directory_to_transfer=directory_to_transfer,
             archive_directory=tempdir.name,
         )
-        # print(dir_lst)
         for d in dir_lst:
             os.makedirs(d, exist_ok=True)
         # Copy files
