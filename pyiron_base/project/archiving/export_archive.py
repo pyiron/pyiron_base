@@ -61,9 +61,9 @@ def copy_files_to_archive(
     # print("directory to transfer: "+directory_to_transfer)
     dst = os.path.join(archive_directory, getdir(path=directory_to_transfer))
     if copy_all_files:
-        copytree(directory_to_transfer, dst)
+        copytree(directory_to_transfer, dst, dirs_exist_ok=True)
     else:
-        copytree(directory_to_transfer, dst, ignore=ignore_non_h5_files)
+        copytree(directory_to_transfer, dst, ignore=ignore_non_h5_files, dirs_exist_ok=True)
     if compressed:
         compress_dir(archive_directory)
 
