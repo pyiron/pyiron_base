@@ -36,21 +36,6 @@ def update_project(project_instance, directory_to_transfer, archive_directory, d
     ]
 
 
-def generate_list_of_directories(df_files, directory_to_transfer, archive_directory):
-    path_rel_lst = [
-        os.path.relpath(d, directory_to_transfer) for d in df_files.dirname.unique()
-    ]
-    dir_name_transfer = getdir(path=directory_to_transfer)
-    return [
-        (
-            os.path.join(archive_directory, dir_name_transfer, p)
-            if p != "."
-            else os.path.join(archive_directory, dir_name_transfer)
-        )
-        for p in path_rel_lst
-    ]
-
-
 def compress_dir(archive_directory):
     arch_comp_name = archive_directory + ".tar.gz"
     with tarfile.open(arch_comp_name, "w:gz") as tar:
