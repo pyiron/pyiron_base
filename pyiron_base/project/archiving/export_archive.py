@@ -1,6 +1,6 @@
 import os
 import tarfile
-from shutil import copyfile, rmtree
+from shutil import copyfile, rmtree, copytree
 import tempfile
 
 import numpy as np
