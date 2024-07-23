@@ -78,11 +78,14 @@ def copy_files_to_archive(
     """
 
     assert isinstance(archive_directory, str) and ".tar.gz" not in archive_directory
-    # print("directory to transfer: "+directory_to_transfer)
+    directory_to_transfer = os.path.normpath(directory_to_transfer)
+    archive_directory = os.path.normpath(archive_directory)
+
     if not copy_all_files:
         pfi = PyFileIndex(path=directory_to_transfer, filter_function=filter_function)
     else:
         pfi = PyFileIndex(path=directory_to_transfer)
+
     df_files = pfi.dataframe[~pfi.dataframe.is_directory]
     tempdir = tempfile.TemporaryDirectory()
 
