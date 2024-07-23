@@ -73,12 +73,18 @@ def copy_files_to_archive(
         if copy_all_files:
             copytree(directory_to_transfer, dst, dirs_exist_ok=True)
         else:
-            copytree(directory_to_transfer, dst, ignore=ignore_non_h5_files, dirs_exist_ok=True)
+            copytree(
+                directory_to_transfer,
+                dst,
+                ignore=ignore_non_h5_files, dirs_exist_ok=True
+            )
         if compress:
             compress_dir(archive_directory, base_name, tempdir)
         else:
             if os.path.exists(archive_directory):
-                raise ValueError("Folder exists, give different name or allow compression")
+                raise ValueError(
+                    "Folder exists, give different name or allow compression"
+                )
             copytree(tempdir, archive_directory, dirs_exist_ok=True)
 
 
