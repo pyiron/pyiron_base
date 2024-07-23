@@ -1,6 +1,6 @@
 import os
 import tarfile
-from shutil import copyfile, rmtree
+from shutil import copytree, rmtree
 
 import numpy as np
 from pyfileindex import PyFileIndex
@@ -34,10 +34,6 @@ def update_project(project_instance, directory_to_transfer, archive_directory, d
         )
         for p in path_rel_lst
     ]
-
-
-def filter_function(file_name):
-    return ".h5" in file_name
 
 
 def generate_list_of_directories(df_files, directory_to_transfer, archive_directory):
@@ -78,34 +74,18 @@ def copy_files_to_archive(
 
     assert isinstance(archive_directory, str) and ".tar.gz" not in archive_directory
     # print("directory to transfer: "+directory_to_transfer)
-    if not copy_all_files:
-        pfi = PyFileIndex(path=directory_to_transfer, filter_function=filter_function)
+    dst = os.path.join(archive_directory, getdir(path=directory_to_transfer))
+    if copy_all_files:
+        copytree(directory_to_transfer, dst)
     else:
-        pfi = PyFileIndex(path=directory_to_transfer)
-    df_files = pfi.dataframe[~pfi.dataframe.is_directory]
-
-    # Create directories
-    dir_lst = generate_list_of_directories(
-        df_files=df_files,
-        directory_to_transfer=directory_to_transfer,
-        archive_directory=archive_directory,
-    )
-    # print(dir_lst)
-    for d in dir_lst:
-        os.makedirs(d, exist_ok=True)
-    # Copy files
-    dir_name_transfer = getdir(path=directory_to_transfer)
-    for f in df_files.path.values:
-        copyfile(
-            f,
-            os.path.join(
-                archive_directory,
-                dir_name_transfer,
-                os.path.relpath(f, directory_to_transfer),
-            ),
-        )
+        copytree(directory_to_transfer, dst, ignore=ignore_unlisted_files)
     if compressed:
         compress_dir(archive_directory)
+
+
+def ignore_non_h5_files(dir, files):
+    return [f for f in files if not f.endswith('.h5')]
+
 
 
 def export_database(pr, directory_to_transfer, archive_directory):
