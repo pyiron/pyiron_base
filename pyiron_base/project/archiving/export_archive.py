@@ -37,8 +37,9 @@ def update_project(project_instance, directory_to_transfer, archive_directory, d
 
 
 
-def compress_dir(archive_directory):
-    arch_comp_name = archive_directory + ".tar.gz"
+def compress_dir(arch_comp_name, base_name, directory_to_compress):
+    if not arch_comp_name.endswith(".tar.gz"):
+        arch_comp_name += ".tar.gz"
     with tarfile.open(arch_comp_name, "w:gz") as tar:
         tar.add(archive_directory, arcname=base_name)
     return arch_comp_name
@@ -67,13 +68,16 @@ def copy_files_to_archive(
 
     assert isinstance(archive_directory, str) and ".tar.gz" not in archive_directory
     with tempfile.TemporaryDirectory() as tempdir:
-        dst = os.path.join(tempdir.name, getdir(path=directory_to_transfer))
+        base_name = getdir(path=directory_to_transfer)
+        dst = os.path.join(tempdir.name, base_name)
         if copy_all_files:
             copytree(directory_to_transfer, dst, dirs_exist_ok=True)
         else:
             copytree(directory_to_transfer, dst, ignore=ignore_non_h5_files, dirs_exist_ok=True)
-        if compressed:
-            compress_dir(archive_directory)
+        if compress:
+            compress_dir(archive_directory, base_name, tmpdir.name)
+        else:
+            copytree(tempdir.name, archive_directory)
 
 
 def ignore_non_h5_files(dir, files):
