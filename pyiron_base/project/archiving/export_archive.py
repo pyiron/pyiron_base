@@ -7,7 +7,6 @@ import numpy as np
 from pyfileindex import PyFileIndex
 
 from pyiron_base.project.archiving.shared import getdir
-from pyiron_base.utils.instance import static_isinstance
 
 
 def new_job_id(job_id, job_translate_dict):
@@ -69,7 +68,7 @@ def get_all_files_to_transfer(directory_to_transfer, copy_all_files=False):
 
 
 def copy_files_to_archive(
-    directory_to_transfer, archive_directory, compressed=True, copy_all_files=False
+    directory_to_transfer, archive_directory, compress=True, copy_all_files=False
 ):
     """
     Create an archive of jobs in directory_to_transfer.
@@ -77,7 +76,7 @@ def copy_files_to_archive(
     Args:
         directory_to_transfer (str): project directory with jobs to export
         archive_directory (str): name of the final archive; if no file ending is given .tar.gz is added automatically when needed
-        compressed (bool): if True compress archive_directory as a tarball; default True
+        compress (bool): if True compress archive_directory as a tarball; default True
         copy_all_files (bool): if True include job output files in archive, otherwise just include .h5 files; default False
     """
 
@@ -100,12 +99,12 @@ def copy_files_to_archive(
             copyfile(
                 f,
                 os.path.join(
-                    archive_directory,
+                    tempdir.name,
                     dir_name_transfer,
                     os.path.relpath(f, directory_to_transfer),
                 ),
             )
-        if compressed:
+        if compress:
             compress_dir(archive_directory)
 
 
