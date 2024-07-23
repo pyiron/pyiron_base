@@ -11,6 +11,7 @@ import os
 import posixpath
 import shutil
 import stat
+from pathlib import Path
 from typing import TYPE_CHECKING, Dict, Generator, Literal, Union
 
 import cloudpickle
@@ -114,7 +115,11 @@ class Project(ProjectPath, HasGroups):
     """
 
     def __init__(
-        self, path="", user=None, sql_query=None, default_working_directory=False
+        self,
+        path="",
+        user=None,
+        sql_query=None,
+        default_working_directory=False,
     ):
         if default_working_directory and path == "":
             inputdict = Notebook.get_custom_dict()
@@ -1960,8 +1965,7 @@ class Project(ProjectPath, HasGroups):
 
     def pack(
         self,
-        destination_path,
-        csv_file_name="export.csv",
+        destination_path=None,
         compress=True,
         copy_all_files=False,
     ):
@@ -1970,62 +1974,26 @@ class Project(ProjectPath, HasGroups):
 
         Args:
             destination_path (str): gives the relative path, in which the project folder is copied and compressed
-            csv_file_name (str): is the name of the csv file used to store the project table.
             compress (bool): if true, the function will compress the destination_path to a tar.gz file.
             copy_all_files (bool):
         """
+        directory_to_transfer = Path(self.path).name
+        if destination_path is None:
+            destination_path = directory_to_transfer
         destination_path_abs = os.path.abspath(destination_path)
         if ".tar.gz" in destination_path_abs:
             destination_path_abs = destination_path_abs.split(".tar.gz")[0]
             compress = True
-        directory_to_transfer = os.path.dirname(self.path)
-        csv_file_path = os.path.join(
-            os.path.dirname(destination_path_abs), csv_file_name
-        )
-        if destination_path_abs == directory_to_transfer:
-            raise ValueError(
-                "The destination_path cannot have the same name as the project to compress."
-            )
         export_archive.copy_files_to_archive(
+            self,
             directory_to_transfer,
             destination_path_abs,
             compressed=compress,
             copy_all_files=copy_all_files,
         )
-        df = export_archive.export_database(
-            self, directory_to_transfer, destination_path_abs
-        )
-        df.to_csv(csv_file_path)
 
-    def unpack(self, origin_path, csv_file_name="export.csv", compress=True):
-        """
-        by this function, job table is imported from a given csv file,
-        and also the content of project directory is copied from a given path
-
-        Args:
-            origin_path (str): the relative path of a directory (or a compressed file without the tar.gz extension)
-                            from which the project directory is copied.
-            csv_file_name (str): the csv file from which the job_table is copied to the current project
-            compress (bool): if True, it looks for a compressed file
-        """
-        if isinstance(origin_path, Project):
-            origin_path = origin_path.path
-        csv_path_origin = os.path.join(os.path.dirname(origin_path), csv_file_name)
-        csv_path_project = os.path.join(self.path, csv_file_name)
-        if os.path.exists(csv_file_name):
-            csv_path = os.path.abspath(csv_file_name)
-        elif os.path.exists(csv_path_origin):
-            csv_path = csv_path_origin
-        elif os.path.exists(csv_path_project):
-            csv_path = csv_path_project
-        else:
-            raise FileNotFoundError(
-                f"File: {csv_file_name} was not found. Looked for {os.path.abspath(csv_file_name)}, {csv_path_origin} and {csv_path_project}."
-            )
-        df = pandas.read_csv(csv_path, index_col=0)
-        import_archive.import_jobs(
-            self, archive_directory=origin_path, df=df, compressed=compress
-        )
+    def unpack(self, origin_path):
+        import_archive.import_jobs(self, origin_path)
 
     @classmethod
     def register_tools(cls, name: str, tools):

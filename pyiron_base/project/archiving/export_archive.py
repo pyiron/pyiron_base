@@ -1,12 +1,12 @@
 import os
 import tarfile
-from shutil import copyfile, rmtree
+import tempfile
+from shutil import copyfile, copytree, rmtree
 
 import numpy as np
 from pyfileindex import PyFileIndex
 
 from pyiron_base.project.archiving.shared import getdir
-from pyiron_base.utils.instance import static_isinstance
 
 
 def new_job_id(job_id, job_translate_dict):
@@ -40,7 +40,7 @@ def filter_function(file_name):
     return ".h5" in file_name
 
 
-def generate_list_of_directories(df_files, directory_to_transfer, archive_directory):
+def generate_list_of_directories(df_files, directory_to_transfer):
     path_rel_lst = [
         os.path.relpath(d, directory_to_transfer) for d in df_files.dirname.unique()
     ]
@@ -55,16 +55,21 @@ def generate_list_of_directories(df_files, directory_to_transfer, archive_direct
     ]
 
 
-def compress_dir(archive_directory):
+def compress_dir(directory_to_transfer, archive_directory):
     arch_comp_name = archive_directory + ".tar.gz"
     with tarfile.open(arch_comp_name, "w:gz") as tar:
-        tar.add(os.path.relpath(archive_directory, os.getcwd()))
+        tar.add(archive_directory, arcname=os.path.basename(directory_to_transfer))
+        # tar.add(os.path.relpath(archive_directory, os.getcwd()))
     rmtree(archive_directory)
     return arch_comp_name
 
 
 def copy_files_to_archive(
-    directory_to_transfer, archive_directory, compressed=True, copy_all_files=False
+    project,
+    directory_to_transfer,
+    archive_directory,
+    compressed=True,
+    copy_all_files=False,
 ):
     """
     Create an archive of jobs in directory_to_transfer.
@@ -75,37 +80,60 @@ def copy_files_to_archive(
         compressed (bool): if True compress archive_directory as a tarball; default True
         copy_all_files (bool): if True include job output files in archive, otherwise just include .h5 files; default False
     """
-
     assert isinstance(archive_directory, str) and ".tar.gz" not in archive_directory
-    # print("directory to transfer: "+directory_to_transfer)
+    directory_to_transfer = os.path.normpath(directory_to_transfer)
+    archive_directory = os.path.normpath(archive_directory)
+
+    tempdir = export_files(directory_to_transfer, copy_all_files=copy_all_files)
+    df = export_database(project, directory_to_transfer, archive_directory)
+    df.to_csv(os.path.join(tempdir.name, "export.csv"))
+
+    if compressed:
+        archived_file = compress_dir(directory_to_transfer, tempdir.name)
+        copyfile(
+            archived_file,
+            os.path.join(
+                os.path.dirname(os.path.abspath(archive_directory)),
+                f"{os.path.basename(directory_to_transfer)}.tar.gz",
+            ),
+        )
+    else:
+        if os.path.exists(archive_directory):
+            raise ValueError("Folder exists, give different name or allow compression")
+        # now copy the whole set of folders
+        copytree(tempdir.name, archive_directory)
+
+
+def export_files(directory_to_transfer, copy_all_files=False):
     if not copy_all_files:
         pfi = PyFileIndex(path=directory_to_transfer, filter_function=filter_function)
     else:
         pfi = PyFileIndex(path=directory_to_transfer)
     df_files = pfi.dataframe[~pfi.dataframe.is_directory]
 
+    # create a temporary folder for archiving
+    tempdir = tempfile.TemporaryDirectory()
+
     # Create directories
     dir_lst = generate_list_of_directories(
-        df_files=df_files,
-        directory_to_transfer=directory_to_transfer,
-        archive_directory=archive_directory,
+        df_files=df_files, directory_to_transfer=directory_to_transfer
     )
-    # print(dir_lst)
+
+    # now make these directories
     for d in dir_lst:
-        os.makedirs(d, exist_ok=True)
-    # Copy files
-    dir_name_transfer = getdir(path=directory_to_transfer)
+        os.makedirs(d.replace(directory_to_transfer, tempdir.name), exist_ok=True)
+
+    # copy files
     for f in df_files.path.values:
         copyfile(
             f,
             os.path.join(
-                archive_directory,
-                dir_name_transfer,
+                tempdir.name,
                 os.path.relpath(f, directory_to_transfer),
             ),
         )
-    if compressed:
-        compress_dir(archive_directory)
+
+    return tempdir
 
 
 def export_database(pr, directory_to_transfer, archive_directory):
@@ -129,11 +157,20 @@ def export_database(pr, directory_to_transfer, archive_directory):
         new_job_id(job_id=job_id, job_translate_dict=job_translate_dict)
         for job_id in df.parentid
     ]
-    df["project"] = update_project(
-        project_instance=pr,
-        directory_to_transfer=directory_to_transfer,
-        archive_directory=archive_directory,
-        df=df,
-    )
+
+    # figure if we need to update archive names
+    path_rel_lst = [os.path.relpath(os.path.normpath(p)) for p in df["project"].values]
+    if os.path.basename(directory_to_transfer) != os.path.basename(archive_directory):
+        # we need to update the project name
+        path_rel_lst = [
+            p.replace(
+                os.path.basename(directory_to_transfer),
+                os.path.basename(archive_directory),
+            )
+            for p in path_rel_lst
+        ]
+
+    df["project"] = path_rel_lst
     del df["projectpath"]
+
     return df
