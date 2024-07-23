@@ -69,15 +69,15 @@ def copy_files_to_archive(
     assert isinstance(archive_directory, str) and ".tar.gz" not in archive_directory
     with tempfile.TemporaryDirectory() as tempdir:
         base_name = getdir(path=directory_to_transfer)
-        dst = os.path.join(tempdir.name, base_name)
+        dst = os.path.join(tempdir, base_name)
         if copy_all_files:
             copytree(directory_to_transfer, dst, dirs_exist_ok=True)
         else:
             copytree(directory_to_transfer, dst, ignore=ignore_non_h5_files, dirs_exist_ok=True)
         if compress:
-            compress_dir(archive_directory, base_name, tmpdir.name)
+            compress_dir(archive_directory, base_name, tempdir)
         else:
-            copytree(tempdir.name, archive_directory)
+            copytree(tempdir, archive_directory)
 
 
 def ignore_non_h5_files(dir, files):
