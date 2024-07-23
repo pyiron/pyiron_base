@@ -86,36 +86,30 @@ def copy_files_to_archive(
     archive_directory = os.path.normpath(archive_directory)
 
     with tempfile.TemporaryDirectory() as tempdir:
-        export_files(directory_to_transfer, copy_all_files=copy_all_files)
+        df_files = get_all_files_to_transfer(directory_to_transfer, copy_all_files=False)
+        # Create directories
+        dir_lst = generate_list_of_directories(
+            df_files=df_files,
+            directory_to_transfer=directory_to_transfer,
+            archive_directory=tempdir.name,
+        )
+        # print(dir_lst)
+        for d in dir_lst:
+            os.makedirs(d, exist_ok=True)
+        # Copy files
+        dir_name_transfer = getdir(path=directory_to_transfer)
+        for f in df_files.path.values:
+            copyfile(
+                f,
+                os.path.join(
+                    archive_directory,
+                    dir_name_transfer,
+                    os.path.relpath(f, directory_to_transfer),
+                ),
+            )
 
     if compressed:
         compress_dir(archive_directory)
- 
-
-def export_files(directory_to_transfer, copy_all_files=False):
-    df_files = get_all_files_to_transfer(directory_to_transfer, copy_all_files=False)
-
-
-    # Create directories
-    dir_lst = generate_list_of_directories(
-        df_files=df_files,
-        directory_to_transfer=directory_to_transfer,
-        archive_directory=tempdir.name,
-    )
-    # print(dir_lst)
-    for d in dir_lst:
-        os.makedirs(d, exist_ok=True)
-    # Copy files
-    dir_name_transfer = getdir(path=directory_to_transfer)
-    for f in df_files.path.values:
-        copyfile(
-            f,
-            os.path.join(
-                archive_directory,
-                dir_name_transfer,
-                os.path.relpath(f, directory_to_transfer),
-            ),
-        )
 
 
 def export_database(pr, directory_to_transfer, archive_directory):
