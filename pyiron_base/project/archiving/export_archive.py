@@ -37,10 +37,6 @@ def update_project(project_instance, directory_to_transfer, archive_directory, d
     ]
 
 
-def filter_function(file_name):
-    return ".h5" in file_name
-
-
 def generate_list_of_directories(df_files, directory_to_transfer, archive_directory):
     path_rel_lst = [
         os.path.relpath(d, directory_to_transfer) for d in df_files.dirname.unique()
@@ -81,12 +77,20 @@ def copy_files_to_archive(
     directory_to_transfer = os.path.normpath(directory_to_transfer)
     archive_directory = os.path.normpath(archive_directory)
 
+    tempdir = export_files(directory_to_transfer, copy_all_files=copy_all_files)
+
+    if compressed:
+        compress_dir(archive_directory)
+
+
+def export_files(directory_to_transfer, copy_all_files=False):
     if not copy_all_files:
-        pfi = PyFileIndex(path=directory_to_transfer, filter_function=filter_function)
+        pfi = PyFileIndex(path=directory_to_transfer, filter_function=lambda f_name: ".h5" in f_name)
     else:
         pfi = PyFileIndex(path=directory_to_transfer)
-
     df_files = pfi.dataframe[~pfi.dataframe.is_directory]
+
+    # create a temporary folder for archiving
     tempdir = tempfile.TemporaryDirectory()
 
     # Create directories
@@ -109,8 +113,6 @@ def copy_files_to_archive(
                 os.path.relpath(f, directory_to_transfer),
             ),
         )
-    if compressed:
-        compress_dir(archive_directory)
 
 
 def export_database(pr, directory_to_transfer, archive_directory):
