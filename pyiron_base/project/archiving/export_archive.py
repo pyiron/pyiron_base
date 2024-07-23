@@ -60,6 +60,14 @@ def compress_dir(archive_directory):
     return arch_comp_name
 
 
+def get_all_files_to_transfer(directory_to_transfer, copy_all_files=False):
+    pfi = PyFileIndex(
+        path=directory_to_transfer,
+        filter_function=lambda f_name: copy_all_files or ".h5" in f_name
+    )
+    return pfi.dataframe[~pfi.dataframe.is_directory]
+
+
 def copy_files_to_archive(
     directory_to_transfer, archive_directory, compressed=True, copy_all_files=False
 ):
@@ -77,21 +85,16 @@ def copy_files_to_archive(
     directory_to_transfer = os.path.normpath(directory_to_transfer)
     archive_directory = os.path.normpath(archive_directory)
 
-    tempdir = export_files(directory_to_transfer, copy_all_files=copy_all_files)
+    with tempfile.TemporaryDirectory() as tempdir:
+        export_files(directory_to_transfer, copy_all_files=copy_all_files)
 
     if compressed:
         compress_dir(archive_directory)
-
+ 
 
 def export_files(directory_to_transfer, copy_all_files=False):
-    if not copy_all_files:
-        pfi = PyFileIndex(path=directory_to_transfer, filter_function=lambda f_name: ".h5" in f_name)
-    else:
-        pfi = PyFileIndex(path=directory_to_transfer)
-    df_files = pfi.dataframe[~pfi.dataframe.is_directory]
+    df_files = get_all_files_to_transfer(directory_to_transfer, copy_all_files=False)
 
-    # create a temporary folder for archiving
-    tempdir = tempfile.TemporaryDirectory()
 
     # Create directories
     dir_lst = generate_list_of_directories(
