@@ -72,7 +72,6 @@ def ignore_non_h5_files(dir, files):
     return [f for f in files if not f.endswith('.h5')]
 
 
-
 def export_database(pr, directory_to_transfer, archive_directory):
     # here we first check wether the archive directory is a path
     # or a project object
