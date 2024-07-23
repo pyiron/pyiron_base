@@ -60,16 +60,6 @@ def compress_dir(archive_directory):
     return arch_comp_name
 
 
-
-def open_file(use_tmp, filename=None):
-    if use_tmp:
-        return tempfile.TemporaryFile(mode='w+')
-    else:
-        if filename is None:
-            raise ValueError("Filename must be provided if not using temporary file.")
-        return open(filename, 'w')
-
-
 def copy_files_to_archive(
     directory_to_transfer, archive_directory, compressed=True, copy_all_files=False
 ):
