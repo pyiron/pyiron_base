@@ -1,12 +1,10 @@
 import os
 import tarfile
-from shutil import copytree, rmtree
+import shutil
 
 import numpy as np
-from pyfileindex import PyFileIndex
 
 from pyiron_base.project.archiving.shared import getdir
-from pyiron_base.utils.instance import static_isinstance
 
 
 def new_job_id(job_id, job_translate_dict):
@@ -40,7 +38,7 @@ def compress_dir(archive_directory):
     arch_comp_name = archive_directory + ".tar.gz"
     with tarfile.open(arch_comp_name, "w:gz") as tar:
         tar.add(os.path.relpath(archive_directory, os.getcwd()))
-    rmtree(archive_directory)
+    shutil.rmtree(archive_directory)
     return arch_comp_name
 
 
@@ -61,7 +59,7 @@ def copy_files_to_archive(
     # print("directory to transfer: "+directory_to_transfer)
     dst = os.path.join(archive_directory, getdir(path=directory_to_transfer))
     if copy_all_files:
-        copytree(directory_to_transfer, dst, dirs_exist_ok=True)
+        shutil.copytree(directory_to_transfer, dst, dirs_exist_ok=True)
     else:
         copy_h5_files(directory_to_transfer, dst)
     if compressed:
