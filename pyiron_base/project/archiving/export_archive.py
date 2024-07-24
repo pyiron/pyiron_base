@@ -4,6 +4,8 @@ import tarfile
 import tempfile
 import numpy as np
 
+from pyiron_base.project.archiving.shared import getdir
+
 
 def new_job_id(job_id, job_translate_dict):
     """
@@ -34,12 +36,9 @@ def update_project(project_instance, directory_to_transfer, archive_directory, d
     Returns:
         list: List of updated project paths reflecting the new archive location.
     """
-    dir_name_transfer = os.path.basename(directory_to_transfer) or os.path.basename(
-        os.path.dirname(directory_to_transfer)
-    )
-    dir_name_archive = os.path.basename(archive_directory) or os.path.basename(
-        os.path.dirname(archive_directory)
-    )
+    dir_name_transfer = getdir(path=directory_to_transfer)
+    dir_name_archive = getdir(path=archive_directory)
+
 
     pr_transfer = project_instance.open(os.curdir)
     path_rel_lst = [
