@@ -48,11 +48,9 @@ def update_project(project_instance, directory_to_transfer, archive_directory, d
     ]
 
     return [
-        (
-            os.path.join(dir_name_archive, dir_name_transfer, p)
-            if p != "."
-            else os.path.join(dir_name_archive, dir_name_transfer)
-        )
+        os.path.join(dir_name_archive, dir_name_transfer, p)
+        if p != "."
+        else os.path.join(dir_name_archive, dir_name_transfer)
         for p in path_rel_lst
     ]
 
