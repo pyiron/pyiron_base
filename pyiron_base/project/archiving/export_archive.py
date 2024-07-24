@@ -36,6 +36,7 @@ def update_project(project_instance, directory_to_transfer, archive_directory, d
     Returns:
         list: List of updated project paths reflecting the new archive location.
     """
+    directory_to_transfer = os.path.basename(directory_to_transfer)
     dir_name_transfer = getdir(path=directory_to_transfer)
     dir_name_archive = getdir(path=archive_directory)
 
