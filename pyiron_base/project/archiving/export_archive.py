@@ -7,22 +7,6 @@ import numpy as np
 from pyiron_base.project.archiving.shared import getdir
 
 
-def new_job_id(job_id, job_translate_dict):
-    """
-    Translate a job ID using a provided dictionary.
-
-    Args:
-        job_id (float or int): The job ID to be translated. If it is a float, it will be converted to an integer.
-        job_translate_dict (dict): Dictionary mapping original job IDs to new job IDs.
-
-    Returns:
-        int or None: The translated job ID if it exists in the dictionary, otherwise None.
-    """
-    if isinstance(job_id, float) and not np.isnan(job_id):
-        job_id = int(job_id)
-    return job_translate_dict.get(job_id) if isinstance(job_id, int) else None
-
-
 def update_project(project_instance, directory_to_transfer, archive_directory, df):
     """
     Update the project paths in a DataFrame to reflect the new archive location.
