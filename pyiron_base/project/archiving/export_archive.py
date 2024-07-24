@@ -80,10 +80,8 @@ def copy_files_to_archive(
         directory_to_transfer (str): The directory containing the files to transfer.
         archive_directory (str): The destination directory for the archive.
         compressed (bool): If True, compress the archive directory into a tarball. Default is True.
-        copy_all_files (bool): If True, include all files in the transfer, otherwise only .h5 files. Default is False.
+        copy_all_files (bool): If True, include all files in the archive, otherwise only .h5 files. Default is False.
 
-    Returns:
-        None
     """
     assert isinstance(archive_directory, str) and ".tar.gz" not in archive_directory
     dir_name_transfer = os.path.basename(directory_to_transfer) or os.path.basename(
