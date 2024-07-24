@@ -92,18 +92,18 @@ class TestPack(PyironTestCase):
             print(f"deleting unsuccessful: {err_msg}")
         self.assertListEqual(desirable_lst, content_tmp)
 
-    @patch('os.makedirs')
-    @patch('shutil.copy2')
-    @patch('os.walk')
+    @patch("os.makedirs")
+    @patch("shutil.copy2")
+    @patch("os.walk")
     def test_copy_h5_files(self, mock_walk, mock_copy2, mock_makedirs):
-        src = '/mock/src'
-        dst = '/mock/dst'
+        src = "/mock/src"
+        dst = "/mock/dst"
 
         # Mock the os.walk() response
         mock_walk.return_value = [
-            ('/mock/src', ('subdir1', 'subdir2'), ('file1.h5', 'file2.txt')),
-            ('/mock/src/subdir1', (), ('file3.h5', 'file4.txt')),
-            ('/mock/src/subdir2', (), ('file5.h5', 'file6.txt')),
+            ("/mock/src", ("subdir1", "subdir2"), ("file1.h5", "file2.txt")),
+            ("/mock/src/subdir1", (), ("file3.h5", "file4.txt")),
+            ("/mock/src/subdir2", (), ("file5.h5", "file6.txt")),
         ]
 
         # Call the function
@@ -111,24 +111,33 @@ class TestPack(PyironTestCase):
 
         # Check that os.makedirs() was called correctly
         expected_makedirs_calls = [
-            call('/mock/dst/.', exist_ok=True),
-            call('/mock/dst/subdir1', exist_ok=True),
-            call('/mock/dst/subdir2', exist_ok=True)
+            call("/mock/dst/.", exist_ok=True),
+            call("/mock/dst/subdir1", exist_ok=True),
+            call("/mock/dst/subdir2", exist_ok=True),
         ]
         mock_makedirs.assert_has_calls(expected_makedirs_calls, any_order=True)
 
         # Check that shutil.copy2() was called correctly
         expected_copy2_calls = [
-            call('/mock/src/file1.h5', '/mock/dst/./file1.h5'),
-            call('/mock/src/subdir1/file3.h5', '/mock/dst/subdir1/file3.h5'),
-            call('/mock/src/subdir2/file5.h5', '/mock/dst/subdir2/file5.h5')
+            call("/mock/src/file1.h5", "/mock/dst/./file1.h5"),
+            call("/mock/src/subdir1/file3.h5", "/mock/dst/subdir1/file3.h5"),
+            call("/mock/src/subdir2/file5.h5", "/mock/dst/subdir2/file5.h5"),
         ]
         mock_copy2.assert_has_calls(expected_copy2_calls, any_order=True)
 
         # Ensure no .txt files were copied
-        self.assertNotIn(call('/mock/src/file2.txt', '/mock/dst/./file2.txt'), mock_copy2.call_args_list)
-        self.assertNotIn(call('/mock/src/subdir1/file4.txt', '/mock/dst/subdir1/file4.txt'), mock_copy2.call_args_list)
-        self.assertNotIn(call('/mock/src/subdir2/file6.txt', '/mock/dst/subdir2/file6.txt'), mock_copy2.call_args_list)
+        self.assertNotIn(
+            call("/mock/src/file2.txt", "/mock/dst/./file2.txt"),
+            mock_copy2.call_args_list,
+        )
+        self.assertNotIn(
+            call("/mock/src/subdir1/file4.txt", "/mock/dst/subdir1/file4.txt"),
+            mock_copy2.call_args_list,
+        )
+        self.assertNotIn(
+            call("/mock/src/subdir2/file6.txt", "/mock/dst/subdir2/file6.txt"),
+            mock_copy2.call_args_list,
+        )
 
 
 if __name__ == "__main__":
