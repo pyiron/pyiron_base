@@ -5,9 +5,6 @@ from shutil import copytree, rmtree
 import numpy as np
 from pyfileindex import PyFileIndex
 
-from pyiron_base.project.archiving.shared import getdir
-from pyiron_base.utils.instance import static_isinstance
-
 
 def new_job_id(job_id, job_translate_dict):
     """
@@ -22,10 +19,7 @@ def new_job_id(job_id, job_translate_dict):
     """
     if isinstance(job_id, float) and not np.isnan(job_id):
         job_id = int(job_id)
-    if isinstance(job_id, int):
-        return job_translate_dict.get(job_id)
-    else:
-        return None
+    return job_translate_dict.get(job_id) if isinstance(job_id, int) else None
 
 
 def update_project(project_instance, directory_to_transfer, archive_directory, df):
@@ -41,19 +35,15 @@ def update_project(project_instance, directory_to_transfer, archive_directory, d
     Returns:
         list: List of updated project paths reflecting the new archive location.
     """
-    directory_to_transfer = os.path.basename(directory_to_transfer)
+    dir_name_transfer = os.path.basename(directory_to_transfer) or os.path.basename(os.path.dirname(directory_to_transfer))
+    dir_name_archive = os.path.basename(archive_directory) or os.path.basename(os.path.dirname(archive_directory))
+
     pr_transfer = project_instance.open(os.curdir)
-    dir_name_transfer = getdir(path=directory_to_transfer)
-    dir_name_archive = getdir(path=archive_directory)
-    path_rel_lst = [
-        os.path.relpath(p, pr_transfer.project_path) for p in df["project"].values
-    ]
+    path_rel_lst = [os.path.relpath(p, pr_transfer.project_path) for p in df["project"].values]
+
     return [
-        (
-            os.path.join(dir_name_archive, dir_name_transfer, p)
-            if p != "."
-            else os.path.join(dir_name_archive, dir_name_transfer)
-        )
+        os.path.join(dir_name_archive, dir_name_transfer, p) if p != "."
+        else os.path.join(dir_name_archive, dir_name_transfer)
         for p in path_rel_lst
     ]
 
@@ -68,16 +58,14 @@ def compress_dir(archive_directory):
     Returns:
         str: The name of the compressed tar.gz archive.
     """
-    arch_comp_name = archive_directory + ".tar.gz"
+    arch_comp_name = f"{archive_directory}.tar.gz"
     with tarfile.open(arch_comp_name, "w:gz") as tar:
         tar.add(os.path.relpath(archive_directory, os.getcwd()))
     rmtree(archive_directory)
     return arch_comp_name
 
 
-def copy_files_to_archive(
-    directory_to_transfer, archive_directory, compressed=True, copy_all_files=False
-):
+def copy_files_to_archive(directory_to_transfer, archive_directory, compressed=True, copy_all_files=False):
     """
     Copy files from a directory to an archive, optionally compressing the archive.
 
@@ -91,13 +79,12 @@ def copy_files_to_archive(
         None
     """
     assert isinstance(archive_directory, str) and ".tar.gz" not in archive_directory
-    dst = os.path.join(archive_directory, getdir(path=directory_to_transfer))
-    if copy_all_files:
-        copytree(directory_to_transfer, dst, dirs_exist_ok=True)
-    else:
-        copytree(
-            directory_to_transfer, dst, ignore=ignore_non_h5_files, dirs_exist_ok=True
-        )
+    dir_name_transfer = os.path.basename(directory_to_transfer) or os.path.basename(os.path.dirname(directory_to_transfer))
+    dst = os.path.join(archive_directory, dir_name_transfer)
+
+    ignore = None if copy_all_files else ignore_non_h5_files
+    copytree(directory_to_transfer, dst, ignore=ignore, dirs_exist_ok=True)
+
     if compressed:
         compress_dir(archive_directory)
 
@@ -130,28 +117,15 @@ def export_database(pr, directory_to_transfer, archive_directory):
     """
     assert isinstance(archive_directory, str) and ".tar.gz" not in archive_directory
     directory_to_transfer = os.path.basename(directory_to_transfer)
+
     df = pr.job_table()
-    job_ids_sorted = sorted(df.id.values)
-    new_job_ids = list(range(len(job_ids_sorted)))
-    job_translate_dict = {j: n for j, n in zip(job_ids_sorted, new_job_ids)}
-    df["id"] = [
-        new_job_id(job_id=job_id, job_translate_dict=job_translate_dict)
-        for job_id in df.id
-    ]
-    df["masterid"] = [
-        new_job_id(job_id=job_id, job_translate_dict=job_translate_dict)
-        for job_id in df.masterid
-    ]
-    df["parentid"] = [
-        new_job_id(job_id=job_id, job_translate_dict=job_translate_dict)
-        for job_id in df.parentid
-    ]
-    df["project"] = update_project(
-        project_instance=pr,
-        directory_to_transfer=directory_to_transfer,
-        archive_directory=archive_directory,
-        df=df,
-    )
-    del df["projectpath"]
+    job_translate_dict = {old_id: new_id for new_id, old_id in enumerate(sorted(df.id.values))}
+
+    df["id"] = df["id"].map(job_translate_dict)
+    df["masterid"] = df["masterid"].map(job_translate_dict)
+    df["parentid"] = df["parentid"].map(job_translate_dict)
+    df["project"] = update_project(pr, directory_to_transfer, archive_directory, df)
+
+    df.drop(columns=["projectpath"], inplace=True)
     return df
 
