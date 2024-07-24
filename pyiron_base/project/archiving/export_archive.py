@@ -1,6 +1,6 @@
 import os
-import tarfile
 import shutil
+import tarfile
 
 import numpy as np
 
