@@ -67,6 +67,19 @@ def copy_files_to_archive(
 
 
 def copy_h5_files(src, dst):
+    """
+    Copies all .h5 files from the source directory to the destination directory,
+    preserving the directory structure.
+
+    Args:
+        src (str): The source directory from which .h5 files will be copied.
+        dst (str): The destination directory where .h5 files will be copied to.
+
+    This function traverses the source directory tree, identifies files with a .h5
+    extension, and copies them to the destination directory while maintaining the
+    same directory structure. Non-.h5 files are ignored.
+    """
+
     for root, dirs, files in os.walk(src):
         for file in files:
             if file.endswith(".h5"):
