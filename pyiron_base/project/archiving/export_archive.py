@@ -63,15 +63,20 @@ def copy_files_to_archive(
     if copy_all_files:
         copytree(directory_to_transfer, dst, dirs_exist_ok=True)
     else:
-        copytree(
-            directory_to_transfer, dst, ignore=ignore_non_h5_files, dirs_exist_ok=True
-        )
+        copy_h5_files(directory_to_transfer, dst)
     if compressed:
         compress_dir(archive_directory)
 
 
-def ignore_non_h5_files(dir, files):
-    return [f for f in files if not f.endswith(".h5")]
+def copy_h5_files(src, dst):
+    for root, dirs, files in os.walk(src):
+        for file in files:
+            if file.endswith(".h5"):
+                src_file = os.path.join(root, file)
+                rel_path = os.path.relpath(root, src)
+                dst_dir = os.path.join(dst, rel_path)
+                os.makedirs(dst_dir, exist_ok=True)
+                shutil.copy2(src_file, os.path.join(dst_dir, file))
 
 
 def export_database(pr, directory_to_transfer, archive_directory):
