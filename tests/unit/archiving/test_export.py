@@ -115,7 +115,7 @@ class TestPack(PyironTestCase):
 
         # Define the expected calls, considering path normalization might add '.'
         expected_makedirs_calls = [
-            call(os.path.normpath("/mock/dst/"), exist_ok=True),
+            call(os.path.normpath("/mock/dst/dot").replace("dot", "."), exist_ok=True),
             call(os.path.normpath("/mock/dst/subdir1/"), exist_ok=True),
             call(os.path.normpath("/mock/dst/subdir2/"), exist_ok=True),
         ]
@@ -124,7 +124,7 @@ class TestPack(PyironTestCase):
         expected_copy2_calls = [
             call(
                 os.path.normpath("/mock/src/file1.h5"),
-                os.path.normpath("/mock/dst/file1.h5"),
+                os.path.normpath("/mock/dst/dot/file1.h5").replace("dot", "."),
             ),
             call(
                 os.path.normpath("/mock/src/subdir1/file3.h5"),
@@ -141,7 +141,7 @@ class TestPack(PyironTestCase):
         self.assertNotIn(
             call(
                 os.path.normpath("/mock/src/file2.txt"),
-                os.path.normpath("/mock/dst/file2.txt"),
+                os.path.normpath("/mock/dst/dot/file2.txt").replace("dot", "."),
             ),
             mock_copy2.call_args_list,
         )
