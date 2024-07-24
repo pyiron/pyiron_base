@@ -113,52 +113,44 @@ class TestPack(PyironTestCase):
         # Call the function
         copy_h5_files(src, dst)
 
-        # Define the expected calls, considering path normalization might add '.'
-        expected_makedirs_calls = [
-            call(os.path.normpath("/mock/dst/dot").replace("dot", "."), exist_ok=True),
-            call(os.path.normpath("/mock/dst/subdir1/"), exist_ok=True),
-            call(os.path.normpath("/mock/dst/subdir2/"), exist_ok=True),
+        # Verify that os.makedirs is called for the destination directories
+        makedirs_calls = [
+            os.path.normpath(call[0][0]) for call in mock_makedirs.call_args_list
         ]
-        mock_makedirs.assert_has_calls(expected_makedirs_calls, any_order=True)
+        expected_dirs = [
+            os.path.normpath("/mock/dst"),
+            os.path.normpath("/mock/dst/subdir1"),
+            os.path.normpath("/mock/dst/subdir2"),
+        ]
+        for expected_dir in expected_dirs:
+            self.assertIn(expected_dir, makedirs_calls)
 
+        # Verify that shutil.copy2 is called correctly for .h5 files
+        copy2_calls = [
+            tuple([os.path.normpath(c) for c in call[0]])
+            for call in mock_copy2.call_args_list
+        ]
         expected_copy2_calls = [
-            call(
+            (
                 os.path.normpath("/mock/src/file1.h5"),
-                os.path.normpath("/mock/dst/dot/file1.h5").replace("dot", "."),
+                os.path.normpath("/mock/dst/file1.h5"),
             ),
-            call(
+            (
                 os.path.normpath("/mock/src/subdir1/file3.h5"),
                 os.path.normpath("/mock/dst/subdir1/file3.h5"),
             ),
-            call(
+            (
                 os.path.normpath("/mock/src/subdir2/file5.h5"),
                 os.path.normpath("/mock/dst/subdir2/file5.h5"),
             ),
         ]
-        mock_copy2.assert_has_calls(expected_copy2_calls, any_order=True)
+        for expected_call in expected_copy2_calls:
+            self.assertIn(expected_call, copy2_calls)
 
         # Ensure no .txt files were copied
-        self.assertNotIn(
-            call(
-                os.path.normpath("/mock/src/file2.txt"),
-                os.path.normpath("/mock/dst/dot/file2.txt").replace("dot", "."),
-            ),
-            mock_copy2.call_args_list,
-        )
-        self.assertNotIn(
-            call(
-                os.path.normpath("/mock/src/subdir1/file4.txt"),
-                os.path.normpath("/mock/dst/subdir1/file4.txt"),
-            ),
-            mock_copy2.call_args_list,
-        )
-        self.assertNotIn(
-            call(
-                os.path.normpath("/mock/src/subdir2/file6.txt"),
-                os.path.normpath("/mock/dst/subdir2/file6.txt"),
-            ),
-            mock_copy2.call_args_list,
-        )
+        for call_args in copy2_calls:
+            src_file, dst_file = call_args
+            self.assertFalse(src_file.endswith(".txt"))
 
 
 if __name__ == "__main__":
