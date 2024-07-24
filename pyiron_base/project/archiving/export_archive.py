@@ -35,14 +35,21 @@ def update_project(project_instance, directory_to_transfer, archive_directory, d
     Returns:
         list: List of updated project paths reflecting the new archive location.
     """
-    dir_name_transfer = os.path.basename(directory_to_transfer) or os.path.basename(os.path.dirname(directory_to_transfer))
-    dir_name_archive = os.path.basename(archive_directory) or os.path.basename(os.path.dirname(archive_directory))
+    dir_name_transfer = os.path.basename(directory_to_transfer) or os.path.basename(
+        os.path.dirname(directory_to_transfer)
+    )
+    dir_name_archive = os.path.basename(archive_directory) or os.path.basename(
+        os.path.dirname(archive_directory)
+    )
 
     pr_transfer = project_instance.open(os.curdir)
-    path_rel_lst = [os.path.relpath(p, pr_transfer.project_path) for p in df["project"].values]
+    path_rel_lst = [
+        os.path.relpath(p, pr_transfer.project_path) for p in df["project"].values
+    ]
 
     return [
-        os.path.join(dir_name_archive, dir_name_transfer, p) if p != "."
+        os.path.join(dir_name_archive, dir_name_transfer, p)
+        if p != "."
         else os.path.join(dir_name_archive, dir_name_transfer)
         for p in path_rel_lst
     ]
@@ -65,7 +72,9 @@ def compress_dir(archive_directory):
     return arch_comp_name
 
 
-def copy_files_to_archive(directory_to_transfer, archive_directory, compressed=True, copy_all_files=False):
+def copy_files_to_archive(
+    directory_to_transfer, archive_directory, compressed=True, copy_all_files=False
+):
     """
     Copy files from a directory to an archive, optionally compressing the archive.
 
@@ -79,7 +88,9 @@ def copy_files_to_archive(directory_to_transfer, archive_directory, compressed=T
         None
     """
     assert isinstance(archive_directory, str) and ".tar.gz" not in archive_directory
-    dir_name_transfer = os.path.basename(directory_to_transfer) or os.path.basename(os.path.dirname(directory_to_transfer))
+    dir_name_transfer = os.path.basename(directory_to_transfer) or os.path.basename(
+        os.path.dirname(directory_to_transfer)
+    )
     dst = os.path.join(archive_directory, dir_name_transfer)
 
     ignore = None if copy_all_files else ignore_non_h5_files
@@ -119,7 +130,9 @@ def export_database(pr, directory_to_transfer, archive_directory):
     directory_to_transfer = os.path.basename(directory_to_transfer)
 
     df = pr.job_table()
-    job_translate_dict = {old_id: new_id for new_id, old_id in enumerate(sorted(df.id.values))}
+    job_translate_dict = {
+        old_id: new_id for new_id, old_id in enumerate(sorted(df.id.values))
+    }
 
     df["id"] = df["id"].map(job_translate_dict)
     df["masterid"] = df["masterid"].map(job_translate_dict)
@@ -128,4 +141,3 @@ def export_database(pr, directory_to_transfer, archive_directory):
 
     df.drop(columns=["projectpath"], inplace=True)
     return df
-
