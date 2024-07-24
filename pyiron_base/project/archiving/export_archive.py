@@ -6,6 +6,7 @@ import numpy as np
 
 from pyiron_base.project.archiving.shared import getdir
 
+
 def new_job_id(job_id, job_translate_dict):
     """
     Translate a job ID using a provided dictionary.
