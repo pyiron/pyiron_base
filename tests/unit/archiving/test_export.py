@@ -1,11 +1,12 @@
 import os
 import unittest
+from unittest.mock import patch, call, MagicMock
 from pyiron_base import Project
-from pyiron_base.project.archiving.export_archive import export_database
+from pyiron_base.project.archiving.export_archive import export_database, copy_h5_files
 import pandas as pd
 from pandas._testing import assert_frame_equal
 from filecmp import dircmp
-from shutil import rmtree
+import shutil
 from pyiron_base._tests import PyironTestCase, ToyJob
 
 
@@ -86,10 +87,70 @@ class TestPack(PyironTestCase):
         content_tmp = os.listdir(tmp_path)
         content_tmp.sort()
         try:
-            rmtree(tmp_path)
+            shutil.rmtree(tmp_path)
         except Exception as err_msg:
             print(f"deleting unsuccessful: {err_msg}")
         self.assertListEqual(desirable_lst, content_tmp)
+
+    @patch("os.makedirs")
+    @patch("shutil.copy2")
+    @patch("os.walk")
+    def test_copy_h5_files(self, mock_walk, mock_copy2, mock_makedirs):
+        src = "/mock/src"
+        dst = "/mock/dst"
+
+        # Mock the os.walk() response
+        mock_walk.return_value = [
+            (
+                os.path.normpath("/mock/src"),
+                ("subdir1", "subdir2"),
+                ("file1.h5", "file2.txt"),
+            ),
+            (os.path.normpath("/mock/src/subdir1"), (), ("file3.h5", "file4.txt")),
+            (os.path.normpath("/mock/src/subdir2"), (), ("file5.h5", "file6.txt")),
+        ]
+
+        # Call the function
+        copy_h5_files(src, dst)
+
+        # Verify that os.makedirs is called for the destination directories
+        makedirs_calls = [
+            os.path.normpath(call[0][0]) for call in mock_makedirs.call_args_list
+        ]
+        expected_dirs = [
+            os.path.normpath("/mock/dst"),
+            os.path.normpath("/mock/dst/subdir1"),
+            os.path.normpath("/mock/dst/subdir2"),
+        ]
+        for expected_dir in expected_dirs:
+            self.assertIn(expected_dir, makedirs_calls)
+
+        # Verify that shutil.copy2 is called correctly for .h5 files
+        copy2_calls = [
+            tuple([os.path.normpath(c) for c in call[0]])
+            for call in mock_copy2.call_args_list
+        ]
+        expected_copy2_calls = [
+            (
+                os.path.normpath("/mock/src/file1.h5"),
+                os.path.normpath("/mock/dst/file1.h5"),
+            ),
+            (
+                os.path.normpath("/mock/src/subdir1/file3.h5"),
+                os.path.normpath("/mock/dst/subdir1/file3.h5"),
+            ),
+            (
+                os.path.normpath("/mock/src/subdir2/file5.h5"),
+                os.path.normpath("/mock/dst/subdir2/file5.h5"),
+            ),
+        ]
+        for expected_call in expected_copy2_calls:
+            self.assertIn(expected_call, copy2_calls)
+
+        # Ensure no .txt files were copied
+        for call_args in copy2_calls:
+            src_file, dst_file = call_args
+            self.assertFalse(src_file.endswith(".txt"))
 
 
 if __name__ == "__main__":
