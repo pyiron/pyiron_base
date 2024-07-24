@@ -1,12 +1,10 @@
 import os
+import shutil
 import tarfile
-from shutil import copytree, rmtree
 
 import numpy as np
-from pyfileindex import PyFileIndex
 
 from pyiron_base.project.archiving.shared import getdir
-from pyiron_base.utils.instance import static_isinstance
 
 
 def new_job_id(job_id, job_translate_dict):
@@ -40,7 +38,7 @@ def compress_dir(archive_directory):
     arch_comp_name = archive_directory + ".tar.gz"
     with tarfile.open(arch_comp_name, "w:gz") as tar:
         tar.add(os.path.relpath(archive_directory, os.getcwd()))
-    rmtree(archive_directory)
+    shutil.rmtree(archive_directory)
     return arch_comp_name
 
 
@@ -61,17 +59,35 @@ def copy_files_to_archive(
     # print("directory to transfer: "+directory_to_transfer)
     dst = os.path.join(archive_directory, getdir(path=directory_to_transfer))
     if copy_all_files:
-        copytree(directory_to_transfer, dst, dirs_exist_ok=True)
+        shutil.copytree(directory_to_transfer, dst, dirs_exist_ok=True)
     else:
-        copytree(
-            directory_to_transfer, dst, ignore=ignore_non_h5_files, dirs_exist_ok=True
-        )
+        copy_h5_files(directory_to_transfer, dst)
     if compressed:
         compress_dir(archive_directory)
 
 
-def ignore_non_h5_files(dir, files):
-    return [f for f in files if not f.endswith(".h5")]
+def copy_h5_files(src, dst):
+    """
+    Copies all .h5 files from the source directory to the destination directory,
+    preserving the directory structure.
+
+    Args:
+        src (str): The source directory from which .h5 files will be copied.
+        dst (str): The destination directory where .h5 files will be copied to.
+
+    This function traverses the source directory tree, identifies files with a .h5
+    extension, and copies them to the destination directory while maintaining the
+    same directory structure. Non-.h5 files are ignored.
+    """
+
+    for root, dirs, files in os.walk(src):
+        for file in files:
+            if file.endswith(".h5"):
+                src_file = os.path.join(root, file)
+                rel_path = os.path.relpath(root, src)
+                dst_dir = os.path.join(dst, rel_path)
+                os.makedirs(dst_dir, exist_ok=True)
+                shutil.copy2(src_file, os.path.join(dst_dir, file))
 
 
 def export_database(pr, directory_to_transfer, archive_directory):
