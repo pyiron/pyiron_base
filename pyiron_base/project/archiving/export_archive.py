@@ -70,9 +70,7 @@ def copy_files_to_archive(
 
     """
     assert isinstance(archive_directory, str) and ".tar.gz" not in archive_directory
-    dir_name_transfer = os.path.basename(directory_to_transfer) or os.path.basename(
-        os.path.dirname(directory_to_transfer)
-    )
+    dir_name_transfer = getdir(path=directory_to_transfer)
     dst = os.path.join(archive_directory, dir_name_transfer)
     if copy_all_files:
         shutil.copytree(directory_to_transfer, dst, dirs_exist_ok=True)
