@@ -61,6 +61,9 @@ flux = [
 stats = [
     "pint==0.24.3",
 ]
+postgres = [
+    "psycopg2==2.9.9"
+]
 
 [project.scripts]
 pyiron = "pyiron_base.cli:main"
