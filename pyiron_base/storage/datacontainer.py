@@ -15,6 +15,8 @@ import pandas
 
 from pyiron_base.interfaces.has_dict import HasDictfromHDF
 from pyiron_base.interfaces.has_groups import HasGroups
+from pyiron_base.interfaces.has_dict import HasDictfromHDF, HasDict
+from pyiron_base.interfaces.has_groups import HasGroups
 from pyiron_base.interfaces.has_hdf import HasHDF
 from pyiron_base.interfaces.lockable import Lockable, sentinel
 from pyiron_base.storage.fileio import read, write
@@ -996,6 +998,26 @@ class DataContainer(DataContainerBase, HasDictfromHDF, HasHDF):
         # called whenever a subclass of DataContainer is defined, then register all subclasses with the same function
         # that the DataContainer is registered
         HDFStub.register(cls, lambda h, g: h[g].to_object(lazy=True))
+
+    def to_builtin(self, stringify=False):
+        data = super().to_builtin(stringify=stringify)
+        def to(v):
+            if isinstance(v, HasDict):
+                return v.to_dict()
+            elif isinstance(v, HasHDF):
+                return HasDictfromHDF.to_dict(v)
+            else:
+                return v
+
+        if not stringify:
+            if isinstance(data, dict):
+                data = {k: to(v) for k, v in data.items()}
+            elif isinstance(data, list):
+                data = [to(v) for v in data]
+            else:
+                assert False, "to_builtin returned neither list nor dict"
+
+        return data
 
 
 HDFStub.register(DataContainer, lambda h, g: h[g].to_object(lazy=True))
