@@ -818,7 +818,7 @@ class DataContainerBase(MutableMapping, Lockable, HasGroups):
         super()._on_unlock()
 
 
-class DataContainer(DataContainerBase, HasDictfromHDF, HasHDF):
+class DataContainer(DataContainerBase, HasHDF, HasDict):
     __doc__ = f"""{DataContainerBase.__doc__}
 
     If instantiated with the argument `lazy=True`, data read from HDF5 later via :method:`.from_hdf` are not actually
@@ -1018,5 +1018,12 @@ class DataContainer(DataContainerBase, HasDictfromHDF, HasHDF):
 
         return data
 
+    def _to_dict(self):
+        return {"data": self.to_builtin(), 'READ_ONLY': self.read_only}
+
+    def from_dict(self, data_dict):
+        with self.unlocked():
+            self.clear()
+            self.update(data_dict["data"], wrap=True)
 
 HDFStub.register(DataContainer, lambda h, g: h[g].to_object(lazy=True))
