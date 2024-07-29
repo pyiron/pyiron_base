@@ -602,10 +602,9 @@ class Server(
         else:
             return None
 
-    def to_dict(self):
-        server_dict = self._type_to_dict()
-        server_dict.update(
-            {
+    def _to_dict(self):
+        # server_dict = self._type_to_dict()
+        server_dict = {
                 "user": self._user,
                 "host": self._host,
                 "run_mode": self.run_mode.mode,
@@ -618,8 +617,7 @@ class Server(
                 "run_time": self.run_time,
                 "memory_limit": self.memory_limit,
                 "accept_crash": self.accept_crash,
-            }
-        )
+        }
         if len(self.additional_arguments) > 0:
             server_dict["additional_arguments"] = self.additional_arguments
         if self._gpus is not None:
