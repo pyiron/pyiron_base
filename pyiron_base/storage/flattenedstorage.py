@@ -26,8 +26,8 @@ import h5py
 import numpy as np
 import pandas as pd
 
-from pyiron_base.interfaces.has_hdf import HasHDF
 from pyiron_base.interfaces.has_dict import HasDictfromHDF
+from pyiron_base.interfaces.has_hdf import HasHDF
 from pyiron_base.interfaces.lockable import Lockable, sentinel
 
 _CHARSIZE = np.dtype("U1").itemsize
