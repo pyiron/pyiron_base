@@ -7,6 +7,7 @@ import pandas as pd
 from pandas._testing import assert_frame_equal
 from filecmp import dircmp
 import shutil
+import tempfile
 from pyiron_base._tests import PyironTestCase, ToyJob
 
 
@@ -74,23 +75,19 @@ class TestPack(PyironTestCase):
         self.assertEqual(len(compare_obj.diff_files), 0)
 
     def test_export_with_targz_extension(self):
-        os.makedirs(os.path.join(os.curdir, "tmp"))
-        tmp_path = os.path.abspath(os.path.join(os.curdir, "tmp"))
-        tar_arch = self.arch_dir_comp + ".tar.gz"
-        self.pr.pack(
-            destination_path=os.path.join(tmp_path, tar_arch),
-            csv_file_name=os.path.join(tmp_path, "exported.csv"),
-            compress=True,
-        )
-        desirable_lst = [tar_arch, "exported.csv"]
-        desirable_lst.sort()
-        content_tmp = os.listdir(tmp_path)
-        content_tmp.sort()
-        try:
-            shutil.rmtree(tmp_path)
-        except Exception as err_msg:
-            print(f"deleting unsuccessful: {err_msg}")
-        self.assertListEqual(desirable_lst, content_tmp)
+        with tempfile.TemporaryDirectory() as temp_dir:
+            tmp_path = os.path.abspath(os.path.join(os.curdir, temp_dir))
+            tar_arch = self.arch_dir_comp + ".tar.gz"
+            self.pr.pack(
+                destination_path=os.path.join(tmp_path, tar_arch),
+                csv_file_name=os.path.join(tmp_path, "exported.csv"),
+                compress=True,
+            )
+            desirable_lst = [tar_arch, "exported.csv"]
+            desirable_lst.sort()
+            content_tmp = os.listdir(tmp_path)
+            content_tmp.sort()
+            self.assertListEqual(desirable_lst, content_tmp)
 
     @patch("os.makedirs")
     @patch("shutil.copy2")
