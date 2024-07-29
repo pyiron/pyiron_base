@@ -226,7 +226,7 @@ class ScriptJob(GenericJob):
         self._job_with_calculate_function = True
 
     @property
-    def script_path(self):
+    def script_path(self) -> str:
         """
         Python script path
 
@@ -236,7 +236,7 @@ class ScriptJob(GenericJob):
         return self._script_path
 
     @script_path.setter
-    def script_path(self, path):
+    def script_path(self, path: str) -> None:
         """
         Python script path
 
@@ -267,12 +267,24 @@ class ScriptJob(GenericJob):
         pass
 
     def disable_mpi4py(self):
+        """
+        Disables the usage of mpi4py for parallel execution.
+        """
         self._enable_mpi4py = False
 
     def enable_mpi4py(self):
+        """
+        Enable the usage of mpi4py for parallel execution.
+        """
         self._enable_mpi4py = True
 
-    def from_dict(self, job_dict):
+    def from_dict(self, job_dict: dict) -> None:
+        """
+        Load job attributes from a dictionary.
+
+        Args:
+            job_dict (dict): The dictionary containing the job attributes.
+        """
         super().from_dict(job_dict=job_dict)
         if "parallel" in job_dict["input"].keys():
             self._enable_mpi4py = job_dict["input"]["parallel"]
@@ -348,7 +360,13 @@ class ScriptJob(GenericJob):
         super().set_input_to_read_only()
         self.input.read_only = True
 
-    def to_dict(self):
+    def to_dict(self) -> dict:
+        """
+        Convert the job object to a dictionary.
+
+        Returns:
+            dict: A dictionary representation of the job object.
+        """
         job_dict = super().to_dict()
         job_dict["input/path"] = self._script_path
         job_dict["input/parallel"] = self._enable_mpi4py
@@ -356,6 +374,12 @@ class ScriptJob(GenericJob):
         return job_dict
 
     def validate_ready_to_run(self):
+        """
+        Validates if the job is ready to run by checking if the script path is provided.
+
+        Raises:
+            TypeError: If the script path is not provided (i.e., is None).
+        """
         if self.script_path is None:
             raise TypeError(
                 "ScriptJob.script_path expects a path but got None. Please provide a path before "
@@ -370,8 +394,8 @@ class ScriptJob(GenericJob):
 
     @staticmethod
     def _executable_command(
-        working_directory, script_path, enable_mpi4py=False, cores=1
-    ):
+        self, working_directory: str, script_path: str, enable_mpi4py: bool = False, cores: int = 1
+    ) -> str:
         """
         internal function to generate the executable command to either use jupyter or python
 

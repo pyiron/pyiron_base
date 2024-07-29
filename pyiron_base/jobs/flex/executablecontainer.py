@@ -79,10 +79,10 @@ class ExecutableContainerJob(TemplateJob):
 
     def set_job_type(
         self,
-        executable_str,
-        write_input_funct=None,
-        collect_output_funct=None,
-        default_input_dict=None,
+        executable_str: str,
+        write_input_funct: callable = None,
+        collect_output_funct: callable = None,
+        default_input_dict: dict = None,
     ):
         """
         Set the pre-defined write_input() and collect_output() function plus a dictionary of default inputs and an
@@ -141,8 +141,14 @@ class ExecutableContainerJob(TemplateJob):
             collect_output_funct=self._collect_output_funct,
         )
 
-    def to_dict(self):
-        job_dict = super().to_dict()
+    def to_dict(self) -> dict:
+        """
+        Convert the job object to a dictionary representation.
+
+        Returns:
+            dict: A dictionary representation of the job object.
+        """
+        job_dict: dict = super().to_dict()
         if self._write_input_funct is not None:
             job_dict["write_input_function"] = np.void(
                 cloudpickle.dumps(self._write_input_funct)
@@ -153,7 +159,14 @@ class ExecutableContainerJob(TemplateJob):
             )
         return job_dict
 
-    def from_dict(self, job_dict):
+    def from_dict(self, job_dict: dict):
+        """
+        Load the job attributes from a dictionary representation.
+
+        Args:
+            job_dict (dict): A dictionary containing the job attributes.
+
+        """
         super().from_dict(job_dict=job_dict)
         if "write_input_function" in job_dict.keys():
             self._write_input_funct = cloudpickle.loads(
