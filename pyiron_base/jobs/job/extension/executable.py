@@ -207,9 +207,7 @@ class Executable(HasDict):
             self.storage.mpi = False
 
     def to_dict(self):
-        executable_dict = self._type_to_dict()
-        executable_dict.update(asdict(self.storage))
-        return executable_dict
+        return asdict(self.storage)
 
     def from_dict(self, executable_dict):
         data_container_keys = [
