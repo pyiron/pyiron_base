@@ -641,7 +641,6 @@ class TestDataContainer(TestWithCleanProject):
         pl2 = self.hdf["pandas"].to_object()
         self.assertEqual(type(pl[0]), type(pl2[0]))
 
-
     def test_dict_empty_list(self):
         """HasDict interface should work"""
         with self.subTest("empty list could not use to_dict interface"):
@@ -655,7 +654,6 @@ class TestDataContainer(TestWithCleanProject):
             l = DataContainer(table_name="input")
             l.from_dict(data)
             self.assertEqual(self.pl, l)
-
 
     def test_groups_nodes(self):
         self.assertTrue(

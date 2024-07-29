@@ -56,9 +56,7 @@ class HasDict(ABC):
         return self._to_dict() | type_dict
 
     @staticmethod
-    def _join_children_dict(
-            children: dict[str, dict[str, Any]]
-    ) -> dict[str, Any]:
+    def _join_children_dict(children: dict[str, dict[str, Any]]) -> dict[str, Any]:
         """
         Given a nested dictionary, flatten the first level.
 
@@ -70,8 +68,11 @@ class HasDict(ABC):
         to_dict their children and then want to give a flattened dict for
         writing to ProjectHDFio.write_dict_to_hdf
         """
-        return {'/'.join((k1, k2)): v2 for k1, v1 in children.items()
-                                        for k2, v2 in v2.items()}
+        return {
+            "/".join((k1, k2)): v2
+            for k1, v1 in children.items()
+            for k2, v2 in v2.items()
+        }
 
 
 class HasHDFfromDict(HasHDF, HasDict):
@@ -90,6 +91,7 @@ class HasHDFfromDict(HasHDF, HasDict):
     def _to_hdf(self, hdf):
         hdf.write_dict_to_hdf(self.to_dict())
 
+
 class HasDictfromHDF(HasDict, HasHDF):
     """
     Implements HasDict in terms of HasHDF.
@@ -103,10 +105,10 @@ class HasDictfromHDF(HasDict, HasHDF):
         # DummyHDFio(project=None) looks a bit weird, but it was added there
         # only to support saving/loading jobs which already use the HasDict
         # interface
-        hdf = DummyHDFio(None, '/', obj_dict)
+        hdf = DummyHDFio(None, "/", obj_dict)
         self.from_hdf(hdf)
 
     def _to_dict(self):
-        hdf = DummyHDFio(None, '/')
+        hdf = DummyHDFio(None, "/")
         self.to_hdf(hdf)
         return hdf.to_dict()
