@@ -1025,5 +1025,6 @@ class DataContainer(DataContainerBase, HasHDF, HasDict):
         with self.unlocked():
             self.clear()
             self.update(data_dict["data"], wrap=True)
+        self.read_only = data_dict.get("READ_ONLY", False)
 
 HDFStub.register(DataContainer, lambda h, g: h[g].to_object(lazy=True))
