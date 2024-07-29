@@ -312,8 +312,8 @@ class GenericMaster(GenericJob):
         return len(self._job_name_lst)
 
     @deprecate(
-            "Use job.output for results, job.files to access files; job.content to access HDF storage and "
-            "job.child_project to access children of master jobs."
+        "Use job.output for results, job.files to access files; job.content to access HDF storage and "
+        "job.child_project to access children of master jobs."
     )
     def __getitem__(self, item):
         """
