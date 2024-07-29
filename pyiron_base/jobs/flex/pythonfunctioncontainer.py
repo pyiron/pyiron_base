@@ -44,11 +44,24 @@ class PythonFunctionContainerJob(PythonTemplateJob):
         return self._function
 
     @python_function.setter
-    def python_function(self, funct):
+    def python_function(self, funct: callable) -> None:
+        """
+        Set the python function for the job and update the input dictionary.
+
+        Args:
+            funct (callable): The python function to be wrapped.
+        """
         self.input.update(get_function_parameter_dict(funct=funct))
         self._function = funct
 
     def set_input(self, *args, **kwargs):
+        """
+        Sets the input arguments for the job.python_function function.
+
+        Args:
+            *args: Positional arguments to be passed to the function.
+            **kwargs: Keyword arguments to be passed to the function.
+        """
         self.input.update(
             inspect.signature(self._function).bind(*args, **kwargs).arguments
         )
@@ -58,7 +71,13 @@ class PythonFunctionContainerJob(PythonTemplateJob):
         self.run()
         return self.output["result"]
 
-    def to_dict(self):
+    def to_dict(self) -> dict:
+        """
+        Convert the job object to a dictionary representation.
+
+        Returns:
+            dict: The dictionary representation of the job object.
+        """
         job_dict = super().to_dict()
         job_dict["function"] = np.void(cloudpickle.dumps(self._function))
         job_dict["_automatically_rename_on_save_using_input"] = (
@@ -66,7 +85,13 @@ class PythonFunctionContainerJob(PythonTemplateJob):
         )
         return job_dict
 
-    def from_dict(self, job_dict):
+    def from_dict(self, job_dict: dict) -> None:
+        """
+        Load the job object from a dictionary representation.
+
+        Args:
+            job_dict (dict): The dictionary representation of the job object.
+        """
         super().from_dict(job_dict=job_dict)
         self._function = cloudpickle.loads(job_dict["function"])
         self._automatically_rename_on_save_using_input = bool(
@@ -74,6 +99,17 @@ class PythonFunctionContainerJob(PythonTemplateJob):
         )
 
     def save(self):
+        """
+        Save the job to the project.
+
+        If `self._automatically_rename_on_save_using_input` is True, the job name will be automatically renamed by appending
+        a hash generated from the function and input arguments.
+
+        If the job name already exists in the project, the job will be loaded from the HDF5 file and marked as finished without saving.
+
+        Returns:
+            None
+        """
         if self._automatically_rename_on_save_using_input:
             self.job_name = self.job_name + get_hash(
                 binary=cloudpickle.dumps(
@@ -88,6 +124,13 @@ class PythonFunctionContainerJob(PythonTemplateJob):
         super().save()
 
     def run_static(self):
+        """
+        Run the static function.
+
+        If an executor is specified and the function signature contains an 'executor' parameter,
+        the function is executed using the specified executor. Otherwise, the function is executed
+        without an executor.
+        """
         self.status.running = True
         if (
             self._executor_type is not None
