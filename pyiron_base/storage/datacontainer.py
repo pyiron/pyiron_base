@@ -423,38 +423,20 @@ class DataContainerBase(MutableMapping, Lockable, HasGroups):
             stringify (bool, optional): convert all non-recursive elements to str
         """
 
-        if self.has_keys():
-            dd = {}
-            for k, v in self.items():
-                # force all string keys in output to work with h5io (it
-                # requires all string keys when storing as json), since
-                # _normalize calls int() on all digit string keys this is
-                # transparent for the rest of the module
-                k = str(k)
-                if isinstance(v, DataContainerBase):
-                    dd[k] = v.to_builtin(stringify=stringify)
-                else:
-                    dd[k] = repr(v) if stringify else v
+        def rec(v):
+            if isinstance(v, DataContainerBase):
+                return v.to_builtin(stringify=stringify)
+            else:
+                return repr(v) if stringify else v
 
-            return dd
-        elif stringify:
-            return list(
-                (
-                    v.to_builtin(stringify=stringify)
-                    if isinstance(v, DataContainerBase)
-                    else repr(v)
-                )
-                for v in self.values()
-            )
+        if self.has_keys():
+            # force all string keys in output to work with h5io (it
+            # requires all string keys when storing as json), since
+            # _normalize calls int() on all digit string keys this is
+            # transparent for the rest of the module
+            return {str(k): rec(v) for k, v in self.items()}
         else:
-            return list(
-                (
-                    v.to_builtin(stringify=stringify)
-                    if isinstance(v, DataContainerBase)
-                    else v
-                )
-                for v in self.values()
-            )
+            return [rec(v) for v in self.values()]
 
     # allows "nice" displays in jupyter lab
     def _repr_json_(self):
