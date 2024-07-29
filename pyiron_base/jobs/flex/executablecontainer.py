@@ -148,7 +148,7 @@ class ExecutableContainerJob(TemplateJob):
         Returns:
             dict: A dictionary representation of the job object.
         """
-        job_dict: dict = super().to_dict()
+        job_dict = super().to_dict()
         if self._write_input_funct is not None:
             job_dict["write_input_function"] = np.void(
                 cloudpickle.dumps(self._write_input_funct)
