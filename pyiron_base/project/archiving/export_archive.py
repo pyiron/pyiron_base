@@ -51,7 +51,7 @@ def compress_dir(archive_directory):
     """
     arch_comp_name = f"{archive_directory}.tar.gz"
     with tarfile.open(arch_comp_name, "w:gz") as tar:
-        tar.add(os.path.relpath(archive_directory, os.getcwd()))
+        tar.add(os.path.abspath(archive_directory))
     shutil.rmtree(archive_directory)
     return arch_comp_name
 
