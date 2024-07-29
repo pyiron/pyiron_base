@@ -131,6 +131,7 @@ class PythonFunctionContainerJob(PythonTemplateJob):
         the function is executed using the specified executor. Otherwise, the function is executed
         without an executor.
         """
+        self.status.running = True
         if (
             self._executor_type is not None
             and "executor" in inspect.signature(self._function).parameters.keys()
