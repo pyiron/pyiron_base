@@ -106,9 +106,14 @@ class HasDictfromHDF(HasDict, HasHDF):
         # only to support saving/loading jobs which already use the HasDict
         # interface
         hdf = DummyHDFio(None, "/", obj_dict)
-        self.from_hdf(hdf)
+        self.from_hdf(hdf, group_name=self._get_hdf_group_name())
 
     def _to_dict(self):
         hdf = DummyHDFio(None, "/")
         self.to_hdf(hdf)
-        return hdf.to_dict()
+        group_name = self._get_hdf_group_name()
+        data = hdf.to_dict()
+        if group_name is not None:
+            return data[group_name]
+        else:
+            return data
