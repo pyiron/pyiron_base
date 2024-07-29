@@ -860,7 +860,9 @@ class BaseHDFio:
     or DummyHDFio object.  Usually this is used to check if it is safe to call
     `to_object` on this object.
     """
+
     pass
+
 
 class ProjectHDFio(FileHDFio, BaseHDFio):
     """
@@ -1501,6 +1503,7 @@ class DummyHDFio(HasGroups, BaseHDFio):
                 d = d.to_object()
             data[path] = d
         return data
+
 
 def _get_safe_filename(file_name):
     file_path_no_ext, file_ext = os.path.splitext(file_name)
