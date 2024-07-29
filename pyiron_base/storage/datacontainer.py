@@ -1026,4 +1026,5 @@ class DataContainer(DataContainerBase, HasHDF, HasDict):
             self.clear()
             self.update(data_dict["data"], wrap=True)
 
+
 HDFStub.register(DataContainer, lambda h, g: h[g].to_object(lazy=True))
