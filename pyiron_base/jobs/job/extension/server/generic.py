@@ -561,10 +561,9 @@ class Server(
         else:
             return None
 
-    def to_dict(self):
-        server_dict = self._type_to_dict()
+    def _to_dict(self):
         self._data.run_mode = self._run_mode.mode
-        server_dict.update(asdict(self._data))
+        return asdict(self._data)
         return server_dict
 
     def from_dict(self, server_dict):
