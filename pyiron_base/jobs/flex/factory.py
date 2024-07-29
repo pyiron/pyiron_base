@@ -1,5 +1,6 @@
-from pyiron_base.utils.instance import static_isinstance
 from typing import Callable, Dict, Optional
+
+from pyiron_base.utils.instance import static_isinstance
 
 
 def create_job_factory(

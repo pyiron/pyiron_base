@@ -394,7 +394,11 @@ class ScriptJob(GenericJob):
 
     @staticmethod
     def _executable_command(
-        self, working_directory: str, script_path: str, enable_mpi4py: bool = False, cores: int = 1
+        self,
+        working_directory: str,
+        script_path: str,
+        enable_mpi4py: bool = False,
+        cores: int = 1,
     ) -> str:
         """
         internal function to generate the executable command to either use jupyter or python
