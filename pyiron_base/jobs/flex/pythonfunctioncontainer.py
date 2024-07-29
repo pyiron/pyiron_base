@@ -88,6 +88,7 @@ class PythonFunctionContainerJob(PythonTemplateJob):
         super().save()
 
     def run_static(self):
+        self.status.running = True
         if (
             self._executor_type is not None
             and "executor" in inspect.signature(self._function).parameters.keys()
