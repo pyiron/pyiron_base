@@ -605,18 +605,18 @@ class Server(
     def _to_dict(self):
         # server_dict = self._type_to_dict()
         server_dict = {
-                "user": self._user,
-                "host": self._host,
-                "run_mode": self.run_mode.mode,
-                "queue": self.queue,
-                "qid": self._queue_id,
-                "cores": self.cores,
-                "threads": self.threads,
-                "new_h5": self.new_hdf,
-                "structure_id": self.structure_id,
-                "run_time": self.run_time,
-                "memory_limit": self.memory_limit,
-                "accept_crash": self.accept_crash,
+            "user": self._user,
+            "host": self._host,
+            "run_mode": self.run_mode.mode,
+            "queue": self.queue,
+            "qid": self._queue_id,
+            "cores": self.cores,
+            "threads": self.threads,
+            "new_h5": self.new_hdf,
+            "structure_id": self.structure_id,
+            "run_time": self.run_time,
+            "memory_limit": self.memory_limit,
+            "accept_crash": self.accept_crash,
         }
         if len(self.additional_arguments) > 0:
             server_dict["additional_arguments"] = self.additional_arguments
