@@ -111,7 +111,7 @@ class PythonFunctionContainerJob(PythonTemplateJob):
             None
         """
         if self._automatically_rename_on_save_using_input:
-            self.job_name = self.job_name + get_hash(
+            self.job_name = self.job_name + "_" + get_hash(
                 binary=cloudpickle.dumps(
                     {"fn": self._function, "kwargs": self.input.to_builtin()}
                 )
