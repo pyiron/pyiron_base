@@ -5,7 +5,7 @@ dependencies:
 - h5io_browser =0.0.17
 - h5py =3.11.0
 - monty =2024.7.30
-- numpy =1.26.4
+- numpy =2.0.1
 - pandas =2.2.2
 - psutil =6.0.0
 - pyfileindex =0.0.26
