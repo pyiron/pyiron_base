@@ -4,7 +4,7 @@ dependencies:
 - cloudpickle =3.0.0
 - h5io_browser =0.0.17
 - h5py =3.11.0
-- monty =2024.7.12
+- monty =2024.7.30
 - numpy =1.26.4
 - pandas =2.2.2
 - psutil =6.0.0
