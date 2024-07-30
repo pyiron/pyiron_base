@@ -10,6 +10,8 @@ import textwrap
 from functools import wraps
 from typing import Union
 
+from pyiron_snippets.deprecate import deprecate
+
 from pyiron_base.interfaces.object import HasStorage
 from pyiron_base.jobs.job.core import _doc_str_job_core_args
 from pyiron_base.jobs.job.extension.jobstatus import job_status_finished_lst
