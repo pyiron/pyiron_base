@@ -52,10 +52,12 @@ def copy_files_to_archive(
     """
     assert isinstance(archive_directory, str) and ".tar.gz" not in archive_directory
     with tempfile.TemporaryDirectory() as tempdir:
+        dir_name_transfer = getdir(path=directory_to_transfer)
+        dst = os.path.join(tempdir, dir_name_transfer)
         if copy_all_files:
-            shutil.copytree(directory_to_transfer, tempdir, dirs_exist_ok=True)
+            shutil.copytree(directory_to_transfer, dst, dirs_exist_ok=True)
         else:
-            copy_h5_files(directory_to_transfer, tempdir)
+            copy_h5_files(directory_to_transfer, dst)
         if compress:
             shutil.make_archive(archive_directory, "gztar", tempdir)
         else:
