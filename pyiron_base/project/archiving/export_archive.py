@@ -101,7 +101,7 @@ def copy_files_to_archive(
             shutil.copytree(directory_to_transfer, tempdir, dirs_exist_ok=True)
         else:
             copy_h5_files(directory_to_transfer, tempdir)
-        if compressed:
+        if compress:
             compress_dir(archive_directory)
 
 
