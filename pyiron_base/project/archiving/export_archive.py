@@ -1,6 +1,7 @@
 import os
 import shutil
 import tempfile
+
 import numpy as np
 
 from pyiron_base.project.archiving.shared import getdir
