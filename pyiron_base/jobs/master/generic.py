@@ -10,6 +10,8 @@ import textwrap
 from functools import wraps
 from typing import Union
 
+from pyiron_snippets.deprecate import deprecate
+
 from pyiron_base.interfaces.object import HasStorage
 from pyiron_base.jobs.job.core import _doc_str_job_core_args
 from pyiron_base.jobs.job.extension.jobstatus import job_status_finished_lst
@@ -311,6 +313,10 @@ class GenericMaster(GenericJob):
         """
         return len(self._job_name_lst)
 
+    @deprecate(
+        "Use job.output for results, job.files to access files; job.content to access HDF storage and "
+        "job.child_project to access children of master jobs."
+    )
     def __getitem__(self, item):
         """
         Get/ read data from the GenericMaster
