@@ -43,7 +43,7 @@ def import_jobs(project_instance, archive_directory, df, compressed=True):
         )
     if compressed:
         with tarfile.open(archive_directory + ".tar.gz", "r:gz") as tar:
-            tar.extractall(archive_directory)
+            tar.extractall()
 
     # source folder; archive folder
     src = os.path.abspath(archive_directory)
