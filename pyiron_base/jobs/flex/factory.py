@@ -1,12 +1,14 @@
+from typing import Callable, Dict, Optional
+
 from pyiron_base.utils.instance import static_isinstance
 
 
 def create_job_factory(
-    executable_str,
-    write_input_funct=None,
-    collect_output_funct=None,
-    default_input_dict=None,
-):
+    executable_str: str,
+    write_input_funct: Optional[Callable] = None,
+    collect_output_funct: Optional[Callable] = None,
+    default_input_dict: Optional[Dict] = None,
+) -> callable:
     """
     Create a new job class based on pre-defined write_input() and collect_output() function plus a dictionary of
     default inputs and an executable string.

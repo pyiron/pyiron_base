@@ -3,3 +3,4 @@ channels:
   - defaults
 dependencies:
   - fenics=2019.1.0=py39hf3d152e_26
+  - mpi4py=3.1.6  # mpi4py 4.0 is not supported by fenics https://github.com/conda-forge/fenics-feedstock/issues/212
