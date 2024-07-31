@@ -72,9 +72,13 @@ def write_input_files_from_input_dict(input_dict: dict, working_directory: str):
         working_directory (str): path to the working directory
     """
     existing_files = set(os.listdir(working_directory))
-    if len(existing_files.intersection(input_dict["files_to_create"])) > 0 \
-            or len(existing_files.intersection(input_dict["files_to_copy"])) > 0:
-        state.logger.info("Some files to be created already exist, assuming that input has already been written.")
+    if (
+        len(existing_files.intersection(input_dict["files_to_create"])) > 0
+        or len(existing_files.intersection(input_dict["files_to_copy"])) > 0
+    ):
+        state.logger.info(
+            "Some files to be created already exist, assuming that input has already been written."
+        )
         return
     for file_name, content in input_dict["files_to_create"].items():
         with open(os.path.join(working_directory, file_name), "w") as f:
