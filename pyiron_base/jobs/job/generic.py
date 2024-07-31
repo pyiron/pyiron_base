@@ -913,6 +913,7 @@ class GenericJob(JobCore, HasDict):
         """
         The run static function is called by run to execute the simulation.
         """
+        self.status.running = True
         if self._job_with_calculate_function:
             execute_job_with_calculate_function(job=self)
         else:
