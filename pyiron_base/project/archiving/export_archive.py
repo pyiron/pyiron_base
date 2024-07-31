@@ -59,7 +59,9 @@ def copy_files_to_archive(
         if compress:
             shutil.make_archive(archive_directory, 'gztar', tempdir)
         else:
-            shutil.copytree(tempdir, archive_directory, dirs_exist_ok=True)
+            dir_name_transfer = getdir(path=directory_to_transfer)
+            dst = os.path.join(archive_directory, dir_name_transfer)
+            shutil.copytree(tempdir, dst, dirs_exist_ok=True)
 
 
 def copy_h5_files(src, dst):
