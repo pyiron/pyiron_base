@@ -1,6 +1,5 @@
 import os
 import shutil
-import tarfile
 import tempfile
 import numpy as np
 
@@ -55,23 +54,6 @@ def update_project(project_instance, directory_to_transfer, archive_directory, d
     ]
 
 
-def compress_dir(archive_directory):
-    """
-    Compress a directory into a tar.gz archive and remove the original directory.
-
-    Args:
-        archive_directory (str): The directory to be compressed.
-
-    Returns:
-        str: The name of the compressed tar.gz archive.
-    """
-    arch_comp_name = f"{archive_directory}.tar.gz"
-    with tarfile.open(arch_comp_name, "w:gz") as tar:
-        tar.add(os.path.relpath(archive_directory, os.getcwd()))
-    shutil.rmtree(archive_directory)
-    return arch_comp_name
-
-
 def get_all_files_to_transfer(directory_to_transfer, copy_all_files=False):
     pfi = PyFileIndex(
         path=directory_to_transfer,
@@ -102,7 +84,9 @@ def copy_files_to_archive(
         else:
             copy_h5_files(directory_to_transfer, tempdir)
         if compress:
-            compress_dir(archive_directory)
+            shutil.make_archive(archive_directory, 'gztar', tempdir)
+        else:
+            shutil.copytree(tempdir, archive_directory, dirs_exist_ok=True)
 
 
 def copy_h5_files(src, dst):
