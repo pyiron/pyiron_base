@@ -5,6 +5,7 @@ from pyiron_base.project.archiving.import_archive import getdir
 from pandas._testing import assert_frame_equal
 from filecmp import dircmp
 from shutil import rmtree
+import tarfile
 from pyiron_base._tests import PyironTestCase, ToyJob
 
 
