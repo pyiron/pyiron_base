@@ -37,14 +37,6 @@ def update_project(project_instance, directory_to_transfer, archive_directory, d
     ]
 
 
-def get_all_files_to_transfer(directory_to_transfer, copy_all_files=False):
-    pfi = PyFileIndex(
-        path=directory_to_transfer,
-        filter_function=lambda f_name: copy_all_files or ".h5" in f_name
-    )
-    return pfi.dataframe[~pfi.dataframe.is_directory]
-
-
 def copy_files_to_archive(
     directory_to_transfer, archive_directory, compress=True, copy_all_files=False
 ):
