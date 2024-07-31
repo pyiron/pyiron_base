@@ -21,13 +21,6 @@ def update_id_lst(record_lst, job_id_lst):
     return masterid_lst
 
 
-def extract_archive(archive_directory):
-    fname = archive_directory + ".tar.gz"
-    tar = tarfile.open(fname, "r:gz")
-    tar.extractall()
-    tar.close()
-
-
 def import_jobs(project_instance, archive_directory, df, compressed=True):
     # Copy HDF5 files
     # if the archive_directory is a path(string)/name of the compressed file
@@ -49,7 +42,8 @@ def import_jobs(project_instance, archive_directory, df, compressed=True):
             as string or pyiron Project objects are expected"""
         )
     if compressed:
-        extract_archive(os.path.relpath(archive_directory, os.getcwd()))
+        with tarfile.open(archive_directory + ".tar.gz", "r:gz") as tar:
+            tar.extractall(archive_directory)
 
     # source folder; archive folder
     src = os.path.abspath(archive_directory)
