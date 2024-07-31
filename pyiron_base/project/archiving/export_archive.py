@@ -2,6 +2,7 @@ import os
 import shutil
 import tarfile
 import tempfile
+
 import numpy as np
 
 from pyiron_base.project.archiving.shared import getdir
