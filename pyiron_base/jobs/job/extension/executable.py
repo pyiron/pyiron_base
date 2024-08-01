@@ -206,7 +206,7 @@ class Executable(HasDict):
         else:
             self.storage.mpi = False
 
-    def to_dict(self):
+    def _to_dict(self):
         return asdict(self.storage)
 
     def from_dict(self, executable_dict):
