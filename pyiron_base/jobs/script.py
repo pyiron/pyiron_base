@@ -278,21 +278,21 @@ class ScriptJob(GenericJob):
         """
         self._enable_mpi4py = True
 
-    def from_dict(self, job_dict: dict) -> None:
+    def _from_dict(self, obj_dict, version=None) -> None:
         """
         Load job attributes from a dictionary.
 
         Args:
-            job_dict (dict): The dictionary containing the job attributes.
+            obj_dict (dict): The dictionary containing the job attributes.
         """
-        super().from_dict(job_dict=job_dict)
-        if "parallel" in job_dict["input"].keys():
-            self._enable_mpi4py = job_dict["input"]["parallel"]
-        path = job_dict["input"]["path"]
+        super()._from_dict(obj_dict=obj_dict)
+        if "parallel" in obj_dict["input"].keys():
+            self._enable_mpi4py = obj_dict["input"]["parallel"]
+        path = obj_dict["input"]["path"]
         if path is not None:
             self.script_path = path
-        if "custom_dict" in job_dict["input"].keys():
-            self.input.update(job_dict["input"]["custom_dict"])
+        if "custom_dict" in obj_dict["input"].keys():
+            self.input.update(obj_dict["input"]["custom_dict"])
 
     def get_input_parameter_dict(self):
         """
@@ -360,14 +360,14 @@ class ScriptJob(GenericJob):
         super().set_input_to_read_only()
         self.input.read_only = True
 
-    def to_dict(self) -> dict:
+    def _to_dict(self) -> dict:
         """
         Convert the job object to a dictionary.
 
         Returns:
             dict: A dictionary representation of the job object.
         """
-        job_dict = super().to_dict()
+        job_dict = super()._to_dict()
         job_dict["input/path"] = self._script_path
         job_dict["input/parallel"] = self._enable_mpi4py
         job_dict["input/custom_dict"] = self.input.to_builtin()

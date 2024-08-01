@@ -316,7 +316,7 @@ class TestServerHDF(unittest.TestCase):
         hdf_dict_empty = server_empty.to_dict()
         hdf_dict_full = server_full.to_dict()
         server_from_hdf = Server()
-        server_from_hdf.from_dict(server_dict=hdf_dict_full)
+        server_from_hdf.from_dict(obj_dict=hdf_dict_full)
         self.assertEqual(hdf_dict_full["gpus"], 10)
         self.assertTrue(hdf_dict_empty["gpus"] is None)
         self.assertEqual(server_from_hdf.gpus, 10)

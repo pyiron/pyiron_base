@@ -51,6 +51,8 @@ class Executable(HasDict):
         else:
             operation_system_nt = os.name == "nt"
 
+        if codename is None:
+            breakpoint()
         self.storage = ExecutableDataClass(
             version=None,
             name=codename.lower(),
@@ -206,10 +208,14 @@ class Executable(HasDict):
         else:
             self.storage.mpi = False
 
+    @classmethod
+    def instantiate(cls, obj_dict: dict, version: str = None) -> "Self":
+        return cls(codename=obj_dict["name"])
+
     def _to_dict(self):
         return asdict(self.storage)
 
-    def from_dict(self, executable_dict):
+    def _from_dict(self, obj_dict, version=None):
         data_container_keys = [
             "version",
             "name",
@@ -220,12 +226,10 @@ class Executable(HasDict):
         ]
         executable_class_dict = {}
         # Backwards compatibility; dict state used to be nested one level deeper
-        if "executable" in executable_dict.keys() and isinstance(
-            executable_dict["executable"], dict
-        ):
-            executable_dict = executable_dict["executable"]
+        if "executable" in obj_dict.keys() and isinstance(obj_dict["executable"], dict):
+            obj_dict = obj_dict["executable"]
         for key in data_container_keys:
-            executable_class_dict[key] = executable_dict.get(key, None)
+            executable_class_dict[key] = obj_dict.get(key, None)
         self.storage = ExecutableDataClass(**executable_class_dict)
 
     def get_input_for_subprocess_call(self, cores, threads, gpus=None):

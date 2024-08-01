@@ -19,7 +19,11 @@ from abc import ABC, abstractmethod
 from typing import Any
 
 from pyiron_base.interfaces.has_hdf import HasHDF
-from pyiron_base.storage.hdfio import DummyHDFio
+from pyiron_base.storage.hdfio import (
+    DummyHDFio,
+    _extract_module_class_name,
+    _import_class,
+)
 
 __author__ = "Jan Janssen"
 __copyright__ = (
@@ -33,11 +37,50 @@ __status__ = "production"
 __date__ = "Dec 20, 2023"
 
 
+def create_from_dict(obj_dict):
+    """
+    Create and restores an object previously written as a dictionary.
+
+    Args:
+        obj_dict (dict): must be the output of HasDict.to_dict()
+
+    Returns:
+        object: restored object
+    """
+    if "TYPE" not in obj_dict:
+        raise ValueError(
+            "invalid obj_dict! must contain type information and be the output of HasDict.to_dict!"
+        )
+    type_field = obj_dict["TYPE"]
+    module_path, class_name = _extract_module_class_name(type_field)
+    class_object = _import_class(module_path, class_name)
+    version = obj_dict.get("VERSION", None)
+    obj = class_object.instantiate(obj_dict, version)
+    obj.from_dict(obj_dict, version)
+    return obj
+
+
 class HasDict(ABC):
     __dict_version__ = "0.1.0"
 
-    @abstractmethod
+    @classmethod
+    def instantiate(cls, obj_dict: dict, version: str = None) -> "Self":
+        return cls()
+
     def from_dict(self, obj_dict: dict, version: str = None):
+        def load(inner_dict):
+            if not isinstance(inner_dict, dict):
+                return inner_dict
+            if not all(
+                k in inner_dict for k in ("NAME", "TYPE", "OBJECT", "DICT_VERSION")
+            ):
+                return {k: load(v) for k, v in inner_dict.items()}
+            return create_from_dict(inner_dict)
+
+        self._from_dict({k: load(v) for k, v in obj_dict.items()}, version)
+
+    @abstractmethod
+    def _from_dict(self, obj_dict: dict, version: str = None):
         pass
 
     @abstractmethod
@@ -66,7 +109,17 @@ class HasDict(ABC):
         return type_dict
 
     def to_dict(self):
-        return self._to_dict() | self._type_to_dict()
+        type_dict = self._type_to_dict()
+        data_dict = {}
+        child_dict = {}
+        for k, v in self._to_dict().items():
+            if isinstance(v, HasDict):
+                child_dict[k] = v.to_dict()
+            elif isinstance(v, HasHDF):
+                child_dict[k] = HasDictfromHDF.to_dict(v)
+            else:
+                data_dict[k] = v
+        return data_dict | self._join_children_dict(child_dict) | type_dict
 
     @staticmethod
     def _join_children_dict(children: dict[str, dict[str, Any]]) -> dict[str, Any]:
@@ -114,12 +167,21 @@ class HasDictfromHDF(HasDict, HasHDF):
     their children to implmement it.
     """
 
-    def from_dict(self, obj_dict: dict, version: str = None):
+    @classmethod
+    def instantiate(cls, obj_dict: dict, version: str = None) -> "Self":
+        hdf = DummyHDFio(None, "/", obj_dict)
+        return cls(**cls.from_hdf_args(hdf))
+
+    def _from_dict(self, obj_dict: dict, version: str = None):
         # DummyHDFio(project=None) looks a bit weird, but it was added there
         # only to support saving/loading jobs which already use the HasDict
         # interface
-        hdf = DummyHDFio(None, "/", obj_dict)
-        self.from_hdf(hdf, group_name=self._get_hdf_group_name())
+        group_name = self._get_hdf_group_name()
+        if group_name is not None:
+            hdf = DummyHDFio(None, "/", {self._get_hdf_group_name(): obj_dict})
+        else:
+            hdf = DummyHDFio(None, "/", obj_dict)
+        self.from_hdf(hdf)
 
     def _to_dict(self):
         hdf = DummyHDFio(None, "/")

@@ -657,8 +657,8 @@ class TableJob(GenericJob):
                 hdf5_output.file_name, key=hdf5_output.h5_path + "/table"
             )
 
-    def to_dict(self):
-        job_dict = super().to_dict()
+    def _to_dict(self):
+        job_dict = super()._to_dict()
         job_dict["input/bool_dict"] = {
             "enforce_update": self._enforce_update,
             "convert_to_object": self._pyiron_table.convert_to_object,
@@ -683,10 +683,10 @@ class TableJob(GenericJob):
             )
         return job_dict
 
-    def from_dict(self, job_dict):
-        super().from_dict(job_dict=job_dict)
-        if "project" in job_dict["input"].keys():
-            project_dict = job_dict["input"]["project"]
+    def _from_dict(self, obj_dict, version=None):
+        super()._from_dict(obj_dict=obj_dict, version=version)
+        if "project" in obj_dict["input"].keys():
+            project_dict = obj_dict["input"]["project"]
             if os.path.exists(project_dict["path"]):
                 project = self.project.__class__(
                     path=project_dict["path"],
@@ -700,18 +700,18 @@ class TableJob(GenericJob):
                 self._logger.warning(
                     f"Could not instantiate analysis_project, no such path {project_dict['path']}."
                 )
-        if "filter" in job_dict["input"].keys():
+        if "filter" in obj_dict["input"].keys():
             self.pyiron_table.filter_function = _from_pickle(
-                job_dict["input"], "filter"
+                obj_dict["input"], "filter"
             )
-        if "db_filter" in job_dict["input"].keys():
+        if "db_filter" in obj_dict["input"].keys():
             self.pyiron_table.db_filter_function = _from_pickle(
-                job_dict["input"], "db_filter"
+                obj_dict["input"], "db_filter"
             )
-        bool_dict = job_dict["input"]["bool_dict"]
+        bool_dict = obj_dict["input"]["bool_dict"]
         self._enforce_update = bool_dict["enforce_update"]
         self._pyiron_table.convert_to_object = bool_dict["convert_to_object"]
-        self._pyiron_table.add._from_hdf(job_dict["input"])
+        self._pyiron_table.add._from_hdf(obj_dict["input"])
 
     def to_hdf(self, hdf=None, group_name=None):
         """
