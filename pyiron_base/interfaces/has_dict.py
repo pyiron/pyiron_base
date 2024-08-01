@@ -45,7 +45,17 @@ class HasDict(ABC):
         pass
 
     def _type_to_dict(self):
-        type_dict = {
+        # Needed for the HasDictfromHDF/HasHDFfromDict classes.  When an object
+        # derives from from both them and HasHDF/HasDict it will generally need
+        # HDF_VERSION and DICT_VERSION defined for the version checking inside
+        # from_dict/from_hdf to work properly.  So the code below tries to
+        # escalate to super in case this is the case and falls back to {} if it
+        # is not
+        try:
+            type_dict = super()._type_to_dict()
+        except AttributeError:
+            type_dict = {}
+        type_dict |= {
             "NAME": self.__class__.__name__,
             "TYPE": str(type(self)),
             "OBJECT": self.__class__.__name__,  # unused alias
