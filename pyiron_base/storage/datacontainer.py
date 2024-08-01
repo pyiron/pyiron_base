@@ -32,7 +32,7 @@ __status__ = "production"
 __date__ = "Jun 17, 2020"
 
 
-_internal_hdf_nodes = ["NAME", "TYPE", "OBJECT", "VERSION", "HDF_VERSION", "READ_ONLY"]
+_internal_hdf_nodes = ["NAME", "TYPE", "OBJECT", "VERSION", "HDF_VERSION", "DICT_VERSION", "READ_ONLY"]
 
 
 def _normalize(key):
@@ -1025,6 +1025,7 @@ class DataContainer(DataContainerBase, HasHDF, HasDict):
         with self.unlocked():
             self.clear()
             self.update(data_dict["data"], wrap=True)
+        self.read_only = data_dict["READ_ONLY"]
 
 
 HDFStub.register(DataContainer, lambda h, g: h[g].to_object(lazy=True))
