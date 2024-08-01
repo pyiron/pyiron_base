@@ -1019,7 +1019,7 @@ class DataContainer(DataContainerBase, HasHDF, HasDict):
         return data
 
     def _to_dict(self):
-        return {"data": self.to_builtin(), 'READ_ONLY': self.read_only}
+        return {"data": self.to_builtin(), "READ_ONLY": self.read_only}
 
     def from_dict(self, data_dict):
         with self.unlocked():
