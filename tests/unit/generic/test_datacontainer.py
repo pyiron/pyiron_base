@@ -659,7 +659,9 @@ class TestDataContainer(TestWithCleanProject):
             data = pl.to_dict()
             l = DataContainer(table_name="input")
             l.from_dict(data)
-            self.assertTrue(l.read_only, "read_only flag not restored after to/from_dict")
+            self.assertTrue(
+                l.read_only, "read_only flag not restored after to/from_dict"
+            )
 
     def test_groups_nodes(self):
         self.assertTrue(
