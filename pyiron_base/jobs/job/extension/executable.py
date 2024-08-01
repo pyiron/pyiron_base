@@ -204,7 +204,9 @@ class Executable(HasDict):
             self.storage.mpi = False
 
     def _to_dict(self):
-        return {"executable": self.storage.to_dict()}
+        full_dict = self.storage.to_dict()
+        data = full_dict.pop("data")
+        return {"executable": {**full_dict, **data}}
 
     def from_dict(self, executable_dict):
         data_container_keys = [
