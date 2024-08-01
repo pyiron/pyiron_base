@@ -203,13 +203,10 @@ class Executable(HasDict):
         else:
             self.storage.mpi = False
 
-    def to_dict(self):
-        executable_dict = self._type_to_dict()
-        executable_storage_dict = self.storage._type_to_dict()
-        executable_storage_dict["READ_ONLY"] = self.storage._read_only
-        executable_storage_dict.update(self.storage.to_builtin())
-        executable_dict["executable"] = executable_storage_dict
-        return executable_dict
+    def _to_dict(self):
+        full_dict = self.storage.to_dict()
+        data = full_dict.pop("data")
+        return {"executable": {**full_dict, **data}}
 
     def from_dict(self, executable_dict):
         data_container_keys = [

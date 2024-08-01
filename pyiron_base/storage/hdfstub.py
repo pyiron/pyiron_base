@@ -4,7 +4,7 @@ Convenience class to lazily read values from HDF.
 
 # Copyright (c) Max-Planck-Institut für Eisenforschung GmbH - Computational Materials Design (CM) Department
 # Distributed under the terms of "New BSD License", see the LICENSE file.
-from pyiron_base.storage.hdfio import ProjectHDFio
+from pyiron_base.storage.hdfio import BaseHDFio
 
 __author__ = "Marvin Poul"
 __copyright__ = (
@@ -108,7 +108,7 @@ class HDFStub:
 
 
 def to_object(hdf_group):
-    if isinstance(hdf_group, ProjectHDFio):
+    if isinstance(hdf_group, BaseHDFio):
         return hdf_group.to_object()
     else:
         return hdf_group
