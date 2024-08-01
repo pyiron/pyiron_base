@@ -44,7 +44,7 @@ class HasDict(ABC):
     def _to_dict(self):
         pass
 
-    def to_dict(self):
+    def _type_to_dict(self):
         type_dict = {
             "NAME": self.__class__.__name__,
             "TYPE": str(type(self)),
@@ -53,7 +53,10 @@ class HasDict(ABC):
         }
         if hasattr(self, "__version__"):
             type_dict["VERSION"] = self.__version__
-        return self._to_dict() | type_dict
+        return type_dict
+
+    def to_dict(self):
+        return self._to_dict() | self._type_to_dict()
 
     @staticmethod
     def _join_children_dict(children: dict[str, dict[str, Any]]) -> dict[str, Any]:
