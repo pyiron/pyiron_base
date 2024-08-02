@@ -74,7 +74,6 @@ def copy_files_to_archive(
             shutil.copytree(dst, final_dst, dirs_exist_ok=True)
 
 
-
 def copy_h5_files(src, dst):
     """
     Copies all .h5 files from the source directory to the destination directory,
