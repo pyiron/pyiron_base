@@ -45,10 +45,6 @@ class Server(
 
     Attributes:
 
-        .. attribute:: structure_id
-
-            the structure ID to be linked to an external/public database.
-
         .. attribute:: host
 
             the hostname of the current system.
@@ -116,7 +112,6 @@ class Server(
         self._queue_id = None
 
         self._new_hdf = new_hdf
-        self._structure_id = None
         self._accept_crash = False
         self._environment_name = None
         self._environment_path = None
@@ -130,27 +125,6 @@ class Server(
     @sentinel
     def accept_crash(self, accept):
         self._accept_crash = accept
-
-    @property
-    def structure_id(self):
-        """
-        Get the structure ID to be linked to an external/public database
-
-        Returns:
-            int: structure ID
-        """
-        return self._structure_id
-
-    @structure_id.setter
-    @sentinel
-    def structure_id(self, structure_id):
-        """
-        Set the structure ID to be linked to an external/public database
-
-        Args:
-            structure_id (int): structure ID
-        """
-        self._structure_id = structure_id
 
     @property
     def queue(self):
@@ -588,7 +562,6 @@ class Server(
                 "cores": self.cores,
                 "threads": self.threads,
                 "new_h5": self.new_hdf,
-                "structure_id": self.structure_id,
                 "run_time": self.run_time,
                 "memory_limit": self.memory_limit,
                 "accept_crash": self.accept_crash,
@@ -616,7 +589,6 @@ class Server(
                 self._queue_id = None
         self._cores = server_dict["cores"]
         h5_mapping = {
-            "structure_id": "_structure_id",
             "run_time": "_run_time",
             "memory_limit": "_memory_limit",
             "threads": "_threads",
@@ -689,7 +661,6 @@ class Server(
         del self._run_mode
         del self._queue_id
         del self._new_hdf
-        del self._structure_id
         del self._accept_crash
 
     @staticmethod
