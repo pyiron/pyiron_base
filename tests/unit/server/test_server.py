@@ -113,7 +113,7 @@ class TestRunmode(PyironTestCase):
                     self.fail(f"queue should accept None, but got {err}")
 
                 self.assertEqual(
-                    server._active_queue, None, "active queue not set to None"
+                    server._data.queue, None, "active queue not set to None"
                 )
                 self.assertTrue(
                     server.run_mode.modal,
@@ -318,7 +318,7 @@ class TestServerHDF(unittest.TestCase):
         server_from_hdf = Server()
         server_from_hdf.from_dict(server_dict=hdf_dict_full)
         self.assertEqual(hdf_dict_full["gpus"], 10)
-        self.assertTrue("gpus" not in hdf_dict_empty.keys())
+        self.assertTrue(hdf_dict_empty["gpus"] is None)
         self.assertEqual(server_from_hdf.gpus, 10)
         self.assertEqual(server_from_hdf.cores, 10)
         self.assertEqual(server_from_hdf.threads, 2)
