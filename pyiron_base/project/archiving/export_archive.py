@@ -67,7 +67,12 @@ def copy_files_to_archive(
             # Compress the temporary directory into a tar.gz archive
             arch_comp_name = f"{archive_directory}.tar.gz"
             with tarfile.open(arch_comp_name, "w:gz") as tar:
-                tar.add(dst, arcname=dir_name_transfer)
+                tar.add(
+                    dst,
+                    arcname=os.path.join(
+                        getdir(archive_directory), dir_name_transfer
+                    )
+                )
         else:
             # If not compressing, copy the directory to the final destination
             final_dst = os.path.join(archive_directory, dir_name_transfer)
