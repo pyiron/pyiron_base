@@ -58,7 +58,10 @@ def copy_files_to_archive(
         dst = os.path.join(temp_dir, dir_name_transfer)
 
         # Copy files to the temporary directory
-        shutil.copytree(directory_to_transfer, dst, dirs_exist_ok=True)
+        if copy_all_files:
+            shutil.copytree(directory_to_transfer, dst, dirs_exist_ok=True)
+        else:
+            copy_h5_files(directory_to_transfer, dst)
 
         if compress:
             # Compress the temporary directory into a tar.gz archive
