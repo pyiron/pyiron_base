@@ -578,13 +578,13 @@ class Server(
         # backwards compatibility
         if "new_h5" in server_dict.keys():
             server_dict["new_hdf"] = server_dict.pop("new_h5") == 1
-        for key in ['conda_environment_name', 'conda_environment_path', "qid"]:
+        for key in ["conda_environment_name", "conda_environment_path", "qid"]:
             if key not in server_dict.keys():
                 server_dict[key] = None
         if "accept_crash" not in server_dict.keys():
             server_dict["accept_crash"] = False
-        if 'additional_arguments' not in server_dict.keys():
-            server_dict['additional_arguments'] = {}
+        if "additional_arguments" not in server_dict.keys():
+            server_dict["additional_arguments"] = {}
 
         # Reload dataclass
         for key in ["NAME", "TYPE", "OBJECT", "VERSION", "DICT_VERSION"]:
