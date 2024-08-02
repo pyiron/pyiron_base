@@ -1989,7 +1989,7 @@ class Project(ProjectPath, HasGroups):
         export_archive.copy_files_to_archive(
             directory_to_transfer,
             destination_path_abs,
-            compressed=compress,
+            compress=compress,
             copy_all_files=copy_all_files,
         )
         df = export_archive.export_database(
