@@ -1032,14 +1032,6 @@ class GenericJob(JobCore, HasDict):
             "This function needs to be implemented in the specific class."
         )
 
-    def send_to_database(self):
-        """
-        if the jobs should be store in the external/public database this could be implemented here, but currently it is
-        just a placeholder.
-        """
-        if self.server.send_to_db:
-            pass
-
     def _init_child_job(self, parent):
         """
         Finalize job initialization when job instance is created as a child from another one.

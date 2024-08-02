@@ -45,10 +45,6 @@ class Server(
 
     Attributes:
 
-        .. attribute:: send_to_db
-
-            boolean option to decide which jobs should be store in the external/public database.
-
         .. attribute:: structure_id
 
             the structure ID to be linked to an external/public database.
@@ -120,33 +116,11 @@ class Server(
         self._queue_id = None
 
         self._new_hdf = new_hdf
-        self._send_to_db = False
         self._structure_id = None
         self._accept_crash = False
         self._environment_name = None
         self._environment_path = None
         self.additional_arguments = {}
-
-    @property
-    def send_to_db(self):
-        """
-        Get the boolean option to decide which jobs should be store in the external/public database
-
-        Returns:
-            bool: [True/False]
-        """
-        return self._send_to_db
-
-    @send_to_db.setter
-    @sentinel
-    def send_to_db(self, send):
-        """
-        Set the boolean option to decide which jobs should be store in the external/public database
-
-        Args:
-            send (bool): [True/False]
-        """
-        self._send_to_db = send
 
     @property
     def accept_crash(self):
@@ -715,7 +689,6 @@ class Server(
         del self._run_mode
         del self._queue_id
         del self._new_hdf
-        del self._send_to_db
         del self._structure_id
         del self._accept_crash
 

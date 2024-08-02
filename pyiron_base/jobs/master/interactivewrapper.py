@@ -134,5 +134,4 @@ class InteractiveWrapper(GenericMaster):
         self._logger.info(
             "{}, status: {}, monte carlo master".format(self.job_info_str, self.status)
         )
-        self.send_to_database()
         self.update_master()
