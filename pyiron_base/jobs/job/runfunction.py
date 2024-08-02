@@ -349,7 +349,6 @@ def run_job_with_status_collect(job):
                 job.compress()
             job.status.finished = True
     job._hdf5["status"] = job.status.string
-    job.send_to_database()
     job.update_master()
 
 
