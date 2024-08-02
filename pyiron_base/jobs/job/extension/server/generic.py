@@ -46,10 +46,6 @@ class Server(
 
     Attributes:
 
-        .. attribute:: send_to_db
-
-            boolean option to decide which jobs should be store in the external/public database.
-
         .. attribute:: structure_id
 
             the structure ID to be linked to an external/public database.
