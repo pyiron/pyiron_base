@@ -631,6 +631,7 @@ class Server(
         """
         Delete the Server object from memory
         """
+        del self._run_mode
         del self._data
 
     @staticmethod
