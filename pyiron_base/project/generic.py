@@ -1981,6 +1981,8 @@ class Project(ProjectPath, HasGroups):
             destination_path_abs = destination_path_abs.split(".tar.gz")[0]
             compress = True
         directory_to_transfer = os.path.abspath(self.path)
+        assert not destination_path_ab.endswith(".tar")
+        assert not destination_path_ab.endswith(".gz")
         csv_file_path = os.path.join(
             os.path.dirname(destination_path_abs), csv_file_name
         )
