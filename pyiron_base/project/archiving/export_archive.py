@@ -50,6 +50,7 @@ def copy_files_to_archive(
         copy_all_files (bool): If True, include all files in the archive, otherwise only .h5 files. Default is False.
 
     """
+
     def copy_files(origin, destination, copy_all_files=copy_all_files):
         if copy_all_files:
             shutil.copytree(origin, destination, dirs_exist_ok=True)
@@ -60,16 +61,12 @@ def copy_files_to_archive(
     dir_name_transfer = getdir(path=directory_to_transfer)
     if not compress:
         copy_files(
-            directory_to_transfer,
-            os.path.join(archive_directory, dir_name_transfer)
+            directory_to_transfer, os.path.join(archive_directory, dir_name_transfer)
         )
     else:
         with tempfile.TemporaryDirectory() as temp_dir:
             # Copy files to the temporary directory
-            copy_files(
-                directory_to_transfer,
-                os.path.join(temp_dir, dir_name_transfer)
-            )
+            copy_files(directory_to_transfer, os.path.join(temp_dir, dir_name_transfer))
 
             # Compress the temporary directory into a tar.gz archive
             with tarfile.open(f"{archive_directory}.tar.gz", "w:gz") as tar:
