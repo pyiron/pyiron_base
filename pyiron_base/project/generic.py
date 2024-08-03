@@ -1980,11 +1980,11 @@ class Project(ProjectPath, HasGroups):
         if ".tar.gz" in destination_path_abs:
             destination_path_abs = destination_path_abs.split(".tar.gz")[0]
             compress = True
-        directory_to_transfer = os.path.dirname(self.path)
+        directory_to_transfer = os.path.abspath(self.path)
         csv_file_path = os.path.join(
             os.path.dirname(destination_path_abs), csv_file_name
         )
-        if destination_path == directory_to_transfer and not compress:
+        if destination_path_abs == directory_to_transfer and not compress:
             raise ValueError(
                 "The destination_path cannot have the same name as the project to compress."
             )
