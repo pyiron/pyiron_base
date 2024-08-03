@@ -65,6 +65,8 @@ class TestPack(PyironTestCase):
         os.remove(file_path)
         with self.assertRaises(ValueError):
             self.pr.pack(compress=False)
+        with self.assertRaises(ValueError):
+            self.pr.pack(destination_path=self.pr.path, compress=False)
 
     def test_compress(self):
         # here we check whether the packing function
