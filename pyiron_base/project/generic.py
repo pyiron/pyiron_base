@@ -11,7 +11,7 @@ import os
 import posixpath
 import shutil
 import stat
-from typing import TYPE_CHECKING, Dict, Generator, Literal, Union, Optional
+from typing import TYPE_CHECKING, Dict, Generator, Literal, Optional, Union
 
 import cloudpickle
 import numpy as np
