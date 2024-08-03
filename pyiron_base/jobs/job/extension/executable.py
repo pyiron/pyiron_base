@@ -222,15 +222,15 @@ class Executable(HasDict):
         ]
         executable_class_dict = {}
         for key in data_container_keys:
-            if key in executable_dict["executable"]:
-                executable_class_dict[key] = executable_dict["executable"][key]
+            if key in executable_dict.keys():
+                executable_class_dict[key] = executable_dict[key]
             else:
                 executable_class_dict[key] = None
 
         # Backwards compatibility
-        if "executable" in executable_dict.keys():
+        if "executable" in executable_dict.keys() and isinstance(executable_dict["executable"], dict):
             for key in data_container_keys:
-                if key in executable_dict["executable"]:
+                if key in executable_dict["executable"].keys():
                     executable_class_dict[key] = executable_dict["executable"][key]
                 else:
                     executable_class_dict[key] = None
