@@ -1984,7 +1984,7 @@ class Project(ProjectPath, HasGroups):
         csv_file_path = os.path.join(
             os.path.dirname(destination_path_abs), csv_file_name
         )
-        if destination_path_abs == directory_to_transfer and not compress:
+        if destination_path == directory_to_transfer and not compress:
             raise ValueError(
                 "The destination_path cannot have the same name as the project to compress."
             )
