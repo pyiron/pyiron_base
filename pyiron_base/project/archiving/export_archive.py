@@ -3,8 +3,6 @@ import shutil
 import tarfile
 import tempfile
 
-import numpy as np
-
 from pyiron_base.project.archiving.shared import getdir
 
 
@@ -52,31 +50,44 @@ def copy_files_to_archive(
         copy_all_files (bool): If True, include all files in the archive, otherwise only .h5 files. Default is False.
 
     """
-    assert isinstance(archive_directory, str) and ".tar.gz" not in archive_directory
-    with tempfile.TemporaryDirectory() as temp_dir:
-        dir_name_transfer = getdir(path=directory_to_transfer)
-        dst = os.path.join(temp_dir, dir_name_transfer)
 
-        # Copy files to the temporary directory
+    def copy_files(origin, destination, copy_all_files=copy_all_files):
+        """
+        Copy files from the origin directory to the destination directory.
+
+        Args:
+            origin (str): The origin directory containing the files to copy.
+            destination (str): The destination directory for the copied files.
+            copy_all_files (bool): If True, include all files in the archive,
+                otherwise only .h5 files. Default is False.
+        """
         if copy_all_files:
-            shutil.copytree(directory_to_transfer, dst, dirs_exist_ok=True)
+            shutil.copytree(origin, destination, dirs_exist_ok=True)
         else:
-            copy_h5_files(directory_to_transfer, dst)
+            copy_h5_files(origin, destination)
 
-        if compress:
+    assert isinstance(archive_directory, str) and ".tar.gz" not in archive_directory
+    dir_name_transfer = getdir(path=directory_to_transfer)
+    if not compress:
+        copy_files(
+            directory_to_transfer, os.path.join(archive_directory, dir_name_transfer)
+        )
+    elif compress and copy_all_files:
+        with tarfile.open(f"{archive_directory}.tar.gz", "w:gz") as tar:
+            tar.add(directory_to_transfer, arcname=dir_name_transfer)
+    else:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            # Copy files to the temporary directory
+            copy_files(directory_to_transfer, os.path.join(temp_dir, dir_name_transfer))
+
             # Compress the temporary directory into a tar.gz archive
-            arch_comp_name = f"{archive_directory}.tar.gz"
-            with tarfile.open(arch_comp_name, "w:gz") as tar:
+            with tarfile.open(f"{archive_directory}.tar.gz", "w:gz") as tar:
                 tar.add(
                     temp_dir,
                     arcname=os.path.relpath(
                         os.path.abspath(archive_directory), os.getcwd()
                     ),
                 )
-        else:
-            # If not compressing, copy the directory to the final destination
-            final_dst = os.path.join(archive_directory, dir_name_transfer)
-            shutil.copytree(dst, final_dst, dirs_exist_ok=True)
 
 
 def copy_h5_files(src, dst):
