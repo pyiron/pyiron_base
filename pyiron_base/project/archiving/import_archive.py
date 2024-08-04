@@ -29,7 +29,7 @@ def import_jobs(project_instance, archive_directory, df, compressed=True):
         project_instance (pyiron_base.project.generic.Project): Pyiron project instance.
         archive_directory (str): Path to the archive directory.
         df (pandas.DataFrame): DataFrame containing the job information.
-        compressed (bool): Set to True, if the archive directory to import is compressed (*.tar.gz). 
+        compressed (bool): Set to True, if the archive directory to import is compressed (*.tar.gz).
     """
     # Copy HDF5 files
     # if the archive_directory is a path(string)/name of the compressed file
