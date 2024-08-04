@@ -52,6 +52,15 @@ def copy_files_to_archive(
     """
 
     def copy_files(origin, destination, copy_all_files=copy_all_files):
+        """
+        Copy files from the origin directory to the destination directory.
+
+        Args:
+            origin (str): The origin directory containing the files to copy.
+            destination (str): The destination directory for the copied files.
+            copy_all_files (bool): If True, include all files in the archive,
+                otherwise only .h5 files. Default is False.
+        """
         if copy_all_files:
             shutil.copytree(origin, destination, dirs_exist_ok=True)
         else:
