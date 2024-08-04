@@ -133,7 +133,9 @@ class TestUnpacking(PyironTestCase):
 
     def test_copy_all_files(self):
         self.imp_pr.remove_jobs(recursive=True, silently=True)
-        self.pr.pack(destination_path=self.arch_dir_comp, compress=True, copy_all_files=True)
+        self.pr.pack(
+            destination_path=self.arch_dir_comp, compress=True, copy_all_files=True
+        )
         self.imp_pr.unpack(origin_path=self.arch_dir_comp, compress=True)
         try:
             j = self.imp_pr.load(self.job.name)
