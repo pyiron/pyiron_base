@@ -132,6 +132,7 @@ class TestUnpacking(PyironTestCase):
         self.assertEqual(len(compare_obj.diff_files), 0)
 
     def test_copy_all_files(self):
+        """Jobs should be able to load from the imported project."""
         self.imp_pr.remove_jobs(recursive=True, silently=True)
         self.pr.pack(
             destination_path=self.arch_dir_comp, compress=True, copy_all_files=True
