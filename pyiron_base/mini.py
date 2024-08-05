@@ -1,7 +1,7 @@
 from pyiron_base.project.generic import Project
 
 
-def warp_exe(
+def wrap_exe(
     executable_str,
     job_name=None,
     write_input_funct=None,
