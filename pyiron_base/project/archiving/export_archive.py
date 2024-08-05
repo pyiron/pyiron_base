@@ -72,9 +72,6 @@ def copy_files_to_archive(
         copy_files(
             directory_to_transfer, os.path.join(archive_directory, dir_name_transfer)
         )
-    elif compress and copy_all_files:
-        with tarfile.open(f"{archive_directory}.tar.gz", "w:gz") as tar:
-            tar.add(directory_to_transfer, arcname=dir_name_transfer)
     else:
         with tempfile.TemporaryDirectory() as temp_dir:
             # Copy files to the temporary directory
