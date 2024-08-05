@@ -14,6 +14,6 @@ dependencies:
 - pysqa =0.1.21
 - pytables =3.9.2
 - sqlalchemy =2.0.31
-- tqdm =4.66.4
+- tqdm =4.66.5
 - traitlets =5.14.3
 - setuptools
