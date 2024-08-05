@@ -1,6 +1,15 @@
 from pyiron_base.project.generic import Project
 
 
+try:
+    import os
+    from pyiron_base.project.condaenv import CondaEnvironment
+except ImportError:
+    pass
+else:
+    conda = CondaEnvironment(env_path=os.path.abspath("conda"))
+
+
 def wrap_exe(
     executable_str,
     job_name=None,
@@ -155,28 +164,3 @@ def cache_clear(silently: bool = False):
         silently (bool): Enable silent clearing without asking the user for confirmation
     """
     Project(path=".").remove_jobs(recursive=True, silently=silently)
-
-
-def conda_create_env(
-    env_name: str,
-    env_file: str,
-    use_mamba: bool = False,
-    global_installation: bool = True,
-):
-    """
-    Create conda environment to execute selected pyiron tasks in a separate conda environment
-
-    Args:
-        env_name (str): Name of the new conda environment
-        env_file (str): Path to the conda environment file (environment.yml) which includes the dependencies for the new
-                        conda environment.
-        use_mamba (bool): Use mamba rather than conda - false by default
-        global_installation (bool): Create a global conda environment rather than creating the conda environment in the
-                                    current folder - true by default
-    """
-    Project(path=".").conda_environment.create(
-        env_name=env_name,
-        env_file=env_file,
-        global_installation=global_installation,
-        use_mamba=use_mamba,
-    )
