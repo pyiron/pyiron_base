@@ -157,7 +157,12 @@ def cache_clear(silently: bool = False):
     Project(path=".").remove_jobs(recursive=True, silently=silently)
 
 
-def conda_create_env(env_name: str, env_file: str, use_mamba: bool = False, global_installation: bool = True):
+def conda_create_env(
+    env_name: str,
+    env_file: str,
+    use_mamba: bool = False,
+    global_installation: bool = True,
+):
     """
     Create conda environment to execute selected pyiron tasks in a separate conda environment
 
@@ -173,5 +178,5 @@ def conda_create_env(env_name: str, env_file: str, use_mamba: bool = False, glob
         env_name=env_name,
         env_file=env_file,
         global_installation=global_installation,
-        use_mamba=use_mamba
+        use_mamba=use_mamba,
     )
