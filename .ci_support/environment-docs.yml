@@ -12,7 +12,7 @@ dependencies:
 - h5io_browser =0.0.17
 - h5py =3.11.0
 - jinja2 =3.1.4
-- monty =2024.7.12
+- monty =2024.7.30
 - numpy =1.26.4
 - pandas =2.2.2
 - pint =0.24.3
@@ -23,6 +23,6 @@ dependencies:
 - pysqa =0.1.21
 - pytables =3.9.2
 - sqlalchemy =2.0.31
-- tqdm =4.66.4
+- tqdm =4.66.5
 - traitlets =5.14.3
 - jupyter-book =1.0.0

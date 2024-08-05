@@ -29,7 +29,7 @@ dependencies = [
     "h5io_browser==0.0.17",
     "h5py==3.11.0",
     "numpy==1.26.4",
-    "monty==2024.7.12",
+    "monty==2024.7.30",
     "pandas==2.2.2",
     "psutil==6.0.0",
     "pyfileindex==0.0.26",
@@ -37,7 +37,7 @@ dependencies = [
     "pysqa==0.1.21",
     "sqlalchemy==2.0.31",
     "tables==3.9.2",
-    "tqdm==4.66.4",
+    "tqdm==4.66.5",
     "traitlets==5.14.3",
 ]
 dynamic = ["version"]

@@ -913,6 +913,7 @@ class GenericJob(JobCore, HasDict):
         """
         The run static function is called by run to execute the simulation.
         """
+        self.status.running = True
         if self._job_with_calculate_function:
             execute_job_with_calculate_function(job=self)
         else:
@@ -1030,14 +1031,6 @@ class GenericJob(JobCore, HasDict):
         raise NotImplementedError(
             "This function needs to be implemented in the specific class."
         )
-
-    def send_to_database(self):
-        """
-        if the jobs should be store in the external/public database this could be implemented here, but currently it is
-        just a placeholder.
-        """
-        if self.server.send_to_db:
-            pass
 
     def _init_child_job(self, parent):
         """
