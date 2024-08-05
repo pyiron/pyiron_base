@@ -11,7 +11,7 @@ import os
 import posixpath
 import shutil
 import stat
-from typing import TYPE_CHECKING, Dict, Generator, Literal, Union
+from typing import TYPE_CHECKING, Dict, Generator, Literal, Optional, Union
 
 import cloudpickle
 import numpy as np
@@ -1960,10 +1960,10 @@ class Project(ProjectPath, HasGroups):
 
     def pack(
         self,
-        destination_path,
-        csv_file_name="export.csv",
-        compress=True,
-        copy_all_files=False,
+        destination_path: Optional[str] = None,
+        csv_file_name: str = "export.csv",
+        compress: bool = True,
+        copy_all_files: bool = False,
     ):
         """
         Export job table to a csv file and copy (and optionally compress) the project directory.
@@ -1974,15 +1974,19 @@ class Project(ProjectPath, HasGroups):
             compress (bool): if true, the function will compress the destination_path to a tar.gz file.
             copy_all_files (bool):
         """
+        if destination_path is None:
+            destination_path = os.path.dirname(self.path)
         destination_path_abs = os.path.abspath(destination_path)
         if ".tar.gz" in destination_path_abs:
             destination_path_abs = destination_path_abs.split(".tar.gz")[0]
             compress = True
-        directory_to_transfer = os.path.dirname(self.path)
+        directory_to_transfer = os.path.abspath(self.path)
+        assert not destination_path_abs.endswith(".tar")
+        assert not destination_path_abs.endswith(".gz")
         csv_file_path = os.path.join(
             os.path.dirname(destination_path_abs), csv_file_name
         )
-        if destination_path_abs == directory_to_transfer:
+        if destination_path_abs == directory_to_transfer and not compress:
             raise ValueError(
                 "The destination_path cannot have the same name as the project to compress."
             )
