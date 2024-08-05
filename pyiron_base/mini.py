@@ -1,8 +1,8 @@
 from pyiron_base.project.generic import Project
 
-
 try:
     import os
+
     from pyiron_base.project.condaenv import CondaEnvironment
 except ImportError:
     pass
