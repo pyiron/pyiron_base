@@ -1975,11 +1975,13 @@ class Project(ProjectPath, HasGroups):
             copy_all_files (bool):
         """
         if destination_path is None:
-            destination_path = os.path.dirname(self.path)
-        destination_path_abs = os.path.abspath(destination_path)
-        if ".tar.gz" in destination_path_abs:
-            destination_path_abs = destination_path_abs.split(".tar.gz")[0]
+            destination_path = self.path
+        if os.path.isabs(destination_path):
+            destination_path = os.path.relpath(destination_path, os.getcwd())
+        if ".tar.gz" in destination_path:
+            destination_path = destination_path.split(".tar.gz")[0]
             compress = True
+        destination_path_abs = os.path.abspath(destination_path)
         directory_to_transfer = os.path.abspath(self.path)
         assert not destination_path_abs.endswith(".tar")
         assert not destination_path_abs.endswith(".gz")
@@ -1995,6 +1997,7 @@ class Project(ProjectPath, HasGroups):
             destination_path_abs,
             compress=compress,
             copy_all_files=copy_all_files,
+            arcname=destination_path,
         )
         df = export_archive.export_database(
             self, directory_to_transfer, destination_path_abs
