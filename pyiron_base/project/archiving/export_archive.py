@@ -38,7 +38,7 @@ def update_project(project_instance, directory_to_transfer, archive_directory, d
 
 
 def copy_files_to_archive(
-    directory_to_transfer, archive_directory, compress=True, copy_all_files=False
+    directory_to_transfer, archive_directory, compress=True, copy_all_files=False, arcname=None
 ):
     """
     Copy files from a directory to an archive, optionally compressing the archive.
@@ -67,6 +67,10 @@ def copy_files_to_archive(
             copy_h5_files(origin, destination)
 
     assert isinstance(archive_directory, str) and ".tar.gz" not in archive_directory
+    if arcname is None:
+        arcname = os.path.relpath(
+            os.path.abspath(archive_directory), os.getcwd()
+        )
     dir_name_transfer = getdir(path=directory_to_transfer)
     if not compress:
         copy_files(
@@ -81,9 +85,7 @@ def copy_files_to_archive(
             with tarfile.open(f"{archive_directory}.tar.gz", "w:gz") as tar:
                 tar.add(
                     temp_dir,
-                    arcname=os.path.relpath(
-                        os.path.abspath(archive_directory), os.getcwd()
-                    ),
+                    arcname=arcname,
                 )
 
 
