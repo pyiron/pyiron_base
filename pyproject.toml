@@ -33,7 +33,7 @@ dependencies = [
     "pandas==2.2.2",
     "psutil==6.0.0",
     "pyfileindex==0.0.26",
-    "pyiron_snippets==0.1.3",
+    "pyiron_snippets==0.1.4",
     "pysqa==0.1.21",
     "sqlalchemy==2.0.32",
     "tables==3.9.2",
