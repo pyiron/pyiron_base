@@ -18,14 +18,14 @@ class TestPack(PyironTestCase):
         cls.arch_dir = "archive_folder"
         # this is used to create a folder/a compressed file, are not path
         cls.arch_dir_comp = cls.arch_dir + "_comp"
-        cls.pr = Project("test")
+        cls.file_location = os.path.dirname(os.path.abspath(__file__)).replace(
+            "\\", "/"
+        )
+        cls.pr = Project(os.path.join(cls.file_location, "test"))
         cls.pr.remove_jobs(recursive=True, silently=True)
         cls.job = cls.pr.create_job(job_type=ToyJob, job_name="toy")
         cls.job.run()
         cls.pr.pack(destination_path=cls.arch_dir, compress=False)
-        cls.file_location = os.path.dirname(os.path.abspath(__file__)).replace(
-            "\\", "/"
-        )
 
     @classmethod
     def tearDownClass(cls) -> None:
