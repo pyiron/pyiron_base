@@ -40,8 +40,7 @@ class TestPack(PyironTestCase):
         # and is compared with the return dataframe from export_database
         directory_to_transfer = os.path.basename(self.pr.path[:-1])
         self.pr.pack(destination_path=self.arch_dir, compress=False)
-        df_read = pd.read_csv("export.csv")
-        df_read.drop(df_read.keys()[0], inplace=True, axis=1)
+        df_read = pd.read_csv("export.csv", index_col=0)
         # this removes the "None/NaN/empty" cells as well as the unnamed column
         df_read.dropna(inplace=True, axis=1)
         df_read["timestart"] = pd.to_datetime(df_read["timestart"])
