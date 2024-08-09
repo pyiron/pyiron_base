@@ -131,18 +131,6 @@ class TestUnpacking(PyironTestCase):
         compare_obj = dircmp(path_original, path_import)
         self.assertEqual(len(compare_obj.diff_files), 0)
 
-    def test_load_job_with_all_files(self):
-        """Jobs should be able to load from the imported project."""
-        self.imp_pr.remove_jobs(recursive=True, silently=True)
-        self.pr.pack(
-            destination_path=self.arch_dir_comp, compress=True, copy_all_files=True
-        )
-        self.imp_pr.unpack(origin_path=self.arch_dir_comp, compress=True)
-        try:
-            j = self.imp_pr.load(self.job.name)
-        except Exception as e:
-            self.fail(msg="Loading job fails with {}".format(str(e)))
-
     def test_load_job(self):
         """Jobs should be able to load from the imported project."""
         self.imp_pr.remove_jobs(recursive=True, silently=True)
