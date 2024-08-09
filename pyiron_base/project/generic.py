@@ -1997,10 +1997,10 @@ class Project(ProjectPath, HasGroups):
             destination_path_abs,
             compress=compress,
             copy_all_files=copy_all_files,
-            arcname=destination_path,
+            arcname=self.name,
         )
         df = export_archive.export_database(
-            self, directory_to_transfer, destination_path_abs
+            self, directory_to_transfer, self.path
         )
         df.to_csv(csv_file_path)
 

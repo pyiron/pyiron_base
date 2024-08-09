@@ -29,9 +29,9 @@ def update_project(project_instance, directory_to_transfer, archive_directory, d
 
     return [
         (
-            os.path.join(dir_name_archive, dir_name_transfer, p)
+            os.path.join(dir_name_archive, p)
             if p != "."
-            else os.path.join(dir_name_archive, dir_name_transfer)
+            else dir_name_archive
         )
         for p in path_rel_lst
     ]
@@ -85,10 +85,7 @@ def copy_files_to_archive(
 
             # Compress the temporary directory into a tar.gz archive
             with tarfile.open(f"{archive_directory}.tar.gz", "w:gz") as tar:
-                tar.add(
-                    temp_dir,
-                    arcname=arcname,
-                )
+                tar.add(os.path.join(temp_dir, dir_name_transfer), dir_name_transfer)
 
 
 def copy_h5_files(src, dst):

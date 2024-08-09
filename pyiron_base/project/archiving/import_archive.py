@@ -50,9 +50,11 @@ def import_jobs(project_instance, archive_directory, df, compressed=True):
             does not have the correct format paths
             as string or pyiron Project objects are expected"""
         )
+    if not os.path.exists(archive_directory):
+        os.makedirs(archive_directory)
     if compressed:
         with tarfile.open(archive_directory + ".tar.gz", "r:gz") as tar:
-            tar.extractall()
+            tar.extractall(path=archive_directory)
 
     # source folder; archive folder
     src = os.path.abspath(archive_directory)
