@@ -2,6 +2,7 @@ import os
 import shutil
 import tarfile
 import tempfile
+from typing import Optional
 
 from pyiron_base.project.archiving.shared import getdir
 
@@ -38,11 +39,11 @@ def update_project(project_instance, directory_to_transfer, archive_directory, d
 
 
 def copy_files_to_archive(
-    directory_to_transfer,
-    archive_directory,
-    compress=True,
-    copy_all_files=False,
-    arcname=None,
+    directory_to_transfer: str,
+    archive_directory: str,
+    compress: bool = True,
+    copy_all_files: bool = False,
+    arcname: Optional[str] = None,
 ):
     """
     Copy files from a directory to an archive, optionally compressing the archive.
@@ -78,6 +79,9 @@ def copy_files_to_archive(
         copy_files(
             directory_to_transfer, os.path.join(archive_directory, dir_name_transfer)
         )
+    elif compress and copy_all_files:
+        with tarfile.open(f"{archive_directory}.tar.gz", "w:gz") as tar:
+            tar.add(os.path.dirname(directory_to_transfer), arcname=arcname)
     else:
         with tempfile.TemporaryDirectory() as temp_dir:
             # Copy files to the temporary directory
