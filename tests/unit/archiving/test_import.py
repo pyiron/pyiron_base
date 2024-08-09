@@ -33,8 +33,10 @@ class TestUnpacking(PyironTestCase):
         cls.pr.remove(enable=True)
         uncompressed_pr = Project(cls.arch_dir)
         uncompressed_pr.remove(enable=True, enforce=True)
-        os.remove("export.csv")
-        os.remove(cls.arch_dir_comp + ".tar.gz")
+        if os.path.exists(cls.arch_dir_comp + ".tar.gz"):
+            os.remove(cls.arch_dir_comp + ".tar.gz")
+        if os.path.exists("export.csv"):
+            os.remove("export.csv")
         cls.imp_pr.remove(enable=True)
 
     def setUp(self):
@@ -130,6 +132,16 @@ class TestUnpacking(PyironTestCase):
         path_import = getdir(path_import)
         compare_obj = dircmp(path_original, path_import)
         self.assertEqual(len(compare_obj.diff_files), 0)
+
+    def test_load_job_all(self):
+        """Jobs should be able to load from the imported project."""
+        self.imp_pr.remove_jobs(recursive=True, silently=True)
+        self.pr.pack(destination_path=self.arch_dir_comp, compress=True, copy_all_files=True)
+        self.imp_pr.unpack(origin_path=self.arch_dir_comp, compress=True)
+        try:
+            j = self.imp_pr.load(self.job.name)
+        except Exception as e:
+            self.fail(msg="Loading job fails with {}".format(str(e)))
 
     def test_load_job(self):
         """Jobs should be able to load from the imported project."""
