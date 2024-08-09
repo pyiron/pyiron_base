@@ -42,7 +42,7 @@ class TestPack(PyironTestCase):
         self.pr.pack(destination_path=self.arch_dir, compress=False)
         df_read = pd.read_csv("export.csv", index_col=0)
         # this removes the "None/NaN/empty" cells as well as the unnamed column
-        df_read.dropna(inplace=True, axis=1)
+        # df_read.dropna(inplace=True, axis=1)
         df_read["timestart"] = pd.to_datetime(df_read["timestart"])
         df_read["hamversion"] = float(df_read["hamversion"])
         df_exp = export_database(
