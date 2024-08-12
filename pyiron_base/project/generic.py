@@ -1990,7 +1990,7 @@ class Project(ProjectPath, HasGroups):
         )
         if destination_path_abs == directory_to_transfer and not compress:
             raise ValueError(
-                "The destination_path cannot have the same name as the project to compress."
+                "The destination_path cannot have the same name as the project."
             )
         export_archive.copy_files_to_archive(
             directory_to_transfer,
