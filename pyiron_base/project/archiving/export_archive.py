@@ -76,7 +76,7 @@ def copy_files_to_archive(
     dir_name_transfer = getdir(path=directory_to_transfer)
     if not compress:
         copy_files(
-            directory_to_transfer, os.path.join(archive_directory, dir_name_transfer)
+            directory_to_transfer, os.path.join(archive_directory, arcname)
         )
     else:
         with tempfile.TemporaryDirectory() as temp_dir:
