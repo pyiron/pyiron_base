@@ -7,11 +7,11 @@ DatabaseAccess class deals with accessing the database
 
 import os
 import re
+import warnings
 from datetime import datetime
 from queue import Empty as QueueEmpty
 from queue import SimpleQueue
 from threading import Lock, Thread
-import warnings
 
 import numpy as np
 import pandas
@@ -611,11 +611,14 @@ class DatabaseAccess(IsDatabase):
         Args:
             par_dict (dict): Dictionary with the item values and column names as keys
         """
-        return len(
-            self.get_items_dict(
-                {"job": par_dict["job"], "project": par_dict["project"]}
+        return (
+            len(
+                self.get_items_dict(
+                    {"job": par_dict["job"], "project": par_dict["project"]}
+                )
             )
-        ) > 0
+            > 0
+        )
 
     # Item functions
     def add_item_dict(self, par_dict, check_duplicates=False):
