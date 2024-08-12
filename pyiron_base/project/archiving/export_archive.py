@@ -28,11 +28,7 @@ def update_project(project_instance, directory_to_transfer, archive_directory, d
     ]
 
     return [
-        (
-            os.path.join(dir_name_archive, p)
-            if p != "."
-            else dir_name_archive
-        )
+        (os.path.join(dir_name_archive, p) if p != "." else dir_name_archive)
         for p in path_rel_lst
     ]
 
@@ -75,9 +71,7 @@ def copy_files_to_archive(
         arcname = os.path.relpath(os.path.abspath(archive_directory), os.getcwd())
     dir_name_transfer = getdir(path=directory_to_transfer)
     if not compress:
-        copy_files(
-            directory_to_transfer, os.path.join(archive_directory, arcname)
-        )
+        copy_files(directory_to_transfer, os.path.join(archive_directory, arcname))
     else:
         with tempfile.TemporaryDirectory() as temp_dir:
             # Copy files to the temporary directory
