@@ -11,6 +11,7 @@ from datetime import datetime
 from queue import Empty as QueueEmpty
 from queue import SimpleQueue
 from threading import Lock, Thread
+import warnings
 
 import numpy as np
 import pandas
@@ -603,8 +604,21 @@ class DatabaseAccess(IsDatabase):
             par_dict[key_limited] = "OVERFLOW_ERROR"
         return par_dict
 
+    def _check_duplidates(self, par_dict: dict):
+        """
+        Check for duplicates in the database
+
+        Args:
+            par_dict (dict): Dictionary with the item values and column names as keys
+        """
+        return len(
+            self.get_items_dict(
+                {"job": par_dict["job"], "project": par_dict["project"]}
+            )
+        ) > 0
+
     # Item functions
-    def add_item_dict(self, par_dict):
+    def add_item_dict(self, par_dict, check_duplicates=False):
         """
         Create a new database item
 
@@ -631,6 +645,9 @@ class DatabaseAccess(IsDatabase):
         """
         if not self._view_mode:
             try:
+                if check_duplicates and self._check_duplidates(par_dict):
+                    warnings.warn(f"Duplicate entry found in database: {par_dict}")
+                    return None
                 par_dict = self._check_chem_formula_length(par_dict)
                 par_dict = dict(
                     (key.lower(), value) for key, value in par_dict.items()
