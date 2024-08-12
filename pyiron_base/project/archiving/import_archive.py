@@ -84,7 +84,7 @@ def import_jobs(project_instance, archive_directory, df, compressed=True):
             entry["timestop"] = pandas.to_datetime(entry["timestop"])
         if "username" not in entry:
             entry["username"] = state.settings.login_user
-        job_id = pr_import.db.add_item_dict(par_dict=entry)
+        job_id = pr_import.db.add_item_dict(par_dict=entry, check_duplicates=True)
         job_id_lst.append(job_id)
 
     # Update parent and master ids
