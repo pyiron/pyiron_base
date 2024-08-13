@@ -1976,7 +1976,7 @@ class Project(ProjectPath, HasGroups):
             destination_path_abs,
             compress=compress,
             copy_all_files=copy_all_files,
-            arcname=self.name,
+            arcname=os.path.relpath(self.path, os.getcwd()),
         )
         df = export_archive.export_database(self)
         df.to_csv(csv_file_path)

@@ -21,6 +21,7 @@ def copy_files_to_archive(
         archive_directory (str): The destination directory for the archive.
         compress (bool): If True, compress the archive directory into a tarball. Default is True.
         copy_all_files (bool): If True, include all files in the archive, otherwise only .h5 files. Default is False.
+        arcname (str): The name of the archive directory. Default is the name of the directory to transfer.
 
     """
 
@@ -99,7 +100,7 @@ def export_database(pr):
     df["id"] = df["id"].map(job_translate_dict)
     df["masterid"] = df["masterid"].map(job_translate_dict)
     df["parentid"] = df["parentid"].map(job_translate_dict)
-    df["project"] = os.path.relpath(pr.project_path, ".")
+    df["project"] = os.path.relpath(pr.project_path, os.getcwd())
 
     df.drop(columns=["projectpath"], inplace=True)
     return df
