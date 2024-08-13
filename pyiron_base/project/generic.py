@@ -254,9 +254,7 @@ class Project(ProjectPath, HasGroups):
             raise EnvironmentError("copy_to is not available in Viewermode !")
         if not isinstance(destination, Project):
             raise TypeError("A project can only be copied to another project.")
-        for sub_project_name in tqdm(
-            self.list_groups(), desc="Copying sub-projects"
-        ):
+        for sub_project_name in tqdm(self.list_groups(), desc="Copying sub-projects"):
             if "_hdf5" not in sub_project_name:
                 sub_project = self.open(sub_project_name)
                 destination_sub_project = destination.open(sub_project_name)
