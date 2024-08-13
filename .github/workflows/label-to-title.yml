@@ -41,7 +41,7 @@ jobs:
         run: |
           TITLE="${{ github.event.pull_request.title || github.event.issue.title }}"
           LABEL_TO_REMOVE="${{ steps.check_label.outputs.label }}"
-          NEW_TITLE=$(echo "$TITLE" | sed "s/\[$LABEL_TO_REMOVE\]//g")
+          NEW_TITLE=$(echo "$TITLE" | tr -d "$LABEL_TO_REMOVE")
           NEW_TITLE=$(echo "$NEW_TITLE" | sed 's/  / /g' | sed 's/^ *//;s/ *$//') # Remove extra spaces
           if [[ $TITLE != ${NEW_TITLE} ]]; then
             curl -s -X PATCH \
