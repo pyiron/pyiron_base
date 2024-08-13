@@ -67,9 +67,7 @@ def import_jobs(project_instance, archive_directory, df, compressed=True):
 
     df["project"] = [
         os.path.normpath(
-            os.path.join(
-                pr_import.project_path, os.path.relpath(p, common_path)
-            )
+            os.path.join(pr_import.project_path, os.path.relpath(p, common_path))
         )
         + "/"
         for p in df["project"].values
