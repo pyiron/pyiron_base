@@ -60,7 +60,7 @@ def import_jobs(project_instance, archive_directory, df, compressed=True):
     src = os.path.abspath(os.path.join(archive_directory, common_path))
     copytree(src, project_instance.path, dirs_exist_ok=True)
     if compressed:
-        rmtree(src)
+        rmtree(os.path.abspath(archive_directory))
 
     # # Update Database
     pr_import = project_instance.open(os.curdir)
