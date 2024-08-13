@@ -54,7 +54,7 @@ def copy_files_to_archive(
 
             # Compress the temporary directory into a tar.gz archive
             with tarfile.open(f"{archive_directory}.tar.gz", "w:gz") as tar:
-                tar.add(dest, arcname=dir_name_transfer)
+                tar.add(dest, arcname=arcname)
 
 
 def copy_h5_files(src, dst):
