@@ -173,9 +173,8 @@ class TestUnpacking(PyironTestCase):
         pr_imp.unpack(
             origin_path=pack_path_comp, csv_file_name=pack_path_csv, compress=True
         )
-        # here the 7 is the length of '.tar.gz' string
         with tarfile.open(pack_path_comp, "r:gz") as tar:
-            tar.extractall()
+            tar.extractall(path=pack_path_comp[:-7])
         compare_obj = dircmp(pack_path_comp[:-7], pr_imp.path)
         self.assertEqual(len(compare_obj.diff_files), 0)
         pr.remove(enable=True)
