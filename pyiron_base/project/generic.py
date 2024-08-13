@@ -238,36 +238,42 @@ class Project(ProjectPath, HasGroups):
         new._inspect_mode = self._inspect_mode
         return new
 
-    def copy_to(self, destination):
+    def copy_to(self, destination, delete_original_data=False):
         """
         Copy the project object to a different pyiron path - including the content of the project (all jobs).
         In order to move individual jobs, use `copy_to` from the job objects.
 
         Args:
             destination (Project): project path to copy the project content to
+            delete_original_data (bool): delete the original data after copying - default=False
 
         Returns:
             Project: pointing to the new project path
         """
-        if not self.view_mode:
-            if not isinstance(destination, Project):
-                raise TypeError("A project can only be copied to another project.")
-            for sub_project_name in tqdm(
-                self.list_groups(), desc="Copying sub-projects"
-            ):
-                if "_hdf5" not in sub_project_name:
-                    sub_project = self.open(sub_project_name)
-                    destination_sub_project = destination.open(sub_project_name)
-                    sub_project.copy_to(destination_sub_project)
-            for job_id in tqdm(self.get_job_ids(recursive=False), desc="Copying jobs"):
-                ham = self.load(job_id)
+        if self.view_mode:
+            raise EnvironmentError("copy_to is not available in Viewermode !")
+        if not isinstance(destination, Project):
+            raise TypeError("A project can only be copied to another project.")
+        for sub_project_name in tqdm(self.list_groups(), desc="Copying sub-projects"):
+            if "_hdf5" not in sub_project_name:
+                sub_project = self.open(sub_project_name)
+                destination_sub_project = destination.open(sub_project_name)
+                sub_project.copy_to(destination_sub_project)
+        for job_id in tqdm(self.get_job_ids(recursive=False), desc="Copying jobs"):
+            ham = self.load(job_id)
+            if delete_original_data:
+                ham.move_to(destination)
+            else:
                 ham.copy_to(project=destination)
+        if delete_original_data:
+            for file in tqdm(self.list_files(), desc="Moving files"):
+                shutil.move(os.path.join(self.path, file), destination.path)
+
+        else:
             for file in tqdm(self.list_files(), desc="Copying files"):
                 if ".h5" not in file:
                     shutil.copy(os.path.join(self.path, file), destination.path)
-            return destination
-        else:
-            raise EnvironmentError("copy_to: is not available in Viewermode !")
+        return destination
 
     def create_from_job(self, job_old, new_job_name):
         """
@@ -1152,33 +1158,8 @@ class Project(ProjectPath, HasGroups):
             raise ValueError("Either a job ID or an database entry has to be provided.")
 
     def move_to(self, destination):
-        """
-        Similar to the copy_to() function move the project object to a different pyiron path - including the content of
-        the project (all jobs). In order to move individual jobs, use `move_to` from the job objects.
-
-        Args:
-            destination (Project): project path to move the project content to
-
-        Returns:
-            Project: pointing to the new project path
-        """
-        if not self.view_mode:
-            if not isinstance(destination, Project):
-                raise TypeError("A project can only be copied to another project.")
-            for sub_project_name in tqdm(
-                self.list_groups(), desc="Moving sub-projects"
-            ):
-                if "_hdf5" not in sub_project_name:
-                    sub_project = self.open(sub_project_name)
-                    destination_sub_project = destination.open(sub_project_name)
-                    sub_project.move_to(destination_sub_project)
-            for job_id in tqdm(self.get_job_ids(recursive=False), desc="Moving jobs"):
-                ham = self.load(job_id)
-                ham.move_to(destination)
-            for file in tqdm(self.list_files(), desc="Moving files"):
-                shutil.move(os.path.join(self.path, file), destination.path)
-        else:
-            raise EnvironmentError("move_to: is not available in Viewermode !")
+        """Same as copy_to() but deletes the original project after copying"""
+        self.copy_to(destination=destination, delete_original_data=True)
 
     def nodes(self):
         """
@@ -1976,8 +1957,6 @@ class Project(ProjectPath, HasGroups):
         """
         if destination_path is None:
             destination_path = self.path
-        if os.path.isabs(destination_path):
-            destination_path = os.path.relpath(destination_path, os.getcwd())
         if ".tar.gz" in destination_path:
             destination_path = destination_path.split(".tar.gz")[0]
             compress = True
@@ -1990,18 +1969,16 @@ class Project(ProjectPath, HasGroups):
         )
         if destination_path_abs == directory_to_transfer and not compress:
             raise ValueError(
-                "The destination_path cannot have the same name as the project to compress."
+                "The destination_path cannot have the same name as the project."
             )
         export_archive.copy_files_to_archive(
             directory_to_transfer,
             destination_path_abs,
             compress=compress,
             copy_all_files=copy_all_files,
-            arcname=destination_path,
+            arcname=os.path.relpath(self.path, os.getcwd()),
         )
-        df = export_archive.export_database(
-            self, directory_to_transfer, destination_path_abs
-        )
+        df = export_archive.export_database(self)
         df.to_csv(csv_file_path)
 
     def unpack(self, origin_path, csv_file_name="export.csv", compress=True):
