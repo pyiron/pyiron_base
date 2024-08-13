@@ -50,13 +50,14 @@ def import_jobs(project_instance, archive_directory, df, compressed=True):
             does not have the correct format paths
             as string or pyiron Project objects are expected"""
         )
+    common_path = os.path.commonpath(list(df["project"]))
     os.makedirs(archive_directory, exist_ok=True)
     if compressed:
         with tarfile.open(archive_directory + ".tar.gz", "r:gz") as tar:
             tar.extractall(path=archive_directory)
 
     # source folder; archive folder
-    src = os.path.abspath(archive_directory)
+    src = os.path.abspath(os.path.join(archive_directory, common_path))
     copytree(src, project_instance.path, dirs_exist_ok=True)
     if compressed:
         rmtree(src)
@@ -65,8 +66,10 @@ def import_jobs(project_instance, archive_directory, df, compressed=True):
     pr_import = project_instance.open(os.curdir)
 
     df["project"] = [
-        os.path.join(
-            pr_import.project_path, os.path.relpath(p, getdir(path=archive_directory))
+        os.path.normpath(
+            os.path.join(
+                pr_import.project_path, os.path.relpath(p, common_path)
+            )
         )
         + "/"
         for p in df["project"].values

@@ -100,7 +100,7 @@ def export_database(pr):
     df["id"] = df["id"].map(job_translate_dict)
     df["masterid"] = df["masterid"].map(job_translate_dict)
     df["parentid"] = df["parentid"].map(job_translate_dict)
-    df["project"] = os.path.relpath(pr.project_path, os.getcwd())
+    df["project"] = df["project"].map(lambda x: os.path.relpath(x, os.getcwd()))
 
     df.drop(columns=["projectpath"], inplace=True)
     return df
