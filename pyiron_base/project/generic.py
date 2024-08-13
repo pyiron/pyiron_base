@@ -1999,7 +1999,7 @@ class Project(ProjectPath, HasGroups):
             copy_all_files=copy_all_files,
             arcname=self.name,
         )
-        df = export_archive.export_database(self, directory_to_transfer, self.path)
+        df = export_archive.export_database(self)
         df.to_csv(csv_file_path)
 
     def unpack(self, origin_path, csv_file_name="export.csv", compress=True):
