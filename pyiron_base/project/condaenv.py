@@ -26,6 +26,17 @@ class CondaEnvironment:
             )
 
     def create(self, env_name, env_file, use_mamba=False, global_installation=True):
+        """
+        Create conda environment to execute selected pyiron tasks in a separate conda environment
+
+        Args:
+            env_name (str): Name of the new conda environment
+            env_file (str): Path to the conda environment file (environment.yml) which includes the dependencies for the
+                            new conda environment.
+            use_mamba (bool): Use mamba rather than conda - false by default
+            global_installation (bool): Create a global conda environment rather than creating the conda environment in
+                                        the current folder - true by default
+        """
         exe = "mamba" if use_mamba else "conda"
         env_lst = list_all_known_prefixes()
         env_path = os.path.join(os.path.abspath(self._env_path), env_name)
