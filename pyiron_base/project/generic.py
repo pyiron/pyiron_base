@@ -1957,8 +1957,6 @@ class Project(ProjectPath, HasGroups):
         """
         if destination_path is None:
             destination_path = self.path
-        if os.path.isabs(destination_path):
-            destination_path = os.path.relpath(destination_path, os.getcwd())
         if ".tar.gz" in destination_path:
             destination_path = destination_path.split(".tar.gz")[0]
             compress = True
