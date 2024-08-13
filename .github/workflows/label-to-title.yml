@@ -40,8 +40,9 @@ jobs:
         if: github.event.action == 'unlabeled' && steps.check_label.outputs.label != ''
         run: |
           TITLE="${{ github.event.pull_request.title || github.event.issue.title }}"
-          NEW_TITLE="${TITLE/${{ steps.check_label.outputs.label }}/}"
-          NEW_TITLE="$(echo $NEW_TITLE | sed 's/  / /g' | sed 's/^ *//;s/ *$//')" # Remove extra spaces
+          LABEL_TO_REMOVE="${{ steps.check_label.outputs.label }}"
+          NEW_TITLE=$(echo "$TITLE" | sed "s/$LABEL_TO_REMOVE //g" | sed "s/$LABEL_TO_REMOVE//g")
+          NEW_TITLE=$(echo "$NEW_TITLE" | sed 's/  / /g' | sed 's/^ *//;s/ *$//') # Remove extra spaces
           if [[ $TITLE != ${NEW_TITLE} ]]; then
             curl -s -X PATCH \
               -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
