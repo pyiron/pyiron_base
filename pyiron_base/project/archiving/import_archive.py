@@ -1,5 +1,6 @@
 import os
 import tarfile
+import tempfile
 from shutil import copytree, rmtree
 
 import numpy as np
@@ -51,16 +52,18 @@ def import_jobs(project_instance, archive_directory, df, compressed=True):
             as string or pyiron Project objects are expected"""
         )
     common_path = os.path.commonpath(list(df["project"]))
-    os.makedirs(archive_directory, exist_ok=True)
     if compressed:
-        with tarfile.open(archive_directory + ".tar.gz", "r:gz") as tar:
-            tar.extractall(path=archive_directory)
-
-    # source folder; archive folder
-    src = os.path.abspath(os.path.join(archive_directory, common_path))
-    copytree(src, project_instance.path, dirs_exist_ok=True)
-    if compressed:
-        rmtree(os.path.abspath(archive_directory))
+        with tempfile.TemporaryDirectory() as temp_dir:
+            with tarfile.open(archive_directory + ".tar.gz", "r:gz") as tar:
+                tar.extractall(path=temp_dir)
+            copytree(
+                os.path.join(temp_dir, common_path),
+                project_instance.path,
+                dirs_exist_ok=True,
+            )
+    else:
+        src = os.path.abspath(os.path.join(archive_directory, common_path))
+        copytree(src, project_instance.path, dirs_exist_ok=True)
 
     df["project"] = [
         os.path.normpath(
