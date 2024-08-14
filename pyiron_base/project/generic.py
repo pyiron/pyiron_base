@@ -1985,15 +1985,16 @@ class Project(ProjectPath, HasGroups):
         df = export_archive.export_database(self)
         df.to_csv(csv_file_path)
 
-    def unpack(self, origin_path, csv_file_name="export.csv", compress=True):
+    def unpack(self, origin_path, csv_file_name="export.csv"):
          """
          by this function, job table is imported from a given csv file,
          and also the content of project directory is copied from a given path
+
          Args:
-             origin_path (str): the relative path of a directory (or a compressed file without the tar.gz extension)
-                             from which the project directory is copied.
-             csv_file_name (str): the csv file from which the job_table is copied to the current project
-             compress (bool): if True, it looks for a compressed file
+             origin_path (str): the relative path of a directory from which
+                the project directory is copied.
+             csv_file_name (str): the csv file from which the job_table is
+                copied to the current project
          """
          if isinstance(origin_path, Project):
              origin_path = origin_path.path
@@ -2011,7 +2012,7 @@ class Project(ProjectPath, HasGroups):
              )
          df = pandas.read_csv(csv_path, index_col=0)
          import_archive.import_jobs(
-             self, archive_directory=origin_path, df=df, compressed=compress
+             self, archive_directory=origin_path, df=df
          )
 
     @classmethod

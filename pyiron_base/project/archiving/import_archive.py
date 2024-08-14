@@ -22,7 +22,7 @@ def update_id_lst(record_lst, job_id_lst):
     return masterid_lst
 
 
-def import_jobs(project_instance, archive_directory, df, compressed=True):
+def import_jobs(project_instance, archive_directory, df):
     """
     Import jobs from an archive directory to a pyiron project.
 
@@ -30,10 +30,10 @@ def import_jobs(project_instance, archive_directory, df, compressed=True):
         project_instance (pyiron_base.project.generic.Project): Pyiron project instance.
         archive_directory (str): Path to the archive directory.
         df (pandas.DataFrame): DataFrame containing the job information.
-        compressed (bool): Set to True, if the archive directory to import is compressed (*.tar.gz).
     """
     # Copy HDF5 files
     # if the archive_directory is a path(string)/name of the compressed file
+    compressed = False
     if static_isinstance(
         obj=archive_directory.__class__,
         obj_type=[
