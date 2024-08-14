@@ -11,8 +11,7 @@ import os
 import posixpath
 import shutil
 import stat
-from pathlib import Path
-from typing import TYPE_CHECKING, Dict, Generator, Literal, Union
+from typing import TYPE_CHECKING, Dict, Generator, Literal, Optional, Union
 
 import cloudpickle
 import numpy as np
@@ -243,36 +242,42 @@ class Project(ProjectPath, HasGroups):
         new._inspect_mode = self._inspect_mode
         return new
 
-    def copy_to(self, destination):
+    def copy_to(self, destination, delete_original_data=False):
         """
         Copy the project object to a different pyiron path - including the content of the project (all jobs).
         In order to move individual jobs, use `copy_to` from the job objects.
 
         Args:
             destination (Project): project path to copy the project content to
+            delete_original_data (bool): delete the original data after copying - default=False
 
         Returns:
             Project: pointing to the new project path
         """
-        if not self.view_mode:
-            if not isinstance(destination, Project):
-                raise TypeError("A project can only be copied to another project.")
-            for sub_project_name in tqdm(
-                self.list_groups(), desc="Copying sub-projects"
-            ):
-                if "_hdf5" not in sub_project_name:
-                    sub_project = self.open(sub_project_name)
-                    destination_sub_project = destination.open(sub_project_name)
-                    sub_project.copy_to(destination_sub_project)
-            for job_id in tqdm(self.get_job_ids(recursive=False), desc="Copying jobs"):
-                ham = self.load(job_id)
+        if self.view_mode:
+            raise EnvironmentError("copy_to is not available in Viewermode !")
+        if not isinstance(destination, Project):
+            raise TypeError("A project can only be copied to another project.")
+        for sub_project_name in tqdm(self.list_groups(), desc="Copying sub-projects"):
+            if "_hdf5" not in sub_project_name:
+                sub_project = self.open(sub_project_name)
+                destination_sub_project = destination.open(sub_project_name)
+                sub_project.copy_to(destination_sub_project)
+        for job_id in tqdm(self.get_job_ids(recursive=False), desc="Copying jobs"):
+            ham = self.load(job_id)
+            if delete_original_data:
+                ham.move_to(destination)
+            else:
                 ham.copy_to(project=destination)
+        if delete_original_data:
+            for file in tqdm(self.list_files(), desc="Moving files"):
+                shutil.move(os.path.join(self.path, file), destination.path)
+
+        else:
             for file in tqdm(self.list_files(), desc="Copying files"):
                 if ".h5" not in file:
                     shutil.copy(os.path.join(self.path, file), destination.path)
-            return destination
-        else:
-            raise EnvironmentError("copy_to: is not available in Viewermode !")
+        return destination
 
     def create_from_job(self, job_old, new_job_name):
         """
@@ -1157,33 +1162,8 @@ class Project(ProjectPath, HasGroups):
             raise ValueError("Either a job ID or an database entry has to be provided.")
 
     def move_to(self, destination):
-        """
-        Similar to the copy_to() function move the project object to a different pyiron path - including the content of
-        the project (all jobs). In order to move individual jobs, use `move_to` from the job objects.
-
-        Args:
-            destination (Project): project path to move the project content to
-
-        Returns:
-            Project: pointing to the new project path
-        """
-        if not self.view_mode:
-            if not isinstance(destination, Project):
-                raise TypeError("A project can only be copied to another project.")
-            for sub_project_name in tqdm(
-                self.list_groups(), desc="Moving sub-projects"
-            ):
-                if "_hdf5" not in sub_project_name:
-                    sub_project = self.open(sub_project_name)
-                    destination_sub_project = destination.open(sub_project_name)
-                    sub_project.move_to(destination_sub_project)
-            for job_id in tqdm(self.get_job_ids(recursive=False), desc="Moving jobs"):
-                ham = self.load(job_id)
-                ham.move_to(destination)
-            for file in tqdm(self.list_files(), desc="Moving files"):
-                shutil.move(os.path.join(self.path, file), destination.path)
-        else:
-            raise EnvironmentError("move_to: is not available in Viewermode !")
+        """Same as copy_to() but deletes the original project after copying"""
+        self.copy_to(destination=destination, delete_original_data=True)
 
     def nodes(self):
         """
@@ -1965,9 +1945,9 @@ class Project(ProjectPath, HasGroups):
 
     def pack(
         self,
-        destination_path=None,
-        compress=True,
-        copy_all_files=False,
+        destination_path: Optional[str] = None,
+        compress: bool = True,
+        copy_all_files: bool = False,
     ):
         """
         Export job table to a csv file and copy (and optionally compress) the project directory.
@@ -1977,20 +1957,33 @@ class Project(ProjectPath, HasGroups):
             compress (bool): if true, the function will compress the destination_path to a tar.gz file.
             copy_all_files (bool):
         """
-        directory_to_transfer = Path(self.path).name
+        csv_file_name = "export.csv",
         if destination_path is None:
-            destination_path = directory_to_transfer
-        destination_path_abs = os.path.abspath(destination_path)
-        if ".tar.gz" in destination_path_abs:
-            destination_path_abs = destination_path_abs.split(".tar.gz")[0]
+            destination_path = self.path
+        if ".tar.gz" in destination_path:
+            destination_path = destination_path.split(".tar.gz")[0]
             compress = True
+        destination_path_abs = os.path.abspath(destination_path)
+        directory_to_transfer = os.path.abspath(self.path)
+        assert not destination_path_abs.endswith(".tar")
+        assert not destination_path_abs.endswith(".gz")
+        csv_file_path = os.path.join(
+            os.path.dirname(destination_path_abs), csv_file_name
+        )
+        if destination_path_abs == directory_to_transfer and not compress:
+            raise ValueError(
+                "The destination_path cannot have the same name as the project."
+            )
         export_archive.copy_files_to_archive(
             self,
             directory_to_transfer,
             destination_path_abs,
-            compressed=compress,
+            compress=compress,
             copy_all_files=copy_all_files,
+            arcname=os.path.relpath(self.path, os.getcwd()),
         )
+        df = export_archive.export_database(self)
+        df.to_csv(csv_file_path)
 
     def unpack(self, origin_path):
         import_archive.import_jobs(self, origin_path)

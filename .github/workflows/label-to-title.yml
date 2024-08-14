@@ -1,0 +1,53 @@
+name: Label to Title
+
+on:
+  issues:
+    types: [labeled, unlabeled]
+  pull_request:
+    types: [labeled, unlabeled]
+
+jobs:
+  update-title:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check if label is patch, minor, or major
+        id: check_label
+        run: |
+          if [[ "${{ github.event.label.name }}" == "patch" ]]; then
+            echo "::set-output name=label::[patch]"
+          elif [[ "${{ github.event.label.name }}" == "minor" ]]; then
+            echo "::set-output name=label::[minor]"
+          elif [[ "${{ github.event.label.name }}" == "major" ]]; then
+            echo "::set-output name=label::[major]"
+          else
+            echo "::set-output name=label::"
+          fi
+
+      - name: Update Title on Label Added
+        if: github.event.action == 'labeled' && steps.check_label.outputs.label != ''
+        run: |
+          TITLE="${{ github.event.pull_request.title || github.event.issue.title }}"
+          NEW_TITLE="${{ steps.check_label.outputs.label }} ${TITLE}"
+          if [[ $TITLE != ${NEW_TITLE} ]]; then
+            curl -s -X PATCH \
+              -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+              -H "Accept: application/vnd.github.v3+json" \
+              https://api.github.com/repos/${{ github.repository }}/issues/${{ github.event.issue.number || github.event.pull_request.number }} \
+              -d '{"title":"'"$NEW_TITLE"'"}'
+          fi
+
+      - name: Update Title on Label Removed
+        if: github.event.action == 'unlabeled' && steps.check_label.outputs.label != ''
+        run: |
+          TITLE="${{ github.event.pull_request.title || github.event.issue.title }}"
+          LABEL_TO_REMOVE="${{ steps.check_label.outputs.label }}"
+          NEW_TITLE=$(echo "$TITLE" | perl -pe "s/\Q$LABEL_TO_REMOVE\E//")
+          NEW_TITLE=$(echo "$NEW_TITLE" | sed 's/  / /g' | sed 's/^ *//;s/ *$//') # Remove extra spaces
+          if [[ $TITLE != ${NEW_TITLE} ]]; then
+            curl -s -X PATCH \
+              -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+              -H "Accept: application/vnd.github.v3+json" \
+              https://api.github.com/repos/${{ github.repository }}/issues/${{ github.event.issue.number || github.event.pull_request.number }} \
+              -d '{"title":"'"$NEW_TITLE"'"}'
+          fi
+

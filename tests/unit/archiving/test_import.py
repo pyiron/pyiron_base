@@ -1,10 +1,11 @@
 import os
 import unittest
 from pyiron_base import Project
-from pyiron_base.project.archiving.import_archive import getdir, extract_archive
+from pyiron_base.project.archiving.import_archive import getdir
 from pandas._testing import assert_frame_equal
 from filecmp import dircmp
 from shutil import rmtree
+import tarfile
 from pyiron_base._tests import PyironTestCase, ToyJob
 
 
@@ -32,8 +33,10 @@ class TestUnpacking(PyironTestCase):
         cls.pr.remove(enable=True)
         uncompressed_pr = Project(cls.arch_dir)
         uncompressed_pr.remove(enable=True, enforce=True)
-        os.remove("export.csv")
-        os.remove(cls.arch_dir_comp + ".tar.gz")
+        if os.path.exists(cls.arch_dir_comp + ".tar.gz"):
+            os.remove(cls.arch_dir_comp + ".tar.gz")
+        if os.path.exists("export.csv"):
+            os.remove("export.csv")
         cls.imp_pr.remove(enable=True)
 
     def setUp(self):
@@ -130,6 +133,18 @@ class TestUnpacking(PyironTestCase):
         compare_obj = dircmp(path_original, path_import)
         self.assertEqual(len(compare_obj.diff_files), 0)
 
+    def test_load_job_all(self):
+        """Jobs should be able to load from the imported project."""
+        self.imp_pr.remove_jobs(recursive=True, silently=True)
+        self.pr.pack(
+            destination_path=self.arch_dir_comp, compress=True, copy_all_files=True
+        )
+        self.imp_pr.unpack(origin_path=self.arch_dir_comp, compress=True)
+        try:
+            j = self.imp_pr.load(self.job.name)
+        except Exception as e:
+            self.fail(msg="Loading job fails with {}".format(str(e)))
+
     def test_load_job(self):
         """Jobs should be able to load from the imported project."""
         self.imp_pr.remove_jobs(recursive=True, silently=True)
@@ -172,8 +187,8 @@ class TestUnpacking(PyironTestCase):
         pr_imp.unpack(
             origin_path=pack_path_comp, csv_file_name=pack_path_csv, compress=True
         )
-        # here the 7 is the length of '.tar.gz' string
-        extract_archive(pack_path_comp[:-7])
+        with tarfile.open(pack_path_comp, "r:gz") as tar:
+            tar.extractall(path=pack_path_comp[: -len(".tar.gz")])
         compare_obj = dircmp(pack_path_comp[:-7], pr_imp.path)
         self.assertEqual(len(compare_obj.diff_files), 0)
         pr.remove(enable=True)

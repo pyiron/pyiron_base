@@ -21,35 +21,46 @@ def update_id_lst(record_lst, job_id_lst):
     return masterid_lst
 
 
-def extract_archive(archive_directory):
-    arch_comp_name = archive_directory + ".tar.gz"
-    with tarfile.open(arch_comp_name, "r:gz") as tar:
-        tar.extractall()
+def import_jobs(project_instance, archive_directory, df, compressed=True):
+    """
+    Import jobs from an archive directory to a pyiron project.
 
-
-def import_jobs_to_new_project(cls, archive_directory, compressed=True):
-    pass
-
-
-def import_jobs_to_existing_project(pr, archive_directory, compressed=True):
-    pass
-
-
-def prepare_path(pr, archive_directory):
-    if archive_directory[-7:] == ".tar.gz":
-        archive_directory = archive_directory[:-7]
-    elif not os.path.exists(archive_directory + ".tar.gz"):
-        raise FileNotFoundError("Cannot find archive")
-
-    arch_comp_name = archive_directory + ".tar.gz"
-    with tarfile.open(arch_comp_name, "r:gz") as tar:
-        target_folder = os.path.join(
-            os.path.dirname(archive_directory), os.path.basename(tar.members[0].name)
+    Args:
+        project_instance (pyiron_base.project.generic.Project): Pyiron project instance.
+        archive_directory (str): Path to the archive directory.
+        df (pandas.DataFrame): DataFrame containing the job information.
+        compressed (bool): Set to True, if the archive directory to import is compressed (*.tar.gz).
+    """
+    # Copy HDF5 files
+    # if the archive_directory is a path(string)/name of the compressed file
+    if static_isinstance(
+        obj=archive_directory.__class__,
+        obj_type=[
+            "pyiron_base.project.generic.Project",
+        ],
+    ):
+        archive_directory = archive_directory.path
+    elif isinstance(archive_directory, str):
+        if archive_directory[-7:] == ".tar.gz":
+            archive_directory = archive_directory[:-7]
+            compressed = True
+    else:
+        raise RuntimeError(
+            """the given path for importing from,
+            does not have the correct format paths
+            as string or pyiron Project objects are expected"""
         )
-    if os.path.exists(target_folder):
-        raise ValueError("Cannot extract to existing folder")
+    common_path = os.path.commonpath(list(df["project"]))
+    os.makedirs(archive_directory, exist_ok=True)
+    if compressed:
+        with tarfile.open(archive_directory + ".tar.gz", "r:gz") as tar:
+            tar.extractall(path=archive_directory)
 
-    return target_folder, archive_directory
+    # source folder; archive folder
+    src = os.path.abspath(os.path.join(archive_directory, common_path))
+    copytree(src, project_instance.path, dirs_exist_ok=True)
+    if compressed:
+        rmtree(os.path.abspath(archive_directory))
 
 
 def import_jobs(pr, archive_directory):
@@ -60,7 +71,10 @@ def import_jobs(pr, archive_directory):
     csv_file_name = os.path.join(pr.path, "export.csv")
     df = pandas.read_csv(csv_file_name, index_col=0)
     df["project"] = [
-        os.path.join(pr.project_path, os.path.relpath(p, pr.project_path)) + "/"
+        os.path.normpath(
+            os.path.join(pr_import.project_path, os.path.relpath(p, common_path))
+        )
+        + "/"
         for p in df["project"].values
     ]
     df["projectpath"] = len(df) * [pr.root_path]
@@ -77,7 +91,7 @@ def import_jobs(pr, archive_directory):
             entry["timestop"] = pandas.to_datetime(entry["timestop"])
         if "username" not in entry:
             entry["username"] = state.settings.login_user
-        job_id = pr.db.add_item_dict(par_dict=entry)
+        job_id = pr_import.db.add_item_dict(par_dict=entry, check_duplicates=True)
         job_id_lst.append(job_id)
 
     # print(job_id_lst)

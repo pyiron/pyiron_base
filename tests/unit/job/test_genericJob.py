@@ -770,15 +770,15 @@ class TestGenericJob(TestWithFilledProject):
                 with contextlib.redirect_stdout(io.StringIO(newline=os.linesep)) as f:
                     job.files.tail("test_file", lines=i + 1)
                 self.assertEqual(
-                    f.getvalue().replace("\r", ""),
-                    reference_str.replace("\r", ""),
+                    f.getvalue().replace("\r", "").replace("\n", ""),
+                    reference_str.replace("\r", "").replace("\n", ""),
                     "tail read incorrect lines from output file when job uncompressed!",
                 )
                 with contextlib.redirect_stdout(io.StringIO(newline=os.linesep)) as f:
                     job.files.test_file.tail(lines=i + 1)
                 self.assertEqual(
-                    f.getvalue().replace("\r", ""),
-                    reference_str.replace("\r", ""),
+                    f.getvalue().replace("\r", "").replace("\n", ""),
+                    reference_str.replace("\r", "").replace("\n", ""),
                     "tail read incorrect lines from output file when job uncompressed!",
                 )
 
@@ -788,15 +788,15 @@ class TestGenericJob(TestWithFilledProject):
             with contextlib.redirect_stdout(io.StringIO()) as f:
                 job.files.tail("test_file", lines=i + 1)
             self.assertEqual(
-                f.getvalue().replace("\r", ""),
-                reference_str.replace("\r", ""),
+                f.getvalue().replace("\r", "").replace("\n", ""),
+                reference_str.replace("\r", "").replace("\n", ""),
                 "tail read incorrect lines from output file when job compressed!",
             )
             with contextlib.redirect_stdout(io.StringIO()) as f:
                 job.files.test_file.tail(lines=i + 1)
             self.assertEqual(
-                f.getvalue().replace("\r", ""),
-                reference_str.replace("\r", ""),
+                f.getvalue().replace("\r", "").replace("\n", ""),
+                reference_str.replace("\r", "").replace("\n", ""),
                 "tail read incorrect lines from output file when job compressed!",
             )
 

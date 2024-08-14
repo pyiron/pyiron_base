@@ -71,16 +71,20 @@ def write_input_files_from_input_dict(input_dict: dict, working_directory: str):
         input_dict (dict): hierarchical input dictionary with files_to_create and files_to_copy.
         working_directory (str): path to the working directory
     """
-    if len(os.listdir(working_directory)) == 0:
-        for file_name, content in input_dict["files_to_create"].items():
-            with open(os.path.join(working_directory, file_name), "w") as f:
-                f.writelines(content)
-        for file_name, source in input_dict["files_to_copy"].items():
-            shutil.copy(source, os.path.join(working_directory, file_name))
-    else:
+    existing_files = set(os.listdir(working_directory))
+    if (
+        len(existing_files.intersection(input_dict["files_to_create"])) > 0
+        or len(existing_files.intersection(input_dict["files_to_copy"])) > 0
+    ):
         state.logger.info(
-            "The working directory is not empty, assuming that input has already been written."
+            "Some files to be created already exist, assuming that input has already been written."
         )
+        return
+    for file_name, content in input_dict["files_to_create"].items():
+        with open(os.path.join(working_directory, file_name), "w") as f:
+            f.writelines(content)
+    for file_name, source in input_dict["files_to_copy"].items():
+        shutil.copy(source, os.path.join(working_directory, file_name))
 
 
 class CalculateFunctionCaller:
@@ -345,7 +349,6 @@ def run_job_with_status_collect(job):
                 job.compress()
             job.status.finished = True
     job._hdf5["status"] = job.status.string
-    job.send_to_database()
     job.update_master()
 
 
@@ -801,7 +804,6 @@ def execute_job_with_external_executable(job):
         job.status.aborted = True
         job._hdf5["status"] = job.status.string
         raise ValueError("No executable set!")
-    job.status.running = True
     executable, shell = job.executable.get_input_for_subprocess_call(
         cores=job.server.cores, threads=job.server.threads, gpus=job.server.gpus
     )
