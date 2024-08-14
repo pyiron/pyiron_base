@@ -1957,7 +1957,7 @@ class Project(ProjectPath, HasGroups):
             compress (bool): if true, the function will compress the destination_path to a tar.gz file.
             copy_all_files (bool):
         """
-        csv_file_name = "export.csv",
+        csv_file_name = ("export.csv",)
         if destination_path is None:
             destination_path = self.path
         if ".tar.gz" in destination_path:
