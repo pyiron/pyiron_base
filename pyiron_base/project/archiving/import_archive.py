@@ -1,7 +1,7 @@
 import os
 import tarfile
-from shutil import copytree, rmtree
 import tempfile
+from shutil import copytree, rmtree
 
 import numpy as np
 import pandas
@@ -56,7 +56,11 @@ def import_jobs(project_instance, archive_directory, df, compressed=True):
         with tempfile.TemporaryDirectory() as temp_dir:
             with tarfile.open(archive_directory + ".tar.gz", "r:gz") as tar:
                 tar.extractall(path=temp_dir)
-            copytree(os.path.join(temp_dir, common_path), project_instance.path, dirs_exist_ok=True)
+            copytree(
+                os.path.join(temp_dir, common_path),
+                project_instance.path,
+                dirs_exist_ok=True,
+            )
     else:
         src = os.path.abspath(os.path.join(archive_directory, common_path))
         copytree(src, project_instance.path, dirs_exist_ok=True)
