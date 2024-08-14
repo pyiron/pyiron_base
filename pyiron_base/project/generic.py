@@ -1957,8 +1957,6 @@ class Project(ProjectPath, HasGroups):
         """
         if destination_path is None:
             destination_path = self.path
-        if os.path.isabs(destination_path):
-            destination_path = os.path.relpath(destination_path, os.getcwd())
         if ".tar.gz" in destination_path:
             destination_path = destination_path.split(".tar.gz")[0]
             compress = True
@@ -1971,18 +1969,16 @@ class Project(ProjectPath, HasGroups):
         )
         if destination_path_abs == directory_to_transfer and not compress:
             raise ValueError(
-                "The destination_path cannot have the same name as the project to compress."
+                "The destination_path cannot have the same name as the project."
             )
         export_archive.copy_files_to_archive(
             directory_to_transfer,
             destination_path_abs,
             compress=compress,
             copy_all_files=copy_all_files,
-            arcname=destination_path,
+            arcname=os.path.relpath(self.path, os.getcwd()),
         )
-        df = export_archive.export_database(
-            self, directory_to_transfer, destination_path_abs
-        )
+        df = export_archive.export_database(self)
         df.to_csv(csv_file_path)
 
     def unpack(self, origin_path, csv_file_name="export.csv", compress=True):

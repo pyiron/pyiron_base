@@ -38,9 +38,7 @@ class TestPack(PyironTestCase):
         # in the first test, the csv file from the packing function is read
         # and is compared with the return dataframe from export_database
         directory_to_transfer = os.path.basename(self.pr.path[:-1])
-        df_exp = export_database(
-            self.pr, directory_to_transfer, "archive_folder"
-        ).dropna(axis=1)
+        df_exp = export_database(self.pr).dropna(axis=1)
         df_exp["hamversion"] = float(df_exp["hamversion"])
         self.assertEqual(df_exp["job"].unique()[0], "toy")
         self.assertEqual(df_exp["id"].unique()[0], 0)
