@@ -1985,8 +1985,34 @@ class Project(ProjectPath, HasGroups):
         df = export_archive.export_database(self)
         df.to_csv(csv_file_path)
 
-    def unpack(self, origin_path):
-        import_archive.import_jobs(self, origin_path)
+    def unpack(self, origin_path, csv_file_name="export.csv", compress=True):
+         """
+         by this function, job table is imported from a given csv file,
+         and also the content of project directory is copied from a given path
+         Args:
+             origin_path (str): the relative path of a directory (or a compressed file without the tar.gz extension)
+                             from which the project directory is copied.
+             csv_file_name (str): the csv file from which the job_table is copied to the current project
+             compress (bool): if True, it looks for a compressed file
+         """
+         if isinstance(origin_path, Project):
+             origin_path = origin_path.path
+         csv_path_origin = os.path.join(os.path.dirname(origin_path), csv_file_name)
+         csv_path_project = os.path.join(self.path, csv_file_name)
+         if os.path.exists(csv_file_name):
+             csv_path = os.path.abspath(csv_file_name)
+         elif os.path.exists(csv_path_origin):
+             csv_path = csv_path_origin
+         elif os.path.exists(csv_path_project):
+             csv_path = csv_path_project
+         else:
+             raise FileNotFoundError(
+                 f"File: {csv_file_name} was not found. Looked for {os.path.abspath(csv_file_name)}, {csv_path_origin} and {csv_path_project}."
+             )
+         df = pandas.read_csv(csv_path, index_col=0)
+         import_archive.import_jobs(
+             self, archive_directory=origin_path, df=df, compressed=compress
+         )
 
     @classmethod
     def register_tools(cls, name: str, tools):

@@ -62,14 +62,6 @@ def import_jobs(project_instance, archive_directory, df, compressed=True):
     if compressed:
         rmtree(os.path.abspath(archive_directory))
 
-
-def import_jobs(pr, archive_directory):
-    # now open and extract archive
-    extract_archive(archive_directory)
-
-    # read csv
-    csv_file_name = os.path.join(pr.path, "export.csv")
-    df = pandas.read_csv(csv_file_name, index_col=0)
     df["project"] = [
         os.path.normpath(
             os.path.join(pr_import.project_path, os.path.relpath(p, common_path))
@@ -77,7 +69,7 @@ def import_jobs(pr, archive_directory):
         + "/"
         for p in df["project"].values
     ]
-    df["projectpath"] = len(df) * [pr.root_path]
+    df["projectpath"] = len(df) * [pr_import.root_path]
     # Add jobs to database
     job_id_lst = []
 
@@ -102,6 +94,6 @@ def import_jobs(pr, archive_directory):
         update_id_lst(record_lst=df["parentid"].values, job_id_lst=job_id_lst),
     ):
         if masterid is not None or parentid is not None:
-            pr.db.item_update(
+            pr_import.db.item_update(
                 item_id=job_id, par_dict={"parentid": parentid, "masterid": masterid}
             )
