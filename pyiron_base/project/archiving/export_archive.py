@@ -13,6 +13,7 @@ def copy_files_to_archive(
     compress: bool = True,
     copy_all_files: bool = False,
     arcname: Optional[str] = None,
+    df: Optional["DataFrame"] = None,
 ):
     """
     Copy files from a directory to an archive, optionally compressing the archive.
@@ -23,6 +24,7 @@ def copy_files_to_archive(
         compress (bool): If True, compress the archive directory into a tarball. Default is True.
         copy_all_files (bool): If True, include all files in the archive, otherwise only .h5 files. Default is False.
         arcname (str): The name of the archive directory. Default is the name of the directory to transfer.
+        df (DataFrame): DataFrame containing updated job information with new IDs and project paths.
 
     """
 
@@ -45,6 +47,11 @@ def copy_files_to_archive(
     if arcname is None:
         arcname = os.path.relpath(os.path.abspath(archive_directory), os.getcwd())
     dir_name_transfer = getdir(path=directory_to_transfer)
+    if df is not None:
+        csv_file_path = os.path.join(
+            os.path.dirname(destination_path_abs), "export.csv"
+        )
+        df.to_csv(csv_file_path)
     if not compress:
         copy_files(directory_to_transfer, os.path.join(archive_directory, arcname))
     elif compress and copy_all_files:
