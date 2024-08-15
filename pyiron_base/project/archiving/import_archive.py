@@ -81,7 +81,6 @@ def import_jobs(project_instance, archive_directory):
         job_id = pr_import.db.add_item_dict(par_dict=entry, check_duplicates=True)
         job_id_lst.append(job_id)
 
-    # print(job_id_lst)
     # Update parent and master ids
     for job_id, masterid, parentid in zip(
         job_id_lst,
