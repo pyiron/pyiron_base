@@ -83,7 +83,7 @@ def copy_h5_files(src, dst):
 
     for root, dirs, files in os.walk(src):
         for file in files:
-            if file.endswith(".h5"):
+            if file.endswith(".h5") or file=="export.csv":
                 src_file = os.path.join(root, file)
                 rel_path = os.path.relpath(root, src)
                 dst_dir = os.path.join(dst, rel_path)
