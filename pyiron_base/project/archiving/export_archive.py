@@ -91,18 +91,18 @@ def copy_h5_files(src, dst):
                 shutil.copy2(src_file, os.path.join(dst_dir, file))
 
 
-def export_database(pr):
+def export_database(df: "DataFrame"):
     """
     Export the project database to an archive directory.
 
     Args:
-        pr (Project): The project instance containing the jobs.
+        df (DataFrame): pyiron job table containing job information.
 
     Returns:
-        DataFrame: DataFrame containing updated job information with new IDs and project paths.
+        DataFrame: DataFrame containing updated job information with new IDs
+            and project paths.
     """
 
-    df = pr.job_table()
     job_translate_dict = {
         old_id: new_id for new_id, old_id in enumerate(sorted(df.id.values))
     }
