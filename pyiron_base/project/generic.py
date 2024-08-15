@@ -114,11 +114,7 @@ class Project(ProjectPath, HasGroups):
     """
 
     def __init__(
-        self,
-        path="",
-        user=None,
-        sql_query=None,
-        default_working_directory=False,
+        self, path="", user=None, sql_query=None, default_working_directory=False
     ):
         if default_working_directory and path == "":
             inputdict = Notebook.get_custom_dict()
