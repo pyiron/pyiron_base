@@ -11,7 +11,7 @@ class Executable:
     version: Optional[str] = None
     executable: Optional[str] = None
 
-      
+
 @dataclass
 class Server:
     user: str
@@ -28,4 +28,4 @@ class Server:
     queue: Optional[str] = None
     qid: Optional[int] = None
     conda_environment_name: Optional[str] = None
-    conda_environment_path: Optional[str] = None 
+    conda_environment_path: Optional[str] = None
