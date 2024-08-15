@@ -3,12 +3,13 @@
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
 import os
+from dataclasses import asdict
 
 from pyiron_snippets.resources import ExecutableResolver
 
+from pyiron_base.dataclasses.job import Executable as ExecutableDataClass
 from pyiron_base.interfaces.has_dict import HasDict
 from pyiron_base.state import state
-from pyiron_base.storage.datacontainer import DataContainer
 
 """
 Executable class loading executables from static/bin/<code>/
@@ -45,28 +46,30 @@ class Executable(HasDict):
             overwrite_nt_flag (bool):
         """
         super().__init__()
-        self.storage = DataContainer()
-        self.storage.table_name = "executable"
+        if overwrite_nt_flag:
+            operation_system_nt = False
+        else:
+            operation_system_nt = os.name == "nt"
+
+        self.storage = ExecutableDataClass(
+            version=None,
+            name=codename.lower(),
+            operation_system_nt=operation_system_nt,
+            executable=None,
+            mpi=False,
+            accepted_return_codes=[0],
+        )
 
         if path_binary_codes is None:
             path_binary_codes = state.settings.resource_paths
-        self.storage.version = None
-        self.storage.name = codename.lower()
         if module is None:
             module = self.storage.name
         self._module = module
         self.path_bin = path_binary_codes
-        if overwrite_nt_flag:
-            self.storage.operation_system_nt = False
-        else:
-            self.storage.operation_system_nt = os.name == "nt"
         self.executable_lst = self._executable_versions_list()
-        self.storage.executable = None
         self._executable_path = None
-        self.storage.mpi = False
         if self.executable_lst:
             self.version = self.default_version
-        self.storage.accepted_return_codes = [0]
 
     @property
     def accepted_return_codes(self):
@@ -205,10 +208,7 @@ class Executable(HasDict):
 
     def to_dict(self):
         executable_dict = self._type_to_dict()
-        executable_storage_dict = self.storage._type_to_dict()
-        executable_storage_dict["READ_ONLY"] = self.storage._read_only
-        executable_storage_dict.update(self.storage.to_builtin())
-        executable_dict["executable"] = executable_storage_dict
+        executable_dict.update(asdict(self.storage))
         return executable_dict
 
     def from_dict(self, executable_dict):
@@ -220,11 +220,15 @@ class Executable(HasDict):
             "mpi",
             "accepted_return_codes",
         ]
+        executable_class_dict = {}
+        # Backwards compatibility; dict state used to be nested one level deeper
+        if "executable" in executable_dict.keys() and isinstance(
+            executable_dict["executable"], dict
+        ):
+            executable_dict = executable_dict["executable"]
         for key in data_container_keys:
-            if key in executable_dict["executable"]:
-                self.storage[key] = executable_dict["executable"][key]
-        if executable_dict["executable"]["READ_ONLY"]:
-            self.storage.read_only = True
+            executable_class_dict[key] = executable_dict.get(key, None)
+        self.storage = ExecutableDataClass(**executable_class_dict)
 
     def get_input_for_subprocess_call(self, cores, threads, gpus=None):
         """
