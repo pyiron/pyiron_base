@@ -13,19 +13,19 @@ class TestUnpacking(PyironTestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
+        cls.file_location = os.path.dirname(os.path.abspath(__file__)).replace(
+            "\\", "/"
+        )
         # this is used to create a folder/a compressed file, are not path
         cls.arch_dir = "archive_folder"
         # this is used to create a folder/a compressed file, are not path
         cls.arch_dir_comp = cls.arch_dir + "_comp"
-        cls.pr = Project("test")
+        cls.pr = Project(os.path.join(cls.file_location, "test"))
         cls.pr.remove_jobs(recursive=True, silently=True)
         cls.job = cls.pr.create_job(job_type=ToyJob, job_name="toy")
         cls.job.run()
         cls.pr.pack(destination_path=cls.arch_dir_comp, compress=True)
-        cls.file_location = os.path.dirname(os.path.abspath(__file__)).replace(
-            "\\", "/"
-        )
-        cls.imp_pr = Project("imported")
+        cls.imp_pr = Project(os.path.join(cls.file_location, "imported"))
 
     @classmethod
     def tearDownClass(cls) -> None:
@@ -70,8 +70,6 @@ class TestUnpacking(PyironTestCase):
     def test_import_compressed(self):
         path_original = self.pr.path
         path_import = self.imp_pr.path
-        path_original = getdir(path_original)
-        path_import = getdir(path_import)
         compare_obj = dircmp(path_original, path_import)
         self.assertEqual(len(compare_obj.diff_files), 0)
 
@@ -81,15 +79,12 @@ class TestUnpacking(PyironTestCase):
         pr_imp.unpack(origin_path=self.arch_dir_comp, compress=True)
         path_original = self.pr.path
         path_import = pr_imp.path
-        path_original = getdir(path_original)
-        path_import = getdir(path_import)
         compare_obj = dircmp(path_original, path_import)
         self.assertEqual(len(compare_obj.diff_files), 0)
         pr.remove(enable=True)
 
     def test_unpack_from_other_dir_uncompress(self):
-        cwd = os.getcwd()
-        pack_path = os.path.join(cwd, "exported")
+        pack_path = os.path.join(self.file_location, "exported")
         os.makedirs(name=pack_path)
         pack_path_comp = os.path.join(pack_path, self.arch_dir_comp)
         pack_path_csv = os.path.join(pack_path, "export.csv")
@@ -115,8 +110,6 @@ class TestUnpacking(PyironTestCase):
         self.imp_pr.unpack(origin_path=self.arch_dir, compress=False)
         path_original = self.pr.path
         path_import = self.imp_pr.path
-        path_original = getdir(path_original)
-        path_import = getdir(path_import)
         compare_obj = dircmp(path_original, path_import)
         self.assertEqual(len(compare_obj.diff_files), 0)
 
@@ -128,8 +121,6 @@ class TestUnpacking(PyironTestCase):
         self.imp_pr.unpack(aux_proj, compress=False)
         path_original = self.pr.path
         path_import = self.imp_pr.path
-        path_original = getdir(path_original)
-        path_import = getdir(path_import)
         compare_obj = dircmp(path_original, path_import)
         self.assertEqual(len(compare_obj.diff_files), 0)
 
@@ -173,8 +164,7 @@ class TestUnpacking(PyironTestCase):
         )
 
     def test_import_with_targz_extension(self):
-        cwd = os.getcwd()
-        pack_path = os.path.join(cwd, "exported_withTar")
+        pack_path = os.path.join(self.file_location, "exported_withTar")
         os.makedirs(name=pack_path)
         tar_arch = self.arch_dir_comp + ".tar.gz"
         pack_path_comp = os.path.join(pack_path, tar_arch)
