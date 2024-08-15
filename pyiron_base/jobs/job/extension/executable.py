@@ -3,10 +3,10 @@
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
 import os
+from dataclasses import asdict
 
 from pyiron_snippets.resources import ExecutableResolver
 
-from dataclasses import asdict
 from pyiron_base.dataclasses.job import Executable as ExecutableDataClass
 from pyiron_base.interfaces.has_dict import HasDict
 from pyiron_base.state import state
