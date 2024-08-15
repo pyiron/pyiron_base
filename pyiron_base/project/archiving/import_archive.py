@@ -104,7 +104,7 @@ def transfer_files(origin_path: str, project_path: str):
         pandas.DataFrame: Job table.
         str: Common path.
     """
-    df = get_dataframe(origin_path=origin_path, project_path=project_path)
+    df = get_dataframe(origin_path=origin_path)
     common_path = os.path.commonpath(list(df["project"]))
     copytree(os.path.join(origin_path, common_path), project_path, dirs_exist_ok=True)
     return df, common_path
