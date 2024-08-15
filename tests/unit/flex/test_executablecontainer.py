@@ -58,8 +58,8 @@ class TestExecutableContainer(TestWithProject):
             "mpi": False,
             "accepted_return_codes": [0],
         }
-        self.assertEqual(job.executable.storage.__dict__, executable_dict)
-        self.assertEqual(job_reload.executable.storage.__dict__, executable_dict)
+        self.assertEqual(asdict(job.executable.storage), executable_dict)
+        self.assertEqual(asdict(job_reload.executable.storage), executable_dict)
         del JOB_CLASS_DICT["CatJob"]
 
     def test_create_job_factory_with_project(self):
