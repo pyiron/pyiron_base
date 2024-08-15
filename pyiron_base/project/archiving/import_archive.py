@@ -126,6 +126,9 @@ def get_dataframe(
     Returns:
         pandas.DataFrame: Job table.
     """
+    # This for loop looks for the csv file outside of the archive directory to
+    # guarantee backward compatibility with old archives. More discussion can
+    # be found here: https://github.com/pyiron/pyiron_base/pull/1401
     for file_name in [
         csv_file_name,
         os.path.join(os.path.dirname(origin_path), csv_file_name),
