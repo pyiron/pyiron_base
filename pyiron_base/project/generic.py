@@ -1970,7 +1970,7 @@ class Project(ProjectPath, HasGroups):
         assert not destination_path_abs.endswith(".gz")
         if destination_path_abs == directory_to_transfer and not compress:
             raise ValueError(
-                "The destination_path cannot have the same name as the project."
+                "destination_path cannot have the same name as the project."
             )
         export_archive.copy_files_to_archive(
             directory_to_transfer=directory_to_transfer,
@@ -1981,7 +1981,7 @@ class Project(ProjectPath, HasGroups):
             df=export_archive.export_database(self.job_table()),
         )
 
-    def unpack(self, origin_path):
+    def unpack(self, origin_path, **kwargs):
         """
         by this function, job table is imported from a given csv file,
         and also the content of project directory is copied from a given path
@@ -1990,6 +1990,15 @@ class Project(ProjectPath, HasGroups):
             origin_path (str): the relative path of a directory from which
                the project directory is copied.
         """
+        if "csv_file_name" in kwargs:
+            msg = "csv_file_name is not supported anymore."
+            if kwargs["csv_file_name"] != "export.csv":
+                msg += " Rename {} to export.csv.".format(kwargs["csv_file_name"])
+            raise ValueError(msg)
+        if "compress" in kwargs and kwargs["compress"] is (".tar.gz" not in origin_path):
+            raise ValueError(
+                "compress is not supported anymore. Use the full file name"
+            )
         import_archive.import_jobs(self, archive_directory=origin_path)
 
     @classmethod
