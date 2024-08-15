@@ -1976,19 +1976,19 @@ class Project(ProjectPath, HasGroups):
             compress=compress,
             copy_all_files=copy_all_files,
             arcname=os.path.relpath(self.path, os.getcwd()),
-            df=export_archive.export_database(self.job_table())
+            df=export_archive.export_database(self.job_table()),
         )
 
     def unpack(self, origin_path):
-         """
-         by this function, job table is imported from a given csv file,
-         and also the content of project directory is copied from a given path
+        """
+        by this function, job table is imported from a given csv file,
+        and also the content of project directory is copied from a given path
 
-         Args:
-             origin_path (str): the relative path of a directory from which
-                the project directory is copied.
-         """
-         import_archive.import_jobs(self, archive_directory=origin_path)
+        Args:
+            origin_path (str): the relative path of a directory from which
+               the project directory is copied.
+        """
+        import_archive.import_jobs(self, archive_directory=origin_path)
 
     @classmethod
     def register_tools(cls, name: str, tools):

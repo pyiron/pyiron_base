@@ -2,10 +2,10 @@ import os
 import shutil
 import tarfile
 import tempfile
+from shutil import rmtree
 from typing import Optional
 
 from pyiron_base.project.archiving.shared import getdir
-from shutil import rmtree
 
 
 def copy_files_to_archive(
@@ -83,7 +83,7 @@ def copy_h5_files(src, dst):
 
     for root, dirs, files in os.walk(src):
         for file in files:
-            if file.endswith(".h5") or file=="export.csv":
+            if file.endswith(".h5") or file == "export.csv":
                 src_file = os.path.join(root, file)
                 rel_path = os.path.relpath(root, src)
                 dst_dir = os.path.join(dst, rel_path)

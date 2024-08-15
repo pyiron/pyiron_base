@@ -53,9 +53,7 @@ def import_jobs(project_instance, archive_directory):
         with tempfile.TemporaryDirectory() as temp_dir:
             with tarfile.open(archive_directory + ".tar.gz", "r:gz") as tar:
                 tar.extractall(path=temp_dir)
-            df = get_dataframe(
-                origin_path=temp_dir, project_path=project_instance.path
-            )
+            df = get_dataframe(origin_path=temp_dir, project_path=project_instance.path)
             common_path = os.path.commonpath(list(df["project"]))
             copytree(
                 os.path.join(temp_dir, common_path),
