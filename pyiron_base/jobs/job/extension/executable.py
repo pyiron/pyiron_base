@@ -208,7 +208,7 @@ class Executable(HasDict):
 
     def to_dict(self):
         executable_dict = self._type_to_dict()
-        executable_dict.update(self.storage.__dict__)
+        executable_dict.update(asdict(self.storage))
         return executable_dict
 
     def from_dict(self, executable_dict):
