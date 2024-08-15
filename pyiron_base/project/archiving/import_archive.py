@@ -1,12 +1,11 @@
 import os
 import tarfile
 import tempfile
-from shutil import copytree, rmtree
+from shutil import copytree
 
 import numpy as np
 import pandas
 
-from pyiron_base.project.archiving.shared import getdir
 from pyiron_base.state import state
 from pyiron_base.utils.instance import static_isinstance
 
@@ -65,6 +64,7 @@ def import_jobs(project_instance, archive_directory, df):
         src = os.path.abspath(os.path.join(archive_directory, common_path))
         copytree(src, project_instance.path, dirs_exist_ok=True)
 
+    pr_import = project_instance.open(os.curdir)
     df["project"] = [
         os.path.normpath(
             os.path.join(pr_import.project_path, os.path.relpath(p, common_path))
@@ -100,3 +100,26 @@ def import_jobs(project_instance, archive_directory, df):
             pr_import.db.item_update(
                 item_id=job_id, par_dict={"parentid": parentid, "masterid": masterid}
             )
+
+
+def get_dataframe(origin_path, project_path, csv_file_name="export.csv"):
+    if hasattr(origin_path, "path"):
+        origin_path = origin_path.path
+    csv_path_origin = os.path.join(os.path.dirname(origin_path), csv_file_name)
+    csv_path_project = os.path.join(project_path, csv_file_name)
+    if os.path.exists(csv_file_name):
+        csv_path = os.path.abspath(csv_file_name)
+    elif os.path.exists(csv_path_origin):
+        csv_path = csv_path_origin
+    elif os.path.exists(csv_path_project):
+        csv_path = csv_path_project
+    else:
+        raise FileNotFoundError(
+            "File: {} was not found. Looked for {}, {} and {}.".format(
+                csv_file_name,
+                os.path.abspath(csv_file_name),
+                csv_path_origin,
+                csv_path_project
+            )
+        )
+    return pandas.read_csv(csv_path, index_col=0)

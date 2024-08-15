@@ -49,7 +49,7 @@ def copy_files_to_archive(
     dir_name_transfer = getdir(path=directory_to_transfer)
     if df is not None:
         csv_file_path = os.path.join(
-            os.path.dirname(destination_path_abs), "export.csv"
+            os.path.dirname(destination), "export.csv"
         )
         df.to_csv(csv_file_path)
     if not compress:
