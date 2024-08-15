@@ -49,11 +49,11 @@ def import_jobs(project_instance, archive_directory):
             with tarfile.open(archive_directory, "r:gz") as tar:
                 tar.extractall(path=temp_dir)
             df, common_path = transfer_files(
-                origin_path=temp_dir, projec_path=project_instance.path
+                origin_path=temp_dir, project_path=project_instance.path
             )
     else:
         df, common_path = transfer_files(
-            origin_path=archive_directory, projec_path=project_instance.path
+            origin_path=archive_directory, project_path=project_instance.path
         )
 
     pr_import = project_instance.open(os.curdir)
