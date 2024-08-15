@@ -72,7 +72,7 @@ class TestUnpacking(PyironTestCase):
     def test_unpack_to_nested_project(self):
         pr = self.pr.open("nested")
         pr_imp = pr.open("imported")
-        pr_imp.unpack(origin_path=self.arch_dir_comp)
+        pr_imp.unpack(origin_path=self.arch_dir_comp + ".tar.gz")
         path_original = self.pr.path
         path_import = pr_imp.path
         path_original = getdir(path_original)
@@ -84,7 +84,7 @@ class TestUnpacking(PyironTestCase):
     def test_unpack_from_other_dir_uncompress(self):
         cwd = os.getcwd()
         pack_path = os.path.join(cwd, "exported")
-        os.makedirs(name=pack_path)
+        os.makedirs(name=pack_path, exist_ok=True)
         pack_path_comp = os.path.join(pack_path, self.arch_dir_comp)
         self.pr.pack(destination_path=pack_path_comp, compress=False)
         pr = self.pr.open("nested")
@@ -164,13 +164,15 @@ class TestUnpacking(PyironTestCase):
     def test_import_with_targz_extension(self):
         cwd = os.getcwd()
         pack_path = os.path.join(cwd, "exported_withTar")
+        if os.path.exists(pack_path):
+            rmtree(pack_path)
         os.makedirs(name=pack_path)
         tar_arch = self.arch_dir_comp + ".tar.gz"
         pack_path_comp = os.path.join(pack_path, tar_arch)
         self.pr.pack(destination_path=pack_path_comp, compress=True)
         pr = self.pr.open("nested2")
         pr_imp = pr.open("imported2")
-        pr_imp.unpack(origin_path=pack_path_comp + ".tar.gz")
+        pr_imp.unpack(origin_path=pack_path_comp)
         with tarfile.open(pack_path_comp, "r:gz") as tar:
             tar.extractall(path=pack_path_comp[: -len(".tar.gz")])
         compare_obj = dircmp(pack_path_comp[:-7], pr_imp.path)
