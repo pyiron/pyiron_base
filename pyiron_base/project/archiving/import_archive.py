@@ -21,14 +21,13 @@ def update_id_lst(record_lst, job_id_lst):
     return masterid_lst
 
 
-def import_jobs(project_instance, archive_directory, df):
+def import_jobs(project_instance, archive_directory):
     """
     Import jobs from an archive directory to a pyiron project.
 
     Args:
         project_instance (pyiron_base.project.generic.Project): Pyiron project instance.
         archive_directory (str): Path to the archive directory.
-        df (pandas.DataFrame): DataFrame containing the job information.
     """
     # Copy HDF5 files
     # if the archive_directory is a path(string)/name of the compressed file
@@ -60,8 +59,14 @@ def import_jobs(project_instance, archive_directory, df):
                 project_instance.path,
                 dirs_exist_ok=True,
             )
+            df = get_dataframe(
+                origin_path=temp_dir, project_path=project_instance.path
+            )
     else:
         src = os.path.abspath(os.path.join(archive_directory, common_path))
+        df = get_dataframe(
+            origin_path=archive_directory, project_path=project_instance.path
+        )
         copytree(src, project_instance.path, dirs_exist_ok=True)
 
     pr_import = project_instance.open(os.curdir)
@@ -102,9 +107,20 @@ def import_jobs(project_instance, archive_directory, df):
             )
 
 
-def get_dataframe(origin_path, project_path, csv_file_name="export.csv"):
-    if hasattr(origin_path, "path"):
-        origin_path = origin_path.path
+def get_dataframe(
+    origin_path: str, project_path: str, csv_file_name: str = "export.csv"
+):
+    """
+    Get the job table from the csv file.
+
+    Args:
+        origin_path (str): Path to the origin directory.
+        project_path (str): Path to the project directory.
+        csv_file_name (str): Name of the csv file.
+
+    Returns:
+        pandas.DataFrame: Job table.
+    """
     for file_name in [
         csv_file_name,
         os.path.join(os.path.dirname(origin_path), csv_file_name),
