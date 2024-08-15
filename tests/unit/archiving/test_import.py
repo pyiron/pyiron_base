@@ -175,9 +175,9 @@ class TestUnpacking(PyironTestCase):
             print(f"deleting unsuccessful: {err_msg}")
 
     def test_backwards_compatibility(self):
-        self.assertRaises(ValueError):
+        with self.assertRaises(ValueError):
             self.imp_pr.unpack(origin_path=self.arch_dir_comp, compress=True)
-        self.assertRaises(ValueError):
+        with self.assertRaises(ValueError):
             self.imp_pr.unpack(origin_path=self.arch_dir_comp, csv_file_name="ahoy.csv")
 
 
