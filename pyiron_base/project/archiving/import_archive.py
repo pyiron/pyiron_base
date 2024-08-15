@@ -111,31 +111,23 @@ def transfer_files(origin_path: str, project_path: str):
 
 
 def get_dataframe(
-    origin_path: str, project_path: str, csv_file_name: str = "export.csv"
+    origin_path: str, csv_file_name: str = "export.csv"
 ) -> "DataFrame":
     """
     Get the job table from the csv file.
 
     Args:
         origin_path (str): Path to the origin directory.
-        project_path (str): Path to the project directory.
         csv_file_name (str): Name of the csv file.
 
     Returns:
         pandas.DataFrame: Job table.
     """
-    # This for loop looks for the csv file outside of the archive directory to
-    # guarantee backward compatibility with old archives. More discussion can
-    # be found here: https://github.com/pyiron/pyiron_base/pull/1401
-    for file_name in [
-        csv_file_name,
-        os.path.join(os.path.dirname(origin_path), csv_file_name),
-        os.path.join(project_path, csv_file_name),
-    ]:
-        if os.path.exists(file_name):
-            return pandas.read_csv(file_name, index_col=0)
+    # This line looks for the csv file outside of the archive directory to
+    # guarantee backward compatibility with old archives.
+    if os.path.exists(csv_file_name):
+        return pandas.read_csv(csv_file_name, index_col=0)
     for root, dirs, files in os.walk(origin_path):
         if csv_file_name in files:
             return pandas.read_csv(os.path.join(root, csv_file_name), index_col=0)
-
     raise FileNotFoundError(f"File: {csv_file_name} was not found.")
