@@ -83,7 +83,7 @@ class TestPack(PyironTestCase):
                 destination_path=os.path.join(tmp_path, tar_arch),
                 compress=True,
             )
-            desirable_lst = [tar_arch, "export.csv"]
+            desirable_lst = [tar_arch]
             desirable_lst.sort()
             content_tmp = os.listdir(tmp_path)
             content_tmp.sort()
