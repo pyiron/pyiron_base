@@ -6,6 +6,7 @@ import os
 
 from pyiron_snippets.resources import ExecutableResolver
 
+from dataclasses import asdict
 from pyiron_base.dataclasses.job import Executable as ExecutableDataClass
 from pyiron_base.interfaces.has_dict import HasDict
 from pyiron_base.state import state
