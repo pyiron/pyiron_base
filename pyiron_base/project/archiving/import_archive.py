@@ -40,9 +40,8 @@ def import_jobs(project_instance, archive_directory):
         archive_directory = archive_directory.path
     elif not isinstance(archive_directory, str):
         raise RuntimeError(
-            """the given path for importing from,
-            does not have the correct format paths
-            as string or pyiron Project objects are expected"""
+            "The given path for importing from, does not have the correct"
+            " format paths as string or pyiron Project objects are expected"
         )
     if archive_directory.endswith(".tar.gz"):
         with tempfile.TemporaryDirectory() as temp_dir:
