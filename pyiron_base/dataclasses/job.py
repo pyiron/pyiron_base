@@ -7,7 +7,7 @@ class Executable:
     name: str
     operation_system_nt: bool
     mpi: bool
-    accepted_return_codes: Optional[List[int]] = []
+    accepted_return_codes: List[int]
     version: Optional[str] = None
     executable: Optional[str] = None
 
