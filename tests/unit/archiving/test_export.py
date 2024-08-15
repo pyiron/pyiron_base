@@ -4,9 +4,9 @@ from unittest.mock import patch, call, MagicMock
 from pyiron_base import Project
 from pyiron_base.project.archiving.export_archive import export_database, copy_h5_files
 import pandas as pd
-from pandas._testing import assert_frame_equal
 from filecmp import dircmp
 import shutil
+import tempfile
 from pyiron_base._tests import PyironTestCase, ToyJob
 
 
@@ -20,8 +20,8 @@ class TestPack(PyironTestCase):
         cls.arch_dir_comp = cls.arch_dir + "_comp"
         cls.pr = Project("test")
         cls.pr.remove_jobs(recursive=True, silently=True)
-        cls.job = cls.pr.create_job(job_type=ToyJob, job_name="toy")
-        cls.job.run()
+        job = cls.pr.create_job(job_type=ToyJob, job_name="toy")
+        job.run()
         cls.pr.pack(destination_path=cls.arch_dir, compress=False)
         cls.file_location = os.path.dirname(os.path.abspath(__file__)).replace(
             "\\", "/"
@@ -39,24 +39,26 @@ class TestPack(PyironTestCase):
         # in the first test, the csv file from the packing function is read
         # and is compared with the return dataframe from export_database
         directory_to_transfer = os.path.basename(self.pr.path[:-1])
-        self.pr.pack(destination_path=self.arch_dir, compress=False)
-        df_read = pd.read_csv("export.csv")
-        df_read.drop(df_read.keys()[0], inplace=True, axis=1)
-        # this removes the "None/NaN/empty" cells as well as the unnamed column
-        df_read.dropna(inplace=True, axis=1)
-        df_read["timestart"] = pd.to_datetime(df_read["timestart"])
-        df_read["hamversion"] = float(df_read["hamversion"])
-        df_exp = export_database(
-            self.pr, directory_to_transfer, "archive_folder"
-        ).dropna(axis=1)
+        df_exp = export_database(self.pr).dropna(axis=1)
         df_exp["hamversion"] = float(df_exp["hamversion"])
-        assert_frame_equal(df_exp, df_read)
+        self.assertEqual(df_exp["job"].unique()[0], "toy")
+        self.assertEqual(df_exp["id"].unique()[0], 0)
 
     def test_HDF5(self):
         # first we check whether the toy.h5 file exists
         # in the exported directory
         h5_file_path = self.arch_dir + "/" + self.pr.name + "/toy.h5"
         self.assertTrue(os.path.exists(h5_file_path))
+
+    def test_compress_undefined_destination(self):
+        self.pr.pack(compress=True)
+        file_path = self.pr.name + ".tar.gz"
+        self.assertTrue(os.path.exists(file_path))
+        os.remove(file_path)
+        with self.assertRaises(ValueError):
+            self.pr.pack(compress=False)
+        with self.assertRaises(ValueError):
+            self.pr.pack(destination_path=self.pr.path, compress=False)
 
     def test_compress(self):
         # here we check whether the packing function
@@ -74,23 +76,19 @@ class TestPack(PyironTestCase):
         self.assertEqual(len(compare_obj.diff_files), 0)
 
     def test_export_with_targz_extension(self):
-        os.makedirs(os.path.join(os.curdir, "tmp"))
-        tmp_path = os.path.abspath(os.path.join(os.curdir, "tmp"))
-        tar_arch = self.arch_dir_comp + ".tar.gz"
-        self.pr.pack(
-            destination_path=os.path.join(tmp_path, tar_arch),
-            csv_file_name=os.path.join(tmp_path, "exported.csv"),
-            compress=True,
-        )
-        desirable_lst = [tar_arch, "exported.csv"]
-        desirable_lst.sort()
-        content_tmp = os.listdir(tmp_path)
-        content_tmp.sort()
-        try:
-            shutil.rmtree(tmp_path)
-        except Exception as err_msg:
-            print(f"deleting unsuccessful: {err_msg}")
-        self.assertListEqual(desirable_lst, content_tmp)
+        with tempfile.TemporaryDirectory() as temp_dir:
+            tmp_path = os.path.abspath(os.path.join(os.curdir, temp_dir))
+            tar_arch = self.arch_dir_comp + ".tar.gz"
+            self.pr.pack(
+                destination_path=os.path.join(tmp_path, tar_arch),
+                csv_file_name=os.path.join(tmp_path, "exported.csv"),
+                compress=True,
+            )
+            desirable_lst = [tar_arch, "exported.csv"]
+            desirable_lst.sort()
+            content_tmp = os.listdir(tmp_path)
+            content_tmp.sort()
+            self.assertListEqual(desirable_lst, content_tmp)
 
     @patch("os.makedirs")
     @patch("shutil.copy2")

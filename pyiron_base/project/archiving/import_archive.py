@@ -1,5 +1,6 @@
 import os
 import tarfile
+import tempfile
 from shutil import copytree, rmtree
 
 import numpy as np
@@ -22,6 +23,15 @@ def update_id_lst(record_lst, job_id_lst):
 
 
 def import_jobs(project_instance, archive_directory, df, compressed=True):
+    """
+    Import jobs from an archive directory to a pyiron project.
+
+    Args:
+        project_instance (pyiron_base.project.generic.Project): Pyiron project instance.
+        archive_directory (str): Path to the archive directory.
+        df (pandas.DataFrame): DataFrame containing the job information.
+        compressed (bool): Set to True, if the archive directory to import is compressed (*.tar.gz).
+    """
     # Copy HDF5 files
     # if the archive_directory is a path(string)/name of the compressed file
     if static_isinstance(
@@ -41,22 +51,26 @@ def import_jobs(project_instance, archive_directory, df, compressed=True):
             does not have the correct format paths
             as string or pyiron Project objects are expected"""
         )
+    common_path = os.path.commonpath(list(df["project"]))
     if compressed:
-        with tarfile.open(archive_directory + ".tar.gz", "r:gz") as tar:
-            tar.extractall()
-
-    # source folder; archive folder
-    src = os.path.abspath(archive_directory)
-    copytree(src, project_instance.path, dirs_exist_ok=True)
-    if compressed:
-        rmtree(src)
+        with tempfile.TemporaryDirectory() as temp_dir:
+            with tarfile.open(archive_directory + ".tar.gz", "r:gz") as tar:
+                tar.extractall(path=temp_dir)
+            copytree(
+                os.path.join(temp_dir, common_path),
+                project_instance.path,
+                dirs_exist_ok=True,
+            )
+    else:
+        src = os.path.abspath(os.path.join(archive_directory, common_path))
+        copytree(src, project_instance.path, dirs_exist_ok=True)
 
     # # Update Database
     pr_import = project_instance.open(os.curdir)
 
     df["project"] = [
-        os.path.join(
-            pr_import.project_path, os.path.relpath(p, getdir(path=archive_directory))
+        os.path.normpath(
+            os.path.join(pr_import.project_path, os.path.relpath(p, common_path))
         )
         + "/"
         for p in df["project"].values
@@ -74,7 +88,7 @@ def import_jobs(project_instance, archive_directory, df, compressed=True):
             entry["timestop"] = pandas.to_datetime(entry["timestop"])
         if "username" not in entry:
             entry["username"] = state.settings.login_user
-        job_id = pr_import.db.add_item_dict(par_dict=entry)
+        job_id = pr_import.db.add_item_dict(par_dict=entry, check_duplicates=True)
         job_id_lst.append(job_id)
 
     # Update parent and master ids

@@ -1,21 +1,31 @@
 from dataclasses import dataclass
-from typing import Optional
+from typing import List, Optional
 
 
+@dataclass
+class Executable:
+    name: str
+    operation_system_nt: bool
+    mpi: bool
+    accepted_return_codes: Optional[List[int]] = []
+    version: Optional[str] = None
+    executable: Optional[str] = None
+
+      
 @dataclass
 class Server:
     user: str
     host: str
     run_mode: str
     cores: int
-    gpus: Optional[int]
-    threads: int
-    new_hdf: bool
-    accept_crash: bool
-    run_time: Optional[int]  # [seconds]
-    memory_limit: Optional[str]
-    queue: Optional[str]
-    qid: Optional[int]
-    additional_arguments: dict
-    conda_environment_name: Optional[str]
-    conda_environment_path: Optional[str]
+    threads: Optional[int] = 1
+    new_hdf: Optional[bool] = True
+    accept_crash: Optional[bool] = False
+    additional_arguments: Optional[dict] = {}
+    gpus: Optional[int] = None
+    run_time: Optional[int] = None  # [seconds]
+    memory_limit: Optional[str] = None
+    queue: Optional[str] = None
+    qid: Optional[int] = None
+    conda_environment_name: Optional[str] = None
+    conda_environment_path: Optional[str] = None 
