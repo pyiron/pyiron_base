@@ -1995,7 +1995,9 @@ class Project(ProjectPath, HasGroups):
             if kwargs["csv_file_name"] != "export.csv":
                 msg += " Rename {} to export.csv.".format(kwargs["csv_file_name"])
             raise ValueError(msg)
-        if "compress" in kwargs and kwargs["compress"] is (".tar.gz" not in origin_path):
+        if "compress" in kwargs and kwargs["compress"] is (
+            ".tar.gz" not in origin_path
+        ):
             raise ValueError(
                 "compress is not supported anymore. Use the full file name"
             )
