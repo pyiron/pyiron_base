@@ -1,3 +1,4 @@
+from dataclasses import asdict
 import os
 import subprocess
 import unittest
