@@ -5,6 +5,7 @@ import tempfile
 from typing import Optional
 
 from pyiron_base.project.archiving.shared import getdir
+from shutil import rmtree
 
 
 def copy_files_to_archive(
@@ -48,10 +49,7 @@ def copy_files_to_archive(
         arcname = os.path.relpath(os.path.abspath(archive_directory), os.getcwd())
     dir_name_transfer = getdir(path=directory_to_transfer)
     if df is not None:
-        csv_file_path = os.path.join(
-            os.path.dirname(archive_directory), "export.csv"
-        )
-        df.to_csv(csv_file_path)
+        df.to_csv(os.path.join(directory_to_transfer, "export.csv"))
     if not compress:
         copy_files(directory_to_transfer, os.path.join(archive_directory, arcname))
     elif compress and copy_all_files:
@@ -62,10 +60,11 @@ def copy_files_to_archive(
             # Copy files to the temporary directory
             dest = os.path.join(temp_dir, dir_name_transfer)
             copy_files(directory_to_transfer, dest)
-
             # Compress the temporary directory into a tar.gz archive
             with tarfile.open(f"{archive_directory}.tar.gz", "w:gz") as tar:
                 tar.add(dest, arcname=arcname)
+    if df is not None:
+        os.remove(os.path.join(directory_to_transfer, "export.csv"))
 
 
 def copy_h5_files(src, dst):
