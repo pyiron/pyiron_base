@@ -1971,9 +1971,8 @@ class Project(ProjectPath, HasGroups):
                 "The destination_path cannot have the same name as the project."
             )
         export_archive.copy_files_to_archive(
-            self,
-            directory_to_transfer,
-            destination_path_abs,
+            directory_to_transfer=directory_to_transfer,
+            archive_directory=destination_path_abs,
             compress=compress,
             copy_all_files=copy_all_files,
             arcname=os.path.relpath(self.path, os.getcwd()),
