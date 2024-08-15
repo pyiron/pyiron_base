@@ -220,7 +220,12 @@ class Executable(HasDict):
             "mpi",
             "accepted_return_codes",
         ]
-        executable_class_dict = {}
+        executable_class_dict = {}        
+        # Backwards compatibility; dict state used to be nested one level deeper
+        if "executable" in executable_dict.keys() and isinstance(
+            executable_dict["executable"], dict
+        ):
+            executable_dict = executable_dict["executable"]
         for key in data_container_keys:
             executable_class_dict[key] = executable_dict.get(key, None)
 
