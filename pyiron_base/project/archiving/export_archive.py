@@ -54,7 +54,9 @@ def copy_files_to_archive(
     else:
         with tempfile.TemporaryDirectory() as temp_dir:
             # Copy files to the temporary directory
-            dest = os.path.join(temp_dir, os.path.basename(directory_to_transfer.rstrip('/\\')))
+            dest = os.path.join(
+                temp_dir, os.path.basename(directory_to_transfer.rstrip("/\\"))
+            )
             copy_files(directory_to_transfer, dest)
             # Compress the temporary directory into a tar.gz archive
             with tarfile.open(f"{archive_directory}.tar.gz", "w:gz") as tar:
