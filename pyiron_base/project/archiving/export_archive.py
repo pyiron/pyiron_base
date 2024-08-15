@@ -2,10 +2,7 @@ import os
 import shutil
 import tarfile
 import tempfile
-from shutil import rmtree
 from typing import Optional
-
-from pyiron_base.project.archiving.shared import getdir
 
 
 def copy_files_to_archive(
@@ -47,7 +44,6 @@ def copy_files_to_archive(
     assert isinstance(archive_directory, str) and ".tar.gz" not in archive_directory
     if arcname is None:
         arcname = os.path.relpath(os.path.abspath(archive_directory), os.getcwd())
-    dir_name_transfer = getdir(path=directory_to_transfer)
     if df is not None:
         df.to_csv(os.path.join(directory_to_transfer, "export.csv"))
     if not compress:
@@ -58,7 +54,7 @@ def copy_files_to_archive(
     else:
         with tempfile.TemporaryDirectory() as temp_dir:
             # Copy files to the temporary directory
-            dest = os.path.join(temp_dir, dir_name_transfer)
+            dest = os.path.join(temp_dir, os.path.basename(directory_to_transfer.rstrip('/\\')))
             copy_files(directory_to_transfer, dest)
             # Compress the temporary directory into a tar.gz archive
             with tarfile.open(f"{archive_directory}.tar.gz", "w:gz") as tar:
