@@ -228,17 +228,6 @@ class Executable(HasDict):
             executable_dict = executable_dict["executable"]
         for key in data_container_keys:
             executable_class_dict[key] = executable_dict.get(key, None)
-
-        # Backwards compatibility
-        if "executable" in executable_dict.keys() and isinstance(
-            executable_dict["executable"], dict
-        ):
-            for key in data_container_keys:
-                if key in executable_dict["executable"].keys():
-                    executable_class_dict[key] = executable_dict["executable"][key]
-                else:
-                    executable_class_dict[key] = None
-
         self.storage = ExecutableDataClass(**executable_class_dict)
 
     def get_input_for_subprocess_call(self, cores, threads, gpus=None):
