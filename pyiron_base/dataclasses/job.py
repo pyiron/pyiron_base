@@ -21,7 +21,7 @@ class Server:
     threads: Optional[int] = 1
     new_hdf: Optional[bool] = True
     accept_crash: Optional[bool] = False
-    additional_arguments: Optional[dict] = {}
+    additional_arguments: Optional[dict] = None
     gpus: Optional[int] = None
     run_time: Optional[int] = None  # [seconds]
     memory_limit: Optional[str] = None
