@@ -113,7 +113,7 @@ def transfer_files(origin_path: str, project_path: str):
 
 def get_dataframe(
     origin_path: str, project_path: str, csv_file_name: str = "export.csv"
-):
+) -> "DataFrame":
     """
     Get the job table from the csv file.
 
