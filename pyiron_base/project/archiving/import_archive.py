@@ -31,7 +31,6 @@ def import_jobs(project_instance, archive_directory):
     """
     # Copy HDF5 files
     # if the archive_directory is a path(string)/name of the compressed file
-    compressed = False
     if static_isinstance(
         obj=archive_directory.__class__,
         obj_type=[
@@ -49,20 +48,13 @@ def import_jobs(project_instance, archive_directory):
         with tempfile.TemporaryDirectory() as temp_dir:
             with tarfile.open(archive_directory, "r:gz") as tar:
                 tar.extractall(path=temp_dir)
-            df = get_dataframe(origin_path=temp_dir, project_path=project_instance.path)
-            common_path = os.path.commonpath(list(df["project"]))
-            copytree(
-                os.path.join(temp_dir, common_path),
-                project_instance.path,
-                dirs_exist_ok=True,
+            df, common_path = transfer_files(
+                origin_path=temp_dir, projec_path=project_instance.path
             )
     else:
-        df = get_dataframe(
-            origin_path=archive_directory, project_path=project_instance.path
+        df, common_path = transfer_files(
+            origin_path=archive_directory, projec_path=project_instance.path
         )
-        common_path = os.path.commonpath(list(df["project"]))
-        src = os.path.abspath(os.path.join(archive_directory, common_path))
-        copytree(src, project_instance.path, dirs_exist_ok=True)
 
     pr_import = project_instance.open(os.curdir)
     df["project"] = [
@@ -100,6 +92,26 @@ def import_jobs(project_instance, archive_directory):
             pr_import.db.item_update(
                 item_id=job_id, par_dict={"parentid": parentid, "masterid": masterid}
             )
+
+
+def transfer_files(origin_path: str, project_path: str):
+    """
+    Transfer files from the origin path to the project path.
+
+    Args:
+        origin_path (str): Path to the origin directory.
+        project_path (str): Path to the project directory.
+
+    Returns:
+        pandas.DataFrame: Job table.
+        str: Common path.
+    """
+    df = get_dataframe(origin_path=origin_path, project_path=project_path)
+    common_path = os.path.commonpath(list(df["project"]))
+    copytree(
+        os.path.join(origin_path, common_path), project_path, dirs_exist_ok=True
+    )
+    return df, common_path
 
 
 def get_dataframe(
