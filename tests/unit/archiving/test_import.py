@@ -1,7 +1,6 @@
 import os
 import unittest
 from pyiron_base import Project
-from pyiron_base.project.archiving.shared import getdir
 from pandas._testing import assert_frame_equal
 from filecmp import dircmp
 from shutil import rmtree
@@ -64,8 +63,6 @@ class TestUnpacking(PyironTestCase):
     def test_import_compressed(self):
         path_original = self.pr.path
         path_import = self.imp_pr.path
-        path_original = getdir(path_original)
-        path_import = getdir(path_import)
         compare_obj = dircmp(path_original, path_import)
         self.assertEqual(len(compare_obj.diff_files), 0)
 
@@ -75,8 +72,6 @@ class TestUnpacking(PyironTestCase):
         pr_imp.unpack(origin_path=self.arch_dir_comp + ".tar.gz")
         path_original = self.pr.path
         path_import = pr_imp.path
-        path_original = getdir(path_original)
-        path_import = getdir(path_import)
         compare_obj = dircmp(path_original, path_import)
         self.assertEqual(len(compare_obj.diff_files), 0)
         pr.remove(enable=True)
@@ -104,8 +99,6 @@ class TestUnpacking(PyironTestCase):
         self.imp_pr.unpack(origin_path=self.arch_dir)
         path_original = self.pr.path
         path_import = self.imp_pr.path
-        path_original = getdir(path_original)
-        path_import = getdir(path_import)
         compare_obj = dircmp(path_original, path_import)
         self.assertEqual(len(compare_obj.diff_files), 0)
 
@@ -117,8 +110,6 @@ class TestUnpacking(PyironTestCase):
         self.imp_pr.unpack(aux_proj)
         path_original = self.pr.path
         path_import = self.imp_pr.path
-        path_original = getdir(path_original)
-        path_import = getdir(path_import)
         compare_obj = dircmp(path_original, path_import)
         self.assertEqual(len(compare_obj.diff_files), 0)
 
