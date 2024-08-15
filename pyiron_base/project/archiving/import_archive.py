@@ -129,4 +129,8 @@ def get_dataframe(
     ]:
         if os.path.exists(file_name):
             return pandas.read_csv(file_name, index_col=0)
+    for root, dirs, files in os.walk(origin_path):
+        if csv_file_name in files:
+            return pandas.read_csv(os.path.join(root, csv_file_name), index_col=0)
+
     raise FileNotFoundError(f"File: {csv_file_name} was not found.")
