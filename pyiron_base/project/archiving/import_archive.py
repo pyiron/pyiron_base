@@ -39,11 +39,7 @@ def import_jobs(project_instance, archive_directory):
         ],
     ):
         archive_directory = archive_directory.path
-    elif isinstance(archive_directory, str):
-        if archive_directory[-7:] == ".tar.gz":
-            archive_directory = archive_directory[:-7]
-            compressed = True
-    else:
+    elif not archive_directory.endswith(".tar.gz"):
         raise RuntimeError(
             """the given path for importing from,
             does not have the correct format paths
@@ -51,7 +47,7 @@ def import_jobs(project_instance, archive_directory):
         )
     if compressed:
         with tempfile.TemporaryDirectory() as temp_dir:
-            with tarfile.open(archive_directory + ".tar.gz", "r:gz") as tar:
+            with tarfile.open(archive_directory, "r:gz") as tar:
                 tar.extractall(path=temp_dir)
             df = get_dataframe(origin_path=temp_dir, project_path=project_instance.path)
             common_path = os.path.commonpath(list(df["project"]))
