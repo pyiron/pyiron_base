@@ -39,13 +39,13 @@ def import_jobs(project_instance, archive_directory):
         ],
     ):
         archive_directory = archive_directory.path
-    elif not archive_directory.endswith(".tar.gz"):
+    elif not isinstance(archive_directory, str):
         raise RuntimeError(
             """the given path for importing from,
             does not have the correct format paths
             as string or pyiron Project objects are expected"""
         )
-    if compressed:
+    if archive_directory.endswith(".tar.gz"):
         with tempfile.TemporaryDirectory() as temp_dir:
             with tarfile.open(archive_directory, "r:gz") as tar:
                 tar.extractall(path=temp_dir)
