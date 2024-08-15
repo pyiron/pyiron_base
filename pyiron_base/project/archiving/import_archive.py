@@ -105,21 +105,11 @@ def import_jobs(project_instance, archive_directory, df):
 def get_dataframe(origin_path, project_path, csv_file_name="export.csv"):
     if hasattr(origin_path, "path"):
         origin_path = origin_path.path
-    csv_path_origin = os.path.join(os.path.dirname(origin_path), csv_file_name)
-    csv_path_project = os.path.join(project_path, csv_file_name)
-    if os.path.exists(csv_file_name):
-        csv_path = os.path.abspath(csv_file_name)
-    elif os.path.exists(csv_path_origin):
-        csv_path = csv_path_origin
-    elif os.path.exists(csv_path_project):
-        csv_path = csv_path_project
-    else:
-        raise FileNotFoundError(
-            "File: {} was not found. Looked for {}, {} and {}.".format(
-                csv_file_name,
-                os.path.abspath(csv_file_name),
-                csv_path_origin,
-                csv_path_project
-            )
-        )
-    return pandas.read_csv(csv_path, index_col=0)
+    for file_name in [
+        csv_file_name,
+        os.path.join(os.path.dirname(origin_path), csv_file_name),
+        os.path.join(project_path, csv_file_name),
+    ]:
+        if os.path.exists(file_name):
+            return pandas.read_csv(file_name, index_col=0)
+    raise FileNotFoundError(f"File: {csv_file_name} was not found.")
