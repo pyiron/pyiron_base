@@ -12,6 +12,7 @@ from typing import Union
 
 from pyiron_snippets.deprecate import deprecate
 
+from dataclasses import asdict
 from pyiron_base.dataclasses.job import Server as ServerDataClass
 from pyiron_base.interfaces.has_dict import HasDict
 from pyiron_base.interfaces.lockable import Lockable, sentinel
