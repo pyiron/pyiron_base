@@ -563,7 +563,7 @@ class Server(
     def to_dict(self):
         server_dict = self._type_to_dict()
         self._data.run_mode = self._run_mode.mode
-        server_dict.update(self._data.__dict__)
+        server_dict.update(asdict(self._data))
         return server_dict
 
     def from_dict(self, server_dict):
