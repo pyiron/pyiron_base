@@ -81,7 +81,6 @@ class TestPack(PyironTestCase):
             tar_arch = self.arch_dir_comp + ".tar.gz"
             self.pr.pack(
                 destination_path=os.path.join(tmp_path, tar_arch),
-                csv_file_name=os.path.join(tmp_path, "exported.csv"),
                 compress=True,
             )
             desirable_lst = [tar_arch, "exported.csv"]
