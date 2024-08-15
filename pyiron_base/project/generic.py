@@ -1954,11 +1954,11 @@ class Project(ProjectPath, HasGroups):
             compress (bool): if true, the function will compress the destination_path to a tar.gz file.
             copy_all_files (bool):
         """
-        if "csv_file_name" in kwargs:
-            msg = "csv_file_name is not supported anymore."
-            if kwargs["csv_file_name"] != "export.csv":
-                msg += " Rename {} to export.csv.".format(kwargs["csv_file_name"])
-            raise ValueError(msg)
+        if "csv_file_name" in kwargs and kwargs["csv_file_name"] != "export.csv":
+            raise ValueError(
+                "csv_file_name is not supported anymore. Rename"
+                " {} to export.csv.".format(kwargs["csv_file_name"])
+            )
         if destination_path is None:
             destination_path = self.path
         if ".tar.gz" in destination_path:
@@ -1990,11 +1990,11 @@ class Project(ProjectPath, HasGroups):
             origin_path (str): the relative path of a directory from which
                the project directory is copied.
         """
-        if "csv_file_name" in kwargs:
-            msg = "csv_file_name is not supported anymore."
-            if kwargs["csv_file_name"] != "export.csv":
-                msg += " Rename {} to export.csv.".format(kwargs["csv_file_name"])
-            raise ValueError(msg)
+        if "csv_file_name" in kwargs and kwargs["csv_file_name"] != "export.csv":
+            raise ValueError(
+                "csv_file_name is not supported anymore. Rename"
+                " {} to export.csv.".format(kwargs["csv_file_name"])
+            )
         if "compress" in kwargs and kwargs["compress"] is (
             ".tar.gz" not in origin_path
         ):
