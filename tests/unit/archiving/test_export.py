@@ -33,7 +33,8 @@ class TestPack(PyironTestCase):
         cls.pr.remove(enable=True)
         uncompressed_pr = Project(cls.arch_dir)
         uncompressed_pr.remove(enable=True, enforce=True)
-        os.remove("export.csv")
+        if os.path.exists("export.csv"):
+            os.remove("export.csv")
 
     def test_exportedCSV(self):
         # in the first test, the csv file from the packing function is read
