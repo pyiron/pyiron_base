@@ -36,6 +36,10 @@ class TestPack(PyironTestCase):
         if os.path.exists("export.csv"):
             os.remove("export.csv")
 
+    def test_backward_compatibility(self):
+        with self.assertRaises(ValueError):
+            self.pr.pack(csv_file_name="my_export.csv")
+
     def test_exportedCSV(self):
         # in the first test, the csv file from the packing function is read
         # and is compared with the return dataframe from export_database

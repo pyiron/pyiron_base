@@ -1944,6 +1944,7 @@ class Project(ProjectPath, HasGroups):
         destination_path: Optional[str] = None,
         compress: bool = True,
         copy_all_files: bool = False,
+        **kwargs,
     ):
         """
         Export job table to a csv file and copy (and optionally compress) the project directory.
@@ -1953,6 +1954,11 @@ class Project(ProjectPath, HasGroups):
             compress (bool): if true, the function will compress the destination_path to a tar.gz file.
             copy_all_files (bool):
         """
+        if "csv_file_name" in kwargs:
+            msg = "csv_file_name is not supported anymore."
+            if kwargs["csv_file_name"] != "export.csv":
+                msg += " Rename {} to export.csv.".format(kwargs["csv_file_name"])
+            raise ValueError(msg)
         if destination_path is None:
             destination_path = self.path
         if ".tar.gz" in destination_path:
