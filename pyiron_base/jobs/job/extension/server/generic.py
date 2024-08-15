@@ -8,11 +8,11 @@ Server object class which is connected to each job containing the technical deta
 import numbers
 import socket
 from concurrent.futures import Executor, Future
+from dataclasses import asdict
 from typing import Union
 
 from pyiron_snippets.deprecate import deprecate
 
-from dataclasses import asdict
 from pyiron_base.dataclasses.job import Server as ServerDataClass
 from pyiron_base.interfaces.has_dict import HasDict
 from pyiron_base.interfaces.lockable import Lockable, sentinel
