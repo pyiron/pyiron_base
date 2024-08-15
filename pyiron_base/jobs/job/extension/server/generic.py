@@ -8,10 +8,12 @@ Server object class which is connected to each job containing the technical deta
 import numbers
 import socket
 from concurrent.futures import Executor, Future
+from dataclasses import asdict
 from typing import Union
 
 from pyiron_snippets.deprecate import deprecate
 
+from pyiron_base.dataclasses.job import Server as ServerDataClass
 from pyiron_base.interfaces.has_dict import HasDict
 from pyiron_base.interfaces.lockable import Lockable, sentinel
 from pyiron_base.jobs.job.extension.server.runmode import Runmode
@@ -93,38 +95,47 @@ class Server(
         new_hdf=True,
     ):
         super().__init__()
-        self._cores = cores
-        self._threads = threads
-        self._active_queue = None
-        self._gpus = gpus
-        self._run_time = None
-        self._memory_limit = None
-        self._host = self._init_host(host=host)
+        self._data = ServerDataClass(
+            user=state.settings.login_user,
+            host=self._init_host(host=host),
+            run_mode=run_mode,
+            cores=cores,
+            gpus=gpus,
+            threads=threads,
+            new_hdf=new_hdf,
+            accept_crash=False,
+            run_time=None,
+            memory_limit=None,
+            queue=None,
+            qid=None,
+            additional_arguments={},
+            conda_environment_name=None,
+            conda_environment_path=None,
+        )
         self._run_mode = Runmode()
         self._executor: Union[Executor, None] = None
         self._future: Union[Future, None] = None
 
         self.queue = queue
-
-        self._user = state.settings.login_user
         self.run_mode = run_mode
-
-        self._queue_id = None
-
-        self._new_hdf = new_hdf
-        self._accept_crash = False
-        self._environment_name = None
-        self._environment_path = None
-        self.additional_arguments = {}
 
     @property
     def accept_crash(self):
-        return self._accept_crash
+        return self._data.accept_crash
 
     @accept_crash.setter
     @sentinel
     def accept_crash(self, accept):
-        self._accept_crash = accept
+        self._data.accept_crash = accept
+
+    @property
+    def additional_arguments(self):
+        return self._data.additional_arguments
+
+    @additional_arguments.setter
+    @sentinel
+    def additional_arguments(self, additional_arguments):
+        self._data.additional_arguments = additional_arguments
 
     @property
     def queue(self):
@@ -134,7 +145,7 @@ class Server(
         Returns:
             (str): schedulers_name
         """
-        return self._active_queue
+        return self._data.queue
 
     @queue.setter
     @sentinel
@@ -148,11 +159,11 @@ class Server(
                                       run_mode modal
         """
         if new_scheduler is None:
-            self._active_queue = None
+            self._data.queue = None
             self.run_mode.modal = True
             self.cores = 1
             self.threads = 1
-            self._run_time = None
+            self._data.run_time = None
             self.memory_limit = None
         else:
             if state.queue_adapter is not None:
@@ -167,17 +178,17 @@ class Server(
                     memory_max=self.memory_limit,
                 )
                 if self.cores is not None and cores != self.cores:
-                    self._cores = cores
+                    self._data.cores = cores
                     state.logger.warning(f"Updated the number of cores to: {cores}")
                 if self.run_time is not None and run_time_max != self.run_time:
-                    self._run_time = run_time_max
+                    self._data.run_time = run_time_max
                     state.logger.warning(
                         f"Updated the run time limit to: {run_time_max}"
                     )
                 if self.memory_limit is not None and memory_max != self.memory_limit:
-                    self._memory_limit = memory_max
+                    self._data.memory_limit = memory_max
                     state.logger.warning(f"Updated the memory limit to: {memory_max}")
-                self._active_queue = new_scheduler
+                self._data.queue = new_scheduler
                 self.run_mode = "queue"
             else:
                 raise TypeError(
@@ -193,7 +204,7 @@ class Server(
         Returns:
             int: queue ID
         """
-        return self._queue_id
+        return self._data.qid
 
     @queue_id.setter
     @sentinel
@@ -204,7 +215,7 @@ class Server(
         Args:
             qid (int): queue ID
         """
-        self._queue_id = int(qid)
+        self._data.qid = int(qid)
 
     @property
     def threads(self):
@@ -214,7 +225,7 @@ class Server(
         Returns:
             (int): number of threads
         """
-        return self._threads
+        return self._data.threads
 
     @threads.setter
     @sentinel
@@ -225,7 +236,7 @@ class Server(
         Args:
             number_of_threads (int): number of threads
         """
-        self._threads = number_of_threads
+        self._data.threads = number_of_threads
 
     @property
     def gpus(self):
@@ -235,7 +246,7 @@ class Server(
         Returns:
             int: Total number of GPUs to use for this calculation.
         """
-        return self._gpus
+        return self._data.gpus
 
     @gpus.setter
     @sentinel
@@ -246,7 +257,7 @@ class Server(
         Args:
             number_of_gpus (int): Total number of GPUs to use for this calculation.
         """
-        self._gpus = number_of_gpus
+        self._data.gpus = number_of_gpus
 
     @property
     def cores(self):
@@ -256,7 +267,7 @@ class Server(
         Returns:
             (int): number of cores
         """
-        return self._cores
+        return self._data.cores
 
     @cores.setter
     @sentinel
@@ -273,7 +284,7 @@ class Server(
             if new_cores != converted:
                 raise ValueError(f"cores must be an integer number, not {new_cores}!")
             new_cores = converted
-        if state.queue_adapter is not None and self._active_queue is not None:
+        if state.queue_adapter is not None and self._data.queue is not None:
             cores = state.queue_adapter.check_queue_parameters(
                 queue=self.queue,
                 cores=new_cores,
@@ -281,12 +292,12 @@ class Server(
                 memory_max=self.memory_limit,
             )[0]
             if cores != new_cores:
-                self._cores = cores
+                self._data.cores = cores
                 state.logger.warning(f"Updated the number of cores to: {cores}")
             else:
-                self._cores = new_cores
+                self._data.cores = new_cores
         else:
-            self._cores = new_cores
+            self._data.cores = new_cores
 
     @property
     def run_time(self):
@@ -296,7 +307,7 @@ class Server(
         Returns:
             (int): run time in seconds
         """
-        return self._run_time
+        return self._data.run_time
 
     @run_time.setter
     @sentinel
@@ -311,7 +322,7 @@ class Server(
             ValueError: if new_run_time cannot be converted to int
         """
         new_run_time = int(new_run_time)
-        if state.queue_adapter is not None and self._active_queue is not None:
+        if state.queue_adapter is not None and self._data.queue is not None:
             run_time_max = state.queue_adapter.check_queue_parameters(
                 queue=self.queue,
                 cores=self.cores,
@@ -319,21 +330,21 @@ class Server(
                 memory_max=self.memory_limit,
             )[1]
             if run_time_max != new_run_time:
-                self._run_time = run_time_max
+                self._data.run_time = run_time_max
                 state.logger.warning(f"Updated the run time limit to: {run_time_max}")
             else:
-                self._run_time = new_run_time
+                self._data.run_time = new_run_time
         else:
-            self._run_time = new_run_time
+            self._data.run_time = new_run_time
 
     @property
     def memory_limit(self):
-        return self._memory_limit
+        return self._data.memory_limit
 
     @memory_limit.setter
     @sentinel
     def memory_limit(self, limit):
-        if state.queue_adapter is not None and self._active_queue is not None:
+        if state.queue_adapter is not None and self._data.queue is not None:
             memory_max = state.queue_adapter.check_queue_parameters(
                 queue=self.queue,
                 cores=self.cores,
@@ -341,12 +352,12 @@ class Server(
                 memory_max=limit,
             )[2]
             if memory_max != limit:
-                self._memory_limit = memory_max
+                self._data.memory_limit = memory_max
                 state.logger.warning(f"Updated the memory limit to: {memory_max}")
             else:
-                self._memory_limit = limit
+                self._data.memory_limit = limit
         else:
-            self._memory_limit = limit
+            self._data.memory_limit = limit
 
     @property
     def run_mode(self):
@@ -373,7 +384,7 @@ class Server(
         if new_mode == "queue":
             if state.queue_adapter is None:
                 raise TypeError("No queue adapter defined.")
-            if self._active_queue is None:
+            if self._data.queue is None:
                 self.queue = state.queue_adapter.config["queue_primary"]
 
     @property
@@ -385,7 +396,7 @@ class Server(
             (bool): [True / False]
 
         """
-        return self._new_hdf
+        return self._data.new_hdf
 
     @new_hdf.setter
     @sentinel
@@ -397,7 +408,7 @@ class Server(
             new_hdf_bool (bool): [True / False]
         """
         if isinstance(new_hdf_bool, bool):
-            self._new_hdf = new_hdf_bool
+            self._data.new_hdf = new_hdf_bool
         else:
             raise TypeError(
                 "The new_hdf5 is a boolean property, defining whether subjobs are stored in the same file."
@@ -490,7 +501,7 @@ class Server(
         Returns:
             str: name of the conda environment
         """
-        return self._environment_name
+        return self._data.conda_environment_name
 
     @conda_environment_name.setter
     @sentinel
@@ -501,7 +512,7 @@ class Server(
         Args:
             environment_name (str): name of the conda environment
         """
-        self._environment_name = environment_name
+        self._data.conda_environment_name = environment_name
 
     @property
     def conda_environment_path(self):
@@ -511,7 +522,7 @@ class Server(
         Returns:
             str: path of the conda environment
         """
-        return self._environment_path
+        return self._data.conda_environment_path
 
     @conda_environment_path.setter
     @sentinel
@@ -522,7 +533,7 @@ class Server(
         Args:
             environment_path (str): path of the conda environment
         """
-        self._environment_path = environment_path
+        self._data.conda_environment_path = environment_path
 
     @staticmethod
     def list_queues():
@@ -552,58 +563,28 @@ class Server(
 
     def to_dict(self):
         server_dict = self._type_to_dict()
-        server_dict.update(
-            {
-                "user": self._user,
-                "host": self._host,
-                "run_mode": self.run_mode.mode,
-                "queue": self.queue,
-                "qid": self._queue_id,
-                "cores": self.cores,
-                "threads": self.threads,
-                "new_h5": self.new_hdf,
-                "run_time": self.run_time,
-                "memory_limit": self.memory_limit,
-                "accept_crash": self.accept_crash,
-            }
-        )
-        if len(self.additional_arguments) > 0:
-            server_dict["additional_arguments"] = self.additional_arguments
-        if self._gpus is not None:
-            server_dict["gpus"] = self._gpus
-        if self._environment_name is not None:
-            server_dict["conda_environment_name"] = self._environment_name
-        if self._environment_path is not None:
-            server_dict["conda_environment_path"] = self._environment_path
+        self._data.run_mode = self._run_mode.mode
+        server_dict.update(asdict(self._data))
         return server_dict
 
     def from_dict(self, server_dict):
-        self._user = server_dict["user"]
-        self._host = server_dict["host"]
-        self._run_mode.mode = server_dict["run_mode"]
-        if self.run_mode.queue:
-            self._active_queue = server_dict["queue"]
-            if "qid" in server_dict.keys():
-                self._queue_id = server_dict["qid"]
-            else:
-                self._queue_id = None
-        self._cores = server_dict["cores"]
-        h5_mapping = {
-            "run_time": "_run_time",
-            "memory_limit": "_memory_limit",
-            "threads": "_threads",
-            "additional_arguments": "additional_arguments",
-            "gpus": "_gpus",
-            "conda_environment_name": "_environment_name",
-            "conda_environment_path": "_environment_path",
-        }
-        for h5_key, obj_attr in h5_mapping.items():
-            if h5_key in server_dict.keys():
-                setattr(self, obj_attr, server_dict[h5_key])
+        # backwards compatibility
+        if "new_h5" in server_dict.keys():
+            server_dict["new_hdf"] = server_dict.pop("new_h5") == 1
+        for key in ["conda_environment_name", "conda_environment_path", "qid"]:
+            if key not in server_dict.keys():
+                server_dict[key] = None
+        if "accept_crash" not in server_dict.keys():
+            server_dict["accept_crash"] = False
+        if "additional_arguments" not in server_dict.keys():
+            server_dict["additional_arguments"] = {}
 
-        if "accept_crash" in server_dict.keys():
-            self._accept_crash = server_dict["accept_crash"] == 1
-        self._new_hdf = server_dict["new_h5"] == 1
+        # Reload dataclass
+        for key in ["NAME", "TYPE", "OBJECT", "VERSION", "DICT_VERSION"]:
+            if key in server_dict.keys():
+                del server_dict[key]
+        self._data = ServerDataClass(**server_dict)
+        self._run_mode = Runmode(mode=self._data.run_mode)
 
     @deprecate(message="Use job.server.to_dict() instead of to_hdf()", version=0.9)
     def to_hdf(self, hdf, group_name=None):
@@ -642,26 +623,17 @@ class Server(
 
         """
         if self.run_mode.queue:
-            server_lst = [self._host, str(self.cores), self.queue]
+            server_lst = [self._data.host, str(self.cores), self.queue]
         else:
-            server_lst = [self._host, str(self.cores)]
-        return self._user + "@" + "#".join(server_lst)
+            server_lst = [self._data.host, str(self.cores)]
+        return self._data.user + "@" + "#".join(server_lst)
 
     def __del__(self):
         """
         Delete the Server object from memory
         """
-        del self._cores
-        del self._threads
-        del self._run_time
-        del self._memory_limit
-        del self._host
-        del self._active_queue
-        del self._user
         del self._run_mode
-        del self._queue_id
-        del self._new_hdf
-        del self._accept_crash
+        del self._data
 
     @staticmethod
     def _init_host(host):
