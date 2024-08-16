@@ -33,13 +33,18 @@ class TestPack(PyironTestCase):
         cls.pr.remove(enable=True)
         uncompressed_pr = Project(cls.arch_dir)
         uncompressed_pr.remove(enable=True, enforce=True)
-        os.remove("export.csv")
+        if os.path.exists("export.csv"):
+            os.remove("export.csv")
+
+    def test_backward_compatibility(self):
+        with self.assertRaises(ValueError):
+            self.pr.pack(csv_file_name="my_export.csv")
 
     def test_exportedCSV(self):
         # in the first test, the csv file from the packing function is read
         # and is compared with the return dataframe from export_database
         directory_to_transfer = os.path.basename(self.pr.path[:-1])
-        df_exp = export_database(self.pr).dropna(axis=1)
+        df_exp = export_database(self.pr.job_table()).dropna(axis=1)
         df_exp["hamversion"] = float(df_exp["hamversion"])
         self.assertEqual(df_exp["job"].unique()[0], "toy")
         self.assertEqual(df_exp["id"].unique()[0], 0)
@@ -81,10 +86,9 @@ class TestPack(PyironTestCase):
             tar_arch = self.arch_dir_comp + ".tar.gz"
             self.pr.pack(
                 destination_path=os.path.join(tmp_path, tar_arch),
-                csv_file_name=os.path.join(tmp_path, "exported.csv"),
                 compress=True,
             )
-            desirable_lst = [tar_arch, "exported.csv"]
+            desirable_lst = [tar_arch]
             desirable_lst.sort()
             content_tmp = os.listdir(tmp_path)
             content_tmp.sort()

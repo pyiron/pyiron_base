@@ -1,12 +1,11 @@
 import os
 import tarfile
 import tempfile
-from shutil import copytree, rmtree
+from shutil import copytree
 
 import numpy as np
 import pandas
 
-from pyiron_base.project.archiving.shared import getdir
 from pyiron_base.state import state
 from pyiron_base.utils.instance import static_isinstance
 
@@ -22,15 +21,13 @@ def update_id_lst(record_lst, job_id_lst):
     return masterid_lst
 
 
-def import_jobs(project_instance, archive_directory, df, compressed=True):
+def import_jobs(project_instance, archive_directory):
     """
     Import jobs from an archive directory to a pyiron project.
 
     Args:
         project_instance (pyiron_base.project.generic.Project): Pyiron project instance.
         archive_directory (str): Path to the archive directory.
-        df (pandas.DataFrame): DataFrame containing the job information.
-        compressed (bool): Set to True, if the archive directory to import is compressed (*.tar.gz).
     """
     # Copy HDF5 files
     # if the archive_directory is a path(string)/name of the compressed file
@@ -41,33 +38,24 @@ def import_jobs(project_instance, archive_directory, df, compressed=True):
         ],
     ):
         archive_directory = archive_directory.path
-    elif isinstance(archive_directory, str):
-        if archive_directory[-7:] == ".tar.gz":
-            archive_directory = archive_directory[:-7]
-            compressed = True
-    else:
+    elif not isinstance(archive_directory, str):
         raise RuntimeError(
-            """the given path for importing from,
-            does not have the correct format paths
-            as string or pyiron Project objects are expected"""
+            "The given path for importing from, does not have the correct"
+            " format paths as string or pyiron Project objects are expected"
         )
-    common_path = os.path.commonpath(list(df["project"]))
-    if compressed:
+    if archive_directory.endswith(".tar.gz"):
         with tempfile.TemporaryDirectory() as temp_dir:
-            with tarfile.open(archive_directory + ".tar.gz", "r:gz") as tar:
+            with tarfile.open(archive_directory, "r:gz") as tar:
                 tar.extractall(path=temp_dir)
-            copytree(
-                os.path.join(temp_dir, common_path),
-                project_instance.path,
-                dirs_exist_ok=True,
+            df, common_path = transfer_files(
+                origin_path=temp_dir, project_path=project_instance.path
             )
     else:
-        src = os.path.abspath(os.path.join(archive_directory, common_path))
-        copytree(src, project_instance.path, dirs_exist_ok=True)
+        df, common_path = transfer_files(
+            origin_path=archive_directory, project_path=project_instance.path
+        )
 
-    # # Update Database
     pr_import = project_instance.open(os.curdir)
-
     df["project"] = [
         os.path.normpath(
             os.path.join(pr_import.project_path, os.path.relpath(p, common_path))
@@ -78,6 +66,7 @@ def import_jobs(project_instance, archive_directory, df, compressed=True):
     df["projectpath"] = len(df) * [pr_import.root_path]
     # Add jobs to database
     job_id_lst = []
+
     for entry in df.dropna(axis=1).to_dict(orient="records"):
         for tag in ["id", "parentid", "masterid"]:
             if tag in entry:
@@ -101,3 +90,42 @@ def import_jobs(project_instance, archive_directory, df, compressed=True):
             pr_import.db.item_update(
                 item_id=job_id, par_dict={"parentid": parentid, "masterid": masterid}
             )
+
+
+def transfer_files(origin_path: str, project_path: str):
+    """
+    Transfer files from the origin path to the project path.
+
+    Args:
+        origin_path (str): Path to the origin directory.
+        project_path (str): Path to the project directory.
+
+    Returns:
+        pandas.DataFrame: Job table.
+        str: Common path.
+    """
+    df = get_dataframe(origin_path=origin_path)
+    common_path = os.path.commonpath(list(df["project"]))
+    copytree(os.path.join(origin_path, common_path), project_path, dirs_exist_ok=True)
+    return df, common_path
+
+
+def get_dataframe(origin_path: str, csv_file_name: str = "export.csv") -> "DataFrame":
+    """
+    Get the job table from the csv file.
+
+    Args:
+        origin_path (str): Path to the origin directory.
+        csv_file_name (str): Name of the csv file.
+
+    Returns:
+        pandas.DataFrame: Job table.
+    """
+    # This line looks for the csv file outside of the archive directory to
+    # guarantee backward compatibility with old archives.
+    if os.path.exists(csv_file_name):
+        return pandas.read_csv(csv_file_name, index_col=0)
+    for root, dirs, files in os.walk(origin_path):
+        if csv_file_name in files:
+            return pandas.read_csv(os.path.join(root, csv_file_name), index_col=0)
+    raise FileNotFoundError(f"File: {csv_file_name} was not found.")

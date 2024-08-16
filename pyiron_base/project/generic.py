@@ -1942,19 +1942,23 @@ class Project(ProjectPath, HasGroups):
     def pack(
         self,
         destination_path: Optional[str] = None,
-        csv_file_name: str = "export.csv",
         compress: bool = True,
         copy_all_files: bool = False,
+        **kwargs,
     ):
         """
         Export job table to a csv file and copy (and optionally compress) the project directory.
 
         Args:
             destination_path (str): gives the relative path, in which the project folder is copied and compressed
-            csv_file_name (str): is the name of the csv file used to store the project table.
             compress (bool): if true, the function will compress the destination_path to a tar.gz file.
             copy_all_files (bool):
         """
+        if "csv_file_name" in kwargs and kwargs["csv_file_name"] != "export.csv":
+            raise ValueError(
+                "csv_file_name is not supported anymore. Rename"
+                " {} to export.csv.".format(kwargs["csv_file_name"])
+            )
         if destination_path is None:
             destination_path = self.path
         if ".tar.gz" in destination_path:
@@ -1964,52 +1968,40 @@ class Project(ProjectPath, HasGroups):
         directory_to_transfer = os.path.abspath(self.path)
         assert not destination_path_abs.endswith(".tar")
         assert not destination_path_abs.endswith(".gz")
-        csv_file_path = os.path.join(
-            os.path.dirname(destination_path_abs), csv_file_name
-        )
         if destination_path_abs == directory_to_transfer and not compress:
             raise ValueError(
-                "The destination_path cannot have the same name as the project."
+                "destination_path cannot have the same name as the project."
             )
         export_archive.copy_files_to_archive(
-            directory_to_transfer,
-            destination_path_abs,
+            directory_to_transfer=directory_to_transfer,
+            archive_directory=destination_path_abs,
             compress=compress,
             copy_all_files=copy_all_files,
             arcname=os.path.relpath(self.path, os.getcwd()),
+            df=export_archive.export_database(self.job_table()),
         )
-        df = export_archive.export_database(self)
-        df.to_csv(csv_file_path)
 
-    def unpack(self, origin_path, csv_file_name="export.csv", compress=True):
+    def unpack(self, origin_path, **kwargs):
         """
         by this function, job table is imported from a given csv file,
         and also the content of project directory is copied from a given path
 
         Args:
-            origin_path (str): the relative path of a directory (or a compressed file without the tar.gz extension)
-                            from which the project directory is copied.
-            csv_file_name (str): the csv file from which the job_table is copied to the current project
-            compress (bool): if True, it looks for a compressed file
+            origin_path (str): the relative path of a directory from which
+               the project directory is copied.
         """
-        if isinstance(origin_path, Project):
-            origin_path = origin_path.path
-        csv_path_origin = os.path.join(os.path.dirname(origin_path), csv_file_name)
-        csv_path_project = os.path.join(self.path, csv_file_name)
-        if os.path.exists(csv_file_name):
-            csv_path = os.path.abspath(csv_file_name)
-        elif os.path.exists(csv_path_origin):
-            csv_path = csv_path_origin
-        elif os.path.exists(csv_path_project):
-            csv_path = csv_path_project
-        else:
-            raise FileNotFoundError(
-                f"File: {csv_file_name} was not found. Looked for {os.path.abspath(csv_file_name)}, {csv_path_origin} and {csv_path_project}."
+        if "csv_file_name" in kwargs and kwargs["csv_file_name"] != "export.csv":
+            raise ValueError(
+                "csv_file_name is not supported anymore. Rename"
+                " {} to export.csv.".format(kwargs["csv_file_name"])
             )
-        df = pandas.read_csv(csv_path, index_col=0)
-        import_archive.import_jobs(
-            self, archive_directory=origin_path, df=df, compressed=compress
-        )
+        if "compress" in kwargs and kwargs["compress"] is (
+            ".tar.gz" not in origin_path
+        ):
+            raise ValueError(
+                "compress is not supported anymore. Use the full file name"
+            )
+        import_archive.import_jobs(self, archive_directory=origin_path)
 
     @classmethod
     def register_tools(cls, name: str, tools):
