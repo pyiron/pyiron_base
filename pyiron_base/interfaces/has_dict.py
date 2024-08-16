@@ -178,7 +178,7 @@ class HasDictfromHDF(HasDict, HasHDF):
         # interface
         group_name = self._get_hdf_group_name()
         if group_name is not None:
-            hdf = DummyHDFio(None, "/", {self._get_hdf_group_name(): obj_dict})
+            hdf = DummyHDFio(None, "/", {group_name: obj_dict})
         else:
             hdf = DummyHDFio(None, "/", obj_dict)
         self.from_hdf(hdf)

@@ -51,8 +51,6 @@ class Executable(HasDict):
         else:
             operation_system_nt = os.name == "nt"
 
-        if codename is None:
-            breakpoint()
         self.storage = ExecutableDataClass(
             version=None,
             name=codename.lower(),
