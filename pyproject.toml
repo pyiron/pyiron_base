@@ -36,7 +36,7 @@ dependencies = [
     "pyiron_snippets==0.1.4",
     "pysqa==0.1.21",
     "sqlalchemy==2.0.32",
-    "tables==3.9.2",
+    "tables==3.10.1",
     "tqdm==4.66.5",
     "traitlets==5.14.3",
 ]
