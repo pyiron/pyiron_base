@@ -387,7 +387,10 @@ class _WithInteractiveOpen:
         return self._job
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        return self._job.interactive_close()
+        job_status = self._job.status.string
+        job_closed = self._job.interactive_close()
+        self._job.status.string = job_status
+        return job_closed
 
     def __getattr__(self, attr):
         error_message = (
