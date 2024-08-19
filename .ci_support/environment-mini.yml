@@ -2,7 +2,7 @@ channels:
 - conda-forge
 dependencies:
 - cloudpickle =3.0.0
-- h5io_browser =0.0.17
+- h5io_browser =0.0.18
 - h5py =3.11.0
 - monty =2024.7.30
 - numpy =2.0.1
