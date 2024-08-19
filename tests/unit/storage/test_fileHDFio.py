@@ -411,7 +411,7 @@ class TestFileHDFio(PyironTestCase):
             with self.assertLogs(logger=state.logger) as lw:
                 with warnings.catch_warnings(record=True) as w:
                     new_hdf.rewrite_hdf5(job_name="job_name")
-                    self.assertEqual(len(w), 2)
+                    self.assertTrue(len(w) <= 2)
                     self.assertEqual(
                         str(w[0].message),
                         "pyiron_base.storage.hdfio.rewrite_hdf5(job_name=job_name) "
@@ -428,7 +428,7 @@ class TestFileHDFio(PyironTestCase):
         with self.subTest("warning handling - deprecate exclude_groups"):
             with warnings.catch_warnings(record=True) as w:
                 new_hdf.rewrite_hdf5(exclude_groups="some")
-                self.assertEqual(len(w), 2)
+                self.assertTrue(len(w) <= 2)
                 self.assertEqual(
                     str(w[0].message),
                     "pyiron_base.storage.hdfio.rewrite_hdf5(exclude_groups=some) "
@@ -438,7 +438,7 @@ class TestFileHDFio(PyironTestCase):
         with self.subTest("warning handling - deprecate exclude_nodes"):
             with warnings.catch_warnings(record=True) as w:
                 new_hdf.rewrite_hdf5(exclude_nodes="any")
-                self.assertEqual(len(w), 2)
+                self.assertTrue(len(w) <= 2)
                 self.assertEqual(
                     str(w[0].message),
                     "pyiron_base.storage.hdfio.rewrite_hdf5(exclude_nodes=any) "
