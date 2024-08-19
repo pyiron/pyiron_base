@@ -78,14 +78,14 @@ class TemplateJob(GenericJob, HasStorage):
     def output(self):
         return self.storage.output
 
-    def to_dict(self):
-        job_dict = super().to_dict()
-        job_dict["input/data"] = self.storage.input.to_builtin()
+    def _to_dict(self):
+        job_dict = super()._to_dict()
+        job_dict["input/data"] = self.storage.input.to_dict()
         return job_dict
 
-    def from_dict(self, job_dict):
-        super().from_dict(job_dict=job_dict)
-        input_dict = job_dict["input"]
+    def _from_dict(self, obj_dict, version=None):
+        super()._from_dict(obj_dict=obj_dict, version=version)
+        input_dict = obj_dict["input"]
         if "data" in input_dict.keys():
             self.storage.input.update(input_dict["data"])
 

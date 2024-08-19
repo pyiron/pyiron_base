@@ -511,7 +511,7 @@ class GenericParameters(HasDict):
         """
         return {"data_dict": self._dataset}
 
-    def from_dict(self, obj_dict, version: str = None):
+    def _from_dict(self, obj_dict, version: str = None):
         """
         Reload GenericParameters from dictionary
 

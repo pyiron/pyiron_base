@@ -1174,14 +1174,14 @@ class GenericJob(JobCore, HasDict):
             data_dict["files_to_compress"] = self._files_to_remove
         return data_dict
 
-    def from_dict(self, job_dict):
-        self._type_from_dict(type_dict=job_dict)
-        if "import_directory" in job_dict.keys():
-            self._import_directory = job_dict["import_directory"]
-        self._server.from_dict(server_dict=job_dict["server"])
-        if "executable" in job_dict.keys() and job_dict["executable"] is not None:
-            self.executable.from_dict(job_dict["executable"])
-        input_dict = job_dict["input"]
+    def _from_dict(self, obj_dict, version=None):
+        self._type_from_dict(type_dict=obj_dict)
+        if "import_directory" in obj_dict.keys():
+            self._import_directory = obj_dict["import_directory"]
+        self._server = obj_dict["server"]
+        if "executable" in obj_dict.keys() and obj_dict["executable"] is not None:
+            self._executable = obj_dict["executable"]
+        input_dict = obj_dict["input"]
         if "generic_dict" in input_dict.keys():
             generic_dict = input_dict["generic_dict"]
             self._restart_file_list = generic_dict["restart_file_list"]
@@ -1242,7 +1242,7 @@ class GenericJob(JobCore, HasDict):
             exe_dict = self._hdf5["executable/executable"].to_object().to_builtin()
             exe_dict["READ_ONLY"] = self._hdf5["executable/executable/READ_ONLY"]
             job_dict["executable"] = {"executable": exe_dict}
-        self.from_dict(job_dict=job_dict)
+        self.from_dict(obj_dict=job_dict)
 
     def save(self):
         """

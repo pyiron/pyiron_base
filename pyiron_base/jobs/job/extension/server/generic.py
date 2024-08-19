@@ -566,23 +566,23 @@ class Server(
         return asdict(self._data)
         return server_dict
 
-    def from_dict(self, server_dict):
+    def _from_dict(self, obj_dict, version=None):
         # backwards compatibility
-        if "new_h5" in server_dict.keys():
-            server_dict["new_hdf"] = server_dict.pop("new_h5") == 1
+        if "new_h5" in obj_dict.keys():
+            obj_dict["new_hdf"] = obj_dict.pop("new_h5") == 1
         for key in ["conda_environment_name", "conda_environment_path", "qid"]:
-            if key not in server_dict.keys():
-                server_dict[key] = None
-        if "accept_crash" not in server_dict.keys():
-            server_dict["accept_crash"] = False
-        if "additional_arguments" not in server_dict.keys():
-            server_dict["additional_arguments"] = {}
+            if key not in obj_dict.keys():
+                obj_dict[key] = None
+        if "accept_crash" not in obj_dict.keys():
+            obj_dict["accept_crash"] = False
+        if "additional_arguments" not in obj_dict.keys():
+            obj_dict["additional_arguments"] = {}
 
         # Reload dataclass
         for key in ["NAME", "TYPE", "OBJECT", "VERSION", "DICT_VERSION"]:
-            if key in server_dict.keys():
-                del server_dict[key]
-        self._data = ServerDataClass(**server_dict)
+            if key in obj_dict.keys():
+                del obj_dict[key]
+        self._data = ServerDataClass(**obj_dict)
         self._run_mode = Runmode(mode=self._data.run_mode)
 
     @deprecate(message="Use job.server.to_dict() instead of to_hdf()", version=0.9)
@@ -609,9 +609,9 @@ class Server(
         """
         if group_name is not None:
             with hdf.open(group_name) as hdf_group:
-                self.from_dict(server_dict=hdf_group["server"])
+                self.from_dict(obj_dict=hdf_group["server"])
         else:
-            self.from_dict(server_dict=hdf["server"])
+            self.from_dict(obj_dict=hdf["server"])
 
     def db_entry(self):
         """
