@@ -9,7 +9,7 @@ dependencies:
 - conda_subprocess =0.0.4
 - cloudpickle =3.0.0
 - gitpython =3.1.43
-- h5io_browser =0.0.17
+- h5io_browser =0.0.18
 - h5py =3.11.0
 - jinja2 =3.1.4
 - monty =2024.7.30
