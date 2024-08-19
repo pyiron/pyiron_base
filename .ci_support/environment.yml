@@ -7,7 +7,7 @@ dependencies:
 - conda_subprocess =0.0.4
 - cloudpickle =3.0.0
 - gitpython =3.1.43
-- h5io_browser =0.0.18
+- h5io_browser =0.1.0
 - h5py =3.11.0
 - jinja2 =3.1.4
 - monty =2024.7.30
@@ -15,7 +15,7 @@ dependencies:
 - pandas =2.2.2
 - pint =0.24.3
 - psutil =6.0.0
-- pyfileindex =0.0.26
+- pyfileindex =0.0.27
 - pyiron_snippets =0.1.4
 - executorlib =0.0.1
 - pysqa =0.1.21
