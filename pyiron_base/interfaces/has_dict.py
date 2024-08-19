@@ -112,6 +112,7 @@ class HasDict(ABC):
             obj_dict (dict): data previously returned from :meth:`.to_dict`
             version (str): version tag written together with the data
         """
+
         def load(inner_dict):
             if not isinstance(inner_dict, dict):
                 return inner_dict
