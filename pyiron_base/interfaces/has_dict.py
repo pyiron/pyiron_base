@@ -61,13 +61,57 @@ def create_from_dict(obj_dict):
 
 
 class HasDict(ABC):
+    """
+    Abstract interface to convert objects to dictionaries for storage.
+
+    Subclasses must to implement :meth:`~._from_dict` and :meth:`~._to_dict` and may implement :meth:`.instantiate`.
+    :meth:`._to_dict` is excepted to return a `dict` mapping string names to the values the object needs serialized.
+
+    On recreating an object from scratch with :func:`.create_from_dict` first :meth:`.instantiate` is called and then
+    :meth:`.from_dict` with the same `obj_dict`, i.e. it is roughly equivalent to
+
+    >>> my_dict = dict(...)
+    >>> my_object = MyType.instantiate(my_dict)
+    >>> my_object.from_dict(my_dict)
+
+    Implementations should make sure that calling `to_dict` after `from_dict` returns an equivalent dictionary even when
+    the object was not obtained from :meth:`.instantiate`, such that
+
+    >>> my_dict = dict(...)
+    >>> my_object = MyType(...)
+    >>> my_object.from_dict(my_dict)
+    >>> my_object.to_dict() == my_dict
+    True
+    """
+
     __dict_version__ = "0.1.0"
+    """A version string saved together with data returned from :meth:`._to_dict` and is passed back into
+    :meth:`._from_dict`.  Implementations can use this change their representation and still read older data."""
 
     @classmethod
     def instantiate(cls, obj_dict: dict, version: str = None) -> "Self":
+        """
+        Create a blank instance of this class.
+
+        This can be used when some values are already necessary for the objects `__init__`.
+
+        Args:
+            obj_dict (dict): data previously returned from :meth:`.to_dict`
+            version (str): version tag written together with the data
+
+        Returns:
+            object: a blank instance of the object that is sufficiently initialized to call :meth:`._from_dict` on it
+        """
         return cls()
 
     def from_dict(self, obj_dict: dict, version: str = None):
+        """
+        Populate the object from the serialized object.
+
+        Args:
+            obj_dict (dict): data previously returned from :meth:`.to_dict`
+            version (str): version tag written together with the data
+        """
         def load(inner_dict):
             if not isinstance(inner_dict, dict):
                 return inner_dict
@@ -81,10 +125,49 @@ class HasDict(ABC):
 
     @abstractmethod
     def _from_dict(self, obj_dict: dict, version: str = None):
+        """
+        Populate the object from the serialized object.
+
+        :meth:`.from_dict` will already recurse through `obj_dict` and deserialize any :class:`.HasDict` data it finds,
+        so implementations do not need to deserialize their children explicitly.
+
+        Args:
+            obj_dict (dict): data previously returned from :meth:`.to_dict`
+            version (str): version tag written together with the data
+        """
         pass
+
+    def to_dict(self):
+        """
+        Reduce the object to a dictionary.
+
+        Returns:
+            dict: serialized state of this object
+        """
+        type_dict = self._type_to_dict()
+        data_dict = {}
+        child_dict = {}
+        for k, v in self._to_dict().items():
+            if isinstance(v, HasDict):
+                child_dict[k] = v.to_dict()
+            elif isinstance(v, HasHDF):
+                child_dict[k] = HasDictfromHDF.to_dict(v)
+            else:
+                data_dict[k] = v
+        return data_dict | self._join_children_dict(child_dict) | type_dict
 
     @abstractmethod
     def _to_dict(self):
+        """
+        Reduce the object to a dictionary.
+
+        :meth:`.to_dict` will find any objects *in the first level* of the returned dictionary and reduce them to
+        dictionaries as well, so implementations do not need to explicitly serialize their children.
+        It will also append the type information obtained from :meth:`._type_to_dict`.
+
+        Returns:
+            dict: serialized state of this object
+        """
         pass
 
     def _type_to_dict(self):
@@ -107,19 +190,6 @@ class HasDict(ABC):
         if hasattr(self, "__version__"):
             type_dict["VERSION"] = self.__version__
         return type_dict
-
-    def to_dict(self):
-        type_dict = self._type_to_dict()
-        data_dict = {}
-        child_dict = {}
-        for k, v in self._to_dict().items():
-            if isinstance(v, HasDict):
-                child_dict[k] = v.to_dict()
-            elif isinstance(v, HasHDF):
-                child_dict[k] = HasDictfromHDF.to_dict(v)
-            else:
-                data_dict[k] = v
-        return data_dict | self._join_children_dict(child_dict) | type_dict
 
     @staticmethod
     def _join_children_dict(children: dict[str, dict[str, Any]]) -> dict[str, Any]:
