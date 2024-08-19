@@ -24,14 +24,22 @@ class TestWriteHdfIO(TestCase):
     def setUp(self):
         self.file_name = "test_write_hdf5.h5"
         self.h5_path = "data_hierarchical"
-        self.data_hierarchical = {"a": np.array([1, 2]), "b": 3, "c": {"d": np.array([4, 5]), "e": np.array([6, 7])}}
+        self.data_hierarchical = {
+            "a": np.array([1, 2]),
+            "b": 3,
+            "c": {"d": np.array([4, 5]), "e": np.array([6, 7])},
+        }
         write_dict_to_hdf(
             file_name=self.file_name,
             data_dict={
                 posixpath.join(self.h5_path, "a"): self.data_hierarchical["a"],
                 posixpath.join(self.h5_path, "b"): self.data_hierarchical["b"],
-                posixpath.join(self.h5_path, "c", "d"): self.data_hierarchical["c"]["d"],
-                posixpath.join(self.h5_path, "c", "e"): self.data_hierarchical["c"]["e"],
+                posixpath.join(self.h5_path, "c", "d"): self.data_hierarchical["c"][
+                    "d"
+                ],
+                posixpath.join(self.h5_path, "c", "e"): self.data_hierarchical["c"][
+                    "e"
+                ],
             },
         )
 
@@ -39,7 +47,9 @@ class TestWriteHdfIO(TestCase):
         os.remove(self.file_name)
 
     def test_read_dict_hierarchical(self):
-        output = read_nested_dict_from_hdf(file_name=self.file_name, h5_path=self.h5_path)
+        output = read_nested_dict_from_hdf(
+            file_name=self.file_name, h5_path=self.h5_path
+        )
         self.assertTrue(
             np.all(np.equal(output["a"], np.array([1, 2]))),
         )
