@@ -13,6 +13,7 @@ from collections.abc import Mapping, MutableMapping, Sequence, Set
 import numpy as np
 import pandas
 
+from pyiron_base.interfaces.has_dict import HasDict, HasDictfromHDF
 from pyiron_base.interfaces.has_groups import HasGroups
 from pyiron_base.interfaces.has_hdf import HasHDF
 from pyiron_base.interfaces.lockable import Lockable, sentinel
@@ -31,7 +32,15 @@ __status__ = "production"
 __date__ = "Jun 17, 2020"
 
 
-_internal_hdf_nodes = ["NAME", "TYPE", "OBJECT", "VERSION", "HDF_VERSION", "READ_ONLY"]
+_internal_hdf_nodes = [
+    "NAME",
+    "TYPE",
+    "OBJECT",
+    "VERSION",
+    "HDF_VERSION",
+    "DICT_VERSION",
+    "READ_ONLY",
+]
 
 
 def _normalize(key):
@@ -422,38 +431,20 @@ class DataContainerBase(MutableMapping, Lockable, HasGroups):
             stringify (bool, optional): convert all non-recursive elements to str
         """
 
-        if self.has_keys():
-            dd = {}
-            for k, v in self.items():
-                # force all string keys in output to work with h5io (it
-                # requires all string keys when storing as json), since
-                # _normalize calls int() on all digit string keys this is
-                # transparent for the rest of the module
-                k = str(k)
-                if isinstance(v, DataContainerBase):
-                    dd[k] = v.to_builtin(stringify=stringify)
-                else:
-                    dd[k] = repr(v) if stringify else v
+        def rec(v):
+            if isinstance(v, DataContainerBase):
+                return v.to_builtin(stringify=stringify)
+            else:
+                return repr(v) if stringify else v
 
-            return dd
-        elif stringify:
-            return list(
-                (
-                    v.to_builtin(stringify=stringify)
-                    if isinstance(v, DataContainerBase)
-                    else repr(v)
-                )
-                for v in self.values()
-            )
+        if self.has_keys():
+            # force all string keys in output to work with h5io (it
+            # requires all string keys when storing as json), since
+            # _normalize calls int() on all digit string keys this is
+            # transparent for the rest of the module
+            return {str(k): rec(v) for k, v in self.items()}
         else:
-            return list(
-                (
-                    v.to_builtin(stringify=stringify)
-                    if isinstance(v, DataContainerBase)
-                    else v
-                )
-                for v in self.values()
-            )
+            return [rec(v) for v in self.values()]
 
     # allows "nice" displays in jupyter lab
     def _repr_json_(self):
@@ -835,7 +826,7 @@ class DataContainerBase(MutableMapping, Lockable, HasGroups):
         super()._on_unlock()
 
 
-class DataContainer(DataContainerBase, HasHDF):
+class DataContainer(DataContainerBase, HasHDF, HasDict):
     __doc__ = f"""{DataContainerBase.__doc__}
 
     If instantiated with the argument `lazy=True`, data read from HDF5 later via :method:`.from_hdf` are not actually
@@ -1013,6 +1004,36 @@ class DataContainer(DataContainerBase, HasHDF):
         # called whenever a subclass of DataContainer is defined, then register all subclasses with the same function
         # that the DataContainer is registered
         HDFStub.register(cls, lambda h, g: h[g].to_object(lazy=True))
+
+    def to_builtin(self, stringify=False):
+        data = super().to_builtin(stringify=stringify)
+
+        def to(v):
+            if isinstance(v, HasDict):
+                return v.to_dict()
+            elif isinstance(v, HasHDF):
+                return HasDictfromHDF.to_dict(v)
+            else:
+                return v
+
+        if not stringify:
+            if isinstance(data, dict):
+                data = {k: to(v) for k, v in data.items()}
+            elif isinstance(data, list):
+                data = [to(v) for v in data]
+            else:
+                assert False, "to_builtin returned neither list nor dict"
+
+        return data
+
+    def _to_dict(self):
+        return {"data": self.to_builtin(), "READ_ONLY": self.read_only}
+
+    def _from_dict(self, obj_dict, version=None):
+        with self.unlocked():
+            self.clear()
+            self.update(obj_dict["data"], wrap=True)
+        self.read_only = obj_dict.get("READ_ONLY", False)
 
 
 HDFStub.register(DataContainer, lambda h, g: h[g].to_object(lazy=True))
