@@ -844,14 +844,9 @@ def always_true(_):
     return True
 
 
-def _apply_function_on_job(funct, job):
-    try:
-        return funct(job)
-    except (ValueError, TypeError):
-        return {}
-
-
 def _apply_list_of_functions_on_job(input_parameters):
+    from pyiron_snippets.logger import logger
+
     from pyiron_base.jobs.job.path import JobPath
 
     db_entry, function_lst, convert_to_object = input_parameters
@@ -861,7 +856,8 @@ def _apply_list_of_functions_on_job(input_parameters):
         job.set_input_to_read_only()
     diff_dict = {}
     for funct in function_lst:
-        funct_dict = _apply_function_on_job(funct, job)
-        for key, value in funct_dict.items():
-            diff_dict[key] = value
+        try:
+            diff_dict.update(funct(job))
+        except Exception as e:
+            logger.warn(f"Caught exception '{e}' when called on job {job.id}!")
     return diff_dict
