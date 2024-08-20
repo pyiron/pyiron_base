@@ -845,8 +845,9 @@ def always_true(_):
 
 
 def _apply_list_of_functions_on_job(input_parameters):
-    from pyiron_base.jobs.job.path import JobPath
     from pyiron_snippets.logger import logger
+
+    from pyiron_base.jobs.job.path import JobPath
 
     db_entry, function_lst, convert_to_object = input_parameters
     job = JobPath.from_db_entry(db_entry)
