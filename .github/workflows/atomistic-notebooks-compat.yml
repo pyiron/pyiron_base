@@ -1,0 +1,45 @@
+# This workflow is used to check the compatibility with the pyiron_atomistics
+
+name: Compatibility with pyiron_atomistics Notebooks
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    types: [labeled, opened, synchronize, reopened]
+
+jobs:
+  build:
+    if: |
+      github.event_name == 'push' ||
+      ( github.event_name == 'pull_request'  && contains(github.event.pull_request.labels.*.name, 'integration' ))
+    
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Merge environment
+      run: |
+        git clone https://github.com/pyiron/pyiron_atomistics ../pyiron_atomistics
+        cp ../pyiron_atomistics/.ci_support/environment.yml environment.yml
+        tail --lines=+4 ../pyiron_atomistics/.ci_support/environment-notebooks.yml >> environment.yml
+    - name: Setup Mambaforge
+      uses: conda-incubator/setup-miniconda@v3
+      with:
+        python-version: "3.12"
+        miniforge-variant: Mambaforge
+        channels: conda-forge
+        channel-priority: strict
+        activate-environment: my-env
+        environment-file: environment.yml
+        use-mamba: true
+    - name: Tests
+      shell: bash -l {0}
+      timeout-minutes: 30
+      run: |
+        pip install versioneer[toml]==0.29
+        cd ../pyiron_atomistics
+        pip install . --no-deps --no-build-isolation
+        cd ../pyiron_base
+        pip install . --no-deps --no-build-isolation
+        cd ../pyiron_atomistics
+        ./.ci_support/build_notebooks.sh
