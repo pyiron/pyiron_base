@@ -188,7 +188,7 @@ class TestUnpackingBackwardsCompatibility(PyironTestCase):
                 os.path.dirname(os.path.abspath(__file__)),
                 "../../static/pack",
             ),
-            ".",
+            os.getcwd(),
             dirs_exist_ok=True,
         )
         pr = Project("old_tar")
