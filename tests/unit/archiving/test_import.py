@@ -180,6 +180,8 @@ class TestUnpacking(PyironTestCase):
         with self.assertRaises(ValueError):
             self.imp_pr.unpack(origin_path=self.arch_dir_comp, csv_file_name="ahoy.csv")
 
+
+class TestUnpackingBackwardsCompatibility(PyironTestCase):
     def test_import_old_tar(self):
         copytree(
             os.path.join(
@@ -191,7 +193,6 @@ class TestUnpacking(PyironTestCase):
         )
         pr = Project("old_tar")
         pr.unpack(origin_path="test_pack.tar.gz")
-        job = pr.load("toy")
         pr.remove(enable=True, enforce=True)
         os.remove("test_pack.tar.gz")
         os.remove("export.csv")
