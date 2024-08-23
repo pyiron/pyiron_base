@@ -196,6 +196,7 @@ class TestUnpackingBackwardsCompatibility(PyironTestCase):
         job = pr.load("toy")
         self.assertEqual(job.job_name, "toy")
         self.assertEqual(job.input.data_in, 100)
+        self.assertEqual(job.output.data_out, 101)
         pr.remove(enable=True, enforce=True)
         os.remove("test_pack.tar.gz")
         os.remove("export.csv")
