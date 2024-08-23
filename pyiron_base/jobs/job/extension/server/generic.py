@@ -9,6 +9,7 @@ import numbers
 import socket
 from concurrent.futures import Executor, Future
 from dataclasses import asdict
+import inspect
 from typing import Union
 
 from pyiron_snippets.deprecate import deprecate
@@ -579,10 +580,8 @@ class Server(
             obj_dict["additional_arguments"] = {}
 
         # Reload dataclass
-        for key in ["NAME", "TYPE", "OBJECT", "VERSION", "DICT_VERSION", "structure_id"]:
-            if key in obj_dict.keys():
-                del obj_dict[key]
-        self._data = ServerDataClass(**obj_dict)
+        dataclass_keys = inspect.signature(ServerDataClass).parameters.keys()
+        self._data = ServerDataClass(**{k:v for k, v in obj_dict.items() if k in dataclass_keys})
         self._run_mode = Runmode(mode=self._data.run_mode)
 
     @deprecate(message="Use job.server.to_dict() instead of to_hdf()", version=0.9)
