@@ -1027,13 +1027,17 @@ class DataContainer(DataContainerBase, HasHDF, HasDict):
         return data
 
     def _to_dict(self):
-        return {"data": self.to_builtin(), "READ_ONLY": self.read_only}
+        data = self.to_builtin()
+        data["READ_ONLY"] = self.read_only
+        return data
 
     def _from_dict(self, obj_dict, version=None):
+        self.read_only = obj_dict.pop("READ_ONLY", False)
+        for key in _internal_hdf_nodes:
+            obj_dict.pop(key, None)
         with self.unlocked():
             self.clear()
-            self.update(obj_dict["data"], wrap=True)
-        self.read_only = obj_dict.get("READ_ONLY", False)
+            self.update(obj_dict)
 
 
 HDFStub.register(DataContainer, lambda h, g: h[g].to_object(lazy=True))
