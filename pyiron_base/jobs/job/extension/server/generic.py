@@ -5,11 +5,11 @@
 Server object class which is connected to each job containing the technical details how the job is executed.
 """
 
+import inspect
 import numbers
 import socket
 from concurrent.futures import Executor, Future
 from dataclasses import asdict
-import inspect
 from typing import Union
 
 from pyiron_snippets.deprecate import deprecate
@@ -581,7 +581,9 @@ class Server(
 
         # Reload dataclass
         dataclass_keys = inspect.signature(ServerDataClass).parameters.keys()
-        self._data = ServerDataClass(**{k:v for k, v in obj_dict.items() if k in dataclass_keys})
+        self._data = ServerDataClass(
+            **{k: v for k, v in obj_dict.items() if k in dataclass_keys}
+        )
         self._run_mode = Runmode(mode=self._data.run_mode)
 
     @deprecate(message="Use job.server.to_dict() instead of to_hdf()", version=0.9)
