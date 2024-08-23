@@ -58,8 +58,8 @@ def import_jobs(project_instance, archive_directory):
 
     pr_import = project_instance.open(os.curdir)
     df["project"] = [
-        os.path.normpath(
-            os.path.join(pr_import.project_path, os.path.relpath(p, common_path))
+        posixpath.normpath(
+            posixpath.join(pr_import.project_path, posixpath.relpath(p, common_path))
         )
         + "/"
         for p in df["project"].values
@@ -106,8 +106,8 @@ def transfer_files(origin_path: str, project_path: str):
         str: Common path.
     """
     df = get_dataframe(origin_path=origin_path)
-    common_path = os.path.commonpath(list(df["project"]))
-    copytree(os.path.join(origin_path, common_path), project_path, dirs_exist_ok=True)
+    common_path = posixpath.commonpath(list(df["project"]))
+    copytree(posixpath.join(origin_path, common_path), project_path, dirs_exist_ok=True)
     return df, common_path
 
 
