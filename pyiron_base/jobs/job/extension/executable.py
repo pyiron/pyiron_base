@@ -4,6 +4,7 @@
 
 import os
 from dataclasses import asdict
+import inspect
 
 from pyiron_snippets.resources import ExecutableResolver
 
@@ -214,19 +215,12 @@ class Executable(HasDict):
         return asdict(self.storage)
 
     def _from_dict(self, obj_dict, version=None):
-        data_container_keys = [
-            "version",
-            "name",
-            "operation_system_nt",
-            "executable",
-            "mpi",
-            "accepted_return_codes",
-        ]
         executable_class_dict = {}
         # Backwards compatibility; dict state used to be nested one level deeper
         if "executable" in obj_dict.keys() and isinstance(obj_dict["executable"], dict):
             obj_dict = obj_dict["executable"]
-        for key in data_container_keys:
+        dataclass_keys = inspect.signature(ExecutableDataClass).parameters.keys()
+        for key in dataclass_keys:
             executable_class_dict[key] = obj_dict.get(key, None)
         self.storage = ExecutableDataClass(**executable_class_dict)
 
