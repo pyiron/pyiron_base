@@ -192,8 +192,8 @@ class TestUnpackingBackwardsCompatibility(PyironTestCase):
             dirs_exist_ok=True,
         )
         pr = Project("old_tar")
-        job = pr.load("toy")
         pr.unpack(origin_path="test_pack.tar.gz")
+        job = pr.load("toy")
         pr.remove(enable=True, enforce=True)
         os.remove("test_pack.tar.gz")
         os.remove("export.csv")
