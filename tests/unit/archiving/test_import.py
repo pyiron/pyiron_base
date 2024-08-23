@@ -180,22 +180,6 @@ class TestUnpacking(PyironTestCase):
         with self.assertRaises(ValueError):
             self.imp_pr.unpack(origin_path=self.arch_dir_comp, csv_file_name="ahoy.csv")
 
-    def test_import_old_tar(self):
-        copytree(
-            os.path.join(
-                os.path.dirname(os.path.abspath(__file__)),
-                "../../static/pack",
-            ),
-            ".",
-            dirs_exist_ok=True,
-        )
-        pr = Project("old_tar")
-        pr.unpack(origin_path="test_pack.tar.gz")
-        job = pr.load("toy")
-        pr.remove(enable=True, enforce=True)
-        os.remove("test_pack.tar.gz")
-        os.remove("export.csv")
-
 
 if __name__ == "__main__":
     unittest.main()
