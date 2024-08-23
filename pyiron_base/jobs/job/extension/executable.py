@@ -208,7 +208,11 @@ class Executable(HasDict):
 
     @classmethod
     def instantiate(cls, obj_dict: dict, version: str = None) -> "Self":
-        return cls(codename=obj_dict["name"])
+        try:
+            codename = obj_dict["name"]
+        except KeyError:
+            codename = obj_dict["executable"]["name"]
+        return cls(codename=codename)
 
     def _to_dict(self):
         return asdict(self.storage)
