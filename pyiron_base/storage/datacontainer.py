@@ -1028,6 +1028,8 @@ class DataContainer(DataContainerBase, HasHDF, HasDict):
 
     def _to_dict(self):
         data = self.to_builtin()
+        if isinstance(data, list):
+            data = {str(i): v for i, v in enumerate(data)}
         data["READ_ONLY"] = self.read_only
         return data
 
