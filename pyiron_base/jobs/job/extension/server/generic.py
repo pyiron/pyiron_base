@@ -579,7 +579,7 @@ class Server(
             obj_dict["additional_arguments"] = {}
 
         # Reload dataclass
-        for key in ["NAME", "TYPE", "OBJECT", "VERSION", "DICT_VERSION"]:
+        for key in ["NAME", "TYPE", "OBJECT", "VERSION", "DICT_VERSION", "structure_id"]:
             if key in obj_dict.keys():
                 del obj_dict[key]
         self._data = ServerDataClass(**obj_dict)
