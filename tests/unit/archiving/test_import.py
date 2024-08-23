@@ -194,6 +194,8 @@ class TestUnpackingBackwardsCompatibility(PyironTestCase):
         pr = Project("old_tar")
         pr.unpack(origin_path="test_pack.tar.gz")
         job = pr.load("toy")
+        self.assertEqual(job.job_name, "toy")
+        self.assertEqual(job.input.data_in, 100)
         pr.remove(enable=True, enforce=True)
         os.remove("test_pack.tar.gz")
         os.remove("export.csv")
