@@ -216,7 +216,9 @@ class HasDict(ABC):
         }
 
     @staticmethod
-    def _split_children_dict(obj_dict: dict[str, Any]) -> dict[str, Any | dict[str, Any]]:
+    def _split_children_dict(
+        obj_dict: dict[str, Any],
+    ) -> dict[str, Any | dict[str, Any]]:
         """
         Undoes _join_children_dict.
         """
