@@ -55,7 +55,7 @@ def create_from_dict(obj_dict):
     type_field = obj_dict["TYPE"]
     module_path, class_name = _extract_module_class_name(type_field)
     class_object = _import_class(module_path, class_name)
-    version = obj_dict.get("VERSION", None)
+    version = obj_dict.get("DICT_VERSION", None)
     obj = class_object.instantiate(obj_dict, version)
     obj.from_dict(obj_dict, version)
     return obj
