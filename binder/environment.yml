@@ -16,7 +16,7 @@ dependencies:
 - psutil =6.0.0
 - pyfileindex =0.0.27
 - pyiron_snippets =0.1.4
-- executorlib =0.0.1
+- executorlib =0.0.2
 - pysqa =0.1.21
 - pytables =3.10.1
 - sqlalchemy =2.0.32
