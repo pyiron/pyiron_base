@@ -8,7 +8,7 @@ Server object class which is connected to each job containing the technical deta
 import numbers
 import socket
 from concurrent.futures import Executor, Future
-from dataclasses import asdict
+from dataclasses import asdict, fields
 from typing import Union
 
 from pyiron_snippets.deprecate import deprecate
@@ -564,7 +564,6 @@ class Server(
     def _to_dict(self):
         self._data.run_mode = self._run_mode.mode
         return asdict(self._data)
-        return server_dict
 
     def _from_dict(self, obj_dict, version=None):
         # backwards compatibility
@@ -578,9 +577,11 @@ class Server(
         if "additional_arguments" not in obj_dict.keys():
             obj_dict["additional_arguments"] = {}
 
-        # Reload dataclass
-        for key in ["NAME", "TYPE", "OBJECT", "VERSION", "DICT_VERSION"]:
-            if key in obj_dict.keys():
+        # Reload dataclass and discard unknown keys
+        server_fields = tuple(f.name for f in fields(ServerDataClass))
+        # force tuple otherwise dict complains about changing size
+        for key in tuple(obj_dict):
+            if key not in server_fields:
                 del obj_dict[key]
         self._data = ServerDataClass(**obj_dict)
         self._run_mode = Runmode(mode=self._data.run_mode)

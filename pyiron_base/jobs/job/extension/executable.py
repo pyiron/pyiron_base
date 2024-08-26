@@ -3,7 +3,7 @@
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
 import os
-from dataclasses import asdict
+from dataclasses import asdict, fields
 
 from pyiron_snippets.resources import ExecutableResolver
 
@@ -208,20 +208,17 @@ class Executable(HasDict):
 
     @classmethod
     def instantiate(cls, obj_dict: dict, version: str = None) -> "Self":
-        return cls(codename=obj_dict["name"])
+        try:
+            codename = obj_dict["name"]
+        except KeyError:
+            codename = obj_dict["executable"]["name"]
+        return cls(codename=codename)
 
     def _to_dict(self):
         return asdict(self.storage)
 
     def _from_dict(self, obj_dict, version=None):
-        data_container_keys = [
-            "version",
-            "name",
-            "operation_system_nt",
-            "executable",
-            "mpi",
-            "accepted_return_codes",
-        ]
+        data_container_keys = tuple(f.name for f in fields(ExecutableDataClass))
         executable_class_dict = {}
         # Backwards compatibility; dict state used to be nested one level deeper
         if "executable" in obj_dict.keys() and isinstance(obj_dict["executable"], dict):

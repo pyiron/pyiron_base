@@ -95,12 +95,12 @@ def _get_project_for_copy(job, project, new_job_name):
     ):
         file_project = project.project
         hdf5_project = project.project_hdf5.open(new_job_name)
-    elif isinstance(project, job.project.__class__):
+    elif isinstance(job.project, project.__class__):
         file_project = project
         hdf5_project = job.project_hdf5.__class__(
             project=project, file_name=new_job_name, h5_path="/" + new_job_name
         )
-    elif isinstance(project, job.project_hdf5.__class__):
+    elif isinstance(job.project_hdf5, project.__class__):
         file_project = project.project
         hdf5_project = project.open(new_job_name)
     elif project is None:

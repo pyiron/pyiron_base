@@ -16,6 +16,7 @@ dict based serialization.  Roughly we want to proceed as follows:
 """
 
 from abc import ABC, abstractmethod
+from collections import defaultdict
 from typing import Any
 
 from pyiron_base.interfaces.has_hdf import HasHDF
@@ -54,7 +55,7 @@ def create_from_dict(obj_dict):
     type_field = obj_dict["TYPE"]
     module_path, class_name = _extract_module_class_name(type_field)
     class_object = _import_class(module_path, class_name)
-    version = obj_dict.get("VERSION", None)
+    version = obj_dict.get("DICT_VERSION", None)
     obj = class_object.instantiate(obj_dict, version)
     obj.from_dict(obj_dict, version)
     return obj
@@ -122,6 +123,9 @@ class HasDict(ABC):
                 return {k: load(v) for k, v in inner_dict.items()}
             return create_from_dict(inner_dict)
 
+        obj_dict = self._split_children_dict(obj_dict)
+        if version is None:
+            version = obj_dict.get("DICT_VERSION", None)
         self._from_dict({k: load(v) for k, v in obj_dict.items()}, version)
 
     @abstractmethod
@@ -208,8 +212,27 @@ class HasDict(ABC):
         return {
             "/".join((k1, k2)): v2
             for k1, v1 in children.items()
-            for k2, v2 in v2.items()
+            for k2, v2 in v1.items()
         }
+
+    @staticmethod
+    def _split_children_dict(
+        obj_dict: dict[str, Any],
+    ) -> dict[str, Any | dict[str, Any]]:
+        """
+        Undoes _join_children_dict.
+        """
+        subs = defaultdict(dict)
+        plain = {}
+        for k, v in obj_dict.items():
+            if "/" not in k:
+                plain[k] = v
+                continue
+            root, k = k.split("/", maxsplit=1)
+            subs[root][k] = v
+        # using update keeps type stability, i.e. we always return a plain dict
+        plain.update(subs)
+        return plain
 
 
 class HasHDFfromDict(HasHDF, HasDict):

@@ -40,6 +40,7 @@ _internal_hdf_nodes = [
     "HDF_VERSION",
     "DICT_VERSION",
     "READ_ONLY",
+    "KEY_ORDER",
 ]
 
 
@@ -827,6 +828,7 @@ class DataContainerBase(MutableMapping, Lockable, HasGroups):
 
 
 class DataContainer(DataContainerBase, HasHDF, HasDict):
+    __dict_version__ = "0.2.0"
     __doc__ = f"""{DataContainerBase.__doc__}
 
     If instantiated with the argument `lazy=True`, data read from HDF5 later via :method:`.from_hdf` are not actually
@@ -1027,13 +1029,28 @@ class DataContainer(DataContainerBase, HasHDF, HasDict):
         return data
 
     def _to_dict(self):
-        return {"data": self.to_builtin(), "READ_ONLY": self.read_only}
+        # stringify keys in case we are acting like a list
+        data = {str(k): v for k, v in dict(self).items()}
+        order = list(data)
+        data["READ_ONLY"] = self.read_only
+        data["KEY_ORDER"] = order
+        return data
 
     def _from_dict(self, obj_dict, version=None):
+        if version == "0.2.0":
+            order = obj_dict.pop("KEY_ORDER")
+        else:
+            order = None
+        self.read_only = obj_dict.pop("READ_ONLY", False)
+        for key in _internal_hdf_nodes:
+            obj_dict.pop(key, None)
         with self.unlocked():
             self.clear()
-            self.update(obj_dict["data"], wrap=True)
-        self.read_only = obj_dict.get("READ_ONLY", False)
+            if order is not None:
+                for key in order:
+                    self[key] = obj_dict[key]
+            else:
+                self.update(obj_dict)
 
 
 HDFStub.register(DataContainer, lambda h, g: h[g].to_object(lazy=True))

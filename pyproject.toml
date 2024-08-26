@@ -18,14 +18,13 @@ classifiers = [
     "License :: OSI Approved :: BSD License",
     "Intended Audience :: Science/Research",
     "Operating System :: OS Independent",
-    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
 ]
 dependencies = [
     "cloudpickle==3.0.0",
-    "executorlib==0.0.1",
+    "executorlib==0.0.2",
     "h5io_browser==0.1.0",
     "h5py==3.11.0",
     "numpy==2.1.0",
