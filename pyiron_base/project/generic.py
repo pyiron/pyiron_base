@@ -1981,6 +1981,19 @@ class Project(ProjectPath, HasGroups):
             df=export_archive.export_database(self.job_table()),
         )
 
+    def unpack_csv(self, tar_path: str, csv_file: str = "export.csv"):
+        """
+        Import job table from a csv file and copy the content of a project directory from a given path.
+
+        Args:
+            tar_path (str): the relative path of a directory from which the project directory is copied.
+            csv_file (str): the name of the csv file.
+
+        Returns:
+            pandas.DataFrame: job table
+        """
+        return import_archive.inspect_csv(tar_path=tar_path, csv_file=csv_file)
+
     def unpack(self, origin_path, **kwargs):
         """
         by this function, job table is imported from a given csv file,

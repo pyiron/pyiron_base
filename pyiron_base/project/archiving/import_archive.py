@@ -3,6 +3,7 @@ import posixpath
 import tarfile
 import tempfile
 from shutil import copytree
+import io
 
 import numpy as np
 import pandas
@@ -130,3 +131,29 @@ def get_dataframe(origin_path: str, csv_file_name: str = "export.csv") -> "DataF
         if csv_file_name in files:
             return pandas.read_csv(os.path.join(root, csv_file_name), index_col=0)
     raise FileNotFoundError(f"File: {csv_file_name} was not found.")
+
+
+def inspect_csv(tar_path: str, csv_file: str = "export.csv"):
+    """
+    Inspect the csv file inside a tar archive.
+
+    Args:
+        tar_path (str): Path to the tar archive.
+        csv_file (str): Name of the csv file.
+
+    Returns:
+        pandas.DataFrame: Job table.
+    """
+    with tarfile.open(tar_path, mode="r:gz") as tar:
+        for member in tar.getmembers():
+            # Check if the member is a file and ends with the desired csv file name
+            if member.isfile() and member.name.endswith(f"/{csv_file}"):
+                # Extract the file object
+                extracted_file = tar.extractfile(member)
+
+                if extracted_file:
+                    # Read the file content
+                    return pandas.read_csv(
+                        io.StringIO(extracted_file.read().decode("utf-8")), index_col=0
+                    )
+        raise FileNotFoundError(f"File: {csv_file} in {tar_path} was not found.")
