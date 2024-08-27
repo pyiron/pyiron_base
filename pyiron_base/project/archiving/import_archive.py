@@ -1,9 +1,9 @@
+import io
 import os
 import posixpath
 import tarfile
 import tempfile
 from shutil import copytree
-import io
 
 import numpy as np
 import pandas
