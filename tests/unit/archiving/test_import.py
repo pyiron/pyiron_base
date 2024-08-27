@@ -47,6 +47,11 @@ class TestUnpacking(PyironTestCase):
         super().tearDown()
         self.imp_pr.remove_jobs(recursive=True, silently=True)
 
+    def test_inspect(self):
+        df = self.pr.unpack_csv(self.arch_dir_comp + ".tar.gz")
+        self.assertIsInstance(df, pd.DataFrame)
+        self.assertEqual(len(df), 1)
+
     def test_import_csv(self):
         df_original = self.pr.job_table()
         df_import = self.imp_pr.job_table()
@@ -192,9 +197,7 @@ class TestUnpackingBackwardsCompatibility(PyironTestCase):
             dirs_exist_ok=True,
         )
         pr = Project("old_tar")
-        df = pr.unpack_csv("test_pack.tar.gz", "export.csv")
-        self.assertIsInstance(df, pd.DataFrame)
-        self.assertEqual(len(df), 1)
+        self.assertRaises(FileNotFoundError, pr.unpack_csv, "test_pack.tar.gz")
         pr.unpack(origin_path="test_pack.tar.gz")
         job = pr.load("toy")
         self.assertEqual(job.job_name, "toy")
