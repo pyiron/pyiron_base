@@ -18,6 +18,7 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - name: Merge environment
+      shell: bash -l {0}
       run: |
         git clone https://github.com/pyiron/pyiron_atomistics ../pyiron_atomistics
         cp ../pyiron_atomistics/.ci_support/environment.yml environment.yml
