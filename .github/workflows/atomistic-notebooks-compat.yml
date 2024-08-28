@@ -22,6 +22,7 @@ jobs:
         git clone https://github.com/pyiron/pyiron_atomistics ../pyiron_atomistics
         cp ../pyiron_atomistics/.ci_support/environment.yml environment.yml
         tail --lines=+4 ../pyiron_atomistics/.ci_support/environment-notebooks.yml >> environment.yml
+        echo -e "channels:\n  - conda-forge\n" > .condarc
     - name: Setup Mambaforge
       uses: conda-incubator/setup-miniconda@v3
       with:
