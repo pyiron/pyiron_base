@@ -61,6 +61,73 @@ def create_from_dict(obj_dict):
     return obj
 
 
+def _split_children_dict(obj_dict: dict[str, Any]) -> dict[str, Any | dict[str, Any]]:
+    """
+    Undoes _join_children_dict.
+    """
+    subs = defaultdict(dict)
+    plain = {}
+    for k, v in obj_dict.items():
+        if "/" not in k:
+            plain[k] = v
+            continue
+        root, k = k.split("/", maxsplit=1)
+        subs[root][k] = v
+    # using update keeps type stability, i.e. we always return a plain dict
+    plain.update(subs)
+    return plain
+
+def _from_dict_children(obj_dict: dict) -> dict:
+    def load(inner_dict):
+        # object is a not a dict, so nothing to do
+        if not isinstance(inner_dict, dict):
+            return inner_dict
+        # if object is a dict but doesn't have type information, recurse through it to load any sub dicts that might
+        if not all(
+            k in inner_dict for k in ("NAME", "TYPE", "OBJECT", "DICT_VERSION")
+        ):
+            return {k: load(v) for k, v in inner_dict.items()}
+        # object has type info, so just load it
+        return create_from_dict(inner_dict)
+    return {k: load(v) for k, v in obj_dict.items()}
+
+def _join_children_dict(children: dict[str, dict[str, Any]]) -> dict[str, Any]:
+    """
+    Given a nested dictionary, flatten the first level.
+
+    >>> d = {'a': {'a1': 3}, 'b': {'b1': 4, 'b2': {'c': 42}}}
+    >>> _join_children_dict(d)
+    {'a/a1': 3, 'b/b1': 4, 'b/b2': {'c': 42}}
+
+    This is intended as a utility function for nested HasDict objects, that
+    to_dict their children and then want to give a flattened dict for
+    writing to ProjectHDFio.write_dict_to_hdf
+    """
+    return {
+        "/".join((k1, k2)): v2
+        for k1, v1 in children.items()
+        for k2, v2 in v1.items()
+    }
+
+def _to_dict_children(obj_dict: dict) -> dict:
+    """
+    Call to_dict on any objects that support it.
+
+    Intended as a helper method for recursive object that want to to_dict
+    their nested objects automatically.
+    """
+    data_dict = {}
+    child_dict = {}
+    for k, v in obj_dict.items():
+        if isinstance(v, HasDict):
+            child_dict[k] = v.to_dict()
+        elif isinstance(v, HasHDF):
+            child_dict[k] = HasDictfromHDF.to_dict(v)
+        else:
+            data_dict[k] = v
+    return data_dict | _join_children_dict(child_dict)
+
+
 class HasDict(ABC):
     """
     Abstract interface to convert objects to dictionaries for storage.
@@ -114,19 +181,10 @@ class HasDict(ABC):
             version (str): version tag written together with the data
         """
 
-        def load(inner_dict):
-            if not isinstance(inner_dict, dict):
-                return inner_dict
-            if not all(
-                k in inner_dict for k in ("NAME", "TYPE", "OBJECT", "DICT_VERSION")
-            ):
-                return {k: load(v) for k, v in inner_dict.items()}
-            return create_from_dict(inner_dict)
-
-        obj_dict = self._split_children_dict(obj_dict)
+        obj_dict = _split_children_dict(obj_dict)
         if version is None:
             version = obj_dict.get("DICT_VERSION", None)
-        self._from_dict({k: load(v) for k, v in obj_dict.items()}, version)
+        self._from_dict(obj_dict, version)
 
     @abstractmethod
     def _from_dict(self, obj_dict: dict, version: str = None):
@@ -150,16 +208,7 @@ class HasDict(ABC):
             dict: serialized state of this object
         """
         type_dict = self._type_to_dict()
-        data_dict = {}
-        child_dict = {}
-        for k, v in self._to_dict().items():
-            if isinstance(v, HasDict):
-                child_dict[k] = v.to_dict()
-            elif isinstance(v, HasHDF):
-                child_dict[k] = HasDictfromHDF.to_dict(v)
-            else:
-                data_dict[k] = v
-        return data_dict | self._join_children_dict(child_dict) | type_dict
+        return self._to_dict() | type_dict
 
     @abstractmethod
     def _to_dict(self):
@@ -195,44 +244,6 @@ class HasDict(ABC):
         if hasattr(self, "__version__"):
             type_dict["VERSION"] = self.__version__
         return type_dict
-
-    @staticmethod
-    def _join_children_dict(children: dict[str, dict[str, Any]]) -> dict[str, Any]:
-        """
-        Given a nested dictionary, flatten the first level.
-
-        >>> d = {'a': {'a1': 3}, 'b': {'b1': 4, 'b2': {'c': 42}}}
-        >>> _join_children_dict(d)
-        {'a/a1': 3, 'b/b1': 4, 'b/b2': {'c': 42}}
-
-        This is intended as a utility function for nested HasDict objects, that
-        to_dict their children and then want to give a flattened dict for
-        writing to ProjectHDFio.write_dict_to_hdf
-        """
-        return {
-            "/".join((k1, k2)): v2
-            for k1, v1 in children.items()
-            for k2, v2 in v1.items()
-        }
-
-    @staticmethod
-    def _split_children_dict(
-        obj_dict: dict[str, Any],
-    ) -> dict[str, Any | dict[str, Any]]:
-        """
-        Undoes _join_children_dict.
-        """
-        subs = defaultdict(dict)
-        plain = {}
-        for k, v in obj_dict.items():
-            if "/" not in k:
-                plain[k] = v
-                continue
-            root, k = k.split("/", maxsplit=1)
-            subs[root][k] = v
-        # using update keeps type stability, i.e. we always return a plain dict
-        plain.update(subs)
-        return plain
 
 
 class HasHDFfromDict(HasHDF, HasDict):
