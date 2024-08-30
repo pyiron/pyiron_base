@@ -77,19 +77,20 @@ def _split_children_dict(obj_dict: dict[str, Any]) -> dict[str, Any | dict[str, 
     plain.update(subs)
     return plain
 
+
 def _from_dict_children(obj_dict: dict) -> dict:
     def load(inner_dict):
         # object is a not a dict, so nothing to do
         if not isinstance(inner_dict, dict):
             return inner_dict
         # if object is a dict but doesn't have type information, recurse through it to load any sub dicts that might
-        if not all(
-            k in inner_dict for k in ("NAME", "TYPE", "OBJECT", "DICT_VERSION")
-        ):
+        if not all(k in inner_dict for k in ("NAME", "TYPE", "OBJECT", "DICT_VERSION")):
             return {k: load(v) for k, v in inner_dict.items()}
         # object has type info, so just load it
         return create_from_dict(inner_dict)
+
     return {k: load(v) for k, v in obj_dict.items()}
+
 
 def _join_children_dict(children: dict[str, dict[str, Any]]) -> dict[str, Any]:
     """
@@ -104,10 +105,9 @@ def _join_children_dict(children: dict[str, dict[str, Any]]) -> dict[str, Any]:
     writing to ProjectHDFio.write_dict_to_hdf
     """
     return {
-        "/".join((k1, k2)): v2
-        for k1, v1 in children.items()
-        for k2, v2 in v1.items()
+        "/".join((k1, k2)): v2 for k1, v1 in children.items() for k2, v2 in v1.items()
     }
+
 
 def _to_dict_children(obj_dict: dict) -> dict:
     """
