@@ -389,7 +389,8 @@ class _WithInteractiveOpen:
     def __exit__(self, exc_type, exc_val, exc_tb):
         job_status = self._job.status.string
         job_closed = self._job.interactive_close()
-        self._job.status.string = job_status
+        if job_status in ["aborted"]:
+            self._job.status.string = job_status
         return job_closed
 
     def __getattr__(self, attr):
