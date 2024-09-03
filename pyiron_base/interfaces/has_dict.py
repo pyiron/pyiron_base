@@ -61,9 +61,32 @@ def create_from_dict(obj_dict):
     return obj
 
 
+def _join_children_dict(children: dict[str, dict[str, Any]]) -> dict[str, Any]:
+    """
+    Given a nested dictionary, flatten the first level.
+
+    >>> d = {'a': {'a1': 3}, 'b': {'b1': 4, 'b2': {'c': 42}}}
+    >>> _join_children_dict(d)
+    {'a/a1': 3, 'b/b1': 4, 'b/b2': {'c': 42}}
+
+    This is intended as a utility function for nested HasDict objects, that
+    to_dict their children and then want to give a flattened dict for
+    writing to ProjectHDFio.write_dict_to_hdf.
+
+    See also :func:`._split_children_dict`.
+    """
+    return {
+        "/".join((k1, k2)): v2
+        for k1, v1 in children.items()
+        for k2, v2 in v1.items()
+    }
+
 def _split_children_dict(obj_dict: dict[str, Any]) -> dict[str, Any | dict[str, Any]]:
     """
     Undoes _join_children_dict.
+
+    Classes that use :func:`._join_children_dict` in their `_to_dict`, must
+    call this function in their `_from_dict`.
     """
     subs = defaultdict(dict)
     plain = {}
@@ -79,6 +102,12 @@ def _split_children_dict(obj_dict: dict[str, Any]) -> dict[str, Any | dict[str, 
 
 
 def _from_dict_children(obj_dict: dict) -> dict:
+    """
+    Recurse through `obj_dict` and restore any objects with :class:`~.HasDict`.
+
+    Args:
+        obj_dict (dict): data previously returned from :meth:`.to_dict`
+    """
     def load(inner_dict):
         # object is a not a dict, so nothing to do
         if not isinstance(inner_dict, dict):
@@ -91,30 +120,22 @@ def _from_dict_children(obj_dict: dict) -> dict:
 
     return {k: load(v) for k, v in obj_dict.items()}
 
-
-def _join_children_dict(children: dict[str, dict[str, Any]]) -> dict[str, Any]:
-    """
-    Given a nested dictionary, flatten the first level.
-
-    >>> d = {'a': {'a1': 3}, 'b': {'b1': 4, 'b2': {'c': 42}}}
-    >>> _join_children_dict(d)
-    {'a/a1': 3, 'b/b1': 4, 'b/b2': {'c': 42}}
-
-    This is intended as a utility function for nested HasDict objects, that
-    to_dict their children and then want to give a flattened dict for
-    writing to ProjectHDFio.write_dict_to_hdf
-    """
-    return {
-        "/".join((k1, k2)): v2 for k1, v1 in children.items() for k2, v2 in v1.items()
-    }
-
-
 def _to_dict_children(obj_dict: dict) -> dict:
     """
-    Call to_dict on any objects that support it.
+    Call to_dict on any objects in the values that support it.
 
-    Intended as a helper method for recursive object that want to to_dict
-    their nested objects automatically.
+    Intended as a helper function for recursives object that want to to_dict
+    their nested objects automatically.  It uses :func:`._join_children_dict`
+    for any dictionaries returned from the children.
+
+    The function only goes through the *first* layer of dictionary values and
+    does *not* recurse through nested dictionaries.
+
+    Args:
+        obj_dict (dict): data previously returned from :meth:`._to_dict`
+
+    Returns:
+        obj_dict (dict): new dictionary with the obj_dict of the children
     """
     data_dict = {}
     child_dict = {}
@@ -191,8 +212,8 @@ class HasDict(ABC):
         """
         Populate the object from the serialized object.
 
-        :meth:`.from_dict` will already recurse through `obj_dict` and deserialize any :class:`.HasDict` data it finds,
-        so implementations do not need to deserialize their children explicitly.
+        Implementations must use :func:`._from_dict_children` if they use
+        `._to_dict_children` in their implementation of :meth:`._to_dict`.
 
         Args:
             obj_dict (dict): data previously returned from :meth:`.to_dict`
@@ -200,7 +221,7 @@ class HasDict(ABC):
         """
         pass
 
-    def to_dict(self):
+    def to_dict(self) -> dict:
         """
         Reduce the object to a dictionary.
 
@@ -211,13 +232,13 @@ class HasDict(ABC):
         return self._to_dict() | type_dict
 
     @abstractmethod
-    def _to_dict(self):
+    def _to_dict(self) -> dict:
         """
         Reduce the object to a dictionary.
 
-        :meth:`.to_dict` will find any objects *in the first level* of the returned dictionary and reduce them to
-        dictionaries as well, so implementations do not need to explicitly serialize their children.
-        It will also append the type information obtained from :meth:`._type_to_dict`.
+        Implementations may use :func:`._to_dict_children`, if they
+        automatically want to call `to_dict` on any objects possible from their
+        returned dictionary.
 
         Returns:
             dict: serialized state of this object
