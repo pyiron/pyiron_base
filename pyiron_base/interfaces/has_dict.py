@@ -76,10 +76,9 @@ def _join_children_dict(children: dict[str, dict[str, Any]]) -> dict[str, Any]:
     See also :func:`._split_children_dict`.
     """
     return {
-        "/".join((k1, k2)): v2
-        for k1, v1 in children.items()
-        for k2, v2 in v1.items()
+        "/".join((k1, k2)): v2 for k1, v1 in children.items() for k2, v2 in v1.items()
     }
+
 
 def _split_children_dict(obj_dict: dict[str, Any]) -> dict[str, Any | dict[str, Any]]:
     """
@@ -108,6 +107,7 @@ def _from_dict_children(obj_dict: dict) -> dict:
     Args:
         obj_dict (dict): data previously returned from :meth:`.to_dict`
     """
+
     def load(inner_dict):
         # object is a not a dict, so nothing to do
         if not isinstance(inner_dict, dict):
@@ -119,6 +119,7 @@ def _from_dict_children(obj_dict: dict) -> dict:
         return create_from_dict(inner_dict)
 
     return {k: load(v) for k, v in obj_dict.items()}
+
 
 def _to_dict_children(obj_dict: dict) -> dict:
     """
