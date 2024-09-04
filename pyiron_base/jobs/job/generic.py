@@ -1172,26 +1172,16 @@ class GenericJob(JobCore, HasDict):
             data_dict["files_to_compress"] = self._files_to_compress
         if len(self._files_to_remove) > 0:
             data_dict["files_to_compress"] = self._files_to_remove
+        data_dict["HDF_VERSION"] = self.__version__
         return data_dict
 
     def _from_dict(self, obj_dict, version=None):
         self._type_from_dict(type_dict=obj_dict)
         if "import_directory" in obj_dict.keys():
             self._import_directory = obj_dict["import_directory"]
-        # Backwards compatibility: Previously server and executable were stored
-        # as plain dicts, but now they are dicts with additional info so that
-        # HasDict can load them automatically.
-        # We need to check whether that was possible with the instance check
-        # below and if not, call from_dict ourselves.
-        if isinstance(server := obj_dict["server"], Server):
-            self._server = server
-        else:
-            self._server.from_dict(server)
+        self._server.from_dict(obj_dict["server"])
         if "executable" in obj_dict.keys() and obj_dict["executable"] is not None:
-            if isinstance(executable := obj_dict["executable"], Executable):
-                self._executable = executable
-            else:
-                self.executable.from_dict(executable)
+            self.executable.from_dict(obj_dict["executable"])
         input_dict = obj_dict["input"]
         if "generic_dict" in input_dict.keys():
             generic_dict = input_dict["generic_dict"]
