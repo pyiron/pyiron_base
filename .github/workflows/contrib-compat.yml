@@ -17,6 +17,7 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - name: Merge environment
+      shell: bash -l {0}
       run: |
         git clone https://github.com/pyiron/pyiron_contrib ../pyiron_contrib
         echo -e "channels:\n  - conda-forge\n" > .condarc
