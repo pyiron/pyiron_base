@@ -1,7 +1,7 @@
 import os
 import unittest
 from pyiron_base import Project
-from pandas._testing import assert_frame_equal
+import pandas as pd
 from filecmp import dircmp
 from shutil import rmtree, copytree
 import tarfile
@@ -47,6 +47,11 @@ class TestUnpacking(PyironTestCase):
         super().tearDown()
         self.imp_pr.remove_jobs(recursive=True, silently=True)
 
+    def test_inspect(self):
+        df = self.pr.unpack_csv(self.arch_dir_comp + ".tar.gz")
+        self.assertIsInstance(df, pd.DataFrame)
+        self.assertEqual(len(df), 1)
+
     def test_import_csv(self):
         df_original = self.pr.job_table()
         df_import = self.imp_pr.job_table()
@@ -58,7 +63,7 @@ class TestUnpacking(PyironTestCase):
         df_original.drop("id", inplace=True, axis=1)
         df_import["hamversion"] = float(df_import["hamversion"])
         df_original["hamversion"] = float(df_original["hamversion"])
-        assert_frame_equal(df_original, df_import)
+        pd._testing.assert_frame_equal(df_original, df_import)
 
     def test_import_compressed(self):
         path_original = self.pr.path
@@ -192,6 +197,7 @@ class TestUnpackingBackwardsCompatibility(PyironTestCase):
             dirs_exist_ok=True,
         )
         pr = Project("old_tar")
+        self.assertRaises(FileNotFoundError, pr.unpack_csv, "test_pack.tar.gz")
         pr.unpack(origin_path="test_pack.tar.gz")
         job = pr.load("toy")
         self.assertEqual(job.job_name, "toy")
