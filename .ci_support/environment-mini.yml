@@ -8,7 +8,7 @@ dependencies:
 - numpy =2.1.1
 - pandas =2.2.2
 - psutil =6.0.0
-- pyfileindex =0.0.27
+- pyfileindex =0.0.28
 - pyiron_snippets =0.1.3
 - executorlib =0.0.2
 - pysqa =0.1.21
