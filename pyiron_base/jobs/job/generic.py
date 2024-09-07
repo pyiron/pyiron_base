@@ -282,7 +282,8 @@ class GenericJob(JobCore, HasDict):
             list: list of files
         """
         self._restart_file_list = [
-            str(f) if isinstance(f, File) else f for f in self._restart_file_list
+            os.path.abspath(str(f)) if isinstance(f, File) else os.path.abspath(f)
+            for f in self._restart_file_list
         ]
         return self._restart_file_list
 
@@ -322,7 +323,7 @@ class GenericJob(JobCore, HasDict):
                     k = str(k)
                 if isinstance(v, File):
                     v = str(v)
-                self._restart_file_dict[k] = v
+                self._restart_file_dict[k] = os.path.abspath(v)
 
     @property
     def exclude_nodes_hdf(self):
