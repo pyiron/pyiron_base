@@ -3,8 +3,8 @@ import os
 import posixpath
 import tarfile
 import tempfile
-from typing import Tuple
 from shutil import copytree
+from typing import Tuple
 
 import numpy as np
 import pandas
@@ -34,7 +34,9 @@ def update_id_lst(record_lst: list, job_id_lst: list) -> list:
     return masterid_lst
 
 
-def import_jobs(project_instance: "pyiron_base.project.generic.Project", archive_directory: str):
+def import_jobs(
+    project_instance: "pyiron_base.project.generic.Project", archive_directory: str
+):
     """
     Import jobs from an archive directory to a pyiron project.
 
@@ -122,7 +124,9 @@ def transfer_files(origin_path: str, project_path: str) -> Tuple[pandas.DataFram
     return df, common_path
 
 
-def get_dataframe(origin_path: str, csv_file_name: str = "export.csv") -> pandas.DataFrame:
+def get_dataframe(
+    origin_path: str, csv_file_name: str = "export.csv"
+) -> pandas.DataFrame:
     """
     Get the job table from the csv file.
 

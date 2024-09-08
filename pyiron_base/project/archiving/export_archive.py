@@ -28,7 +28,9 @@ def copy_files_to_archive(
 
     """
 
-    def copy_files(origin: str, destination: str, copy_all_files: bool = copy_all_files):
+    def copy_files(
+        origin: str, destination: str, copy_all_files: bool = copy_all_files
+    ):
         """
         Copy files from the origin directory to the destination directory.
 

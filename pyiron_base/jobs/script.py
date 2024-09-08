@@ -278,7 +278,7 @@ class ScriptJob(GenericJob):
         """
         self._enable_mpi4py = True
 
-    def _from_dict(self, obj_dict: dict, version: Optional[str]=None) -> None:
+    def _from_dict(self, obj_dict: dict, version: Optional[str] = None) -> None:
         """
         Load job attributes from a dictionary.
 

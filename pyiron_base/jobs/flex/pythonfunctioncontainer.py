@@ -86,7 +86,7 @@ class PythonFunctionContainerJob(PythonTemplateJob):
         )
         return job_dict
 
-    def _from_dict(self, obj_dict: dict, version: Optional[str] =None) -> None:
+    def _from_dict(self, obj_dict: dict, version: Optional[str] = None) -> None:
         """
         Load the job object from a dictionary representation.
 
