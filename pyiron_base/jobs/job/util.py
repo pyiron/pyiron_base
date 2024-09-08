@@ -11,7 +11,7 @@ import shutil
 import stat
 import tarfile
 from itertools import islice
-from typing import Optional, Union, Tuple
+from typing import Optional, Tuple, Union
 
 import monty.io
 import psutil
