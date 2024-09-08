@@ -267,7 +267,7 @@ class DatabaseAccess(IsDatabase):
         job: Optional[str] = None,
         sub_job_name: str = "%",
         element_lst: List[str] = None,
-    ) -> Union[List[dict]]:
+    ) -> List[dict]:
         """
         Internal function to access the database from the project directly.
 
@@ -650,6 +650,7 @@ class DatabaseAccess(IsDatabase):
                              'timestop': datetime(2016, 5, 2, 11, 31, 4, 371165),
                              'totalcputime': 0.117788,
                              'username': 'Test'}
+            check_duplicates (bool): Check for duplicate entries in the database
 
         Returns:
             int: Database ID of the item created as an int, like: 3
