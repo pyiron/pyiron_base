@@ -8,7 +8,7 @@ Jobtype class to create GenericJob type objects
 import importlib
 import inspect
 import os
-from typing import Union, Optional
+from typing import Optional, Union
 
 from pyiron_snippets.singleton import Singleton
 
@@ -51,9 +51,9 @@ class JobType:
         class_name: Union[type, str],
         project: ProjectHDFio,
         job_name: str,
-        job_class_dict: Optional[dict]=None,
-        delete_existing_job: bool=False,
-        delete_aborted_job: bool =False,
+        job_class_dict: Optional[dict] = None,
+        delete_existing_job: bool = False,
+        delete_aborted_job: bool = False,
     ):
         """
         The __new__() method allows to create objects from other classes - the class selected by class_name
