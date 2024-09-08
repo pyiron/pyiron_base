@@ -7,10 +7,10 @@ DatabaseAccess class deals with accessing the database
 
 import fnmatch
 import re
-from typing import Literal, Union, Optional, List
 import warnings
 from abc import ABC, abstractmethod
 from collections.abc import Iterable
+from typing import List, Literal, Optional, Union
 
 import numpy as np
 import pandas
@@ -63,9 +63,9 @@ class IsDatabase(ABC):
         sql_query: str,
         user: str,
         project_path: str,
-        recursive: bool=True,
-        columns: Optional[List[str]]=None,
-        element_lst: Optional[List[str]]=None,
+        recursive: bool = True,
+        columns: Optional[List[str]] = None,
+        element_lst: Optional[List[str]] = None,
     ) -> pandas.DataFrame:
         pass
 
@@ -120,14 +120,14 @@ class IsDatabase(ABC):
         sql_query: str,
         user: str,
         project_path: sgr,
-        recursive: bool=True,
-        columns: Optional[List[str]]=None,
-        all_columns: bool=False,
-        sort_by: str="id",
-        max_colwidth: int=200,
-        full_table: bool=False,
-        element_lst: Optional[List[str]]=None,
-        job_name_contains: str="",
+        recursive: bool = True,
+        columns: Optional[List[str]] = None,
+        all_columns: bool = False,
+        sort_by: str = "id",
+        max_colwidth: int = 200,
+        full_table: bool = False,
+        element_lst: Optional[List[str]] = None,
+        job_name_contains: str = "",
         mode: Literal["regex", "glob"] = "glob",
         **kwargs,
     ):
@@ -204,7 +204,7 @@ class IsDatabase(ABC):
         return df
 
     @abstractmethod
-    def _get_table_headings(self, table_name: Optional[str]=None):
+    def _get_table_headings(self, table_name: Optional[str] = None):
         pass
 
     def item_update(self, par_dict: dict, item_id: int) -> None:
@@ -247,7 +247,7 @@ class IsDatabase(ABC):
             item_id=job_id,
         )
 
-    def get_table_headings(self, table_name: Optional[str]=None) -> List[str]:
+    def get_table_headings(self, table_name: Optional[str] = None) -> List[str]:
         """
         Get column names; if given table_name can select one of multiple tables defined in the database, but subclasses
         may ignore it
@@ -303,10 +303,24 @@ class IsDatabase(ABC):
         return self.get_table_headings()
 
     @abstractmethod
-    def _get_jobs(self, sql_query: str, user: str, project_path: str, recursive: bool=True, columns: Optional[List[str]]=None) -> List[dict]:
+    def _get_jobs(
+        self,
+        sql_query: str,
+        user: str,
+        project_path: str,
+        recursive: bool = True,
+        columns: Optional[List[str]] = None,
+    ) -> List[dict]:
         pass
 
-    def get_jobs(self, sql_query: str, user: str, project_path: str, recursive: bool=True, columns: Optional[List[str]]=None) -> List[dict]:
+    def get_jobs(
+        self,
+        sql_query: str,
+        user: str,
+        project_path: str,
+        recursive: bool = True,
+        columns: Optional[List[str]] = None,
+    ) -> List[dict]:
         """
         Internal function to return the jobs as dictionary rather than a pandas.Dataframe
 
@@ -326,7 +340,9 @@ class IsDatabase(ABC):
             columns = ["id", "project"]
         return self._get_jobs(sql_query, user, project_path, recursive, columns)
 
-    def get_job_ids(self, sql_query: str, user: str, project_path: str, recursive: bool=True) -> List[int]:
+    def get_job_ids(
+        self, sql_query: str, user: str, project_path: str, recursive: bool = True
+    ) -> List[int]:
         """
         Return the job IDs matching a specific query
 

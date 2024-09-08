@@ -9,7 +9,7 @@ import datetime
 import os
 from abc import ABCMeta
 from collections.abc import Iterable
-from typing import Union, Optional, List
+from typing import List, Optional, Union
 
 import numpy as np
 import pandas
@@ -67,7 +67,9 @@ class FileTableSingleton(ABCMeta):
             )
         return cls._instances[path]
 
-    def _get_fileindex_if_theres_a_common_path(cls, path: str) -> Union[PyFileIndex, None]:
+    def _get_fileindex_if_theres_a_common_path(
+        cls, path: str
+    ) -> Union[PyFileIndex, None]:
         common_path = _get_most_common_path(
             path=path, reference_paths=cls._instances.keys()
         )
@@ -158,7 +160,7 @@ class FileTable(IsDatabase, metaclass=FileTableSingleton):
         else:
             raise ValueError
 
-    def force_reset(self, fileindex: Optional[PyFileIndex]=None) -> None:
+    def force_reset(self, fileindex: Optional[PyFileIndex] = None) -> None:
         """
         Reset cache of the FileTable object
 
@@ -178,7 +180,12 @@ class FileTable(IsDatabase, metaclass=FileTableSingleton):
         else:
             self._job_table = pandas.DataFrame({k: [] for k in self._columns})
 
-    def get_child_ids(self, job_specifier: Union[str, int], project: Optional[str]=None, status: Optional[str]=None) -> List[int]:
+    def get_child_ids(
+        self,
+        job_specifier: Union[str, int],
+        project: Optional[str] = None,
+        status: Optional[str] = None,
+    ) -> List[int]:
         """
         Get the childs for a specific job
 
@@ -242,7 +249,9 @@ class FileTable(IsDatabase, metaclass=FileTableSingleton):
             for k, v in self._job_table[self._job_table.id == item_id].to_dict().items()
         }
 
-    def get_items_dict(self, item_dict: dict, return_all_columns: bool=True) -> List[dict]:
+    def get_items_dict(
+        self, item_dict: dict, return_all_columns: bool = True
+    ) -> List[dict]:
         """
         Get list of jobs which fulfills the query in the dictionary
 
@@ -317,7 +326,14 @@ class FileTable(IsDatabase, metaclass=FileTableSingleton):
         else:
             return [{"id": i} for i in df_dict["id"].values()]
 
-    def _get_jobs(self, user: str, sql_query: str, project: Optional[str]=None, recursive: bool=True, columns: Optional[List[str]]=None) -> dict:
+    def _get_jobs(
+        self,
+        user: str,
+        sql_query: str,
+        project: Optional[str] = None,
+        recursive: bool = True,
+        columns: Optional[List[str]] = None,
+    ) -> dict:
         """
         Get jobs as dictionary from filetable
 
@@ -354,7 +370,9 @@ class FileTable(IsDatabase, metaclass=FileTableSingleton):
             ].tolist()  # ToDo: Check difference of tolist and to_list
         return dictionary
 
-    def get_job_id(self, job_specifier: Union[str, int], project: Optional[str]=None) -> int:
+    def get_job_id(
+        self, job_specifier: Union[str, int], project: Optional[str] = None
+    ) -> int:
         """
         Get job ID from filetable
 
@@ -426,7 +444,9 @@ class FileTable(IsDatabase, metaclass=FileTableSingleton):
         except KeyError:
             return None
 
-    def init_table(self, fileindex: PyFileIndex, working_dir_lst: Optional[List[str]]=None) -> List[dict]:
+    def init_table(
+        self, fileindex: PyFileIndex, working_dir_lst: Optional[List[str]] = None
+    ) -> List[dict]:
         """
         Initialize the filetable class
 
@@ -461,7 +481,7 @@ class FileTable(IsDatabase, metaclass=FileTableSingleton):
                 job_lst.append(job_dict)
         return job_lst
 
-    def _item_update(self, par_dict: dict, item_id: int)-> None:
+    def _item_update(self, par_dict: dict, item_id: int) -> None:
         """
         Modify Item in database
 
@@ -618,10 +638,10 @@ class FileTable(IsDatabase, metaclass=FileTableSingleton):
         self,
         sql_query: str,
         user: str,
-        project_path: Optional[str]=None,
-        recursive: bool=True,
-        columns: Optional[List[str]]=None,
-        element_lst: Optional[List[str]]=None,
+        project_path: Optional[str] = None,
+        recursive: bool = True,
+        columns: Optional[List[str]] = None,
+        element_lst: Optional[List[str]] = None,
     ) -> pandas.DataFrame:
         """
         Get the job table based on the specified parameters.
@@ -652,7 +672,7 @@ class FileTable(IsDatabase, metaclass=FileTableSingleton):
         else:
             return self._job_table
 
-    def _get_table_headings(self, table_name: Optional[str]=None) -> List[str]:
+    def _get_table_headings(self, table_name: Optional[str] = None) -> List[str]:
         """
         Get column names
 

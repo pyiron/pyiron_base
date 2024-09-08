@@ -4,7 +4,8 @@
 """
 The Jobtable module provides a set of top level functions to interact with the database.
 """
-from typing import Union, Optional, List
+
+from typing import List, Optional, Union
 
 import numpy as np
 
@@ -23,7 +24,14 @@ __status__ = "production"
 __date__ = "Sep 1, 2017"
 
 
-def get_child_ids(database: Union[FileTable, DatabaseAccess], sql_query: str, user: str, project_path: str, job_specifier: str, status: Optional[str]=None) -> List[dict]:
+def get_child_ids(
+    database: Union[FileTable, DatabaseAccess],
+    sql_query: str,
+    user: str,
+    project_path: str,
+    job_specifier: str,
+    status: Optional[str] = None,
+) -> List[dict]:
     """
     Get the childs for a specific job
 
@@ -58,7 +66,13 @@ def get_child_ids(database: Union[FileTable, DatabaseAccess], sql_query: str, us
         return database.get_child_ids(job_specifier=job_specifier, project=project_path)
 
 
-def get_job_id(database: Union[FileTable, DatabaseAccess], sql_query: str, user: str, project_path: str, job_specifier: str) -> Union[int, None]:
+def get_job_id(
+    database: Union[FileTable, DatabaseAccess],
+    sql_query: str,
+    user: str,
+    project_path: str,
+    job_specifier: str,
+) -> Union[int, None]:
     """
     get the job_id for job named job_name in the local project path from database
 
@@ -105,7 +119,14 @@ def get_job_id(database: Union[FileTable, DatabaseAccess], sql_query: str, user:
         return database.get_job_id(job_specifier=job_specifier, project=project_path)
 
 
-def set_job_status(database: Union[FileTable, DatabaseAccess], sql_query: str, user: str, project_path: str, job_specifier: Union[str, int], status: str) -> None:
+def set_job_status(
+    database: Union[FileTable, DatabaseAccess],
+    sql_query: str,
+    user: str,
+    project_path: str,
+    job_specifier: Union[str, int],
+    status: str,
+) -> None:
     """
     Set the status of a particular job
 
@@ -131,7 +152,13 @@ def set_job_status(database: Union[FileTable, DatabaseAccess], sql_query: str, u
     )
 
 
-def get_job_status(database: Union[FileTable, DatabaseAccess], sql_query: str, user: str, project_path: str, job_specifier: Union[str, int]) -> str:
+def get_job_status(
+    database: Union[FileTable, DatabaseAccess],
+    sql_query: str,
+    user: str,
+    project_path: str,
+    job_specifier: Union[str, int],
+) -> str:
     """
     Get the status of a particular job
 
@@ -158,7 +185,13 @@ def get_job_status(database: Union[FileTable, DatabaseAccess], sql_query: str, u
     )
 
 
-def get_job_working_directory(database: Union[FileTable, DatabaseAccess], sql_query: str, user: str, project_path: str, job_specifier: Union[str, int]) -> str:
+def get_job_working_directory(
+    database: Union[FileTable, DatabaseAccess],
+    sql_query: str,
+    user: str,
+    project_path: str,
+    job_specifier: Union[str, int],
+) -> str:
     """
     Get the working directory of a particular job
 

@@ -120,7 +120,7 @@ class ConnectionWatchDog(Thread):
 
 
 class AutorestoredConnection:
-    def __init__(self, engine: Engine, timeout: int=60):
+    def __init__(self, engine: Engine, timeout: int = 60):
         self.engine = engine
         self._conn = None
         self._lock = Lock()
@@ -184,7 +184,7 @@ class DatabaseAccess(IsDatabase):
     Murat Han Celik
     """
 
-    def __init__(self, connection_string: str, table_name: str, timeout: int=60):
+    def __init__(self, connection_string: str, table_name: str, timeout: int = 60):
         """
         Initialize the Database connection
 
@@ -264,9 +264,9 @@ class DatabaseAccess(IsDatabase):
         user: str,
         project_path: str,
         recursive: bool,
-        job: Optional[str]=None,
-        sub_job_name: str ="%",
-        element_lst: List[str]=None,
+        job: Optional[str] = None,
+        sub_job_name: str = "%",
+        element_lst: List[str] = None,
     ) -> Union[List[dict]]:
         """
         Internal function to access the database from the project directly.
@@ -352,9 +352,9 @@ class DatabaseAccess(IsDatabase):
         sql_query: str,
         user: str,
         project_path: str,
-        recursive: bool=True,
-        columns: List[str]=None,
-        element_lst: List[str]=None,
+        recursive: bool = True,
+        columns: List[str] = None,
+        element_lst: List[str] = None,
     ) -> pandas.DataFrame:
         job_dict = self._job_dict(
             sql_query=sql_query,
@@ -407,7 +407,7 @@ class DatabaseAccess(IsDatabase):
             return reg.search(item) is not None
 
     # Table functions
-    def _get_table_headings(self, table_name: Optional[str]=None) -> List[str]:
+    def _get_table_headings(self, table_name: Optional[str] = None) -> List[str]:
         """
         Get column names
 
@@ -446,7 +446,9 @@ class DatabaseAccess(IsDatabase):
             raise ValueError(str(table_name) + " does not exist")
         return [column.name for column in iter(simulation_list.columns)]
 
-    def add_column(self, col_name: Union[str, List[str]], col_type: Union[str, List[str]]) -> None:
+    def add_column(
+        self, col_name: Union[str, List[str]], col_type: Union[str, List[str]]
+    ) -> None:
         """
         Add an additional column - required for modification on the database
 
@@ -472,7 +474,9 @@ class DatabaseAccess(IsDatabase):
         else:
             raise PermissionError("Not avilable in viewer mode.")
 
-    def change_column_type(self, col_name: Union[str, List[str]], col_type: Union[str, List[str]]) -> None:
+    def change_column_type(
+        self, col_name: Union[str, List[str]], col_type: Union[str, List[str]]
+    ) -> None:
         """
         Modify data type of an existing column - required for modification on the database
 
@@ -498,7 +502,9 @@ class DatabaseAccess(IsDatabase):
         else:
             raise PermissionError("Not avilable in viewer mode.")
 
-    def get_items_sql(self, where_condition: Optional[str]=None, sql_statement: Optional[str]=None) -> List[dict]:
+    def get_items_sql(
+        self, where_condition: Optional[str] = None, sql_statement: Optional[str] = None
+    ) -> List[dict]:
         """
         Submit an SQL query to the database
 
@@ -593,7 +599,7 @@ class DatabaseAccess(IsDatabase):
     def _check_chem_formula_length(self, par_dict: dict) -> dict:
         """
         performs a check whether the length of chemical formula exceeds the defined limit
-        
+
         Args:
             par_dict(dict): dictionary of the parameters to be checked
         """
@@ -623,7 +629,7 @@ class DatabaseAccess(IsDatabase):
         )
 
     # Item functions
-    def add_item_dict(self, par_dict: dict, check_duplicates: bool=False) -> int:
+    def add_item_dict(self, par_dict: dict, check_duplicates: bool = False) -> int:
         """
         Create a new database item
 
@@ -786,7 +792,14 @@ class DatabaseAccess(IsDatabase):
             self.conn.close()
 
     # IsDatabase impl'
-    def _get_jobs(self, sql_query: str, user: str, project_path: str, recursive: bool=True, columns:Optional[List[str]]=None) -> List[dict]:
+    def _get_jobs(
+        self,
+        sql_query: str,
+        user: str,
+        project_path: str,
+        recursive: bool = True,
+        columns: Optional[List[str]] = None,
+    ) -> List[dict]:
         df = self.job_table(
             sql_query=sql_query,
             user=user,
@@ -856,7 +869,9 @@ class DatabaseAccess(IsDatabase):
             ]
         )
 
-    def get_items_dict(self, item_dict: dict, return_all_columns: bool=True) -> List[dict]:
+    def get_items_dict(
+        self, item_dict: dict, return_all_columns: bool = True
+    ) -> List[dict]:
         """
 
         Args:

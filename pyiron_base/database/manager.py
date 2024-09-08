@@ -6,8 +6,8 @@ A class for mediating connections to SQL databases.
 """
 
 import os
+from typing import Optional, Union
 from urllib.parse import quote_plus
-from typing import Union, Optional
 
 from pyiron_snippets.logger import logger
 from pyiron_snippets.singleton import Singleton
@@ -132,7 +132,9 @@ class DatabaseManager(metaclass=Singleton):
                 timeout=self.connection_timeout,
             )
 
-    def switch_to_local_database(self, file_name: str="pyiron.db", cwd: Optional[str]=None) -> None:
+    def switch_to_local_database(
+        self, file_name: str = "pyiron.db", cwd: Optional[str] = None
+    ) -> None:
         """
         Swtich to an local SQLite based database.
 
