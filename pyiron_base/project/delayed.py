@@ -1,7 +1,7 @@
 import hashlib
 import inspect
 import re
-from typing import Optional, Tuple, Dict, List
+from typing import Dict, List, Optional, Tuple
 
 import cloudpickle
 

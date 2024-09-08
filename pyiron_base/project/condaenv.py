@@ -55,7 +55,13 @@ class CondaEnvironment:
                 f"Unknown conda environment {item}. Use one of {self._list_all_known_prefixes_dict()} or create a new one."
             )
 
-    def create(self, env_name: str, env_file: str, use_mamba: bool = False, global_installation: bool = True) -> None:
+    def create(
+        self,
+        env_name: str,
+        env_file: str,
+        use_mamba: bool = False,
+        global_installation: bool = True,
+    ) -> None:
         """
         Create a new conda environment.
 
