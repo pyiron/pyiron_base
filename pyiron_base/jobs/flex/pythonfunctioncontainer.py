@@ -1,4 +1,5 @@
 import inspect
+from typing import Optional
 
 import cloudpickle
 import numpy as np
@@ -85,12 +86,13 @@ class PythonFunctionContainerJob(PythonTemplateJob):
         )
         return job_dict
 
-    def _from_dict(self, obj_dict: dict, version=None) -> None:
+    def _from_dict(self, obj_dict: dict, version: Optional[str] =None) -> None:
         """
         Load the job object from a dictionary representation.
 
         Args:
             obj_dict (dict): The dictionary representation of the job object.
+            version (str): The version of the job object.
         """
         super()._from_dict(obj_dict=obj_dict)
         self._function = cloudpickle.loads(obj_dict["function"])
@@ -98,7 +100,7 @@ class PythonFunctionContainerJob(PythonTemplateJob):
             obj_dict["_automatically_rename_on_save_using_input"]
         )
 
-    def save(self):
+    def save(self) -> None:
         """
         Save the job to the project.
 
@@ -127,7 +129,7 @@ class PythonFunctionContainerJob(PythonTemplateJob):
             return  # Without saving
         super().save()
 
-    def run_static(self):
+    def run_static(self) -> None:
         """
         Run the static function.
 

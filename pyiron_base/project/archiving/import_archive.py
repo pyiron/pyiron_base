@@ -3,6 +3,7 @@ import os
 import posixpath
 import tarfile
 import tempfile
+from typing import Tuple
 from shutil import copytree
 
 import numpy as np
@@ -12,7 +13,17 @@ from pyiron_base.state import state
 from pyiron_base.utils.instance import static_isinstance
 
 
-def update_id_lst(record_lst, job_id_lst):
+def update_id_lst(record_lst: list, job_id_lst: list) -> list:
+    """
+    Update the list of master IDs based on the record list and job ID list.
+
+    Args:
+        record_lst (list): List of master IDs.
+        job_id_lst (list): List of job IDs.
+
+    Returns:
+        list: Updated list of master IDs.
+    """
     masterid_lst = []
     for masterid in record_lst:
         if masterid is None or np.isnan(masterid):
@@ -23,7 +34,7 @@ def update_id_lst(record_lst, job_id_lst):
     return masterid_lst
 
 
-def import_jobs(project_instance, archive_directory):
+def import_jobs(project_instance: "pyiron_base.project.generic.Project", archive_directory: str):
     """
     Import jobs from an archive directory to a pyiron project.
 
@@ -94,7 +105,7 @@ def import_jobs(project_instance, archive_directory):
             )
 
 
-def transfer_files(origin_path: str, project_path: str):
+def transfer_files(origin_path: str, project_path: str) -> Tuple[pandas.DataFrame, str]:
     """
     Transfer files from the origin path to the project path.
 
@@ -103,8 +114,7 @@ def transfer_files(origin_path: str, project_path: str):
         project_path (str): Path to the project directory.
 
     Returns:
-        pandas.DataFrame: Job table.
-        str: Common path.
+        Tuple[pandas.DataFrame, str]: A tuple containing the job table and the common path.
     """
     df = get_dataframe(origin_path=origin_path)
     common_path = posixpath.commonpath(list(df["project"]))
@@ -112,7 +122,7 @@ def transfer_files(origin_path: str, project_path: str):
     return df, common_path
 
 
-def get_dataframe(origin_path: str, csv_file_name: str = "export.csv") -> "DataFrame":
+def get_dataframe(origin_path: str, csv_file_name: str = "export.csv") -> pandas.DataFrame:
     """
     Get the job table from the csv file.
 
@@ -133,7 +143,7 @@ def get_dataframe(origin_path: str, csv_file_name: str = "export.csv") -> "DataF
     raise FileNotFoundError(f"File: {csv_file_name} was not found.")
 
 
-def inspect_csv(tar_path: str, csv_file: str = "export.csv"):
+def inspect_csv(tar_path: str, csv_file: str = "export.csv") -> None:
     """
     Inspect the csv file inside a tar archive.
 

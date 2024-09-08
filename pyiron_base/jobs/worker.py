@@ -9,6 +9,7 @@ import os
 import time
 from datetime import datetime
 from multiprocessing import Pool
+from typing import Tuple
 
 import numpy as np
 import psutil
@@ -28,7 +29,7 @@ __status__ = "production"
 __date__ = "Nov 5, 2021"
 
 
-def worker_function(args):
+def worker_function(args: list) -> None:
     """
     The worker function is executed inside an aproc processing pool.
 
@@ -128,7 +129,7 @@ class WorkerJob(PythonTemplateJob):
 
     """
 
-    def __init__(self, project, job_name):
+    def __init__(self, project: "pyiron_base.project.generic.Project", job_name: str):
         super(WorkerJob, self).__init__(project, job_name)
         if not state.database.database_is_disabled:
             self.input.project = project.path
@@ -142,54 +143,72 @@ class WorkerJob(PythonTemplateJob):
         self._job_with_calculate_function = True
 
     @property
-    def project_to_watch(self):
+    def project_to_watch(self) -> "pyiron_base.project.generic.Project":
         rel_path = os.path.relpath(self.input.project, self.project.path)
         return self.project.open(rel_path)
 
     @project_to_watch.setter
-    def project_to_watch(self, pr):
+    def project_to_watch(self, pr: "pyiron_base.project.generic.Project") -> None:
         self.input.project = pr.path
 
     @property
-    def cores_per_job(self):
+    def cores_per_job(self) -> int:
         return self.input.cores_per_job
 
     @cores_per_job.setter
-    def cores_per_job(self, cores):
+    def cores_per_job(self, cores: int) -> None:
         self.input.cores_per_job = int(cores)
 
     @property
-    def queue_limit_factor(self):
+    def queue_limit_factor(self) -> int:
         return self.input.queue_limit_factor
 
     @queue_limit_factor.setter
-    def queue_limit_factor(self, limit_factor):
+    def queue_limit_factor(self, limit_factor: int) -> None:
         self.input.queue_limit_factor = limit_factor
 
     @property
-    def child_runtime(self):
+    def child_runtime(self) -> int:  # in seconds:
         return self.input.child_runtime
 
     @child_runtime.setter
-    def child_runtime(self, time_in_sec):
+    def child_runtime(self, time_in_sec: int) -> None:
         self.input.child_runtime = time_in_sec
 
     @property
-    def sleep_interval(self):
+    def sleep_interval(self) -> int:  # in seconds:
         return self.input.sleep_interval
 
     @sleep_interval.setter
-    def sleep_interval(self, interval):
+    def sleep_interval(self, interval: int) -> None:
         self.input.sleep_interval = int(interval)
 
     # This function is executed
-    def run_static(self):
+    def run_static(self) -> None:
+        """
+        Run the worker job in static mode.
+
+        If the database is enabled, the worker job will execute calculations by querying the database for jobs to
+        execute. If the database is disabled, the worker job will execute calculations by scanning the working
+        directory for HDF5 files.
+
+        Returns:
+            None
+        """
         if not state.database.database_is_disabled:
             self.run_static_with_database()
         else:
             self.run_static_without_database()
 
-    def run_static_with_database(self):
+    def run_static_with_database(self) -> None:
+        """
+        Run the worker job in static mode with database.
+
+        This method executes calculations by querying the database for jobs to execute.
+
+        Returns:
+            None
+        """
         self.status.running = True
         master_id = self.job_id
         pr = self.project_to_watch
@@ -277,13 +296,36 @@ class WorkerJob(PythonTemplateJob):
         self.status.finished = True
 
     @staticmethod
-    def _get_working_directory_and_h5path(path):
+    def _get_working_directory_and_h5path(path: str) -> Tuple[str, str]:
+        """
+        Get the working directory and h5path from the given path.
+
+        Args:
+            path (str): The path to the h5 file.
+
+        Returns:
+            Tuple[str, str]: The working directory and h5path.
+
+        Example:
+            >>> _get_working_directory_and_h5path("/path/to/job.h5")
+            ("/path/to/job_hdf5/job", "/path/to/job.h5/job")
+        """
         path_split = path.split("/")
         job_name = path_split[-1].split(".h5")[0]
         parent_dir = "/".join(path_split[:-1])
-        return parent_dir + "/" + job_name + "_hdf5/" + job_name, path + "/" + job_name
+        working_directory = parent_dir + "/" + job_name + "_hdf5/" + job_name
+        h5path = path + "/" + job_name
+        return working_directory, h5path
 
-    def run_static_without_database(self):
+    def run_static_without_database(self) -> None:
+        """
+        Run the worker job in static mode without a database.
+
+        This method executes calculations by scanning the working directory for HDF5 files.
+
+        Returns:
+            None
+        """
         self.project_hdf5.create_working_directory()
         working_directory = self.working_directory
         log_file = os.path.join(working_directory, "worker.log")
@@ -335,7 +377,7 @@ class WorkerJob(PythonTemplateJob):
         # The job is finished
         self.status.finished = True
 
-    def wait_for_worker(self, interval_in_s=60, max_iterations=10):
+    def wait_for_worker(self, interval_in_s: int=60, max_iterations: int=10) -> None:
         """
         Wait for the workerjob to finish the execution of all jobs. If no job is in status running or submitted the
         workerjob shuts down automatically after 10 minutes.

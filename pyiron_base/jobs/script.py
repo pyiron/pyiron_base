@@ -260,30 +260,31 @@ class ScriptJob(GenericJob):
                 "path should be a string, but ", path, " is a ", type(path), " instead."
             )
 
-    def collect_logfiles(self):
+    def collect_logfiles(self) -> None:
         """
         Compatibility function - but no log files are being collected
         """
         pass
 
-    def disable_mpi4py(self):
+    def disable_mpi4py(self) -> None:
         """
         Disables the usage of mpi4py for parallel execution.
         """
         self._enable_mpi4py = False
 
-    def enable_mpi4py(self):
+    def enable_mpi4py(self) -> None:
         """
         Enable the usage of mpi4py for parallel execution.
         """
         self._enable_mpi4py = True
 
-    def _from_dict(self, obj_dict, version=None) -> None:
+    def _from_dict(self, obj_dict: dict, version: Optional[str]=None) -> None:
         """
         Load job attributes from a dictionary.
 
         Args:
             obj_dict (dict): The dictionary containing the job attributes.
+            version (str): The version of the job object.
         """
         super()._from_dict(obj_dict=obj_dict)
         if "parallel" in obj_dict["input"].keys():
@@ -294,7 +295,7 @@ class ScriptJob(GenericJob):
         if "custom_dict" in obj_dict["input"].keys():
             self.input.update(obj_dict["input"]["custom_dict"])
 
-    def get_input_parameter_dict(self):
+    def get_input_parameter_dict(self) -> dict:
         """
         Get an hierarchical dictionary of input files. On the first level the dictionary is divided in file_to_create
         and files_to_copy. Both are dictionaries use the file names as keys. In file_to_create the values are strings
@@ -320,7 +321,7 @@ class ScriptJob(GenericJob):
                 self.executable._mpi = True
         return input_file_dict
 
-    def run_if_lib(self):
+    def run_if_lib(self) -> None:
         """
         Compatibility function - but library run mode is not available
         """
@@ -328,7 +329,7 @@ class ScriptJob(GenericJob):
             "Library run mode is not implemented for script jobs."
         )
 
-    def run_static(self):
+    def run_static(self) -> None:
         """
         The run_static() function is called internally in pyiron to trigger the execution of the executable. This is
         typically divided into three steps: (1) the generation of the calculate function and its inputs, (2) the
@@ -349,10 +350,10 @@ class ScriptJob(GenericJob):
 
     def save_output(
         self, output_dict: Optional[dict] = None, shell_output: Optional[str] = None
-    ):
+    ) -> None:
         pass
 
-    def set_input_to_read_only(self):
+    def set_input_to_read_only(self) -> None:
         """
         This function enforces read-only mode for the input classes, but it has to be implement in the individual
         classes.
@@ -373,7 +374,7 @@ class ScriptJob(GenericJob):
         job_dict["input/custom_dict"] = self.input.to_builtin()
         return job_dict
 
-    def validate_ready_to_run(self):
+    def validate_ready_to_run(self) -> None:
         """
         Validates if the job is ready to run by checking if the script path is provided.
 
@@ -386,7 +387,7 @@ class ScriptJob(GenericJob):
                 + "running."
             )
 
-    def _executable_activate_mpi(self):
+    def _executable_activate_mpi(self) -> None:
         """
         Internal helper function to switch the executable to MPI mode
         """
