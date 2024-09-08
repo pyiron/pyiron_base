@@ -119,7 +119,7 @@ class IsDatabase(ABC):
         self,
         sql_query: str,
         user: str,
-        project_path: sgr,
+        project_path: str,
         recursive: bool = True,
         columns: Optional[List[str]] = None,
         all_columns: bool = False,
