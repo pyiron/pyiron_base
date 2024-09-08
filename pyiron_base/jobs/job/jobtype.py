@@ -8,7 +8,7 @@ Jobtype class to create GenericJob type objects
 import importlib
 import inspect
 import os
-from typing import Union
+from typing import Union, Optional
 
 from pyiron_snippets.singleton import Singleton
 
@@ -48,12 +48,12 @@ class JobType:
 
     def __new__(
         cls,
-        class_name,
-        project,
-        job_name,
-        job_class_dict=None,
-        delete_existing_job=False,
-        delete_aborted_job=False,
+        class_name: Union[type, str],
+        project: ProjectHDFio,
+        job_name: str,
+        job_class_dict: Optional[dict]=None,
+        delete_existing_job: bool=False,
+        delete_aborted_job: bool =False,
     ):
         """
         The __new__() method allows to create objects from other classes - the class selected by class_name
@@ -119,7 +119,7 @@ class JobType:
         return job
 
     @classmethod
-    def unregister(cls, job_name_or_class):
+    def unregister(cls, job_name_or_class: Union[str, type]) -> Optional[type]:
         """Unregister job type from the exposed list of available job types
 
         Args:
@@ -140,7 +140,7 @@ class JobType:
         return _cls
 
     @staticmethod
-    def _convert_pyiron_to_pyiron_atomistics_module(cls_module_str):
+    def _convert_pyiron_to_pyiron_atomistics_module(cls_module_str: str) -> str:
         if cls_module_str.startswith("pyiron."):
             # Currently, we set all sub-modules of pyiron_atomistics to be sub-modules of pyiron. Thus, any class
             # pyiron.submodule.PyironClass is identical to pyiron_atomistics_submodule.PyironClass:
@@ -151,9 +151,9 @@ class JobType:
     def register(
         cls,
         job_class_or_module_str: Union[type, str],
-        job_name: str = None,
-        overwrite=False,
-    ):
+        job_name: Optional[str] = None,
+        overwrite: bool = False,
+    ) -> None:
         """Register job type from the exposed list of available job types
 
         Args:
@@ -196,7 +196,7 @@ class JobType:
             cls._job_class_dict[job_name] = cls_module_str
 
     @staticmethod
-    def convert_str_to_class(job_class_dict, class_name):
+    def convert_str_to_class(job_class_dict: dict, class_name: str) -> type:
         """
         convert the name of a class to the corresponding class object - only for pyiron internal classes.
 
@@ -233,17 +233,17 @@ class JobFactory(PyironFactory):
     which is wrapped as pyiron job type.
     """
 
-    def __init__(self, project):
+    def __init__(self, project: "pyiron_base.project.generic.Project"):
         self._job_class_dict = JOB_CLASS_DICT
         self._project = project
 
-    def __dir__(self):
+    def __dir__(self) -> list:
         """
         Enable autocompletion by overwriting the __dir__() function.
         """
         return list(self._job_class_dict.keys())
 
-    def __getattr__(self, name):
+    def __getattr__(self, name: str) -> callable:
         if name in self._job_class_dict:
 
             def wrapper(job_name, delete_existing_job=False, delete_aborted_job=False):
@@ -291,20 +291,20 @@ class JobTypeChoice(metaclass=Singleton):
         self.job_class_dict = JOB_CLASS_DICT
 
     @property
-    def job_class_dict(self):
+    def job_class_dict(self) -> dict:
         return self._job_class_dict
 
     @job_class_dict.setter
-    def job_class_dict(self, job_class_dict):
+    def job_class_dict(self, job_class_dict: dict) -> None:
         self._job_class_dict = job_class_dict
 
-    def __getattr__(self, name):
+    def __getattr__(self, name: str) -> str:
         if name in self._job_class_dict.keys():
             return name
         else:
             raise AttributeError("no job class named '{}' defined".format(name))
 
-    def __dir__(self):
+    def __dir__(self) -> list:
         """
         Enable autocompletion by overwriting the __dir__() function.
         """
