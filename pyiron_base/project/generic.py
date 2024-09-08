@@ -11,7 +11,7 @@ import os
 import posixpath
 import shutil
 import stat
-from typing import TYPE_CHECKING, Dict, Generator, Literal, Optional, Union
+from typing import Any, TYPE_CHECKING, Dict, Generator, Literal, Optional, Union, List
 
 import cloudpickle
 import numpy as np
@@ -52,7 +52,7 @@ from pyiron_base.project.delayed import DelayedObject, get_hash
 from pyiron_base.project.external import Notebook
 from pyiron_base.project.jobloader import JobInspector, JobLoader
 from pyiron_base.project.path import ProjectPath
-from pyiron_base.state import state
+from pyiron_base.state import state, State
 from pyiron_base.storage.hdfio import ProjectHDFio
 
 if TYPE_CHECKING:
@@ -114,7 +114,7 @@ class Project(ProjectPath, HasGroups):
     """
 
     def __init__(
-        self, path="", user=None, sql_query=None, default_working_directory=False
+        self, path: str = "", user: Optional[str] = None, sql_query: Optional[str]=None, default_working_directory: bool=False
     ):
         if default_working_directory and path == "":
             inputdict = Notebook.get_custom_dict()
@@ -139,18 +139,18 @@ class Project(ProjectPath, HasGroups):
         self._maintenance = None
 
     @property
-    def state(self):
+    def state(self) -> State:
         return state
 
     @property
-    def db(self):
+    def db(self) -> Union["DatabaseAccess", FileTable]:
         if not state.database.database_is_disabled:
             return state.database.database
         else:
             return FileTable(index_from=self.path)
 
     @property
-    def maintenance(self):
+    def maintenance(self) -> "Maintenance":
         if self._maintenance is None:
             from pyiron_base.project.maintenance import Maintenance
 
@@ -158,7 +158,7 @@ class Project(ProjectPath, HasGroups):
         return self._maintenance
 
     @property
-    def parent_group(self):
+    def parent_group(self) -> "Project":
         """
         Get the parent group of the current project
 
@@ -169,7 +169,7 @@ class Project(ProjectPath, HasGroups):
 
     @property
     @deprecate("use db.view_mode")
-    def view_mode(self):
+    def view_mode(self) -> bool:
         """
         Get viewer_mode - if viewer_mode is enable pyiron has read only access to the database.
 
@@ -184,7 +184,7 @@ class Project(ProjectPath, HasGroups):
         return self.db.view_mode
 
     @property
-    def name(self):
+    def name(self) -> str:
         """
         The name of the current project folder
 
@@ -194,11 +194,11 @@ class Project(ProjectPath, HasGroups):
         return self.base_name
 
     @property
-    def create(self):
+    def create(self) -> Creator:
         return self._creator
 
     @property
-    def data(self):
+    def data(self) -> ProjectData:
         if self._data is None:
             self._data = ProjectData(project=self, table_name="data")
             try:
@@ -208,7 +208,7 @@ class Project(ProjectPath, HasGroups):
         return self._data
 
     @property
-    def size(self):
+    def size(self) -> float:
         """
         Get the size of the project
         """
@@ -217,7 +217,7 @@ class Project(ProjectPath, HasGroups):
         return get_folder_size(path=self.path)
 
     @property
-    def conda_environment(self):
+    def conda_environment(self) -> "CondaEnvironment":
         try:
             from pyiron_base.project.condaenv import CondaEnvironment
         except ImportError:
@@ -226,7 +226,7 @@ class Project(ProjectPath, HasGroups):
             ) from None
         return CondaEnvironment(env_path=os.path.join(self.path, "conda"))
 
-    def copy(self):
+    def copy(self) -> "Project":
         """
         Copy the project object - copying just the Python object but maintaining the same pyiron path
 
@@ -238,7 +238,7 @@ class Project(ProjectPath, HasGroups):
         new._inspect_mode = self._inspect_mode
         return new
 
-    def copy_to(self, destination, delete_original_data=False):
+    def copy_to(self, destination: "Project", delete_original_data: bool = False) -> "Project":
         """
         Copy the project object to a different pyiron path - including the content of the project (all jobs).
         In order to move individual jobs, use `copy_to` from the job objects.
@@ -275,7 +275,7 @@ class Project(ProjectPath, HasGroups):
                     shutil.copy(os.path.join(self.path, file), destination.path)
         return destination
 
-    def create_from_job(self, job_old, new_job_name):
+    def create_from_job(self, job_old: "GenericJob", new_job_name: str) -> "GenericJob":
         """
         Create a new job from an existing pyiron job
 
@@ -307,7 +307,7 @@ class Project(ProjectPath, HasGroups):
         )
         return job_new
 
-    def create_group(self, group):
+    def create_group(self, group: str) -> "Project":
         """
         Create a new subproject/ group/ folder
 
@@ -322,12 +322,12 @@ class Project(ProjectPath, HasGroups):
 
     @staticmethod
     def create_job_class(
-        class_name,
-        executable_str,
-        write_input_funct=None,
-        collect_output_funct=None,
-        default_input_dict=None,
-    ):
+        class_name: str,
+        executable_str: str,
+        write_input_funct: Optional[callable]=None,
+        collect_output_funct: Optional[callable]=None,
+        default_input_dict: Optional[dict] = None,
+    ) -> None:
         """
         Create a new job class based on pre-defined write_input() and collect_output() function plus a dictionary of
         default inputs and an executable string.
@@ -374,20 +374,20 @@ class Project(ProjectPath, HasGroups):
 
     def wrap_executable(
         self,
-        executable_str,
-        job_name=None,
-        write_input_funct=None,
-        collect_output_funct=None,
-        input_dict=None,
-        conda_environment_path=None,
-        conda_environment_name=None,
-        input_file_lst=None,
-        automatically_rename=False,
-        execute_job=False,
-        delayed=False,
-        output_file_lst=[],
-        output_key_lst=[],
-    ):
+        executable_str: str,
+        job_name: Optional[str]=None,
+        write_input_funct: Optional[callable] = None,
+        collect_output_funct: Optional[callable]=None,
+        input_dict: Optional[dict]=None,
+        conda_environment_path: Optional[str]=None,
+        conda_environment_name: Optional[str]=None,
+        input_file_lst: Optional[list]=None,
+        automatically_rename: bool=False,
+        execute_job: bool=False,
+        delayed: bool=False,
+        output_file_lst: list=[],
+        output_key_lst: list=[],
+    ) -> "ExecutableContainerJob":
         """
         Wrap any executable into a pyiron job object using the ExecutableContainerJob.
 
@@ -467,14 +467,30 @@ class Project(ProjectPath, HasGroups):
             )
 
         def create_executable_job(
-            project,
-            input_internal_dict,
-            executable_internal_str,
-            internal_file_lst,
-            internal_job_name=None,
-            internal_execute_job=True,
-            internal_auto_rename=False,
-        ):
+            project: Project,
+            input_internal_dict: Dict[str, any],
+            executable_internal_str: str,
+            internal_file_lst: List[str],
+            internal_job_name: Optional[str] = None,
+            internal_execute_job: bool = True,
+            internal_auto_rename: bool = False,
+        ) -> Project:
+            """
+            Create an executable job.
+
+            Args:
+                project (Project): The project object.
+                input_internal_dict (Dict[str, any]): The input dictionary for the job.
+                executable_internal_str (str): The executable string.
+                internal_file_lst (List[str]): The list of files to be copied to the working directory.
+                internal_job_name (str, optional): The name of the job. Defaults to None.
+                internal_execute_job (bool, optional): Whether to execute the job. Defaults to True.
+                internal_auto_rename (bool, optional): Whether to automatically rename the job. Defaults to False.
+
+            Returns:
+                Project: The project object.
+
+            """
             if internal_job_name is None:
                 internal_job_name = "exe"
                 internal_auto_rename = True
@@ -539,7 +555,7 @@ class Project(ProjectPath, HasGroups):
                 internal_execute_job=execute_job,
             )
 
-    def create_job(self, job_type, job_name, delete_existing_job=False):
+    def create_job(self, job_type: str, job_name: str, delete_existing_job: bool=False) -> "GenericJob":
         """
         Create one of the following jobs:
         - 'ExampleJob': example job just generating random number
@@ -567,7 +583,7 @@ class Project(ProjectPath, HasGroups):
             job.user = self.user
         return job
 
-    def create_table(self, job_name="table", delete_existing_job=False):
+    def create_table(self, job_name: str = "table", delete_existing_job: bool=False) -> "TableJob":
         """
         Create pyiron table
 
@@ -588,16 +604,16 @@ class Project(ProjectPath, HasGroups):
 
     def wrap_python_function(
         self,
-        python_function,
+        python_function: callable,
         *args,
-        job_name=None,
-        automatically_rename=True,
-        execute_job=False,
-        delayed=False,
-        output_file_lst=[],
-        output_key_lst=[],
+        job_name: Optional[str]=None,
+        automatically_rename: bool=True,
+        execute_job: bool=False,
+        delayed: bool=False,
+        output_file_lst: list=[],
+        output_key_lst: list=[],
         **kwargs,
-    ):
+    ) -> "PythonFunctionContainerJob":
         """
         Create a pyiron job object from any python function
 
@@ -669,7 +685,7 @@ class Project(ProjectPath, HasGroups):
             else:
                 return job
 
-    def get_child_ids(self, job_specifier, project=None):
+    def get_child_ids(self, job_specifier: Union[str, int], project: Optional["Project"]=None) -> List[int]:
         """
         Get the childs for a specific job
 
@@ -690,7 +706,7 @@ class Project(ProjectPath, HasGroups):
             job_specifier=job_specifier,
         )
 
-    def get_db_columns(self):
+    def get_db_columns(self) -> List[str]:
         """
         Get column names
 
@@ -715,7 +731,7 @@ class Project(ProjectPath, HasGroups):
         """
         return self.db.get_table_headings()
 
-    def get_jobs(self, recursive=True, columns=None):
+    def get_jobs(self, recursive: bool=True, columns: Optional[List[str]]=None) -> dict:
         """
         Internal function to return the jobs as dictionary rather than a pandas.Dataframe
 
@@ -737,7 +753,7 @@ class Project(ProjectPath, HasGroups):
             columns=columns,
         )
 
-    def get_job_ids(self, recursive=True):
+    def get_job_ids(self, recursive: bool=True) -> List[int]:
         """
         Return the job IDs matching a specific query
 
@@ -754,7 +770,7 @@ class Project(ProjectPath, HasGroups):
             recursive=recursive,
         )
 
-    def get_job_id(self, job_specifier):
+    def get_job_id(self, job_specifier: Union[str, int]) -> int:
         """
         get the job_id for job named job_name in the local project path from database
 
@@ -772,7 +788,7 @@ class Project(ProjectPath, HasGroups):
             job_specifier=job_specifier,
         )
 
-    def get_job_status(self, job_specifier, project=None):
+    def get_job_status(self, job_specifier: Union[str, int], project: Optional["Project"] = None) -> str:
         """
         Get the status of a particular job
 
@@ -794,7 +810,7 @@ class Project(ProjectPath, HasGroups):
             job_specifier=job_specifier,
         )
 
-    def get_job_working_directory(self, job_specifier, project=None):
+    def get_job_working_directory(self, job_specifier: Union[str, int], project: Optional["Project"]=None) -> str:
         """
         Get the working directory of a particular job
 
@@ -816,7 +832,7 @@ class Project(ProjectPath, HasGroups):
         )
 
     @deprecate("use self.size instead.")
-    def get_project_size(self):
+    def get_project_size(self) -> float:
         """
         Get the size of the project.
 
@@ -826,7 +842,7 @@ class Project(ProjectPath, HasGroups):
         return self.size
 
     @deprecate("use maintenance.get_repository_status() instead.")
-    def get_repository_status(self):
+    def get_repository_status(self) -> pandas.DataFrame:
         return self.maintenance.get_repository_status()
 
     def groups(self):
@@ -841,7 +857,7 @@ class Project(ProjectPath, HasGroups):
         return new
 
     @property
-    def inspect(self):
+    def inspect(self) -> JobInspector:
         return self._inspector
 
     def iter_jobs(
@@ -912,7 +928,7 @@ class Project(ProjectPath, HasGroups):
                     convert_to_object=convert_to_object,
                 )
 
-    def iter_output(self, recursive=True):
+    def iter_output(self, recursive: bool = True) -> Generator:
         """
         Iterate over the output of jobs within the current project and it is sub projects
 
@@ -942,7 +958,7 @@ class Project(ProjectPath, HasGroups):
                 groups.set_postfix(group=group)
             yield self[group]
 
-    def items(self):
+    def items(self) -> list:
         """
         All items in the current project - this includes jobs, sub projects/ groups/ folders and any kind of files
 
@@ -952,7 +968,7 @@ class Project(ProjectPath, HasGroups):
         return [(key, self[key]) for key in self.keys()]
 
     def update_from_remote(
-        self, recursive=True, ignore_exceptions=False, try_collecting=False
+        self, recursive: bool = True, ignore_exceptions: bool = False, try_collecting: bool = False
     ):
         """
         Update jobs from the remote server
@@ -975,14 +991,14 @@ class Project(ProjectPath, HasGroups):
 
     def job_table(
         self,
-        recursive=True,
-        columns=None,
-        all_columns=True,
-        sort_by="id",
-        full_table=False,
-        element_lst=None,
-        job_name_contains="",
-        auto_refresh_job_status=False,
+        recursive: bool = True,
+        columns: Optional[List[str]]=None,
+        all_columns: bool = True,
+        sort_by: str = "id",
+        full_table: bool = False,
+        element_lst: Optional[List[str]]=None,
+        job_name_contains: str = "",
+        auto_refresh_job_status: bool=False,
         mode: Literal["regex", "glob"] = "glob",
         **kwargs: dict,
     ):
@@ -1022,7 +1038,7 @@ class Project(ProjectPath, HasGroups):
         ]
     )
 
-    def get_jobs_status(self, recursive=True, **kwargs):
+    def get_jobs_status(self, recursive: bool=True, **kwargs) -> pandas.Series:
         """
         Gives a overview of all jobs status.
 
@@ -1037,7 +1053,7 @@ class Project(ProjectPath, HasGroups):
         df = self.job_table(recursive=recursive, all_columns=True, **kwargs)
         return df["status"].value_counts()
 
-    def keys(self):
+    def keys(self) -> list:
         """
         List of file-, folder- and objectnames
 
@@ -1046,7 +1062,7 @@ class Project(ProjectPath, HasGroups):
         """
         return self.list_dirs() + self.list_nodes()
 
-    def _list_all(self):
+    def _list_all(self) -> dict:
         """
         Combination of list_groups(), list_nodes() and list_files() all in one dictionary with the corresponding keys:
         - 'groups': Subprojects/ -folder/ -groups.
@@ -1062,7 +1078,7 @@ class Project(ProjectPath, HasGroups):
             "files": self.list_files(),
         }
 
-    def list_dirs(self, skip_hdf5=True):
+    def list_dirs(self, skip_hdf5: bool = True) -> list:
         """
         List directories inside the project
 
@@ -1081,7 +1097,7 @@ class Project(ProjectPath, HasGroups):
             return [d for d in dirs if not self._is_hdf5_dir(d)]
         return dirs
 
-    def list_files(self, extension=None):
+    def list_files(self, extension: Optional[str]=None) -> list:
         """
         List files inside the project
 
@@ -1107,7 +1123,7 @@ class Project(ProjectPath, HasGroups):
 
     _list_groups = list_dirs
 
-    def _list_nodes(self, recursive=False):
+    def _list_nodes(self, recursive: bool=False) -> list:
         """
         List nodes/ jobs/ pyiron objects inside the project
 
@@ -1122,10 +1138,10 @@ class Project(ProjectPath, HasGroups):
         return self.get_jobs(recursive=recursive, columns=["job"])["job"]
 
     @property
-    def load(self):
+    def load(self) -> JobLoader:
         return self._loader
 
-    def load_from_jobpath(self, job_id=None, db_entry=None, convert_to_object=True):
+    def load_from_jobpath(self, job_id: Optional[int]=None, db_entry: Optional[dict]=None, convert_to_object: bool=True) -> Union["GenricJob", "JobCore"]:
         """
         Internal function to load an existing job either based on the job ID or based on the database entry dictionary.
 
@@ -1157,11 +1173,11 @@ class Project(ProjectPath, HasGroups):
         else:
             raise ValueError("Either a job ID or an database entry has to be provided.")
 
-    def move_to(self, destination):
+    def move_to(self, destination: "Project") -> None:
         """Same as copy_to() but deletes the original project after copying"""
         self.copy_to(destination=destination, delete_original_data=True)
 
-    def nodes(self):
+    def nodes(self) -> "Project":
         """
         Filter project by nodes
 
@@ -1172,7 +1188,7 @@ class Project(ProjectPath, HasGroups):
         new._filter = ["nodes"]
         return new
 
-    def queue_table(self, project_only=True, recursive=True, full_table=False):
+    def queue_table(self, project_only: bool=True, recursive: bool=True, full_table: bool=False) -> pandas.DataFrame:
         """
         Display the queuing system table as pandas.Dataframe
 
@@ -1197,7 +1213,7 @@ class Project(ProjectPath, HasGroups):
                 working_directory_lst=[self.path],
             )
 
-    def queue_table_global(self, full_table=False):
+    def queue_table_global(self, full_table: bool=False) -> pandas.DataFrame:
         """
         Display the queuing system table as pandas.Dataframe
 
@@ -1221,7 +1237,7 @@ class Project(ProjectPath, HasGroups):
                 )
             else:
 
-                def get_id_from_job_table(job_table, job_path):
+                def get_id_from_job_table(job_table: pandas.DataFrame, job_path: str) -> int:
                     job_dir = "_hdf5".join(job_path.split("_hdf5")[:-1])
                     job_name = os.path.basename(job_dir)
                     project = os.path.dirname(job_dir) + "/"
@@ -1249,7 +1265,7 @@ class Project(ProjectPath, HasGroups):
         else:
             return None
 
-    def refresh_job_status(self, *jobs, by_status=["running", "submitted"]):
+    def refresh_job_status(self, *jobs, by_status:List[str]=["running", "submitted"]) -> None:
         """
         Check if job is still running or crashed on the cluster node.
 
@@ -1280,7 +1296,7 @@ class Project(ProjectPath, HasGroups):
             raise ValueError("Must have established database connection!")
 
     @deprecate("use refresh_job_status()")
-    def refresh_job_status_based_on_queue_status(self, job_specifier, status="running"):
+    def refresh_job_status_based_on_queue_status(self, job_specifier: Union[str, int], status: str="running") -> None:
         """
         Check if the job is still listed as running, while it is no longer listed in the queue.
 
@@ -1292,7 +1308,7 @@ class Project(ProjectPath, HasGroups):
             raise NotImplementedError()
         self.refresh_job_status(job_specifier)
 
-    def refresh_job_status_based_on_job_id(self, job_id, que_mode=True):
+    def refresh_job_status_based_on_job_id(self, job_id: int, que_mode: bool=True) -> None:
         """
         Internal function to check if a job is still listed 'running' in the job_table while it is no longer listed in
         the queuing system. In this case update the entry in the job_table to 'aborted'.
@@ -1319,7 +1335,8 @@ class Project(ProjectPath, HasGroups):
                 if not self.queue_check_job_is_waiting_or_running(job):
                     self.db.set_job_status(job_id=job_id, status="aborted")
 
-    def _refresh_job_status_file_table(self, df):
+    @staticmethod
+    def _refresh_job_status_file_table(df: pandas.DataFrame) -> pandas.DataFrame:
         """
         Internal function to refresh the job table and update the job table with the status from the queuing system.
 
@@ -1330,7 +1347,7 @@ class Project(ProjectPath, HasGroups):
             pandas.DataFrame: updated job table with status from the queuing system
         """
 
-        def convert_queue_status(queue_status):
+        def convert_queue_status(queue_status: str) -> str:
             return {"pending": "submitted"}.get(queue_status, default=queue_status)
 
         df_queue = state.queue_adapter.get_status_of_my_jobs()
@@ -1350,7 +1367,7 @@ class Project(ProjectPath, HasGroups):
 
         return df
 
-    def remove_file(self, file_name):
+    def remove_file(self, file_name: str) -> None:
         """
         Remove a file (same as unlink()) - copied from os.remove()
 
@@ -1367,7 +1384,7 @@ class Project(ProjectPath, HasGroups):
         else:
             raise EnvironmentError("copy_to: is not available in Viewermode !")
 
-    def remove_job(self, job_specifier, _unprotect=False):
+    def remove_job(self, job_specifier: Union[str, int], _unprotect: bool=False) -> None:
         """
         Remove a single job from the project based on its job_specifier - see also remove_jobs()
 
@@ -1400,7 +1417,7 @@ class Project(ProjectPath, HasGroups):
             )
             self.db.delete_item(job.id)
 
-    def remove_jobs(self, recursive=False, progress=True, silently=False):
+    def remove_jobs(self, recursive: bool =False, progress: bool =True, silently: bool =False) -> None:
         """
         Remove all jobs in the current project and in all subprojects if recursive=True is selected - see also
         remove_job().
@@ -1437,10 +1454,10 @@ class Project(ProjectPath, HasGroups):
     @deprecate(
         message="Use pr.remove_jobs(silently=True) rather than pr.remove_jobs_silently()."
     )
-    def remove_jobs_silently(self, recursive=False, progress=True):
+    def remove_jobs_silently(self, recursive: bool=False, progress: bool=True) -> None:
         self.remove_jobs(recursive=recursive, progress=progress, silently=True)
 
-    def compress_jobs(self, recursive=False):
+    def compress_jobs(self, recursive: bool =False) -> None:
         """
         Compress all finished jobs in the current project and in all subprojects if recursive=True is selected.
 
@@ -1452,7 +1469,7 @@ class Project(ProjectPath, HasGroups):
             if job.status == "finished":
                 job.compress()
 
-    def delete_output_files_jobs(self, recursive=False):
+    def delete_output_files_jobs(self, recursive: bool=False) -> None:
         """
         Delete the output files of all finished jobs in the current project and in all subprojects if recursive=True is
         selected.
@@ -1470,7 +1487,7 @@ class Project(ProjectPath, HasGroups):
                     elif os.path.isdir(fullname):
                         os.removedirs(fullname)
 
-    def remove(self, enable=False, enforce=False):
+    def remove(self, enable: bool=False, enforce: bool=False) -> None:
         """
         Delete all the whole project including all jobs in the project and its subprojects
 
@@ -1504,12 +1521,12 @@ class Project(ProjectPath, HasGroups):
         else:
             raise EnvironmentError("remove() is not available in view_mode!")
 
-    def set_job_status(self, job_specifier, status, project=None):
+    def set_job_status(self, job_specifier: Union[str, int], status: str, project: "Project"=None) -> None:
         """
         Set the status of a particular job
 
         Args:
-            job_specifier (str): name of the job or job ID
+            job_specifier (str, int): name of the job or job ID
             status (str): job status can be one of the following ['initialized', 'appended', 'created', 'submitted',
                          'running', 'aborted', 'collect', 'suspended', 'refresh', 'busy', 'finished']
             project (str): project path
@@ -1525,7 +1542,7 @@ class Project(ProjectPath, HasGroups):
             status=status,
         )
 
-    def values(self):
+    def values(self) -> list:
         """
         All items in the current project - this includes jobs, sub projects/ groups/ folders and any kind of files
 
@@ -1534,21 +1551,21 @@ class Project(ProjectPath, HasGroups):
         """
         return [self[key] for key in self.keys()]
 
-    def switch_to_viewer_mode(self):
+    def switch_to_viewer_mode(self) -> None:
         """
         Switch from user mode to viewer mode - if viewer_mode is enable pyiron has read only access to the database.
         """
         if not isinstance(self.db, FileTable):
             state.database.switch_to_viewer_mode()
 
-    def switch_to_user_mode(self):
+    def switch_to_user_mode(self) -> None:
         """
         Switch from viewer mode to user mode - if viewer_mode is enable pyiron has read only access to the database.
         """
         if not isinstance(self.db, FileTable):
             state.database.switch_to_user_mode()
 
-    def switch_to_local_database(self, file_name="pyiron.db", cwd=None):
+    def switch_to_local_database(self, file_name: str="pyiron.db", cwd: Optional[str]=None) -> None:
         """
         Switch from central mode to local mode - if local_mode is enable pyiron is using a local database.
 
@@ -1559,13 +1576,13 @@ class Project(ProjectPath, HasGroups):
         cwd = self.path if cwd is None else cwd
         state.database.switch_to_local_database(file_name=file_name, cwd=cwd)
 
-    def switch_to_central_database(self):
+    def switch_to_central_database(self) -> None:
         """
         Switch from local mode to central mode - if local_mode is enable pyiron is using a local database.
         """
         state.database.switch_to_central_database()
 
-    def queue_delete_job(self, item):
+    def queue_delete_job(self, item: Union[int, "GenericJob"]) -> None:
         """
         Delete a job from the queuing system
 
@@ -1581,7 +1598,7 @@ class Project(ProjectPath, HasGroups):
             raise EnvironmentError("copy_to: is not available in Viewermode !")
 
     @staticmethod
-    def create_hdf(path, job_name):
+    def create_hdf(path, job_name: str) -> ProjectHDFio:
         """
         Create an ProjectHDFio object to store project related information - for example aggregated data
 
@@ -1597,7 +1614,7 @@ class Project(ProjectPath, HasGroups):
         )
 
     @staticmethod
-    def load_from_jobpath_string(job_path, convert_to_object=True):
+    def load_from_jobpath_string(job_path: str, convert_to_object: bool = True) -> "JobPath":
         """
         Internal function to load an existing job either based on the job ID or based on the database entry dictionary.
 
@@ -1619,7 +1636,7 @@ class Project(ProjectPath, HasGroups):
         return job
 
     @staticmethod
-    def get_external_input():
+    def get_external_input() -> dict:
         """
         Get external input either from the HDF5 file of the ScriptJob object which executes the Jupyter notebook
         or from an input.json file located in the same directory as the Jupyter notebook.
@@ -1637,7 +1654,7 @@ class Project(ProjectPath, HasGroups):
         return inputdict
 
     @staticmethod
-    def list_publications(bib_format="pandas"):
+    def list_publications(bib_format: str="pandas") -> pandas.DataFrame:
         """
         List the publications used in this project.
 
@@ -1650,7 +1667,7 @@ class Project(ProjectPath, HasGroups):
         return state.publications.show(bib_format=bib_format)
 
     @staticmethod
-    def queue_is_empty():
+    def queue_is_empty() -> bool:
         """
         Check if the queue table is currently empty - no more jobs to wait for.
 
@@ -1660,7 +1677,7 @@ class Project(ProjectPath, HasGroups):
         return queue_is_empty()
 
     @staticmethod
-    def queue_enable_reservation(item):
+    def queue_enable_reservation(item: Union[int, "GenericJob"]) -> str:
         """
         Enable a reservation for a particular job within the queuing system
 
@@ -1673,7 +1690,7 @@ class Project(ProjectPath, HasGroups):
         return queue_enable_reservation(item)
 
     @staticmethod
-    def queue_check_job_is_waiting_or_running(item):
+    def queue_check_job_is_waiting_or_running(item: Union[int, "GenericJob"]) -> bool:
         """
         Check if a job is still listed in the queue system as either waiting or running.
 
@@ -1686,7 +1703,7 @@ class Project(ProjectPath, HasGroups):
         return queue_check_job_is_waiting_or_running(item)
 
     @staticmethod
-    def wait_for_job(job, interval_in_s=5, max_iterations=100):
+    def wait_for_job(job: "GenericJob", interval_in_s: int=5, max_iterations: int=100) -> None:
         """
         Sleep until the job is finished but maximum interval_in_s * max_iterations seconds.
 
@@ -1704,11 +1721,11 @@ class Project(ProjectPath, HasGroups):
 
     def wait_for_jobs(
         self,
-        interval_in_s=5,
-        max_iterations=100,
-        recursive=True,
-        ignore_exceptions=False,
-    ):
+        interval_in_s: int=5,
+        max_iterations: int=100,
+        recursive: bool=True,
+        ignore_exceptions: bool=False,
+    ) -> None:
         """
         Wait for the calculation in the project to be finished
 
@@ -1731,7 +1748,7 @@ class Project(ProjectPath, HasGroups):
 
     @staticmethod
     @deprecate(message="Use state.logger.set_logging_level instead.")
-    def set_logging_level(level, channel=None):
+    def set_logging_level(level: str, channel: Optional[int]=None) -> None:
         """
         Set level for logger
 
@@ -1742,7 +1759,7 @@ class Project(ProjectPath, HasGroups):
         state.logger.set_logging_level(level=level, channel=channel)
 
     @staticmethod
-    def list_clusters():
+    def list_clusters() -> list:
         """
         List available computing clusters for remote submission
 
@@ -1752,7 +1769,7 @@ class Project(ProjectPath, HasGroups):
         return state.queue_adapter.list_clusters()
 
     @staticmethod
-    def switch_cluster(cluster_name):
+    def switch_cluster(cluster_name: str) -> None:
         """
         Switch to a different computing cluster
 
@@ -1762,7 +1779,7 @@ class Project(ProjectPath, HasGroups):
         state.queue_adapter.switch_cluster(cluster_name=cluster_name)
 
     @staticmethod
-    def _is_hdf5_dir(item):
+    def _is_hdf5_dir(item: str) -> bool:
         """
         Static internal function to check if the current project directory belongs to an pyiron object
 
@@ -1778,7 +1795,7 @@ class Project(ProjectPath, HasGroups):
                 return True
         return False
 
-    def __getitem__(self, item):
+    def __getitem__(self, item: Union[str, int]) -> Any:
         """
         Get item from project
 
@@ -1806,7 +1823,7 @@ class Project(ProjectPath, HasGroups):
                     ).__getitem__("/".join(item_lst[1:]))
         return self._get_item_helper(item=item, convert_to_object=True)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         """
         Human readable string representation of the project object
 
@@ -1817,7 +1834,7 @@ class Project(ProjectPath, HasGroups):
             {"groups": self.list_dirs(skip_hdf5=True), "nodes": self.list_nodes()}
         )
 
-    def __getstate__(self):
+    def __getstate__(self) -> dict:
         state_dict = super().__getstate__()
         state_dict.update(
             {
@@ -1829,7 +1846,7 @@ class Project(ProjectPath, HasGroups):
         )
         return state_dict
 
-    def __setstate__(self, state):
+    def __setstate__(self, state: dict) -> None:
         super().__setstate__(state)
         self.user = state["user"]
         self.sql_query = state["sql_query"]
@@ -1842,7 +1859,7 @@ class Project(ProjectPath, HasGroups):
         self.job_type = JobTypeChoice()
         self._maintenance = None
 
-    def _get_item_helper(self, item, convert_to_object=True):
+    def _get_item_helper(self, item: Union[str, int], convert_to_object: bool=True) -> Any:
         """
         Internal helper function to get item from project
 
@@ -1882,7 +1899,7 @@ class Project(ProjectPath, HasGroups):
             return self.open(item)
         raise ValueError("Unknown item: {}".format(item))
 
-    def _remove_jobs_helper(self, recursive=False, progress=True):
+    def _remove_jobs_helper(self, recursive: bool=False, progress: bool=True) -> None:
         """
         Remove all jobs in the current project and in all subprojects if recursive=True is selected - see also
         remove_job()
@@ -1904,7 +1921,7 @@ class Project(ProjectPath, HasGroups):
             except (IndexError, Exception):
                 state.logger.warning("Could not remove job with ID {0} ".format(job_id))
 
-    def _remove_files(self, pattern="*"):
+    def _remove_files(self, pattern: str ="*") -> None:
         """
         Remove files within the current project
 
@@ -1921,7 +1938,7 @@ class Project(ProjectPath, HasGroups):
         else:
             raise EnvironmentError("copy_to: is not available in Viewermode !")
 
-    def _update_jobs_in_old_database_format(self, job_name):
+    def _update_jobs_in_old_database_format(self, job_name: str) -> None:
         """
 
         Args:
@@ -1945,7 +1962,7 @@ class Project(ProjectPath, HasGroups):
         compress: bool = True,
         copy_all_files: bool = False,
         **kwargs,
-    ):
+    ) -> None:
         """
         Export job table to a csv file and copy (and optionally compress) the project directory.
 
@@ -1981,7 +1998,8 @@ class Project(ProjectPath, HasGroups):
             df=export_archive.export_database(self.job_table()),
         )
 
-    def unpack_csv(self, tar_path: str):
+    @staticmethod
+    def unpack_csv(tar_path: str, csv_file: str = "export.csv") -> pandas.DataFrame:
         """
         Import job table from a csv file and copy the content of a project
         directory from a given path.
@@ -1994,9 +2012,9 @@ class Project(ProjectPath, HasGroups):
         Returns:
             pandas.DataFrame: job table
         """
-        return import_archive.inspect_csv(tar_path=tar_path, csv_file="export.csv")
+        return import_archive.inspect_csv(tar_path=tar_path, csv_file=csv_file)
 
-    def unpack(self, origin_path, **kwargs):
+    def unpack(self, origin_path: str, **kwargs) -> None:
         """
         by this function, job table is imported from a given csv file,
         and also the content of project directory is copied from a given path
@@ -2019,7 +2037,7 @@ class Project(ProjectPath, HasGroups):
         import_archive.import_jobs(self, archive_directory=origin_path)
 
     @classmethod
-    def register_tools(cls, name: str, tools):
+    def register_tools(cls, name: str, tools) -> None:
         """
         Add a new creator to the project class.
 
@@ -2050,7 +2068,7 @@ class Project(ProjectPath, HasGroups):
             )
         setattr(cls, name, property(lambda self: tools(self)))
 
-    def symlink(self, target_dir):
+    def symlink(self, target_dir: str) -> None:
         """
         Move underlying project folder to target and create a symlink to it.
 
@@ -2096,7 +2114,7 @@ class Project(ProjectPath, HasGroups):
         shutil.move(self.path, target_dir)
         os.symlink(target, destination)
 
-    def unlink(self):
+    def unlink(self) -> None:
         """
         If the project folder is symlinked somewhere else remove the link and restore the original folder.
 
@@ -2112,12 +2130,12 @@ class Project(ProjectPath, HasGroups):
 
 
 class Creator:
-    def __init__(self, project):
+    def __init__(self, project: Project):
         self._job_factory = JobFactory(project=project)
         self._project = project
 
     @property
-    def job(self):
+    def job(self) -> JobFactory:
         return self._job_factory
 
     @staticmethod
@@ -2125,7 +2143,7 @@ class Creator:
         job_name: str,
         ndigits: Union[int, None] = 8,
         special_symbols: Union[Dict, None] = None,
-    ):
+    ) -> str:
         """
         Creation of job names with special symbol replacement and rounding of floating numbers
 
@@ -2148,7 +2166,7 @@ class Creator:
         "default_special_symbols_to_be_replaced", str(_special_symbol_replacements)
     )
 
-    def table(self, job_name="table", delete_existing_job=False):
+    def table(self, job_name: str="table", delete_existing_job: bool=False) -> "TableJob":
         """
         Create pyiron table
 

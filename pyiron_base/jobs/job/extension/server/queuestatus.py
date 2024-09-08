@@ -143,7 +143,7 @@ def queue_is_empty():
         return True
 
 
-def queue_delete_job(item):
+def queue_delete_job(item) -> None:
     """
     Delete a job from the queuing system
 
