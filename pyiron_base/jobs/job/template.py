@@ -4,11 +4,12 @@
 """
 Template class to define jobs
 """
+
 from typing import Optional
 
-from pyiron_base.storage.datacontainer import DataContainer
 from pyiron_base.interfaces.object import HasStorage
 from pyiron_base.jobs.job.generic import GenericJob
+from pyiron_base.storage.datacontainer import DataContainer
 
 __author__ = "Jan Janssen"
 __copyright__ = (
@@ -66,7 +67,9 @@ class TemplateJob(GenericJob, HasStorage):
 
     """
 
-    def __init__(self, project: "pyiron_base.storage.hdfio.ProjectHDFio", job_name: str):
+    def __init__(
+        self, project: "pyiron_base.storage.hdfio.ProjectHDFio", job_name: str
+    ):
         GenericJob.__init__(self, project, job_name)
         HasStorage.__init__(self, group_name="")
         self.storage.create_group("input")
@@ -91,7 +94,7 @@ class TemplateJob(GenericJob, HasStorage):
         job_dict["input/data"] = self.storage.input.to_dict()
         return job_dict
 
-    def _from_dict(self, obj_dict: dict, version: str=None):
+    def _from_dict(self, obj_dict: dict, version: str = None):
         """
         Update the object attributes from a dictionary representation.
 
@@ -104,11 +107,19 @@ class TemplateJob(GenericJob, HasStorage):
         if "data" in input_dict.keys():
             self.storage.input.update(input_dict["data"])
 
-    def to_hdf(self, hdf: Optional["pyiron_base.storage.hdfio.ProjectHDFio"]=None, group_name: Optional[str]=None) -> None:
+    def to_hdf(
+        self,
+        hdf: Optional["pyiron_base.storage.hdfio.ProjectHDFio"] = None,
+        group_name: Optional[str] = None,
+    ) -> None:
         GenericJob.to_hdf(self=self, hdf=hdf, group_name=group_name)
         HasStorage.to_hdf(self=self, hdf=self.project_hdf5)
 
-    def from_hdf(self, hdf: Optional["pyiron_base.storage.hdfio.ProjectHDFio"]=None, group_name: Optional[str]=None) -> None:
+    def from_hdf(
+        self,
+        hdf: Optional["pyiron_base.storage.hdfio.ProjectHDFio"] = None,
+        group_name: Optional[str] = None,
+    ) -> None:
         GenericJob.from_hdf(self=self, hdf=hdf, group_name=group_name)
         HasStorage.from_hdf(self=self, hdf=self.project_hdf5)
 
@@ -146,7 +157,9 @@ class PythonTemplateJob(TemplateJob):
 
     """
 
-    def __init__(self, project: "pyiron_base.storeage.hdfio.ProjectHDFio", job_name: str):
+    def __init__(
+        self, project: "pyiron_base.storeage.hdfio.ProjectHDFio", job_name: str
+    ):
         super().__init__(project, job_name)
         self._job_with_calculate_function = True
         self._write_work_dir_warnings = False
