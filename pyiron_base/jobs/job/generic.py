@@ -640,11 +640,11 @@ class GenericJob(JobCore, HasDict):
 
     def _internal_copy_to(
         self,
-        project: Optional[ProjectHDFio]=None,
-        new_job_name: str=None,
-        new_database_entry: bool=True,
-        copy_files: bool=True,
-        delete_existing_job: bool=False,
+        project: Optional[ProjectHDFio] = None,
+        new_job_name: str = None,
+        new_database_entry: bool = True,
+        copy_files: bool = True,
+        delete_existing_job: bool = False,
     ):
         # Store all job arguments in the HDF5 file
         delete_file_after_copy = _job_store_before_copy(job=self)
@@ -675,12 +675,12 @@ class GenericJob(JobCore, HasDict):
 
     def copy_to(
         self,
-        project: Optional[Union[ProjectHDFio, JobCore]]=None,
-        new_job_name: Optional[str]=None,
-        input_only: bool=False,
-        new_database_entry: bool=True,
-        delete_existing_job: bool=False,
-        copy_files: bool =True,
+        project: Optional[Union[ProjectHDFio, JobCore]] = None,
+        new_job_name: Optional[str] = None,
+        input_only: bool = False,
+        new_database_entry: bool = True,
+        delete_existing_job: bool = False,
+        copy_files: bool = True,
     ):
         """
         Copy the content of the job including the HDF5 file to a new location.
@@ -728,7 +728,9 @@ class GenericJob(JobCore, HasDict):
         )
         return new_job_core
 
-    def _after_generic_copy_to(self, original: "GenericJob", new_database_entry: bool, reloaded: bool) -> None:
+    def _after_generic_copy_to(
+        self, original: "GenericJob", new_database_entry: bool, reloaded: bool
+    ) -> None:
         """
         Called in :method:`.copy_to()` after :method`._internal_copy_to()` to allow sub classes to modify copy behavior.
 
@@ -751,7 +753,11 @@ class GenericJob(JobCore, HasDict):
         else:
             self.restart_file_list.append(os.path.abspath(file))
 
-    def copy_template(self, project: Optional[Union[ProjectHDFio, JobCore]]=None, new_job_name: Optional[None]=None) -> "GenericJob":
+    def copy_template(
+        self,
+        project: Optional[Union[ProjectHDFio, JobCore]] = None,
+        new_job_name: Optional[None] = None,
+    ) -> "GenericJob":
         """
         Copy the content of the job including the HDF5 file but without the output data to a new location
 
@@ -771,7 +777,7 @@ class GenericJob(JobCore, HasDict):
             new_database_entry=False,
         )
 
-    def remove(self, _protect_childs: bool=True) -> None:
+    def remove(self, _protect_childs: bool = True) -> None:
         """
         Remove the job - this removes the HDF5 file, all data stored in the HDF5 file an the corresponding database entry.
 
@@ -791,7 +797,7 @@ class GenericJob(JobCore, HasDict):
         _kill_child(job=self)
         super(GenericJob, self).remove_child()
 
-    def remove_and_reset_id(self, _protect_childs: bool=True) -> None:
+    def remove_and_reset_id(self, _protect_childs: bool = True) -> None:
         """
         Remove the job and reset its ID.
 
@@ -844,7 +850,7 @@ class GenericJob(JobCore, HasDict):
         """
         pass
 
-    def reset_job_id(self, job_id: Optional[int]=None) -> None:
+    def reset_job_id(self, job_id: Optional[int] = None) -> None:
         """
         Reset the job id sets the job_id to None in the GenericJob as well as all connected modules like JobStatus.
         """
@@ -857,11 +863,11 @@ class GenericJob(JobCore, HasDict):
     )
     def run(
         self,
-        delete_existing_job: bool=False,
-        repair: bool=False,
-        debug: bool =False,
-        run_mode: Optional[str]=None,
-        run_again: bool=False,
+        delete_existing_job: bool = False,
+        repair: bool = False,
+        debug: bool = False,
+        run_mode: Optional[str] = None,
+        run_again: bool = False,
     ) -> None:
         """
         This is the main run function, depending on the job status ['initialized', 'created', 'submitted', 'running',
@@ -1055,7 +1061,9 @@ class GenericJob(JobCore, HasDict):
             "This function needs to be implemented in the specific class."
         )
 
-    def interactive_flush(self, path: str="generic", include_last_step: bool=True) -> None:
+    def interactive_flush(
+        self, path: str = "generic", include_last_step: bool = True
+    ) -> None:
         """
         For jobs which executables are available as Python library, those can also be executed with a library call
         instead of calling an external executable. This is usually faster than a single core python job. To write the
@@ -1076,7 +1084,9 @@ class GenericJob(JobCore, HasDict):
         """
         pass
 
-    def create_job(self, job_type: str, job_name: str, delete_existing_job: bool =False) -> "GenericJob":
+    def create_job(
+        self, job_type: str, job_name: str, delete_existing_job: bool = False
+    ) -> "GenericJob":
         """
         Create one of the following jobs:
         - 'StructureContainer’:
@@ -1132,7 +1142,7 @@ class GenericJob(JobCore, HasDict):
         job._init_child_job(self)
         return job
 
-    def update_master(self, force_update: bool=False) -> None:
+    def update_master(self, force_update: bool = False) -> None:
         """
         After a job is finished it checks whether it is linked to any metajob - meaning the master ID is pointing to
         this jobs job ID. If this is the case and the master job is in status suspended - the child wakes up the master
@@ -1163,7 +1173,7 @@ class GenericJob(JobCore, HasDict):
             ):
                 self._reload_update_master(project=project, master_id=master_id)
 
-    def job_file_name(self, file_name: str, cwd: Optional[str]=None) -> str:
+    def job_file_name(self, file_name: str, cwd: Optional[str] = None) -> str:
         """
         combine the file name file_name with the path of the current working directory
 
@@ -1178,7 +1188,9 @@ class GenericJob(JobCore, HasDict):
             cwd = self.project_hdf5.working_directory
         return posixpath.join(cwd, file_name)
 
-    def _set_hdf(self, hdf: Optional[ProjectHDFio]=None, group_name: Optional[str]=None) -> None:
+    def _set_hdf(
+        self, hdf: Optional[ProjectHDFio] = None, group_name: Optional[str] = None
+    ) -> None:
         if hdf is not None:
             self._hdf5 = hdf
         if group_name is not None and self._hdf5 is not None:
@@ -1214,7 +1226,7 @@ class GenericJob(JobCore, HasDict):
         data_dict["HDF_VERSION"] = self.__version__
         return data_dict
 
-    def _from_dict(self, obj_dict: dict, version: str=None) -> None:
+    def _from_dict(self, obj_dict: dict, version: str = None) -> None:
         """
         Restore the GenericJob object from a dictionary.
 
@@ -1247,7 +1259,9 @@ class GenericJob(JobCore, HasDict):
         if "executor_type" in input_dict.keys():
             self._executor_type = input_dict["executor_type"]
 
-    def to_hdf(self, hdf: Optional[ProjectHDFio]=None, group_name: Optional[str]=None) -> None:
+    def to_hdf(
+        self, hdf: Optional[ProjectHDFio] = None, group_name: Optional[str] = None
+    ) -> None:
         """
         Store the GenericJob in an HDF5 file
 
@@ -1272,7 +1286,9 @@ class GenericJob(JobCore, HasDict):
         )
         return {"job_name": job_name, "project": project_hdf5}
 
-    def from_hdf(self, hdf: Optional[ProjectHDFio]=None, group_name: Optional[str]=None) -> None:
+    def from_hdf(
+        self, hdf: Optional[ProjectHDFio] = None, group_name: Optional[str] = None
+    ) -> None:
         """
         Restore the GenericJob from an HDF5 file
 
@@ -1356,7 +1372,9 @@ class GenericJob(JobCore, HasDict):
         }
         return db_dict
 
-    def restart(self, job_name: Optional[str]=None, job_type: Optional[str] =None) -> "GenericJob":
+    def restart(
+        self, job_name: Optional[str] = None, job_type: Optional[str] = None
+    ) -> "GenericJob":
         """
         Create an restart calculation from the current calculation - in the GenericJob this is the same as create_job().
         A restart is only possible after the current job has finished. If you want to run the same job again with
@@ -1431,7 +1449,7 @@ class GenericJob(JobCore, HasDict):
             self.status.aborted = True
             self.project_hdf5["status"] = self.status.string
 
-    def _run_if_new(self, debug: bool=False) -> None:
+    def _run_if_new(self, debug: bool = False) -> None:
         """
         Internal helper function the run if new function is called when the job status is 'initialized'. It prepares
         the hdf5 file and the corresponding directory structure.
@@ -1501,7 +1519,9 @@ class GenericJob(JobCore, HasDict):
         """
         run_job_with_status_suspended(job=self)
 
-    def _executable_activate(self, enforce: bool=False, codename: Optional[str]=None) -> None:
+    def _executable_activate(
+        self, enforce: bool = False, codename: Optional[str] = None
+    ) -> None:
         """
         Internal helper function to koad the executable object, if it was not loaded already.
 
@@ -1610,7 +1630,7 @@ class GenericJob(JobCore, HasDict):
             )
 
     @deprecate("Use job.save()")
-    def _create_job_structure(self, debug: bool=False) -> None:
+    def _create_job_structure(self, debug: bool = False) -> None:
         """
         Internal helper function to create the input directories, save the job in the database and write the wrapper.
 
@@ -1654,7 +1674,7 @@ class GenericJob(JobCore, HasDict):
             self._logger.info("busy master: {} {}".format(master_id, self.get_job_id()))
             del self
 
-    def _get_executor(self, max_workers: Optional[int]=None) -> Executor:
+    def _get_executor(self, max_workers: Optional[int] = None) -> Executor:
         if self._executor_type is None:
             raise ValueError(
                 "No executor type defined - Please set self.executor_type."
@@ -1695,7 +1715,9 @@ class GenericError(object):
     def print_queue(self, string="") -> str:
         return self._print_error(file_name="error.out", string=string)
 
-    def _print_error(self, file_name: str, string: str="", print_yes: bool=True) -> str:
+    def _print_error(
+        self, file_name: str, string: str = "", print_yes: bool = True
+    ) -> str:
         if not os.path.exists(os.path.join(self._working_directory, file_name)):
             return ""
         elif print_yes:

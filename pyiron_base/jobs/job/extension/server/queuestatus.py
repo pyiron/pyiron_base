@@ -31,7 +31,10 @@ QUEUE_SCRIPT_PREFIX = "pi_"
 
 
 def queue_table(
-    job_ids: Optional[List[int]]=None, working_directory_lst: Optional[List[str]]=None, project_only: bool=True, full_table: bool=False
+    job_ids: Optional[List[int]] = None,
+    working_directory_lst: Optional[List[str]] = None,
+    project_only: bool = True,
+    full_table: bool = False,
 ) -> pandas.DataFrame:
     """
     Display the queuing system table as pandas.Dataframe
@@ -94,7 +97,9 @@ def queue_table(
         return None
 
 
-def queue_check_job_is_waiting_or_running(item: Union[int, "pyiron_base.jobs.job.generic.GenericJob"]) -> Union[bool, None]:
+def queue_check_job_is_waiting_or_running(
+    item: Union[int, "pyiron_base.jobs.job.generic.GenericJob"],
+) -> Union[bool, None]:
     """
     Check if a job is still listed in the queue system as either waiting or running.
 
@@ -144,7 +149,9 @@ def queue_is_empty() -> bool:
         return True
 
 
-def queue_delete_job(item: Union[int, "pyiron_base.jobs.job.generic.GenericJob"]) -> Union[str, None]:
+def queue_delete_job(
+    item: Union[int, "pyiron_base.jobs.job.generic.GenericJob"],
+) -> Union[str, None]:
     """
     Delete a job from the queuing system
 
@@ -161,7 +168,9 @@ def queue_delete_job(item: Union[int, "pyiron_base.jobs.job.generic.GenericJob"]
         return None
 
 
-def queue_enable_reservation(item: Union[int, "pyiron_base.jobs.job.generic.GenericJob"]) -> Union[str, None]:
+def queue_enable_reservation(
+    item: Union[int, "pyiron_base.jobs.job.generic.GenericJob"],
+) -> Union[str, None]:
     """
     Enable a reservation for a particular job within the queuing system
 
@@ -183,7 +192,11 @@ def queue_enable_reservation(item: Union[int, "pyiron_base.jobs.job.generic.Gene
         return None
 
 
-def wait_for_job(job: "pyiron_base.jobs.job.generic.GenericJob", interval_in_s: int=5, max_iterations: int=100) -> None:
+def wait_for_job(
+    job: "pyiron_base.jobs.job.generic.GenericJob",
+    interval_in_s: int = 5,
+    max_iterations: int = 100,
+) -> None:
     """
     Sleep until the job is finished but maximum interval_in_s * max_iterations seconds.
 
@@ -249,11 +262,11 @@ def wait_for_job(job: "pyiron_base.jobs.job.generic.GenericJob", interval_in_s: 
 
 def wait_for_jobs(
     project: "pyiron_base.project.generic.Project",
-    interval_in_s: int=5,
-    max_iterations: int =100,
-    recursive: bool =True,
-    ignore_exceptions: bool =False,
-    try_collecting: bool =False,
+    interval_in_s: int = 5,
+    max_iterations: int = 100,
+    recursive: bool = True,
+    ignore_exceptions: bool = False,
+    try_collecting: bool = False,
 ) -> None:
     """
     Wait for the calculation in the project to be finished
@@ -283,7 +296,10 @@ def wait_for_jobs(
 
 
 def update_from_remote(
-    project: "pyiron_base.project.generic.Project", recursive: bool=True, ignore_exceptions: bool =False, try_collecting: bool =False
+    project: "pyiron_base.project.generic.Project",
+    recursive: bool = True,
+    ignore_exceptions: bool = False,
+    try_collecting: bool = False,
 ) -> None:
     """
     Update jobs from the remote server
@@ -342,7 +358,9 @@ def update_from_remote(
             return failed_jobs
 
 
-def retrieve_job(job: "pyiron_base.jobs.job.generic.GenericJob", try_collecting: bool=False) -> None:
+def retrieve_job(
+    job: "pyiron_base.jobs.job.generic.GenericJob", try_collecting: bool = False
+) -> None:
     """
     Retrieve a job from remote server and check if it has a "finished status".
     Optionally try to collect its output.
@@ -363,7 +381,9 @@ def retrieve_job(job: "pyiron_base.jobs.job.generic.GenericJob", try_collecting:
         job.run()
 
 
-def validate_que_request(item: Union[int, "pyiron_base.jobs.job.generic.GenericJob"]) -> int:
+def validate_que_request(
+    item: Union[int, "pyiron_base.jobs.job.generic.GenericJob"],
+) -> int:
     """
     Internal function to convert the job_ID or hamiltonian to the queuing system ID.
 

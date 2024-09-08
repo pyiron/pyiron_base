@@ -10,8 +10,8 @@ import math
 import os
 import posixpath
 import shutil
-from typing import Any, Generator, Optional, Union, List
 import warnings
+from typing import Any, Generator, List, Optional, Union
 
 from pyiron_snippets.deprecate import deprecate
 
@@ -240,7 +240,6 @@ class HDF5Content(object):
         return self._project_hdf5.__repr__()
 
 
-
 class JobCore(HasGroups):
     __doc__ = (
         """
@@ -453,7 +452,7 @@ class JobCore(HasGroups):
     def files_to_remove(self) -> list:
         return self._files_to_remove
 
-    def relocate_hdf5(self, h5_path: Optional[str]=None):
+    def relocate_hdf5(self, h5_path: Optional[str] = None):
         """
         Relocate the hdf file. This function is needed when the child job is
         spawned by a parent job (cf. pyiron_base.jobs.master.generic)
@@ -506,7 +505,13 @@ class JobCore(HasGroups):
         """
         return self.project_hdf5.path
 
-    def check_if_job_exists(self, job_name: Optional[str]=None, project: Optional[Union[ProjectHDFio, "pyiron_base.project.generic.Project"]]=None):
+    def check_if_job_exists(
+        self,
+        job_name: Optional[str] = None,
+        project: Optional[
+            Union[ProjectHDFio, "pyiron_base.project.generic.Project"]
+        ] = None,
+    ):
         """
         Check if a job already exists in an specific project.
 
@@ -557,7 +562,7 @@ class JobCore(HasGroups):
         """
         return self.project_hdf5.get_from_table(path, name)
 
-    def remove(self, _protect_childs: bool=True) -> None:
+    def remove(self, _protect_childs: bool = True) -> None:
         """
         Remove the job - this removes the HDF5 file, all data stored in the HDF5 file an the corresponding database entry.
 
@@ -634,7 +639,9 @@ class JobCore(HasGroups):
         if self.job_id is not None:
             self.project.db.delete_item(self.job_id)
 
-    def to_object(self, object_type: Optional[str]=None, **qwargs) -> "pyiron_base.job.generic.GenericJob":
+    def to_object(
+        self, object_type: Optional[str] = None, **qwargs
+    ) -> "pyiron_base.job.generic.GenericJob":
         """
         Load the full pyiron object from an HDF5 file
 
@@ -653,7 +660,7 @@ class JobCore(HasGroups):
             )
         return self.project_hdf5.to_object(object_type, **qwargs)
 
-    def get(self, name: str, default: Optional[Any]=None) -> Any:
+    def get(self, name: str, default: Optional[Any] = None) -> Any:
         """
         Internal wrapper function for __getitem__() - self[name]
 
@@ -674,7 +681,9 @@ class JobCore(HasGroups):
                 return default
             raise
 
-    def load(self, job_specifier: Union[str, int], convert_to_object: bool=True) -> Union["pyiron_base.job.generic.GenericJob", "JobCore"]:
+    def load(
+        self, job_specifier: Union[str, int], convert_to_object: bool = True
+    ) -> Union["pyiron_base.job.generic.GenericJob", "JobCore"]:
         """
         Load an existing pyiron object - most commonly a job - from the database
 
@@ -725,7 +734,9 @@ class JobCore(HasGroups):
             > 0
         )
 
-    def get_job_id(self, job_specifier: Optional[Union[str, int]]=None) -> Union[int, None]:
+    def get_job_id(
+        self, job_specifier: Optional[Union[str, int]] = None
+    ) -> Union[int, None]:
         """
         get the job_id for job named job_name in the local project path from database
 
@@ -801,11 +812,13 @@ class JobCore(HasGroups):
 
     def _internal_copy_to(
         self,
-        project: Optional[Union["JobCore", ProjectHDFio, "pyiron_base.project.generic.Project"]]=None,
-        new_job_name: Optional[str]=None,
-        new_database_entry: bool=True,
-        copy_files: bool=True,
-        delete_existing_job: bool=False,
+        project: Optional[
+            Union["JobCore", ProjectHDFio, "pyiron_base.project.generic.Project"]
+        ] = None,
+        new_job_name: Optional[str] = None,
+        new_database_entry: bool = True,
+        copy_files: bool = True,
+        delete_existing_job: bool = False,
     ) -> "JobCore":
         """
         Internal helper function for copy_to() which returns more
@@ -882,10 +895,10 @@ class JobCore(HasGroups):
     def copy_to(
         self,
         project: Union["JobCore", ProjectHDFio, "pyiron_base.project.generic.Project"],
-        new_job_name: Optional[str]=None,
-        input_only: bool=False,
-        new_database_entry: bool=True,
-        copy_files: bool=True,
+        new_job_name: Optional[str] = None,
+        input_only: bool = False,
+        new_database_entry: bool = True,
+        copy_files: bool = True,
     ) -> "JobCore":
         """
         Copy the content of the job including the HDF5 file to a new location
@@ -973,7 +986,7 @@ class JobCore(HasGroups):
         """
         self.job_name = new_job_name
 
-    def reset_job_id(self, job_id: Optional[int]=None) -> None:
+    def reset_job_id(self, job_id: Optional[int] = None) -> None:
         """
         The reset_job_id function has to be implemented by the derived classes - usually the GenericJob class
 
@@ -991,7 +1004,9 @@ class JobCore(HasGroups):
         """
         raise NotImplementedError("save() should be implemented in the derived class")
 
-    def to_hdf(self, hdf: Optional[ProjectHDFio]=None, group_name: str="group") -> None:
+    def to_hdf(
+        self, hdf: Optional[ProjectHDFio] = None, group_name: str = "group"
+    ) -> None:
         """
         Store object in hdf5 format - The function has to be implemented by the derived classes
         - usually the GenericJob class
@@ -1002,7 +1017,9 @@ class JobCore(HasGroups):
         """
         raise NotImplementedError("to_hdf() should be implemented in the derived class")
 
-    def from_hdf(self, hdf: Optional[ProjectHDFio]=None, group_name: str="group") -> None:
+    def from_hdf(
+        self, hdf: Optional[ProjectHDFio] = None, group_name: str = "group"
+    ) -> None:
         """
         Restore object from hdf5 format - The function has to be implemented by the derived classes
         - usually the GenericJob class
@@ -1130,7 +1147,11 @@ class JobCore(HasGroups):
         childs = self.list_childs()
         return list(set(childs) - set(nodes))
 
-    def compress(self, files_to_compress: Optional[List[str]]=None, files_to_remove: Optional[List[str]]=None) -> None:
+    def compress(
+        self,
+        files_to_compress: Optional[List[str]] = None,
+        files_to_remove: Optional[List[str]] = None,
+    ) -> None:
         """
         Compress the output files of a job object.
 

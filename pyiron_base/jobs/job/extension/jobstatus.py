@@ -4,6 +4,7 @@
 """
 The JobStatus class belongs to the GenericJob object.
 """
+
 from typing import Optional, Union
 
 from pyiron_base.utils.instance import static_isinstance
@@ -36,7 +37,7 @@ job_status_lst = [
 ] + job_status_finished_lst
 
 
-def format_docstring_with_statuses(n_tabs: int=1) -> callable:
+def format_docstring_with_statuses(n_tabs: int = 1) -> callable:
     """
     Replaces a '{}' in the decorated object's docstring with the documentation for all possible job status.
 
@@ -94,10 +95,15 @@ class JobStatus(object):
     """
 
     def __init__(
-        self, 
-        initial_status: str="initialized", 
-        db: Optional[Union["pyiron_base.database.generic.DatabaseAccess", "pyiron_base.database.filetable.FileTable"]]=None, 
-        job_id: Optional[int]=None,
+        self,
+        initial_status: str = "initialized",
+        db: Optional[
+            Union[
+                "pyiron_base.database.generic.DatabaseAccess",
+                "pyiron_base.database.filetable.FileTable",
+            ]
+        ] = None,
+        job_id: Optional[int] = None,
     ):
         super(JobStatus, self).__setattr__("_status_dict", {})
         self._db = None
@@ -107,7 +113,13 @@ class JobStatus(object):
         self.job_id = job_id
 
     @property
-    def database(self) -> Union["pyiron_base.database.generic.DatabaseAccess", "pyiron_base.database.filetable.FileTable", None]:
+    def database(
+        self,
+    ) -> Union[
+        "pyiron_base.database.generic.DatabaseAccess",
+        "pyiron_base.database.filetable.FileTable",
+        None,
+    ]:
         """
         Get the database which is responsible for this job. If no database is linked it returns None.
         Returns:
@@ -116,7 +128,13 @@ class JobStatus(object):
         return self._db
 
     @database.setter
-    def database(self, db: Union["pyiron_base.database.generic.DatabaseAccess", "pyiron_base.database.filetable.FileTable"]) -> None:
+    def database(
+        self,
+        db: Union[
+            "pyiron_base.database.generic.DatabaseAccess",
+            "pyiron_base.database.filetable.FileTable",
+        ],
+    ) -> None:
         """
         Set the database which is responsible for this job.
         Args:
@@ -139,7 +157,7 @@ class JobStatus(object):
         return self._job_id
 
     @job_id.setter
-    def job_id(self, unique_id: int)-> None:
+    def job_id(self, unique_id: int) -> None:
         """
         Get the job id of the job this jobstatus is associated to.
         Args:

@@ -4,6 +4,7 @@
 """
 InteractiveBase class extends the Generic Job class with all the functionality to run the job object interactivley.
 """
+
 from typing import Any, Optional
 
 import numpy as np
@@ -127,7 +128,9 @@ class InteractiveBase(GenericJob):
 
     """
 
-    def __init__(self, project: "pyiron_base.storage.hdfio.ProjectHDFio", job_name: str):
+    def __init__(
+        self, project: "pyiron_base.storage.hdfio.ProjectHDFio", job_name: str
+    ):
         super(InteractiveBase, self).__init__(project=project, job_name=job_name)
         self._interactive_library = None
         self._interactive_write_input_files = False
@@ -209,7 +212,9 @@ class InteractiveBase(GenericJob):
             return True
 
     @staticmethod
-    def _extend_hdf(h5: "pyiron_base.storage.hdfio.ProjectHDFio", path: str, key: str, data: Any) -> None:
+    def _extend_hdf(
+        h5: "pyiron_base.storage.hdfio.ProjectHDFio", path: str, key: str, data: Any
+    ) -> None:
         """
         Extend an existing HDF5 dataset with new data.
 
@@ -232,7 +237,9 @@ class InteractiveBase(GenericJob):
         h5[path + "/" + key] = data
 
     @staticmethod
-    def _include_last_step(array: np.ndarray, step: int = 1, include_last: bool = False) -> np.ndarray:
+    def _include_last_step(
+        array: np.ndarray, step: int = 1, include_last: bool = False
+    ) -> np.ndarray:
         """
         Returns a new array with elements selected at a given step size.
 
@@ -260,7 +267,9 @@ class InteractiveBase(GenericJob):
                     return []
         return []
 
-    def interactive_flush(self, path: str = "interactive", include_last_step: bool = False) -> None:
+    def interactive_flush(
+        self, path: str = "interactive", include_last_step: bool = False
+    ) -> None:
         """
         Flushes the interactive cache to the HDF5 file.
 
@@ -351,7 +360,11 @@ class InteractiveBase(GenericJob):
     def run_if_interactive_non_modal(self) -> None:
         raise NotImplementedError("run_if_interactive_non_modal() is not implemented!")
 
-    def to_hdf(self, hdf: Optional["pyiron_base.storage.hdfio.ProjectHDFio"]=None, group_name: Optional[str]=None):
+    def to_hdf(
+        self,
+        hdf: Optional["pyiron_base.storage.hdfio.ProjectHDFio"] = None,
+        group_name: Optional[str] = None,
+    ):
         """
         Store the InteractiveBase object in the HDF5 File
 
@@ -366,7 +379,11 @@ class InteractiveBase(GenericJob):
                 "interactive_write_frequency": self._interactive_write_frequency,
             }
 
-    def from_hdf(self, hdf: Optional["pyiron_base.storage.hdfio.ProjectHDFio"]=None, group_name: Optional[str]=None):
+    def from_hdf(
+        self,
+        hdf: Optional["pyiron_base.storage.hdfio.ProjectHDFio"] = None,
+        group_name: Optional[str] = None,
+    ):
         """
         Restore the InteractiveBase object in the HDF5 File
 

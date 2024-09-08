@@ -53,7 +53,7 @@ class Runmode(object):
                      'interactive_non_modal', 'srun', 'executor']
     """
 
-    def __init__(self, mode: str="modal"):
+    def __init__(self, mode: str = "modal"):
         super(Runmode, self).__init__()
         self._reset_mode()
         self.mode = mode

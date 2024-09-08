@@ -33,10 +33,10 @@ class Executable(HasDict):
 
     def __init__(
         self,
-        path_binary_codes: Optional[List[str]]=None,
-        codename: Optional[str]=None,
-        module: Optional[str]=None,
-        overwrite_nt_flag: bool=False,
+        path_binary_codes: Optional[List[str]] = None,
+        codename: Optional[str] = None,
+        module: Optional[str] = None,
+        overwrite_nt_flag: bool = False,
     ):
         """
         Handle the path to the executable, as well as the version selection.
@@ -224,7 +224,7 @@ class Executable(HasDict):
         """
         return asdict(self.storage)
 
-    def _from_dict(self, obj_dict: dict, version: Optional[str]=None) -> None:
+    def _from_dict(self, obj_dict: dict, version: Optional[str] = None) -> None:
         """
         Load the object from a dictionary representation.
 
@@ -241,7 +241,9 @@ class Executable(HasDict):
             executable_class_dict[key] = obj_dict.get(key, None)
         self.storage = ExecutableDataClass(**executable_class_dict)
 
-    def get_input_for_subprocess_call(self, cores: int, threads: int, gpus: Optional[int]=None) -> Tuple[Union[str, List[str]], bool]:
+    def get_input_for_subprocess_call(
+        self, cores: int, threads: int, gpus: Optional[int] = None
+    ) -> Tuple[Union[str, List[str]], bool]:
         """
         Get the input parameters for the subprocess call to execute the job
 

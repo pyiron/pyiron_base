@@ -1,7 +1,7 @@
 import os
 import posixpath
 from itertools import islice
-from typing import List, Optional, Union, Generator
+from typing import Generator, List, Optional, Union
 
 from pyiron_base.jobs.job.util import (
     _working_directory_list_files,
@@ -18,7 +18,7 @@ class File:
     def __str__(self) -> str:
         return self._path
 
-    def _read(self, tail: Optional[int]=None) -> List[str]:
+    def _read(self, tail: Optional[int] = None) -> List[str]:
         return _working_directory_read_file(
             working_directory=os.path.dirname(str(self)),
             file_name=os.path.basename(str(self)),
