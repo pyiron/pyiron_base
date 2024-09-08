@@ -7,6 +7,7 @@ A class for mediating connections to SQL databases.
 
 import os
 from urllib.parse import quote_plus
+from typing import Union, Optional
 
 from pyiron_snippets.logger import logger
 from pyiron_snippets.singleton import Singleton
@@ -37,22 +38,22 @@ class DatabaseManager(metaclass=Singleton):
         return self._database
 
     @property
-    def using_local_database(self):
+    def using_local_database(self) -> bool:
         return self._use_local_database
 
     @property
-    def database_is_disabled(self):
+    def database_is_disabled(self) -> bool:
         return self._database_is_disabled
 
     @property
-    def project_check_enabled(self):
+    def project_check_enabled(self) -> bool:
         if self.database_is_disabled:
             return False
         else:
             return s.configuration["project_check_enabled"]
 
     @property
-    def connection_timeout(self):
+    def connection_timeout(self) -> int:
         """
         Get the connection timeout in seconds.  Zero means close the database after every connection.
 
@@ -62,15 +63,15 @@ class DatabaseManager(metaclass=Singleton):
         return s.configuration["connection_timeout"]
 
     @connection_timeout.setter
-    def connection_timeout(self, val):
+    def connection_timeout(self, val: int) -> None:
         s.configuration["connection_timeout"] = val
 
     @staticmethod
-    def _sqlalchemy_string(prefix, user, key, host, database):
+    def _sqlalchemy_string(prefix: str, user: str, key: str, host: str, database: str):
         key = quote_plus(key)
         return f"{prefix}://{user}:{key}@{host}/{database}"
 
-    def _credentialed_sqalchemy_string(self, prefix):
+    def _credentialed_sqalchemy_string(self, prefix: str):
         return self._sqlalchemy_string(
             prefix,
             s.configuration["user"],
@@ -80,7 +81,7 @@ class DatabaseManager(metaclass=Singleton):
         )
 
     @property
-    def sql_connection_string(self):
+    def sql_connection_string(self) -> str:
         sql_type = s.configuration["sql_type"]
         if sql_type == "Postgres":
             return self._credentialed_sqalchemy_string("postgresql")
@@ -97,7 +98,7 @@ class DatabaseManager(metaclass=Singleton):
             )
 
     @property
-    def sql_view_connection_string(self):
+    def sql_view_connection_string(self) -> Union[str, None]:
         if s.configuration["sql_view_user"] is None:
             return None
         else:
@@ -110,14 +111,14 @@ class DatabaseManager(metaclass=Singleton):
             )
 
     @property
-    def sql_table_name(self):
+    def sql_table_name(self) -> str:
         return s.configuration["sql_table_name"]
 
     @property
-    def sql_view_table_name(self):
+    def sql_view_table_name(self) -> str:
         return s.configuration["sql_view_table_name"]
 
-    def open_connection(self):
+    def open_connection(self) -> None:
         """
         Internal function to open the connection to the database. Only after this function is called the database is
         accessable.
@@ -131,7 +132,7 @@ class DatabaseManager(metaclass=Singleton):
                 timeout=self.connection_timeout,
             )
 
-    def switch_to_local_database(self, file_name="pyiron.db", cwd=None):
+    def switch_to_local_database(self, file_name: str="pyiron.db", cwd: Optional[str]=None) -> None:
         """
         Swtich to an local SQLite based database.
 
@@ -151,14 +152,14 @@ class DatabaseManager(metaclass=Singleton):
                 connection_string="sqlite:///" + file_name
             )
 
-    def open_local_sqlite_connection(self, connection_string):
+    def open_local_sqlite_connection(self, connection_string: str) -> None:
         from pyiron_base.database.generic import DatabaseAccess
 
         self._database = DatabaseAccess(connection_string, self.sql_table_name)
         self._use_local_database = True
         self._database_is_disabled = False
 
-    def switch_to_central_database(self):
+    def switch_to_central_database(self) -> None:
         """
         Switch to central database
         """
@@ -167,7 +168,7 @@ class DatabaseManager(metaclass=Singleton):
         else:
             logger.info("Database is already in central mode or disabled!")
 
-    def switch_to_viewer_mode(self):
+    def switch_to_viewer_mode(self) -> None:
         """
         Switch from user mode to viewer mode - if view_mode is enable pyiron has read only access to the database.
         """
@@ -189,7 +190,7 @@ class DatabaseManager(metaclass=Singleton):
         else:
             print("Viewer Mode is not available on this pyiron installation.")
 
-    def switch_to_user_mode(self):
+    def switch_to_user_mode(self) -> None:
         """
         Switch from viewer mode to user mode - if view_mode is enable pyiron has read only access to the database.
         """
@@ -211,7 +212,7 @@ class DatabaseManager(metaclass=Singleton):
         else:
             print("Viewer Mode is not available on this pyiron installation.")
 
-    def close_connection(self):
+    def close_connection(self) -> None:
         """
         Internal function to close the connection to the database.
         """
@@ -219,7 +220,7 @@ class DatabaseManager(metaclass=Singleton):
             self._database.conn.close()
             self._database = None
 
-    def top_path(self, full_path):
+    def top_path(self, full_path: str) -> Union[str, None]:
         """
         Validated that the full_path is a sub directory of one of the pyrion environments loaded.
 
@@ -243,7 +244,7 @@ class DatabaseManager(metaclass=Singleton):
         else:
             return None
 
-    def update(self):
+    def update(self) -> None:
         """
         Warning: Database interaction does not have written spec. This method does a thing. It might not be the thing
                  you want.

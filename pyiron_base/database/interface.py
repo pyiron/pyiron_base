@@ -7,7 +7,7 @@ DatabaseAccess class deals with accessing the database
 
 import fnmatch
 import re
-import typing
+from typing import Literal, Union, Optional, List
 import warnings
 from abc import ABC, abstractmethod
 from collections.abc import Iterable
@@ -35,11 +35,11 @@ class IsDatabase(ABC):
     """
 
     @abstractmethod
-    def _get_view_mode(self):
+    def _get_view_mode(self) -> bool:
         pass
 
     @property
-    def view_mode(self):
+    def view_mode(self) -> bool:
         """
         Get view_mode - if view_moded is enable pyiron has read only access to the database.
 
@@ -52,7 +52,7 @@ class IsDatabase(ABC):
 
     @property
     @deprecate("use view_mode")
-    def viewer_mode(self):
+    def viewer_mode(self) -> bool:
         return self.view_mode
 
     viewer_mode.__doc__ = view_mode.__doc__
@@ -60,19 +60,19 @@ class IsDatabase(ABC):
     @abstractmethod
     def _get_job_table(
         self,
-        sql_query,
-        user,
-        project_path,
-        recursive=True,
-        columns=None,
-        element_lst=None,
-    ):
+        sql_query: str,
+        user: str,
+        project_path: str,
+        recursive: bool=True,
+        columns: Optional[List[str]]=None,
+        element_lst: Optional[List[str]]=None,
+    ) -> pandas.DataFrame:
         pass
 
     @staticmethod
     def _get_filtered_job_table(
         df: pandas.DataFrame,
-        mode: typing.Literal["regex", "glob"] = "glob",
+        mode: Literal["regex", "glob"] = "glob",
         **kwargs: dict,
     ) -> pandas.DataFrame:
         """
@@ -117,18 +117,18 @@ class IsDatabase(ABC):
 
     def job_table(
         self,
-        sql_query,
-        user,
-        project_path,
-        recursive=True,
-        columns=None,
-        all_columns=False,
-        sort_by="id",
-        max_colwidth=200,
-        full_table=False,
-        element_lst=None,
-        job_name_contains="",
-        mode: typing.Literal["regex", "glob"] = "glob",
+        sql_query: str,
+        user: str,
+        project_path: sgr,
+        recursive: bool=True,
+        columns: Optional[List[str]]=None,
+        all_columns: bool=False,
+        sort_by: str="id",
+        max_colwidth: int=200,
+        full_table: bool=False,
+        element_lst: Optional[List[str]]=None,
+        job_name_contains: str="",
+        mode: Literal["regex", "glob"] = "glob",
         **kwargs,
     ):
         """
@@ -204,19 +204,19 @@ class IsDatabase(ABC):
         return df
 
     @abstractmethod
-    def _get_table_headings(self, table_name=None):
+    def _get_table_headings(self, table_name: Optional[str]=None):
         pass
 
-    def item_update(self, par_dict, item_id):
+    def item_update(self, par_dict: dict, item_id: int) -> None:
         if isinstance(item_id, Iterable):
             return self._items_update(par_dict=par_dict, item_ids=item_id)
         return self._item_update(par_dict=par_dict, item_id=item_id)
 
     @abstractmethod
-    def _item_update(self, par_dict, item_id):
+    def _item_update(self, par_dict: dict, item_id: int) -> None:
         pass
 
-    def _items_update(self, par_dict, item_ids):
+    def _items_update(self, par_dict: dict, item_ids: List) -> None:
         """
         For now simply loops over all item_ids to call item_update,
         but can be made more efficient.
@@ -229,7 +229,7 @@ class IsDatabase(ABC):
         for i_id in item_ids:
             self._item_update(par_dict=par_dict, item_id=i_id)
 
-    def set_job_status(self, status, job_id):
+    def set_job_status(self, status: str, job_id: Union[int, List[int]]) -> None:
         """
         Set status of a job or multiple jobs if job_id is iterable.
 
@@ -247,7 +247,7 @@ class IsDatabase(ABC):
             item_id=job_id,
         )
 
-    def get_table_headings(self, table_name=None):
+    def get_table_headings(self, table_name: Optional[str]=None) -> List[str]:
         """
         Get column names; if given table_name can select one of multiple tables defined in the database, but subclasses
         may ignore it
@@ -277,7 +277,7 @@ class IsDatabase(ABC):
         return self._get_table_headings(table_name=table_name)
 
     @deprecate("use get_table_headings()")
-    def get_db_columns(self):
+    def get_db_columns(self) -> List[str]:
         """
         Get column names
 
@@ -303,10 +303,10 @@ class IsDatabase(ABC):
         return self.get_table_headings()
 
     @abstractmethod
-    def _get_jobs(self, sql_query, user, project_path, recursive=True, columns=None):
+    def _get_jobs(self, sql_query: str, user: str, project_path: str, recursive: bool=True, columns: Optional[List[str]]=None) -> List[dict]:
         pass
 
-    def get_jobs(self, sql_query, user, project_path, recursive=True, columns=None):
+    def get_jobs(self, sql_query: str, user: str, project_path: str, recursive: bool=True, columns: Optional[List[str]]=None) -> List[dict]:
         """
         Internal function to return the jobs as dictionary rather than a pandas.Dataframe
 
@@ -326,7 +326,7 @@ class IsDatabase(ABC):
             columns = ["id", "project"]
         return self._get_jobs(sql_query, user, project_path, recursive, columns)
 
-    def get_job_ids(self, sql_query, user, project_path, recursive=True):
+    def get_job_ids(self, sql_query: str, user: str, project_path: str, recursive: bool=True) -> List[int]:
         """
         Return the job IDs matching a specific query
 
