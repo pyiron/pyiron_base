@@ -575,7 +575,7 @@ class FileHDFio(HasGroups, Pointer):
             if default is not None:
                 return default
             else:
-                raise KeyError(key)
+                raise
 
     def put(self, key: str, value: Union[pandas.DataFrame, pandas.Series, Dict, List, float, int]) -> None:
         """

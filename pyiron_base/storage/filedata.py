@@ -7,7 +7,7 @@ import json
 import os
 from abc import ABC, abstractmethod
 from functools import lru_cache
-from typing import Any, IO, List, Union
+from typing import Any, IO, List, Union, Callable
 
 import pandas
 from pyiron_snippets.import_alarm import ImportAlarm
