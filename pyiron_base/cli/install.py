@@ -4,6 +4,7 @@
 """
 Install pyiron config and resources for the first time.
 """
+
 from argparse import ArgumentParser, Namespace
 
 from pyiron_base.state.install import install_pyiron

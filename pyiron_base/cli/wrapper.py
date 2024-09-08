@@ -3,6 +3,7 @@
 """
 Run a job from hdf5.
 """
+
 from argparse import ArgumentParser, Namespace
 
 from pyiron_base.jobs.job.wrapper import job_wrapper_function

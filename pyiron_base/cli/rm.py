@@ -4,8 +4,8 @@
 Remove jobs from pyiron project or whole project.
 """
 
-from argparse import ArgumentParser, Namespace
 import os
+from argparse import ArgumentParser, Namespace
 
 from pyiron_base.project.generic import Project
 

@@ -4,6 +4,7 @@
 """
 Copy a pyiron project to a new location.
 """
+
 from argparse import ArgumentParser, Namespace
 
 from pyiron_base.project.generic import Project
