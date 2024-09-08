@@ -287,17 +287,34 @@ class HasStoredTraits(HasTraits, HasStorage, ABC, metaclass=ABCTraitsMeta):
 
     @property
     def read_only(self) -> bool:
+        """
+        Get the read-only status of the traits.
+
+        Returns:
+            bool: True if the traits are read-only, False otherwise.
+        """
         return self._read_only
 
     def _to_hdf(self, hdf: ProjectHDFio):
-        self.storage.is_read_only = (
-            self._read_only
-        )  # read_only and _read_only are already used on DataContainer
+        """
+        Serialize the object to HDF5 format.
+
+        Args:
+            hdf (ProjectHDFio): The HDF5 file handler.
+        """
+        self.storage.is_read_only = self._read_only
         for k in self.traits().keys():
             self.storage[k] = getattr(self, k)
         super()._to_hdf(hdf)
 
     def _from_hdf(self, hdf: ProjectHDFio, version: Optional[str] = None):
+        """
+        Deserialize the object from HDF5 format.
+
+        Args:
+            hdf (ProjectHDFio): The HDF5 file handler.
+            version (Optional[str]): The version of the object (default is None).
+        """
         super()._from_hdf(hdf, version=version)
         if len(self.storage) > 0:
             read_only = self.storage.pop("is_read_only")
@@ -305,21 +322,32 @@ class HasStoredTraits(HasTraits, HasStorage, ABC, metaclass=ABCTraitsMeta):
                 setattr(self, k, v)
             self._read_only = read_only
 
-    def lock(self):
-        """Recursively make all traits read-only."""
+    def lock(self) -> None:
+        """
+        Recursively make all traits read-only.
+        """
         self._read_only = True
         for sub in self.trait_values().values():
             if isinstance(sub, HasStoredTraits):
                 sub.lock()
 
-    def unlock(self):
-        """Recursively make all traits both readable and writeable"""
+    def unlock(self) -> None:
+        """
+        Recursively make all traits both readable and writeable.
+        """
         self._read_only = False
         for sub in self.trait_values().values():
             if isinstance(sub, HasStoredTraits):
                 sub.unlock()
 
-    def __setattr__(self, key, value):
+    def __setattr__(self, key: str, value) -> None:
+        """
+        Set the value of an attribute.
+
+        Args:
+            key (str): The attribute name.
+            value: The attribute value.
+        """
         if key == "_read_only":
             super(HasStoredTraits, self).__setattr__(key, value)
         elif self.read_only and key in self.traits().keys():

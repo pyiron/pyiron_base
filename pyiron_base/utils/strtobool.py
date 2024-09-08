@@ -20,15 +20,23 @@ __status__ = "production"
 __date__ = "Sep 1, 2017"
 
 
-def strtobool(val: str):
-    """Convert a string representation of truth to true (1) or false (0).
+def strtobool(val: str) -> int:
+    """
+    Convert a string representation of truth to true (1) or false (0).
 
     True values are 'y', 'yes', 't', 'true', 'on', and '1'; false values
     are 'n', 'no', 'f', 'false', 'off', and '0'.  Raises ValueError if
     'val' is anything else.
 
-    Originally part of `distutils.util.strtobool`, but copied and pasted as
-    `distutils` was going to be removed from python 3.12.
+    Args:
+        val (str): The string representation of truth value.
+
+    Returns:
+        int: The converted truth value as an integer (1 for true, 0 for false).
+
+    Raises:
+        ValueError: If 'val' is not a valid truth value.
+
     """
     val = val.lower()
     if val in ("y", "yes", "t", "true", "on", "1"):

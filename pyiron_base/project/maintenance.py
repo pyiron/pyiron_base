@@ -74,7 +74,7 @@ class Maintenance:
         return self._local
 
     @staticmethod
-    def get_repository_status():
+    def get_repository_status() -> pandas.DataFrame:
         """
         Finds the hashes and versions for every `pyiron` module available.
 
