@@ -7,6 +7,7 @@ The job wrapper is called from the run_job.py script, it restores the job from h
 
 import logging
 import os
+from typing import Optional
 
 from pyiron_base.database.filetable import (
     get_hamilton_from_file,
@@ -44,14 +45,14 @@ class JobWrapper(object):
 
     def __init__(
         self,
-        working_directory,
-        job_id=None,
-        hdf5_file=None,
-        h5_path=None,
-        submit_on_remote=False,
-        debug=False,
-        connection_string=None,
-        collect=False,
+        working_directory: str,
+        job_id: Optional[int] = None,
+        hdf5_file: Optional["pyiron_base.storage.hdfio.ProjectHDFio"] = None,
+        h5_path: Optional[str] = None,
+        submit_on_remote: bool = False,
+        debug: bool = False,
+        connection_string: Optional[str] = None,
+        collect: bool = False,
     ):
         self.working_directory = working_directory
         self._remote_flag = submit_on_remote
@@ -94,7 +95,7 @@ class JobWrapper(object):
         self._logger = self.setup_logger(debug=debug)
 
     @staticmethod
-    def setup_logger(debug=False):
+    def setup_logger(debug: bool = False) -> logging.Logger:
         """
         Setup the error logger
 
@@ -117,7 +118,7 @@ class JobWrapper(object):
         logger.addHandler(ch)
         return logger
 
-    def run(self):
+    def run(self) -> None:
         """
         The job wrapper run command, sets the job status to 'running' and executes run_if_modal().
         """
@@ -133,12 +134,12 @@ class JobWrapper(object):
 
 
 def job_wrapper_function(
-    working_directory,
-    job_id=None,
-    file_path=None,
-    submit_on_remote=False,
-    debug=False,
-    collect=False,
+    working_directory: str,
+    job_id: Optional[int] = None,
+    file_path: Optional[str] = None,
+    submit_on_remote: bool = False,
+    debug: bool = False,
+    collect: bool = False,
 ):
     """
     Job Wrapper function - creates a JobWrapper object and calls run() on that object

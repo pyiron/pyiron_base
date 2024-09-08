@@ -5,6 +5,8 @@
 Install pyiron config and resources for the first time.
 """
 
+from argparse import ArgumentParser, Namespace
+
 from pyiron_base.state.install import install_pyiron
 
 __author__ = "Marvin Poul"
@@ -19,7 +21,7 @@ __status__ = "development"
 __date__ = "Jun 26, 2020"
 
 
-def register(parser):
+def register(parser: ArgumentParser) -> None:
     parser.add_argument(
         "-c",
         "--config",
@@ -46,7 +48,7 @@ def register(parser):
     )
 
 
-def main(args):
+def main(args: Namespace) -> None:
     install_pyiron(
         config_file_name=args.config,
         project_path=args.project,

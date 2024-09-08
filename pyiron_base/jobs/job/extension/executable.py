@@ -4,6 +4,7 @@
 
 import os
 from dataclasses import asdict, fields
+from typing import List, Optional, Tuple, Union
 
 from pyiron_snippets.resources import ExecutableResolver
 
@@ -32,10 +33,10 @@ class Executable(HasDict):
 
     def __init__(
         self,
-        path_binary_codes=None,
-        codename=None,
-        module=None,
-        overwrite_nt_flag=False,
+        path_binary_codes: Optional[List[str]] = None,
+        codename: Optional[str] = None,
+        module: Optional[str] = None,
+        overwrite_nt_flag: bool = False,
     ):
         """
         Handle the path to the executable, as well as the version selection.
@@ -72,14 +73,14 @@ class Executable(HasDict):
             self.version = self.default_version
 
     @property
-    def accepted_return_codes(self):
+    def accepted_return_codes(self) -> List[int]:
         """
         list of int: accept all of the return codes in this list as the result of a successful run
         """
         return self.storage.accepted_return_codes
 
     @accepted_return_codes.setter
-    def accepted_return_codes(self, value):
+    def accepted_return_codes(self, value: List[int]) -> None:
         if not isinstance(value, list) or any(
             not isinstance(c, int) or c > 255 for c in value
         ):
@@ -87,7 +88,7 @@ class Executable(HasDict):
         self.storage.accepted_return_codes = value
 
     @property
-    def version(self):
+    def version(self) -> str:
         """
         Version of the Executable
 
@@ -97,7 +98,7 @@ class Executable(HasDict):
         return self.storage.version
 
     @property
-    def default_version(self):
+    def default_version(self) -> str:
         """
         Default Version of the Available Executables
         i.e. specifically defined
@@ -111,7 +112,7 @@ class Executable(HasDict):
         return sorted(self.executable_lst.keys())[0]
 
     @version.setter
-    def version(self, new_version):
+    def version(self, new_version: str) -> None:
         """
         Version of the Executable
 
@@ -131,7 +132,7 @@ class Executable(HasDict):
             )
 
     @property
-    def mpi(self):
+    def mpi(self) -> bool:
         """
         Check if the message processing interface is activated.
 
@@ -143,7 +144,7 @@ class Executable(HasDict):
         return self.storage.mpi
 
     @mpi.setter
-    def mpi(self, mpi_bool):
+    def mpi(self, mpi_bool: bool) -> None:
         """
         Activate the message processing interface.
 
@@ -158,7 +159,7 @@ class Executable(HasDict):
             raise ValueError("No executable set!")
 
     @property
-    def available_versions(self):
+    def available_versions(self) -> List[str]:
         """
         List all available exectuables in the path_binary_codes for the specified codename.
 
@@ -167,7 +168,7 @@ class Executable(HasDict):
         """
         return self.list_executables()
 
-    def list_executables(self):
+    def list_executables(self) -> List[str]:
         """
         List all available exectuables in the path_binary_codes for the specified codename.
 
@@ -177,7 +178,7 @@ class Executable(HasDict):
         return sorted(list(self.executable_lst.keys()))
 
     @property
-    def executable_path(self):
+    def executable_path(self) -> str:
         """
         Get the executable path
 
@@ -192,7 +193,7 @@ class Executable(HasDict):
         return self._executable_select()
 
     @executable_path.setter
-    def executable_path(self, new_path):
+    def executable_path(self, new_path: str) -> None:
         """
         Set the executable path
 
@@ -207,17 +208,30 @@ class Executable(HasDict):
             self.storage.mpi = False
 
     @classmethod
-    def instantiate(cls, obj_dict: dict, version: str = None) -> "Self":
+    def instantiate(cls, obj_dict: dict, version: str = None) -> "Executable":
         try:
             codename = obj_dict["name"]
         except KeyError:
             codename = obj_dict["executable"]["name"]
         return cls(codename=codename)
 
-    def _to_dict(self):
+    def _to_dict(self) -> dict:
+        """
+        Convert the object to a dictionary.
+
+        Returns:
+            dict: A dictionary representation of the object.
+        """
         return asdict(self.storage)
 
-    def _from_dict(self, obj_dict, version=None):
+    def _from_dict(self, obj_dict: dict, version: Optional[str] = None) -> None:
+        """
+        Load the object from a dictionary representation.
+
+        Args:
+            obj_dict (dict): A dictionary representation of the object.
+            version (str, optional): The version of the object. Defaults to None.
+        """
         data_container_keys = tuple(f.name for f in fields(ExecutableDataClass))
         executable_class_dict = {}
         # Backwards compatibility; dict state used to be nested one level deeper
@@ -227,7 +241,9 @@ class Executable(HasDict):
             executable_class_dict[key] = obj_dict.get(key, None)
         self.storage = ExecutableDataClass(**executable_class_dict)
 
-    def get_input_for_subprocess_call(self, cores, threads, gpus=None):
+    def get_input_for_subprocess_call(
+        self, cores: int, threads: int, gpus: Optional[int] = None
+    ) -> Tuple[Union[str, List[str]], bool]:
         """
         Get the input parameters for the subprocess call to execute the job
 
@@ -253,19 +269,19 @@ class Executable(HasDict):
             shell = False
         return executable, shell
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         """
         Executable path
         """
         return repr(self.executable_path)
 
-    def __str__(self):
+    def __str__(self) -> str:
         """
         Executable path
         """
         return str(self.executable_path)
 
-    def _executable_versions_list(self):
+    def _executable_versions_list(self) -> dict:
         """
         Internal function to list all available exectuables in the path_binary_codes for the specified codename.
 
@@ -278,7 +294,7 @@ class Executable(HasDict):
             module=self._module,
         ).dict()
 
-    def _executable_select(self):
+    def _executable_select(self) -> str:
         """
         Internal function to select an executable based on the codename and the version.
 
@@ -293,5 +309,5 @@ class Executable(HasDict):
             else:
                 return ""
 
-    def _get_hdf_group_name(self):
+    def _get_hdf_group_name(self) -> str:
         return "executable"

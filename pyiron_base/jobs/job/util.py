@@ -11,7 +11,7 @@ import shutil
 import stat
 import tarfile
 from itertools import islice
-from typing import Optional, Union
+from typing import Optional, Tuple, Union
 
 import monty.io
 import psutil
@@ -32,7 +32,18 @@ __status__ = "production"
 __date__ = "Nov 28, 2020"
 
 
-def _copy_database_entry(new_job_core, job_copied_id):
+_special_symbol_replacements = {
+    ".": "d",
+    "-": "m",
+    "+": "p",
+    ",": "c",
+    " ": "_",
+}
+
+
+def _copy_database_entry(
+    new_job_core: "pyiron_base.jobs.job.generic.GenericJob", job_copied_id: int
+) -> None:
     """
     Copy database entry from previous job
 
@@ -51,7 +62,11 @@ def _copy_database_entry(new_job_core, job_copied_id):
         new_job_core.reset_job_id(job_id=job_id)
 
 
-def _copy_to_delete_existing(project_class, job_name, delete_job):
+def _copy_to_delete_existing(
+    project_class: "pyiron_base.project.generic.Project",
+    job_name: str,
+    delete_job: bool,
+):
     """
     Check if the job exists already in the project, if that is the case either
     delete it or reload it depending on the setting of delete_job
@@ -75,7 +90,19 @@ def _copy_to_delete_existing(project_class, job_name, delete_job):
             return None
 
 
-def _get_project_for_copy(job, project, new_job_name):
+def _get_project_for_copy(
+    job: "pyiron_base.jobs.job.core.JobCore",
+    project: Optional[
+        Union[
+            "pyiron_base.project.generic.Project",
+            "pyiron_base.jobs.job.core.JobCore",
+            "pyiron_base.storage.hdfio.ProjectHDFio",
+        ]
+    ],
+    new_job_name: str,
+) -> Tuple[
+    "pyiron_base.project.generic.Project", "pyiron_base.storage.hdfio.ProjectHDFio"
+]:
     """
     Internal helper function to generate a project and hdf5 project for copying
 
@@ -113,20 +140,11 @@ def _get_project_for_copy(job, project, new_job_name):
     return file_project, hdf5_project
 
 
-_special_symbol_replacements = {
-    ".": "d",
-    "-": "m",
-    "+": "p",
-    ",": "c",
-    " ": "_",
-}
-
-
 def _get_safe_job_name(
     name: Union[str, tuple],
     ndigits: Optional[int] = 8,
     special_symbols: Optional[dict] = None,
-):
+) -> str:
     """
     Sanitize a job name, optionally appending numeric values.
 
@@ -167,7 +185,12 @@ _get_safe_job_name.__doc__ = _get_safe_job_name.__doc__.replace(
 )
 
 
-def _rename_job(job, new_job_name):
+def _rename_job(
+    job: Union[
+        "pyiron_base.jobs.job.generic.GenericJob", "pyiron_base.jobs.job.core.JobCore"
+    ],
+    new_job_name: str,
+) -> None:
     """ """
     new_job_name = _get_safe_job_name(new_job_name)
     child_ids = job.child_ids
@@ -201,7 +224,7 @@ def _rename_job(job, new_job_name):
         )
 
 
-def _is_valid_job_name(job_name):
+def _is_valid_job_name(job_name: str) -> None:
     """
     internal function to validate the job_name - only available in Python 3.4 <
 
@@ -218,7 +241,7 @@ def _is_valid_job_name(job_name):
         )
 
 
-def _get_restart_copy_dict(job):
+def _get_restart_copy_dict(job: "pyiron_base.jobs.job.generic.GenericJob") -> dict:
     copy_dict = {}
     for i, actual_name in enumerate(
         [os.path.basename(f) for f in job.restart_file_list]
@@ -231,7 +254,7 @@ def _get_restart_copy_dict(job):
     return copy_dict
 
 
-def _copy_restart_files(job):
+def _copy_restart_files(job: "pyiron_base.jobs.job.generic.GenericJob") -> None:
     """
     Internal helper function to copy the files required for the restart job.
     """
@@ -246,7 +269,7 @@ def _copy_restart_files(job):
         )
 
 
-def _kill_child(job):
+def _kill_child(job: "pyiron_base.jobs.job.core.JobCore") -> None:
     """
     Internal helper function to kill a child process.
 
@@ -273,19 +296,25 @@ def _kill_child(job):
                     job_process.kill()
 
 
-def _job_compressed_name(job):
+def _job_compressed_name(job: "pyiron_base.jobs.job.core.JobCore") -> str:
     """Return the canonical file name of a compressed job."""
     return _get_compressed_job_name(working_directory=job.working_directory)
 
 
-def _get_compressed_job_name(working_directory):
+def _get_compressed_job_name(
+    working_directory: "pyiron_base.jobs.job.core.JobCore",
+) -> str:
     """Return the canonical file name of a compressed job from the working directory."""
     return os.path.join(
         working_directory, os.path.basename(working_directory) + ".tar.bz2"
     )
 
 
-def _job_compress(job, files_to_compress=[], files_to_remove=[]):
+def _job_compress(
+    job: "pyiron_base.jobs.job.core.JobCore",
+    files_to_compress: list = [],
+    files_to_remove: list = [],
+) -> None:
     """
     Compress the output files of a job object.
 
@@ -322,7 +351,7 @@ def _job_compress(job, files_to_compress=[], files_to_remove=[]):
         job.logger.info("The files are already compressed!")
 
 
-def _job_decompress(job):
+def _job_decompress(job: "pyiron_base.jobs.job.core.JobCore") -> None:
     """
     Decompress the output files of a compressed job object.
 
@@ -338,7 +367,7 @@ def _job_decompress(job):
         pass
 
 
-def _working_directory_is_compressed(working_directory):
+def _working_directory_is_compressed(working_directory: str) -> bool:
     """
     Check if the working directory of a given job is already compressed or not.
 
@@ -354,7 +383,7 @@ def _working_directory_is_compressed(working_directory):
     return compressed_name in os.listdir(working_directory)
 
 
-def _job_is_compressed(job):
+def _job_is_compressed(job: "pyiron_base.jobs.job.core.JobCore") -> bool:
     """
     Check if the job is already compressed or not.
 
@@ -367,7 +396,9 @@ def _job_is_compressed(job):
     return _working_directory_is_compressed(working_directory=job.working_directory)
 
 
-def _working_directory_list_files(working_directory, include_archive=True):
+def _working_directory_list_files(
+    working_directory: str, include_archive: bool = True
+) -> list:
     """
     Returns list of files in the jobs working directory.
 
@@ -399,7 +430,7 @@ def _working_directory_list_files(working_directory, include_archive=True):
     return []
 
 
-def _job_list_files(job):
+def _job_list_files(job: "pyiron_base.jobs.job.core.JobCore") -> list:
     """
     Returns list of files in the jobs working directory.
 
@@ -414,7 +445,9 @@ def _job_list_files(job):
     return _working_directory_list_files(working_directory=job.working_directory)
 
 
-def _working_directory_read_file(working_directory, file_name, tail=None):
+def _working_directory_read_file(
+    working_directory: str, file_name: str, tail: Optional[int] = None
+) -> list:
     """
     Return list of lines of the given file.
 
@@ -472,7 +505,9 @@ def _working_directory_read_file(working_directory, file_name, tail=None):
             return lines
 
 
-def _job_read_file(job, file_name, tail=None):
+def _job_read_file(
+    job: "pyiron_base.jobs.job.core.JobCore", file_name: str, tail: Optional[int] = None
+) -> list:
     """
     Return list of lines of the given file.
 
@@ -493,7 +528,7 @@ def _job_read_file(job, file_name, tail=None):
     )
 
 
-def _job_archive(job):
+def _job_archive(job: "pyiron_base.jobs.job.core.JobCore") -> None:
     """
     Compress HDF5 file of the job object to tar-archive
 
@@ -522,7 +557,7 @@ def _job_archive(job):
         os.chdir(cwd)
 
 
-def _job_unarchive(job):
+def _job_unarchive(job: "pyiron_base.jobs.job.core.JobCore") -> None:
     """
     Decompress HDF5 file of the job object from tar-archive
 
@@ -539,7 +574,7 @@ def _job_unarchive(job):
         pass
 
 
-def _job_is_archived(job):
+def _job_is_archived(job: "pyiron_base.jobs.job.core.JobCore") -> bool:
     """
     Check if the HDF5 file of the Job is compressed as tar-archive
 
@@ -554,7 +589,7 @@ def _job_is_archived(job):
     )
 
 
-def _job_delete_hdf(job):
+def _job_delete_hdf(job: "pyiron_base.jobs.job.core.JobCore") -> None:
     """
     Delete HDF5 file of job object
 
@@ -565,7 +600,7 @@ def _job_delete_hdf(job):
         os.remove(job.project_hdf5.file_name)
 
 
-def _job_delete_files(job):
+def _job_delete_files(job: "pyiron_base.jobs.job.core.JobCore") -> None:
     """
     Delete files in the working directory of job object
 
@@ -579,7 +614,7 @@ def _job_delete_files(job):
         job._import_directory = None
 
 
-def _job_remove_folder(job):
+def _job_remove_folder(job: "pyiron_base.jobs.job.core.JobCore") -> None:
     """
     Delete the working directory of the job object
 
@@ -591,7 +626,7 @@ def _job_remove_folder(job):
         shutil.rmtree(working_directory)
 
 
-def _job_store_before_copy(job):
+def _job_store_before_copy(job: "pyiron_base.jobs.job.core.JobCore") -> bool:
     """
     Store job in HDF5 file for copying
 
@@ -609,7 +644,9 @@ def _job_store_before_copy(job):
     return delete_file_after_copy
 
 
-def _job_reload_after_copy(job, delete_file_after_copy):
+def _job_reload_after_copy(
+    job: "pyiron_base.jobs.job.core.JobCore", delete_file_after_copy: bool
+) -> None:
     """
     Reload job from HDF5 file after copying
 

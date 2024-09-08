@@ -1050,7 +1050,7 @@ class ProjectHDFio(FileHDFio, BaseHDFio):
 
     def __init__(
         self,
-        project: "Project",
+        project: "pyiron_base.project.generic.Project",
         file_name: str,
         h5_path: Optional[str] = None,
         mode: Optional[str] = None,
@@ -1100,7 +1100,7 @@ class ProjectHDFio(FileHDFio, BaseHDFio):
         return os.path.join(self._project.path, self.h5_path[1:]).replace("\\", "/")
 
     @property
-    def project(self) -> "Project":
+    def project(self) -> "pyiron_base.project.generic.Project":
         """
         Get the project instance the ProjectHDFio object is located in
 
