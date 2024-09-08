@@ -12,7 +12,7 @@ import warnings
 from concurrent.futures import Executor, Future
 from datetime import datetime
 from inspect import isclass
-from typing import Optional
+from typing import Optional, Union
 
 from h5io_browser.base import _read_hdf, _write_hdf
 from pyiron_snippets.deprecate import deprecate
@@ -54,6 +54,7 @@ from pyiron_base.jobs.job.util import (
 )
 from pyiron_base.state import state
 from pyiron_base.state.signal import catch_signals
+from pyiron_base.storage.hdfio import ProjectHDFio
 from pyiron_base.utils.instance import import_class, static_isinstance
 
 __author__ = "Joerg Neugebauer, Jan Janssen"
@@ -133,8 +134,8 @@ class GenericJob(JobCore, HasDict):
         + _doc_str_generic_job_attr
     )
 
-    def __init__(self, project, job_name):
-        super(GenericJob, self).__init__(project, job_name)
+    def __init__(self, project: ProjectHDFio, job_name: str):
+        super(GenericJob, self).__init__(project=project, job_name=job_name)
         self.__name__ = type(self).__name__
         self.__version__ = "0.4"
         self.__hdf_version__ = "0.1.0"
@@ -173,7 +174,7 @@ class GenericJob(JobCore, HasDict):
         self.error = GenericError(working_directory=self.project_hdf5.working_directory)
 
     @property
-    def version(self):
+    def version(self) -> str:
         """
         Get the version of the hamiltonian, which is also the version of the executable unless a custom executable is
         used.
@@ -191,7 +192,7 @@ class GenericJob(JobCore, HasDict):
                 return None
 
     @version.setter
-    def version(self, new_version):
+    def version(self, new_version: str) -> None:
         """
         Set the version of the hamiltonian, which is also the version of the executable unless a custom executable is
         used.
@@ -203,7 +204,7 @@ class GenericJob(JobCore, HasDict):
         self._executable.version = new_version
 
     @property
-    def executable(self):
+    def executable(self) -> Executable:
         """
         Get the executable used to run the job - usually the path to an external executable.
 
@@ -214,7 +215,7 @@ class GenericJob(JobCore, HasDict):
         return self._executable
 
     @executable.setter
-    def executable(self, exe):
+    def executable(self, exe: str) -> None:
         """
         Set the executable used to run the job - usually the path to an external executable.
 
@@ -225,7 +226,7 @@ class GenericJob(JobCore, HasDict):
         self._executable.executable_path = exe
 
     @property
-    def server(self):
+    def server(self) -> Server:
         """
         Get the server object to handle the execution environment for the job.
 
@@ -235,7 +236,7 @@ class GenericJob(JobCore, HasDict):
         return self._server
 
     @server.setter
-    def server(self, server):
+    def server(self, server: Server) -> None:
         """
         Set the server object to handle the execution environment for the job.
         Args:
@@ -244,7 +245,7 @@ class GenericJob(JobCore, HasDict):
         self._server = server
 
     @property
-    def queue_id(self):
+    def queue_id(self) -> int:
         """
         Get the queue ID, the ID returned from the queuing system - it is most likely not the same as the job ID.
 
@@ -254,7 +255,7 @@ class GenericJob(JobCore, HasDict):
         return self.server.queue_id
 
     @queue_id.setter
-    def queue_id(self, qid):
+    def queue_id(self, qid: int) -> None:
         """
         Set the queue ID, the ID returned from the queuing system - it is most likely not the same as the job ID.
 
@@ -274,7 +275,7 @@ class GenericJob(JobCore, HasDict):
         return self._logger
 
     @property
-    def restart_file_list(self):
+    def restart_file_list(self) -> list:
         """
         Get the list of files which are used to restart the calculation from these files.
 
@@ -287,7 +288,7 @@ class GenericJob(JobCore, HasDict):
         return self._restart_file_list
 
     @restart_file_list.setter
-    def restart_file_list(self, filenames):
+    def restart_file_list(self, filenames: list) -> None:
         """
         Append new files to the restart file list - the list of files which are used to restart the calculation from.
 
@@ -302,7 +303,7 @@ class GenericJob(JobCore, HasDict):
             self.restart_file_list.append(f)
 
     @property
-    def restart_file_dict(self):
+    def restart_file_dict(self) -> dict:
         """
         A dictionary of the new name of the copied restart files
         """
@@ -312,7 +313,7 @@ class GenericJob(JobCore, HasDict):
         return self._restart_file_dict
 
     @restart_file_dict.setter
-    def restart_file_dict(self, val):
+    def restart_file_dict(self, val: str) -> None:
         if not isinstance(val, dict):
             raise ValueError("restart_file_dict should be a dictionary!")
         else:
@@ -325,7 +326,7 @@ class GenericJob(JobCore, HasDict):
                 self._restart_file_dict[k] = v
 
     @property
-    def exclude_nodes_hdf(self):
+    def exclude_nodes_hdf(self) -> list:
         """
         Get the list of nodes which are excluded from storing in the hdf5 file
 
@@ -335,7 +336,7 @@ class GenericJob(JobCore, HasDict):
         return self._exclude_nodes_hdf
 
     @exclude_nodes_hdf.setter
-    def exclude_nodes_hdf(self, val):
+    def exclude_nodes_hdf(self, val: Union[list, str]) -> None:
         if isinstance(val, str):
             val = [val]
         elif not hasattr(val, "__len__"):
@@ -343,7 +344,7 @@ class GenericJob(JobCore, HasDict):
         self._exclude_nodes_hdf = val
 
     @property
-    def exclude_groups_hdf(self):
+    def exclude_groups_hdf(self) -> list:
         """
         Get the list of groups which are excluded from storing in the hdf5 file
 
@@ -353,7 +354,7 @@ class GenericJob(JobCore, HasDict):
         return self._exclude_groups_hdf
 
     @exclude_groups_hdf.setter
-    def exclude_groups_hdf(self, val):
+    def exclude_groups_hdf(self, val: Union[list, str]) -> None:
         if isinstance(val, str):
             val = [val]
         elif not hasattr(val, "__len__"):
@@ -361,7 +362,7 @@ class GenericJob(JobCore, HasDict):
         self._exclude_groups_hdf = val
 
     @property
-    def job_type(self):
+    def job_type(self) -> str:
         """
         Job type object with all the available job types: ['ExampleJob', 'ParallelMaster', 'ScriptJob',
                                                            'ListMaster']
@@ -371,7 +372,7 @@ class GenericJob(JobCore, HasDict):
         return self.project.job_type
 
     @property
-    def working_directory(self):
+    def working_directory(self) -> str:
         """
         Get the working directory of the job is executed in - outside the HDF5 file. The working directory equals the
         path but it is represented by the filesystem:
@@ -389,11 +390,11 @@ class GenericJob(JobCore, HasDict):
         return self.project_hdf5.working_directory
 
     @property
-    def executor_type(self):
+    def executor_type(self) -> Union[str, Executor]:
         return self._executor_type
 
     @executor_type.setter
-    def executor_type(self, exe):
+    def executor_type(self, exe: Union[str, Executor]) -> None:
         if exe is None:
             self._executor_type = exe
         elif isinstance(exe, str):
@@ -455,7 +456,7 @@ class GenericJob(JobCore, HasDict):
             "output_parameter_dict": self.get_output_parameter_dict(),
         }
 
-    def clear_job(self):
+    def clear_job(self) -> None:
         """
         Convenience function to clear job info after suspend. Mimics deletion of all the job info after suspend in a
         local test environment.
@@ -470,7 +471,7 @@ class GenericJob(JobCore, HasDict):
         del self._restart_file_list
         del self._restart_file_dict
 
-    def copy(self):
+    def copy(self) -> "GenericJob":
         """
         Copy the GenericJob object which links to the job and its HDF5 file
 
@@ -500,7 +501,7 @@ class GenericJob(JobCore, HasDict):
             )
         return copied_self
 
-    def collect_logfiles(self):
+    def collect_logfiles(self) -> None:
         """
         Collect the log files of the external executable and store the information in the HDF5 file. This method has
         to be implemented in the individual hamiltonians.
@@ -559,10 +560,10 @@ class GenericJob(JobCore, HasDict):
                 "files_to_copy": _get_restart_copy_dict(job=self),
             }
 
-    def get_output_parameter_dict(self):
+    def get_output_parameter_dict(self) -> dict:
         return {}
 
-    def collect_output(self):
+    def collect_output(self) -> None:
         """
         Collect the output files of the external executable and store the information in the HDF5 file. This method has
         to be implemented in the individual hamiltonians.
@@ -573,7 +574,7 @@ class GenericJob(JobCore, HasDict):
 
     def save_output(
         self, output_dict: Optional[dict] = None, shell_output: Optional[str] = None
-    ):
+    ) -> None:
         """
         Store output of the calculate function in the HDF5 file.
 
@@ -588,7 +589,7 @@ class GenericJob(JobCore, HasDict):
         if shell_output is not None or output_dict is not None:
             self.to_hdf()
 
-    def suspend(self):
+    def suspend(self) -> None:
         """
         Suspend the job by storing the object and its state persistently in HDF5 file and exit it.
         """
@@ -601,7 +602,7 @@ class GenericJob(JobCore, HasDict):
         )
         self.clear_job()
 
-    def refresh_job_status(self):
+    def refresh_job_status(self) -> None:
         """
         Refresh job status by updating the job status with the status from the database if a job ID is available.
         """
@@ -627,7 +628,7 @@ class GenericJob(JobCore, HasDict):
             else:
                 self.status.finished = True
 
-    def write_input(self):
+    def write_input(self) -> None:
         """
         Call routines that generate the code specific input files
         Returns:
@@ -639,11 +640,11 @@ class GenericJob(JobCore, HasDict):
 
     def _internal_copy_to(
         self,
-        project=None,
-        new_job_name=None,
-        new_database_entry=True,
-        copy_files=True,
-        delete_existing_job=False,
+        project: Optional[ProjectHDFio]=None,
+        new_job_name: str=None,
+        new_database_entry: bool=True,
+        copy_files: bool=True,
+        delete_existing_job: bool=False,
     ):
         # Store all job arguments in the HDF5 file
         delete_file_after_copy = _job_store_before_copy(job=self)
@@ -674,12 +675,12 @@ class GenericJob(JobCore, HasDict):
 
     def copy_to(
         self,
-        project=None,
-        new_job_name=None,
-        input_only=False,
-        new_database_entry=True,
-        delete_existing_job=False,
-        copy_files=True,
+        project: Optional[Union[ProjectHDFio, JobCore]]=None,
+        new_job_name: Optional[str]=None,
+        input_only: bool=False,
+        new_database_entry: bool=True,
+        delete_existing_job: bool=False,
+        copy_files: bool =True,
     ):
         """
         Copy the content of the job including the HDF5 file to a new location.
@@ -727,7 +728,7 @@ class GenericJob(JobCore, HasDict):
         )
         return new_job_core
 
-    def _after_generic_copy_to(self, original, new_database_entry, reloaded):
+    def _after_generic_copy_to(self, original: "GenericJob", new_database_entry: bool, reloaded: bool) -> None:
         """
         Called in :method:`.copy_to()` after :method`._internal_copy_to()` to allow sub classes to modify copy behavior.
 
@@ -738,7 +739,7 @@ class GenericJob(JobCore, HasDict):
         """
         pass
 
-    def copy_file_to_working_directory(self, file):
+    def copy_file_to_working_directory(self, file: str) -> None:
         """
         Copy a specific file to the working directory before the job is executed.
 
@@ -750,7 +751,7 @@ class GenericJob(JobCore, HasDict):
         else:
             self.restart_file_list.append(os.path.abspath(file))
 
-    def copy_template(self, project=None, new_job_name=None):
+    def copy_template(self, project: Optional[Union[ProjectHDFio, JobCore]]=None, new_job_name: Optional[None]=None) -> "GenericJob":
         """
         Copy the content of the job including the HDF5 file but without the output data to a new location
 
@@ -770,7 +771,7 @@ class GenericJob(JobCore, HasDict):
             new_database_entry=False,
         )
 
-    def remove(self, _protect_childs=True):
+    def remove(self, _protect_childs: bool=True) -> None:
         """
         Remove the job - this removes the HDF5 file, all data stored in the HDF5 file an the corresponding database entry.
 
@@ -782,7 +783,7 @@ class GenericJob(JobCore, HasDict):
             self.server.future.cancel()
         super().remove(_protect_childs=_protect_childs)
 
-    def remove_child(self):
+    def remove_child(self) -> None:
         """
         internal function to remove command that removes also child jobs.
         Do never use this command, since it will destroy the integrity of your project.
@@ -790,7 +791,16 @@ class GenericJob(JobCore, HasDict):
         _kill_child(job=self)
         super(GenericJob, self).remove_child()
 
-    def remove_and_reset_id(self, _protect_childs=True):
+    def remove_and_reset_id(self, _protect_childs: bool=True) -> None:
+        """
+        Remove the job and reset its ID.
+
+        Args:
+            _protect_childs (bool): Flag indicating whether to protect child jobs (default is True).
+
+        Returns:
+            None
+        """
         if self.job_id is not None:
             master_id, parent_id = self.master_id, self.parent_id
             self.remove(_protect_childs=_protect_childs)
@@ -799,7 +809,16 @@ class GenericJob(JobCore, HasDict):
         else:
             self.remove(_protect_childs=_protect_childs)
 
-    def kill(self):
+    def kill(self) -> None:
+        """
+        Kill the job.
+
+        This function is used to terminate the execution of the job. It checks if the job is currently running or submitted,
+        and if so, it removes and resets the job ID. If the job is not running or submitted, a `ValueError` is raised.
+
+        Returns:
+            None
+        """
         if self.status.running or self.status.submitted:
             self.remove_and_reset_id()
         else:
@@ -807,7 +826,7 @@ class GenericJob(JobCore, HasDict):
                 "The kill() function is only available during the execution of the job."
             )
 
-    def validate_ready_to_run(self):
+    def validate_ready_to_run(self) -> None:
         """
         Validate that the calculation is ready to be executed. By default no generic checks are performed, but one could
         check that the input information is complete or validate the consistency of the input at this point.
@@ -817,7 +836,7 @@ class GenericJob(JobCore, HasDict):
         """
         pass
 
-    def check_setup(self):
+    def check_setup(self) -> None:
         """
         Checks whether certain parameters (such as plane wave cutoff radius in DFT) are changed from the pyiron standard
         values to allow for a physically meaningful results. This function is called manually or only when the job is
@@ -825,7 +844,7 @@ class GenericJob(JobCore, HasDict):
         """
         pass
 
-    def reset_job_id(self, job_id=None):
+    def reset_job_id(self, job_id: Optional[int]=None) -> None:
         """
         Reset the job id sets the job_id to None in the GenericJob as well as all connected modules like JobStatus.
         """
@@ -838,12 +857,12 @@ class GenericJob(JobCore, HasDict):
     )
     def run(
         self,
-        delete_existing_job=False,
-        repair=False,
-        debug=False,
-        run_mode=None,
-        run_again=False,
-    ):
+        delete_existing_job: bool=False,
+        repair: bool=False,
+        debug: bool =False,
+        run_mode: Optional[str]=None,
+        run_again: bool=False,
+    ) -> None:
         """
         This is the main run function, depending on the job status ['initialized', 'created', 'submitted', 'running',
         'collect','finished', 'refresh', 'suspended'] the corresponding run mode is chosen.
@@ -902,14 +921,14 @@ class GenericJob(JobCore, HasDict):
                 self.drop_status_to_aborted()
                 raise
 
-    def run_if_modal(self):
+    def run_if_modal(self) -> None:
         """
         The run if modal function is called by run to execute the simulation, while waiting for the output. For this we
         use subprocess.check_output()
         """
         run_job_with_runmode_modal(job=self)
 
-    def run_static(self):
+    def run_static(self) -> Union[None, int]:
         """
         The run static function is called by run to execute the simulation.
         """
@@ -919,7 +938,7 @@ class GenericJob(JobCore, HasDict):
         else:
             return execute_job_with_external_executable(job=self)
 
-    def run_if_scheduler(self):
+    def run_if_scheduler(self) -> Union[None, int]:
         """
         The run if queue function is called by run if the user decides to submit the job to and queing system. The job
         is submitted to the queuing system using subprocess.Popen()
@@ -928,7 +947,21 @@ class GenericJob(JobCore, HasDict):
         """
         return run_job_with_runmode_queue(job=self)
 
-    def transfer_from_remote(self):
+    def transfer_from_remote(self) -> None:
+        """
+        Transfer the job from a remote location to the local machine.
+
+        This method transfers the job from a remote location to the local machine. It performs the following steps:
+        1. Retrieves the job from the remote location using the queue adapter.
+        2. Transfers the job file to the remote location, with the option to delete the file on the remote location after transfer.
+        3. Updates the project database if it is disabled, otherwise updates the file table in the database with the job information.
+
+        Args:
+            None
+
+        Returns:
+            None
+        """
         state.queue_adapter.get_job_from_remote(
             working_directory="/".join(self.working_directory.split("/")[:-1]),
         )
@@ -984,7 +1017,7 @@ class GenericJob(JobCore, HasDict):
         if self.master_id is not None:
             self._reload_update_master(project=self.project, master_id=self.master_id)
 
-    def run_if_interactive(self):
+    def run_if_interactive(self) -> None:
         """
         For jobs which executables are available as Python library, those can also be executed with a library call
         instead of calling an external executable. This is usually faster than a single core python job.
@@ -993,7 +1026,7 @@ class GenericJob(JobCore, HasDict):
             "This function needs to be implemented in the specific class."
         )
 
-    def run_if_interactive_non_modal(self):
+    def run_if_interactive_non_modal(self) -> None:
         """
         For jobs which executables are available as Python library, those can also be executed with a library call
         instead of calling an external executable. This is usually faster than a single core python job.
@@ -1002,7 +1035,7 @@ class GenericJob(JobCore, HasDict):
             "This function needs to be implemented in the specific class."
         )
 
-    def interactive_close(self):
+    def interactive_close(self) -> None:
         """
         For jobs which executables are available as Python library, those can also be executed with a library call
         instead of calling an external executable. This is usually faster than a single core python job. After the
@@ -1012,7 +1045,7 @@ class GenericJob(JobCore, HasDict):
             "This function needs to be implemented in the specific class."
         )
 
-    def interactive_fetch(self):
+    def interactive_fetch(self) -> None:
         """
         For jobs which executables are available as Python library, those can also be executed with a library call
         instead of calling an external executable. This is usually faster than a single core python job. To access the
@@ -1022,7 +1055,7 @@ class GenericJob(JobCore, HasDict):
             "This function needs to be implemented in the specific class."
         )
 
-    def interactive_flush(self, path="generic", include_last_step=True):
+    def interactive_flush(self, path: str="generic", include_last_step: bool=True) -> None:
         """
         For jobs which executables are available as Python library, those can also be executed with a library call
         instead of calling an external executable. This is usually faster than a single core python job. To write the
@@ -1032,7 +1065,7 @@ class GenericJob(JobCore, HasDict):
             "This function needs to be implemented in the specific class."
         )
 
-    def _init_child_job(self, parent):
+    def _init_child_job(self, parent: "GenericJob") -> None:
         """
         Finalize job initialization when job instance is created as a child from another one.
 
@@ -1043,7 +1076,7 @@ class GenericJob(JobCore, HasDict):
         """
         pass
 
-    def create_job(self, job_type, job_name, delete_existing_job=False):
+    def create_job(self, job_type: str, job_name: str, delete_existing_job: bool =False) -> "GenericJob":
         """
         Create one of the following jobs:
         - 'StructureContainer’:
@@ -1099,7 +1132,7 @@ class GenericJob(JobCore, HasDict):
         job._init_child_job(self)
         return job
 
-    def update_master(self, force_update=False):
+    def update_master(self, force_update: bool=False) -> None:
         """
         After a job is finished it checks whether it is linked to any metajob - meaning the master ID is pointing to
         this jobs job ID. If this is the case and the master job is in status suspended - the child wakes up the master
@@ -1130,7 +1163,7 @@ class GenericJob(JobCore, HasDict):
             ):
                 self._reload_update_master(project=project, master_id=master_id)
 
-    def job_file_name(self, file_name, cwd=None):
+    def job_file_name(self, file_name: str, cwd: Optional[str]=None) -> str:
         """
         combine the file name file_name with the path of the current working directory
 
@@ -1145,13 +1178,19 @@ class GenericJob(JobCore, HasDict):
             cwd = self.project_hdf5.working_directory
         return posixpath.join(cwd, file_name)
 
-    def _set_hdf(self, hdf=None, group_name=None):
+    def _set_hdf(self, hdf: Optional[ProjectHDFio]=None, group_name: Optional[str]=None) -> None:
         if hdf is not None:
             self._hdf5 = hdf
         if group_name is not None and self._hdf5 is not None:
             self._hdf5 = self._hdf5.open(group_name)
 
-    def _to_dict(self):
+    def _to_dict(self) -> dict:
+        """
+        Convert the GenericJob object to a dictionary.
+
+        Returns:
+            dict: The dictionary representation of the GenericJob object.
+        """
         data_dict = {}
         data_dict["status"] = self.status.string
         data_dict["input/generic_dict"] = {
@@ -1175,7 +1214,14 @@ class GenericJob(JobCore, HasDict):
         data_dict["HDF_VERSION"] = self.__version__
         return data_dict
 
-    def _from_dict(self, obj_dict, version=None):
+    def _from_dict(self, obj_dict: dict, version: str=None) -> None:
+        """
+        Restore the GenericJob object from a dictionary.
+
+        Args:
+            obj_dict (dict): The dictionary representation of the GenericJob object.
+            version (str): The version of the GenericJob object (optional).
+        """
         self._type_from_dict(type_dict=obj_dict)
         if "import_directory" in obj_dict.keys():
             self._import_directory = obj_dict["import_directory"]
@@ -1201,7 +1247,7 @@ class GenericJob(JobCore, HasDict):
         if "executor_type" in input_dict.keys():
             self._executor_type = input_dict["executor_type"]
 
-    def to_hdf(self, hdf=None, group_name=None):
+    def to_hdf(self, hdf: Optional[ProjectHDFio]=None, group_name: Optional[str]=None) -> None:
         """
         Store the GenericJob in an HDF5 file
 
@@ -1213,7 +1259,7 @@ class GenericJob(JobCore, HasDict):
         self._hdf5.write_dict(data_dict=self.to_dict())
 
     @classmethod
-    def from_hdf_args(cls, hdf):
+    def from_hdf_args(cls, hdf: ProjectHDFio) -> dict:
         """
         Read arguments for instance creation from HDF5 file
 
@@ -1226,7 +1272,7 @@ class GenericJob(JobCore, HasDict):
         )
         return {"job_name": job_name, "project": project_hdf5}
 
-    def from_hdf(self, hdf=None, group_name=None):
+    def from_hdf(self, hdf: Optional[ProjectHDFio]=None, group_name: Optional[str]=None) -> None:
         """
         Restore the GenericJob from an HDF5 file
 
@@ -1245,7 +1291,7 @@ class GenericJob(JobCore, HasDict):
             job_dict["executable"] = {"executable": exe_dict}
         self.from_dict(obj_dict=job_dict)
 
-    def save(self):
+    def save(self) -> None:
         """
         Save the object, by writing the content to the HDF5 file and storing an entry in the database.
 
@@ -1277,7 +1323,7 @@ class GenericJob(JobCore, HasDict):
         )
         return job_id
 
-    def convergence_check(self):
+    def convergence_check(self) -> bool:
         """
         Validate the convergence of the calculation.
 
@@ -1286,7 +1332,7 @@ class GenericJob(JobCore, HasDict):
         """
         return True
 
-    def db_entry(self):
+    def db_entry(self) -> dict:
         """
         Generate the initial database entry for the current GenericJob
 
@@ -1310,7 +1356,7 @@ class GenericJob(JobCore, HasDict):
         }
         return db_dict
 
-    def restart(self, job_name=None, job_type=None):
+    def restart(self, job_name: Optional[str]=None, job_type: Optional[str] =None) -> "GenericJob":
         """
         Create an restart calculation from the current calculation - in the GenericJob this is the same as create_job().
         A restart is only possible after the current job has finished. If you want to run the same job again with
@@ -1344,7 +1390,7 @@ class GenericJob(JobCore, HasDict):
         new_ham._restart_file_dict = dict()
         return new_ham
 
-    def _list_all(self):
+    def _list_all(self) -> dict:
         """
         List all groups and nodes of the HDF5 file - where groups are equivalent to directories and nodes to files.
 
@@ -1356,7 +1402,7 @@ class GenericJob(JobCore, HasDict):
             h5_dict["groups"] += self._list_ext_childs()
         return h5_dict
 
-    def signal_intercept(self, sig):
+    def signal_intercept(self, sig) -> None:
         """
         Abort the job and log signal that caused it.
 
@@ -1376,7 +1422,7 @@ class GenericJob(JobCore, HasDict):
         except:
             raise
 
-    def drop_status_to_aborted(self):
+    def drop_status_to_aborted(self) -> None:
         """
         Change the job status to aborted when the job was intercepted.
         """
@@ -1385,7 +1431,7 @@ class GenericJob(JobCore, HasDict):
             self.status.aborted = True
             self.project_hdf5["status"] = self.status.string
 
-    def _run_if_new(self, debug=False):
+    def _run_if_new(self, debug: bool=False) -> None:
         """
         Internal helper function the run if new function is called when the job status is 'initialized'. It prepares
         the hdf5 file and the corresponding directory structure.
@@ -1395,7 +1441,7 @@ class GenericJob(JobCore, HasDict):
         """
         run_job_with_status_initialized(job=self, debug=debug)
 
-    def _run_if_created(self):
+    def _run_if_created(self) -> Union[None, int]:
         """
         Internal helper function the run if created function is called when the job status is 'created'. It executes
         the simulation, either in modal mode, meaning waiting for the simulation to finish, manually, or submits the
@@ -1406,41 +1452,41 @@ class GenericJob(JobCore, HasDict):
         """
         return run_job_with_status_created(job=self)
 
-    def _run_if_repair(self):
+    def _run_if_repair(self) -> None:
         """
         Internal helper function the run if repair function is called when the run() function is called with the
         'repair' parameter.
         """
         run_job_with_parameter_repair(job=self)
 
-    def _run_if_running(self):
+    def _run_if_running(self) -> None:
         """
         Internal helper function the run if running function is called when the job status is 'running'. It allows the
         user to interact with the simulation while it is running.
         """
         run_job_with_status_running(job=self)
 
-    def run_if_refresh(self):
+    def run_if_refresh(self) -> None:
         """
         Internal helper function the run if refresh function is called when the job status is 'refresh'. If the job was
         suspended previously, the job is going to be started again, to be continued.
         """
         run_job_with_status_refresh(job=self)
 
-    def set_input_to_read_only(self):
+    def set_input_to_read_only(self) -> None:
         """
         This function enforces read-only mode for the input classes, but it has to be implemented in the individual
         classes.
         """
         self.server.lock()
 
-    def _run_if_busy(self):
+    def _run_if_busy(self) -> None:
         """
         Internal helper function the run if busy function is called when the job status is 'busy'.
         """
         run_job_with_status_busy(job=self)
 
-    def _run_if_collect(self):
+    def _run_if_collect(self) -> None:
         """
         Internal helper function the run if collect function is called when the job status is 'collect'. It collects
         the simulation output using the standardized functions collect_output() and collect_logfiles(). Afterwards the
@@ -1448,14 +1494,14 @@ class GenericJob(JobCore, HasDict):
         """
         run_job_with_status_collect(job=self)
 
-    def _run_if_suspended(self):
+    def _run_if_suspended(self) -> None:
         """
         Internal helper function the run if suspended function is called when the job status is 'suspended'. It
         restarts the job by calling the run if refresh function after setting the status to 'refresh'.
         """
         run_job_with_status_suspended(job=self)
 
-    def _executable_activate(self, enforce=False, codename=None):
+    def _executable_activate(self, enforce: bool=False, codename: Optional[str]=None) -> None:
         """
         Internal helper function to koad the executable object, if it was not loaded already.
 
@@ -1490,7 +1536,7 @@ class GenericJob(JobCore, HasDict):
                     path_binary_codes=None,
                 )
 
-    def _type_to_dict(self):
+    def _type_to_dict(self) -> dict:
         """
         Internal helper function to save type and version in HDF5 file root
         """
@@ -1501,12 +1547,12 @@ class GenericJob(JobCore, HasDict):
             data_dict["HDF_VERSION"] = self.__hdf_version__
         return data_dict
 
-    def _type_from_dict(self, type_dict):
+    def _type_from_dict(self, type_dict: dict) -> None:
         self.__obj_type__ = type_dict["TYPE"]
         if self._executable is None:
             self.__obj_version__ = type_dict["VERSION"]
 
-    def _type_from_hdf(self):
+    def _type_from_hdf(self) -> None:
         """
         Internal helper function to load type and version from HDF5 file root
         """
@@ -1517,14 +1563,14 @@ class GenericJob(JobCore, HasDict):
             }
         )
 
-    def run_time_to_db(self):
+    def run_time_to_db(self) -> None:
         """
         Internal helper function to store the run_time in the database
         """
         if not state.database.database_is_disabled and self.job_id is not None:
             self.project.db.item_update(self._runtime(), self.job_id)
 
-    def _runtime(self):
+    def _runtime(self) -> dict:
         """
         Internal helper function to calculate runtime by substracting the starttime, from the stoptime.
 
@@ -1538,7 +1584,7 @@ class GenericJob(JobCore, HasDict):
             "totalcputime": int((stop_time - start_time).total_seconds()),
         }
 
-    def _db_server_entry(self):
+    def _db_server_entry(self) -> str:
         """
         Internal helper function to connect all the info regarding the server into a single word that can be used
         e.g. as entry in a database
@@ -1549,7 +1595,7 @@ class GenericJob(JobCore, HasDict):
         """
         return self._server.db_entry()
 
-    def _executable_activate_mpi(self):
+    def _executable_activate_mpi(self) -> None:
         """
         Internal helper function to switch the executable to MPI mode
         """
@@ -1564,7 +1610,7 @@ class GenericJob(JobCore, HasDict):
             )
 
     @deprecate("Use job.save()")
-    def _create_job_structure(self, debug=False):
+    def _create_job_structure(self, debug: bool=False) -> None:
         """
         Internal helper function to create the input directories, save the job in the database and write the wrapper.
 
@@ -1573,7 +1619,7 @@ class GenericJob(JobCore, HasDict):
         """
         self.save()
 
-    def _check_if_input_should_be_written(self):
+    def _check_if_input_should_be_written(self) -> bool:
         if self._job_with_calculate_function:
             return False
         else:
@@ -1582,7 +1628,7 @@ class GenericJob(JobCore, HasDict):
                 or self.server.run_mode.interactive_non_modal
             )
 
-    def _before_successor_calc(self, ham):
+    def _before_successor_calc(self, ham: "GenericJob") -> None:
         """
         Internal helper function which is executed based on the hamiltonian of the successor job, before it is executed.
         This function is used to execute a series of jobs based on their parent relationship - marked by the parent ID.
@@ -1590,7 +1636,7 @@ class GenericJob(JobCore, HasDict):
         """
         pass
 
-    def _reload_update_master(self, project, master_id):
+    def _reload_update_master(self, project: ProjectHDFio, master_id: int) -> None:
         queue_flag = self.server.run_mode.queue
         master_db_entry = project.db.get_item_by_id(master_id)
         if master_db_entry["status"] == "suspended":
@@ -1608,7 +1654,7 @@ class GenericJob(JobCore, HasDict):
             self._logger.info("busy master: {} {}".format(master_id, self.get_job_id()))
             del self
 
-    def _get_executor(self, max_workers=None):
+    def _get_executor(self, max_workers: Optional[int]=None) -> Executor:
         if self._executor_type is None:
             raise ValueError(
                 "No executor type defined - Please set self.executor_type."
@@ -1631,10 +1677,10 @@ class GenericJob(JobCore, HasDict):
 
 
 class GenericError(object):
-    def __init__(self, working_directory):
+    def __init__(self, working_directory: str):
         self._working_directory = working_directory
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         all_messages = ""
         for message in [self.print_message(), self.print_queue()]:
             if message is True:
@@ -1643,13 +1689,13 @@ class GenericError(object):
             all_messages = "There is no error/warning"
         return all_messages
 
-    def print_message(self, string=""):
+    def print_message(self, string="") -> str:
         return self._print_error(file_name="error.msg", string=string)
 
-    def print_queue(self, string=""):
+    def print_queue(self, string="") -> str:
         return self._print_error(file_name="error.out", string=string)
 
-    def _print_error(self, file_name, string="", print_yes=True):
+    def _print_error(self, file_name: str, string: str="", print_yes: bool=True) -> str:
         if not os.path.exists(os.path.join(self._working_directory, file_name)):
             return ""
         elif print_yes:
