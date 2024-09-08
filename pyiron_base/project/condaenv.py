@@ -16,12 +16,6 @@ class CondaEnvironment:
         self._env_path = env_path
 
     def __dir__(self):
-        """
-        Return a list of attributes and methods of the CondaEnvironment object.
-
-        Returns:
-            list: A list of attributes and methods.
-        """
         return list(self._list_all_known_prefixes_dict().keys()) + ["create"]
 
     @staticmethod
