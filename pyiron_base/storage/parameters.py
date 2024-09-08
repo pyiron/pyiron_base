@@ -10,7 +10,7 @@ import posixpath
 import warnings
 from ast import literal_eval
 from collections import OrderedDict
-from typing import Optional, Union, Dict, List, Tuple
+from typing import Dict, List, Optional, Tuple, Union
 
 import numpy as np
 import pandas
@@ -275,7 +275,9 @@ class GenericParameters(HasDict):
         """
         self._replace_char_dict = new_replace_char_dict
 
-    def _read_only_check_dict(self, new_dict: Dict[str, List[Union[str, bool]]]) -> None:
+    def _read_only_check_dict(
+        self, new_dict: Dict[str, List[Union[str, bool]]]
+    ) -> None:
         if self.read_only and new_dict != self._dataset:
             self._read_only_error()
 
@@ -354,7 +356,9 @@ class GenericParameters(HasDict):
         """
         return pandas.DataFrame(self._dataset)
 
-    def get(self, parameter_name: str, default_value: Optional[str] = None) -> Union[str, None]:
+    def get(
+        self, parameter_name: str, default_value: Optional[str] = None
+    ) -> Union[str, None]:
         """
         Get the value of a specific parameter from GenericParameters - if the parameter is not available return
         default_value if that is set.
@@ -519,7 +523,9 @@ class GenericParameters(HasDict):
         """
         return {"data_dict": self._dataset}
 
-    def _from_dict(self, obj_dict: Dict[str, List[Union[str, bool]]], version: Optional[str] = None) -> None:
+    def _from_dict(
+        self, obj_dict: Dict[str, List[Union[str, bool]]], version: Optional[str] = None
+    ) -> None:
         """
         Reload GenericParameters from dictionary
 
@@ -744,7 +750,11 @@ class GenericParameters(HasDict):
             raise ValueError("unknown block to be removed")
         self.remove_keys(self._block_dict[block_name])
 
-    def _insert_block(self, block_dict: Dict[str, List[Union[str, bool]]], next_block: Optional[str] = None) -> None:
+    def _insert_block(
+        self,
+        block_dict: Dict[str, List[Union[str, bool]]],
+        next_block: Optional[str] = None,
+    ) -> None:
         """
         Internal helper function to insert a block by name
 
@@ -790,7 +800,12 @@ class GenericParameters(HasDict):
             del val[line_number]
             self._dataset[key] = val
 
-    def _insert(self, line_number: int, data_dict: Dict[str, List[Union[str, bool]]], shift: int = 0) -> None:
+    def _insert(
+        self,
+        line_number: int,
+        data_dict: Dict[str, List[Union[str, bool]]],
+        shift: int = 0,
+    ) -> None:
         """
         Internal helper function to insert a single line by line number
 
@@ -949,7 +964,7 @@ class GenericParameters(HasDict):
                         val = ""
                     else:
                         name = sep[0][0:keypos]
-                        val = sep[0][keypos + len(self.separator_char):]
+                        val = sep[0][keypos + len(self.separator_char) :]
                 lst["Parameter"].append(name.strip())
                 lst["Value"].append(self._bool_str_to_bool(val.strip()))
                 if len(sep) > 1:

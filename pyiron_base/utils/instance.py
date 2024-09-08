@@ -20,7 +20,7 @@ __date__ = "Sep 1, 2017"
 
 
 import importlib
-from typing import Union, List
+from typing import List, Union
 
 
 def static_isinstance(obj: object, obj_type: Union[str, List[str]]) -> bool:

@@ -8,7 +8,7 @@ Functions for reading and writing data files.
 import os.path
 import warnings
 from collections import namedtuple
-from typing import Union, Dict, List
+from typing import Dict, List, Union
 
 import yaml
 

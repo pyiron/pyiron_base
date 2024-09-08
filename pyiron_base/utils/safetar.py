@@ -1,5 +1,4 @@
 import os
-import os
 import tarfile
 
 
@@ -22,7 +21,13 @@ def is_within_directory(directory: str, target: str) -> bool:
     return prefix == abs_directory
 
 
-def safe_extract(tar: tarfile.TarFile, path: str = ".", members: list = None, *, numeric_owner: bool = False) -> None:
+def safe_extract(
+    tar: tarfile.TarFile,
+    path: str = ".",
+    members: list = None,
+    *,
+    numeric_owner: bool = False,
+) -> None:
     """
     Safely extract the contents of a tar file.
 

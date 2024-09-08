@@ -6,7 +6,7 @@ General purpose output parser
 """
 
 import ast
-from typing import List, Union, Any, Optional, Dict, Tuple 
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 import numpy as np
 
@@ -21,7 +21,10 @@ __email__ = "janssen@mpie.de"
 __status__ = "production"
 __date__ = "Sep 1, 2017"
 
-def extract_data_from_str_lst(str_lst: List[str], tag: str, num_args: int = 1) -> List[Union[str, List[str]]]:
+
+def extract_data_from_str_lst(
+    str_lst: List[str], tag: str, num_args: int = 1
+) -> List[Union[str, List[str]]]:
     """
     General purpose routine to extract any static from a log (text) file
 
@@ -58,7 +61,9 @@ def extract_data_from_str_lst(str_lst: List[str], tag: str, num_args: int = 1) -
     return collector
 
 
-def extract_data_from_file(file_name: str, tag: str, num_args: int = 1) -> List[Union[str, List[str]]]:
+def extract_data_from_file(
+    file_name: str, tag: str, num_args: int = 1
+) -> List[Union[str, List[str]]]:
     """
     General purpose routine to extract any static from a log (text) file
 
@@ -123,7 +128,9 @@ class Logstatus(object):
         """
         self.iter[dim] += 1
 
-    def append(self, title: str, data_to_append: Union[list, dict], vec: bool = False) -> None:
+    def append(
+        self, title: str, data_to_append: Union[list, dict], vec: bool = False
+    ) -> None:
         """
         Append data to the LogStatus object status_dict dictionary
 
@@ -158,7 +165,14 @@ class Logstatus(object):
             else:
                 hdf[key] = np.array([val for _, val in value])
 
-    def combine_xyz(self, x_key: str, y_key: str, z_key: str, combined_key: str, as_vector: bool = False) -> None:
+    def combine_xyz(
+        self,
+        x_key: str,
+        y_key: str,
+        z_key: str,
+        combined_key: str,
+        as_vector: bool = False,
+    ) -> None:
         """
         Combine three lists representing the x,y,z coordinates, by accessing them from the status_dict dictionary,
         combining them, store them under the combined_key and remove the other three keys.
@@ -207,7 +221,16 @@ class Logstatus(object):
             del self.status_dict[z_key]
             self.status_dict[combined_key] = combined_lst
 
-    def combine_mat(self, x_key: str, xy_key: str, xz_key: str, y_key: str, yz_key: str, z_key: str, combined_key: str) -> None:
+    def combine_mat(
+        self,
+        x_key: str,
+        xy_key: str,
+        xz_key: str,
+        y_key: str,
+        yz_key: str,
+        z_key: str,
+        combined_key: str,
+    ) -> None:
         """
         Combine three lists representing the x,y,z coordinates, by accessing them from the status_dict dictionary,
         combining them, store them under the combined_key and remove the other three keys.
@@ -314,7 +337,13 @@ class Logstatus(object):
             args = item_list[num_elements + 1 : :]
         return tag_string, args
 
-    def extract_from_list(self, list_of_lines: List[str], tag_dict: Dict[str, Any], h5_dict: Optional[Dict[str, str]] = None, key_dict: Optional[Dict[str, str]] = None) -> None:
+    def extract_from_list(
+        self,
+        list_of_lines: List[str],
+        tag_dict: Dict[str, Any],
+        h5_dict: Optional[Dict[str, str]] = None,
+        key_dict: Optional[Dict[str, str]] = None,
+    ) -> None:
         """
         Main function of the LogStatus class to extract data from an output file by searching for the tag dictionary
 
@@ -417,7 +446,13 @@ class Logstatus(object):
                     except StopIteration:
                         break
 
-    def extract_file(self, file_name: str, tag_dict: Dict[str, Any], h5_dict: Optional[Dict[str, str]] = None, key_dict: Optional[Dict[str, str]] = None) -> None:
+    def extract_file(
+        self,
+        file_name: str,
+        tag_dict: Dict[str, Any],
+        h5_dict: Optional[Dict[str, str]] = None,
+        key_dict: Optional[Dict[str, str]] = None,
+    ) -> None:
         """
         Main function of the LogStatus class to extract data from an output file by searching for the tag dictionary
 
@@ -462,7 +497,12 @@ class LogTag(object):
         key_dict (Optional[Dict[str, str]]): Translation dictionary of python internal tags as keys to the output tags as values. Defaults to None.
     """
 
-    def __init__(self, tag_dict: Dict[str, Any], h5_dict: Optional[Dict[str, str]] = None, key_dict: Optional[Dict[str, str]] = None) -> None:
+    def __init__(
+        self,
+        tag_dict: Dict[str, Any],
+        h5_dict: Optional[Dict[str, str]] = None,
+        key_dict: Optional[Dict[str, str]] = None,
+    ) -> None:
         self._tag_dict = None
         self._tag_first_word = None
         self._current = None
@@ -752,7 +792,9 @@ class LogTag(object):
         my_func = self.get_item(item="func", default=None)
         return my_func is not None
 
-    def apply_func(self, val: Union[list, dict, int, float]) -> Union[list, dict, int, float]:
+    def apply_func(
+        self, val: Union[list, dict, int, float]
+    ) -> Union[list, dict, int, float]:
         """
         Apply the function on a given value
 
@@ -766,7 +808,9 @@ class LogTag(object):
         if my_func is not None:
             return my_func(val)
 
-    def set_item(self, tag_vals: dict, log_file: Logstatus) -> Tuple[str, dict, int, bool]:
+    def set_item(
+        self, tag_vals: dict, log_file: Logstatus
+    ) -> Tuple[str, dict, int, bool]:
         """
         Set LogTag item
 
