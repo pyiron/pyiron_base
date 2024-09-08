@@ -36,17 +36,18 @@ class ProjectData(DataContainer):
         object.__setattr__(instance, "_project", None)
         return instance
 
-    def __init__(self, *args, project=None, lazy=True, **kwargs):
+    def __init__(self, *args, project: 'pyiron_base.Project' = None, lazy: bool = True, **kwargs):
         """
         A data storage container which can store itself to/retrieve itself from file at the project level.
 
         Args:
             project (pyiron_base.Project): The project instance the storage is attached to.
+            lazy (bool): If True, the data is loaded lazily. Default is True.
         """
         super().__init__(*args, lazy=lazy, **kwargs)
         self._project = project
 
-    def read(self):
+    def read(self) -> None:
         """Read existing data from project-level storage."""
         hdf = ProjectHDFio(self._project, file_name="project_data")
         if self.table_name not in hdf.list_groups():
@@ -55,6 +56,6 @@ class ProjectData(DataContainer):
             )
         self.from_hdf(hdf=hdf)
 
-    def write(self):
+    def write(self) -> None:
         """Write data to project-level storage."""
         self.to_hdf(ProjectHDFio(self._project, file_name="project_data"))

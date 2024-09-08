@@ -22,11 +22,29 @@ __status__ = "development"
 __date__ = "Sep 1, 2017"
 
 
-def is_h5_file(name):
+def is_h5_file(name: str) -> bool:
+    """
+    Check if a file name has the extension ".h5".
+
+    Args:
+        name (str): The file name.
+
+    Returns:
+        bool: True if the file name has the extension ".h5", False otherwise.
+    """
     return "h5" == name.split(".")[-1]
 
 
-def is_h5_dir(name):
+def is_h5_dir(name: str) -> bool:
+    """
+    Check if a directory name has the suffix "_hdf5".
+
+    Args:
+        name (str): The directory name.
+
+    Returns:
+        bool: True if the directory name has the suffix "_hdf5", False otherwise.
+    """
     return "hdf5" == name.split("_")[-1]
 
 
@@ -56,11 +74,12 @@ class ProjectGUI:
         self.connect_widgets()
         self.display()
 
-    def create_widgets(self):
+    def create_widgets(self) -> None:
         """
+        Create the GUI widgets for browsing through projects and objects.
 
         Returns:
-
+            None
         """
         select = widgets.Select  # Multiple
         self.w_group = select(description="Groups:")
@@ -84,33 +103,36 @@ class ProjectGUI:
 
         self.refresh_view()
 
-    def connect_widgets(self):
+    def connect_widgets(self) -> None:
         """
+        Connect the widget observers to the on_value_change method.
 
         Returns:
-
+            None
         """
         self.w_group.observe(self.on_value_change, names="value")
         self.w_node.observe(self.on_value_change, names="value")
         self.w_file.observe(self.on_value_change, names="value")
 
-    def display(self):
+    def display(self) -> None:
         """
+        Display the GUI widgets.
 
         Returns:
-
+            None
         """
         w_txt = widgets.HBox([self.w_path, self.w_type])
         display(widgets.VBox([self.w_tab, w_txt]))
 
-    def plot_array(self, val):
+    def plot_array(self, val: np.ndarray) -> None:
         """
+        Plot an array.
 
         Args:
-            val:
+            val (np.ndarray): The array to plot.
 
         Returns:
-
+            None
         """
         try:
             import pylab as plt
@@ -133,11 +155,17 @@ class ProjectGUI:
                 self.ax.plot(val)
         elif val.ndim == 3:
             self.ax.plot(val[:, :, 0])
-        # self.fig.canvas.draw()
+
         self.w_text.value = self.plot_to_html()
         plt.close()
 
-    def plot_to_html(self):
+    def plot_to_html(self) -> str:
+        """
+        Convert the plot to an HTML image tag.
+
+        Returns:
+            str: The HTML image tag.
+        """
         import base64
         import io
 
@@ -150,14 +178,15 @@ class ProjectGUI:
             base64.b64encode(buf.getvalue()).decode("ascii")
         )
 
-    def on_value_change(self, change):
+    def on_value_change(self, change: dict) -> None:
         """
+        Handle the value change event of the widgets.
 
         Args:
-            change:
+            change (dict): The change event.
 
         Returns:
-
+            None
         """
         name = change["new"]
         self.w_text.value = ""
@@ -169,28 +198,29 @@ class ProjectGUI:
                 if isinstance(name, str):
                     self.update_project(name)
 
-    def get_rel_path(self, path):
+    def get_rel_path(self, path: str) -> str:
         """
+        Get the relative path of a given path with respect to the reference path.
 
         Args:
-            path:
+            path (str): The path to get the relative path for.
 
         Returns:
-
+            str: The relative path.
         """
         return os.path.relpath(path, self._ref_path).replace("\\", "/")
 
     @staticmethod
-    def dict_to_str(my_dict):
+    def dict_to_str(my_dict: dict) -> str:
         """
+        Convert a dictionary to a string representation.
 
         Args:
-            my_dict:
+            my_dict (dict): The dictionary to convert.
 
         Returns:
-
+            str: The string representation of the dictionary.
         """
-        # eol = os.linesep
         eol = "<br>"
         if "Parameter" in my_dict.keys():
             key = html.escape(my_dict["Parameter"])
@@ -204,11 +234,12 @@ class ProjectGUI:
             table = ["{}: {} {}".format(key, val, eol) for key, val in my_dict.items()]
         return "".join(table)
 
-    def refresh_view(self):
+    def refresh_view(self) -> None:
         """
+        Refresh the view based on the current project.
 
         Returns:
-
+            None
         """
         eol = os.linesep
         self.w_type.value = str(type(self.project))
@@ -276,14 +307,15 @@ class ProjectGUI:
             else:
                 self.w_file.options = []
 
-    def update_project(self, name):
+    def update_project(self, name: str) -> None:
         """
+        Update the project based on the selected name.
 
         Args:
-            name:
+            name (str): The name of the selected project.
 
         Returns:
-
+            None
         """
         if name == ".":
             return
@@ -292,11 +324,12 @@ class ProjectGUI:
         self.project = self.project[name]
         self.refresh_view()
 
-    def _move_up(self):
+    def _move_up(self) -> None:
         """
+        Move up to the parent project.
 
         Returns:
-
+            None
         """
         if hasattr(self.project, "path"):
             self.project = self.project[".."]
@@ -308,11 +341,12 @@ class ProjectGUI:
         else:
             self.w_path.value = self.get_rel_path(self.parent.path + "/" + self.name)
 
-    def move_up(self):
+    def move_up(self) -> None:
         """
+        Move up to the parent project.
 
         Returns:
-
+            None
         """
         self._move_up()
         self.refresh_view()

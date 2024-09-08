@@ -1,18 +1,18 @@
 import hashlib
 import inspect
 import re
-from typing import Optional, Tuple
+from typing import Optional, Tuple, Dict, List
 
 import cloudpickle
 
 
-def draw(node_dict: dict, edge_lst: list):
+def draw(node_dict: Dict[str, object], edge_lst: List[List[str]]) -> None:
     """
     Draw graph of nodes and edges
 
     Args:
-        node_dict (dict): Dictionary of nodes
-        edge_lst (list): List of edges
+        node_dict (Dict[str, object]): Dictionary of nodes
+        edge_lst (List[List[str]]): List of edges
     """
     import networkx as nx
     from IPython.display import SVG, display
@@ -23,7 +23,7 @@ def draw(node_dict: dict, edge_lst: list):
     for edge in edge_lst:
         graph.add_edge(edge[1], edge[0])
     svg = nx.nx_agraph.to_agraph(graph).draw(prog="dot", format="svg")
-    return display(SVG(svg))
+    display(SVG(svg))
 
 
 def evaluate_function(funct: callable, input_dict: dict) -> object:

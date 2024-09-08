@@ -308,7 +308,7 @@ class UnitConverter:
         """
         return self.base_to_code_pint(quantity).magnitude
 
-    def __call__(self, conversion: str, quantity: str):
+    def __call__(self, conversion: str, quantity: str) -> callable:
         """
         Function call operator used as a decorator for functions that return numpy array
 
@@ -385,7 +385,7 @@ class UnitConverter:
         else:
             raise ValueError("Conversion type {} not implemented!".format(conversion))
 
-    def code_to_base(self, quantity: str):
+    def code_to_base(self, quantity: str) -> callable:
         """
         Decorator for functions that returns a numpy array. Multiples the function output by the code to base units
         conversion factor
@@ -399,7 +399,7 @@ class UnitConverter:
         """
         return self(quantity=quantity, conversion="code_to_base")
 
-    def base_to_code(self, quantity: str):
+    def base_to_code(self, quantity: str) -> callable:
         """
         Decorator for functions that returns a numpy array. Multiples the function output by the base to code units
         conversion factor
@@ -413,7 +413,7 @@ class UnitConverter:
         """
         return self(quantity=quantity, conversion="base_to_code")
 
-    def code_units(self, quantity: str):
+    def code_units(self, quantity: str) -> callable:
         """
         Decorator for functions that returns a numpy array. Assigns the code unit of the quantity to the function output
 
@@ -426,7 +426,7 @@ class UnitConverter:
         """
         return self(quantity=quantity, conversion="code_units")
 
-    def base_units(self, quantity: str):
+    def base_units(self, quantity: str) -> callable:
         """
         Decorator for functions that returns a numpy array. Assigns the base unit of the quantity to the function output
 
