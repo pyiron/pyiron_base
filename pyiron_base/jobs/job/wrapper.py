@@ -46,13 +46,13 @@ class JobWrapper(object):
     def __init__(
         self,
         working_directory: str,
-        job_id: Optional[int]=None,
-        hdf5_file: Optional["pyiron_base.storage.hdfio.ProjectHDFio"]=None,
-        h5_path: Optional[str]=None,
-        submit_on_remote: bool=False,
-        debug: bool=False,
-        connection_string: Optional[str]=None,
-        collect: bool=False,
+        job_id: Optional[int] = None,
+        hdf5_file: Optional["pyiron_base.storage.hdfio.ProjectHDFio"] = None,
+        h5_path: Optional[str] = None,
+        submit_on_remote: bool = False,
+        debug: bool = False,
+        connection_string: Optional[str] = None,
+        collect: bool = False,
     ):
         self.working_directory = working_directory
         self._remote_flag = submit_on_remote
@@ -135,11 +135,11 @@ class JobWrapper(object):
 
 def job_wrapper_function(
     working_directory: str,
-    job_id: Optional[int]=None,
-    file_path: Optional[str]=None,
-    submit_on_remote: bool=False,
-    debug: bool=False,
-    collect: bool=False,
+    job_id: Optional[int] = None,
+    file_path: Optional[str] = None,
+    submit_on_remote: bool = False,
+    debug: bool = False,
+    collect: bool = False,
 ):
     """
     Job Wrapper function - creates a JobWrapper object and calls run() on that object

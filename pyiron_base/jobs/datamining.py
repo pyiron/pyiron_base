@@ -8,7 +8,7 @@ import json
 import os
 import types
 from datetime import datetime
-from typing import List, Tuple, Optional, Any, Union
+from typing import Any, List, Optional, Tuple, Union
 
 import cloudpickle
 import numpy as np
@@ -86,7 +86,7 @@ class FunctionContainer(object):
 
     """
 
-    def __init__(self, system_function_lst: Optional[List[callable]]=None):
+    def __init__(self, system_function_lst: Optional[List[callable]] = None):
         if system_function_lst is None:
             system_function_lst = []
         self._user_function_dict = {}
@@ -186,7 +186,11 @@ class PyironTable:
     """
 
     def __init__(
-        self, project: "pyiron_base.project.generic.Project", name: Optional[str] = None, system_function_lst: List[callable]=None, csv_file_name: Optional[str]=None
+        self,
+        project: "pyiron_base.project.generic.Project",
+        name: Optional[str] = None,
+        system_function_lst: List[callable] = None,
+        csv_file_name: Optional[str] = None,
     ):
         self._project = project
         self._df = pandas.DataFrame({})
@@ -299,7 +303,13 @@ class PyironTable:
             new_system_functions = []
         return new_user_functions, new_system_functions
 
-    def create_table(self, file: FileHDFio, job_status_list: List[str], executor: Optional["concurrent.futures.Executor"]=None, enforce_update: bool=False):
+    def create_table(
+        self,
+        file: FileHDFio,
+        job_status_list: List[str],
+        executor: Optional["concurrent.futures.Executor"] = None,
+        enforce_update: bool = False,
+    ):
         """
         Create or update the table.
 
@@ -432,7 +442,7 @@ class PyironTable:
         else:
             return np.array([])
 
-    def _get_filtered_job_ids_from_project(self, recursive: bool=True) -> List[int]:
+    def _get_filtered_job_ids_from_project(self, recursive: bool = True) -> List[int]:
         """
         Get the filtered job IDs from the project.
 
@@ -513,7 +523,9 @@ class PyironTable:
                 if key not in sub_dict.keys():
                     sub_dict[key] = None
 
-    def _collect_job_update_lst(self, job_status_list: List, job_stored_ids: Optional[List]=None) -> List:
+    def _collect_job_update_lst(
+        self, job_status_list: List, job_stored_ids: Optional[List] = None
+    ) -> List:
         """
         Collect jobs to update the pyiron table.
 
@@ -673,7 +685,7 @@ class TableJob(GenericJob):
         self._job_status = status
 
     @property
-    def pyiron_table(self) -> PyironTable:  
+    def pyiron_table(self) -> PyironTable:
         return self._pyiron_table
 
     @property
@@ -797,7 +809,7 @@ class TableJob(GenericJob):
             )
         return job_dict
 
-    def _from_dict(self, obj_dict: dict, version: str=None):
+    def _from_dict(self, obj_dict: dict, version: str = None):
         """
         Restore the TableJob object from a dictionary.
 
@@ -837,7 +849,11 @@ class TableJob(GenericJob):
         self._pyiron_table.convert_to_object = bool_dict["convert_to_object"]
         self._pyiron_table.add._from_hdf(obj_dict["input"])
 
-    def to_hdf(self, hdf: Optional["pyiron_base.storage.hdfio.ProjectHDFio"] = None, group_name: Optional[str] = None) -> None:
+    def to_hdf(
+        self,
+        hdf: Optional["pyiron_base.storage.hdfio.ProjectHDFio"] = None,
+        group_name: Optional[str] = None,
+    ) -> None:
         """
         Store pyiron table job in HDF5
 
@@ -852,7 +868,11 @@ class TableJob(GenericJob):
         if len(self.pyiron_table._df) != 0:
             self._save_output()
 
-    def from_hdf(self, hdf: Optional["pyiron_base.storage.hdfio.ProjectHDFio"] = None, group_name: Optional[str] = None) -> None:
+    def from_hdf(
+        self,
+        hdf: Optional["pyiron_base.storage.hdfio.ProjectHDFio"] = None,
+        group_name: Optional[str] = None,
+    ) -> None:
         """
         Restore pyiron table job from HDF5
 
@@ -908,7 +928,7 @@ class TableJob(GenericJob):
         self.status.finished = True
 
     @deprecate(job_status_list="Use TableJob.job_status instead!")
-    def update_table(self, job_status_list: Optional[List[str]]=None) -> None:
+    def update_table(self, job_status_list: Optional[List[str]] = None) -> None:
         """
         Update the pyiron table object, add new columns if a new function was added or add new rows for new jobs.
 
