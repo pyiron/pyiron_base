@@ -82,7 +82,12 @@ class PyironUnitRegistry:
         """
         return self._unit_dict
 
-    def add_quantity(self, quantity: str, unit: Union[pint.Unit, pint.Quantity], data_type: type = float) -> None:
+    def add_quantity(
+        self,
+        quantity: str,
+        unit: Union[pint.Unit, pint.Quantity],
+        data_type: type = float,
+    ) -> None:
         """
         Add a quantity to a registry
 
@@ -216,7 +221,9 @@ class UnitConverter:
 
     """
 
-    def __init__(self, base_registry: PyironUnitRegistry, code_registry: PyironUnitRegistry):
+    def __init__(
+        self, base_registry: PyironUnitRegistry, code_registry: PyironUnitRegistry
+    ):
         """
         Args:
             base_registry (PyironUnitRegistry): Base unit registry

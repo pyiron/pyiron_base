@@ -7,8 +7,8 @@ Classes for representing the file system path in pyiron
 
 import os
 import posixpath
-from typing import Optional, Iterator, Union, Tuple
 from copy import copy
+from typing import Iterator, Optional, Tuple, Union
 
 from pyiron_base.state import state
 
@@ -289,7 +289,7 @@ class ProjectPath(GenericPath):
         """
         return ProjectPath(path=self.path)
 
-    def removedirs(self, project_name: Optional[str]=None):
+    def removedirs(self, project_name: Optional[str] = None):
         """
         equivalent to os.removedirs  -> remove empty dirs
 
@@ -369,7 +369,9 @@ class ProjectPath(GenericPath):
         super().__setstate__(state)
         self._history = state["history"]
 
-    def _convert_str_to_generic_path(self, path: Union[str, GenericPath]) -> GenericPath:
+    def _convert_str_to_generic_path(
+        self, path: Union[str, GenericPath]
+    ) -> GenericPath:
         """
         Convert path in string representation to an GenericPath object.  If argument is string and the given path does
         not exist, create it.

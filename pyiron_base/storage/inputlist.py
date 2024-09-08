@@ -1,7 +1,8 @@
 """
 Backwards compatible way of importing the DataContainer.
 """
-from typing import Union, Optional
+
+from typing import Optional, Union
 
 from pyiron_snippets.deprecate import deprecate
 
@@ -20,7 +21,11 @@ class InputList(DataContainer):
     """
 
     @deprecate("use DataContainer instead", version="0.3.0")
-    def __init__(self, init: Union[None, dict, list, tuple] = None, table_name: Optional[str] = None) -> None:
+    def __init__(
+        self,
+        init: Union[None, dict, list, tuple] = None,
+        table_name: Optional[str] = None,
+    ) -> None:
         """
         Initialize the InputList object.
 
