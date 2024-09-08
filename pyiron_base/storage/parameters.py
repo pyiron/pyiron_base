@@ -10,6 +10,7 @@ import posixpath
 import warnings
 from ast import literal_eval
 from collections import OrderedDict
+from typing import Optional, Union, Dict, List, Tuple
 
 import numpy as np
 import pandas
@@ -79,13 +80,13 @@ class GenericParameters(HasDict):
 
     def __init__(
         self,
-        table_name=None,
-        input_file_name=None,
-        val_only=False,
-        comment_char="#",
-        separator_char=" ",
-        end_value_char="",
-    ):
+        table_name: Optional[str] = None,
+        input_file_name: Optional[Union[str, None]] = None,
+        val_only: bool = False,
+        comment_char: str = "#",
+        separator_char: str = " ",
+        end_value_char: str = "",
+    ) -> None:
         self.__name__ = "GenericParameters"
         self.__version__ = "0.1"
 
@@ -115,7 +116,7 @@ class GenericParameters(HasDict):
             self.read_input(self.file_name)
 
     @property
-    def file_name(self):
+    def file_name(self) -> Optional[str]:
         """
         Get the file name of the input file
 
@@ -125,7 +126,7 @@ class GenericParameters(HasDict):
         return self._file_name
 
     @file_name.setter
-    def file_name(self, new_file_name):
+    def file_name(self, new_file_name: Optional[Union[str, None]]) -> None:
         """
         Set the file name of the input file
 
@@ -135,7 +136,7 @@ class GenericParameters(HasDict):
         self._file_name = new_file_name
 
     @property
-    def table_name(self):
+    def table_name(self) -> Optional[str]:
         """
         Get the name of the input table inside the HDF5 file
 
@@ -145,7 +146,7 @@ class GenericParameters(HasDict):
         return self._table_name
 
     @table_name.setter
-    def table_name(self, new_table_name):
+    def table_name(self, new_table_name: Optional[str]) -> None:
         """
         Set the name of the input table inside the HDF5 file
 
@@ -155,7 +156,7 @@ class GenericParameters(HasDict):
         self._table_name = new_table_name
 
     @property
-    def val_only(self):
+    def val_only(self) -> Optional[bool]:
         """
         Get the boolean option to switch from a key value list to an value only input file
 
@@ -165,7 +166,7 @@ class GenericParameters(HasDict):
         return self._val_only
 
     @val_only.setter
-    def val_only(self, val_only):
+    def val_only(self, val_only: bool) -> None:
         """
         Set the boolean option to switch from a key value list to an value only input file
 
@@ -175,7 +176,7 @@ class GenericParameters(HasDict):
         self._val_only = val_only
 
     @property
-    def comment_char(self):
+    def comment_char(self) -> Optional[str]:
         """
         Get the separator that characterizes comment
 
@@ -185,7 +186,7 @@ class GenericParameters(HasDict):
         return self._comment_char
 
     @comment_char.setter
-    def comment_char(self, new_comment_char):
+    def comment_char(self, new_comment_char: str) -> None:
         """
         Set the separator that characterizes comment
 
@@ -195,7 +196,7 @@ class GenericParameters(HasDict):
         self._comment_char = new_comment_char
 
     @property
-    def separator_char(self):
+    def separator_char(self) -> Optional[str]:
         """
         Get the separator that characterizes the split between key and value
 
@@ -205,7 +206,7 @@ class GenericParameters(HasDict):
         return self._separator_char
 
     @separator_char.setter
-    def separator_char(self, new_separator_char):
+    def separator_char(self, new_separator_char: str) -> None:
         """
         Set the separator that characterizes the split between key and value
 
@@ -215,7 +216,7 @@ class GenericParameters(HasDict):
         self._separator_char = new_separator_char
 
     @property
-    def multi_word_separator(self):
+    def multi_word_separator(self) -> Optional[str]:
         """
         Get the multi word separator to have multi word keys
 
@@ -225,7 +226,7 @@ class GenericParameters(HasDict):
         return self._multi_word_separator
 
     @multi_word_separator.setter
-    def multi_word_separator(self, new_multi_word_separator):
+    def multi_word_separator(self, new_multi_word_separator: str) -> None:
         """
         Set the multi word separator to have multi word keys
 
@@ -235,7 +236,7 @@ class GenericParameters(HasDict):
         self._multi_word_separator = new_multi_word_separator
 
     @property
-    def end_value_char(self):
+    def end_value_char(self) -> Optional[str]:
         """
         Get the special character at the end of every line
 
@@ -245,7 +246,7 @@ class GenericParameters(HasDict):
         return self._end_value_char
 
     @end_value_char.setter
-    def end_value_char(self, new_end_value_char):
+    def end_value_char(self, new_end_value_char: str) -> None:
         """
         Set the special character at the end of every line
 
@@ -255,7 +256,7 @@ class GenericParameters(HasDict):
         self._end_value_char = new_end_value_char
 
     @property
-    def replace_char_dict(self):
+    def replace_char_dict(self) -> Optional[Dict[str, str]]:
         """
         Get the dictionary to replace certain character combinations
 
@@ -265,7 +266,7 @@ class GenericParameters(HasDict):
         return self._replace_char_dict
 
     @replace_char_dict.setter
-    def replace_char_dict(self, new_replace_char_dict):
+    def replace_char_dict(self, new_replace_char_dict: Dict[str, str]) -> None:
         """
         Set the dictionary to replace certain character combinations
 
@@ -274,17 +275,17 @@ class GenericParameters(HasDict):
         """
         self._replace_char_dict = new_replace_char_dict
 
-    def _read_only_check_dict(self, new_dict):
+    def _read_only_check_dict(self, new_dict: Dict[str, List[Union[str, bool]]]) -> None:
         if self.read_only and new_dict != self._dataset:
             self._read_only_error()
 
     @staticmethod
-    def _read_only_error():
+    def _read_only_error() -> None:
         warnings.warn(
             "The input in GenericParameters changed, while the state of the job was already finished."
         )
 
-    def load_string(self, input_str):
+    def load_string(self, input_str: str) -> None:
         """
         Load a multi line string to overwrite the current parameter settings
 
@@ -295,7 +296,7 @@ class GenericParameters(HasDict):
         self._read_only_check_dict(new_dict=new_dict)
         self._dataset = new_dict
 
-    def load_default(self):
+    def load_default(self) -> None:
         """
         Load defaults resets the dataset in the background to be empty
         """
@@ -306,7 +307,7 @@ class GenericParameters(HasDict):
         self._read_only_check_dict(new_dict=new_dict)
         self._dataset = new_dict
 
-    def keys(self):
+    def keys(self) -> List[str]:
         """
         Return keys of GenericParameters object
         """
@@ -315,7 +316,7 @@ class GenericParameters(HasDict):
         else:
             return self._dataset["Parameter"]
 
-    def read_input(self, file_name, ignore_trigger=None):
+    def read_input(self, file_name: str, ignore_trigger: Optional[str] = None) -> None:
         """
         Read input file and store the data in GenericParameters - this overwrites the current parameter settings
 
@@ -344,7 +345,7 @@ class GenericParameters(HasDict):
         self._read_only_check_dict(new_dict=new_dict)
         self._dataset = new_dict
 
-    def get_pandas(self):
+    def get_pandas(self) -> pandas.DataFrame:
         """
         Output the GenericParameters object as Pandas Dataframe for human readability.
 
@@ -353,7 +354,7 @@ class GenericParameters(HasDict):
         """
         return pandas.DataFrame(self._dataset)
 
-    def get(self, parameter_name, default_value=None):
+    def get(self, parameter_name: str, default_value: Optional[str] = None) -> Union[str, None]:
         """
         Get the value of a specific parameter from GenericParameters - if the parameter is not available return
         default_value if that is set.
@@ -380,7 +381,7 @@ class GenericParameters(HasDict):
         else:
             raise NameError("parameter not found: " + parameter_name)
 
-    def get_attribute(self, attribute_name):
+    def get_attribute(self, attribute_name: str) -> Union[str, None]:
         """
         Get the value of a specific parameter from GenericParameters
 
@@ -398,7 +399,12 @@ class GenericParameters(HasDict):
         else:
             return None
 
-    def modify(self, separator=None, append_if_not_present=False, **modify_dict):
+    def modify(
+        self,
+        separator: Optional[str] = None,
+        append_if_not_present: bool = False,
+        **modify_dict: Union[str, bool],
+    ) -> None:
         """
         Modify values for existing parameters. The command is called as modify(param1=val1, param2=val2, ...)
 
@@ -430,7 +436,9 @@ class GenericParameters(HasDict):
                 self._read_only_error()
             self._dataset["Value"][i_key] = str(val)
 
-    def set(self, separator=None, **set_dict):
+    def set(
+        self, separator: Optional[str] = None, **set_dict: Union[str, bool]
+    ) -> None:
         """
         Set the value of multiple parameters or create new parameter key, if they do not exist already.
 
@@ -440,7 +448,7 @@ class GenericParameters(HasDict):
         """
         self.modify(separator=separator, append_if_not_present=True, **set_dict)
 
-    def set_value(self, line, val):
+    def set_value(self, line: int, val: Union[str, bytes]) -> None:
         """
         Set the value of a parameter in a specific line
 
@@ -472,7 +480,7 @@ class GenericParameters(HasDict):
         else:
             raise ValueError("Wrong indexing")
 
-    def remove_keys(self, key_list):
+    def remove_keys(self, key_list: List[str]) -> None:
         """
         Remove a list of keys from the GenericParameters
 
@@ -491,7 +499,7 @@ class GenericParameters(HasDict):
             for i_key in i_keys[::-1]:
                 self._delete_line(i_key)
 
-    def define_blocks(self, block_dict):
+    def define_blocks(self, block_dict: Dict[str, List[str]]) -> None:
         """
         Define a block section within the GenericParameters
 
@@ -502,7 +510,7 @@ class GenericParameters(HasDict):
             raise AssertionError()
         self._block_dict = block_dict
 
-    def _to_dict(self):
+    def _to_dict(self) -> Dict[str, List[Union[str, bool]]]:
         """
         Convert the GenericParameters object to a dictionary for storage
 
@@ -511,7 +519,7 @@ class GenericParameters(HasDict):
         """
         return {"data_dict": self._dataset}
 
-    def _from_dict(self, obj_dict, version: str = None):
+    def _from_dict(self, obj_dict: Dict[str, List[Union[str, bool]]], version: Optional[str] = None) -> None:
         """
         Reload GenericParameters from dictionary
 
@@ -521,7 +529,7 @@ class GenericParameters(HasDict):
         """
         self._dataset = obj_dict["data_dict"]
 
-    def to_hdf(self, hdf, group_name=None):
+    def to_hdf(self, hdf, group_name: Optional[str] = None) -> None:
         """
         Store the GenericParameters in an HDF5 file
 
@@ -537,7 +545,7 @@ class GenericParameters(HasDict):
             for k, v in self.to_dict().items():
                 hdf_group[k] = v
 
-    def from_hdf(self, hdf, group_name=None):
+    def from_hdf(self, hdf, group_name: Optional[str] = None) -> None:
         """
         Restore the GenericParameters from an HDF5 file
 
@@ -555,12 +563,14 @@ class GenericParameters(HasDict):
         else:
             self.from_dict(obj_dict={"data_dict": data._read("data_dict")})
 
-    def get_string_lst(self):
+    def get_string_lst(self) -> List[str]:
         """
         Get list of strings from GenericParameters to write to input file
+
+        Returns:
+            List[str]: List of strings representing the GenericParameters object
         """
         tab_dict = self._dataset
-        # assert(len(tab_dict['Value']) == len(tab_dict['Parameter']))
         if "Parameter" not in tab_dict:
             tab_dict["Parameter"] = ["" for _ in tab_dict["Value"]]
 
@@ -573,12 +583,9 @@ class GenericParameters(HasDict):
             except ValueError:
                 value_lst = tab_dict["Value"]
         for par, v, c in zip(tab_dict["Parameter"], value_lst, tab_dict["Comment"]):
-            # special treatment for values that are bool or str
             if isinstance(v, bool):
                 v_str = self._bool_dict[v]
-            elif isinstance(
-                v, str
-            ):  # TODO: introduce variable for string symbol (" or ')
+            elif isinstance(v, str):
                 v_str = v
             else:
                 v_str = str(v)
@@ -611,7 +618,7 @@ class GenericParameters(HasDict):
                     )
         return string_lst
 
-    def write_file(self, file_name, cwd=None):
+    def write_file(self, file_name: str, cwd: Optional[str] = None) -> None:
         """
         Write GenericParameters to input file
 
@@ -626,7 +633,7 @@ class GenericParameters(HasDict):
             for line in self.get_string_lst():
                 f.write(line)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         """
         Human readable string representation
 
@@ -635,13 +642,13 @@ class GenericParameters(HasDict):
         """
         return str(self.get_pandas())
 
-    def __setitem__(self, key, value):
+    def __setitem__(self, key: Union[int, str], value: Union[float, int, str]) -> None:
         """
         Set a value for the corresponding key
 
         Args:
-            key (str): key to be set of modified
-            value (float/int/str): value to be set
+            key (Union[int, str]): key to be set or modified
+            value (Union[float, int, str]): value to be set
         """
         if isinstance(key, int):
             if self.read_only and self._dataset["Value"][key] != value:
@@ -650,7 +657,7 @@ class GenericParameters(HasDict):
         else:
             self.set(**{key: value})
 
-    def set_dict(self, dictionary):
+    def set_dict(self, dictionary: Dict[str, Union[str, bool]]) -> None:
         """
         Set a dictionary of key value pairs
 
@@ -659,7 +666,7 @@ class GenericParameters(HasDict):
         """
         self.set(**dictionary)
 
-    def __getitem__(self, item):
+    def __getitem__(self, item: Union[int, str]) -> str:
         """
         Get a value for the corresponding key
 
@@ -674,7 +681,7 @@ class GenericParameters(HasDict):
         elif item in self._dataset["Parameter"]:
             return self.get(item)
 
-    def __delitem__(self, key):
+    def __delitem__(self, key: str) -> None:
         """
         Delete a key from GenericParameters
 
@@ -683,7 +690,7 @@ class GenericParameters(HasDict):
         """
         self.remove_keys([key])
 
-    def _get_block(self, block_name):
+    def _get_block(self, block_name: str) -> Dict[str, List[Union[str, bool]]]:
         """
         Internal helper function to get a block by name
 
@@ -705,12 +712,12 @@ class GenericParameters(HasDict):
                     block_dict[key].append(self._dataset[key][i])
         return block_dict
 
-    def _get_attributes(self):
+    def _get_attributes(self) -> Dict[str, List[str]]:
         """
         Internal helper function to extract pyiron specific commands (start in comments with " @my_command")
 
         Returns:
-            (dict): {"Parameter": list of tags, "Value": list of values}
+            dict: Dictionary containing the parameter tags and values
         """
         tags = self._dataset["Parameter"]
         lst_tag, lst_val = [], []
@@ -726,7 +733,7 @@ class GenericParameters(HasDict):
         self._attributes = {"Parameter": lst_tag, "Value": lst_val}
         return self._attributes
 
-    def _remove_block(self, block_name):
+    def _remove_block(self, block_name: str) -> None:
         """
         Internal helper function to remove a block by name
 
@@ -737,7 +744,7 @@ class GenericParameters(HasDict):
             raise ValueError("unknown block to be removed")
         self.remove_keys(self._block_dict[block_name])
 
-    def _insert_block(self, block_dict, next_block=None):
+    def _insert_block(self, block_dict: Dict[str, List[Union[str, bool]]], next_block: Optional[str] = None) -> None:
         """
         Internal helper function to insert a block by name
 
@@ -754,12 +761,12 @@ class GenericParameters(HasDict):
                     self._insert(line_number=i, data_dict=block_dict)  # , shift=1)
                     break
 
-    def _update_block(self, block_dict):
+    def _update_block(self, block_dict: Dict[str, List[Union[str, bool]]]) -> None:
         """
         Internal helper function to update a block by name
 
         Args:
-            block_dict (dict): block dictionary
+            block_dict (dict): block dictionary containing the parameter tags and values
         """
         tag_lst = block_dict["Parameter"]
         val_lst = block_dict["Value"]
@@ -768,7 +775,7 @@ class GenericParameters(HasDict):
             par_dict[t] = v
         self.modify(**par_dict)
 
-    def _delete_line(self, line_number):
+    def _delete_line(self, line_number: int) -> None:
         """
         Internal helper function to delete a single line
 
@@ -783,7 +790,7 @@ class GenericParameters(HasDict):
             del val[line_number]
             self._dataset[key] = val
 
-    def _insert(self, line_number, data_dict, shift=0):
+    def _insert(self, line_number: int, data_dict: Dict[str, List[Union[str, bool]]], shift: int = 0) -> None:
         """
         Internal helper function to insert a single line by line number
 
@@ -800,7 +807,7 @@ class GenericParameters(HasDict):
             lst = np.array(lst).tolist()
             self._dataset[key] = lst[: line_number - shift] + val + lst[line_number:]
 
-    def _refresh_block_line_hash_table(self):
+    def _refresh_block_line_hash_table(self) -> None:
         """
         Internal helper function to refresh the block dictionary hash table
         """
@@ -823,7 +830,7 @@ class GenericParameters(HasDict):
             else:
                 self._block_line_dict[key] = [i_line_old]
 
-    def _append_line_in_block(self, parameter_name, value):
+    def _append_line_in_block(self, parameter_name: str, value: str) -> bool:
         """
         Internal helper function to append a line within a block
 
@@ -832,7 +839,7 @@ class GenericParameters(HasDict):
             value (str): value of the parameter
 
         Returns:
-            bool: [True/False]
+            bool: True if the line was successfully appended, False otherwise
         """
         for key, val in self._block_dict.items():
             par_first = parameter_name.split()[0].split(self.multi_word_separator)[0]
@@ -855,12 +862,13 @@ class GenericParameters(HasDict):
             )
         return False
 
-    def _append(self, **qwargs):
+    def _append(self, **qwargs: Union[str, Tuple[str, str]]) -> None:
         """
         Internal helper function to append data to the GenericParameters object
 
         Args:
             **qwargs (dict): dictionary with parameter keys and their corresponding values
+                The values can be either a string or a tuple of string and comment.
         """
         if self.read_only:
             self._read_only_error()
@@ -883,7 +891,7 @@ class GenericParameters(HasDict):
             self._dataset["Value"].append(val)
             self._dataset["Comment"].append(comment)
 
-    def _is_multi_word_parameter(self, key):
+    def _is_multi_word_parameter(self, key: str) -> bool:
         """
         Internal helper function to check if a parameter included multiple words
 
@@ -891,21 +899,21 @@ class GenericParameters(HasDict):
             key (str): parameter
 
         Returns:
-            bool: [True/False]
+            bool: True if the parameter includes multiple words, False otherwise
         """
         par_list = key.split(self.multi_word_separator)
         return len(par_list) > 1
 
-    def _repr_html_(self):
+    def _repr_html_(self) -> str:
         """
         Internal helper function to represent the GenericParameters object within the Jupyter Framework
 
         Returns:
-            HTML: Jupyter HTML object
+            str: HTML representation of the GenericParameters object
         """
         return self.get_pandas()._repr_html_()
 
-    def _lines_to_dict(self, lines):
+    def _lines_to_dict(self, lines: List[str]) -> Dict[str, List[Union[str, bool]]]:
         """
         Internal helper function to convert multiple lines to a dictionary
 
@@ -920,44 +928,41 @@ class GenericParameters(HasDict):
         lst["Value"] = []
         lst["Comment"] = []
         for line in lines:
-            # print ("line: ", line)
             if self.replace_char_dict is not None:
                 for key, val in self.replace_char_dict.items():
                     line = line.replace(key, val)
 
             sep = line.split(self.comment_char)
-            if len(line.strip()) > 0 and (
-                line.strip()[0] == self.comment_char
-            ):  # comment line
+            if len(line.strip()) > 0 and line.strip()[0] == self.comment_char:
                 lst["Parameter"].append("Comment")
                 lst["Value"].append(self._bool_str_to_bool(line[:-1]))
                 lst["Comment"].append("")
             elif not sep[0].strip() == "":
                 sep[0] = sep[0].strip()
-                if self.val_only:  # Value only entries
+                if self.val_only:
                     val = sep[0]
                     name = ""
                 else:
                     keypos = sep[0].find(self.separator_char)
-                    if keypos == -1:  # Key only entries
+                    if keypos == -1:
                         name = sep[0]
                         val = ""
-                    else:  # Entires with key and value
+                    else:
                         name = sep[0][0:keypos]
-                        val = sep[0][keypos + len(self.separator_char) :]
+                        val = sep[0][keypos + len(self.separator_char):]
                 lst["Parameter"].append(name.strip())
                 lst["Value"].append(self._bool_str_to_bool(val.strip()))
-                if len(sep) > 1:  # Handle comments
+                if len(sep) > 1:
                     lst["Comment"].append(sep[-1].strip())
                 else:
                     lst["Comment"].append("")
-            else:  # Handle empty lines
+            else:
                 lst["Parameter"].append("")
                 lst["Value"].append("")
                 lst["Comment"].append("")
         return lst
 
-    def _find_line(self, key_name):
+    def _find_line(self, key_name: str) -> Union[int, List[int]]:
         """
         Internal helper function to find a line by key name
 
@@ -965,7 +970,7 @@ class GenericParameters(HasDict):
             key_name (str): key name
 
         Returns:
-            list: [line index, line]
+            Union[int, List[int]]: line index if a single occurrence is found, list of line indices if multiple occurrences are found, -1 if no occurrence is found
         """
         params = self._dataset["Parameter"]
         if len(params) > 0:
@@ -992,7 +997,7 @@ class GenericParameters(HasDict):
             error_msg = "\n".join(error_msg)
             raise ValueError(error_msg)
 
-    def clear_all(self):
+    def clear_all(self) -> None:
         """
         Clears all fields in the object
         """
@@ -1000,7 +1005,16 @@ class GenericParameters(HasDict):
         self._dataset["Value"] = []
         self._dataset["Comment"] = []
 
-    def _bool_str_to_bool(self, val):
+    def _bool_str_to_bool(self, val: str) -> Union[str, bool]:
+        """
+        Convert a string representation of a boolean value to a boolean
+
+        Args:
+            val (str): The string representation of the boolean value
+
+        Returns:
+            Union[str, bool]: The converted boolean value
+        """
         for key, value in self._bool_dict.items():
             if val == value:
                 return key

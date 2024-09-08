@@ -7,6 +7,7 @@ Classes for representing the file system path in pyiron
 
 import os
 import posixpath
+from typing import Optional, Iterator, Union, Tuple
 from copy import copy
 
 from pyiron_base.state import state
@@ -58,14 +59,14 @@ class GenericPath(object):
     Author: Jan Janssen
     """
 
-    def __init__(self, root_path, project_path):
+    def __init__(self, root_path: str, project_path: str):
         self._root_path = None
         self._project_path = None
         self.root_path = root_path
         self.project_path = project_path
 
     @property
-    def root_path(self):
+    def root_path(self) -> str:
         """
         the pyiron user directory, defined in the .pyiron configuration
 
@@ -75,7 +76,7 @@ class GenericPath(object):
         return self._root_path
 
     @root_path.setter
-    def root_path(self, new_path):
+    def root_path(self, new_path: str) -> None:
         """
         the pyiron user directory, defined in the .pyiron configuration
 
@@ -85,7 +86,7 @@ class GenericPath(object):
         self._root_path = self._windows_path_to_unix_path(new_path)
 
     @property
-    def project_path(self):
+    def project_path(self) -> str:
         """
         the relative path of the current project / folder starting from the root path
         of the pyiron user directory
@@ -98,7 +99,7 @@ class GenericPath(object):
         return self._project_path
 
     @project_path.setter
-    def project_path(self, new_path):
+    def project_path(self, new_path: str) -> None:
         """
         the relative path of the current project / folder starting from the root path
         of the pyiron user directory
@@ -112,7 +113,7 @@ class GenericPath(object):
         )
 
     @property
-    def path(self):
+    def path(self) -> str:
         """
         The absolute path to of the current object.
 
@@ -125,7 +126,7 @@ class GenericPath(object):
             return self.project_path
 
     @property
-    def base_name(self):
+    def base_name(self) -> str:
         """
         The name of the current project folder
 
@@ -137,7 +138,7 @@ class GenericPath(object):
         else:
             return self.project_path.split("/")[-1]
 
-    def copy(self):
+    def copy(self) -> "GenericPath":
         """
         Copy the GenericPath object
 
@@ -146,7 +147,7 @@ class GenericPath(object):
         """
         return copy(self)
 
-    def __copy__(self):
+    def __copy__(self) -> "GenericPath":
         """
         Copy the GenericPath object
 
@@ -155,7 +156,7 @@ class GenericPath(object):
         """
         return GenericPath(self.root_path, self.project_path)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         """
         String representation of the GenericPath object
 
@@ -167,7 +168,7 @@ class GenericPath(object):
         project_str += "   project: " + str(self.project_path) + "\n"
         return project_str
 
-    def __str__(self):
+    def __str__(self) -> str:
         """
         String representation of the GenericPath object
 
@@ -176,18 +177,18 @@ class GenericPath(object):
         """
         return self.path
 
-    def __getstate__(self):
+    def __getstate__(self) -> dict:
         return {
             "root_path": self._root_path,
             "project_path": self._project_path,
         }
 
-    def __setstate__(self, state):
+    def __setstate__(self, state: dict) -> None:
         self._root_path = state["root_path"]
         self._project_path = state["project_path"]
 
     @staticmethod
-    def _windows_path_to_unix_path(path):
+    def _windows_path_to_unix_path(path: str) -> str:
         """
         Helperfunction to covert windows path into unix path
 
@@ -239,7 +240,7 @@ class ProjectPath(GenericPath):
         self._history = []
 
     @property
-    def history(self):
+    def history(self) -> list:
         """
         The history of the previously opened paths
 
@@ -248,7 +249,7 @@ class ProjectPath(GenericPath):
         """
         return self._history
 
-    def open(self, rel_path, history=True):
+    def open(self, rel_path: str, history: bool = True) -> "ProjectPath":
         """
         if rel_path exist set the project path to this directory
         if not create it and go there
@@ -269,7 +270,7 @@ class ProjectPath(GenericPath):
             new_project.history.append(rel_path)
         return new_project
 
-    def close(self):
+    def close(self) -> None:
         """
         return to the path before the last open if no history exists nothing happens
         """
@@ -279,7 +280,7 @@ class ProjectPath(GenericPath):
             self.project_path = "/".join(path_lst[: -len(hist_lst)])
             del self.history[-1]
 
-    def copy(self):
+    def copy(self) -> "ProjectPath":
         """
         copy the path without the history, i.e., to going back with close is not possible
 
@@ -288,7 +289,7 @@ class ProjectPath(GenericPath):
         """
         return ProjectPath(path=self.path)
 
-    def removedirs(self, project_name=None):
+    def removedirs(self, project_name: Optional[str]=None):
         """
         equivalent to os.removedirs  -> remove empty dirs
 
@@ -304,7 +305,7 @@ class ProjectPath(GenericPath):
         except OSError:
             pass
 
-    def listdir(self):
+    def listdir(self) -> list:
         """
         equivalent to os.listdir
         list all files and directories in this path
@@ -317,7 +318,7 @@ class ProjectPath(GenericPath):
         except OSError:
             return []
 
-    def walk(self):
+    def walk(self) -> Iterator[tuple[str, list[str], list[str]]]:
         """
         equivalent to os.listdir
         list all files and directories in this path
@@ -327,7 +328,7 @@ class ProjectPath(GenericPath):
         """
         return os.walk(self.path)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         """
         String representation of the ProjectPath object
 
@@ -339,7 +340,7 @@ class ProjectPath(GenericPath):
             project_str += "   history: " + str(self.history) + "\n"
         return project_str
 
-    def __enter__(self):
+    def __enter__(self) -> "ProjectPath":
         """
         Helper function to support with calls
 
@@ -359,16 +360,16 @@ class ProjectPath(GenericPath):
         """
         self.close()
 
-    def __getstate__(self):
+    def __getstate__(self) -> dict:
         state_dict = super().__getstate__()
         state_dict["history"] = self._history
         return state_dict
 
-    def __setstate__(self, state):
+    def __setstate__(self, state: dict) -> None:
         super().__setstate__(state)
         self._history = state["history"]
 
-    def _convert_str_to_generic_path(self, path):
+    def _convert_str_to_generic_path(self, path: Union[str, GenericPath]) -> GenericPath:
         """
         Convert path in string representation to an GenericPath object.  If argument is string and the given path does
         not exist, create it.
@@ -399,7 +400,7 @@ class ProjectPath(GenericPath):
         else:
             raise TypeError("Only string and GenericPath objects are supported.")
 
-    def _create_path(self, path, rel_path=None):
+    def _create_path(self, path: str, rel_path: Optional[str] = None) -> None:
         """
         Create the directory if it does not exist already using os.makedirs()
 
@@ -414,7 +415,7 @@ class ProjectPath(GenericPath):
         os.makedirs(path, exist_ok=True)
 
     @staticmethod
-    def _get_project_from_path(full_path):
+    def _get_project_from_path(full_path: str) -> Tuple[str, str]:
         """
         Split the absolute path in root_path and project_path using the top_path function in Settings()
 

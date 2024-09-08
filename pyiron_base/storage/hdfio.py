@@ -10,7 +10,7 @@ import numbers
 import os
 import posixpath
 import sys
-from typing import Any, Optional, Tuple, Union
+from typing import Any, Optional, Tuple, Union, List, Dict, Set
 
 import h5py
 import numpy as np
@@ -43,22 +43,42 @@ __date__ = "Sep 1, 2017"
 
 # for historic reasons we write str(class) into the HDF 'TYPE' field of objects, so we need to parse this back out
 def _extract_fully_qualified_name(type_field: str) -> str:
+    """
+    Extracts the fully qualified name from the given type field.
+
+    Args:
+        type_field (str): The type field containing the fully qualified name.
+
+    Returns:
+        str: The extracted fully qualified name.
+    """
     return type_field.split("'")[1]
 
 
 def _extract_module_class_name(type_field: str) -> Tuple[str, str]:
+    """
+    Extracts the module path and class name from the given type field.
+
+    Args:
+        type_field (str): The type field containing the fully qualified name.
+
+    Returns:
+        Tuple[str, str]: The module path and class name.
+    """
     fully_qualified_path = _extract_fully_qualified_name(type_field)
     return fully_qualified_path.rsplit(".", maxsplit=1)
 
 
-def _list_groups_and_nodes(hdf, h5_path):
+def _list_groups_and_nodes(hdf: h5py.File, h5_path: str) -> Tuple[List[str], List[str]]:
     """
     Get the list of groups and list of nodes from an open HDF5 file
+
     Args:
         hdf (h5py.File): file handle of an open HDF5 file
         h5_path (str): path inside the HDF5 file
+
     Returns:
-        list, list: list of groups and list of nodes
+        Tuple[List[str], List[str]]: list of groups and list of nodes
     """
     groups = set()
     nodes = set()
@@ -74,7 +94,7 @@ def _list_groups_and_nodes(hdf, h5_path):
     return list(groups), list(nodes)
 
 
-def _import_class(module_path, class_name):
+def _import_class(module_path: str, class_name: str) -> type:
     """
     Import given class from fully qualified name and return class object.
 
@@ -119,26 +139,23 @@ def _import_class(module_path, class_name):
             raise
 
 
-def _to_object(hdf, class_name=None, **kwargs):
+def _to_object(hdf: "FileHDFio", class_name: Optional[str] = None, **kwargs: Any) -> Any:
     """
     Load the full pyiron object from an HDF5 file
 
     Args:
-        class_name(str, optional): if the 'TYPE' node is not available in
-                    the HDF5 file a manual object type can be set,
-                    must be as reported by `str(type(obj))`
-        **kwargs: optional parameters optional parameters to override init
-                  parameters
+        hdf (FileHDFio): The HDF5 file handle.
+        class_name (str, optional): If the 'TYPE' node is not available in the HDF5 file, a manual object type can be
+            set. Must be as reported by `str(type(obj))`.
+        **kwargs: Optional parameters to override init parameters.
 
     Returns:
-        pyiron object of the given class_name
+        Any: Pyiron object of the given class_name.
     """
     if "TYPE" not in hdf.list_nodes() and class_name is None:
         raise ValueError("Objects can be only recovered from hdf5 if TYPE is given")
     elif class_name is not None and class_name != hdf.get("TYPE"):
-        raise ValueError(
-            "Object type in hdf5-file must be identical to input parameter"
-        )
+        raise ValueError("Object type in hdf5-file must be identical to input parameter")
     type_field = class_name or hdf.get("TYPE")
     module_path, class_name = _extract_module_class_name(type_field)
     class_object = _import_class(module_path, class_name)
@@ -199,32 +216,53 @@ class FileHDFio(HasGroups, Pointer):
         boolean if the HDF5 file is empty
     """
 
-    def __init__(self, file_name, h5_path="/", mode="a"):
+    def __init__(self, file_name: str, h5_path: str = "/", mode: str = "a") -> None:
         Pointer.__init__(self=self, file_name=file_name, h5_path=h5_path)
         self.history = []
         self._filter = ["groups", "nodes", "objects"]
 
     # MutableMapping Impl
-    def __contains__(self, item):
+    def __contains__(self, item: str) -> bool:
+        """
+        Check if an item exists in the HDF5 file.
+
+        Args:
+            item (str): path to the data or key of the data object
+
+        Returns:
+            bool: True if the item exists, False otherwise
+        """
         nodes_groups = self.list_all()
         return item in nodes_groups["nodes"] or item in nodes_groups["groups"]
 
-    def __len__(self):
+    def __len__(self) -> int:
+        """
+        Get the number of items in the HDF5 file.
+
+        Returns:
+            int: Number of items in the HDF5 file
+        """
         nodes_groups = self.list_all()
         return len(nodes_groups["nodes"]) + len(nodes_groups["groups"])
 
     def __iter__(self):
+        """
+        Iterate over the keys in the HDF5 file.
+
+        Returns:
+            iter: Iterator over the keys in the HDF5 file
+        """
         return iter(self.keys())
 
-    def __getitem__(self, item):
+    def __getitem__(self, item: Union[str, slice]) -> Union[Dict, List, float, int]:
         """
-        Get/ read data from the HDF5 file
+        Get/ read data from the HDF5 file.
 
         Args:
             item (str, slice): path to the data or key of the data object
 
         Returns:
-            dict, list, float, int: data or data object
+            Union[Dict, List, float, int]: Data or data object
         """
         if isinstance(item, slice):
             if not (item.start or item.stop or item.step):
@@ -290,7 +328,16 @@ class FileHDFio(HasGroups, Pointer):
 
     # TODO: remove this function upon 1.0.0 release
     @staticmethod
-    def _is_convertable_dtype_object_array(obj):
+    def _is_convertable_dtype_object_array(obj: np.ndarray) -> bool:
+        """
+        Check if an object array is convertable to a different dtype.
+
+        Args:
+            obj (np.ndarray): Object array
+
+        Returns:
+            bool: True if the object array is convertable, False otherwise
+        """
         if isinstance(obj, np.ndarray) and obj.dtype == np.dtype(object):
             first_element = obj[(0,) * obj.ndim]
             last_element = obj[(-1,) * obj.ndim]
@@ -304,7 +351,16 @@ class FileHDFio(HasGroups, Pointer):
 
     # TODO: remove this function upon 1.0.0 release
     @staticmethod
-    def _convert_dtype_obj_array(obj: np.ndarray):
+    def _convert_dtype_obj_array(obj: np.ndarray) -> np.ndarray:
+        """
+        Convert an object array to a different dtype.
+
+        Args:
+            obj (np.ndarray): Object array
+
+        Returns:
+            np.ndarray: Converted object array
+        """
         try:
             result = np.array(obj.tolist())
         except ValueError:
@@ -321,13 +377,13 @@ class FileHDFio(HasGroups, Pointer):
         else:
             return obj
 
-    def __setitem__(self, key, value):
+    def __setitem__(self, key: str, value: Union[pandas.DataFrame, pandas.Series, Dict, List, float, int]) -> None:
         """
-        Store data inside the HDF5 file
+        Store data inside the HDF5 file.
 
         Args:
-            key (str): key to store the data
-            value (pandas.DataFrame, pandas.Series, dict, list, float, int): basically any kind of data is supported
+            key (str): Key to store the data
+            value (Union[pandas.DataFrame, pandas.Series, Dict, List, float, int]): Data to store
         """
         if hasattr(value, "to_hdf") & (
             not isinstance(value, (pandas.DataFrame, pandas.Series))
@@ -341,40 +397,40 @@ class FileHDFio(HasGroups, Pointer):
         )
 
     @property
-    def base_name(self):
+    def base_name(self) -> str:
         """
-        Name of the HDF5 file - but without the file extension .h5
+        Get the name of the HDF5 file without the file extension.
 
         Returns:
-            str: file name without the file extension
+            str: Name of the HDF5 file without the file extension
         """
         return ".".join(posixpath.basename(self.file_name).split(".")[:-1])
 
     @property
-    def file_path(self):
+    def file_path(self) -> str:
         """
-        Path where the HDF5 file is located - posixpath.dirname()
+        Get the directory where the HDF5 file is located.
 
         Returns:
-            str: HDF5 file location
+            str: Directory where the HDF5 file is located
         """
         return posixpath.dirname(self.file_name)
 
-    def get_size(self, hdf):
+    def get_size(self, hdf: "FileHDFio") -> float:
         """
-        Get size of the groups inside the HDF5 file
+        Get the size of the groups inside the HDF5 file.
 
         Args:
-            hdf (FileHDFio): hdf file
+            hdf (FileHDFio): HDF5 file
 
         Returns:
-            float: file size in Bytes
+            float: File size in Bytes
         """
         return sum([sys.getsizeof(hdf[p]) for p in hdf.list_nodes()]) + sum(
             [self.get_size(hdf[p]) for p in hdf.list_groups()]
         )
 
-    def copy(self):
+    def copy(self) -> "FileHDFio":
         """
         Copy the Python object which links to the HDF5 file - in contrast to copy_to() which copies the content of the
         HDF5 file to a new location.
@@ -386,15 +442,15 @@ class FileHDFio(HasGroups, Pointer):
         new_h5._filter = self._filter
         return new_h5
 
-    def create_group(self, name, track_order=False):
+    def create_group(self, name: str, track_order: bool = False) -> "FileHDFio":
         """
         Create an HDF5 group - similar to a folder in the filesystem - the HDF5 groups allow the users to structure
         their data.
 
         Args:
-            name (str): name of the HDF5 group
-            track_order (bool): if False this groups tracks its elements in
-                alphanumeric order, if True in insertion order
+            name (str): Name of the HDF5 group
+            track_order (bool): If False, this groups tracks its elements in alphanumeric order,
+                                if True, in insertion order
 
         Returns:
             FileHDFio: FileHDFio object pointing to the new group
@@ -408,9 +464,9 @@ class FileHDFio(HasGroups, Pointer):
         h_new = self[name].copy()
         return h_new
 
-    def remove_group(self):
+    def remove_group(self) -> None:
         """
-        Remove an HDF5 group - if it exists. If the group does not exist no error message is raised.
+        Remove an HDF5 group if it exists. If the group does not exist, no error message is raised.
         """
         try:
             with _open_hdf(self.file_name, mode="a") as hdf_file:
@@ -418,13 +474,13 @@ class FileHDFio(HasGroups, Pointer):
         except KeyError:
             pass
 
-    def open(self, h5_rel_path):
+    def open(self, h5_rel_path: str) -> "FileHDFio":
         """
-        Create an HDF5 group and enter this specific group. If the group exists in the HDF5 path only the h5_path is
-        set correspondingly otherwise the group is created first.
+        Create an HDF5 group and enter this specific group. If the group exists in the HDF5 path,
+        only the h5_path is set correspondingly, otherwise the group is created first.
 
         Args:
-            h5_rel_path (str): relative path from the current HDF5 path - h5_path - to the new group
+            h5_rel_path (str): Relative path from the current HDF5 path - h5_path - to the new group
 
         Returns:
             FileHDFio: FileHDFio object pointing to the new group
@@ -443,9 +499,9 @@ class FileHDFio(HasGroups, Pointer):
 
         return new_h5_path
 
-    def close(self):
+    def close(self) -> None:
         """
-        Close the current HDF5 path and return to the path before the last open
+        Close the current HDF5 path and return to the path before the last open.
         """
         path_lst = self.h5_path.split("/")
         last = self.history[-1].strip()
@@ -456,29 +512,29 @@ class FileHDFio(HasGroups, Pointer):
                 self.h5_path = "/"
         del self.history[-1]
 
-    def show_hdf(self):
+    def show_hdf(self) -> None:
         """
-        Iterating over the HDF5 datastructure and generating a human readable graph.
+        Iterate over the HDF5 data structure and generate a human-readable graph.
         """
         self._walk()
 
-    def remove_file(self):
+    def remove_file(self) -> None:
         """
-        Remove the HDF5 file with all the related content
+        Remove the HDF5 file with all the related content.
         """
         if self.file_exists:
             os.remove(self.file_name)
 
-    def get_from_table(self, path, name):
+    def get_from_table(self, path: str, name: str) -> Union[Dict, List, float, int]:
         """
-        Get a specific value from a pandas.Dataframe
+        Get a specific value from a pandas.DataFrame.
 
         Args:
-            path (str): relative path to the data object
-            name (str): parameter key
+            path (str): Relative path to the data object
+            name (str): Parameter key
 
         Returns:
-            dict, list, float, int: the value associated to the specific parameter key
+            Union[Dict, List, float, int]: The value associated with the specific parameter key
         """
         df_table = self.get(path)
         keys = df_table["Parameter"]
@@ -487,31 +543,31 @@ class FileHDFio(HasGroups, Pointer):
             return df_table["Value"][job_id]
         raise ValueError("Unknown name: {0}".format(name))
 
-    def get_pandas(self, name):
+    def get_pandas(self, name: str) -> pandas.DataFrame:
         """
-        Load a dictionary from the HDF5 file and display the dictionary as pandas Dataframe
+        Load a dictionary from the HDF5 file and display the dictionary as a pandas DataFrame.
 
         Args:
             name (str): HDF5 node name
 
         Returns:
-            pandas.Dataframe: The dictionary is returned as pandas.Dataframe object
+            pd.DataFrame: The dictionary as a pandas DataFrame object
         """
         val = self.get(name)
         if isinstance(val, dict):
             df = pandas.DataFrame(val)
             return df
 
-    def get(self, key, default=None):
+    def get(self, key: str, default: Optional[object] = None) -> Union[Dict, List, float, int]:
         """
-        Internal wrapper function for __getitem__() - self[name]
+        Get data from the HDF5 file.
 
         Args:
-            key (str, slice): path to the data or key of the data object
-            default (object): default value to return if key doesn't exist
+            key (str): Path to the data or key of the data object
+            default (object): Default value to return if key doesn't exist
 
         Returns:
-            dict, list, float, int: data or data object
+            Union[Dict, List, float, int]: Data or data object
         """
         try:
             return self.__getitem__(key)
@@ -519,24 +575,24 @@ class FileHDFio(HasGroups, Pointer):
             if default is not None:
                 return default
             else:
-                raise
+                raise KeyError(key)
 
-    def put(self, key, value):
+    def put(self, key: str, value: Union[pandas.DataFrame, pandas.Series, Dict, List, float, int]) -> None:
         """
-        Store data inside the HDF5 file
+        Store data inside the HDF5 file.
 
         Args:
-            key (str): key to store the data
-            value (pandas.DataFrame, pandas.Series, dict, list, float, int): basically any kind of data is supported
+            key (str): Key to store the data
+            value (Union[pandas.DataFrame, pandas.Series, Dict, List, float, int]): Data to store
         """
         self.__setitem__(key=key, value=value)
 
-    def _list_all(self):
+    def _list_all(self) -> Dict[str, List[str]]:
         """
         List all groups and nodes of the HDF5 file - where groups are equivalent to directories and nodes to files.
 
         Returns:
-            dict: {'groups': [list of groups], 'nodes': [list of nodes]}
+            Dict[str, List[str]]: Dictionary with keys "groups" and "nodes" containing lists of groups and nodes
         """
         if self.file_exists:
             with _open_hdf(self.file_name) as hdf:
@@ -549,88 +605,102 @@ class FileHDFio(HasGroups, Pointer):
         else:
             return {"groups": [], "nodes": []}
 
-    def _list_nodes(self):
+    def _list_nodes(self) -> List[str]:
+        """
+        List all nodes in the HDF5 file.
+
+        Returns:
+            List[str]: List of nodes in the HDF5 file
+        """
         return self.list_all()["nodes"]
 
-    def _list_groups(self):
+    def _list_groups(self) -> List[str]:
+        """
+        List all groups in the HDF5 file.
+
+        Returns:
+            List[str]: List of groups in the HDF5 file
+        """
         return self.list_all()["groups"]
 
-    def listdirs(self):
+    def listdirs(self) -> List[str]:
         """
-        equivalent to os.listdirs (consider groups as equivalent to dirs)
+        Equivalent to os.listdirs (consider groups as equivalent to dirs).
 
         Returns:
-            (list): list of groups in pytables for the path self.h5_path
-
+            List[str]: List of groups in pytables for the path self.h5_path
         """
         return self.list_groups()
 
-    def list_dirs(self):
+    def list_dirs(self) -> List[str]:
         """
-        equivalent to os.listdirs (consider groups as equivalent to dirs)
+        Equivalent to os.listdirs (consider groups as equivalent to dirs).
 
         Returns:
-            (list): list of groups in pytables for the path self.h5_path
+            List[str]: List of groups in pytables for the path self.h5_path
         """
         return self.list_groups()
 
-    def keys(self):
+    def keys(self) -> List[str]:
         """
         List all groups and nodes of the HDF5 file - where groups are equivalent to directories and nodes to files.
 
         Returns:
-            list: all groups and nodes
+            List[str]: All groups and nodes
         """
         list_all_dict = self.list_all()
         return list_all_dict["nodes"] + list_all_dict["groups"]
 
-    def values(self):
+    def values(self) -> List[Union[Dict, List, float, int]]:
         """
-        List all values for all groups and nodes of the HDF5 file
+        List all values for all groups and nodes of the HDF5 file.
 
         Returns:
-            list: list of all values
+            List[Union[Dict, List, float, int]]: List of all values
         """
         return [self[key] for key in self.keys()]
 
-    def items(self):
+    def items(self) -> List[Tuple[str, Union[Dict, List, float, int]]]:
         """
-        List all keys and values as items of all groups and nodes of the HDF5 file
+        List all keys and values as items of all groups and nodes of the HDF5 file.
 
         Returns:
-            list: list of sets (key, value)
+            List[Tuple[str, Union[Dict, List, float, int]]]: List of sets (key, value)
         """
         return [(key, self[key]) for key in self.keys()]
 
-    def groups(self):
+    def groups(self) -> "FileHDFio":
         """
-        Filter HDF5 file by groups
+        Filter HDF5 file by groups.
 
         Returns:
-            FileHDFio: an HDF5 file which is filtered by groups
+            FileHDFio: An HDF5 file which is filtered by groups
         """
         new = self.copy()
         new._filter = ["groups"]
         return new
 
-    def nodes(self):
+    def nodes(self) -> "FileHDFio":
         """
-        Filter HDF5 file by nodes
+        Filter HDF5 file by nodes.
 
         Returns:
-            FileHDFio: an HDF5 file which is filtered by nodes
+            FileHDFio: An HDF5 file which is filtered by nodes
         """
         new = self.copy()
         new._filter = ["nodes"]
         return new
 
-    def hd_copy(self, hdf_old, hdf_new, exclude_groups=None, exclude_nodes=None):
+    def hd_copy(self, hdf_old: "FileHDFio", hdf_new: "FileHDFio", exclude_groups: Optional[List[str]] = None,
+                exclude_nodes: Optional[List[str]] = None) -> None:
         """
-        args:
-            hdf_old (ProjectHDFio): old hdf
-            hdf_new (ProjectHDFio): new hdf
-            exclude_groups (list/None): list of groups to delete
-            exclude_nodes (list/None): list of nodes to delete
+        Copy data from one HDF5 file to another.
+
+        Args:
+            hdf_old (FileHDFio): Source HDF5 file
+            hdf_new (FileHDFio): Destination HDF5 file
+            exclude_groups (List[str]): List of groups to exclude from the copy
+            exclude_nodes (List[str]): List of nodes to exclude from the copy
         """
         if exclude_groups is None or len(exclude_groups) == 0:
             exclude_groups_split = list()
@@ -663,13 +733,16 @@ class FileHDFio(HasGroups, Pointer):
 
     @deprecate(job_name="ignored!", exclude_groups="ignored!", exclude_nodes="ignored!")
     def rewrite_hdf5(
-        self, job_name=None, info=False, exclude_groups=None, exclude_nodes=None
-    ):
+        self, job_name: Optional[str] = None, info: bool = False, exclude_groups: Optional[List[str]] = None, exclude_nodes: Optional[List[str]] = None
+    ) -> None:
         """
         Rewrite the entire hdf file.
 
         Args:
-            info (True/False): whether to give the information on how much space has been saved
+            job_name (Optional[str]): Deprecated argument, ignored.
+            info (bool): Whether to give the information on how much space has been saved.
+            exclude_groups (Optional[List[str]]): List of groups to exclude from the copy.
+            exclude_nodes (Optional[List[str]]): List of nodes to exclude from the copy.
         """
         if job_name is not None:
             state.logger.warning(
@@ -700,7 +773,7 @@ class FileHDFio(HasGroups, Pointer):
         self.remove_file()
         os.rename(hdf_new.file_name, file_name)
 
-    def __str__(self):
+    def __str__(self) -> str:
         """
         Machine readable string representation
 
@@ -709,7 +782,7 @@ class FileHDFio(HasGroups, Pointer):
         """
         return self.__repr__()
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         """
         Human readable string representation
 
@@ -733,7 +806,7 @@ class FileHDFio(HasGroups, Pointer):
         except AttributeError:
             pass
 
-    def _read(self, item):
+    def _read(self, item: str) -> Union[Dict, List, float, int]:
         """
         Internal read function to read data from the HDF5 file
 
@@ -745,7 +818,7 @@ class FileHDFio(HasGroups, Pointer):
         """
         return _read_hdf(hdf_filehandle=self.file_name, h5_path=self._get_h5_path(item))
 
-    def write_dict_to_hdf(self, data_dict):
+    def write_dict_to_hdf(self, data_dict: dict) -> None:
         """
         Write a dictionary to HDF5
 
@@ -754,19 +827,19 @@ class FileHDFio(HasGroups, Pointer):
         """
         self.write_dict(data_dict=data_dict)
 
-    def read_dict_from_hdf(self, group_paths=[], recursive=False):
+    def read_dict_from_hdf(self, group_paths: List[str] = [], recursive: bool = False) -> dict:
         """
         Read data from HDF5 file into a dictionary - by default only the nodes are converted to dictionaries, additional
         sub groups can be specified using the group_paths parameter.
 
         Args:
-            group_paths (list): list of additional groups to be included in the dictionary, for example:
-                                ["input", "output", "output/generic"]
-                                These groups are defined relative to the h5_path.
+            group_paths (List[str]): list of additional groups to be included in the dictionary, for example:
+                                     ["input", "output", "output/generic"]
+                                     These groups are defined relative to the h5_path.
             recursive (bool): Load all subgroups recursively
 
         Returns:
-            dict:     The loaded data. Can be of any type supported by ``write_hdf5``.
+            Dict: The loaded data. Can be of any type supported by ``write_hdf5``.
         """
         return read_nested_dict_from_hdf(
             file_name=self.file_name,
@@ -776,7 +849,7 @@ class FileHDFio(HasGroups, Pointer):
             slash="ignore",
         )
 
-    def create_project_from_hdf5(self):
+    def create_project_from_hdf5(self) -> "Project":
         """
         Internal function to create a pyiron project pointing to the directory where the HDF5 file is located.
 
@@ -787,7 +860,7 @@ class FileHDFio(HasGroups, Pointer):
 
         return Project(path=self.file_path)
 
-    def _get_h5_path(self, name):
+    def _get_h5_path(self, name: str) -> str:
         """
         Internal function to combine the current h5_path with the relative path
 
@@ -799,7 +872,7 @@ class FileHDFio(HasGroups, Pointer):
         """
         return posixpath.join(self.h5_path, name)
 
-    def _get_h5io_type(self, name):
+    def _get_h5io_type(self, name: str) -> str:
         """
         Internal function to get h5io type
 
@@ -812,7 +885,7 @@ class FileHDFio(HasGroups, Pointer):
         with _open_hdf(self.file_name) as store:
             return str(store[self.h5_path][name].attrs.get("TITLE", ""))
 
-    def _filter_io_objects(self, groups):
+    def _filter_io_objects(self, groups: Union[List[str], Set[str]]) -> Set[str]:
         """
         Internal function to extract h5io objects (which have the same type as normal groups)
 
@@ -836,7 +909,7 @@ class FileHDFio(HasGroups, Pointer):
         )
         return group_h5io
 
-    def _walk(self, level=0):
+    def _walk(self, level: int = 0) -> None:
         """
         Internal helper function for show_hdf() - iterating over the HDF5 datastructure and generating a human readable
         graph.
@@ -950,7 +1023,7 @@ class ProjectHDFio(FileHDFio, BaseHDFio):
             working directory of the job is executed in - outside the HDF5 file
     """
 
-    def __init__(self, project, file_name, h5_path=None, mode=None):
+    def __init__(self, project: "Project", file_name: str, h5_path: Optional[str] = None, mode: Optional[str] = None) -> None:
         self._file_name = _get_safe_filename(file_name)
         if h5_path is None:
             h5_path = "/"
@@ -964,7 +1037,7 @@ class ProjectHDFio(FileHDFio, BaseHDFio):
         )
 
     @property
-    def base_name(self):
+    def base_name(self) -> str:
         """
         The absolute path to of the current pyiron project - absolute path on the file system, not including the HDF5
         path.
@@ -975,7 +1048,7 @@ class ProjectHDFio(FileHDFio, BaseHDFio):
         return self._project.path
 
     @property
-    def db(self):
+    def db(self) -> "DatabaseAccess":
         """
         Get connection to the SQL database
 
@@ -985,7 +1058,7 @@ class ProjectHDFio(FileHDFio, BaseHDFio):
         return self._project.db
 
     @property
-    def path(self):
+    def path(self) -> str:
         """
         Absolute path of the HDF5 group starting from the system root - combination of the absolute system path plus the
         absolute path inside the HDF5 file starting from the root group.
@@ -996,7 +1069,7 @@ class ProjectHDFio(FileHDFio, BaseHDFio):
         return os.path.join(self._project.path, self.h5_path[1:]).replace("\\", "/")
 
     @property
-    def project(self):
+    def project(self) -> "Project":
         """
         Get the project instance the ProjectHDFio object is located in
 
@@ -1006,7 +1079,7 @@ class ProjectHDFio(FileHDFio, BaseHDFio):
         return self._project
 
     @property
-    def project_path(self):
+    def project_path(self) -> str:
         """
         the relative path of the current project / folder starting from the root path
         of the pyiron user directory
@@ -1017,7 +1090,7 @@ class ProjectHDFio(FileHDFio, BaseHDFio):
         return self._project.project_path
 
     @property
-    def root_path(self):
+    def root_path(self) -> str:
         """
         the pyiron user directory, defined in the .pyiron configuration
 
@@ -1027,7 +1100,7 @@ class ProjectHDFio(FileHDFio, BaseHDFio):
         return self._project.root_path
 
     @property
-    def sql_query(self):
+    def sql_query(self) -> str:
         """
         Get the SQL query for the project
 
@@ -1037,7 +1110,7 @@ class ProjectHDFio(FileHDFio, BaseHDFio):
         return self._project.sql_query
 
     @sql_query.setter
-    def sql_query(self, new_query):
+    def sql_query(self, new_query: str) -> None:
         """
         Set the SQL query for the project
 
@@ -1047,7 +1120,7 @@ class ProjectHDFio(FileHDFio, BaseHDFio):
         self._project.sql_query = new_query
 
     @property
-    def user(self):
+    def user(self) -> str:
         """
         Get current unix/linux/windows user who is running pyiron
 
@@ -1057,7 +1130,7 @@ class ProjectHDFio(FileHDFio, BaseHDFio):
         return self._project.user
 
     @property
-    def working_directory(self):
+    def working_directory(self) -> str:
         """
         Get the working directory of the current ProjectHDFio object. The working directory equals the path but it is
         represented by the filesystem:
@@ -1080,7 +1153,7 @@ class ProjectHDFio(FileHDFio, BaseHDFio):
         return posixpath.join(project_full_path, file_name, h5_path)
 
     @property
-    def _filter(self):
+    def _filter(self) -> str:
         """
         Get project filter
 
@@ -1090,7 +1163,7 @@ class ProjectHDFio(FileHDFio, BaseHDFio):
         return self._project._filter
 
     @_filter.setter
-    def _filter(self, new_filter):
+    def _filter(self, new_filter: str) -> None:
         """
         Set project filter
 
@@ -1100,7 +1173,7 @@ class ProjectHDFio(FileHDFio, BaseHDFio):
         self._project._filter = new_filter
 
     @property
-    def _inspect_mode(self):
+    def _inspect_mode(self) -> bool:
         """
         Check if inspect mode is activated
 
@@ -1110,7 +1183,7 @@ class ProjectHDFio(FileHDFio, BaseHDFio):
         return self._project._inspect_mode
 
     @_inspect_mode.setter
-    def _inspect_mode(self, read_mode):
+    def _inspect_mode(self, read_mode: bool) -> None:
         """
         Activate or deactivate inspect mode
 
@@ -1120,10 +1193,16 @@ class ProjectHDFio(FileHDFio, BaseHDFio):
         self._project._inspect_mode = read_mode
 
     @property
-    def name(self):
+    def name(self) -> str:
+        """
+        Get the name of the HDF5 group.
+
+        Returns:
+            str: The name of the HDF5 group.
+        """
         return os.path.basename(self.h5_path)
 
-    def copy(self):
+    def copy(self) -> "ProjectHDFio":
         """
         Copy the ProjectHDFio object - copying just the Python object but maintaining the same pyiron path
 
@@ -1136,7 +1215,7 @@ class ProjectHDFio(FileHDFio, BaseHDFio):
         new_h5._filter = self._filter
         return new_h5
 
-    def create_hdf(self, path, job_name):
+    def create_hdf(self, path: str, job_name: str) -> "ProjectHDFio":
         """
         Create an ProjectHDFio object to store project related information - for testing aggregated data
 
@@ -1149,13 +1228,13 @@ class ProjectHDFio(FileHDFio, BaseHDFio):
         """
         return self._project.create_hdf(path=path, job_name=job_name)
 
-    def create_working_directory(self):
+    def create_working_directory(self) -> None:
         """
         Create the working directory on the file system if it does not exist already.
         """
         os.makedirs(self.working_directory, exist_ok=True)
 
-    def to_object(self, class_name=None, **kwargs):
+    def to_object(self, class_name: Optional[str] = None, **kwargs) -> object:
         """
         Load the full pyiron object from an HDF5 file
 
@@ -1171,7 +1250,7 @@ class ProjectHDFio(FileHDFio, BaseHDFio):
         """
         return _to_object(self, class_name, **kwargs)
 
-    def get_job_id(self, job_specifier):
+    def get_job_id(self, job_specifier: Union[str, int]) -> int:
         """
         get the job_id for job named job_name in the local project path from database
 
@@ -1183,7 +1262,7 @@ class ProjectHDFio(FileHDFio, BaseHDFio):
         """
         return self._project.get_job_id(job_specifier=job_specifier)
 
-    def inspect(self, job_specifier):
+    def inspect(self, job_specifier: Union[str, int]) -> "JobCore":
         """
         Inspect an existing pyiron object - most commonly a job - from the database
 
@@ -1195,7 +1274,7 @@ class ProjectHDFio(FileHDFio, BaseHDFio):
         """
         return self._project.inspect(job_specifier=job_specifier)
 
-    def load(self, job_specifier, convert_to_object=True):
+    def load(self, job_specifier: Union[str, int], convert_to_object: bool = True) -> Union["GenericJob", "JobCore"]:
         """
         Load an existing pyiron object - most commonly a job - from the database
 
@@ -1212,13 +1291,13 @@ class ProjectHDFio(FileHDFio, BaseHDFio):
             job_specifier=job_specifier, convert_to_object=convert_to_object
         )
 
-    def load_from_jobpath(self, job_id=None, db_entry=None, convert_to_object=True):
+    def load_from_jobpath(self, job_id: Optional[int] = None, db_entry: Optional[dict] = None, convert_to_object: bool = True) -> Union["GenericJob", "JobCore"]:
         """
         Internal function to load an existing job either based on the job ID or based on the database entry dictionary.
 
         Args:
-            job_id (int): Job ID - optional, but either the job_id or the db_entry is required.
-            db_entry (dict): database entry dictionary - optional, but either the job_id or the db_entry is required.
+            job_id (int, optional): Job ID - optional, but either the job_id or the db_entry is required.
+            db_entry (dict, optional): database entry dictionary - optional, but either the job_id or the db_entry is required.
             convert_to_object (bool): convert the object to an pyiron object or only access the HDF5 file - default=True
                                       accessing only the HDF5 file is about an order of magnitude faster, but only
                                       provides limited functionality. Compare the GenericJob object to JobCore object.
@@ -1230,18 +1309,18 @@ class ProjectHDFio(FileHDFio, BaseHDFio):
             job_id=job_id, db_entry=db_entry, convert_to_object=convert_to_object
         )
 
-    def remove_job(self, job_specifier, _unprotect=False):
+    def remove_job(self, job_specifier: Union[str, int], _unprotect: bool = False) -> None:
         """
-        Remove a single job from the project based on its job_specifier - see also remove_jobs()
+        Remove a single job from the project based on its job_specifier.
 
         Args:
-            job_specifier (str, int): name of the job or job ID
-            _unprotect (bool): [True/False] delete the job without validating the dependencies to other jobs
-                               - default=False
+            job_specifier (Union[str, int]): Name of the job or job ID.
+            _unprotect (bool): [True/False] Delete the job without validating the dependencies to other jobs.
+                               Default is False.
         """
         self._project.remove_job(job_specifier=job_specifier, _unprotect=_unprotect)
 
-    def create_project_from_hdf5(self):
+    def create_project_from_hdf5(self) -> "Project":
         """
         Internal function to create a pyiron project pointing to the directory where the HDF5 file is located.
 
@@ -1291,7 +1370,7 @@ class DummyHDFio(HasGroups, BaseHDFio):
      'HDF_VERSION': '0.2.0'}
     """
 
-    def __init__(self, project, h5_path: str, cont: Optional[dict] = None, root=None):
+    def __init__(self, project, h5_path: str, cont: Optional[dict] = None, root: Optional["DummyHDFio"]=None):
         """
 
         Args:
@@ -1340,7 +1419,7 @@ class DummyHDFio(HasGroups, BaseHDFio):
             # compat with ProjectHDFio with for some reasons raises ValueErrors
             raise ValueError(item) from None
 
-    def get(self, key, default=None):
+    def get(self, key: Union[str, slice], default: Optional[object] = None) -> Union[dict, list, float, int]:
         """
         Internal wrapper function for __getitem__() - self[name]
 
@@ -1359,10 +1438,10 @@ class DummyHDFio(HasGroups, BaseHDFio):
             else:
                 raise
 
-    def __setitem__(self, item: str, value: Any):
+    def __setitem__(self, item: str, value: Any) -> None:
         self._dict[item] = value
 
-    def create_group(self, name: str):
+    def create_group(self, name: str) -> "DummyHDFio":
         """
         Create a new sub group.
 
@@ -1382,28 +1461,28 @@ class DummyHDFio(HasGroups, BaseHDFio):
             raise RuntimeError(f"'{name}' is already a node!")
         return d
 
-    def _list_nodes(self):
+    def _list_nodes(self) -> List[str]:
         return [k for k, v in self._dict.items() if not isinstance(v, DummyHDFio)]
 
-    def _list_groups(self):
+    def _list_groups(self) -> List[str]:
         return [
             k
             for k, v in self._dict.items()
             if isinstance(v, DummyHDFio) and not v._empty()
         ]
 
-    def __contains__(self, item):
+    def __contains__(self, item) -> bool:
         return item in self._dict
 
     @property
-    def project(self):
+    def project(self) -> "Project":
         if self._project is not None:
             return self._project
         else:
             raise RuntimeError("No project set!")
 
     @property
-    def h5_path(self):
+    def h5_path(self) -> str:
         return self._h5_path
 
     def open(self, name: str) -> "DummyHDFio":
@@ -1435,7 +1514,7 @@ class DummyHDFio(HasGroups, BaseHDFio):
         except AttributeError:
             return self
 
-    def __enter__(self):
+    def __enter__(self) -> "DummyHDFio":
         """
         Compatibility function for the with statement
         """
@@ -1448,6 +1527,12 @@ class DummyHDFio(HasGroups, BaseHDFio):
         self.close()
 
     def to_dict(self) -> dict:
+        """
+        Convert the HDF5 data to a dictionary.
+
+        Returns:
+            dict: The converted dictionary.
+        """
         def unwrap(v):
             if isinstance(v, DummyHDFio):
                 return v.to_dict()
@@ -1455,7 +1540,7 @@ class DummyHDFio(HasGroups, BaseHDFio):
 
         return {k: unwrap(v) for k, v in self._dict.items()}
 
-    def to_object(self, class_name=None, **kwargs):
+    def to_object(self, class_name: Optional[str] = None, **kwargs) -> object:
         """
         Load the full pyiron object from an HDF5 file
 
@@ -1471,14 +1556,26 @@ class DummyHDFio(HasGroups, BaseHDFio):
         """
         return _to_object(self, class_name, **kwargs)
 
-    def _empty(self):
+    def _empty(self) -> bool:
+        """
+        Check if the DummyHDFio object is empty.
+
+        Returns:
+            bool: True if the object is empty, False otherwise.
+        """
         if len(self._dict) == 0:
             return True
         return len(self.list_nodes()) == 0 and all(
             self[g]._empty() for g in self.list_groups()
         )
 
-    def write_dict_to_hdf(self, data_dict):
+    def write_dict_to_hdf(self, data_dict: dict) -> None:
+        """
+        Write a dictionary to the HDF5 file.
+
+        Args:
+            data_dict (dict): The dictionary to be written to the HDF5 file.
+        """
         for k, v in data_dict.items():
             if isinstance(v, dict):
                 g = self.create_group(k)
@@ -1486,7 +1583,17 @@ class DummyHDFio(HasGroups, BaseHDFio):
             else:
                 self[k] = v
 
-    def read_dict_from_hdf(self, group_paths=[], recursive=False):
+    def read_dict_from_hdf(self, group_paths: List[str] = [], recursive: bool = False) -> Union[dict, Any]:
+        """
+        Read data from the HDF5 file and return it as a dictionary.
+
+        Args:
+            group_paths (List[str]): List of group paths to read data from.
+            recursive (bool): If True, read data recursively from all groups.
+
+        Returns:
+            Union[dict, Any]: The read data as a dictionary or any other object if recursive is True.
+        """
         if recursive:
             return self.to_dict()
 
@@ -1505,7 +1612,16 @@ class DummyHDFio(HasGroups, BaseHDFio):
         return data
 
 
-def _get_safe_filename(file_name):
+def _get_safe_filename(file_name: str) -> str:
+    """
+    Get a safe filename by replacing special characters and adding a file extension.
+
+    Args:
+        file_name (str): The original file name.
+
+    Returns:
+        str: The safe file name with a file extension.
+    """
     file_path_no_ext, file_ext = os.path.splitext(file_name)
     file_path = os.path.dirname(file_path_no_ext)
     file_name_no_ext = os.path.basename(file_path_no_ext)

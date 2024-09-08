@@ -6,6 +6,7 @@ General purpose output parser
 """
 
 import ast
+from typing import List, Union, Any, Optional, Dict, Tuple 
 
 import numpy as np
 
@@ -20,21 +21,20 @@ __email__ = "janssen@mpie.de"
 __status__ = "production"
 __date__ = "Sep 1, 2017"
 
-
-def extract_data_from_str_lst(str_lst, tag, num_args=1):
+def extract_data_from_str_lst(str_lst: List[str], tag: str, num_args: int = 1) -> List[Union[str, List[str]]]:
     """
     General purpose routine to extract any static from a log (text) file
 
     Args:
-        file_name (str): file name or path to the file, can either be absolute or relative
+        str_lst (List[str]): list of strings representing the lines in the file
         tag (str): string at the beginning of the line
         num_args (int): number of arguments separated by ' ' or ',' to extract after the tag
 
     Returns:
-        list: List of arguments extracted as strings
+        List[Union[str, List[str]]]: List of arguments extracted as strings
     """
 
-    def multiple_delimiter_split(s, seps):
+    def multiple_delimiter_split(s: str, seps: List[str]) -> List[str]:
         res = [s]
         for sep in seps:
             s, res = res, []
@@ -58,7 +58,7 @@ def extract_data_from_str_lst(str_lst, tag, num_args=1):
     return collector
 
 
-def extract_data_from_file(file_name, tag, num_args=1):
+def extract_data_from_file(file_name: str, tag: str, num_args: int = 1) -> List[Union[str, List[str]]]:
     """
     General purpose routine to extract any static from a log (text) file
 
@@ -68,7 +68,7 @@ def extract_data_from_file(file_name, tag, num_args=1):
         num_args (int): number of arguments separated by ' ' or ',' to extract after the tag
 
     Returns:
-        list: List of arguments extracted as strings
+        List[Union[str, List[str]]]: List of arguments extracted as strings
     """
     with open(file_name) as infile:
         content = infile.readlines()
@@ -84,7 +84,14 @@ class Logstatus(object):
         iter_levels (int): Levels of iteration - default = 1
     """
 
-    def __init__(self, h5=None, iter_levels=1):  # path = None, # path of h5 file
+    def __init__(self, h5: Optional[Any] = None, iter_levels: int = 1) -> None:
+        """
+        Initialize the Logstatus object.
+
+        Args:
+            h5 (Optional[Any]): HDF5 object to store the dictionary in. Defaults to None.
+            iter_levels (int): Levels of iteration. Defaults to 1.
+        """
         if h5 is not None:
             h5.add_group("generic")
             h5.move_up()
@@ -97,7 +104,7 @@ class Logstatus(object):
         self.store_as_vector = []
         self.h5_open = False
 
-    def reset_iter(self, dim=0):
+    def reset_iter(self, dim: int = 0) -> None:
         """
         Reset iteration level
 
@@ -107,7 +114,7 @@ class Logstatus(object):
         for i in range(dim, self.iter_levels):
             self.iter[i] = 0
 
-    def raise_iter(self, dim=0):
+    def raise_iter(self, dim: int = 0) -> None:
         """
         Increase the iteration level
 
@@ -116,13 +123,13 @@ class Logstatus(object):
         """
         self.iter[dim] += 1
 
-    def append(self, title, data_to_append, vec=False):
+    def append(self, title: str, data_to_append: Union[list, dict], vec: bool = False) -> None:
         """
         Append data to the LogStatus object status_dict dictionary
 
         Args:
             title (str): Title of the data to append
-            data_to_append (list,dict): the data can be of various types
+            data_to_append (Union[list, dict]): the data can be of various types
             vec (bool): [True/False] if the data is a single vector instead of a matrix or a tensor
         """
         if title in self.status_dict.keys():
@@ -134,7 +141,7 @@ class Logstatus(object):
         else:
             self.status_dict[title] = [[list(self.iter), data_to_append]]
 
-    def to_hdf(self, hdf):
+    def to_hdf(self, hdf: "ProjectHDFio") -> None:
         """
         Store the LogStatus object status_dict dictionary in an HDF5 file
 
@@ -151,7 +158,7 @@ class Logstatus(object):
             else:
                 hdf[key] = np.array([val for _, val in value])
 
-    def combine_xyz(self, x_key, y_key, z_key, combined_key, as_vector=False):
+    def combine_xyz(self, x_key: str, y_key: str, z_key: str, combined_key: str, as_vector: bool = False) -> None:
         """
         Combine three lists representing the x,y,z coordinates, by accessing them from the status_dict dictionary,
         combining them, store them under the combined_key and remove the other three keys.
@@ -161,6 +168,7 @@ class Logstatus(object):
             y_key (str): key of the y coordinates
             z_key (str): key of the z coordinates
             combined_key (str): name of the combined coordinates
+            as_vector (bool): [True/False] if the combined coordinates should be stored as a single vector instead of a matrix. Defaults to False.
         """
         if (
             x_key in self.status_dict
@@ -199,14 +207,17 @@ class Logstatus(object):
             del self.status_dict[z_key]
             self.status_dict[combined_key] = combined_lst
 
-    def combine_mat(self, x_key, xy_key, xz_key, y_key, yz_key, z_key, combined_key):
+    def combine_mat(self, x_key: str, xy_key: str, xz_key: str, y_key: str, yz_key: str, z_key: str, combined_key: str) -> None:
         """
         Combine three lists representing the x,y,z coordinates, by accessing them from the status_dict dictionary,
         combining them, store them under the combined_key and remove the other three keys.
 
         Args:
             x_key (str): key of the x coordinates
+            xy_key (str): key of the xy coordinates
+            xz_key (str): key of the xz coordinates
             y_key (str): key of the y coordinates
+            yz_key (str): key of the yz coordinates
             z_key (str): key of the z coordinates
             combined_key (str): name of the combined coordinates
         """
@@ -261,7 +272,14 @@ class Logstatus(object):
             del self.status_dict[z_key]
             self.status_dict[combined_key] = combined_lst
 
-    def convert_unit(self, key, factor):
+    def convert_unit(self, key: str, factor: float) -> None:
+        """
+        Convert the values of a specific key in the status_dict dictionary by multiplying them with a factor.
+
+        Args:
+            key (str): The key of the values to be converted.
+            factor (float): The factor to multiply the values with.
+        """
         if key in self.status_dict:
             return_lst = []
             for step in self.status_dict[key]:
@@ -270,7 +288,7 @@ class Logstatus(object):
             self.status_dict[key] = return_lst
 
     @staticmethod
-    def extract_item(l_item):
+    def extract_item(l_item: str) -> Tuple[str, Optional[List[str]]]:
         """
         Method to extract information from a single line - currently very specific for the Lammps output
 
@@ -278,7 +296,7 @@ class Logstatus(object):
             l_item (str): line to extract information from
 
         Returns:
-            str, list: the tag_string as string and the arguments as list
+            Tuple[str, Optional[List[str]]]: the tag_string as string and the arguments as list
         """
         item_list = l_item.split()
         first_item = item_list[1]
@@ -296,24 +314,15 @@ class Logstatus(object):
             args = item_list[num_elements + 1 : :]
         return tag_string, args
 
-    def extract_from_list(self, list_of_lines, tag_dict, h5_dict=None, key_dict=None):
+    def extract_from_list(self, list_of_lines: List[str], tag_dict: Dict[str, Any], h5_dict: Optional[Dict[str, str]] = None, key_dict: Optional[Dict[str, str]] = None) -> None:
         """
         Main function of the LogStatus class to extract data from an output file by searching for the tag dictionary
 
         Args:
-            file_name (str): absolute path to the output file
-            tag_dict (dict): Dictionary with tags/patterns as key and an additional dictionary to describe the data
-                             structure. The data structure dictionary can contain the following keys:
-                             - "arg": position of the argument - or dimension (":", ":,:")
-                             - "type": Python data type
-                             - "h5": HDF5 key to store the information
-                             - "rows": number of rows from the line where the tag was found
-                             - "splitTag": split the tag - [True/False]
-                             - "splitArg": split the argument - [True/False]
-                             - "lineSkip": skip a line
-                             - "func": function to convert the data
-            h5_dict (dict): Translation dictionary of output tags as keys to the tags used on the HDF5 file as values.
-            key_dict (dict): Translation dictionary of python internal tags as keys to the output tags as values.
+            list_of_lines (List[str]): List of lines from the output file
+            tag_dict (Dict[str, Any]): Dictionary with tags/patterns as key and an additional dictionary to describe the data structure.
+            h5_dict (Optional[Dict[str, str]]): Translation dictionary of output tags as keys to the tags used on the HDF5 file as values. Defaults to None.
+            key_dict (Optional[Dict[str, str]]): Translation dictionary of python internal tags as keys to the output tags as values. Defaults to None.
         """
         val_item = {}
         tag_vals = {}
@@ -408,7 +417,7 @@ class Logstatus(object):
                     except StopIteration:
                         break
 
-    def extract_file(self, file_name, tag_dict, h5_dict=None, key_dict=None):
+    def extract_file(self, file_name: str, tag_dict: Dict[str, Any], h5_dict: Optional[Dict[str, str]] = None, key_dict: Optional[Dict[str, str]] = None) -> None:
         """
         Main function of the LogStatus class to extract data from an output file by searching for the tag dictionary
 
@@ -439,21 +448,21 @@ class LogTag(object):
     LogTag object to parse for a specific pattern in the output file
 
     Args:
-        tag_dict (dict): Dictionary with tags/patterns as key and an additional dictionary to describe the data
-                         structure. The data structure dictionary can contain the following keys:
-                         - "arg": position of the argument - or dimension (":", ":,:")
-                         - "type": Python data type
-                         - "h5": HDF5 key to store the information
-                         - "rows": number of rows from the line where the tag was found
-                         - "splitTag": split the tag - [True/False]
-                         - "splitArg": split the argument - [True/False]
-                         - "lineSkip": skip a line
-                         - "func": function to convert the data
-        h5_dict (dict): Translation dictionary of output tags as keys to the tags used on the HDF5 file as values.
-        key_dict (dict): Translation dictionary of python internal tags as keys to the output tags as values.
+        tag_dict (Dict[str, Any]): Dictionary with tags/patterns as key and an additional dictionary to describe the data
+                                   structure. The data structure dictionary can contain the following keys:
+                                    - "arg": position of the argument - or dimension (":", ":,:")
+                                    - "type": Python data type
+                                    - "h5": HDF5 key to store the information
+                                    - "rows": number of rows from the line where the tag was found
+                                    - "splitTag": split the tag - [True/False]
+                                    - "splitArg": split the argument - [True/False]
+                                    - "lineSkip": skip a line
+                                    - "func": function to convert the data
+        h5_dict (Optional[Dict[str, str]]): Translation dictionary of output tags as keys to the tags used on the HDF5 file as values. Defaults to None.
+        key_dict (Optional[Dict[str, str]]): Translation dictionary of python internal tags as keys to the output tags as values. Defaults to None.
     """
 
-    def __init__(self, tag_dict, h5_dict=None, key_dict=None):
+    def __init__(self, tag_dict: Dict[str, Any], h5_dict: Optional[Dict[str, str]] = None, key_dict: Optional[Dict[str, str]] = None) -> None:
         self._tag_dict = None
         self._tag_first_word = None
         self._current = None
@@ -466,7 +475,7 @@ class LogTag(object):
         self.h5_dict = h5_dict
 
     @property
-    def current(self):
+    def current(self) -> Dict[str, Any]:
         """
         Get the current tag
 
@@ -476,7 +485,7 @@ class LogTag(object):
         return self._current
 
     @current.setter
-    def current(self, tag_name):
+    def current(self, tag_name: str) -> None:
         """
         Set the current tag
 
@@ -489,7 +498,7 @@ class LogTag(object):
         self._current = self.tag_dict[tag_name]
 
     @property
-    def tag_name(self):
+    def tag_name(self) -> str:
         """
         Get tag name
 
@@ -499,7 +508,7 @@ class LogTag(object):
         return self._tag_name
 
     @property
-    def tag_dict(self):
+    def tag_dict(self) -> dict:
         """
         Get tag dictionary with tags/patterns as key and an additional dictionary to describe the data
         structure. The data structure dictionary can contain the following keys:
@@ -518,7 +527,7 @@ class LogTag(object):
         return self._tag_dict
 
     @tag_dict.setter
-    def tag_dict(self, tag_dict):
+    def tag_dict(self, tag_dict: dict) -> None:
         """
         Set tag dictionary with tags/patterns as key and an additional dictionary to describe the data
         structure. The data structure dictionary can contain the following keys:
@@ -539,7 +548,7 @@ class LogTag(object):
         self.dyn_tags = tag_dict
 
     @property
-    def tag_first_word(self):
+    def tag_first_word(self) -> str:
         """
         Get first word of the tag
 
@@ -549,7 +558,7 @@ class LogTag(object):
         return self._tag_first_word
 
     @property
-    def dyn_tags(self):
+    def dyn_tags(self) -> dict:
         """
         Get dynamic tags
 
@@ -559,7 +568,7 @@ class LogTag(object):
         return self._dyn_tags
 
     @dyn_tags.setter
-    def dyn_tags(self, tag_dict):
+    def dyn_tags(self, tag_dict: dict) -> None:
         """
         Set dynamic tags
 
@@ -574,7 +583,7 @@ class LogTag(object):
         self._dyn_tags = dyn_tags
 
     @property
-    def key_dict(self):
+    def key_dict(self) -> dict:
         """
         Get translation dictionary of python internal tags as keys to the output tags as values.
 
@@ -584,7 +593,7 @@ class LogTag(object):
         return self._key_dict
 
     @key_dict.setter
-    def key_dict(self, key_dict):
+    def key_dict(self, key_dict: dict) -> None:
         """
         Set translation dictionary of python internal tags as keys to the output tags as values.
 
@@ -594,7 +603,7 @@ class LogTag(object):
         self._key_dict = key_dict
 
     @property
-    def h5_dict(self):
+    def h5_dict(self) -> dict:
         """
         Get translation dictionary of output tags as keys to the tags used on the HDF5 file as values.
 
@@ -604,7 +613,7 @@ class LogTag(object):
         return self._h5_dict
 
     @h5_dict.setter
-    def h5_dict(self, h5_dict):
+    def h5_dict(self, h5_dict: dict) -> None:
         """
         Set translation dictionary of output tags as keys to the tags used on the HDF5 file as values.
 
@@ -613,7 +622,7 @@ class LogTag(object):
         """
         self._h5_dict = h5_dict
 
-    def is_item(self, item_line, start=0):
+    def is_item(self, item_line: str, start: int = 0) -> bool:
         """
         Check if the current line - item_line - matches one of the provided tags, if that is the case set the tag to be
         the current tag and update the val_list with the corresponding values.
@@ -640,7 +649,7 @@ class LogTag(object):
         self.val_list = items
         return True
 
-    def get_item(self, item, default):
+    def get_item(self, item: str, default: Any) -> Union[list, dict, int, float]:
         """
         If item is part of the current dictionary keys the corresponding value is returned otherwise the default is
         returned.
@@ -660,7 +669,7 @@ class LogTag(object):
         else:
             return default
 
-    def h5(self):
+    def h5(self) -> str:
         """
         Translate current tag to HDF5 tag using the tag dictionary
 
@@ -669,7 +678,7 @@ class LogTag(object):
         """
         return self.get_item(item="h5", default=self.tag_name)
 
-    def translate(self, item):
+    def translate(self, item: str) -> str:
         """
         Translate current tag to HDF5 tag using the h5_dict dictionary
 
@@ -686,7 +695,7 @@ class LogTag(object):
         else:
             raise ValueError("tag not in h5_dict: " + item)
 
-    def arg(self):
+    def arg(self) -> str:
         """
         Get tag argument
 
@@ -699,7 +708,7 @@ class LogTag(object):
         else:
             return str(l_arg)
 
-    def line_skip(self):
+    def line_skip(self) -> bool:
         """
         Check how many lines should be skipped.
 
@@ -708,7 +717,7 @@ class LogTag(object):
         """
         return bool(self.get_item(item="lineSkip", default=0))
 
-    def rows(self):
+    def rows(self) -> Union[int, str]:
         """
         Number of rows to parse
 
@@ -721,7 +730,7 @@ class LogTag(object):
         except ValueError:
             return rows
 
-    def test_split(self):
+    def test_split(self) -> bool:
         """
         Check if the argument or the tag should be split - if "splitArg" or "splitTag" is included in the tag_dict
         dictionary.
@@ -733,7 +742,7 @@ class LogTag(object):
         self.split_tag = self.get_item(item="splitTag", default=False)
         return self.split_arg or self.split_tag
 
-    def is_func(self):
+    def is_func(self) -> bool:
         """
         Check if a function is defined to convert the data - if "func" is included in the tag_dict dictionary
 
@@ -743,7 +752,7 @@ class LogTag(object):
         my_func = self.get_item(item="func", default=None)
         return my_func is not None
 
-    def apply_func(self, val):
+    def apply_func(self, val: Union[list, dict, int, float]) -> Union[list, dict, int, float]:
         """
         Apply the function on a given value
 
@@ -757,7 +766,7 @@ class LogTag(object):
         if my_func is not None:
             return my_func(val)
 
-    def set_item(self, tag_vals, log_file):
+    def set_item(self, tag_vals: dict, log_file: Logstatus) -> Tuple[str, dict, int, bool]:
         """
         Set LogTag item
 
@@ -788,7 +797,7 @@ class LogTag(object):
                 self.resolve_dynamic_variable(val)
         return tag_name, tag_vals, self.rows(), self.line_skip()
 
-    def resolve_dynamic_variable(self, val):
+    def resolve_dynamic_variable(self, val: list) -> None:
         """
         Resolve dynamic variable using the key_dict dictionary
 

@@ -3,6 +3,7 @@
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
 import functools
+from typing import Union
 
 import numpy as np
 import pint
@@ -18,11 +19,10 @@ __copyright__ = (
 
 class PyironUnitRegistry:
     """
-
     Module to record units for physical quantities within pyiron. This module is used for defining the units
     for different pyiron submodules.
 
-    Useage:
+    Usage:
 
     >>> import pint
     >>> from pyiron_base.utils.units import PyironUnitRegistry
@@ -38,7 +38,6 @@ class PyironUnitRegistry:
     >>> base_registry.add_labels(labels=["energy_tot", "energy_pot"], quantity="energy")
 
     For more information on working with `pint`, see: https://pint.readthedocs.io/en/0.10.1/tutorial.html
-
     """
 
     def __init__(self):
@@ -53,7 +52,7 @@ class PyironUnitRegistry:
         self._unit_dict = dict()
 
     @property
-    def quantity_dict(self):
+    def quantity_dict(self) -> dict:
         """
         A dictionary of the different labels stored and the physical quantity they correspond to
 
@@ -63,7 +62,7 @@ class PyironUnitRegistry:
         return self._quantity_dict
 
     @property
-    def dtype_dict(self):
+    def dtype_dict(self) -> dict:
         """
         A dictionary of the names of the different physical quantities to the corresponding datatype in which they are
         to be stored
@@ -74,7 +73,7 @@ class PyironUnitRegistry:
         return self._dtype_dict
 
     @property
-    def unit_dict(self):
+    def unit_dict(self) -> dict:
         """
         A dictionary of the different physical quantities and the corresponding `pint` unit
 
@@ -83,7 +82,7 @@ class PyironUnitRegistry:
         """
         return self._unit_dict
 
-    def add_quantity(self, quantity, unit, data_type=float):
+    def add_quantity(self, quantity: str, unit: Union[pint.Unit, pint.Quantity], data_type: type = float) -> None:
         """
         Add a quantity to a registry
 
@@ -98,7 +97,7 @@ class PyironUnitRegistry:
         self._unit_dict[quantity] = unit
         self._dtype_dict[quantity] = data_type
 
-    def add_labels(self, labels, quantity):
+    def add_labels(self, labels: Union[list, np.ndarray], quantity: str) -> None:
         """
         Maps quantities with different labels to quantities already defined in the registry
 
@@ -123,7 +122,7 @@ class PyironUnitRegistry:
                     )
                 )
 
-    def __getitem__(self, item):
+    def __getitem__(self, item: str) -> Union[pint.Unit, pint.Quantity]:
         """
         Getter to return corresponding `pint` unit for a given quantity
 
@@ -145,7 +144,7 @@ class PyironUnitRegistry:
                 "Quantity/label '{}' not registered in this unit registry".format(item)
             )
 
-    def get_dtype(self, quantity):
+    def get_dtype(self, quantity: str) -> type:
         """
         Returns the data type in which the quantity will be stored
 
@@ -172,7 +171,6 @@ class PyironUnitRegistry:
 
 class UnitConverter:
     """
-
     Module to handle conversions between two different unit registries mainly use to convert units between codes and
     pyiron submodules.
 
@@ -218,19 +216,18 @@ class UnitConverter:
 
     """
 
-    def __init__(self, base_registry, code_registry):
+    def __init__(self, base_registry: PyironUnitRegistry, code_registry: PyironUnitRegistry):
         """
-
         Args:
-            base_registry (:class:`pyiron_base.generic.units.PyironUnitRegistry`): Base unit registry
-            code_registry (:class:`pyiron_base.generic.units.PyironUnitRegistry`): Code specific unit registry
+            base_registry (PyironUnitRegistry): Base unit registry
+            code_registry (PyironUnitRegistry): Code specific unit registry
         """
         self._base_registry = base_registry
         self._code_registry = code_registry
         self._check_quantities()
         self._check_dimensionality()
 
-    def _check_quantities(self):
+    def _check_quantities(self) -> None:
         base_quant = list(self._base_registry.unit_dict.keys())
         for quant in self._code_registry.unit_dict.keys():
             if quant not in base_quant:
@@ -238,7 +235,7 @@ class UnitConverter:
                     "quantity {} is not defined in the base registry".format(quant)
                 )
 
-    def _check_dimensionality(self):
+    def _check_dimensionality(self) -> None:
         for quant in self._code_registry.unit_dict.keys():
             if (
                 not self._base_registry[quant].dimensionality
@@ -256,7 +253,7 @@ class UnitConverter:
                     ),
                 )
 
-    def code_to_base_pint(self, quantity):
+    def code_to_base_pint(self, quantity: str) -> pint.Quantity:
         """
         Get the conversion factor as a `pint` quantity from code to base units
 
@@ -264,11 +261,11 @@ class UnitConverter:
             quantity (str): Name of quantity
 
         Returns:
-            pint.quantity.Quantity: Conversion factor as a `pint` quantity
+            pint.Quantity: Conversion factor as a `pint` quantity
         """
         return (1 * self._code_registry[quantity]).to(self._base_registry[quantity])
 
-    def base_to_code_pint(self, quantity):
+    def base_to_code_pint(self, quantity: str) -> pint.Quantity:
         """
         Get the conversion factor as a `pint` quantity from base to code units
 
@@ -276,11 +273,11 @@ class UnitConverter:
             quantity (str): Name of quantity
 
         Returns:
-            pint.quantity.Quantity: Conversion factor as a `pint` quantity
+            pint.Quantity: Conversion factor as a `pint` quantity
         """
         return (1 * self._base_registry[quantity]).to(self._code_registry[quantity])
 
-    def code_to_base_value(self, quantity):
+    def code_to_base_value(self, quantity: str) -> float:
         """
         Get the conversion factor as a scalar from code to base units
 
@@ -292,7 +289,7 @@ class UnitConverter:
         """
         return self.code_to_base_pint(quantity).magnitude
 
-    def base_to_code_value(self, quantity):
+    def base_to_code_value(self, quantity: str) -> float:
         """
         Get the conversion factor as a scalar from base to code units
 
@@ -304,7 +301,7 @@ class UnitConverter:
         """
         return self.base_to_code_pint(quantity).magnitude
 
-    def __call__(self, conversion, quantity):
+    def __call__(self, conversion: str, quantity: str):
         """
         Function call operator used as a decorator for functions that return numpy array
 
@@ -381,7 +378,7 @@ class UnitConverter:
         else:
             raise ValueError("Conversion type {} not implemented!".format(conversion))
 
-    def code_to_base(self, quantity):
+    def code_to_base(self, quantity: str):
         """
         Decorator for functions that returns a numpy array. Multiples the function output by the code to base units
         conversion factor
@@ -395,7 +392,7 @@ class UnitConverter:
         """
         return self(quantity=quantity, conversion="code_to_base")
 
-    def base_to_code(self, quantity):
+    def base_to_code(self, quantity: str):
         """
         Decorator for functions that returns a numpy array. Multiples the function output by the base to code units
         conversion factor
@@ -409,7 +406,7 @@ class UnitConverter:
         """
         return self(quantity=quantity, conversion="base_to_code")
 
-    def code_units(self, quantity):
+    def code_units(self, quantity: str):
         """
         Decorator for functions that returns a numpy array. Assigns the code unit of the quantity to the function output
 
@@ -422,7 +419,7 @@ class UnitConverter:
         """
         return self(quantity=quantity, conversion="code_units")
 
-    def base_units(self, quantity):
+    def base_units(self, quantity: str):
         """
         Decorator for functions that returns a numpy array. Assigns the base unit of the quantity to the function output
 

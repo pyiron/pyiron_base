@@ -20,19 +20,20 @@ __date__ = "Sep 1, 2017"
 
 
 import importlib
+from typing import Union, List
 
 
-def static_isinstance(obj, obj_type):
+def static_isinstance(obj: object, obj_type: Union[str, List[str]]) -> bool:
     """
     A static implementation of isinstance() - instead of comparing an object and a class, the object is compared to a
     string, like 'pyiron_base.jobs.job.generic.GenericJob' or a list of strings.
 
     Args:
-        obj: the object to check
-        obj_type (str/list): object type as string or a list of object types as string.
+        obj (object): The object to check.
+        obj_type (str/list): Object type as string or a list of object types as string.
 
     Returns:
-        bool: [True/False]
+        bool: True if the object is an instance of any of the specified types, False otherwise.
     """
     if not hasattr(obj, "__mro__"):
         obj = obj.__class__
@@ -47,7 +48,20 @@ def static_isinstance(obj, obj_type):
         raise TypeError()
 
 
-def import_class(class_type):
+def import_class(class_type: str) -> type:
+    """
+    Import a class dynamically based on its fully qualified name.
+
+    Args:
+        class_type (str): The fully qualified name of the class, e.g. 'module.submodule.ClassName'.
+
+    Returns:
+        type: The imported class.
+
+    Raises:
+        ImportError: If the module or class cannot be imported.
+        AttributeError: If the class does not exist in the module.
+    """
     module_path, class_name = class_type.rsplit(".", maxsplit=1)
     return getattr(
         importlib.import_module(module_path),

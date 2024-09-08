@@ -7,6 +7,7 @@ import json
 import os
 from abc import ABC, abstractmethod
 from functools import lru_cache
+from typing import Any, IO, List, Union
 
 import pandas
 from pyiron_snippets.import_alarm import ImportAlarm
@@ -54,7 +55,16 @@ else:
     )
 
 
-def _load_txt(file):
+def _load_txt(file: Union[str, IO]) -> List[str]:
+    """
+    Load a text file and return a list of lines.
+
+    Args:
+        file (str or file-like object): Path to the text file or file object.
+
+    Returns:
+        list: List of lines from the text file.
+    """
     if isinstance(file, str):
         with open(file, encoding="utf8") as f:
             return f.readlines()
@@ -62,7 +72,16 @@ def _load_txt(file):
         return file.readlines()
 
 
-def _load_json(file):
+def _load_json(file: Union[str, IO]) -> Any:
+    """
+    Load a JSON file and return the parsed data.
+
+    Args:
+        file (str or file-like object): Path to the JSON file or file object.
+
+    Returns:
+        Any: Parsed data from the JSON file.
+    """
     if isinstance(file, str):
         with open(file) as f:
             return json.load(f)
@@ -71,6 +90,8 @@ def _load_json(file):
 
 
 class FileLoader:
+    """Class for loading different file types."""
+
     _file_types = {
         ".json": _load_json,
         ".txt": _load_txt,
@@ -79,24 +100,46 @@ class FileLoader:
     default_assumed_file_type = ".txt"
 
     @classmethod
-    def register(cls, file_type, load_callable):
+    def register(cls, file_type: str, load_callable: Callable) -> None:
         """Register a load function for a specific file type.
 
         Args:
-            file_type(str): File extension to be registered, e.g. '.txt', '.csv'
-            load_callable(callable): function excepting a file or file-handle, returning an appropriate object for
+            file_type (str): File extension to be registered, e.g. '.txt', '.csv'
+            load_callable (callable): Function accepting a file or file-handle, returning an appropriate object for
                 this file type.
-
         """
         cls._file_types[file_type] = load_callable
 
-    def load(self, file_type, file, *args, **kwargs):
+    def load(self, file_type: str, file: Union[str, IO], *args, **kwargs) -> Any:
+        """Load a file of a specific type.
+
+        Args:
+            file_type (str): File extension indicating the type of the file.
+            file (str or file-like object): Path to the file or file object.
+
+        Returns:
+            Any: Object containing the loaded data.
+
+        Raises:
+            IOError: If the file could not be loaded.
+        """
         if file_type in self._file_types:
             return self._file_types[file_type](file, *args, **kwargs)
         else:
             return self._load_default(file, *args, **kwargs)
 
-    def _load_default(self, file, *args, **kwargs):
+    def _load_default(self, file: Union[str, IO], *args, **kwargs) -> Any:
+        """Load a file using the default assumed file type.
+
+        Args:
+            file (str or file-like object): Path to the file or file object.
+
+        Returns:
+            Any: Object containing the loaded data.
+
+        Raises:
+            IOError: If the file could not be loaded.
+        """
         try:
             return self._file_types[self.default_assumed_file_type](
                 file, *args, **kwargs
@@ -116,6 +159,12 @@ if _has_imported["nbformat"]:
         """Wrapper for nbformat.NotebookNode with some additional representation based on nbconvert."""
 
         def _repr_html_(self):
+            """
+            Generate HTML representation of the object.
+
+            Returns:
+                str: HTML representation of the object.
+            """
             html_exporter = nbconvert.HTMLExporter()
             html_exporter.template_name = "classic"
             (html_output, _) = html_exporter.from_notebook_node(self)
