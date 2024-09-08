@@ -35,18 +35,6 @@ class CondaEnvironment:
         return {os.path.basename(path): path for path in list_all_known_prefixes()}
 
     def __getattr__(self, item: str) -> str:
-        """
-        Get the value of the specified attribute.
-
-        Args:
-            item (str): The name of the attribute.
-
-        Returns:
-            Any: The value of the attribute.
-
-        Raises:
-            AttributeError: If the attribute is not found.
-        """
         item_dict = {os.path.basename(path): path for path in list_all_known_prefixes()}
         if item in item_dict.keys():
             return item_dict[item]
