@@ -4,16 +4,17 @@
 """
 Copy a pyiron project to a new location.
 """
+from argparse import ArgumentParser, Namespace
 
 from pyiron_base.project.generic import Project
 
 
-def register(parser):
+def register(parser: ArgumentParser) -> None:
     parser.add_argument("src", help="source project")
     parser.add_argument("dst", help="destination project")
 
 
-def main(args):
+def main(args: Namespace) -> None:
     src = Project(args.src)
     dst = Project(args.dst)
     src.copy_to(dst)

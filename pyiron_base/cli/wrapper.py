@@ -3,11 +3,12 @@
 """
 Run a job from hdf5.
 """
+from argparse import ArgumentParser, Namespace
 
 from pyiron_base.jobs.job.wrapper import job_wrapper_function
 
 
-def register(parser):
+def register(parser: ArgumentParser):
     parser.add_argument(
         "-d",
         "--debug",
@@ -33,7 +34,7 @@ def register(parser):
     )
 
 
-def main(args):
+def main(args: Namespace) -> None:
     job_wrapper_function(
         working_directory=args.project,
         job_id=args.job_id,
