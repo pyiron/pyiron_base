@@ -9,7 +9,7 @@ import numbers
 import socket
 from concurrent.futures import Executor, Future
 from dataclasses import asdict, fields
-from typing import Union, Optional
+from typing import Optional, Union
 
 import pandas
 from pyiron_snippets.deprecate import deprecate
@@ -87,13 +87,13 @@ class Server(
 
     def __init__(
         self,
-        host: Optional[str]=None,
-        queue: Optional[str]=None,
-        cores: int=1,
-        threads: int=1,
-        gpus: Optional[int]=None,
-        run_mode: str="modal",
-        new_hdf: bool=True,
+        host: Optional[str] = None,
+        queue: Optional[str] = None,
+        cores: int = 1,
+        threads: int = 1,
+        gpus: Optional[int] = None,
+        run_mode: str = "modal",
+        new_hdf: bool = True,
     ):
         super().__init__()
         self._data = ServerDataClass(
@@ -572,7 +572,7 @@ class Server(
         self._data.run_mode = self._run_mode.mode
         return asdict(self._data)
 
-    def _from_dict(self, obj_dict: dict, version: Optional[str]=None) -> None:
+    def _from_dict(self, obj_dict: dict, version: Optional[str] = None) -> None:
         """
         Load the Server object from a dictionary.
 
@@ -601,7 +601,11 @@ class Server(
         self._run_mode = Runmode(mode=self._data.run_mode)
 
     @deprecate(message="Use job.server.to_dict() instead of to_hdf()", version=0.9)
-    def to_hdf(self, hdf: "pyiron_base.storage.hdfio.ProjectHDFio", group_name: Optional[str]=None) -> None:
+    def to_hdf(
+        self,
+        hdf: "pyiron_base.storage.hdfio.ProjectHDFio",
+        group_name: Optional[str] = None,
+    ) -> None:
         """
         Store Server object in HDF5 file
         Args:
@@ -615,7 +619,11 @@ class Server(
             hdf["server"] = self.to_dict()
 
     @deprecate(message="Use job.server.from_dict() instead of from_hdf()", version=0.9)
-    def from_hdf(self, hdf: "pyiron_base.storage.hdfio.ProjectHDFio", group_name: Optional[str]=None) -> None:
+    def from_hdf(
+        self,
+        hdf: "pyiron_base.storage.hdfio.ProjectHDFio",
+        group_name: Optional[str] = None,
+    ) -> None:
         """
         Recover Server object in HDF5 file
         Args:
