@@ -283,7 +283,7 @@ class GenericJob(JobCore, HasDict):
             list: list of files
         """
         self._restart_file_list = [
-            os.path.abspath(str(f)) if isinstance(f, File) else os.path.abspath(f)
+            str(f) if isinstance(f, File) else os.path.abspath(f)
             for f in self._restart_file_list
         ]
         return self._restart_file_list

@@ -28,6 +28,15 @@ class File:
     def __iter__(self) -> Generator:
         return iter(self._read())
 
+    def abspath(self) -> str:
+        """
+        Absolute path to file object
+
+        Returns:
+            str: absolute path
+        """
+        return os.path.abspath(self._path)
+
     def list(self, lines: Optional[int] = None) -> List[str]:
         """
         Return file content as list of lines.
