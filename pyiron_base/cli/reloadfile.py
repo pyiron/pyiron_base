@@ -3,6 +3,7 @@
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 import os
 import shutil
+from argparse import ArgumentParser, Namespace
 
 from h5io_browser.base import _open_hdf
 
@@ -10,7 +11,7 @@ from pyiron_base import Project
 from pyiron_base.state import state
 
 
-def register(parser):
+def register(parser: ArgumentParser) -> None:
     parser.add_argument(
         "-i",
         "--input-path",
@@ -23,7 +24,7 @@ def register(parser):
     )
 
 
-def main(args):
+def main(args: Namespace) -> None:
     with _open_hdf(filename=args.input_path, mode="r") as f:
         job_name = list(f.keys())[0]
     project_path = os.path.join(os.path.abspath("."), job_name + ".h5")

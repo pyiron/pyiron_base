@@ -99,7 +99,7 @@ class Publications(metaclass=Singleton):
             pandas.DataFrame|dict|str: Publication data.
         """
 
-        def get_bibtex(k, v):
+        def get_bibtex(k: str, v: str) -> str:
             total_keys = [
                 "title",
                 "journal",
@@ -129,7 +129,7 @@ class Publications(metaclass=Singleton):
             bibtex_str += "}\n"
             return bibtex_str
 
-        def get_apa(v):
+        def get_apa(v: dict) -> str:
             apa_str = " & ".join(v["author"])
             if "year" in v.keys():
                 apa_str += " (" + v["year"] + "). "

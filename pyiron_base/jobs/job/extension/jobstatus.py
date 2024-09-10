@@ -5,6 +5,8 @@
 The JobStatus class belongs to the GenericJob object.
 """
 
+from typing import Optional, Union
+
 from pyiron_base.utils.instance import static_isinstance
 
 __author__ = "Jan Janssen"
@@ -35,7 +37,7 @@ job_status_lst = [
 ] + job_status_finished_lst
 
 
-def format_docstring_with_statuses(n_tabs=1):
+def format_docstring_with_statuses(n_tabs: int = 1) -> callable:
     """
     Replaces a '{}' in the decorated object's docstring with the documentation for all possible job status.
 
@@ -92,7 +94,17 @@ class JobStatus(object):
             job status as string
     """
 
-    def __init__(self, initial_status="initialized", db=None, job_id=None):
+    def __init__(
+        self,
+        initial_status: str = "initialized",
+        db: Optional[
+            Union[
+                "pyiron_base.database.generic.DatabaseAccess",
+                "pyiron_base.database.filetable.FileTable",
+            ]
+        ] = None,
+        job_id: Optional[int] = None,
+    ):
         super(JobStatus, self).__setattr__("_status_dict", {})
         self._db = None
         self._job_id = None
@@ -101,7 +113,13 @@ class JobStatus(object):
         self.job_id = job_id
 
     @property
-    def database(self):
+    def database(
+        self,
+    ) -> Union[
+        "pyiron_base.database.generic.DatabaseAccess",
+        "pyiron_base.database.filetable.FileTable",
+        None,
+    ]:
         """
         Get the database which is responsible for this job. If no database is linked it returns None.
         Returns:
@@ -110,7 +128,13 @@ class JobStatus(object):
         return self._db
 
     @database.setter
-    def database(self, db):
+    def database(
+        self,
+        db: Union[
+            "pyiron_base.database.generic.DatabaseAccess",
+            "pyiron_base.database.filetable.FileTable",
+        ],
+    ) -> None:
         """
         Set the database which is responsible for this job.
         Args:
@@ -124,7 +148,7 @@ class JobStatus(object):
         self._db = db
 
     @property
-    def job_id(self):
+    def job_id(self) -> int:
         """
         Get the job id of the job this jobstatus is associated to.
         Returns:
@@ -133,7 +157,7 @@ class JobStatus(object):
         return self._job_id
 
     @job_id.setter
-    def job_id(self, unique_id):
+    def job_id(self, unique_id: int) -> None:
         """
         Get the job id of the job this jobstatus is associated to.
         Args:
@@ -146,7 +170,7 @@ class JobStatus(object):
 
     @format_docstring_with_statuses(n_tabs=2)
     @property
-    def string(self):
+    def string(self) -> str:
         """
         Get the current status as string, it can be: {}
 
@@ -159,7 +183,7 @@ class JobStatus(object):
 
     @format_docstring_with_statuses(n_tabs=2)
     @string.setter
-    def string(self, status):
+    def string(self, status: str) -> None:
         """
         Set the current status, to one of the following: {}
 
@@ -176,7 +200,7 @@ class JobStatus(object):
                 f"'{status}' is not a valid job status. Instead use [{', '.join(job_status_lst)}]"
             )
 
-    def refresh_status(self):
+    def refresh_status(self) -> None:
         """
         Refresh the job status - check if the database and job_id are set and if this is the case load the job status
         from the database.
@@ -195,7 +219,7 @@ class JobStatus(object):
             self._reset()
             self._status_dict[status] = True
 
-    def _status_write(self):
+    def _status_write(self) -> None:
         """
         Private function: Write the job status to the internal variable _key and store it in the database.
         """
@@ -204,14 +228,14 @@ class JobStatus(object):
             if self.database.get_job_status(job_id=self.job_id) != current_status:
                 self.database.set_job_status(job_id=self.job_id, status=current_status)
 
-    def _reset(self):
+    def _reset(self) -> None:
         """
         internal function to reset the run mode - sets all run modes to false.
         """
         self._status_dict = {status: False for status in job_status_lst}
 
     @staticmethod
-    def _bool_check(boolean):
+    def _bool_check(boolean: bool) -> None:
         """
         Private function: Raise TypeError if boolean is not type bool and raise a ValueError if it is not True.
         Args:
@@ -224,10 +248,10 @@ class JobStatus(object):
         if boolean is False:
             raise ValueError("The JobStatus can only be set to True.")
 
-    def _get_status_from_dict(self):
+    def _get_status_from_dict(self) -> str:
         return [key for key, val in self._status_dict.items() if val][0]
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         """
         Human readable representation of the job status
         Returns:
@@ -235,7 +259,7 @@ class JobStatus(object):
         """
         return repr(self.string)
 
-    def __str__(self):
+    def __str__(self) -> str:
         """
         Machine readable representation of the job status
         Returns:
@@ -243,7 +267,7 @@ class JobStatus(object):
         """
         return str(self.string)
 
-    def __getattr__(self, name):
+    def __getattr__(self, name: str) -> bool:
         if name in self._status_dict.keys():
             self.refresh_status()
             return self._status_dict[name]
@@ -251,7 +275,7 @@ class JobStatus(object):
             "'{}' object has no attribute '{}'".format(self.__class__.__name__, name)
         )
 
-    def __setattr__(self, name, value):
+    def __setattr__(self, name: str, value: bool) -> None:
         if name in self._status_dict.keys():
             if not isinstance(value, bool):
                 raise TypeError("A run mode can only be activated using [True].")
@@ -262,10 +286,10 @@ class JobStatus(object):
         else:
             super(JobStatus, self).__setattr__(name, value)
 
-    def __dir__(self):
+    def __dir__(self) -> list:
         return list(self._status_dict.keys())
 
-    def __eq__(self, other):
+    def __eq__(self, other: Union[str, "JobStatus"]) -> bool:
         if isinstance(other, self.__class__):
             return other._status_dict == self._status_dict
         elif isinstance(other, str):
@@ -273,7 +297,7 @@ class JobStatus(object):
         else:
             return super(JobStatus, self).__eq__(other)
 
-    def __ne__(self, other):
+    def __ne__(self, other: Union[str, "JobStatus"]) -> bool:
         if isinstance(other, self.__class__):
             return other._status_dict != self._status_dict
         elif isinstance(other, str):

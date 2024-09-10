@@ -10,6 +10,7 @@ from sqlalchemy import (
     DateTime,
     Float,
     Integer,
+    MetaData,
     String,
     Table,
 )
@@ -39,7 +40,9 @@ __status__ = "development"
 __date__ = "Sep, 2021"
 
 
-def get_historical_table(table_name, metadata, extend_existing=True):
+def get_historical_table(
+    table_name: str, metadata: MetaData, extend_existing: bool = True
+) -> Table:
     """The historical table."""
     return Table(
         table_name,

@@ -4,6 +4,8 @@ import tarfile
 import tempfile
 from typing import Optional
 
+import pandas
+
 
 def copy_files_to_archive(
     directory_to_transfer: str,
@@ -11,7 +13,7 @@ def copy_files_to_archive(
     compress: bool = True,
     copy_all_files: bool = False,
     arcname: Optional[str] = None,
-    df: Optional["DataFrame"] = None,
+    df: Optional[pandas.DataFrame] = None,
 ):
     """
     Copy files from a directory to an archive, optionally compressing the archive.
@@ -26,7 +28,9 @@ def copy_files_to_archive(
 
     """
 
-    def copy_files(origin, destination, copy_all_files=copy_all_files):
+    def copy_files(
+        origin: str, destination: str, copy_all_files: bool = copy_all_files
+    ):
         """
         Copy files from the origin directory to the destination directory.
 
@@ -65,7 +69,7 @@ def copy_files_to_archive(
         os.remove(os.path.join(directory_to_transfer, "export.csv"))
 
 
-def copy_h5_files(src, dst):
+def copy_h5_files(src: str, dst: str) -> None:
     """
     Copies all .h5 files from the source directory to the destination directory,
     preserving the directory structure.
@@ -89,7 +93,7 @@ def copy_h5_files(src, dst):
                 shutil.copy2(src_file, os.path.join(dst_dir, file))
 
 
-def export_database(df: "DataFrame"):
+def export_database(df: pandas.DataFrame) -> pandas.DataFrame:
     """
     Export the project database to an archive directory.
 

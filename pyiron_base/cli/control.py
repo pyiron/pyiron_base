@@ -32,7 +32,7 @@ cli_modules = {
 }
 
 
-def main():
+def main() -> None:
     parser = argparse.ArgumentParser(prog="pyiron", description=__doc__)
     parser.add_argument(
         "-d", "--dirty", action="store_true", help="do not remove pyiron log files"

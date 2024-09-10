@@ -24,11 +24,11 @@ __date__ = "Sep 1, 2017"
 
 
 def _download_resources(
-    zip_file="resources.tar.gz",
-    resource_directory="~/pyiron/resources",
-    giturl_for_zip_file="https://github.com/pyiron/pyiron-resources/releases/latest/download/resources.tar.gz",
-    git_folder_name="resources",
-):
+    zip_file: str = "resources.tar.gz",
+    resource_directory: str = "~/pyiron/resources",
+    giturl_for_zip_file: str = "https://github.com/pyiron/pyiron-resources/releases/latest/download/resources.tar.gz",
+    git_folder_name: str = "resources",
+) -> None:
     """
     Download pyiron resources from Github
 
@@ -67,10 +67,10 @@ def _download_resources(
 
 
 def _write_config_file(
-    file_name="~/.pyiron",
-    project_path="~/pyiron/projects",
-    resource_path="~/pyiron/resources",
-):
+    file_name: str = "~/.pyiron",
+    project_path: str = "~/pyiron/projects",
+    resource_path: str = "~/pyiron/resources",
+) -> None:
     """
     Write configuration file and create the corresponding project path.
 
@@ -79,6 +79,7 @@ def _write_config_file(
         project_path (str): the location where pyiron is going to store the pyiron projects
         resource_path (str): the location where the resouces (executables, potentials, ...) for pyiron are stored.
     """
+
     config_file = os.path.normpath(os.path.abspath(os.path.expanduser(file_name)))
     if not os.path.isfile(config_file):
         with open(config_file, "w") as cf:
@@ -95,7 +96,13 @@ def _write_config_file(
         os.makedirs(project_path, exist_ok=True)
 
 
-def install_dialog(silently=False):
+def install_dialog(silently: bool = False) -> None:
+    """
+    Function to interactively install pyiron if it is not yet configured.
+
+    Args:
+        silently (bool): If True, the function will not prompt for user input. Default is False.
+    """
     if not silently:
         user_input = None
     else:
@@ -129,13 +136,13 @@ def install_dialog(silently=False):
 
 
 def install_pyiron(
-    config_file_name="~/.pyiron",
-    zip_file="resources.tar.gz",
-    project_path="~/pyiron/projects",
-    resource_directory="~/pyiron/resources",
-    giturl_for_zip_file="https://github.com/pyiron/pyiron-resources/releases/latest/download/resources.tar.gz",
-    git_folder_name="resources",
-):
+    config_file_name: str = "~/.pyiron",
+    zip_file: str = "resources.tar.gz",
+    project_path: str = "~/pyiron/projects",
+    resource_directory: str = "~/pyiron/resources",
+    giturl_for_zip_file: str = "https://github.com/pyiron/pyiron-resources/releases/latest/download/resources.tar.gz",
+    git_folder_name: str = "resources",
+) -> None:
     """
     Function to configure the pyiron installation.
 

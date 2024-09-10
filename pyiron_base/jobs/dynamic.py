@@ -3,7 +3,9 @@ import os
 from typing import List
 
 
-def warn_dynamic_job_classes(resource_folder_lst: List[str], logger: logging.Logger):
+def warn_dynamic_job_classes(
+    resource_folder_lst: List[str], logger: logging.Logger
+) -> None:
     """
     Warns about deprecated 'dynamic' and 'templates' folders in the resource directory.
 

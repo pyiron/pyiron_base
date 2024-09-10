@@ -9,6 +9,7 @@ import datetime
 import os
 from abc import ABCMeta
 from collections.abc import Iterable
+from typing import List, Optional, Union
 
 import numpy as np
 import pandas
@@ -57,7 +58,7 @@ class FileTableSingleton(ABCMeta):
 
     _instances = {}
 
-    def __call__(cls, index_from):
+    def __call__(cls, index_from: str):
         path = os.path.abspath(os.path.expanduser(index_from))
         if path not in cls._instances:
             cls._instances[path] = super().__call__(
@@ -66,7 +67,9 @@ class FileTableSingleton(ABCMeta):
             )
         return cls._instances[path]
 
-    def _get_fileindex_if_theres_a_common_path(cls, path):
+    def _get_fileindex_if_theres_a_common_path(
+        cls, path: str
+    ) -> Union[PyFileIndex, None]:
         common_path = _get_most_common_path(
             path=path, reference_paths=cls._instances.keys()
         )
@@ -98,7 +101,7 @@ class FileTable(IsDatabase, metaclass=FileTableSingleton):
         self._columns = list(table_columns.keys())
         self.force_reset(fileindex=fileindex)
 
-    def add_item_dict(self, par_dict):
+    def add_item_dict(self, par_dict: dict) -> int:
         """
         Create a new database item
 
@@ -142,7 +145,7 @@ class FileTable(IsDatabase, metaclass=FileTableSingleton):
         ).reset_index(drop=True)
         return int(par_dict_merged["id"])
 
-    def delete_item(self, item_id):
+    def delete_item(self, item_id: int) -> None:
         """
         Delete Item from database
 
@@ -157,7 +160,7 @@ class FileTable(IsDatabase, metaclass=FileTableSingleton):
         else:
             raise ValueError
 
-    def force_reset(self, fileindex=None):
+    def force_reset(self, fileindex: Optional[PyFileIndex] = None) -> None:
         """
         Reset cache of the FileTable object
 
@@ -177,7 +180,12 @@ class FileTable(IsDatabase, metaclass=FileTableSingleton):
         else:
             self._job_table = pandas.DataFrame({k: [] for k in self._columns})
 
-    def get_child_ids(self, job_specifier, project=None, status=None):
+    def get_child_ids(
+        self,
+        job_specifier: Union[str, int],
+        project: Optional[str] = None,
+        status: Optional[str] = None,
+    ) -> List[int]:
         """
         Get the childs for a specific job
 
@@ -209,7 +217,7 @@ class FileTable(IsDatabase, metaclass=FileTableSingleton):
                 ].id.values
             return sorted(id_lst)
 
-    def get_item_by_id(self, item_id):
+    def get_item_by_id(self, item_id: int) -> dict:
         """
         Get item from database by searching for a specific item Id.
 
@@ -241,7 +249,9 @@ class FileTable(IsDatabase, metaclass=FileTableSingleton):
             for k, v in self._job_table[self._job_table.id == item_id].to_dict().items()
         }
 
-    def get_items_dict(self, item_dict, return_all_columns=True):
+    def get_items_dict(
+        self, item_dict: dict, return_all_columns: bool = True
+    ) -> List[dict]:
         """
         Get list of jobs which fulfills the query in the dictionary
 
@@ -316,7 +326,14 @@ class FileTable(IsDatabase, metaclass=FileTableSingleton):
         else:
             return [{"id": i} for i in df_dict["id"].values()]
 
-    def _get_jobs(self, user, sql_query, project=None, recursive=True, columns=None):
+    def _get_jobs(
+        self,
+        user: str,
+        sql_query: str,
+        project: Optional[str] = None,
+        recursive: bool = True,
+        columns: Optional[List[str]] = None,
+    ) -> dict:
         """
         Get jobs as dictionary from filetable
 
@@ -353,7 +370,9 @@ class FileTable(IsDatabase, metaclass=FileTableSingleton):
             ].tolist()  # ToDo: Check difference of tolist and to_list
         return dictionary
 
-    def get_job_id(self, job_specifier, project=None):
+    def get_job_id(
+        self, job_specifier: Union[str, int], project: Optional[str] = None
+    ) -> int:
         """
         Get job ID from filetable
 
@@ -389,7 +408,7 @@ class FileTable(IsDatabase, metaclass=FileTableSingleton):
                 "job name '{0}' in this project is not unique".format(job_specifier)
             )
 
-    def get_job_status(self, job_id):
+    def get_job_status(self, job_id: int) -> str:
         """
         Get status of a given job selected by its job ID
 
@@ -401,7 +420,7 @@ class FileTable(IsDatabase, metaclass=FileTableSingleton):
         """
         return self._job_table[self._job_table.id == job_id].status.values[0]
 
-    def get_job_working_directory(self, job_id):
+    def get_job_working_directory(self, job_id: int) -> Union[str, None]:
         """
         Get the working directory of a particular job
 
@@ -425,7 +444,9 @@ class FileTable(IsDatabase, metaclass=FileTableSingleton):
         except KeyError:
             return None
 
-    def init_table(self, fileindex, working_dir_lst=None):
+    def init_table(
+        self, fileindex: PyFileIndex, working_dir_lst: Optional[List[str]] = None
+    ) -> List[dict]:
         """
         Initialize the filetable class
 
@@ -460,7 +481,7 @@ class FileTable(IsDatabase, metaclass=FileTableSingleton):
                 job_lst.append(job_dict)
         return job_lst
 
-    def _item_update(self, par_dict, item_id):
+    def _item_update(self, par_dict: dict, item_id: int) -> None:
         """
         Modify Item in database
 
@@ -476,7 +497,7 @@ class FileTable(IsDatabase, metaclass=FileTableSingleton):
         for k, v in par_dict.items():
             self._job_table.loc[self._job_table.id == int(item_id), k] = v
 
-    def set_job_status(self, job_id, status):
+    def set_job_status(self, job_id: int, status: str) -> None:
         """
         Set job status
 
@@ -487,7 +508,14 @@ class FileTable(IsDatabase, metaclass=FileTableSingleton):
         super().set_job_status(job_id=job_id, status=status)
         self._update_hdf5_status(job_id=job_id, status=status)
 
-    def _update_hdf5_status(self, job_id, status):
+    def _update_hdf5_status(self, job_id: int, status: str) -> None:
+        """
+        Update the status of a job in its HDF5 file.
+
+        Args:
+            job_id (int): The ID of the job.
+            status (str): The new status of the job.
+        """
         if isinstance(job_id, Iterable):
             for j_id in job_id:
                 db_entry = self.get_item_by_id(item_id=j_id)
@@ -506,7 +534,7 @@ class FileTable(IsDatabase, metaclass=FileTableSingleton):
                 overwrite="update",
             )
 
-    def update(self):
+    def update(self) -> None:
         """
         Update the filetable cache
         """
@@ -551,7 +579,17 @@ class FileTable(IsDatabase, metaclass=FileTableSingleton):
                     self._job_table = df
 
     @staticmethod
-    def get_extract(path, mtime):
+    def get_extract(path: str, mtime: datetime.datetime) -> dict:
+        """
+        Extract job information from a given file path and modification time.
+
+        Args:
+            path (str): The file path.
+            mtime (datetime.datetime): The modification time.
+
+        Returns:
+            dict: A dictionary containing the extracted job information.
+        """
         basename = os.path.basename(path)
         job = os.path.splitext(basename)[0]
         time = datetime.datetime.fromtimestamp(mtime)
@@ -579,7 +617,16 @@ class FileTable(IsDatabase, metaclass=FileTableSingleton):
         del return_dict["masterid"]
         return return_dict
 
-    def _get_job_status_from_hdf5(self, job_id):
+    def _get_job_status_from_hdf5(self, job_id: int) -> str:
+        """
+        Get the status of a job from its HDF5 file.
+
+        Args:
+            job_id (int): The ID of the job.
+
+        Returns:
+            str: The status of the job.
+        """
         db_entry = self.get_item_by_id(job_id)
         job_name = db_entry["subjob"][1:]
         return get_job_status_from_file(
@@ -589,13 +636,27 @@ class FileTable(IsDatabase, metaclass=FileTableSingleton):
 
     def _get_job_table(
         self,
-        sql_query,
-        user,
-        project_path=None,
-        recursive=True,
-        columns=None,
-        element_lst=None,
-    ):
+        sql_query: str,
+        user: str,
+        project_path: Optional[str] = None,
+        recursive: bool = True,
+        columns: Optional[List[str]] = None,
+        element_lst: Optional[List[str]] = None,
+    ) -> pandas.DataFrame:
+        """
+        Get the job table based on the specified parameters.
+
+        Args:
+            sql_query (str): SQL query string.
+            user (str): User name.
+            project_path (str, optional): Project path. Defaults to None.
+            recursive (bool, optional): Recursive flag. Defaults to True.
+            columns (List[str], optional): List of columns to return. Defaults to None.
+            element_lst (List[str], optional): List of elements. Defaults to None.
+
+        Returns:
+            pandas.DataFrame: The job table.
+        """
         self.update()
         if project_path is None:
             project_path = self._path
@@ -611,7 +672,7 @@ class FileTable(IsDatabase, metaclass=FileTableSingleton):
         else:
             return self._job_table
 
-    def _get_table_headings(self, table_name=None):
+    def _get_table_headings(self, table_name: Optional[str] = None) -> List[str]:
         """
         Get column names
 
@@ -639,15 +700,40 @@ class FileTable(IsDatabase, metaclass=FileTableSingleton):
         """
         return self._job_table.columns.values
 
-    def _get_view_mode(self):
+    def _get_view_mode(self) -> bool:
+        """
+        Get the view mode of the file table.
+
+        Returns:
+            bool: The view mode of the file table - Always False.
+        """
         return False
 
 
-def filter_function(file_name):
+def filter_function(file_name: str) -> bool:
+    """
+    Filter function to check if a file name contains ".h5".
+
+    Args:
+        file_name (str): The name of the file.
+
+    Returns:
+        bool: True if the file name contains ".h5", False otherwise.
+    """
     return ".h5" in file_name
 
 
-def get_hamilton_from_file(hdf5_file, job_name):
+def get_hamilton_from_file(hdf5_file: str, job_name: str) -> str:
+    """
+    Get the Hamilton type from an HDF5 file.
+
+    Args:
+        hdf5_file (str): The path to the HDF5 file.
+        job_name (str): The name of the job.
+
+    Returns:
+        str: The Hamilton type.
+    """
     return (
         _read_hdf(hdf_filehandle=hdf5_file, h5_path=job_name + "/TYPE")
         .split(".")[-1]
@@ -655,18 +741,48 @@ def get_hamilton_from_file(hdf5_file, job_name):
     )
 
 
-def get_hamilton_version_from_file(hdf5_file, job_name):
+def get_hamilton_version_from_file(hdf5_file: str, job_name: str) -> str:
+    """
+    Get the Hamilton version from an HDF5 file.
+
+    Args:
+        hdf5_file (str): The path to the HDF5 file.
+        job_name (str): The name of the job.
+
+    Returns:
+        str: The Hamilton version.
+    """
     return _read_hdf(hdf_filehandle=hdf5_file, h5_path=job_name + "/VERSION")
 
 
-def get_job_status_from_file(hdf5_file, job_name):
+def get_job_status_from_file(hdf5_file: str, job_name: str) -> Union[str, None]:
+    """
+    Get the status of a job from an HDF5 file.
+
+    Args:
+        hdf5_file (str): The path to the HDF5 file.
+        job_name (str): The name of the job.
+
+    Returns:
+        Union[str, None]: The status of the job, or None if the file does not exist.
+    """
     if os.path.exists(hdf5_file):
         return _read_hdf(hdf_filehandle=hdf5_file, h5_path=job_name + "/status")
     else:
         return None
 
 
-def _get_most_common_path(path, reference_paths):
+def _get_most_common_path(path: str, reference_paths: List[str]) -> Union[str, None]:
+    """
+    Get the most common path between the given path and a list of reference paths.
+
+    Args:
+        path (str): The path to compare.
+        reference_paths (List[str]): The list of reference paths.
+
+    Returns:
+        Union[str, None]: The most common path or None if no common path is found.
+    """
     path_match_lst = [p for p in reference_paths if os.path.commonpath([path, p]) == p]
     if len(path_match_lst) > 0:
         return max(path_match_lst, key=len)

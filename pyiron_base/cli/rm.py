@@ -5,6 +5,7 @@ Remove jobs from pyiron project or whole project.
 """
 
 import os
+from argparse import ArgumentParser, Namespace
 
 from pyiron_base.project.generic import Project
 
@@ -20,7 +21,7 @@ __status__ = "production"
 __date__ = "23 Jun, 2020"
 
 
-def register(parser):
+def register(parser: ArgumentParser):
     parser.add_argument(
         "project", default=".", nargs="?", help="path to pyiron project"
     )
@@ -32,7 +33,7 @@ def register(parser):
     )
 
 
-def main(args):
+def main(args: Namespace) -> None:
     pr = Project(args.project)
     if args.jobs_only:
         pr.remove_jobs(recursive=args.recursive, silently=True)

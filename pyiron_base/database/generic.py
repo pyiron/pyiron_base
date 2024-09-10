@@ -12,6 +12,7 @@ from datetime import datetime
 from queue import Empty as QueueEmpty
 from queue import SimpleQueue
 from threading import Lock, Thread
+from typing import List, Optional, Union
 
 import numpy as np
 import pandas
@@ -26,6 +27,7 @@ from sqlalchemy import (
     or_,
     text,
 )
+from sqlalchemy.engine import Engine
 from sqlalchemy.exc import DatabaseError, OperationalError
 from sqlalchemy.pool import NullPool
 from sqlalchemy.sql import select
@@ -86,7 +88,7 @@ class ConnectionWatchDog(Thread):
         self._lock = lock
         self._timeout = timeout
 
-    def run(self):
+    def run(self) -> None:
         """
         Starts the watchdog.
         """
@@ -103,13 +105,13 @@ class ConnectionWatchDog(Thread):
                         pass
                     break
 
-    def kick(self):
+    def kick(self) -> None:
         """
         Restarts the timeout.
         """
         self._queue.put(True)
 
-    def kill(self):
+    def kill(self) -> None:
         """
         Stop the watchdog and close the connection.
         """
@@ -118,7 +120,7 @@ class ConnectionWatchDog(Thread):
 
 
 class AutorestoredConnection:
-    def __init__(self, engine, timeout=60):
+    def __init__(self, engine: Engine, timeout: int = 60):
         self.engine = engine
         self._conn = None
         self._lock = Lock()
@@ -159,11 +161,11 @@ class AutorestoredConnection:
             delay=5,
         )
 
-    def close(self):
+    def close(self) -> None:
         if self._conn is not None:
             self._conn.close()
 
-    def commit(self):
+    def commit(self) -> None:
         if self._conn is not None:
             self._conn.commit()
 
@@ -182,7 +184,7 @@ class DatabaseAccess(IsDatabase):
     Murat Han Celik
     """
 
-    def __init__(self, connection_string, table_name, timeout=60):
+    def __init__(self, connection_string: str, table_name: str, timeout: int = 60):
         """
         Initialize the Database connection
 
@@ -217,7 +219,7 @@ class DatabaseAccess(IsDatabase):
 
         self._chem_formula_lim_length = CHEMICALFORMULA_STR_LENGTH
 
-        def _create_table():
+        def _create_table() -> None:
             self.__reload_db()
             self.simulation_table = get_historical_table(
                 table_name=str(table_name), metadata=self.metadata, extend_existing=True
@@ -235,11 +237,11 @@ class DatabaseAccess(IsDatabase):
         )
         self._view_mode = False
 
-    def _get_view_mode(self):
+    def _get_view_mode(self) -> bool:
         return self._view_mode
 
     @IsDatabase.view_mode.setter
-    def view_mode(self, value):
+    def view_mode(self, value: bool) -> None:
         """
         Set view_mode - if view_mode is enable pyiron has read only access to the database.
 
@@ -253,19 +255,19 @@ class DatabaseAccess(IsDatabase):
 
     @IsDatabase.viewer_mode.setter
     @deprecate("use view_mode")
-    def viewer_mode(self, value):
+    def viewer_mode(self, value: bool) -> None:
         self.view_mode = value
 
     def _job_dict(
         self,
-        sql_query,
-        user,
-        project_path,
-        recursive,
-        job=None,
-        sub_job_name="%",
-        element_lst=None,
-    ):
+        sql_query: str,
+        user: str,
+        project_path: str,
+        recursive: bool,
+        job: Optional[str] = None,
+        sub_job_name: str = "%",
+        element_lst: List[str] = None,
+    ) -> List[dict]:
         """
         Internal function to access the database from the project directly.
 
@@ -347,13 +349,13 @@ class DatabaseAccess(IsDatabase):
 
     def _get_job_table(
         self,
-        sql_query,
-        user,
-        project_path,
-        recursive=True,
-        columns=None,
-        element_lst=None,
-    ):
+        sql_query: str,
+        user: str,
+        project_path: str,
+        recursive: bool = True,
+        columns: List[str] = None,
+        element_lst: List[str] = None,
+    ) -> pandas.DataFrame:
         job_dict = self._job_dict(
             sql_query=sql_query,
             user=user,
@@ -364,7 +366,7 @@ class DatabaseAccess(IsDatabase):
         return pandas.DataFrame(job_dict, columns=columns)
 
     # Internal functions
-    def __del__(self):
+    def __del__(self) -> None:
         """
         Close database connection
 
@@ -374,7 +376,7 @@ class DatabaseAccess(IsDatabase):
         if not self._keep_connection:
             self.conn.close()
 
-    def __reload_db(self):
+    def __reload_db(self) -> None:
         """
         Reload database
 
@@ -385,7 +387,7 @@ class DatabaseAccess(IsDatabase):
         self.metadata.reflect(bind=self._engine)
 
     @staticmethod
-    def regexp(expr, item):
+    def regexp(expr: str, item: str) -> Union[str, None]:
         """
         Regex function for SQLite
         Args:
@@ -405,7 +407,7 @@ class DatabaseAccess(IsDatabase):
             return reg.search(item) is not None
 
     # Table functions
-    def _get_table_headings(self, table_name=None):
+    def _get_table_headings(self, table_name: Optional[str] = None) -> List[str]:
         """
         Get column names
 
@@ -444,7 +446,9 @@ class DatabaseAccess(IsDatabase):
             raise ValueError(str(table_name) + " does not exist")
         return [column.name for column in iter(simulation_list.columns)]
 
-    def add_column(self, col_name, col_type):
+    def add_column(
+        self, col_name: Union[str, List[str]], col_type: Union[str, List[str]]
+    ) -> None:
         """
         Add an additional column - required for modification on the database
 
@@ -470,7 +474,9 @@ class DatabaseAccess(IsDatabase):
         else:
             raise PermissionError("Not avilable in viewer mode.")
 
-    def change_column_type(self, col_name, col_type):
+    def change_column_type(
+        self, col_name: Union[str, List[str]], col_type: Union[str, List[str]]
+    ) -> None:
         """
         Modify data type of an existing column - required for modification on the database
 
@@ -496,7 +502,9 @@ class DatabaseAccess(IsDatabase):
         else:
             raise PermissionError("Not avilable in viewer mode.")
 
-    def get_items_sql(self, where_condition=None, sql_statement=None):
+    def get_items_sql(
+        self, where_condition: Optional[str] = None, sql_statement: Optional[str] = None
+    ) -> List[dict]:
         """
         Submit an SQL query to the database
 
@@ -588,12 +596,12 @@ class DatabaseAccess(IsDatabase):
             output_list += [dict(zip(col.keys(), tmp_values))]
         return output_list
 
-    def _check_chem_formula_length(self, par_dict):
+    def _check_chem_formula_length(self, par_dict: dict) -> dict:
         """
         performs a check whether the length of chemical formula exceeds the defined limit
-        args:
-        par_dict(dict): dictionary of the parameter
-        limit(int): the limit for the length of checmical formular
+
+        Args:
+            par_dict(dict): dictionary of the parameters to be checked
         """
         key_limited = "ChemicalFormula"
         if (
@@ -604,7 +612,7 @@ class DatabaseAccess(IsDatabase):
             par_dict[key_limited] = "OVERFLOW_ERROR"
         return par_dict
 
-    def _check_duplidates(self, par_dict: dict):
+    def _check_duplidates(self, par_dict: dict) -> bool:
         """
         Check for duplicates in the database
 
@@ -621,7 +629,7 @@ class DatabaseAccess(IsDatabase):
         )
 
     # Item functions
-    def add_item_dict(self, par_dict, check_duplicates=False):
+    def add_item_dict(self, par_dict: dict, check_duplicates: bool = False) -> int:
         """
         Create a new database item
 
@@ -642,6 +650,7 @@ class DatabaseAccess(IsDatabase):
                              'timestop': datetime(2016, 5, 2, 11, 31, 4, 371165),
                              'totalcputime': 0.117788,
                              'username': 'Test'}
+            check_duplicates (bool): Check for duplicate entries in the database
 
         Returns:
             int: Database ID of the item created as an int, like: 3
@@ -667,7 +676,7 @@ class DatabaseAccess(IsDatabase):
         else:
             raise PermissionError("Not avilable in viewer mode.")
 
-    def __get_items(self, col_name, var):
+    def __get_items(self, col_name: str, var: Union[str, int]) -> List[dict]:
         """
         Get multiple items from the database
 
@@ -717,7 +726,7 @@ class DatabaseAccess(IsDatabase):
             self.conn.close()
         return [dict(zip(col._mapping.keys(), col._mapping.values())) for col in row]
 
-    def _item_update(self, par_dict, item_id):
+    def _item_update(self, par_dict: dict, item_id: int) -> None:
         """
         Modify Item in database
 
@@ -758,7 +767,7 @@ class DatabaseAccess(IsDatabase):
         else:
             raise PermissionError("Not avilable in viewer mode.")
 
-    def delete_item(self, item_id: int):
+    def delete_item(self, item_id: int) -> None:
         """
         Delete Item from database
 
@@ -784,7 +793,14 @@ class DatabaseAccess(IsDatabase):
             self.conn.close()
 
     # IsDatabase impl'
-    def _get_jobs(self, sql_query, user, project_path, recursive=True, columns=None):
+    def _get_jobs(
+        self,
+        sql_query: str,
+        user: str,
+        project_path: str,
+        recursive: bool = True,
+        columns: Optional[List[str]] = None,
+    ) -> List[dict]:
         df = self.job_table(
             sql_query=sql_query,
             user=user,
@@ -797,7 +813,7 @@ class DatabaseAccess(IsDatabase):
         return df.to_dict(orient="list")
 
     # Shortcut
-    def get_item_by_id(self, item_id):
+    def get_item_by_id(self, item_id: int) -> dict:
         """
         Get item from database by searching for a specific item Id.
 
@@ -844,7 +860,7 @@ class DatabaseAccess(IsDatabase):
         else:
             raise TypeError("THE SQL database ID has to be an integer.")
 
-    def query_for_element(self, element):
+    def query_for_element(self, element: str) -> Union[bool, str]:
         return or_(
             *[
                 self.simulation_table.c["chemicalformula"].like(
@@ -854,7 +870,9 @@ class DatabaseAccess(IsDatabase):
             ]
         )
 
-    def get_items_dict(self, item_dict, return_all_columns=True):
+    def get_items_dict(
+        self, item_dict: dict, return_all_columns: bool = True
+    ) -> List[dict]:
         """
 
         Args:
@@ -961,13 +979,13 @@ class DatabaseAccess(IsDatabase):
             self.conn.close()
         return [dict(zip(col._mapping.keys(), col._mapping.values())) for col in row]
 
-    def get_job_status(self, job_id):
+    def get_job_status(self, job_id: int) -> Union[str, None]:
         try:
             return self.get_item_by_id(item_id=job_id)["status"]
         except KeyError:
             return None
 
-    def get_job_working_directory(self, job_id):
+    def get_job_working_directory(self, job_id: int) -> Union[str, None]:
         try:
             db_entry = self.get_item_by_id(job_id)
             if db_entry:
