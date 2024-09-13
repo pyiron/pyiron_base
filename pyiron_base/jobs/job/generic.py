@@ -320,7 +320,10 @@ class GenericJob(JobCore, HasDict):
         else:
             self._restart_file_dict = {}
             for k, v in val.items():
-                self._restart_file_dict[k] = File(v).abspath()
+                if isinstance(v, File):
+                    self._restart_file_dict[k] = v.abspath()
+                else:
+                    self._restart_file_dict[k] = File(v).abspath()
 
     @property
     def exclude_nodes_hdf(self) -> list:
