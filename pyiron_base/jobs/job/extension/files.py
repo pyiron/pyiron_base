@@ -1,5 +1,4 @@
 import os
-import posixpath
 from itertools import islice
 from typing import Generator, List, Optional, Union
 
@@ -100,7 +99,7 @@ class FileBrowser:
     __slots__ = ("_working_directory",)
 
     def __init__(self, working_directory: str):
-        self._working_directory = working_directory
+        self._working_directory = os.path.abspath(os.path.expanduser(working_directory))
 
     def _get_file_dict(self) -> dict:
         return {
@@ -150,12 +149,12 @@ class FileBrowser:
             working_directory=self._working_directory,
             include_archive=False,
         ):
-            return File(posixpath.join(self._working_directory, item))
+            return File(os.path.join(self._working_directory, item))
         elif item in _working_directory_list_files(
             working_directory=self._working_directory,
             include_archive=True,
         ):
-            return File(posixpath.join(self._working_directory, item))
+            return File(os.path.join(self._working_directory, item))
         else:
             raise FileNotFoundError(item)
 
