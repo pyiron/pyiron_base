@@ -1,5 +1,4 @@
 import os
-import posixpath
 from pyiron_base._tests import TestWithProject
 
 
@@ -30,7 +29,7 @@ class TestWrapExecutable(TestWithProject):
         self.assertTrue(python_version_step.status.finished)
         self.assertEqual(
             python_version_step.files.error_out,
-            posixpath.join(python_version_step.working_directory, "error.out"),
+            os.path.join(os.path.abspath(python_version_step.working_directory), "error.out"),
         )
 
     def test_cat(self):
