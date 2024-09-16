@@ -1,5 +1,4 @@
 import os
-import posixpath
 from itertools import islice
 from typing import Generator, List, Optional, Union
 
