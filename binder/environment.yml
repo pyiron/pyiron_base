@@ -3,7 +3,7 @@ channels:
 dependencies:
 - python
 - conda =24.5.0
-- conda_subprocess =0.0.4
+- conda_subprocess =0.0.5
 - cloudpickle =3.0.0
 - gitpython =3.1.43
 - h5io_browser =0.1.1
