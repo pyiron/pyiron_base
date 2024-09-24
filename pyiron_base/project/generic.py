@@ -11,7 +11,17 @@ import os
 import posixpath
 import shutil
 import stat
-from typing import TYPE_CHECKING, Any, Dict, Generator, List, Literal, Optional, Union, Callable
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Callable,
+    Dict,
+    Generator,
+    List,
+    Literal,
+    Optional,
+    Union,
+)
 
 import cloudpickle
 import numpy as np
@@ -746,8 +756,11 @@ class Project(ProjectPath, HasGroups):
         """
         if isinstance(executable, str):
             if len(args) != 0 or len(kwargs) != 0:
-                raise TypeError("For executables of type string the following arguments are not supported:", args,
-                                kwargs)
+                raise TypeError(
+                    "For executables of type string the following arguments are not supported:",
+                    args,
+                    kwargs,
+                )
             return self.wrap_executable(
                 executable_str=executable,
                 job_name=job_name,
@@ -765,19 +778,29 @@ class Project(ProjectPath, HasGroups):
             )
         elif isinstance(executable, Callable):
             if write_input_funct is not None:
-                raise TypeError("The write_input_funct() function is only supported for executables of type string.")
+                raise TypeError(
+                    "The write_input_funct() function is only supported for executables of type string."
+                )
             elif collect_output_funct is not None:
-                raise TypeError("The collect_output_funct() function is only supported for executables of type string.")
+                raise TypeError(
+                    "The collect_output_funct() function is only supported for executables of type string."
+                )
             elif input_dict is not None:
-                raise TypeError("The input_dict dictionary is only supported for executables of type string.")
+                raise TypeError(
+                    "The input_dict dictionary is only supported for executables of type string."
+                )
             elif conda_environment_path is not None:
                 raise TypeError(
-                    "The conda_environment_path parameter is only supported for executables of type string.")
+                    "The conda_environment_path parameter is only supported for executables of type string."
+                )
             elif conda_environment_name is not None:
                 raise TypeError(
-                    "The conda_environment_name parameter is only supported for executables of type string.")
+                    "The conda_environment_name parameter is only supported for executables of type string."
+                )
             elif input_file_lst is not None:
-                raise TypeError("The input_file_lst parameter is only supported for executables of type string.")
+                raise TypeError(
+                    "The input_file_lst parameter is only supported for executables of type string."
+                )
             print(executable, args, kwargs)
             return self.wrap_python_function(
                 executable,
@@ -791,7 +814,9 @@ class Project(ProjectPath, HasGroups):
                 **kwargs,
             )
         else:
-            raise TypeError("The executable has to be either of type string or of type callable.")
+            raise TypeError(
+                "The executable has to be either of type string or of type callable."
+            )
 
     def get_child_ids(
         self, job_specifier: Union[str, int], project: Optional["Project"] = None

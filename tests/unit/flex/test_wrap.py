@@ -32,10 +32,7 @@ class TestWrap(TestWithProject):
 
     def test_executable_errors(self):
         with self.assertRaises(TypeError):
-            self.project.wrap(
-                executable="cat input_file > output_file",
-                a=1
-            )
+            self.project.wrap(executable="cat input_file > output_file", a=1)
         with self.assertRaises(TypeError):
             self.project.wrap(
                 "cat input_file > output_file",
@@ -52,11 +49,15 @@ class TestWrap(TestWithProject):
         with self.assertRaises(TypeError):
             self.project.wrap(executable=my_function, write_input_funct=write_input)
         with self.assertRaises(TypeError):
-            self.project.wrap(executable=my_function, collect_output_funct=collect_output)
+            self.project.wrap(
+                executable=my_function, collect_output_funct=collect_output
+            )
         with self.assertRaises(TypeError):
             self.project.wrap(executable=my_function, input_dict={"a": 1})
         with self.assertRaises(TypeError):
-            self.project.wrap(executable=my_function, conda_environment_path="test/path")
+            self.project.wrap(
+                executable=my_function, conda_environment_path="test/path"
+            )
         with self.assertRaises(TypeError):
             self.project.wrap(executable=my_function, conda_environment_name="test")
         with self.assertRaises(TypeError):
