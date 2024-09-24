@@ -11,7 +11,7 @@ import os
 import posixpath
 import shutil
 import stat
-from typing import TYPE_CHECKING, Any, Dict, Generator, List, Literal, Optional, Union
+from typing import TYPE_CHECKING, Any, Dict, Generator, List, Literal, Optional, Union, Callable
 
 import cloudpickle
 import numpy as np
@@ -694,6 +694,104 @@ class Project(ProjectPath, HasGroups):
                 return job.output["result"]
             else:
                 return job
+
+    def wrap(
+        self,
+        executable: Union[str, callable],
+        *args,
+        job_name: Optional[str] = None,
+        write_input_funct: Optional[callable] = None,
+        collect_output_funct: Optional[callable] = None,
+        input_dict: Optional[dict] = None,
+        conda_environment_path: Optional[str] = None,
+        conda_environment_name: Optional[str] = None,
+        input_file_lst: Optional[list] = None,
+        automatically_rename: bool = False,
+        execute_job: bool = False,
+        delayed: bool = False,
+        output_file_lst: list = [],
+        output_key_lst: list = [],
+        **kwargs,
+    ) -> Union["ExecutableContainerJob", "PythonFunctionContainerJob"]:
+        """
+        The wrap() function is an interface for the wrap_executable() and wrap_python_function() functions.
+
+        Args:
+            executable_str (str/ callable): Either a string to reference an executable on the command line or a python
+                                            function. Both can be wrapped as pyiron job objects.
+            job_name (str): name of the new job object
+            write_input_funct (callable): The write input function write_input(input_dict, working_directory). Only
+                                          supported for executables of type string not for python functions.
+            collect_output_funct (callable): The collect output function collect_output(working_directory). Only
+                                             supported for executables of type string not for python functions.
+            input_dict (dict): Default input for the newly created job class. Only supported for executables of type
+                               string not for python functions.
+            conda_environment_path (str): path of the conda environment to execute the executable in. Only supported for
+                                          executables of type string not for python functions.
+            conda_environment_name (str): name of the conda environment to execute the executable in. Only supported for
+                                          executables of type string not for python functions.
+            input_file_lst (list): list of files to be copied to the working directory before executing it. Only
+                                   supported for executables of type string not for python functions.
+            execute_job (boolean): automatically call run() on the job object - default false
+            automatically_rename (bool): Whether to automatically rename the job at save-time to append a string based
+                                         on the input values. (Default is false.)
+            delayed (bool): delayed execution
+            output_file_lst (list):
+            output_key_lst (list):
+
+        Returns:
+            pyiron_base.jobs.flex.executablecontainerExecutableContainerJob: pyiron job object for executable command or
+            pyiron_base.jobs.flex.pythonfunctioncontainer.PythonFunctionContainerJob: pyiron job object for python
+                                                                                      function
+        """
+        if isinstance(executable, str):
+            if len(args) != 0 or len(kwargs) != 0:
+                raise TypeError("For executables of type string the following arguments are not supported:", args,
+                                kwargs)
+            return self.wrap_executable(
+                executable_str=executable,
+                job_name=job_name,
+                write_input_funct=write_input_funct,
+                collect_output_funct=collect_output_funct,
+                input_dict=input_dict,
+                conda_environment_path=conda_environment_path,
+                conda_environment_name=conda_environment_name,
+                input_file_lst=input_file_lst,
+                automatically_rename=automatically_rename,
+                execute_job=execute_job,
+                delayed=delayed,
+                output_file_lst=output_file_lst,
+                output_key_lst=output_key_lst,
+            )
+        elif isinstance(executable, Callable):
+            if write_input_funct is not None:
+                raise TypeError("The write_input_funct() function is only supported for executables of type string.")
+            elif collect_output_funct is not None:
+                raise TypeError("The collect_output_funct() function is only supported for executables of type string.")
+            elif input_dict is not None:
+                raise TypeError("The input_dict dictionary is only supported for executables of type string.")
+            elif conda_environment_path is not None:
+                raise TypeError(
+                    "The conda_environment_path parameter is only supported for executables of type string.")
+            elif conda_environment_name is not None:
+                raise TypeError(
+                    "The conda_environment_name parameter is only supported for executables of type string.")
+            elif input_file_lst is not None:
+                raise TypeError("The input_file_lst parameter is only supported for executables of type string.")
+            print(executable, args, kwargs)
+            return self.wrap_python_function(
+                executable,
+                *args,
+                job_name=job_name,
+                automatically_rename=automatically_rename,
+                execute_job=execute_job,
+                delayed=delayed,
+                output_file_lst=output_file_lst,
+                output_key_lst=output_key_lst,
+                **kwargs,
+            )
+        else:
+            raise TypeError("The executable has to be either of type string or of type callable.")
 
     def get_child_ids(
         self, job_specifier: Union[str, int], project: Optional["Project"] = None
