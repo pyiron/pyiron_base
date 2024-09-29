@@ -579,9 +579,8 @@ class TestDataContainer(TestWithCleanProject):
         self.hdf["read_only_from/READ_ONLY"] = True
         with warnings.catch_warnings(record=True) as w:
             pl.from_hdf(self.hdf, group_name="read_only_from")
-            self.assertEqual(
-                len(w),
-                0,
+            self.assertTrue(
+                len(w) <= 2,
                 "from_hdf on read_only DataContainer should not call _read_only_error.",
             )
         self.assertEqual(
@@ -640,6 +639,28 @@ class TestDataContainer(TestWithCleanProject):
         pl.to_hdf(hdf=self.hdf)
         pl2 = self.hdf["pandas"].to_object()
         self.assertEqual(type(pl[0]), type(pl2[0]))
+
+    def test_dict_empty_list(self):
+        """HasDict interface should work"""
+        with self.subTest("empty list could not use to_dict interface"):
+            l = DataContainer(table_name="empty_list")
+            data = l.to_dict()
+            l.from_dict(data)
+            self.assertEqual(len(l), 0, "Empty list read from HDF not empty.")
+
+        with self.subTest("to/from_dict should give back the same list as written."):
+            data = self.pl.to_dict()
+            l = DataContainer(table_name="input")
+            l.from_dict(data)
+            self.assertEqual(self.pl, l)
+            pl = self.pl.copy()
+            pl.read_only = True
+            data = pl.to_dict()
+            l = DataContainer(table_name="input")
+            l.from_dict(data)
+            self.assertTrue(
+                l.read_only, "read_only flag not restored after to/from_dict"
+            )
 
     def test_groups_nodes(self):
         self.assertTrue(

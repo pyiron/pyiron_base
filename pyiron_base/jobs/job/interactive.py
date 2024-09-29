@@ -5,6 +5,8 @@
 InteractiveBase class extends the Generic Job class with all the functionality to run the job object interactivley.
 """
 
+from typing import Any, Optional
+
 import numpy as np
 
 from pyiron_base.database.filetable import FileTable
@@ -126,8 +128,10 @@ class InteractiveBase(GenericJob):
 
     """
 
-    def __init__(self, project, job_name):
-        super(InteractiveBase, self).__init__(project, job_name)
+    def __init__(
+        self, project: "pyiron_base.storage.hdfio.ProjectHDFio", job_name: str
+    ):
+        super(InteractiveBase, self).__init__(project=project, job_name=job_name)
         self._interactive_library = None
         self._interactive_write_input_files = False
         self._interactive_flush_frequency = 10000
@@ -135,11 +139,11 @@ class InteractiveBase(GenericJob):
         self.interactive_cache = {}
 
     @property
-    def interactive_flush_frequency(self):
+    def interactive_flush_frequency(self) -> int:
         return self._interactive_flush_frequency
 
     @interactive_flush_frequency.setter
-    def interactive_flush_frequency(self, frequency):
+    def interactive_flush_frequency(self, frequency: int) -> None:
         if not isinstance(frequency, int) or frequency < 1:
             raise AssertionError("interactive_flush_frequency must be an integer>0")
         if frequency < self._interactive_write_frequency:
@@ -149,18 +153,18 @@ class InteractiveBase(GenericJob):
         self._interactive_flush_frequency = frequency
 
     @property
-    def interactive_write_frequency(self):
+    def interactive_write_frequency(self) -> int:
         return self._interactive_write_frequency
 
     @interactive_write_frequency.setter
-    def interactive_write_frequency(self, frequency):
+    def interactive_write_frequency(self, frequency: int) -> None:
         if not isinstance(frequency, int) or frequency < 1:
             raise AssertionError("interactive_write_frequency must be an integer>0")
         if self._interactive_flush_frequency < frequency:
             self.interactive_flush_frequency = frequency
         self._interactive_write_frequency = frequency
 
-    def validate_ready_to_run(self):
+    def validate_ready_to_run(self) -> None:
         """
         This should work but doesn't...
         """
@@ -169,11 +173,12 @@ class InteractiveBase(GenericJob):
                 "interactive_write_frequency must be smaller or equal to interactive_flush_frequency"
             )
 
-    def _run_if_running(self):
+    def _run_if_running(self) -> None:
         """
+        Run the job if it is in the running state.
 
         Returns:
-
+            None
         """
         if self.server.run_mode.interactive:
             self.run_if_interactive()
@@ -182,17 +187,24 @@ class InteractiveBase(GenericJob):
         else:
             super(InteractiveBase, self)._run_if_running()
 
-    def _check_if_input_should_be_written(self):
+    def _check_if_input_should_be_written(self) -> bool:
+        """
+        Check if the input should be written.
+
+        Returns:
+            bool: True if the input should be written, False otherwise.
+        """
         return (
             super(InteractiveBase, self)._check_if_input_should_be_written()
             or self._interactive_write_input_files
         )
 
-    def interactive_is_activated(self):
+    def interactive_is_activated(self) -> bool:
         """
+        Check if the interactive library is activated.
 
         Returns:
-
+            bool: True if the interactive library is activated, False otherwise.
         """
         if self._interactive_library is None:
             return False
@@ -200,17 +212,20 @@ class InteractiveBase(GenericJob):
             return True
 
     @staticmethod
-    def _extend_hdf(h5, path, key, data):
+    def _extend_hdf(
+        h5: "pyiron_base.storage.hdfio.ProjectHDFio", path: str, key: str, data: Any
+    ) -> None:
         """
+        Extend an existing HDF5 dataset with new data.
 
         Args:
-            h5:
-            path:
-            key:
-            data:
+            h5 (pyiron_base.storage.hdfio.ProjectHDFio): HDF5 file object.
+            path (str): Path to the dataset within the HDF5 file.
+            key (str): Name of the dataset.
+            data (Union[list, np.ndarray]): Data to be added to the dataset.
 
         Returns:
-
+            None
         """
         if path in h5.list_groups() and key in h5[path].list_nodes():
             current_hdf = h5[path + "/" + key]
@@ -222,16 +237,19 @@ class InteractiveBase(GenericJob):
         h5[path + "/" + key] = data
 
     @staticmethod
-    def _include_last_step(array, step=1, include_last=False):
+    def _include_last_step(
+        array: np.ndarray, step: int = 1, include_last: bool = False
+    ) -> np.ndarray:
         """
+        Returns a new array with elements selected at a given step size.
 
         Args:
-            array:
-            step:
-            include_last:
+            array (np.ndarray): The input array.
+            step (int, optional): The step size for selecting elements. Defaults to 1.
+            include_last (bool, optional): Whether to include the last element in the new array. Defaults to False.
 
         Returns:
-
+            np.ndarray: The new array with selected elements.
         """
         if step == 1:
             return array
@@ -249,15 +267,18 @@ class InteractiveBase(GenericJob):
                     return []
         return []
 
-    def interactive_flush(self, path="interactive", include_last_step=False):
+    def interactive_flush(
+        self, path: str = "interactive", include_last_step: bool = False
+    ) -> None:
         """
+        Flushes the interactive cache to the HDF5 file.
 
         Args:
-            path:
-            include_last_step:
+            path (str): The path within the HDF5 file to store the flushed data.
+            include_last_step (bool): Whether to include the last step of the cache in the flushed data.
 
         Returns:
-
+            None
         """
         with self.project_hdf5.open("output") as h5:
             for key in self.interactive_cache.keys():
@@ -285,7 +306,7 @@ class InteractiveBase(GenericJob):
                     )
                 self.interactive_cache[key] = []
 
-    def interactive_open(self):
+    def interactive_open(self) -> "pyiron_base.jobs.job.interactive.InteractiveBase":
         """
         Set the run mode to interactive.
 
@@ -296,7 +317,7 @@ class InteractiveBase(GenericJob):
         self.server.run_mode.interactive = True
         return _WithInteractiveOpen(self)
 
-    def interactive_close(self):
+    def interactive_close(self) -> None:
         """
         Stop interactive execution and sync interactive output cache.
 
@@ -317,28 +338,33 @@ class InteractiveBase(GenericJob):
         for key in self.interactive_cache.keys():
             self.interactive_cache[key] = []
 
-    def interactive_store_in_cache(self, key, value):
+    def interactive_store_in_cache(self, key: str, value: Any) -> None:
         """
+        Store a value in the interactive cache.
 
         Args:
-            key:
-            value:
+            key (str): The key to store the value under.
+            value (Any): The value to be stored.
 
         Returns:
-
+            None
         """
         self.interactive_cache[key] = value
 
     # def __del__(self):
     #     self.interactive_close()
 
-    def run_if_interactive(self):
+    def run_if_interactive(self) -> None:
         raise NotImplementedError("run_if_interactive() is not implemented!")
 
-    def run_if_interactive_non_modal(self):
+    def run_if_interactive_non_modal(self) -> None:
         raise NotImplementedError("run_if_interactive_non_modal() is not implemented!")
 
-    def to_hdf(self, hdf=None, group_name=None):
+    def to_hdf(
+        self,
+        hdf: Optional["pyiron_base.storage.hdfio.ProjectHDFio"] = None,
+        group_name: Optional[str] = None,
+    ):
         """
         Store the InteractiveBase object in the HDF5 File
 
@@ -353,7 +379,11 @@ class InteractiveBase(GenericJob):
                 "interactive_write_frequency": self._interactive_write_frequency,
             }
 
-    def from_hdf(self, hdf=None, group_name=None):
+    def from_hdf(
+        self,
+        hdf: Optional["pyiron_base.storage.hdfio.ProjectHDFio"] = None,
+        group_name: Optional[str] = None,
+    ):
         """
         Restore the InteractiveBase object in the HDF5 File
 
@@ -377,17 +407,21 @@ class InteractiveBase(GenericJob):
 
 
 class _WithInteractiveOpen:
-    def __init__(self, job):
+    def __init__(self, job: InteractiveBase):
         self._job = job
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return "Interactive ready"
 
-    def __enter__(self):
+    def __enter__(self) -> InteractiveBase:
         return self._job
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        return self._job.interactive_close()
+        job_status = self._job.status.string
+        job_closed = self._job.interactive_close()
+        if job_status in ["aborted"]:
+            self._job.status.string = job_status
+        return job_closed
 
     def __getattr__(self, attr):
         error_message = (

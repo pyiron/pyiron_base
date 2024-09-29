@@ -1,12 +1,64 @@
 import os
-import posixpath
 from itertools import islice
-from typing import List, Optional
+from typing import Generator, List, Optional, Union
 
 from pyiron_base.jobs.job.util import (
     _working_directory_list_files,
     _working_directory_read_file,
 )
+
+
+class File:
+    __slots__ = ("_path",)
+
+    def __init__(self, path: str):
+        self._path = path
+
+    def __str__(self) -> str:
+        return self._path
+
+    def _read(self, tail: Optional[int] = None) -> List[str]:
+        return _working_directory_read_file(
+            working_directory=os.path.dirname(str(self)),
+            file_name=os.path.basename(str(self)),
+            tail=tail,
+        )
+
+    def __iter__(self) -> Generator:
+        return iter(self._read())
+
+    def abspath(self) -> str:
+        """
+        Absolute path to file object
+
+        Returns:
+            str: absolute path
+        """
+        return os.path.abspath(self._path)
+
+    def list(self, lines: Optional[int] = None) -> List[str]:
+        """
+        Return file content as list of lines.
+
+        Args:
+            lines (int): only return the first `lines` lines
+
+        Return:
+            list of str: file content
+        """
+        return list(islice(iter(self), lines))
+
+    def tail(self, lines: int = 100) -> None:
+        """
+        Print the last `lines` to stdout.
+
+        Args:
+            lines (int): number of output lines
+        """
+        print(*self._read(tail=lines), sep="")
+
+    def __eq__(self, other: Union[str, "File"]) -> bool:
+        return self.__str__().__eq__(other)
 
 
 class FileBrowser:
@@ -46,10 +98,10 @@ class FileBrowser:
 
     __slots__ = ("_working_directory",)
 
-    def __init__(self, working_directory):
-        self._working_directory = working_directory
+    def __init__(self, working_directory: str):
+        self._working_directory = os.path.abspath(os.path.expanduser(working_directory))
 
-    def _get_file_dict(self):
+    def _get_file_dict(self) -> dict:
         return {
             f.replace(".", "_"): f
             for f in _working_directory_list_files(
@@ -57,7 +109,7 @@ class FileBrowser:
             )
         }
 
-    def __dir__(self):
+    def __dir__(self) -> List[str]:
         return list(self._get_file_dict().keys()) + super().__dir__()
 
     def list(self) -> List[str]:
@@ -66,7 +118,7 @@ class FileBrowser:
         """
         return _working_directory_list_files(working_directory=self._working_directory)
 
-    def _ipython_display_(self):
+    def _ipython_display_(self) -> None:
         path = self._job.working_directory + ":"
         files = [
             "\t" + str(f)
@@ -76,7 +128,7 @@ class FileBrowser:
         ]
         print(os.linesep.join([path, *files]))
 
-    def tail(self, file: str, lines: int = 100):
+    def tail(self, file: str, lines: int = 100) -> None:
         """
         Print the last lines of a file.
 
@@ -89,7 +141,7 @@ class FileBrowser:
         """
         return self[file].tail(lines=lines)
 
-    def __getitem__(self, item):
+    def __getitem__(self, item: str) -> Union[File, "FileBrowser"]:
         sub = os.path.join(self._working_directory, item)
         if os.path.isdir(sub):
             return FileBrowser(sub)
@@ -97,16 +149,16 @@ class FileBrowser:
             working_directory=self._working_directory,
             include_archive=False,
         ):
-            return File(posixpath.join(self._working_directory, item))
+            return File(os.path.join(self._working_directory, item))
         elif item in _working_directory_list_files(
             working_directory=self._working_directory,
             include_archive=True,
         ):
-            return File(posixpath.join(self._working_directory, item))
+            return File(os.path.join(self._working_directory, item))
         else:
             raise FileNotFoundError(item)
 
-    def __getattr__(self, item):
+    def __getattr__(self, item: str) -> Union[File, "FileBrowser"]:
         if item.startswith("__") and item.endswith("__"):
             raise AttributeError(item)
         else:
@@ -114,47 +166,3 @@ class FileBrowser:
                 return self[self._get_file_dict()[item]]
             except KeyError:
                 raise FileNotFoundError(item) from None
-
-
-class File:
-    __slots__ = ("_path",)
-
-    def __init__(self, path):
-        self._path = path
-
-    def __str__(self):
-        return self._path
-
-    def _read(self, tail=None):
-        return _working_directory_read_file(
-            working_directory=os.path.dirname(str(self)),
-            file_name=os.path.basename(str(self)),
-            tail=tail,
-        )
-
-    def __iter__(self):
-        return iter(self._read())
-
-    def list(self, lines: Optional[int] = None):
-        """
-        Return file content as list of lines.
-
-        Args:
-            lines (int): only return the first `lines` lines
-
-        Return:
-            list of str: file content
-        """
-        return list(islice(iter(self), lines))
-
-    def tail(self, lines: int = 100):
-        """
-        Print the last `lines` to stdout.
-
-        Args:
-            lines (int): number of output lines
-        """
-        print(*self._read(tail=lines), sep="")
-
-    def __eq__(self, other):
-        return self.__str__().__eq__(other)

@@ -5,8 +5,11 @@
 Template class to define jobs
 """
 
+from typing import Optional
+
 from pyiron_base.interfaces.object import HasStorage
 from pyiron_base.jobs.job.generic import GenericJob
+from pyiron_base.storage.datacontainer import DataContainer
 
 __author__ = "Jan Janssen"
 __copyright__ = (
@@ -64,36 +67,59 @@ class TemplateJob(GenericJob, HasStorage):
 
     """
 
-    def __init__(self, project, job_name):
+    def __init__(
+        self, project: "pyiron_base.storage.hdfio.ProjectHDFio", job_name: str
+    ):
         GenericJob.__init__(self, project, job_name)
         HasStorage.__init__(self, group_name="")
         self.storage.create_group("input")
         self.storage.create_group("output")
 
     @property
-    def input(self):
+    def input(self) -> DataContainer:
         return self.storage.input
 
     @property
-    def output(self):
+    def output(self) -> DataContainer:
         return self.storage.output
 
-    def to_dict(self):
-        job_dict = super().to_dict()
-        job_dict["input/data"] = self.storage.input.to_builtin()
+    def _to_dict(self) -> dict:
+        """
+        Convert the job object to a dictionary.
+
+        Returns:
+            dict: A dictionary representation of the job object.
+        """
+        job_dict = super()._to_dict()
+        job_dict["input/data"] = self.storage.input.to_dict()
         return job_dict
 
-    def from_dict(self, job_dict):
-        super().from_dict(job_dict=job_dict)
-        input_dict = job_dict["input"]
+    def _from_dict(self, obj_dict: dict, version: str = None):
+        """
+        Update the object attributes from a dictionary representation.
+
+        Args:
+            obj_dict (dict): The dictionary containing the object attributes.
+            version (str, optional): The version of the dictionary format. Defaults to None.
+        """
+        super()._from_dict(obj_dict=obj_dict, version=version)
+        input_dict = obj_dict["input"]
         if "data" in input_dict.keys():
             self.storage.input.update(input_dict["data"])
 
-    def to_hdf(self, hdf=None, group_name=None):
+    def to_hdf(
+        self,
+        hdf: Optional["pyiron_base.storage.hdfio.ProjectHDFio"] = None,
+        group_name: Optional[str] = None,
+    ) -> None:
         GenericJob.to_hdf(self=self, hdf=hdf, group_name=group_name)
         HasStorage.to_hdf(self=self, hdf=self.project_hdf5)
 
-    def from_hdf(self, hdf=None, group_name=None):
+    def from_hdf(
+        self,
+        hdf: Optional["pyiron_base.storage.hdfio.ProjectHDFio"] = None,
+        group_name: Optional[str] = None,
+    ) -> None:
         GenericJob.from_hdf(self=self, hdf=hdf, group_name=group_name)
         HasStorage.from_hdf(self=self, hdf=self.project_hdf5)
 
@@ -131,7 +157,9 @@ class PythonTemplateJob(TemplateJob):
 
     """
 
-    def __init__(self, project, job_name):
+    def __init__(
+        self, project: "pyiron_base.storeage.hdfio.ProjectHDFio", job_name: str
+    ):
         super().__init__(project, job_name)
         self._job_with_calculate_function = True
         self._write_work_dir_warnings = False

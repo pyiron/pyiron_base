@@ -3,26 +3,18 @@
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
 
-def fix_ipython_autocomplete(enable=True):
+def fix_ipython_autocomplete(enable: bool = True) -> None:
     """Change autocomplete behavior for IPython > 6.x
 
-    Parameter
-    ---------
-    enable : bool (default True)
-        Is use the trick.
+    Parameters:
+        enable (bool): Whether to use the trick. Default is True.
 
-    Notes
-    -----
-    Since IPython > 6.x the ``jedi`` package is using for autocomplete by default.
-    But in some cases, the autocomplete doesn't work correctly wrong (see e.g.
-    `here <https://github.com/ipython/ipython/issues/11653>`_).
-
-    To set the correct behaviour we should use in IPython environment::
-
+    Notes:
+    - Since IPython > 6.x, the `jedi` package is used for autocomplete by default.
+    - In some cases, the autocomplete doesn't work correctly (see e.g. `here <https://github.com/ipython/ipython/issues/11653>`_).
+    - To set the correct behavior, we should use the following in IPython environment:
         %config Completer.use_jedi = False
-
-    or add to IPython config (``<HOME>\.ipython\profile_default\ipython_config.py``)::
-
+    - Alternatively, you can add the following to IPython config (`<HOME>\.ipython\profile_default\ipython_config.py`):
         c.Completer.use_jedi = False
     """
 

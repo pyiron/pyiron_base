@@ -60,7 +60,7 @@ Finally for jobs which call an external executable the execution is implemented 
 """
 
 
-def write_input_files_from_input_dict(input_dict: dict, working_directory: str):
+def write_input_files_from_input_dict(input_dict: dict, working_directory: str) -> None:
     """
     Write input files based on hierarchical input dictionary. On the first level the input dictionary is divided in
     file_to_create and files_to_copy. Both are dictionaries use the file names as keys. In file_to_create the values are
@@ -71,16 +71,20 @@ def write_input_files_from_input_dict(input_dict: dict, working_directory: str):
         input_dict (dict): hierarchical input dictionary with files_to_create and files_to_copy.
         working_directory (str): path to the working directory
     """
-    if len(os.listdir(working_directory)) == 0:
-        for file_name, content in input_dict["files_to_create"].items():
-            with open(os.path.join(working_directory, file_name), "w") as f:
-                f.writelines(content)
-        for file_name, source in input_dict["files_to_copy"].items():
-            shutil.copy(source, os.path.join(working_directory, file_name))
-    else:
+    existing_files = set(os.listdir(working_directory))
+    if (
+        len(existing_files.intersection(input_dict["files_to_create"])) > 0
+        or len(existing_files.intersection(input_dict["files_to_copy"])) > 0
+    ):
         state.logger.info(
-            "The working directory is not empty, assuming that input has already been written."
+            "Some files to be created already exist, assuming that input has already been written."
         )
+        return
+    for file_name, content in input_dict["files_to_create"].items():
+        with open(os.path.join(working_directory, file_name), "w") as f:
+            f.writelines(content)
+    for file_name, source in input_dict["files_to_copy"].items():
+        shutil.copy(source, os.path.join(working_directory, file_name))
 
 
 class CalculateFunctionCaller:
@@ -161,7 +165,9 @@ class CalculateFunctionCaller:
 
 
 # Parameter
-def run_job_with_parameter_repair(job):
+def run_job_with_parameter_repair(
+    job: "pyiron_base.jobs.job.generic.GenericJob",
+) -> None:
     """
     Internal helper function the run if repair function is called when the run() function is called with the
     'repair' parameter.
@@ -173,7 +179,9 @@ def run_job_with_parameter_repair(job):
 
 
 # Job Status
-def run_job_with_status_initialized(job, debug=False):
+def run_job_with_status_initialized(
+    job: "pyiron_base.jobs.job.generic.GenericJob", debug: bool = False
+):
     """
     Internal helper function the run if new function is called when the job status is 'initialized'. It prepares
     the hdf5 file and the corresponding directory structure.
@@ -200,7 +208,7 @@ def run_job_with_status_initialized(job, debug=False):
             job.run()
 
 
-def run_job_with_status_created(job):
+def run_job_with_status_created(job: "pyiron_base.jobs.job.generic.GenericJob") -> None:
     """
     Internal helper function the run if created function is called when the job status is 'created'. It executes
     the simulation, either in modal mode, meaning waiting for the simulation to finish, manually, or submits the
@@ -252,8 +260,8 @@ def run_job_with_status_created(job):
 
 
 def run_job_with_status_submitted(
-    job,
-):  # Submitted jobs are handled by the job wrapper!
+    job: "pyiron_base.jobs.job.generic.GenericJob",
+) -> None:  # Submitted jobs are handled by the job wrapper!
     """
     Internal helper function the run if submitted function is called when the job status is 'submitted'. It means
     the job is waiting in the queue. ToDo: Display a list of the users jobs in the queue.
@@ -273,7 +281,7 @@ def run_job_with_status_submitted(
         print("Job " + str(job.job_id) + " is waiting in the que!")
 
 
-def run_job_with_status_running(job):
+def run_job_with_status_running(job: "pyiron_base.jobs.job.generic.GenericJob") -> None:
     """
     Internal helper function the run if running function is called when the job status is 'running'. It allows the
     user to interact with the simulation while it is running.
@@ -294,7 +302,7 @@ def run_job_with_status_running(job):
         print("Job " + str(job.job_id) + " is running!")
 
 
-def run_job_with_status_refresh(job):
+def run_job_with_status_refresh(job: "pyiron_base.jobs.job.generic.GenericJob") -> None:
     """
     Internal helper function the run if refresh function is called when the job status is 'refresh'. If the job was
     suspended previously, the job is going to be started again, to be continued.
@@ -307,7 +315,7 @@ def run_job_with_status_refresh(job):
     )
 
 
-def run_job_with_status_busy(job):
+def run_job_with_status_busy(job: "pyiron_base.jobs.job.generic.GenericJob") -> None:
     """
     Internal helper function the run if busy function is called when the job status is 'busy'.
 
@@ -319,7 +327,7 @@ def run_job_with_status_busy(job):
     )
 
 
-def run_job_with_status_collect(job):
+def run_job_with_status_collect(job: "pyiron_base.jobs.job.generic.GenericJob") -> None:
     """
     Internal helper function the run if collect function is called when the job status is 'collect'. It collects
     the simulation output using the standardized functions collect_output() and collect_logfiles(). Afterwards the
@@ -345,11 +353,12 @@ def run_job_with_status_collect(job):
                 job.compress()
             job.status.finished = True
     job._hdf5["status"] = job.status.string
-    job.send_to_database()
     job.update_master()
 
 
-def run_job_with_status_suspended(job):
+def run_job_with_status_suspended(
+    job: "pyiron_base.jobs.job.generic.GenericJob",
+) -> None:
     """
     Internal helper function the run if suspended function is called when the job status is 'suspended'. It
     restarts the job by calling the run if refresh function after setting the status to 'refresh'.
@@ -365,7 +374,9 @@ def run_job_with_status_suspended(job):
     run_again="Either delete the job via job.remove() or use delete_existing_job=True.",
     version="0.4.0",
 )
-def run_job_with_status_finished(job):
+def run_job_with_status_finished(
+    job: "pyiron_base.jobs.job.generic.GenericJob",
+) -> None:
     """
     Internal helper function the run if finished function is called when the job status is 'finished'. It loads
     the existing job.
@@ -381,7 +392,9 @@ def run_job_with_status_finished(job):
 
 
 # Run Modes
-def run_job_with_runmode_manually(job, _manually_print=True):
+def run_job_with_runmode_manually(
+    job: "pyiron_base.jobs.job.generic.GenericJob", _manually_print: bool = True
+) -> None:
     """
     Internal helper function to run a job manually.
 
@@ -415,7 +428,7 @@ def run_job_with_runmode_manually(job, _manually_print=True):
             )
 
 
-def run_job_with_runmode_modal(job):
+def run_job_with_runmode_modal(job: "pyiron_base.jobs.job.generic.GenericJob") -> None:
     """
     The run if modal function is called by run to execute the simulation, while waiting for the output. For this we
     use subprocess.check_output()
@@ -426,7 +439,9 @@ def run_job_with_runmode_modal(job):
     job.run_static()
 
 
-def run_job_with_runmode_non_modal(job):
+def run_job_with_runmode_non_modal(
+    job: "pyiron_base.jobs.job.generic.GenericJob",
+) -> None:
     """
     The run if non modal function is called by run to execute the simulation in the background. For this we use
     multiprocessing.Process()
@@ -469,7 +484,7 @@ def run_job_with_runmode_non_modal(job):
             job._process.start()
 
 
-def run_job_with_runmode_queue(job):
+def run_job_with_runmode_queue(job: "pyiron_base.jobs.job.generic.GenericJob") -> None:
     """
     The run if queue function is called by run if the user decides to submit the job to and queing system. The job
     is submitted to the queuing system using subprocess.Popen()
@@ -544,7 +559,7 @@ def run_job_with_runmode_queue(job):
     )
 
 
-def run_job_with_runmode_srun(job):
+def run_job_with_runmode_srun(job: "pyiron_base.jobs.job.generic.GenericJob") -> None:
     working_directory = job.project_hdf5.working_directory
     if not state.database.database_is_disabled:
         if not state.database.using_local_database:
@@ -579,7 +594,11 @@ def run_job_with_runmode_srun(job):
     )
 
 
-def run_job_with_runmode_executor(job, executor, gpus_per_slot=None):
+def run_job_with_runmode_executor(
+    job: "pyiron_base.jobs.job.generic.GenericJob",
+    executor: "concurrent.futures.Executor",
+    gpus_per_slot: Optional[int] = None,
+) -> None:
     """
     Introduced in Python 3.2 the concurrent.futures interface enables the asynchronous execution of python programs.
     A function is submitted to the executor and a future object is returned. The future object is updated in the
@@ -627,7 +646,10 @@ def run_job_with_runmode_executor(job, executor, gpus_per_slot=None):
         )
 
 
-def run_job_with_runmode_executor_futures(job, executor):
+def run_job_with_runmode_executor_futures(
+    job: "pyiron_base.jobs.job.generic.GenericJob",
+    executor: "concurrent.futures.Executor",
+) -> None:
     """
     Interface for the ProcessPoolExecutor implemented in the python standard library as part of the concurrent.futures
     module. The ProcessPoolExecutor does not provide any resource management, so the user is responsible to keep track of
@@ -668,7 +690,11 @@ def run_job_with_runmode_executor_futures(job, executor):
     )
 
 
-def run_job_with_runmode_executor_flux(job, executor, gpus_per_slot=None):
+def run_job_with_runmode_executor_flux(
+    job: "pyiron_base.jobs.job.generic.GenericJob",
+    executor: "concurrent.futures.Executor",
+    gpus_per_slot: Optional[int] = None,
+) -> None:
     """
     Interface for the flux.job.FluxExecutor executor. Flux is a hierarchical resource management. It can either be used to
     replace queuing systems like SLURM or be used as a user specific queuing system within an existing allocation.
@@ -723,8 +749,8 @@ def run_job_with_runmode_executor_flux(job, executor, gpus_per_slot=None):
     job.server.future = executor.submit(jobspec)
 
 
-def run_time_decorator(func):
-    def wrapper(job):
+def run_time_decorator(func: callable) -> callable:
+    def wrapper(job: "pyiron_base.jobs.job.generic.GenericJob"):
         if not state.database.database_is_disabled and job.job_id is not None:
             job.project.db.item_update({"timestart": datetime.now()}, job.job_id)
             output = func(job)
@@ -746,6 +772,30 @@ def execute_subprocess(
     conda_environment_name: Optional[str] = None,
     conda_environment_path: Optional[str] = None,
 ) -> str:
+    """
+    Execute a subprocess with the given parameters.
+
+    Args:
+        executable (str): The executable command to run.
+        shell (bool): If True, the command will be executed through the shell.
+        working_directory (str): The working directory for the subprocess.
+        cores (int, optional): The number of CPU cores to allocate. Defaults to 1.
+        threads (int, optional): The number of threads to allocate. Defaults to 1.
+        gpus (int, optional): The number of GPUs to allocate. Defaults to 1.
+        conda_environment_name (str, optional): The name of the conda environment to activate. Defaults to None.
+        conda_environment_path (str, optional): The path to the conda environment to activate. Defaults to None.
+
+    Returns:
+        str: The output of the subprocess.
+
+    Raises:
+        subprocess.CalledProcessError: If the subprocess returns a non-zero exit status.
+
+    Note:
+        - If both `conda_environment_name` and `conda_environment_path` are None, the subprocess will be executed using `subprocess.run`.
+        - If `conda_environment_name` is not None, the subprocess will be executed using `conda_subprocess.run` with the specified environment name.
+        - If `conda_environment_path` is not None, the subprocess will be executed using `conda_subprocess.run` with the specified environment path.
+    """
     environment_dict = os.environ.copy()
     environment_dict.update(
         {
@@ -787,7 +837,9 @@ def execute_subprocess(
 
 
 @run_time_decorator
-def execute_job_with_external_executable(job):
+def execute_job_with_external_executable(
+    job: "pyiron_base.jobs.job.generic.GenericJob",
+) -> str:
     """
     The run static function is called by run to execute the simulation.
 
@@ -801,7 +853,6 @@ def execute_job_with_external_executable(job):
         job.status.aborted = True
         job._hdf5["status"] = job.status.string
         raise ValueError("No executable set!")
-    job.status.running = True
     executable, shell = job.executable.get_input_for_subprocess_call(
         cores=job.server.cores, threads=job.server.threads, gpus=job.server.gpus
     )
@@ -831,7 +882,11 @@ def execute_job_with_external_executable(job):
     return out
 
 
-def handle_finished_job(job, job_crashed=False, collect_output=True):
+def handle_finished_job(
+    job: "pyiron_base.jobs.job.generic.GenericJob",
+    job_crashed: bool = False,
+    collect_output: bool = True,
+) -> None:
     """
     Handle finished jobs, collect the calculation output and set the status to aborted if the job crashed
 
@@ -849,7 +904,9 @@ def handle_finished_job(job, job_crashed=False, collect_output=True):
         job._hdf5["status"] = job.status.string
 
 
-def handle_failed_job(job, error):
+def handle_failed_job(
+    job: "pyiron_base.jobs.job.generic.GenericJob", error: subprocess.SubprocessError
+) -> Tuple[bool, str]:
     """
     Handle failed jobs write error message to text file and update database
 
@@ -876,7 +933,9 @@ def handle_failed_job(job, error):
         raise_runtimeerror_for_failed_job(job=job)
 
 
-def raise_runtimeerror_for_failed_job(job):
+def raise_runtimeerror_for_failed_job(
+    job: "pyiron_base.jobs.job.generic.GenericJob",
+) -> None:
     job._logger.warning("Job aborted")
     job.status.aborted = True
     job._hdf5["status"] = job.status.string
@@ -887,8 +946,28 @@ def raise_runtimeerror_for_failed_job(job):
 
 
 def multiprocess_wrapper(
-    working_directory, job_id=None, file_path=None, debug=False, connection_string=None
+    working_directory: str,
+    job_id: Optional[int] = None,
+    file_path: Optional[str] = None,
+    debug: bool = False,
+    connection_string: Optional[str] = None,
 ):
+    """
+    Wrapper function for running a job in a separate process.
+
+    Args:
+        working_directory (str): The working directory for the job.
+        job_id (Optional[int], optional): The ID of the job. Defaults to None.
+        file_path (Optional[str], optional): The file path of the job. Defaults to None.
+        debug (bool, optional): Whether to run the job in debug mode. Defaults to False.
+        connection_string (Optional[str], optional): The connection string for the job. Defaults to None.
+
+    Raises:
+        ValueError: If both job_id and file_path are None.
+
+    Returns:
+        None
+    """
     if job_id is not None:
         job_wrap = JobWrapper(
             working_directory=str(working_directory),
@@ -974,7 +1053,9 @@ def execute_command_with_error_handling(
 
 
 @run_time_decorator
-def execute_job_with_calculate_function(job):
+def execute_job_with_calculate_function(
+    job: "pyiron_base.jobs.job.generic.GenericJob",
+) -> None:
     """
     The run_static() function is called internally in pyiron to trigger the execution of the executable. This is
     typically divided into three steps: (1) the generation of the calculate function and its inputs, (2) the
@@ -1006,7 +1087,9 @@ def execute_job_with_calculate_function(job):
                 job.status.finished = True
 
 
-def _generate_flux_execute_string(job, database_is_disabled):
+def _generate_flux_execute_string(
+    job: "pyiron_base.jobs.job.generic.GenericJob", database_is_disabled: bool
+) -> Tuple[str, str]:
     from jinja2 import Template
 
     if not database_is_disabled:

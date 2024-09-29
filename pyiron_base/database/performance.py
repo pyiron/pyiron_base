@@ -3,7 +3,7 @@ __copyright__ = (
     "Computational Materials Design (CM) Department"
 )
 
-import pandas as pd
+import pandas
 from sqlalchemy import (
     MetaData,
     Table,
@@ -14,6 +14,7 @@ from sqlalchemy import (
     or_,
     select,
 )
+from sqlalchemy.engine import Connection
 
 from pyiron_base.state import state
 
@@ -23,7 +24,7 @@ __maintainer__ = "Muhammad Hassani"
 __email__ = "hassani@mpie.de"
 
 
-def _checkpoints_interval(conn):
+def _checkpoints_interval(conn: Connection) -> dict:
     """
     returns the number of checkpoints and their intervals
     """
@@ -42,7 +43,7 @@ def _checkpoints_interval(conn):
     return {"num. checkpoints": check_points[0], "checkpoint interval": check_points[1]}
 
 
-def _duplicate_indices(conn):
+def _duplicate_indices(conn: Connection) -> dict:
     """
     returns the duplicates in indices
     """
@@ -75,7 +76,7 @@ def _duplicate_indices(conn):
 class DatabaseStatistics:
     """
     The use case is:
-    >>> from pyiron_base import DatabaseStatistics
+    >>> from pyiron_base.database.performance import DatabaseStatistics
     >>> db_stat = DatabaseStatistics()
     >>> df = db_stat.performance()
     >>> df
@@ -99,7 +100,7 @@ class DatabaseStatistics:
         )
         self._locks_view = Table("pg_locks", metadata, autoload_with=self._engine)
 
-    def _num_conn(self, conn):
+    def _num_conn(self, conn: Connection) -> dict:
         """
         return the number of connections
         """
@@ -107,7 +108,7 @@ class DatabaseStatistics:
         result = conn.execute(stmt)
         return {"total num. connection": result.fetchone()[0]}
 
-    def _num_conn_by_state(self, conn):
+    def _num_conn_by_state(self, conn: Connection) -> dict:
         """
         return the number of connection, categorized by their state:
         active, idle, idle in transaction, idle in transaction (aborted)
@@ -125,7 +126,7 @@ class DatabaseStatistics:
             output_dict[key] = val
         return output_dict
 
-    def _num_conn_waiting_locks(self, conn):
+    def _num_conn_waiting_locks(self, conn: Connection) -> dict:
         """
         returns the number of connection waiting for locks
         """
@@ -134,7 +135,7 @@ class DatabaseStatistics:
         )
         return {"num. of conn. waiting for locks": conn.execute(stmt).fetchone()[0]}
 
-    def _max_trans_age(self, conn):
+    def _max_trans_age(self, conn: Connection) -> dict:
         """
         returns the maximum age of a transaction
         """
@@ -150,7 +151,7 @@ class DatabaseStatistics:
         )
         return {"max. transaction age": str(conn.execute(stmt).fetchone()[0])}
 
-    def _index_size(self, conn):
+    def _index_size(self, conn: Connection) -> dict:
         """
         returns the total size of indexes for the pyiron job table
         """
@@ -183,7 +184,7 @@ class DatabaseStatistics:
 
         return {"index size/usage (MB)": index_usage}
 
-    def performance(self):
+    def performance(self) -> pandas.DataFrame:
         """
         returns a pandas dataframe with the essential statistics of a pyiron postgres database
         """
@@ -196,10 +197,10 @@ class DatabaseStatistics:
             self._performance_dict.update(self._index_size(conn))
             self._performance_dict.update(_duplicate_indices(conn))
 
-        return pd.DataFrame(self._performance_dict, index=["performance"])
+        return pandas.DataFrame(self._performance_dict, index=["performance"])
 
 
-def get_database_statistics():
+def get_database_statistics() -> pandas.DataFrame:
     """
     This function returns the statistics of pyiron postgres database in the form of a pandas dataframe.
     The dataframe includes:
@@ -210,7 +211,7 @@ def get_database_statistics():
     - size of indices
     - pair of duplicate indices and their total size
     usage:
-    >>> from pyiron_base import get_database_statistics
+    >>> from pyiron_base.database.performance import get_database_statistics
     >>> get_database_statistics()
     """
 

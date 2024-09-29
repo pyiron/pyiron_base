@@ -8,7 +8,7 @@ import json
 import os
 import types
 from datetime import datetime
-from typing import List, Tuple
+from typing import Any, List, Optional, Tuple, Union
 
 import cloudpickle
 import numpy as np
@@ -33,13 +33,31 @@ __status__ = "development"
 __date__ = "Sep 1, 2018"
 
 
-def _to_pickle(hdf, key, value):
+def _to_pickle(hdf: FileHDFio, key: str, value: Any) -> None:
+    """
+    Pickle and store an object in an HDF file.
+
+    Args:
+        hdf (FileHDFio): The HDF file object.
+        key (str): The key to store the object under.
+        value (Any): The object to be pickled and stored.
+    """
     hdf[key] = codecs.encode(
         cloudpickle.dumps(obj=value, protocol=5, buffer_callback=None), "base64"
     ).decode()
 
 
-def _from_pickle(hdf, key):
+def _from_pickle(hdf: FileHDFio, key: str) -> Any:
+    """
+    Load and unpickle an object from an HDF file.
+
+    Args:
+        hdf (FileHDFio): The HDF file object.
+        key (str): The key of the object in the HDF file.
+
+    Returns:
+        Any: The unpickled object.
+    """
     try:
         return cloudpickle.loads(codecs.decode(hdf[key].encode(), "base64"))
     except ModuleNotFoundError:
@@ -49,6 +67,16 @@ def _from_pickle(hdf, key):
 
 
 def get_job_id(job):
+    """
+    Get the job ID.
+
+    Args:
+        job: The job object.
+
+    Returns:
+        dict: A dictionary containing the job ID.
+
+    """
     return {"job_id": job.job_id}
 
 
@@ -58,7 +86,7 @@ class FunctionContainer(object):
 
     """
 
-    def __init__(self, system_function_lst=None):
+    def __init__(self, system_function_lst: Optional[List[callable]] = None):
         if system_function_lst is None:
             system_function_lst = []
         self._user_function_dict = {}
@@ -77,17 +105,32 @@ class FunctionContainer(object):
             and self._system_function_dict[funct.__name__]
         ] + list(self._user_function_dict.values())
 
-    def _to_hdf(self, hdf):
+    def _to_hdf(self, hdf: FileHDFio) -> None:
+        """
+        Store the user and system function dictionaries in an HDF file.
+
+        Args:
+            hdf (FileHDFio): The HDF file object.
+        """
         _to_pickle(hdf=hdf, key="user_function_dict", value=self._user_function_dict)
         _to_pickle(
             hdf=hdf, key="system_function_dict", value=self._system_function_dict
         )
 
-    def _from_hdf(self, hdf):
+    def _from_hdf(self, hdf: FileHDFio) -> None:
+        """
+        Load data from an HDF file.
+
+        Args:
+            hdf (str): The path to the HDF file.
+
+        Returns:
+            None
+        """
         self._user_function_dict = _from_pickle(hdf=hdf, key="user_function_dict")
         self._system_function_dict = _from_pickle(hdf=hdf, key="system_function_dict")
 
-    def __setitem__(self, key, item):
+    def __setitem__(self, key: str, item: Union[str, types.FunctionType]) -> None:
         if isinstance(item, str):
             self._user_function_dict[key] = eval(
                 'lambda job: {"' + key + '":' + item + "}"
@@ -97,17 +140,17 @@ class FunctionContainer(object):
         else:
             raise TypeError("unsupported function type!")
 
-    def __getitem__(self, key):
+    def __getitem__(self, key: str) -> callable:
         return self._user_function_dict[key]
 
-    def __getattr__(self, name):
+    def __getattr__(self, name: str) -> callable:
         if name in list(self._system_function_dict.keys()):
             self._system_function_dict[name] = True
             return self._system_function_dict[name]
         else:
             super(FunctionContainer, self).__getattr__(name)
 
-    def __dir__(self):
+    def __dir__(self) -> list:
         return list(self._system_function_dict.keys())
 
 
@@ -118,14 +161,14 @@ class JobFilters(object):
     """
 
     @staticmethod
-    def job_type(job_type):
+    def job_type(job_type: str) -> callable:
         def filter_job_type(job):
             return job.__name__ == job_type
 
         return filter_job_type
 
     @staticmethod
-    def job_name_contains(job_name_segment):
+    def job_name_contains(job_name_segment: str) -> callable:
         def filter_job_name_segment(job):
             return job_name_segment in job.job_name
 
@@ -137,13 +180,17 @@ class PyironTable:
     Class for easy, efficient, and pythonic analysis of data from pyiron projects
 
     Args:
-        project (pyiron.project.Project/None): The project to analyze
+        project (pyiron_base.project.generic.Project): The project to analyze
         name (str): Name of the pyiron table
         system_function_lst (list/ None): List of built-in functions
     """
 
     def __init__(
-        self, project, name=None, system_function_lst=None, csv_file_name=None
+        self,
+        project: "pyiron_base.project.generic.Project",
+        name: Optional[str] = None,
+        system_function_lst: List[callable] = None,
+        csv_file_name: Optional[str] = None,
     ):
         self._project = project
         self._df = pandas.DataFrame({})
@@ -157,7 +204,7 @@ class PyironTable:
         self._csv_file = csv_file_name
 
     @property
-    def filter(self):
+    def filter(self) -> JobFilters:
         """
         Object containing pre-defined filter functions
 
@@ -168,7 +215,7 @@ class PyironTable:
         return self._filter
 
     @property
-    def name(self):
+    def name(self) -> str:
         """
         Name of the table. Takes the project name if not specified
 
@@ -181,7 +228,7 @@ class PyironTable:
         return self._name
 
     @property
-    def db_filter_function(self):
+    def db_filter_function(self) -> Union[callable, None]:
         """
         Function to filter the a project database table before job specific functions are applied.
 
@@ -198,11 +245,11 @@ class PyironTable:
         return self._db_filter_function
 
     @db_filter_function.setter
-    def db_filter_function(self, funct):
+    def db_filter_function(self, funct: callable) -> None:
         self._db_filter_function = funct
 
     @property
-    def filter_function(self):
+    def filter_function(self) -> Union[callable, None]:
         """
         Function to filter each job before more expensive functions are applied
 
@@ -216,10 +263,26 @@ class PyironTable:
         return self._filter_function
 
     @filter_function.setter
-    def filter_function(self, funct):
+    def filter_function(self, funct: callable):
         self._filter_function = funct
 
     def _get_new_functions(self, file: FileHDFio) -> Tuple[List, List]:
+        """
+        Get new user-defined and system functions from an HDF5 file.
+
+        Args:
+            file (FileHDFio): The HDF5 file to extract data from.
+
+        Returns:
+            Tuple[List, List]: A tuple containing two lists:
+                - new_user_functions (List): A list of new user-defined functions.
+                - new_system_functions (List): A list of new system functions.
+
+        Raises:
+            IndexError: If an index is out of range.
+            ValueError: If a value is not valid.
+            TypeError: If a type is incorrect.
+        """
         try:
             (
                 temp_user_function_dict,
@@ -240,7 +303,13 @@ class PyironTable:
             new_system_functions = []
         return new_user_functions, new_system_functions
 
-    def create_table(self, file, job_status_list, executor=None, enforce_update=False):
+    def create_table(
+        self,
+        file: FileHDFio,
+        job_status_list: List[str],
+        executor: Optional["concurrent.futures.Executor"] = None,
+        enforce_update: bool = False,
+    ):
         """
         Create or update the table.
 
@@ -299,21 +368,21 @@ class PyironTable:
             if len(df_new_ids) > 0:
                 self._df = pandas.concat([self._df, df_new_ids], ignore_index=True)
 
-    def get_dataframe(self):
+    def get_dataframe(self) -> pandas.DataFrame:
         return self._df
 
-    def _list_nodes(self):
+    def _list_nodes(self) -> list:
         return list(self._df.columns)
 
-    def __getitem__(self, item):
+    def __getitem__(self, item: str) -> Union[np.ndarray, None]:
         if item in self.list_nodes():
             return np.array(self._df[item])
         return None
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self._df.__str__()
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         """
         Human readable string representation
 
@@ -323,29 +392,66 @@ class PyironTable:
         return self._df.__repr__()
 
     @property
-    def _file_name_csv(self):
+    def _file_name_csv(self) -> str:
+        """
+        Get the file name of the CSV file.
+
+        Returns:
+            str: The file name of the CSV file.
+        """
         if self._csv_file is None:
             return self._project.path + self.name + ".csv"
         else:
             return self._csv_file
 
-    def _load_csv(self):
-        # Legacy method to read tables written to csv
+    def _load_csv(self) -> None:
+        """
+        Load the table from a CSV file.
+
+        Returns:
+            None
+        """
         self._df = pandas.read_csv(self._file_name_csv)
 
     @staticmethod
-    def _get_data_from_hdf5(hdf):
+    def _get_data_from_hdf5(hdf: FileHDFio) -> Tuple[dict, dict]:
+        """
+        Load user-defined and system function dictionaries from an HDF file.
+
+        Args:
+            hdf (FileHDFio): The HDF file object.
+
+        Returns:
+            Tuple[dict, dict]: A tuple containing two dictionaries:
+                - temp_user_function_dict (dict): The user-defined function dictionary.
+                - temp_system_function_dict (dict): The system function dictionary.
+        """
         temp_user_function_dict = _from_pickle(hdf=hdf, key="user_function_dict")
         temp_system_function_dict = _from_pickle(hdf=hdf, key="system_function_dict")
         return temp_user_function_dict, temp_system_function_dict
 
-    def _get_job_ids(self):
+    def _get_job_ids(self) -> np.ndarray:
+        """
+        Get the job IDs from the dataframe.
+
+        Returns:
+            np.ndarray: An array of job IDs.
+        """
         if len(self._df) > 0:
             return self._df.job_id.values
         else:
             return np.array([])
 
-    def _get_filtered_job_ids_from_project(self, recursive=True):
+    def _get_filtered_job_ids_from_project(self, recursive: bool = True) -> List[int]:
+        """
+        Get the filtered job IDs from the project.
+
+        Args:
+            recursive (bool): Flag to indicate whether to include jobs from subprojects (default is True).
+
+        Returns:
+            List[int]: A list of filtered job IDs.
+        """
         project_table = self._project.job_table(recursive=recursive)
         filter_funct = self.db_filter_function
         return project_table[filter_funct(project_table)]["id"].tolist()
@@ -395,7 +501,7 @@ class PyironTable:
         return pandas.DataFrame(diff_dict_lst)
 
     @staticmethod
-    def total_lst_of_keys(diff_dict_lst):
+    def total_lst_of_keys(diff_dict_lst: List[dict]) -> set:
         """
         Get unique list of all keys occuring in list.
         """
@@ -405,7 +511,7 @@ class PyironTable:
                 total_key_lst.append(key)
         return set(total_key_lst)
 
-    def refill_dict(self, diff_dict_lst):
+    def refill_dict(self, diff_dict_lst: List) -> None:
         """
         Ensure that all dictionaries in the list have the same keys.
 
@@ -417,7 +523,9 @@ class PyironTable:
                 if key not in sub_dict.keys():
                     sub_dict[key] = None
 
-    def _collect_job_update_lst(self, job_status_list, job_stored_ids=None):
+    def _collect_job_update_lst(
+        self, job_status_list: List, job_stored_ids: Optional[List] = None
+    ) -> List:
         """
         Collect jobs to update the pyiron table.
 
@@ -455,7 +563,7 @@ class PyironTable:
                 job_update_lst.append(job_id)
         return job_update_lst
 
-    def _repr_html_(self):
+    def _repr_html_(self) -> str:
         """
         Internal helper function to represent the GenericParameters object within the Jupyter Framework
 
@@ -526,11 +634,11 @@ class TableJob(GenericJob):
         self.analysis_project = project.project
 
     @property
-    def filter(self):
+    def filter(self) -> JobFilters:
         return self._pyiron_table.filter
 
     @property
-    def db_filter_function(self):
+    def db_filter_function(self) -> Union[callable, None]:
         """
         function: database level filter function
 
@@ -540,11 +648,11 @@ class TableJob(GenericJob):
         return self._pyiron_table.db_filter_function
 
     @db_filter_function.setter
-    def db_filter_function(self, funct):
+    def db_filter_function(self, funct: callable) -> None:
         self._pyiron_table.db_filter_function = funct
 
     @property
-    def filter_function(self):
+    def filter_function(self) -> Union[callable, None]:
         """
         function: job level filter function
 
@@ -554,18 +662,18 @@ class TableJob(GenericJob):
         return self._pyiron_table.filter_function
 
     @filter_function.setter
-    def filter_function(self, funct):
+    def filter_function(self, funct: callable) -> None:
         self._pyiron_table.filter_function = funct
 
     @property
-    def job_status(self):
+    def job_status(self) -> List[str]:
         """
         list of str: only jobs with status in this list are included in the table.
         """
         return self._job_status
 
     @job_status.setter
-    def job_status(self, status):
+    def job_status(self, status: Union[str, List[str]]) -> None:
         if isinstance(status, str):
             status = [status]
         for s in status:
@@ -577,20 +685,20 @@ class TableJob(GenericJob):
         self._job_status = status
 
     @property
-    def pyiron_table(self):
+    def pyiron_table(self) -> PyironTable:
         return self._pyiron_table
 
     @property
     @deprecate("Use analysis_project instead!")
-    def ref_project(self):
+    def ref_project(self) -> "pyiron_base.project.generic.Project":
         return self.analysis_project
 
     @ref_project.setter
-    def ref_project(self, project):
+    def ref_project(self, project: "pyiron_base.project.generic.Project") -> None:
         self.analysis_project = project
 
     @property
-    def analysis_project(self):
+    def analysis_project(self) -> "pyiron_base.project.generic.Project":
         """
         :class:`.Project`: which pyiron project should be searched for jobs
 
@@ -599,7 +707,7 @@ class TableJob(GenericJob):
         return self._analysis_project
 
     @analysis_project.setter
-    def analysis_project(self, project):
+    def analysis_project(self, project: "pyiron_base.project.generic.Project") -> None:
         self._analysis_project = project
         self._pyiron_table = PyironTable(
             project=self._analysis_project,
@@ -608,7 +716,7 @@ class TableJob(GenericJob):
         )
 
     @property
-    def add(self):
+    def add(self) -> FunctionContainer:
         """
         Add a function to analyse job data
 
@@ -622,25 +730,31 @@ class TableJob(GenericJob):
         return self._pyiron_table.add
 
     @property
-    def convert_to_object(self):
+    def convert_to_object(self) -> bool:
         """
         bool: if `True` convert fully load jobs before passing them to functions, if `False` use inspect mode.
         """
         return self._pyiron_table.convert_to_object
 
     @convert_to_object.setter
-    def convert_to_object(self, conv_to_obj):
+    def convert_to_object(self, conv_to_obj: bool) -> None:
         self._pyiron_table.convert_to_object = conv_to_obj
 
     @property
-    def enforce_update(self):
+    def enforce_update(self) -> bool:
         """
         bool: if `True` re-evaluate all function on all jobs when :meth:`.update_table` is called.
         """
         return self._enforce_update
 
     @enforce_update.setter
-    def enforce_update(self, enforce):
+    def enforce_update(self, enforce: bool) -> None:
+        """
+        Set the enforce_update property.
+
+        Args:
+            enforce (bool): If True, re-evaluate all functions on all jobs when update_table is called.
+        """
         if isinstance(enforce, bool):
             if enforce:
                 self._enforce_update = True
@@ -649,16 +763,28 @@ class TableJob(GenericJob):
             else:
                 self._enforce_update = False
         else:
-            raise TypeError()
+            raise TypeError("enforce must be a boolean")
 
-    def _save_output(self):
+    def _save_output(self) -> None:
+        """
+        Save the pyiron table dataframe to the HDF5 output file.
+
+        Returns:
+            None
+        """
         with self.project_hdf5.open("output") as hdf5_output:
             self.pyiron_table._df.to_hdf(
                 hdf5_output.file_name, key=hdf5_output.h5_path + "/table"
             )
 
-    def to_dict(self):
-        job_dict = super().to_dict()
+    def _to_dict(self) -> dict:
+        """
+        Convert the TableJob object to a dictionary.
+
+        Returns:
+            dict: The TableJob object represented as a dictionary.
+        """
+        job_dict = super()._to_dict()
         job_dict["input/bool_dict"] = {
             "enforce_update": self._enforce_update,
             "convert_to_object": self._pyiron_table.convert_to_object,
@@ -683,10 +809,20 @@ class TableJob(GenericJob):
             )
         return job_dict
 
-    def from_dict(self, job_dict):
-        super().from_dict(job_dict=job_dict)
-        if "project" in job_dict["input"].keys():
-            project_dict = job_dict["input"]["project"]
+    def _from_dict(self, obj_dict: dict, version: str = None):
+        """
+        Restore the TableJob object from a dictionary.
+
+        Args:
+            obj_dict (dict): The TableJob object represented as a dictionary.
+            version (str): The version of the object.
+
+        Returns:
+            None
+        """
+        super()._from_dict(obj_dict=obj_dict, version=version)
+        if "project" in obj_dict["input"].keys():
+            project_dict = obj_dict["input"]["project"]
             if os.path.exists(project_dict["path"]):
                 project = self.project.__class__(
                     path=project_dict["path"],
@@ -700,39 +836,52 @@ class TableJob(GenericJob):
                 self._logger.warning(
                     f"Could not instantiate analysis_project, no such path {project_dict['path']}."
                 )
-        if "filter" in job_dict["input"].keys():
+        if "filter" in obj_dict["input"].keys():
             self.pyiron_table.filter_function = _from_pickle(
-                job_dict["input"], "filter"
+                obj_dict["input"], "filter"
             )
-        if "db_filter" in job_dict["input"].keys():
+        if "db_filter" in obj_dict["input"].keys():
             self.pyiron_table.db_filter_function = _from_pickle(
-                job_dict["input"], "db_filter"
+                obj_dict["input"], "db_filter"
             )
-        bool_dict = job_dict["input"]["bool_dict"]
+        bool_dict = obj_dict["input"]["bool_dict"]
         self._enforce_update = bool_dict["enforce_update"]
         self._pyiron_table.convert_to_object = bool_dict["convert_to_object"]
-        self._pyiron_table.add._from_hdf(job_dict["input"])
+        self._pyiron_table.add._from_hdf(obj_dict["input"])
 
-    def to_hdf(self, hdf=None, group_name=None):
+    def to_hdf(
+        self,
+        hdf: Optional["pyiron_base.storage.hdfio.ProjectHDFio"] = None,
+        group_name: Optional[str] = None,
+    ) -> None:
         """
         Store pyiron table job in HDF5
 
         Args:
-            hdf:
-            group_name:
+            hdf (Optional[ProjectHDFio]): The HDF5 file object.
+            group_name (Optional[str]): The name of the group in the HDF5 file.
 
+        Returns:
+            None
         """
         super(TableJob, self).to_hdf(hdf=hdf, group_name=group_name)
         if len(self.pyiron_table._df) != 0:
             self._save_output()
 
-    def from_hdf(self, hdf=None, group_name=None):
+    def from_hdf(
+        self,
+        hdf: Optional["pyiron_base.storage.hdfio.ProjectHDFio"] = None,
+        group_name: Optional[str] = None,
+    ) -> None:
         """
         Restore pyiron table job from HDF5
 
         Args:
-            hdf:
-            group_name:
+            hdf (Optional[ProjectHDFio]): The HDF5 file object.
+            group_name (Optional[str]): The name of the group in the HDF5 file.
+
+        Returns:
+            None
         """
         super(TableJob, self).from_hdf(hdf=hdf, group_name=group_name)
         hdf_version = self.project_hdf5.get("HDF_VERSION", "0.1.0")
@@ -757,18 +906,29 @@ class TableJob(GenericJob):
                             json.loads(hdf5_output["table"])
                         )
 
-    def validate_ready_to_run(self):
+    def validate_ready_to_run(self) -> None:
+        """
+        Validate if the job is ready to run.
+
+        Raises:
+            ValueError: If the analysis project is not defined.
+        """
         if self._analysis_project is None:
             raise ValueError("Analysis project not defined!")
 
-    def run_static(self):
+    def run_static(self) -> None:
+        """
+        Run the static analysis job.
+
+        This method creates the working directory, updates the table, and sets the job status to finished.
+        """
         self._create_working_directory()
         self.status.running = True
         self.update_table()
         self.status.finished = True
 
     @deprecate(job_status_list="Use TableJob.job_status instead!")
-    def update_table(self, job_status_list=None):
+    def update_table(self, job_status_list: Optional[List[str]] = None) -> None:
         """
         Update the pyiron table object, add new columns if a new function was added or add new rows for new jobs.
 
@@ -808,7 +968,7 @@ class TableJob(GenericJob):
         self._save_output()
         self.run_time_to_db()
 
-    def get_dataframe(self):
+    def get_dataframe(self) -> pandas.DataFrame:
         """
         Returns aggregated results over all jobs.
 
@@ -818,7 +978,7 @@ class TableJob(GenericJob):
         return self.pyiron_table._df
 
 
-def always_true_pandas(job_table):
+def always_true_pandas(job_table) -> "pandas.Series":
     """
     A function which returns a pandas Series with all True values based on the size of the input pandas dataframe
     Args:
@@ -844,14 +1004,9 @@ def always_true(_):
     return True
 
 
-def _apply_function_on_job(funct, job):
-    try:
-        return funct(job)
-    except (ValueError, TypeError):
-        return {}
+def _apply_list_of_functions_on_job(input_parameters: Tuple) -> dict:
+    from pyiron_snippets.logger import logger
 
-
-def _apply_list_of_functions_on_job(input_parameters):
     from pyiron_base.jobs.job.path import JobPath
 
     db_entry, function_lst, convert_to_object = input_parameters
@@ -861,7 +1016,8 @@ def _apply_list_of_functions_on_job(input_parameters):
         job.set_input_to_read_only()
     diff_dict = {}
     for funct in function_lst:
-        funct_dict = _apply_function_on_job(funct, job)
-        for key, value in funct_dict.items():
-            diff_dict[key] = value
+        try:
+            diff_dict.update(funct(job))
+        except Exception as e:
+            logger.warn(f"Caught exception '{e}' when called on job {job.id}!")
     return diff_dict

@@ -43,7 +43,7 @@ examples:
 """
 
 
-def register(parser):
+def register(parser: argparse.ArgumentParser) -> None:
     parser.add_argument(
         "project", default=".", nargs="?", help="path to pyiron project"
     )
@@ -123,7 +123,7 @@ def register(parser):
     )
 
 
-def main(args):
+def main(args: argparse.Namespace) -> None:
     if args.status:
         if "status" not in args.columns:
             args.columns = args.columns + ["status"]

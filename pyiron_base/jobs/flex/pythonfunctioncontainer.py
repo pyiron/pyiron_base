@@ -1,4 +1,5 @@
 import inspect
+from typing import Optional
 
 import cloudpickle
 import numpy as np
@@ -71,34 +72,35 @@ class PythonFunctionContainerJob(PythonTemplateJob):
         self.run()
         return self.output["result"]
 
-    def to_dict(self) -> dict:
+    def _to_dict(self) -> dict:
         """
         Convert the job object to a dictionary representation.
 
         Returns:
             dict: The dictionary representation of the job object.
         """
-        job_dict = super().to_dict()
+        job_dict = super()._to_dict()
         job_dict["function"] = np.void(cloudpickle.dumps(self._function))
         job_dict["_automatically_rename_on_save_using_input"] = (
             self._automatically_rename_on_save_using_input
         )
         return job_dict
 
-    def from_dict(self, job_dict: dict) -> None:
+    def _from_dict(self, obj_dict: dict, version: Optional[str] = None) -> None:
         """
         Load the job object from a dictionary representation.
 
         Args:
-            job_dict (dict): The dictionary representation of the job object.
+            obj_dict (dict): The dictionary representation of the job object.
+            version (str): The version of the job object.
         """
-        super().from_dict(job_dict=job_dict)
-        self._function = cloudpickle.loads(job_dict["function"])
+        super()._from_dict(obj_dict=obj_dict)
+        self._function = cloudpickle.loads(obj_dict["function"])
         self._automatically_rename_on_save_using_input = bool(
-            job_dict["_automatically_rename_on_save_using_input"]
+            obj_dict["_automatically_rename_on_save_using_input"]
         )
 
-    def save(self):
+    def save(self) -> None:
         """
         Save the job to the project.
 
@@ -111,9 +113,13 @@ class PythonFunctionContainerJob(PythonTemplateJob):
             None
         """
         if self._automatically_rename_on_save_using_input:
-            self.job_name = self.job_name + get_hash(
-                binary=cloudpickle.dumps(
-                    {"fn": self._function, "kwargs": self.input.to_builtin()}
+            self.job_name = (
+                self.job_name
+                + "_"
+                + get_hash(
+                    binary=cloudpickle.dumps(
+                        {"fn": self._function, "kwargs": self.input.to_builtin()}
+                    )
                 )
             )
 
@@ -123,7 +129,7 @@ class PythonFunctionContainerJob(PythonTemplateJob):
             return  # Without saving
         super().save()
 
-    def run_static(self):
+    def run_static(self) -> None:
         """
         Run the static function.
 

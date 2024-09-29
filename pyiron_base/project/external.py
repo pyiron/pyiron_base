@@ -40,7 +40,13 @@ class Notebook(object):
         dump(output_dict=output_dict)
 
 
-def load():
+def load() -> DataContainer:
+    """
+    Load input parameters from HDF5 or JSON file.
+
+    Returns:
+        DataContainer: The loaded input parameters.
+    """
     folder = Path(".").cwd().parts[-1]
     project_folder = Path(".").cwd().parents[1]
     hdf_file = project_folder / folder
@@ -63,7 +69,13 @@ def load():
         return None
 
 
-def dump(output_dict):
+def dump(output_dict: dict) -> None:
+    """
+    Dump output dictionary to HDF5 file.
+
+    Args:
+        output_dict (dict): The output dictionary to be dumped.
+    """
     folder = Path(".").cwd().parts[-1]
     hdf_file = Path(".").cwd().parents[1] / folder
     hdf_file = str(hdf_file) + ".h5"

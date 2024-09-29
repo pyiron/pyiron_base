@@ -2,7 +2,7 @@
 
 [![Coverage Status](https://coveralls.io/repos/github/pyiron/pyiron_base/badge.svg?branch=main)](https://coveralls.io/github/pyiron/pyiron_base?branch=main)
 [![Release_Date](https://anaconda.org/conda-forge/pyiron_base/badges/latest_release_date.svg)](https://anaconda.org/conda-forge/pyiron_base/)
-[![Build Status](https://github.com/pyiron/pyiron_base/workflows/Python%20package/badge.svg)](https://github.com/pyiron//pyiron_base/actions)
+[![Build Status](https://github.com/pyiron/pyiron_base/actions/workflows/unittests.yml/badge.svg)](https://github.com/pyiron/pyiron_base/actions/workflows/unittests.yml)
 [![Downloads](https://anaconda.org/conda-forge/pyiron_base/badges/downloads.svg)](https://anaconda.org/conda-forge/pyiron_base/)
 [![Documentation Status](https://readthedocs.org/projects/pyiron-base/badge/?version=latest)](https://pyiron-base.readthedocs.io/en/latest/?badge=latest)
 

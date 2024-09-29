@@ -11,6 +11,7 @@ import os
 import posixpath
 import shutil
 import warnings
+from typing import Any, Generator, List, Optional, Union
 
 from pyiron_snippets.deprecate import deprecate
 
@@ -138,7 +139,7 @@ def recursive_load_from_hdf(project_hdf5: ProjectHDFio, item: str):
         None: if nothing was found in the HDF file
     """
 
-    def successive_path_splits(name_lst):
+    def successive_path_splits(name_lst: list) -> Generator:
         """
         Yield successive split/joins of a path, i.e.
         /a/b/c/d
@@ -184,6 +185,61 @@ def recursive_load_from_hdf(project_hdf5: ProjectHDFio, item: str):
             pass
 
 
+class DatabaseProperties(object):
+    """
+    Access the database entry of the job
+    """
+
+    def __init__(self, job_dict=None):
+        self._job_dict = job_dict
+
+    def __bool__(self):
+        return self._job_dict is not None
+
+    def __dir__(self):
+        return list(self._job_dict.keys())
+
+    def __getattr__(self, name):
+        if name in self._job_dict.keys():
+            return self._job_dict[name]
+        else:
+            raise AttributeError(name)
+
+    def __repr__(self):
+        return f"{self.__class__.__name__}({repr(self._job_dict)})"
+
+
+class HDF5Content(object):
+    """
+    Access the HDF5 file of the job
+    """
+
+    def __init__(self, project_hdf5):
+        self._project_hdf5 = project_hdf5
+
+    def __getattr__(self, name):
+        try:
+            return self[name]
+        except KeyError:
+            raise AttributeError(name) from None
+
+    def __getitem__(self, item):
+        value = recursive_load_from_hdf(self._project_hdf5, item)
+        if value is not None:
+            return value
+
+        if item in self._project_hdf5.list_groups():
+            return HDF5Content(self._project_hdf5[item])
+        else:
+            raise KeyError(item)
+
+    def __dir__(self):
+        return self._project_hdf5.list_nodes() + self._project_hdf5.list_groups()
+
+    def __repr__(self):
+        return self._project_hdf5.__repr__()
+
+
 class JobCore(HasGroups):
     __doc__ = (
         """
@@ -199,7 +255,7 @@ class JobCore(HasGroups):
         + _doc_str_job_core_attr
     )
 
-    def __init__(self, project, job_name):
+    def __init__(self, project: ProjectHDFio, job_name: str):
         job_name = _get_safe_job_name(job_name)
         self._name = job_name
         self._hdf5 = project.open(self._name)
@@ -214,17 +270,17 @@ class JobCore(HasGroups):
         self._files_to_compress = list()
 
     @property
-    def content(self):
+    def content(self) -> HDF5Content:
         return self._hdf5_content
 
     @property
-    def files(self):
+    def files(self) -> FileBrowser:
         return FileBrowser(working_directory=self.working_directory)
 
     files.__doc__ = FileBrowser.__doc__
 
     @property
-    def job_name(self):
+    def job_name(self) -> str:
         """
         Get name of the job, which has to be unique within the project
 
@@ -234,7 +290,7 @@ class JobCore(HasGroups):
         return self.name
 
     @job_name.setter
-    def job_name(self, new_job_name):
+    def job_name(self, new_job_name: str) -> None:
         """
         Set name of the job, which has to be unique within the project. When changing the job_name this also moves the
         HDF5 file as the name of the HDF5 file is the job_name plus the extension *.h5
@@ -245,7 +301,7 @@ class JobCore(HasGroups):
         self.name = new_job_name
 
     @property
-    def name(self):
+    def name(self) -> str:
         """
         Get name of the job, which has to be unique within the project
 
@@ -255,7 +311,7 @@ class JobCore(HasGroups):
         return self._name
 
     @name.setter
-    def name(self, new_job_name):
+    def name(self, new_job_name: str) -> None:
         """
         Set name of the job, which has to be unique within the project. When changing the job_name this also moves the
         HDF5 file as the name of the HDF5 file is the job_name plus the extension *.h5
@@ -266,7 +322,7 @@ class JobCore(HasGroups):
         _rename_job(job=self, new_job_name=new_job_name)
 
     @property
-    def status(self):
+    def status(self) -> str:
         """
         Execution status of the job, can be one of the following [initialized, appended, created, submitted, running,
                                                                   aborted, collect, suspended, refresh, busy, finished]
@@ -277,7 +333,7 @@ class JobCore(HasGroups):
         return self._status
 
     @property
-    def job_id(self):
+    def job_id(self) -> int:
         """
         Unique id to identify the job in the pyiron database
 
@@ -289,7 +345,7 @@ class JobCore(HasGroups):
         return self._job_id
 
     @property
-    def id(self):
+    def id(self) -> int:
         """
         Unique id to identify the job in the pyiron database - use self.job_id instead
 
@@ -299,7 +355,7 @@ class JobCore(HasGroups):
         return self.job_id
 
     @property
-    def database_entry(self):
+    def database_entry(self) -> DatabaseProperties:
         if not bool(self._database_property):
             self._database_property = DatabaseProperties(
                 job_dict=self.project.db.get_item_by_id(self.job_id)
@@ -307,7 +363,7 @@ class JobCore(HasGroups):
         return self._database_property
 
     @property
-    def parent_id(self):
+    def parent_id(self) -> int:
         """
         Get job id of the predecessor job - the job which was executed before the current one in the current job series
 
@@ -319,7 +375,7 @@ class JobCore(HasGroups):
         return self._parent_id
 
     @parent_id.setter
-    def parent_id(self, parent_id):
+    def parent_id(self, parent_id: int) -> None:
         """
         Set job id of the predecessor job - the job which was executed before the current one in the current job series
 
@@ -331,7 +387,7 @@ class JobCore(HasGroups):
         self._parent_id = parent_id
 
     @property
-    def master_id(self):
+    def master_id(self) -> int:
         """
         Get job id of the master job - a meta job which groups a series of jobs, which are executed either in parallel
         or in serial.
@@ -344,7 +400,7 @@ class JobCore(HasGroups):
         return self._master_id
 
     @master_id.setter
-    def master_id(self, master_id):
+    def master_id(self, master_id: int) -> None:
         """
         Set job id of the master job - a meta job which groups a series of jobs, which are executed either in parallel
         or in serial.
@@ -357,7 +413,7 @@ class JobCore(HasGroups):
         self._master_id = master_id
 
     @property
-    def child_ids(self):
+    def child_ids(self) -> list:
         """
         list of child job ids - only meta jobs have child jobs - jobs which list the meta job as their master
 
@@ -369,7 +425,7 @@ class JobCore(HasGroups):
         )
 
     @property
-    def project_hdf5(self):
+    def project_hdf5(self) -> ProjectHDFio:
         """
         Get the ProjectHDFio instance which points to the HDF5 file the job is stored in
 
@@ -379,7 +435,7 @@ class JobCore(HasGroups):
         return self._hdf5
 
     @project_hdf5.setter
-    def project_hdf5(self, project):
+    def project_hdf5(self, project: ProjectHDFio) -> None:
         """
         Set the ProjectHDFio instance which points to the HDF5 file the job is stored in
 
@@ -389,14 +445,14 @@ class JobCore(HasGroups):
         self._hdf5 = project.copy()
 
     @property
-    def files_to_compress(self):
+    def files_to_compress(self) -> list:
         return self._files_to_compress
 
     @property
-    def files_to_remove(self):
+    def files_to_remove(self) -> list:
         return self._files_to_remove
 
-    def relocate_hdf5(self, h5_path=None):
+    def relocate_hdf5(self, h5_path: Optional[str] = None):
         """
         Relocate the hdf file. This function is needed when the child job is
         spawned by a parent job (cf. pyiron_base.jobs.master.generic)
@@ -409,7 +465,7 @@ class JobCore(HasGroups):
         )
 
     @property
-    def project(self):
+    def project(self) -> "pyiron_base.project.generic.Project":
         """
         Project instance the jobs is located in
 
@@ -419,7 +475,7 @@ class JobCore(HasGroups):
         return self._hdf5.project
 
     @property
-    def job_info_str(self):
+    def job_info_str(self) -> str:
         """
         Short string to describe the job by it is job_name and job ID - mainly used for logging
 
@@ -429,7 +485,7 @@ class JobCore(HasGroups):
         return "job: {0} id: {1}".format(self._name, self.job_id)
 
     @property
-    def working_directory(self):
+    def working_directory(self) -> str:
         """
         working directory of the job is executed in - outside the HDF5 file
 
@@ -439,7 +495,7 @@ class JobCore(HasGroups):
         return self.project_hdf5.working_directory
 
     @property
-    def path(self):
+    def path(self) -> str:
         """
         Absolute path of the HDF5 group starting from the system root - combination of the absolute system path plus the
         absolute path inside the HDF5 file starting from the root group.
@@ -449,7 +505,13 @@ class JobCore(HasGroups):
         """
         return self.project_hdf5.path
 
-    def check_if_job_exists(self, job_name=None, project=None):
+    def check_if_job_exists(
+        self,
+        job_name: Optional[str] = None,
+        project: Optional[
+            Union[ProjectHDFio, "pyiron_base.project.generic.Project"]
+        ] = None,
+    ):
         """
         Check if a job already exists in an specific project.
 
@@ -481,13 +543,13 @@ class JobCore(HasGroups):
         else:
             return False
 
-    def show_hdf(self):
+    def show_hdf(self) -> None:
         """
         Iterating over the HDF5 datastructure and generating a human readable graph.
         """
         self.project_hdf5.show_hdf()
 
-    def get_from_table(self, path, name):
+    def get_from_table(self, path: str, name: str) -> Union[dict, list, float, int]:
         """
         Get a specific value from a pandas.Dataframe
 
@@ -500,7 +562,7 @@ class JobCore(HasGroups):
         """
         return self.project_hdf5.get_from_table(path, name)
 
-    def remove(self, _protect_childs=True):
+    def remove(self, _protect_childs: bool = True) -> None:
         """
         Remove the job - this removes the HDF5 file, all data stored in the HDF5 file an the corresponding database entry.
 
@@ -528,7 +590,7 @@ class JobCore(HasGroups):
         # After all children are deleted, remove the job itself.
         self.remove_child()
 
-    def remove_child(self):
+    def remove_child(self) -> None:
         """
         internal function to remove command that removes also child jobs.
         Do never use this command, since it will destroy the integrity of your project.
@@ -577,7 +639,9 @@ class JobCore(HasGroups):
         if self.job_id is not None:
             self.project.db.delete_item(self.job_id)
 
-    def to_object(self, object_type=None, **qwargs):
+    def to_object(
+        self, object_type: Optional[str] = None, **qwargs
+    ) -> "pyiron_base.job.generic.GenericJob":
         """
         Load the full pyiron object from an HDF5 file
 
@@ -596,7 +660,7 @@ class JobCore(HasGroups):
             )
         return self.project_hdf5.to_object(object_type, **qwargs)
 
-    def get(self, name, default=None):
+    def get(self, name: str, default: Optional[Any] = None) -> Any:
         """
         Internal wrapper function for __getitem__() - self[name]
 
@@ -617,7 +681,9 @@ class JobCore(HasGroups):
                 return default
             raise
 
-    def load(self, job_specifier, convert_to_object=True):
+    def load(
+        self, job_specifier: Union[str, int], convert_to_object: bool = True
+    ) -> Union["pyiron_base.job.generic.GenericJob", "JobCore"]:
         """
         Load an existing pyiron object - most commonly a job - from the database
 
@@ -634,7 +700,7 @@ class JobCore(HasGroups):
             job_specifier=job_specifier, convert_to_object=convert_to_object
         )
 
-    def inspect(self, job_specifier):
+    def inspect(self, job_specifier: Union[str, int]) -> "JobCore":
         """
         Inspect an existing pyiron object - most commonly a job - from the database
 
@@ -646,7 +712,7 @@ class JobCore(HasGroups):
         """
         return self.project.inspect(job_specifier=job_specifier)
 
-    def is_master_id(self, job_id):
+    def is_master_id(self, job_id: int) -> bool:
         """
         Check if the job ID job_id is the master ID for any child job
 
@@ -668,7 +734,9 @@ class JobCore(HasGroups):
             > 0
         )
 
-    def get_job_id(self, job_specifier=None):
+    def get_job_id(
+        self, job_specifier: Optional[Union[str, int]] = None
+    ) -> Union[int, None]:
         """
         get the job_id for job named job_name in the local project path from database
 
@@ -693,7 +761,7 @@ class JobCore(HasGroups):
         return None
 
     @deprecate("use job.files.list()")
-    def list_files(self):
+    def list_files(self) -> list:
         """
         List files inside the working directory
 
@@ -705,7 +773,7 @@ class JobCore(HasGroups):
         """
         return _job_list_files(self)
 
-    def list_childs(self):
+    def list_childs(self) -> list:
         """
         List child jobs as JobPath objects - not loading the full GenericJob objects for each child
 
@@ -714,13 +782,13 @@ class JobCore(HasGroups):
         """
         return [self.project.inspect(child_id).job_name for child_id in self.child_ids]
 
-    def _list_groups(self):
+    def _list_groups(self) -> list:
         return self.project_hdf5.list_groups() + self._list_ext_childs()
 
-    def _list_nodes(self):
+    def _list_nodes(self) -> list:
         return self.project_hdf5.list_nodes()
 
-    def _list_all(self):
+    def _list_all(self) -> dict:
         """
         List all groups and nodes of the HDF5 file - where groups are equivalent to directories and nodes to files.
 
@@ -731,7 +799,7 @@ class JobCore(HasGroups):
         h5_dict["groups"] += self._list_ext_childs()
         return h5_dict
 
-    def copy(self):
+    def copy(self) -> "JobCore":
         """
         Copy the JobCore object which links to the HDF5 file
 
@@ -744,12 +812,14 @@ class JobCore(HasGroups):
 
     def _internal_copy_to(
         self,
-        project=None,
-        new_job_name=None,
-        new_database_entry=True,
-        copy_files=True,
-        delete_existing_job=False,
-    ):
+        project: Optional[
+            Union["JobCore", ProjectHDFio, "pyiron_base.project.generic.Project"]
+        ] = None,
+        new_job_name: Optional[str] = None,
+        new_database_entry: bool = True,
+        copy_files: bool = True,
+        delete_existing_job: bool = False,
+    ) -> "JobCore":
         """
         Internal helper function for copy_to() which returns more
 
@@ -824,12 +894,12 @@ class JobCore(HasGroups):
 
     def copy_to(
         self,
-        project,
-        new_job_name=None,
-        input_only=False,
-        new_database_entry=True,
-        copy_files=True,
-    ):
+        project: Union["JobCore", ProjectHDFio, "pyiron_base.project.generic.Project"],
+        new_job_name: Optional[str] = None,
+        input_only: bool = False,
+        new_database_entry: bool = True,
+        copy_files: bool = True,
+    ) -> "JobCore":
         """
         Copy the content of the job including the HDF5 file to a new location
 
@@ -871,15 +941,12 @@ class JobCore(HasGroups):
             new_job_core._status = "initialized"
         return new_job_core
 
-    def move_to(self, project):
+    def move_to(self, project: ProjectHDFio) -> None:
         """
         Move the content of the job including the HDF5 file to a new location
 
         Args:
             project (ProjectHDFio): project to move the job to
-
-        Returns:
-            JobCore: JobCore object pointing to the new location.
         """
         delete_hdf5_after_copy = False
         old_working_directory = self.working_directory
@@ -910,7 +977,7 @@ class JobCore(HasGroups):
             shutil.rmtree(old_working_directory)
             os.rmdir("/".join(old_working_directory.split("/")[:-1]))
 
-    def rename(self, new_job_name):
+    def rename(self, new_job_name: str) -> None:
         """
         Rename the job - by changing the job name
 
@@ -919,7 +986,7 @@ class JobCore(HasGroups):
         """
         self.job_name = new_job_name
 
-    def reset_job_id(self, job_id=None):
+    def reset_job_id(self, job_id: Optional[int] = None) -> None:
         """
         The reset_job_id function has to be implemented by the derived classes - usually the GenericJob class
 
@@ -931,13 +998,15 @@ class JobCore(HasGroups):
             job_id = int(job_id)
         self._job_id = job_id
 
-    def save(self):
+    def save(self) -> None:
         """
         The save function has to be implemented by the derived classes - usually the GenericJob class
         """
         raise NotImplementedError("save() should be implemented in the derived class")
 
-    def to_hdf(self, hdf=None, group_name="group"):
+    def to_hdf(
+        self, hdf: Optional[ProjectHDFio] = None, group_name: str = "group"
+    ) -> None:
         """
         Store object in hdf5 format - The function has to be implemented by the derived classes
         - usually the GenericJob class
@@ -948,7 +1017,9 @@ class JobCore(HasGroups):
         """
         raise NotImplementedError("to_hdf() should be implemented in the derived class")
 
-    def from_hdf(self, hdf=None, group_name="group"):
+    def from_hdf(
+        self, hdf: Optional[ProjectHDFio] = None, group_name: str = "group"
+    ) -> None:
         """
         Restore object from hdf5 format - The function has to be implemented by the derived classes
         - usually the GenericJob class
@@ -961,7 +1032,7 @@ class JobCore(HasGroups):
             "from_hdf() should be implemented in the derived class"
         )
 
-    def __del__(self):
+    def __del__(self) -> None:
         """
         The delete function is just implemented for compatibilty
         """
@@ -972,7 +1043,11 @@ class JobCore(HasGroups):
         del self._master_id
         del self._status
 
-    def __getitem__(self, item):
+    @deprecate(
+        "Use job.output for results, job.files to access files; job.content to access HDF storage and "
+        "job.child_project to access children of master jobs."
+    )
+    def __getitem__(self, item: str) -> Any:
         """
         Get/read data from the HDF5 file, child jobs or access log files.
 
@@ -1023,7 +1098,7 @@ class JobCore(HasGroups):
                 return child["/".join(name_lst[1:])]
         return None
 
-    def __setitem__(self, key, value):
+    def __setitem__(self, key: str, value: Any) -> None:
         """
         Stores data
 
@@ -1037,7 +1112,7 @@ class JobCore(HasGroups):
             )
         self._hdf5[key] = value
 
-    def __delitem__(self, key):
+    def __delitem__(self, key: str) -> None:
         """
         Delete item from the HDF5 file
 
@@ -1046,7 +1121,7 @@ class JobCore(HasGroups):
         """
         del self.project_hdf5[posixpath.join(self.project_hdf5.h5_path, key)]
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         """
         Human readable string representation
 
@@ -1055,13 +1130,13 @@ class JobCore(HasGroups):
         """
         return str(self.list_all())
 
-    def _create_working_directory(self):
+    def _create_working_directory(self) -> None:
         """
         internal function to create the working directory on the file system if it does not exist already.
         """
         self.project_hdf5.create_working_directory()
 
-    def _list_ext_childs(self):
+    def _list_ext_childs(self) -> list:
         """
         internal function to list nodes excluding childs
 
@@ -1072,7 +1147,11 @@ class JobCore(HasGroups):
         childs = self.list_childs()
         return list(set(childs) - set(nodes))
 
-    def compress(self, files_to_compress=None, files_to_remove=None):
+    def compress(
+        self,
+        files_to_compress: Optional[List[str]] = None,
+        files_to_remove: Optional[List[str]] = None,
+    ) -> None:
         """
         Compress the output files of a job object.
 
@@ -1093,13 +1172,13 @@ class JobCore(HasGroups):
             files_to_remove=files_to_remove,
         )
 
-    def decompress(self):
+    def decompress(self) -> None:
         """
         Decompress the output files of a compressed job object.
         """
         _job_decompress(job=self)
 
-    def is_compressed(self):
+    def is_compressed(self) -> bool:
         """
         Check if the job is already compressed or not.
 
@@ -1108,19 +1187,19 @@ class JobCore(HasGroups):
         """
         return _job_is_compressed(job=self)
 
-    def self_archive(self):
+    def self_archive(self) -> None:
         """
         Compress HDF5 file of the job object to tar-archive
         """
         _job_archive(job=self)
 
-    def self_unarchive(self):
+    def self_unarchive(self) -> None:
         """
         Decompress HDF5 file of the job object from tar-archive
         """
         _job_unarchive(job=self)
 
-    def is_self_archived(self):
+    def is_self_archived(self) -> bool:
         """
         Check if the HDF5 file of the Job is compressed as tar-archive
 
@@ -1128,58 +1207,3 @@ class JobCore(HasGroups):
             bool: [True/False]
         """
         return _job_is_archived(job=self)
-
-
-class DatabaseProperties(object):
-    """
-    Access the database entry of the job
-    """
-
-    def __init__(self, job_dict=None):
-        self._job_dict = job_dict
-
-    def __bool__(self):
-        return self._job_dict is not None
-
-    def __dir__(self):
-        return list(self._job_dict.keys())
-
-    def __getattr__(self, name):
-        if name in self._job_dict.keys():
-            return self._job_dict[name]
-        else:
-            raise AttributeError(name)
-
-    def __repr__(self):
-        return f"{self.__class__.__name__}({repr(self._job_dict)})"
-
-
-class HDF5Content(object):
-    """
-    Access the HDF5 file of the job
-    """
-
-    def __init__(self, project_hdf5):
-        self._project_hdf5 = project_hdf5
-
-    def __getattr__(self, name):
-        try:
-            return self[name]
-        except KeyError:
-            raise AttributeError(name) from None
-
-    def __getitem__(self, item):
-        value = recursive_load_from_hdf(self._project_hdf5, item)
-        if value is not None:
-            return value
-
-        if item in self._project_hdf5.list_groups():
-            return HDF5Content(self._project_hdf5[item])
-        else:
-            raise KeyError(item)
-
-    def __dir__(self):
-        return self._project_hdf5.list_nodes() + self._project_hdf5.list_groups()
-
-    def __repr__(self):
-        return self._project_hdf5.__repr__()

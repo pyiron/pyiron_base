@@ -6,6 +6,7 @@ The JobPath class enables quick access to the HDF5 data file without loading the
 """
 
 import os
+from typing import Any, Tuple
 
 from pyiron_base.jobs.job.core import JobCore
 from pyiron_base.project.generic import Project
@@ -102,7 +103,7 @@ class JobPath(JobCore):
             path inside the HDF5 file - also stored as absolute path
     """
 
-    def __init__(self, job_path):
+    def __init__(self, job_path: str):
         """
         Load a job from the given path.
 
@@ -128,7 +129,7 @@ class JobPath(JobCore):
         super().__init__(project=hdf_project, job_name=job_path_lst[1].split("/")[-1])
 
     @classmethod
-    def from_job_id(cls, db, job_id):
+    def from_job_id(cls, db, job_id: int) -> "JobPath":
         """
         Load a job path from a database connection and the job id.
 
@@ -143,7 +144,7 @@ class JobPath(JobCore):
         return cls.from_db_entry(db_entry)
 
     @classmethod
-    def from_db_entry(cls, db_entry):
+    def from_db_entry(cls, db_entry: dict) -> "JobPath":
         """
         Load a job path from a database entry.
 
@@ -174,7 +175,7 @@ class JobPath(JobCore):
         return job
 
     @property
-    def is_root(self):
+    def is_root(self) -> bool:
         """
         Check if the current h5_path is pointing to the HDF5 root group.
 
@@ -184,7 +185,7 @@ class JobPath(JobCore):
         return self.project_hdf5.is_root
 
     @property
-    def is_empty(self):
+    def is_empty(self) -> bool:
         """
         Check if the HDF5 file is empty
 
@@ -194,7 +195,7 @@ class JobPath(JobCore):
         return self.project_hdf5.is_empty
 
     @property
-    def base_name(self):
+    def base_name(self) -> str:
         """
         Name of the HDF5 file - but without the file extension .h5
 
@@ -204,7 +205,7 @@ class JobPath(JobCore):
         return self.project_hdf5.base_name
 
     @property
-    def file_path(self):
+    def file_path(self) -> str:
         """
         Path where the HDF5 file is located - posixpath.dirname()
 
@@ -214,7 +215,7 @@ class JobPath(JobCore):
         return self.project_hdf5.file_path
 
     @property
-    def h5_path(self):
+    def h5_path(self) -> str:
         """
         Get the path in the HDF5 file starting from the root group - meaning this path starts with '/'
 
@@ -224,7 +225,7 @@ class JobPath(JobCore):
         return self.project_hdf5.h5_path
 
     @h5_path.setter
-    def h5_path(self, path):
+    def h5_path(self, path: str) -> None:
         """
         Set the path in the HDF5 file starting from the root group
 
@@ -233,7 +234,7 @@ class JobPath(JobCore):
         """
         self.project_hdf5.h5_path = path
 
-    def create_group(self, name):
+    def create_group(self, name: str) -> "pyiron_base.storage.hdfio.ProjectHDFio":
         """
         Create an HDF5 group - similar to a folder in the filesystem - the HDF5 groups allow the users to structure their
         data.
@@ -246,7 +247,7 @@ class JobPath(JobCore):
         """
         return self.project_hdf5.create_group(name)
 
-    def open(self, h5_rel_path):
+    def open(self, h5_rel_path: str) -> "pyiron_base.storage.hdfio.ProjectHDFio":
         """
         Create an HDF5 group and enter this specific group. If the group exists in the HDF5 path only the h5_path is
         set correspondingly otherwise the group is created first.
@@ -259,19 +260,19 @@ class JobPath(JobCore):
         """
         return self.project_hdf5.open(h5_rel_path)
 
-    def close(self):
+    def close(self) -> None:
         """
         Close the current HDF5 path and return to the path before the last open
         """
         self.project_hdf5.close()
 
-    def remove_file(self):
+    def remove_file(self) -> None:
         """
         Remove the HDF5 file with all the related content
         """
         self.project_hdf5.remove_file()
 
-    def put(self, key, value):
+    def put(self, key: str, value: Any) -> None:
         """
         Store data inside the HDF5 file
 
@@ -281,7 +282,7 @@ class JobPath(JobCore):
         """
         self.project_hdf5.__setitem__(key, value)
 
-    def listdirs(self):
+    def listdirs(self) -> list:
         """
         equivalent to os.listdirs (consider groups as equivalent to dirs)
 
@@ -291,7 +292,7 @@ class JobPath(JobCore):
         """
         return self.project_hdf5.list_groups()
 
-    def list_dirs(self):
+    def list_dirs(self) -> list:
         """
         equivalent to os.listdirs (consider groups as equivalent to dirs)
 
@@ -300,7 +301,7 @@ class JobPath(JobCore):
         """
         return self.project_hdf5.list_groups()
 
-    def keys(self):
+    def keys(self) -> list:
         """
         List all groups and nodes of the HDF5 file - where groups are equivalent to directories and nodes to files.
 
@@ -309,7 +310,7 @@ class JobPath(JobCore):
         """
         return self.project_hdf5.keys()
 
-    def values(self):
+    def values(self) -> list:
         """
         List all values for all groups and nodes of the HDF5 file
 
@@ -318,7 +319,7 @@ class JobPath(JobCore):
         """
         return self.project_hdf5.values()
 
-    def items(self):
+    def items(self) -> Tuple[list, list]:
         """
         List all keys and values as items of all groups and nodes of the HDF5 file
 
@@ -327,7 +328,7 @@ class JobPath(JobCore):
         """
         return self.project_hdf5.items()
 
-    def groups(self):
+    def groups(self) -> list:
         """
         Filter HDF5 file by groups
 
@@ -336,7 +337,7 @@ class JobPath(JobCore):
         """
         return self.project_hdf5.groups()
 
-    def nodes(self):
+    def nodes(self) -> list:
         """
         Filter HDF5 file by nodes
 
@@ -345,7 +346,7 @@ class JobPath(JobCore):
         """
         return self.project_hdf5.nodes()
 
-    def __enter__(self):
+    def __enter__(self) -> "JobPath":
         """
         Compatibility function for the with statement
         """
@@ -357,7 +358,7 @@ class JobPath(JobCore):
         """
         self.project_hdf5.__exit__(exc_type=exc_type, exc_val=exc_val, exc_tb=exc_tb)
 
-    def __setitem__(self, key, value):
+    def __setitem__(self, key: str, value: Any) -> None:
         """
         Store data inside the HDF5 file
 
@@ -367,7 +368,7 @@ class JobPath(JobCore):
         """
         self.project_hdf5.__setitem__(key, value)
 
-    def __delitem__(self, key):
+    def __delitem__(self, key: str) -> None:
         """
         Delete item from the HDF5 file
 
@@ -376,7 +377,7 @@ class JobPath(JobCore):
         """
         self.project_hdf5.__delitem__(key)
 
-    def __str__(self):
+    def __str__(self) -> str:
         """
         Machine readable string representation
 
@@ -385,7 +386,7 @@ class JobPath(JobCore):
         """
         return self.project_hdf5.__str__()
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         """
         Human readable string representation
 
@@ -394,7 +395,7 @@ class JobPath(JobCore):
         """
         return self.project_hdf5.__repr__()
 
-    def __del__(self):
+    def __del__(self) -> None:
         """
         When the object is deleted the HDF5 file has to be closed
         """

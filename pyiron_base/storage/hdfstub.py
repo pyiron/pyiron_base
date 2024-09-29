@@ -4,7 +4,9 @@ Convenience class to lazily read values from HDF.
 
 # Copyright (c) Max-Planck-Institut für Eisenforschung GmbH - Computational Materials Design (CM) Department
 # Distributed under the terms of "New BSD License", see the LICENSE file.
-from pyiron_base.storage.hdfio import ProjectHDFio
+from typing import Any, Callable, Type
+
+from pyiron_base.storage.hdfio import BaseHDFio
 
 __author__ = "Marvin Poul"
 __copyright__ = (
@@ -55,9 +57,9 @@ class HDFStub:
     pass `to_object()` (and therefore to their own initializers).
     """
 
-    _load_functions = {}
+    _load_functions: dict[str, Callable[[Any, str], Any]] = {}
 
-    def __init__(self, hdf, group_name):
+    def __init__(self, hdf: "BaseHDFio", group_name: str) -> None:
         """
         Create new stub.
 
@@ -65,26 +67,26 @@ class HDFStub:
         between this initialization and later calls to :meth:.load` do not change the location this stub is pointing at.
 
         Args:
-            hdf (:class:`.ProjectHDFio`): hdf object to load from
+            hdf (BaseHDFio): hdf object to load from
             group_name (str): node or group name to load from the hdf object
         """
         self._hdf = hdf.copy()
         self._group_name = group_name
 
     @classmethod
-    def register(cls, type, load):
+    def register(cls, type: Type, load: Callable[[Any, str], Any]) -> None:
         """
         Register call back for a new type.
 
         Args:
-            type (type): class to be registered
-            load (function): callback that is called on :method:`.load` when the type matches `type_name`, must
+            type (Type): class to be registered
+            load (Callable[[Any, str], Any]): callback that is called on :method:`.load` when the type matches `type_name`, must
                              accept `hdf` and `group_name` corresponding to the init parameters of this class and return
                              (lazily) loaded object
         """
         cls._load_functions[str(type)] = load
 
-    def load(self):
+    def load(self) -> Any:
         """
         Read value from HDF.
 
@@ -103,12 +105,27 @@ class HDFStub:
         )
         return load(self._hdf, self._group_name)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
+        """
+        Return a string representation of the object.
+
+        Returns:
+            str: The string representation of the object.
+        """
         return f"{self.__class__.__name__}({self._hdf}, {self._group_name})"
 
 
-def to_object(hdf_group):
-    if isinstance(hdf_group, ProjectHDFio):
+def to_object(hdf_group: Any) -> Any:
+    """
+    Convert HDF group to object.
+
+    Args:
+        hdf_group (Any): HDF group to convert.
+
+    Returns:
+        Any: Converted object.
+    """
+    if isinstance(hdf_group, BaseHDFio):
         return hdf_group.to_object()
     else:
         return hdf_group
