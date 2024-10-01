@@ -501,7 +501,8 @@ def _working_directory_read_file(
             # monty strips all newlines, where as reading the other ways does
             # not.  So if a file does not end with a newline (as most text
             # files) adding it to every line like above adds an additional one.
-            lines[-1] = lines[-1].rstrip(os.linesep)
+            if len(lines) > 0:
+                lines[-1] = lines[-1].rstrip(os.linesep)
             return lines
 
 
