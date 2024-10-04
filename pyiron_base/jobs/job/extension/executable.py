@@ -6,9 +6,9 @@ import os
 from dataclasses import asdict, fields
 from typing import List, Optional, Tuple, Union
 
+from pyiron_dataclasses.v1.job import Executable as ExecutableDataClass
 from pyiron_snippets.resources import ExecutableResolver
 
-from pyiron_base.dataclasses.job import Executable as ExecutableDataClass
 from pyiron_base.interfaces.has_dict import HasDict
 from pyiron_base.state import state
 

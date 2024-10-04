@@ -12,9 +12,9 @@ from dataclasses import asdict, fields
 from typing import Optional, Union
 
 import pandas
+from pyiron_dataclasses.v1.job import Server as ServerDataClass
 from pyiron_snippets.deprecate import deprecate
 
-from pyiron_base.dataclasses.job import Server as ServerDataClass
 from pyiron_base.interfaces.has_dict import HasDict
 from pyiron_base.interfaces.lockable import Lockable, sentinel
 from pyiron_base.jobs.job.extension.server.runmode import Runmode
