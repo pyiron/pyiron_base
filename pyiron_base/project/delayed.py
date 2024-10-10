@@ -253,6 +253,10 @@ class DelayedObject:
     def server(self):
         return self._server
 
+    def draw(self):
+        node_dict, edge_lst = self.get_graph()
+        draw(node_dict=node_dict, edge_lst=edge_lst)
+
     def get_python_result(self):
         return getattr(self._result.output, self._output_key)
 
