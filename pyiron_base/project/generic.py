@@ -29,6 +29,7 @@ from pyiron_base.database.jobtable import (
 )
 from pyiron_base.interfaces.has_groups import HasGroups
 from pyiron_base.jobs.flex.factory import create_job_factory
+from pyiron_base.jobs.job.extension.server.generic import Server
 from pyiron_base.jobs.job.extension.server.queuestatus import (
     queue_check_job_is_waiting_or_running,
     queue_delete_job,
@@ -480,6 +481,7 @@ class Project(ProjectPath, HasGroups):
             internal_job_name: Optional[str] = None,
             internal_execute_job: bool = True,
             internal_auto_rename: bool = False,
+            server_obj: Server = None,
         ) -> Project:
             """
             Create an executable job.
@@ -524,6 +526,8 @@ class Project(ProjectPath, HasGroups):
                 )(project=project, job_name=internal_job_name)
             else:
                 return project.load(job_specifier=job_id)
+            if server_obj is not None:
+                job.server = server_obj
             if conda_environment_path is not None:
                 job.server.conda_environment_path = conda_environment_path
             elif conda_environment_name is not None:
@@ -660,12 +664,14 @@ class Project(ProjectPath, HasGroups):
 
         """
 
-        def create_function_job(*args, **kwargs):
+        def create_function_job(*args, server_obj=None, **kwargs):
             job = self.create.job.PythonFunctionContainerJob(
                 job_name=python_function.__name__ if job_name is None else job_name
             )
             job._automatically_rename_on_save_using_input = automatically_rename
             job.python_function = python_function
+            if server_obj is not None:
+                job.server = server_obj
             if not args and len(kwargs) == 0:
                 return job
             else:
