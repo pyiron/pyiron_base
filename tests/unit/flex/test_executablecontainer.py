@@ -290,7 +290,7 @@ class TestExecutableContainer(TestWithProject):
         self.assertEqual(w.output.result.pull(), 7)
         nodes_dict, edges_lst = w.get_graph()
         self.assertEqual(len(nodes_dict), 17)
-        self.assertEqual(len(edges_lst), 24)
+        self.assertEqual(len(edges_lst), 27)
         job_w = w.pull()
         job_z = z.pull()
         self.assertEqual(job_w.output.result, 7)
