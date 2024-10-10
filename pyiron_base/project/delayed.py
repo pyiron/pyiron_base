@@ -5,6 +5,8 @@ from typing import Dict, List, Optional, Tuple
 
 import cloudpickle
 
+from pyiron_base.jobs.job.extension.server.generic import Server
+
 
 def draw(node_dict: Dict[str, object], edge_lst: List[List[str]]) -> None:
     """
@@ -239,12 +241,17 @@ class DelayedObject:
             pass
         self.__name__ = "DelayedObject"
         self._result = None
+        self._server = Server()
         self._output_key = output_key
         self._output_file = output_file
         self._output_key_lst = output_key_lst
         self._output_file_lst = output_file_lst
         self._list_length = list_length
         self._list_index = list_index
+
+    @property
+    def server(self):
+        return self._server
 
     def get_python_result(self):
         return getattr(self._result.output, self._output_key)
@@ -254,6 +261,7 @@ class DelayedObject:
 
     def pull(self):
         if self._result is None:
+            self._input.update({"server_obj": self.server})
             self._result = evaluate_function(
                 funct=self._function, input_dict=self._input
             )
