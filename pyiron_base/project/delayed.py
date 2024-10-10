@@ -293,6 +293,7 @@ class DelayedObject:
         )
         obj_copy._input = self._input
         obj_copy._result = self._result
+        obj_copy._server = self._server.copy()
         return obj_copy
 
     def __getattr__(self, name):
