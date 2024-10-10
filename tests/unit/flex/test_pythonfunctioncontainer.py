@@ -216,5 +216,5 @@ class TestPythonFunctionContainer(TestWithProject):
         )
         self.assertEqual(d.pull(), 6)
         nodes_dict, edges_lst = d.get_graph()
-        self.assertEqual(len(nodes_dict), 5)
+        self.assertEqual(len(nodes_dict), 6)
         self.assertEqual(len(edges_lst), 4)
