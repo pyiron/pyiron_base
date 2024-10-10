@@ -29,6 +29,7 @@ from pyiron_base.database.jobtable import (
 )
 from pyiron_base.interfaces.has_groups import HasGroups
 from pyiron_base.jobs.flex.factory import create_job_factory
+from pyiron_base.jobs.job.extension.server.generic import Server
 from pyiron_base.jobs.job.extension.server.queuestatus import (
     queue_check_job_is_waiting_or_running,
     queue_delete_job,
@@ -39,7 +40,6 @@ from pyiron_base.jobs.job.extension.server.queuestatus import (
     wait_for_job,
     wait_for_jobs,
 )
-from pyiron_base.jobs.job.extension.server.generic import Server
 from pyiron_base.jobs.job.jobtype import (
     JOB_CLASS_DICT,
     JobFactory,
