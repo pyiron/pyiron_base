@@ -15,9 +15,10 @@ dependencies:
 - pint =0.24.3
 - psutil =6.0.0
 - pyfileindex =0.0.29
+- pyiron_dataclasses =0.0.1
 - pyiron_snippets =0.1.4
-- executorlib =0.0.2
-- pysqa =0.1.22
+- executorlib =0.0.3
+- pysqa =0.2.0
 - pytables =3.10.1
 - sqlalchemy =2.0.35
 - tqdm =4.66.5

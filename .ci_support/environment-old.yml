@@ -12,6 +12,7 @@ dependencies:
 - pint =0.18
 - psutil =5.8.0
 - pyfileindex =0.0.16
+- pyiron_dataclasses =0.0.1
 - pyiron_snippets =0.1.3
 - executorlib =0.0.1
 - pysqa =0.1.12
