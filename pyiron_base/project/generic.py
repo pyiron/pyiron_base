@@ -526,6 +526,8 @@ class Project(ProjectPath, HasGroups):
                 )(project=project, job_name=internal_job_name)
             else:
                 return project.load(job_specifier=job_id)
+            if server_obj is not None:
+                job.server = server_obj
             if conda_environment_path is not None:
                 job.server.conda_environment_path = conda_environment_path
             elif conda_environment_name is not None:
@@ -533,8 +535,6 @@ class Project(ProjectPath, HasGroups):
             if internal_file_lst is not None and len(internal_file_lst) > 0:
                 for file in internal_file_lst:
                     job.restart_file_list.append(file)
-            if server_obj is not None:
-                job.server = server_obj
             if internal_execute_job:
                 job.run()
             return job
