@@ -7,6 +7,7 @@ The project object is the central import point of pyiron - all other objects can
 
 from __future__ import annotations
 
+import inspect
 import os
 import posixpath
 import shutil
@@ -666,7 +667,8 @@ class Project(ProjectPath, HasGroups):
             )
             job._automatically_rename_on_save_using_input = automatically_rename
             job.python_function = python_function
-            if not args and len(kwargs) == 0:
+            nr_parameters = len(inspect.signature(python_function).parameters)
+            if not args and len(kwargs) == 0 and nr_parameters > 0:
                 return job
             else:
                 return job(*args, **kwargs)
