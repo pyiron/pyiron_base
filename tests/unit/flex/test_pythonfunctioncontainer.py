@@ -10,6 +10,10 @@ def my_function(a, b=8):
     return a + b
 
 
+def my_function_str():
+    return "hello"
+
+
 def my_sleep_funct(a, b=8, sleep_time=0.01):
     sleep(sleep_time)
     return a + b
@@ -32,6 +36,15 @@ class TestPythonFunctionContainer(TestWithProject):
         self.assertEqual(job_reload.input["a"], 4)
         self.assertEqual(job_reload.input["b"], 5)
         self.assertEqual(job_reload.output["result"], 9)
+        self.project.remove_job(job.job_name)
+
+    def test_as_job_without_arguments(self):
+        job = self.project.wrap_python_function(my_function_str)
+        job.run()
+        self.assertEqual(job.output["result"], "hello")
+        self.assertTrue(job.status.finished)
+        job_reload = self.project.load(job.job_name)
+        self.assertEqual(job_reload.output["result"], "hello")
         self.project.remove_job(job.job_name)
 
     def test_as_function(self):
