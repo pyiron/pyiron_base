@@ -494,6 +494,7 @@ class Project(ProjectPath, HasGroups):
                 internal_job_name (str, optional): The name of the job. Defaults to None.
                 internal_execute_job (bool, optional): Whether to execute the job. Defaults to True.
                 internal_auto_rename (bool, optional): Whether to automatically rename the job. Defaults to False.
+                server_obj (Server): Server object to define the resource requirements for the executable
 
             Returns:
                 Project: The project object.
