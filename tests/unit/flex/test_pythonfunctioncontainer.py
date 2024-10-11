@@ -47,6 +47,13 @@ class TestPythonFunctionContainer(TestWithProject):
         self.assertEqual(job_reload.output["result"], "hello")
         self.project.remove_job(job.job_name)
 
+    def test_as_job_without_arguments_delayed(self):
+        delayed_obj = self.project.wrap_python_function(
+            python_function=my_function_str,
+            delayed=True,
+        )
+        self.assertEqual(delayed_obj.pull(), "hello")
+
     def test_as_function(self):
         my_function_as_job = self.project.wrap_python_function(my_function)
         self.assertEqual(my_function_as_job(a=5, b=6), 11)
