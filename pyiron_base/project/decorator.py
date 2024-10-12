@@ -1,7 +1,8 @@
 import inspect
 from typing import Optional
-from pyiron_base.project.generic import Project
+
 from pyiron_base.jobs.job.extension.server.generic import Server
+from pyiron_base.project.generic import Project
 
 
 def pyiron_job(
@@ -39,7 +40,9 @@ def pyiron_job(
                 new_hdf=new_hdf,
             )
             return delayed_job_object
+
         return function
+
     return pyiron_job_function
 
 
@@ -50,14 +53,15 @@ def pyiron_job_simple(funct) -> callable:
         resource_dict: dict = {},
         output_file_lst: list = [],
         output_key_lst: list = [],
-        **kwargs
+        **kwargs,
     ):
         resource_default_dict = {
             k: v.default for k, v in inspect.signature(Server).parameters.items()
         }
         resource_dict.update(
             {
-                k:v for k, v in resource_default_dict.items()
+                k: v
+                for k, v in resource_default_dict.items()
                 if k not in resource_dict.keys()
             }
         )
@@ -74,4 +78,5 @@ def pyiron_job_simple(funct) -> callable:
         )
         delayed_job_object._server = Server(**resource_dict)
         return delayed_job_object
+
     return function
