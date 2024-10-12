@@ -29,6 +29,7 @@ from pyiron_base.jobs.master.generic import GenericMaster, get_function_from_str
 from pyiron_base.jobs.master.interactivewrapper import InteractiveWrapper
 from pyiron_base.jobs.master.list import ListMaster
 from pyiron_base.jobs.master.parallel import JobGenerator, ParallelMaster
+from pyiron_base.project.decorator import pyiron_job, pyiron_job_simple
 from pyiron_base.project.external import Notebook, dump, load
 from pyiron_base.project.generic import Creator, Project
 from pyiron_base.state import state
