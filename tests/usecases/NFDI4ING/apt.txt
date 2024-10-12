@@ -1,2 +1,2 @@
-libgl1-mesa-glx
-libegl1-mesa
+libglx-mesa0
+libegl1-mesa-dev
