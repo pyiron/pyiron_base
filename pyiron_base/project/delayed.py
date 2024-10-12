@@ -246,6 +246,10 @@ class DelayedObject:
         self._list_length = list_length
         self._list_index = list_index
 
+    def draw(self):
+        node_dict, edge_lst = self.get_graph()
+        draw(node_dict=node_dict, edge_lst=edge_lst)
+
     def get_python_result(self):
         return getattr(self._result.output, self._output_key)
 
