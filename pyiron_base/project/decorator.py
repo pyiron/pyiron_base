@@ -25,7 +25,7 @@ def pyiron_job(
         python_function: callable,
         pyiron_resource_dict: dict,
         resource_default_dict: dict,
-        **kwargs
+        **kwargs,
     ):
         pyiron_resource_dict.update(
             {
@@ -51,10 +51,7 @@ def pyiron_job(
     # This is the actual decorator function that applies to the decorated function
     def pyiron_job_function(f) -> callable:
         def function(
-            *args,
-            pyiron_project: Project,
-            pyiron_resource_dict: dict = {},
-            **kwargs
+            *args, pyiron_project: Project, pyiron_resource_dict: dict = {}, **kwargs
         ):
             resource_default_dict = {
                 "host": None,
@@ -71,7 +68,7 @@ def pyiron_job(
                 pyiron_project=pyiron_project,
                 pyiron_resource_dict=pyiron_resource_dict,
                 resource_default_dict=resource_default_dict,
-                **kwargs
+                **kwargs,
             )
 
         return function
@@ -98,7 +95,7 @@ def pyiron_job(
                 pyiron_project=pyiron_project,
                 pyiron_resource_dict=pyiron_resource_dict,
                 resource_default_dict=resource_default_dict,
-                **kwargs
+                **kwargs,
             )
 
         return function
