@@ -54,6 +54,7 @@ def pyiron_job(
         >>> print(d.pull())
 
     """
+
     def get_delayed_object(
         *args,
         pyiron_project: Project,
