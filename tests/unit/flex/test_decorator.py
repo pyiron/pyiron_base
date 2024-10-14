@@ -33,7 +33,9 @@ class TestPythonFunctionDecorator(TestWithProject):
             return a + b
 
         c = my_function_a(a=1, b=2, pyiron_project=self.project)
-        d = my_function_b(a=c, b=3, pyiron_project=self.project, pyiron_resource_dict={"cores": 2})
+        d = my_function_b(
+            a=c, b=3, pyiron_project=self.project, pyiron_resource_dict={"cores": 2}
+        )
         self.assertEqual(d.pull(), 6)
         nodes_dict, edges_lst = d.get_graph()
         self.assertEqual(len(nodes_dict), 6)
