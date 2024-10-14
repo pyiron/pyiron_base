@@ -673,10 +673,7 @@ class Project(ProjectPath, HasGroups):
             job.python_function = python_function
             if server_obj is not None:
                 job.server = server_obj
-            if not args and len(kwargs) == 0:
-                return job
-            else:
-                return job(*args, **kwargs)
+            return job(*args, **kwargs)
 
         if delayed:
             return DelayedObject(
