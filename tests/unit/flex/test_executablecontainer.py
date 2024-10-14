@@ -147,7 +147,12 @@ class TestExecutableContainer(TestWithProject):
             ),
             job_name="job_no",
         )
-        job.run()
+        job.server.cores = 2
+        self.assertEqual(job.server.cores, 2)
+        with self.assertWarns(RuntimeWarning):
+            # No multi core executable found falling back to the single core executable.
+            job.run()
+        self.assertEqual(job.server.cores, 1)
         self.assertTrue("Python" in job.output["stdout"])
         self.assertTrue(job.status.finished)
         self.assertEqual(os.listdir(job.working_directory), ["error.out"])
@@ -289,9 +294,13 @@ class TestExecutableContainer(TestWithProject):
         )
         self.assertEqual(w.output.result.pull(), 7)
         nodes_dict, edges_lst = w.get_graph()
-        self.assertEqual(len(nodes_dict), 15)
-        self.assertEqual(len(edges_lst), 24)
+        self.assertEqual(len(nodes_dict), 17)
+        self.assertEqual(len(edges_lst), 27)
+        w.server.cores = 2
+        self.assertEqual(w.server.cores, 2)
         job_w = w.pull()
+        self.assertEqual(w.server.cores, 2)
+        self.assertEqual(job_w.server.cores, 1)
         job_z = z.pull()
         self.assertEqual(job_w.output.result, 7)
         self.project.remove_job(job_z.job_name)
@@ -328,8 +337,8 @@ class TestExecutableContainer(TestWithProject):
         )
         self.assertEqual(w.output.result.pull(), 7)
         nodes_dict, edges_lst = w.get_graph()
-        self.assertEqual(len(nodes_dict), 14)
-        self.assertEqual(len(edges_lst), 24)
+        self.assertEqual(len(nodes_dict), 16)
+        self.assertEqual(len(edges_lst), 27)
         job_w = w.pull()
         job_z = z.pull()
         self.assertEqual(job_w.output.result, 7)
