@@ -8,16 +8,16 @@ class TestPythonFunctionDecorator(TestWithProject):
         self.project.remove_jobs(recursive=True, silently=True)
 
     def test_delayed(self):
-        @pyiron_job(project=self.project)
+        @pyiron_job()
         def my_function_a(a, b=8):
             return a + b
 
-        @pyiron_job(project=self.project, cores=2)
+        @pyiron_job(cores=2)
         def my_function_b(a, b=8):
             return a + b
 
-        c = my_function_a(a=1, b=2)
-        d = my_function_b(a=c, b=3)
+        c = my_function_a(a=1, b=2, pyiron_project=self.project)
+        d = my_function_b(a=c, b=3, pyiron_project=self.project)
         self.assertEqual(d.pull(), 6)
         nodes_dict, edges_lst = d.get_graph()
         self.assertEqual(len(nodes_dict), 6)
@@ -32,8 +32,8 @@ class TestPythonFunctionDecorator(TestWithProject):
         def my_function_b(a, b=8):
             return a + b
 
-        c = my_function_a(a=1, b=2, project=self.project)
-        d = my_function_b(a=c, b=3, project=self.project, resource_dict={"cores": 2})
+        c = my_function_a(a=1, b=2, pyiron_project=self.project)
+        d = my_function_b(a=c, b=3, pyiron_project=self.project, pyiron_resource_dict={"cores": 2})
         self.assertEqual(d.pull(), 6)
         nodes_dict, edges_lst = d.get_graph()
         self.assertEqual(len(nodes_dict), 6)
