@@ -19,6 +19,41 @@ def pyiron_job(
     output_file_lst: list = [],
     output_key_lst: list = [],
 ):
+    """
+    Decorator to create a pyiron job object from any python function
+
+    Args:
+        funct (callable): python function to create a job object from
+        host (str): the hostname of the current system.
+        queue (str): the queue selected for a current simulation.
+        cores (int): the number of cores selected for the current simulation.
+        threads (int): the number of threads selected for the current simulation.
+        gpus (int): the number of gpus selected for the current simulation.
+        run_mode (str): the run mode of the job ['modal', 'non_modal', 'queue', 'manual']
+        new_hdf (bool): defines whether a subjob should be stored in the same HDF5 file or in a new one.
+        output_file_lst (list):
+        output_key_lst (list):
+
+    Returns:
+        callable: The decorated functions
+
+    Example:
+        >>> from pyiron_base import pyiron_job, Project
+        >>>
+        >>> @pyiron_job
+        >>> def my_function_a(a, b=8):
+        >>>     return a + b
+        >>>
+        >>> @pyiron_job(cores=2)
+        >>> def my_function_b(a, b=8):
+        >>>     return a + b
+        >>>
+        >>> pr = Project("test")
+        >>> c = my_function_a(a=1, b=2, pyiron_project=pr)
+        >>> d = my_function_b(a=c, b=3, pyiron_project=pr)
+        >>> print(d.pull())
+
+    """
     def get_delayed_object(
         *args,
         pyiron_project: Project,
