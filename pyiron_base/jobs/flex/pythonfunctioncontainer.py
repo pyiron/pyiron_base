@@ -150,6 +150,10 @@ class PythonFunctionContainerJob(PythonTemplateJob):
             if len(self.input.to_builtin()) > 0:
                 output = self._function(**self.input.to_builtin())
             else:
+                # An empty DataContainer returns a list rather than a dict, so **self.input.to_builtin()
+                # results in "TypeError: argument after ** must be a mapping, not list".
+                # As a workaround, when the input DataContainer is empty the function is called without
+                # arguments (*args) or keyword-arguments (**kwargs)
                 output = self._function()
         self.output.update({"result": output})
         self.to_hdf()
