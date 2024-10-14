@@ -39,5 +39,6 @@ class TestPythonFunctionDecorator(TestWithProject):
         self.assertEqual(len(nodes_dict), 6)
         self.assertEqual(len(edges_lst), 6)
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     unittest.main()

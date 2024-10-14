@@ -44,6 +44,7 @@ def pyiron_job(
                 new_hdf=new_hdf,
             )
             return delayed_job_object
+
         return function
 
     # If funct is None, it means the decorator is called with arguments (like @pyiron_job(...))
@@ -86,4 +87,3 @@ def pyiron_job(
             return delayed_job_object
 
         return function
-
