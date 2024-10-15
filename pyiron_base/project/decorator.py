@@ -53,6 +53,7 @@ def pyiron_job(
         >>> d = my_function_b(a=c, b=3, pyiron_project=pr)
         >>> print(d.pull())
 
+        Output: 6
     """
 
     def get_delayed_object(
