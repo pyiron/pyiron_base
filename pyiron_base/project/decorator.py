@@ -64,13 +64,9 @@ def pyiron_job(
         resource_default_dict: dict,
         **kwargs,
     ):
-        pyiron_resource_dict.update(
-            {
-                k: v
-                for k, v in resource_default_dict.items()
-                if k not in pyiron_resource_dict.keys()
-            }
-        )
+        for k, v in resource_default_dict.items():
+            if k not in pyiron_resource_dict:
+                pyiron_resource_dict[k] = v
         delayed_job_object = pyiron_project.wrap_python_function(
             python_function=python_function,
             *args,
