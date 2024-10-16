@@ -23,7 +23,7 @@ dependencies:
 - executorlib =0.0.4
 - pysqa =0.2.0
 - pytables =3.10.1
-- sqlalchemy =2.0.35
+- sqlalchemy =2.0.36
 - tqdm =4.66.5
 - traitlets =5.14.3
 - jupyter-book =1.0.0
