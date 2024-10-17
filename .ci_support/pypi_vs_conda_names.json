@@ -1,3 +1,6 @@
 {
+  "conda-subprocess": "conda_subprocess",
+  "h5io-browser": "h5io_browser",
+  "pyiron-dataclasses": "pyiron_dataclasses",
   "pyiron-snippets": "pyiron_snippets"
 }
