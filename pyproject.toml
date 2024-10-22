@@ -30,7 +30,7 @@ dependencies = [
     "numpy==1.26.4",
     "monty==2024.10.21",
     "pandas==2.2.3",
-    "psutil==6.0.0",
+    "psutil==6.1.0",
     "pyfileindex==0.0.30",
     "pyiron_dataclasses==0.0.1",
     "pyiron_snippets==0.1.4",
