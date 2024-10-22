@@ -6,6 +6,7 @@ from typing import Dict, List, Optional, Tuple
 import cloudpickle
 
 from pyiron_base.jobs.job.extension.server.generic import Server
+from tensorflow.python.ops.numpy_ops.np_utils import getitem
 
 
 def draw(node_dict: Dict[str, object], edge_lst: List[List[str]]) -> None:
@@ -258,7 +259,7 @@ class DelayedObject:
         draw(node_dict=node_dict, edge_lst=edge_lst)
 
     def get_python_result(self):
-        return getattr(self._result.output, self._output_key)
+        return self._result[self._output_key]
 
     def get_file_result(self):
         return getattr(self._result.files, self._output_file)

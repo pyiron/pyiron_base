@@ -24,6 +24,10 @@ def my_function_exe(a_lst, b_lst, executor):
     return [future.result() for future in future_lst]
 
 
+def function_with_dict(a, b=1, c=3):
+    return {"a": a, "b": b, "c": c}
+
+
 class TestPythonFunctionContainer(TestWithProject):
     def test_as_job(self):
         job = self.project.wrap_python_function(my_function)
@@ -238,3 +242,22 @@ class TestPythonFunctionContainer(TestWithProject):
         nodes_dict, edges_lst = d.get_graph()
         self.assertEqual(len(nodes_dict), 6)
         self.assertEqual(len(edges_lst), 6)
+
+    def test_delayed_dict(self):
+        job_1 = self.project.wrap_python_function(
+            python_function=function_with_dict,
+            a=6,
+            b=4,
+            c=3,
+            delayed=True,
+            output_key_lst=["a", "b", "c"],
+        )
+        job_2 = self.project.wrap_python_function(
+            python_function=function_with_dict,
+            a=job_1.output.a,
+            b=5,
+            c=job_1.output.c,
+            delayed=True,
+            output_key_lst=["a", "b", "c"],
+        )
+        self.assertEqual(job_2.pull(), {'a': 6, 'b': 5, 'c': 3})
