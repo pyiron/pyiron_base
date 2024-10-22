@@ -1076,7 +1076,6 @@ def execute_job_with_calculate_function(
         job.set_input_to_read_only()
         if job_crashed:
             job.status.aborted = True
-            job._hdf5["status"] = job.status.string
         else:
             job.save_output(output_dict=parsed_output, shell_output=shell_output)
             if not job.convergence_check():
@@ -1085,6 +1084,7 @@ def execute_job_with_calculate_function(
                 if job._compress_by_default:
                     job.compress()
                 job.status.finished = True
+        job._hdf5["status"] = job.status.string
 
 
 def _generate_flux_execute_string(
