@@ -86,7 +86,11 @@ def pyiron_job(
     # This is the actual decorator function that applies to the decorated function
     def pyiron_job_function(f) -> callable:
         def function(
-            *args, pyiron_project: Project, pyiron_resource_dict: dict = {}, list_length: Optional[int] = None, **kwargs
+            *args,
+            pyiron_project: Project,
+            pyiron_resource_dict: dict = {},
+            list_length: Optional[int] = None,
+            **kwargs,
         ):
             resource_default_dict = {
                 "host": host,
