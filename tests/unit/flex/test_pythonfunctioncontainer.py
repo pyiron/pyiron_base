@@ -260,4 +260,4 @@ class TestPythonFunctionContainer(TestWithProject):
             delayed=True,
             output_key_lst=["a", "b", "c"],
         )
-        self.assertEqual(job_2.pull(), {'a': 6, 'b': 5, 'c': 3})
+        self.assertEqual(job_2.pull(), {"a": 6, "b": 5, "c": 3})

@@ -4,9 +4,9 @@ import re
 from typing import Dict, List, Optional, Tuple
 
 import cloudpickle
+from tensorflow.python.ops.numpy_ops.np_utils import getitem
 
 from pyiron_base.jobs.job.extension.server.generic import Server
-from tensorflow.python.ops.numpy_ops.np_utils import getitem
 
 
 def draw(node_dict: Dict[str, object], edge_lst: List[List[str]]) -> None:
