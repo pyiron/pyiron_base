@@ -258,7 +258,10 @@ class DelayedObject:
         draw(node_dict=node_dict, edge_lst=edge_lst)
 
     def get_python_result(self):
-        return getattr(self._result.output, self._output_key)
+        if isinstance(self._result, dict):
+            return self._result[self._output_key]
+        else:
+            return getattr(self._result.output, self._output_key)
 
     def get_file_result(self):
         return getattr(self._result.files, self._output_file)

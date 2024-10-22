@@ -18,6 +18,7 @@ def pyiron_job(
     new_hdf: bool = True,
     output_file_lst: list = [],
     output_key_lst: list = [],
+    list_length: Optional[int] = None,
 ):
     """
     Decorator to create a pyiron job object from any python function
@@ -76,6 +77,7 @@ def pyiron_job(
             delayed=True,
             output_file_lst=output_file_lst,
             output_key_lst=output_key_lst,
+            list_length=list_length,
             **kwargs,
         )
         delayed_job_object._server = Server(**pyiron_resource_dict)
@@ -87,13 +89,13 @@ def pyiron_job(
             *args, pyiron_project: Project, pyiron_resource_dict: dict = {}, **kwargs
         ):
             resource_default_dict = {
-                "host": None,
-                "queue": None,
-                "cores": 1,
-                "threads": 1,
-                "gpus": None,
-                "run_mode": "modal",
-                "new_hdf": True,
+                "host": host,
+                "queue": queue,
+                "cores": cores,
+                "threads": threads,
+                "gpus": gpus,
+                "run_mode": run_mode,
+                "new_hdf": new_hdf,
             }
             return get_delayed_object(
                 *args,
