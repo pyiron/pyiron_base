@@ -18,7 +18,6 @@ def pyiron_job(
     new_hdf: bool = True,
     output_file_lst: list = [],
     output_key_lst: list = [],
-    list_length: Optional[int] = None,
 ):
     """
     Decorator to create a pyiron job object from any python function
@@ -63,6 +62,7 @@ def pyiron_job(
         python_function: callable,
         pyiron_resource_dict: dict,
         resource_default_dict: dict,
+        list_length: Optional[int] = None,
         **kwargs,
     ):
         for k, v in resource_default_dict.items():
@@ -86,7 +86,7 @@ def pyiron_job(
     # This is the actual decorator function that applies to the decorated function
     def pyiron_job_function(f) -> callable:
         def function(
-            *args, pyiron_project: Project, pyiron_resource_dict: dict = {}, **kwargs
+            *args, pyiron_project: Project, pyiron_resource_dict: dict = {}, list_length: Optional[int] = None, **kwargs
         ):
             resource_default_dict = {
                 "host": host,
@@ -103,6 +103,7 @@ def pyiron_job(
                 pyiron_project=pyiron_project,
                 pyiron_resource_dict=pyiron_resource_dict,
                 resource_default_dict=resource_default_dict,
+                list_length=list_length,
                 **kwargs,
             )
 
@@ -119,6 +120,7 @@ def pyiron_job(
             *args,
             pyiron_project: Project,
             pyiron_resource_dict: dict = {},
+            list_length: Optional[int] = None,
             **kwargs,
         ):
             resource_default_dict = {
@@ -130,6 +132,7 @@ def pyiron_job(
                 pyiron_project=pyiron_project,
                 pyiron_resource_dict=pyiron_resource_dict,
                 resource_default_dict=resource_default_dict,
+                list_length=list_length,
                 **kwargs,
             )
 
