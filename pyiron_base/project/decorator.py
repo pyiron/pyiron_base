@@ -16,6 +16,13 @@ def pyiron_job(
     gpus: Optional[int] = None,
     run_mode: str = "modal",
     new_hdf: bool = True,
+    accept_crash: bool = False,
+    run_time: Optional[int] = None,
+    memory_limit: Optional[str] = None,
+    qid: Optional[int] = None,
+    additional_arguments: dict = {},
+    conda_environment_name: Optional[str] = None,
+    conda_environment_path: Optional[str] = None,
     output_file_lst: list = [],
     output_key_lst: list = [],
 ):
@@ -31,6 +38,13 @@ def pyiron_job(
         gpus (int): the number of gpus selected for the current simulation.
         run_mode (str): the run mode of the job ['modal', 'non_modal', 'queue', 'manual']
         new_hdf (bool): defines whether a subjob should be stored in the same HDF5 file or in a new one.
+        accept_crash (bool): ignore execution errors raised by external executables - default False
+        run_time (int): run time limit in seconds for the job to finish - required for HPC job schedulers
+        memory_limit (str): memory required
+        qid (int): Queuing system ID - ID received from the HPC job scheduler
+        additional_arguments (dict): Additional arguments for the HPC job scheduler
+        conda_environment_name (str): Name of the conda environment
+        conda_environment_path (str): Path to the conda environment
         output_file_lst (list):
         output_key_lst (list):
 
@@ -100,6 +114,13 @@ def pyiron_job(
                 "gpus": gpus,
                 "run_mode": run_mode,
                 "new_hdf": new_hdf,
+                "accept_crash": accept_crash,
+                "run_time": run_time,
+                "memory_limit": memory_limit,
+                "qid": qid,
+                "additional_arguments": additional_arguments,
+                "conda_environment_name": conda_environment_name,
+                "conda_environment_path": conda_environment_path,
             }
             return get_delayed_object(
                 *args,
