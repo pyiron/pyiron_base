@@ -333,6 +333,8 @@ def _job_compress(
     if not _job_is_compressed(job):
         for name in files_to_remove:
             delete_file_or_folder(fullname=os.path.join(job.working_directory, name))
+        if len(files_to_compress) == 0:
+            return
         cwd = os.getcwd()
         try:
             os.chdir(job.working_directory)
