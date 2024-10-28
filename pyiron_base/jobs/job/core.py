@@ -446,7 +446,7 @@ class JobCore(HasGroups):
 
     @property
     def files_to_compress(self) -> list:
-        return self._files_to_compress
+        return self._files_to_compress or self.files.list()
 
     @property
     def files_to_remove(self) -> list:
@@ -1158,10 +1158,8 @@ class JobCore(HasGroups):
         Args:
             files_to_compress (list):
         """
-        if files_to_compress is None and len(self.files_to_compress) != 0:
+        if files_to_compress is None:
             files_to_compress = self.files_to_compress
-        elif files_to_compress is None:
-            files_to_compress = self.files.list()
         if files_to_remove is None:
             files_to_remove = self.files_to_remove
         else:
