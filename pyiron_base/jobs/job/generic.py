@@ -1219,10 +1219,10 @@ class GenericJob(JobCore, HasDict):
             data_dict["import_directory"] = self._import_directory
         if self._executor_type is not None:
             data_dict["executor_type"] = self._executor_type
-        if len(self._files_to_compress) > 0:
-            data_dict["files_to_compress"] = self._files_to_compress
+        if len(self.files_to_compress) > 0:
+            data_dict["files_to_compress"] = self.files_to_compress
         if len(self._files_to_remove) > 0:
-            data_dict["files_to_compress"] = self._files_to_remove
+            data_dict["files_to_remove"] = self._files_to_remove
         data_dict["HDF_VERSION"] = self.__version__
         return data_dict
 
