@@ -1,5 +1,5 @@
 channels:
   - conda-forge
 dependencies:
-  - paraview=5.13.1=py312ha1bca2b_5_egl
+  - paraview=5.11.2=py312hd3aac20_2_egl
   - tectonic=0.15.0=hffe7e2f_0
