@@ -147,7 +147,7 @@ class PythonFunctionContainerJob(PythonTemplateJob):
             with self._get_executor(max_workers=self.server.cores) as exe:
                 output = self._function(**input_dict, executor=exe)
         else:
-            output = self._function(**self.input.to_builtin())
+            output = self._function(**self.input)
         self.output.update({"result": output})
         self.to_hdf()
         self.status.finished = True
