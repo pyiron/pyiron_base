@@ -101,7 +101,7 @@ def pyiron_job(
     def pyiron_job_function(f) -> callable:
         def function(
             *args,
-            pyiron_project: Project,
+            pyiron_project: Project = Project("."),
             pyiron_resource_dict: dict = {},
             list_length: Optional[int] = None,
             **kwargs,
@@ -143,7 +143,7 @@ def pyiron_job(
         # Assume this usage and handle the decorator like `pyiron_job_simple`
         def function(
             *args,
-            pyiron_project: Project,
+            pyiron_project: Project = Project("."),
             pyiron_resource_dict: dict = {},
             list_length: Optional[int] = None,
             **kwargs,
