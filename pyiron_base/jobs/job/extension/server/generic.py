@@ -45,6 +45,13 @@ class Server(
         cores (int): number of cores
         run_mode (pyiron_base.server.runmode.Runmode): mode of the job ['modal', 'non_modal', 'queue', 'manual']
         new_hdf (bool): create a new HDF5 file [True/False] - default=True
+        accept_crash (bool): ignore execution errors raised by external executables - default False
+        run_time (int): run time limit in seconds for the job to finish - required for HPC job schedulers
+        memory_limit (str): memory required
+        qid (int): Queuing system ID - ID received from the HPC job scheduler
+        additional_arguments (dict): Additional arguments for the HPC job scheduler
+        conda_environment_name (str): Name of the conda environment
+        conda_environment_path (str): Path to the conda environment
 
     Attributes:
 
@@ -94,6 +101,13 @@ class Server(
         gpus: Optional[int] = None,
         run_mode: str = "modal",
         new_hdf: bool = True,
+        accept_crash: bool = False,
+        run_time: Optional[int] = None,
+        memory_limit: Optional[str] = None,
+        qid: Optional[int] = None,
+        additional_arguments: dict = {},
+        conda_environment_name: Optional[str] = None,
+        conda_environment_path: Optional[str] = None,
     ):
         super().__init__()
         self._data = ServerDataClass(
@@ -104,14 +118,14 @@ class Server(
             gpus=gpus,
             threads=threads,
             new_hdf=new_hdf,
-            accept_crash=False,
-            run_time=None,
-            memory_limit=None,
-            queue=None,
-            qid=None,
-            additional_arguments={},
-            conda_environment_name=None,
-            conda_environment_path=None,
+            accept_crash=accept_crash,
+            run_time=run_time,
+            memory_limit=memory_limit,
+            queue=queue,
+            qid=qid,
+            additional_arguments=additional_arguments,
+            conda_environment_name=conda_environment_name,
+            conda_environment_path=conda_environment_path,
         )
         self._run_mode = Runmode()
         self._executor: Union[Executor, None] = None
@@ -339,12 +353,12 @@ class Server(
             self._data.run_time = new_run_time
 
     @property
-    def memory_limit(self) -> int:
+    def memory_limit(self) -> str:
         return self._data.memory_limit
 
     @memory_limit.setter
     @sentinel
-    def memory_limit(self, limit: int) -> None:
+    def memory_limit(self, limit: str) -> None:
         if state.queue_adapter is not None and self._data.queue is not None:
             memory_max = state.queue_adapter.check_queue_parameters(
                 queue=self.queue,
