@@ -6,7 +6,7 @@ from pyiron_base.project.generic import Project
 
 
 # The combined decorator
-def pyiron_job(
+def job(
     funct: Optional[callable] = None,
     *,
     host: Optional[str] = None,
@@ -52,13 +52,13 @@ def pyiron_job(
         callable: The decorated functions
 
     Example:
-        >>> from pyiron_base import pyiron_job, Project
+        >>> from pyiron_base import job, Project
         >>>
-        >>> @pyiron_job
+        >>> @job
         >>> def my_function_a(a, b=8):
         >>>     return a + b
         >>>
-        >>> @pyiron_job(cores=2)
+        >>> @job(cores=2)
         >>> def my_function_b(a, b=8):
         >>>     return a + b
         >>>
