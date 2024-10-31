@@ -31,7 +31,7 @@ dependencies = [
     "monty==2024.10.21",
     "pandas==2.2.3",
     "psutil==6.1.0",
-    "pyfileindex==0.0.30",
+    "pyfileindex==0.0.31",
     "pyiron_dataclasses==0.0.1",
     "pyiron_snippets==0.1.4",
     "pysqa==0.2.1",
