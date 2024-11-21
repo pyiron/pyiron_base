@@ -85,6 +85,10 @@ def _get_edges_dict(edges_lst, nodes_dict, connection_dict, lookup_dict):
     return edges_dict_lst
 
 
+def _get_kwargs(lst):
+    return {t['targetHandle']: {'source': t['source'], 'sourceHandle': t['sourceHandle']} for t in lst}
+
+
 def _group_edges(edges_lst):
     edges_sorted_lst = sorted(edges_lst, key=lambda x: x['target'], reverse=True)
     total_lst, tmp_lst = [], []
@@ -93,10 +97,10 @@ def _group_edges(edges_lst):
         if target_id == ed["target"]:
             tmp_lst.append(ed)
         else:
-            total_lst.append((target_id, get_kwargs(lst=tmp_lst)))
+            total_lst.append((target_id, _get_kwargs(lst=tmp_lst)))
             target_id = ed["target"]
             tmp_lst = [ed]
-    total_lst.append((target_id, get_kwargs(lst=tmp_lst)))
+    total_lst.append((target_id, _get_kwargs(lst=tmp_lst)))
     return total_lst
 
 
@@ -152,7 +156,7 @@ def convert_workflow(nodes_dict, edges_lst):
         nodes_dict=nodes_dict,
         edges_lst=edges_lst,
     )
-    delayed_object_updated_dict, _match_dict = get_unique_objects(
+    delayed_object_updated_dict, match_dict = _get_unique_objects(
         nodes_dict=nodes_dict,
         edges_lst=edges_lst,
     )
