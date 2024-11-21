@@ -12,15 +12,14 @@ def _remove_server_obj(nodes_dict, edges_lst):
 
 def _get_nodes(connection_dict, delayed_object_updated_dict):
     return {
-        connection_dict[k]: v._python_function
-        if isinstance(v, DelayedObject) else v
+        connection_dict[k]: v._python_function if isinstance(v, DelayedObject) else v
         for k, v in delayed_object_updated_dict.items()
     }
 
 
 def _get_unique_objects(nodes_dict, edges_lst):
     delayed_object_dict = {
-        k:v for k, v in nodes_dict.items() if isinstance(v, DelayedObject)
+        k: v for k, v in nodes_dict.items() if isinstance(v, DelayedObject)
     }
     unique_lst = []
     delayed_object_updated_dict, match_dict = {}, {}
@@ -35,9 +34,9 @@ def _get_unique_objects(nodes_dict, edges_lst):
         if not match:
             unique_lst.append(dobj)
             delayed_object_updated_dict[dobj] = delayed_object_dict[dobj]
-    delayed_object_updated_dict.update({
-        k:v for k, v in nodes_dict.items() if not isinstance(v, DelayedObject)
-    })
+    delayed_object_updated_dict.update(
+        {k: v for k, v in nodes_dict.items() if not isinstance(v, DelayedObject)}
+    )
     return delayed_object_updated_dict, match_dict
 
 
@@ -68,31 +67,38 @@ def _get_edges_dict(edges_lst, nodes_dict, connection_dict, lookup_dict):
         if connection_name not in existing_connection_lst:
             output = nodes_dict[output_name]
             if isinstance(output, DelayedObject):
-                edges_dict_lst.append({
-                    "target": target,
-                    "targetHandle": target_handle,
-                    "source": connection_dict[output_name],
-                    "sourceHandle": output._output_key,
-                })
+                edges_dict_lst.append(
+                    {
+                        "target": target,
+                        "targetHandle": target_handle,
+                        "source": connection_dict[output_name],
+                        "sourceHandle": output._output_key,
+                    }
+                )
             else:
-                edges_dict_lst.append({
-                    "target": target,
-                    "targetHandle": target_handle,
-                    "source": connection_dict[output_name],
-                    "sourceHandle": None,
-                })
+                edges_dict_lst.append(
+                    {
+                        "target": target,
+                        "targetHandle": target_handle,
+                        "source": connection_dict[output_name],
+                        "sourceHandle": None,
+                    }
+                )
             existing_connection_lst.append(connection_name)
     return edges_dict_lst
 
 
 def _get_kwargs(lst):
-    return {t['targetHandle']: {'source': t['source'], 'sourceHandle': t['sourceHandle']} for t in lst}
+    return {
+        t["targetHandle"]: {"source": t["source"], "sourceHandle": t["sourceHandle"]}
+        for t in lst
+    }
 
 
 def _group_edges(edges_lst):
-    edges_sorted_lst = sorted(edges_lst, key=lambda x: x['target'], reverse=True)
+    edges_sorted_lst = sorted(edges_lst, key=lambda x: x["target"], reverse=True)
     total_lst, tmp_lst = [], []
-    target_id = edges_sorted_lst[0]['target']
+    target_id = edges_sorted_lst[0]["target"]
     for ed in edges_sorted_lst:
         if target_id == ed["target"]:
             tmp_lst.append(ed)
@@ -107,16 +113,18 @@ def _group_edges(edges_lst):
 def _get_source_handles(edges_lst):
     source_handle_dict = {}
     for ed in edges_lst:
-        if ed['source'] not in source_handle_dict.keys():
-            source_handle_dict[ed['source']] = [ed['sourceHandle']]
+        if ed["source"] not in source_handle_dict.keys():
+            source_handle_dict[ed["source"]] = [ed["sourceHandle"]]
         else:
-            source_handle_dict[ed['source']].append(ed['sourceHandle'])
+            source_handle_dict[ed["source"]].append(ed["sourceHandle"])
     return source_handle_dict
 
 
 def _get_source(nodes_dict, delayed_object_dict, source, sourceHandle):
     if source in delayed_object_dict.keys():
-        return delayed_object_dict[source].__getattr__("output").__getattr__(sourceHandle)
+        return (
+            delayed_object_dict[source].__getattr__("output").__getattr__(sourceHandle)
+        )
     else:
         return nodes_dict[source]
 
