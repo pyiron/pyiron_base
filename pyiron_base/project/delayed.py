@@ -241,6 +241,7 @@ class DelayedObject:
             pass
         self.__name__ = "DelayedObject"
         self._result = None
+        self._python_function = None
         self._server = Server()
         self._output_key = output_key
         self._output_file = output_file
@@ -294,6 +295,7 @@ class DelayedObject:
             list_length=self._list_length,
             list_index=self._list_index,
         )
+        obj_copy._python_function = self._python_function
         obj_copy._input = self._input
         obj_copy._result = self._result
         obj_copy._server.from_dict(self._server.to_dict())
