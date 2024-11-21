@@ -24,7 +24,7 @@ classifiers = [
 ]
 dependencies = [
     "cloudpickle==3.1.0",
-    "executorlib==0.0.4",
+    "executorlib==0.0.5",
     "h5io_browser==0.1.4",
     "h5py==3.12.1",
     "numpy==1.26.4",
@@ -34,7 +34,7 @@ dependencies = [
     "pyfileindex==0.0.31",
     "pyiron_dataclasses==0.0.1",
     "pyiron_snippets==0.1.4",
-    "pysqa==0.2.1",
+    "pysqa==0.2.2",
     "sqlalchemy==2.0.36",
     "tables==3.10.1",
     "tqdm==4.67.0",
