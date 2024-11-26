@@ -94,6 +94,7 @@ def job(
             list_length=list_length,
             **kwargs,
         )
+        delayed_job_object._python_function = python_function
         delayed_job_object._server = Server(**pyiron_resource_dict)
         return delayed_job_object
 
