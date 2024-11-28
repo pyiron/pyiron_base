@@ -543,7 +543,8 @@ def run_job_with_runmode_queue(job: "pyiron_base.jobs.job.generic.GenericJob") -
         **job.server.additional_arguments,
     )
     if que_id is not None:
-        job.server.queue_id = que_id
+        with job.server.unlocked():
+            job.server.queue_id = que_id
         job.project_hdf5.write_dict(data_dict={"server": job.server.to_dict()})
         print("Queue system id: ", que_id)
     else:
