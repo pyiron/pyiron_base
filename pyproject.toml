@@ -24,7 +24,7 @@ classifiers = [
 ]
 dependencies = [
     "cloudpickle==3.1.0",
-    "executorlib==0.0.6",
+    "executorlib==0.0.7",
     "h5io_browser==0.1.4",
     "h5py==3.12.1",
     "numpy==1.26.4",
