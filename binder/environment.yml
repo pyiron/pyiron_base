@@ -8,7 +8,7 @@ dependencies:
 - gitpython =3.1.44
 - h5io_browser =0.1.4
 - h5py =3.12.1
-- jinja2 =3.1.4
+- jinja2 =3.1.5
 - monty =2024.12.10
 - numpy =1.26.4
 - pandas =2.2.3
