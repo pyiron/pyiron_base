@@ -2,7 +2,7 @@ channels:
 - conda-forge
 dependencies:
 - python
-- conda =24.5.0
+- conda =24.7.1
 - conda_subprocess =0.0.5
 - cloudpickle =3.1.0
 - gitpython =3.1.44
