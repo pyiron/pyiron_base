@@ -24,6 +24,10 @@ jobs:
           prefix: C:\Miniconda3\envs\my-env
 
         - operating-system: ubuntu-latest
+          python-version: '3.13'
+          label: linux-64-py-3-13
+
+        - operating-system: ubuntu-latest
           python-version: '3.12'
           label: linux-64-py-3-12
           
