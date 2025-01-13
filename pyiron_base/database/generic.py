@@ -329,18 +329,18 @@ class DatabaseAccess(IsDatabase):
                 {str(element.split()[0]): element.split()[2] for element in cl_split}
             )
         if job is not None:
-            dict_clause["job"] = str(job)
+            dict_clause["job"] = str(job).replace("_", "\_")
 
         if project_path == "./":
             project_path = ""
         if recursive:
-            dict_clause["project"] = str(project_path) + "%"
+            dict_clause["project"] = str(project_path).replace("_", "\_") + "%"
         else:
-            dict_clause["project"] = str(project_path)
+            dict_clause["project"] = str(project_path).replace("_", "\_")
         if sub_job_name is None:
             dict_clause["subjob"] = None
         elif sub_job_name != "%":
-            dict_clause["subjob"] = str(sub_job_name)
+            dict_clause["subjob"] = str(sub_job_name).replace("_", "\_")
         if element_lst is not None:
             dict_clause["element_lst"] = element_lst
 
