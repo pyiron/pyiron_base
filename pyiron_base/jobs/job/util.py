@@ -42,7 +42,9 @@ _special_symbol_replacements = {
 
 
 def _copy_database_entry(
-    new_job_core: "pyiron_base.jobs.job.generic.GenericJob", job_copied_id: int
+    new_job_core: "pyiron_base.jobs.job.generic.GenericJob",
+    job_copied_id: int,
+    user_name: Optional[str] = None,
 ) -> None:
     """
     Copy database entry from previous job
@@ -57,6 +59,8 @@ def _copy_database_entry(
         db_entry["subjob"] = new_job_core.project_hdf5.h5_path
         db_entry["project"] = new_job_core.project_hdf5.project_path
         db_entry["projectpath"] = new_job_core.project_hdf5.root_path
+        if username is not None:
+            db_entry["username"] = username
         del db_entry["id"]
         job_id = new_job_core.project.db.add_item_dict(db_entry)
         new_job_core.reset_job_id(job_id=job_id)
