@@ -44,7 +44,7 @@ _special_symbol_replacements = {
 def _copy_database_entry(
     new_job_core: "pyiron_base.jobs.job.generic.GenericJob",
     job_copied_id: int,
-    user_name: Optional[str] = None,
+    username: Optional[str] = None,
 ) -> None:
     """
     Copy database entry from previous job
@@ -52,6 +52,7 @@ def _copy_database_entry(
     Args:
         new_job_core (GenericJob): Copy of the job object
         job_copied_id (int): Job id of the copied job
+        username (str): Optional name of the user to transfer the job to
     """
     db_entry = new_job_core.project.db.get_item_by_id(job_copied_id)
     if db_entry is not None:
