@@ -107,7 +107,7 @@ class TestDatabaseAccess(PyironTestCase):
         # be sure that get_items_sql returns right result with right statement
         result = self.database.get_items_sql(
             where_condition="",
-            sql_statement="select * from simulation " "where id=%s" % key,
+            sql_statement="select * from simulation where id=%s" % key,
         )[-1]
         self.assertTrue(par_dict.items() <= result.items())
 
