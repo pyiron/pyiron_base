@@ -1040,7 +1040,7 @@ class FlattenedStorage(Lockable, HasDictfromHDF, HasHDF):
                     # itemsize of original a is four bytes per character, so divide by four to get
                     # length of the orignal stored unicode string; np.dtype('U1').itemsize is just a
                     # platform agnostic way of knowing how wide a unicode charater is for numpy
-                    dtype=f"U{a.dtype.itemsize//np.dtype('U1').itemsize}",
+                    dtype=f"U{a.dtype.itemsize // np.dtype('U1').itemsize}",
                 )
             return a
 
