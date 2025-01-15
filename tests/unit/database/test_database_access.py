@@ -16,10 +16,105 @@ import os
 from datetime import datetime
 from random import choice
 from string import ascii_uppercase
+from typing import List, Optional
 from pyiron_base.database.generic import DatabaseAccess
 from pyiron_base._tests import PyironTestCase
 from sqlalchemy import text
 
+# legacy method of DatabaseAccess; kept here only to test _get_items_dict
+def get_items_sql(
+    self, where_condition: Optional[str] = None, sql_statement: Optional[str] = None
+) -> List[dict]:
+    """
+    Submit an SQL query to the database
+
+    Args:
+        where_condition (str): SQL where query, query like: "project LIKE 'lammps.phonons.Ni_fcc%'"
+        sql_statement (str): general SQL query, normal SQL statement
+
+    Returns:
+        list: get a list of dictionaries, where each dictionary represents one item of the table like:
+             [{u'chemicalformula': u'BO',
+              u'computer': u'localhost',
+              u'hamilton': u'VAMPS',
+              u'hamversion': u'1.1',
+              u'id': 1,
+              u'job': u'testing',
+              u'masterid': None,
+              u'parentid': 0,
+              u'project': u'database.testing',
+              u'projectpath': u'/TESTING',
+              u'status': u'KAAAA',
+              u'subjob': u'testJob',
+              u'timestart': u'2016-05-02 11:31:04.253377',
+              u'timestop': u'2016-05-02 11:31:04.371165',
+              u'totalcputime': 0.117788,
+              u'username': u'User'},
+             {u'chemicalformula': u'BO',
+              u'computer': u'localhost',
+              u'hamilton': u'VAMPS',
+              u'hamversion': u'1.1',
+              u'id': 2,
+              u'job': u'testing',
+              u'masterid': 0,
+              u'parentid': 0,
+              u'project': u'database.testing',
+              u'projectpath': u'/TESTING',
+              u'status': u'KAAAA',
+              u'subjob': u'testJob',
+              u'timestart': u'2016-05-02 11:31:04.253377',
+              u'timestop': u'2016-05-02 11:31:04.371165',
+              u'totalcputime': 0.117788,
+              u'username': u'User'}.....]
+    """
+
+    if where_condition:
+        where_condition = (
+            where_condition.replace("like", "similar to")
+            if self._engine.dialect.name == "postgresql"
+            else where_condition
+        )
+        try:
+            query = "select * from " + self.table_name + " where " + where_condition
+            query.replace("%", "%%")
+            result = self.conn.execute(text(query))
+        except Exception as except_msg:
+            print("EXCEPTION in get_items_sql: ", except_msg)
+            raise ValueError("EXCEPTION in get_items_sql: ", except_msg)
+    elif sql_statement:
+        sql_statement = (
+            sql_statement.replace("like", "similar to")
+            if self._engine.dialect.name == "postgresql"
+            else sql_statement
+        )
+        # TODO: make it save against SQL injection
+        result = self.conn.execute(text(sql_statement))
+    else:
+        result = self.conn.execute(text("select * from " + self.table_name))
+    row = result.mappings().all()
+    if not self._keep_connection:
+        self.conn.close()
+
+    # change the date of str datatype back into datetime object
+    output_list = []
+    for col in row:
+        # ensures working with db entries, which are camel case
+        timestop_index = [item.lower() for item in col.keys()].index("timestop")
+        timestart_index = [item.lower() for item in col.keys()].index("timestart")
+        tmp_values = list(col.values())
+        if (tmp_values[timestop_index] and tmp_values[timestart_index]) is not None:
+            # changes values
+            try:
+                tmp_values[timestop_index] = datetime.strptime(
+                    str(tmp_values[timestop_index]), "%Y-%m-%d %H:%M:%S.%f"
+                )
+                tmp_values[timestart_index] = datetime.strptime(
+                    str(tmp_values[timestart_index]), "%Y-%m-%d %H:%M:%S.%f"
+                )
+            except ValueError:
+                print("error in: ", str(col))
+        output_list += [dict(zip(col.keys(), tmp_values))]
+    return output_list
 
 class TestDatabaseAccess(PyironTestCase):
     """
@@ -80,70 +175,6 @@ class TestDatabaseAccess(PyironTestCase):
         # general headings have to be at least a part of get_table_headings
         for item in heading_list:
             self.assertTrue(item in self.database.get_table_headings())
-
-    def test_get_items_sql(self):
-        """
-        Tests get_items_sql function
-        Returns:
-        """
-        self.add_items("Blub")
-        self.add_items("Bluk")
-        # has to return a list
-        self.assertIsInstance(
-            self.database.get_items_sql("chemicalformula LIKE 'Blu%'"), list
-        )
-        self.assertRaises(
-            Exception, self.database.get_items_sql, "A Wrong where Clause"
-        )  # Where clause must be right
-        # A valid sqlstatement should also return a valid list
-        self.assertIsInstance(
-            self.database.get_items_sql(
-                where_condition="", sql_statement="select * from simulation"
-            ),
-            list,
-        )
-        par_dict = self.add_items("BO")
-        key = par_dict["id"]
-        # be sure that get_items_sql returns right result with right statement
-        result = self.database.get_items_sql(
-            where_condition="",
-            sql_statement="select * from simulation where id=%s" % key,
-        )[-1]
-        self.assertTrue(par_dict.items() <= result.items())
-
-    def test_get_items_sql_like_regex(self):
-        """
-        Tests the regex functionality of 'like'
-        Returns:
-        """
-        elem1 = self.add_items("H4Ni2")
-        elem2 = self.add_items("H2")
-        elem3 = self.add_items("H6")
-        elem4 = self.add_items("HeNi2")
-        elem5 = self.add_items("H12Ni5")
-        elem6 = self.add_items("H12")
-        elem7 = self.add_items("He2")
-
-        # H([0-9]*) matches H2, H6 and H12
-        self.assertEqual(
-            [elem2, elem3, elem6],
-            self.database.get_items_sql(r"chemicalformula like 'H([0-9]*)'"),
-        )
-        # He(\d)*(Ni)?\d* matches HeNi2, He2
-        self.assertEqual(
-            [elem4, elem7],
-            self.database.get_items_sql(r"chemicalformula like 'He(\d)*(Ni)?\d*'"),
-        )
-        # H\d*Ni\d* matches H4Ni2, H12Ni5
-        self.assertEqual(
-            [elem1, elem5],
-            self.database.get_items_sql(r"chemicalformula like 'H\d*Ni\d*'"),
-        )
-        # assert that not something random really is in the Database, recommended by Samuel Hartke
-        # Murat: 'Just ignore the line!'
-        self.assertEqual(
-            [], self.database.get_items_sql(r"chemicalformula like 'B\d[a-z]'")
-        )
 
     def test_add_item_dict(self):
         """
@@ -227,7 +258,7 @@ class TestDatabaseAccess(PyironTestCase):
         item_dict = {"hamilton": "VAMPE", "hamversion": "1.1"}
         self.assertEqual(
             self.database.get_items_dict(item_dict),
-            self.database.get_items_sql("hamilton='VAMPE' and hamversion='1.1'"),
+            get_items_sql(self.database, "hamilton='VAMPE' and hamversion='1.1'"),
         )
 
     def test_get_items_dict_project(self):
@@ -272,7 +303,7 @@ class TestDatabaseAccess(PyironTestCase):
         # tests an example or statement
         item_dict = {"chemicalformula": ["Blub", "Blab"]}
         # assert that both the sql and non-sql methods give the same result
-        sql_db = self.database.get_items_sql(
+        sql_db = get_items_sql(self.database,
             "chemicalformula='Blub' or chemicalformula='Blab'"
         )
         dict_db = self.database.get_items_dict(item_dict)
@@ -288,7 +319,7 @@ class TestDatabaseAccess(PyironTestCase):
         # tests an example like statement
         item_dict = {"status": "%AA%"}
         # assert that both the sql and non-sql methods give the same result
-        sql_db = self.database.get_items_sql("status like '%AA%'")
+        sql_db = get_items_sql(self.database, "status like '%AA%'")
         dict_db = self.database.get_items_dict(item_dict)
         for item in sql_db:
             self.assertTrue(item in dict_db)

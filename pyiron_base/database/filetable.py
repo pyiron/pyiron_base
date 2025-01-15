@@ -280,7 +280,7 @@ class FileTable(IsDatabase, metaclass=FileTableSingleton):
             return_all_columns (bool): return all columns or only the 'id' - still the format stays the same.
 
         Returns:
-            list: the function returns a list of dicts like get_items_sql, but it does not format datetime:
+            list: the function returns a list of dicts, but it does not format datetime:
                  [{'chemicalformula': u'Ni108',
                   'computer': u'mapc157',
                   'hamilton': u'LAMMPS',
