@@ -21,6 +21,7 @@ from pyiron_base.database.generic import DatabaseAccess
 from pyiron_base._tests import PyironTestCase
 from sqlalchemy import text
 
+
 # legacy method of DatabaseAccess; kept here only to test _get_items_dict
 def get_items_sql(
     self, where_condition: Optional[str] = None, sql_statement: Optional[str] = None
@@ -115,6 +116,7 @@ def get_items_sql(
                 print("error in: ", str(col))
         output_list += [dict(zip(col.keys(), tmp_values))]
     return output_list
+
 
 class TestDatabaseAccess(PyironTestCase):
     """
@@ -303,8 +305,8 @@ class TestDatabaseAccess(PyironTestCase):
         # tests an example or statement
         item_dict = {"chemicalformula": ["Blub", "Blab"]}
         # assert that both the sql and non-sql methods give the same result
-        sql_db = get_items_sql(self.database,
-            "chemicalformula='Blub' or chemicalformula='Blab'"
+        sql_db = get_items_sql(
+            self.database, "chemicalformula='Blub' or chemicalformula='Blab'"
         )
         dict_db = self.database.get_items_dict(item_dict)
         for item in sql_db:
