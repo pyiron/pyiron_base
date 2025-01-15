@@ -52,7 +52,7 @@ def _copy_database_entry(
     Args:
         new_job_core (GenericJob): Copy of the job object
         job_copied_id (int): Job id of the copied job
-        username (str): Optional name of the user to transfer the job to
+        username (str): Optional name of the user to copy the job to
     """
     db_entry = new_job_core.project.db.get_item_by_id(job_copied_id)
     if db_entry is not None:
