@@ -313,7 +313,8 @@ class DatabaseAccess(IsDatabase):
 
         """
         if not self._sql_lite:
-            def escape(s, escape_char='\\', special_chars="_%"):
+
+            def escape(s, escape_char="\\", special_chars="_%"):
                 """Insert escape_char in front of special_chars, unless present.
 
                 Handles the cases where s already contains escaped characters,
@@ -326,8 +327,10 @@ class DatabaseAccess(IsDatabase):
                     s = s.replace(c, escape_char + c)
                 return s
         else:
-            def escape(s, escape_char='\\', special_chars="_%"):
+
+            def escape(s, escape_char="\\", special_chars="_%"):
                 return s
+
         dict_clause = {}
         # FOR GET_ITEMS_SQL: clause = []
         if user is not None:
