@@ -326,6 +326,7 @@ class DatabaseAccess(IsDatabase):
                         s = s.replace(escape_char + c, c)
                     s = s.replace(c, escape_char + c)
                 return s
+
         else:
 
             def escape(s, escape_char="\\", special_chars="_%"):
