@@ -281,7 +281,7 @@ class DatabaseAccess(IsDatabase):
             element_lst (list): list of elements required in the chemical formular - by default None
 
         Returns:
-            list: the function returns a list of dicts like get_items_sql, but it does not format datetime:
+            list: the function returns a list of dicts, but it does not format datetime:
                  [{'chemicalformula': u'Ni108',
                   'computer': u'mapc157',
                   'hamilton': u'LAMMPS',
@@ -501,100 +501,6 @@ class DatabaseAccess(IsDatabase):
             self.conn.commit()
         else:
             raise PermissionError("Not avilable in viewer mode.")
-
-    def get_items_sql(
-        self, where_condition: Optional[str] = None, sql_statement: Optional[str] = None
-    ) -> List[dict]:
-        """
-        Submit an SQL query to the database
-
-        Args:
-            where_condition (str): SQL where query, query like: "project LIKE 'lammps.phonons.Ni_fcc%'"
-            sql_statement (str): general SQL query, normal SQL statement
-
-        Returns:
-            list: get a list of dictionaries, where each dictionary represents one item of the table like:
-                 [{u'chemicalformula': u'BO',
-                  u'computer': u'localhost',
-                  u'hamilton': u'VAMPS',
-                  u'hamversion': u'1.1',
-                  u'id': 1,
-                  u'job': u'testing',
-                  u'masterid': None,
-                  u'parentid': 0,
-                  u'project': u'database.testing',
-                  u'projectpath': u'/TESTING',
-                  u'status': u'KAAAA',
-                  u'subjob': u'testJob',
-                  u'timestart': u'2016-05-02 11:31:04.253377',
-                  u'timestop': u'2016-05-02 11:31:04.371165',
-                  u'totalcputime': 0.117788,
-                  u'username': u'User'},
-                 {u'chemicalformula': u'BO',
-                  u'computer': u'localhost',
-                  u'hamilton': u'VAMPS',
-                  u'hamversion': u'1.1',
-                  u'id': 2,
-                  u'job': u'testing',
-                  u'masterid': 0,
-                  u'parentid': 0,
-                  u'project': u'database.testing',
-                  u'projectpath': u'/TESTING',
-                  u'status': u'KAAAA',
-                  u'subjob': u'testJob',
-                  u'timestart': u'2016-05-02 11:31:04.253377',
-                  u'timestop': u'2016-05-02 11:31:04.371165',
-                  u'totalcputime': 0.117788,
-                  u'username': u'User'}.....]
-        """
-
-        if where_condition:
-            where_condition = (
-                where_condition.replace("like", "similar to")
-                if self._engine.dialect.name == "postgresql"
-                else where_condition
-            )
-            try:
-                query = "select * from " + self.table_name + " where " + where_condition
-                query.replace("%", "%%")
-                result = self.conn.execute(text(query))
-            except Exception as except_msg:
-                print("EXCEPTION in get_items_sql: ", except_msg)
-                raise ValueError("EXCEPTION in get_items_sql: ", except_msg)
-        elif sql_statement:
-            sql_statement = (
-                sql_statement.replace("like", "similar to")
-                if self._engine.dialect.name == "postgresql"
-                else sql_statement
-            )
-            # TODO: make it save against SQL injection
-            result = self.conn.execute(text(sql_statement))
-        else:
-            result = self.conn.execute(text("select * from " + self.table_name))
-        row = result.mappings().all()
-        if not self._keep_connection:
-            self.conn.close()
-
-        # change the date of str datatype back into datetime object
-        output_list = []
-        for col in row:
-            # ensures working with db entries, which are camel case
-            timestop_index = [item.lower() for item in col.keys()].index("timestop")
-            timestart_index = [item.lower() for item in col.keys()].index("timestart")
-            tmp_values = list(col.values())
-            if (tmp_values[timestop_index] and tmp_values[timestart_index]) is not None:
-                # changes values
-                try:
-                    tmp_values[timestop_index] = datetime.strptime(
-                        str(tmp_values[timestop_index]), "%Y-%m-%d %H:%M:%S.%f"
-                    )
-                    tmp_values[timestart_index] = datetime.strptime(
-                        str(tmp_values[timestart_index]), "%Y-%m-%d %H:%M:%S.%f"
-                    )
-                except ValueError:
-                    print("error in: ", str(col))
-            output_list += [dict(zip(col.keys(), tmp_values))]
-        return output_list
 
     def _check_chem_formula_length(self, par_dict: dict) -> dict:
         """
@@ -900,7 +806,7 @@ class DatabaseAccess(IsDatabase):
             return_all_columns (bool): return all columns or only the 'id' - still the format stays the same.
 
         Returns:
-            list: the function returns a list of dicts like get_items_sql, but it does not format datetime:
+            list: the function returns a list of dicts, but it does not format datetime:
                  [{'chemicalformula': u'Ni108',
                   'computer': u'mapc157',
                   'hamilton': u'LAMMPS',
