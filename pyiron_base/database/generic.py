@@ -900,10 +900,10 @@ class DatabaseAccess(IsDatabase):
                 self.conn.connection.create_function("like", 2, self.regexp)
 
             result = self.conn.execute(query)
-        row = result.fetchall()
+        results = [row._asdict() for row in result.fetchall()]
         if not self._keep_connection:
             self.conn.close()
-        return [dict(zip(col._mapping.keys(), col._mapping.values())) for col in row]
+        return results
 
     def get_job_status(self, job_id: int) -> Union[str, None]:
         try:
