@@ -876,6 +876,7 @@ class JobCore(HasGroups):
                 _copy_database_entry(
                     new_job_core=new_job_core,
                     job_copied_id=self.job_id,
+                    username=state.settings.login_user,
                 )
             else:
                 new_job_core.reset_job_id(job_id=None)
