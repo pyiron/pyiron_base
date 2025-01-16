@@ -41,6 +41,22 @@ class TestPythonFunctionDecorator(TestWithProject):
         self.assertEqual(len(nodes_dict), 6)
         self.assertEqual(len(edges_lst), 6)
 
+    def test_delayed_return_types(self):
+        @job(output_key_lst=["a"])
+        def my_function_a(a, b=8):
+            return {"a": a + b}
+
+        @job(cores=2, output_key_lst=["0"])
+        def my_function_b(a, b=8):
+            return [a + b]
+
+        c = my_function_a(a=1, b=2, pyiron_project=self.project)
+        d = my_function_b(a=c.output.a, b=3, pyiron_project=self.project)
+        self.assertEqual(d.pull(), [6])
+        nodes_dict, edges_lst = d.get_graph()
+        self.assertEqual(len(nodes_dict), 6)
+        self.assertEqual(len(edges_lst), 6)
+
 
 if __name__ == "__main__":
     unittest.main()
