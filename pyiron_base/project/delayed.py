@@ -260,7 +260,7 @@ class DelayedObject:
 
     def get_python_result(self):
         if isinstance(self._result, dict) and self._output_key is not None:
-            return self._result[self._output_key]
+            return self._result[str(self._output_key)]
         elif isinstance(self._result, list):
             if self._list_index is not None:
                 return self._result[self._list_index]
