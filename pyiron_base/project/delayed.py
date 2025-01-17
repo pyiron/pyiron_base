@@ -286,7 +286,9 @@ class DelayedObject:
             return self.get_python_result()
         elif self._output_file is not None:
             return self.get_file_result()
-        elif self._list_index is not None:
+        elif isinstance(self._result, list) and self._list_index is not None:
+            return self._result[self._list_index]
+        elif isinstance(self._result, dict) and self._list_index is not None:
             return self._result[str(self._list_index)]
         else:
             return self._result
