@@ -98,7 +98,7 @@ class TestGenericJob(TestWithFilledProject):
         os.makedirs(ham.working_directory, exist_ok=True)
         for file in file_lst:
             with open(os.path.join(ham.working_directory, file), "w") as f:
-                f.writelines(["content: " + file])
+                f.writelines(["content: " + file + "\n"])
         for file in file_lst:
             self.assertTrue(file in ham.files.list())
         for file in file_lst:
@@ -762,7 +762,7 @@ class TestGenericJob(TestWithFilledProject):
         job.decompress()
         content = ["Content", "More", "Lines"]
         with open(os.path.join(job.working_directory, "test_file"), "w") as f:
-            f.write(os.linesep.join(content))
+            f.write(os.linesep.join(content) + "\n")
 
         for i in range(len(content)):
             with self.subTest(i=i):
