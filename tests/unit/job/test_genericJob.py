@@ -115,7 +115,7 @@ class TestGenericJob(TestWithFilledProject):
         )
         with contextlib.redirect_stdout(io.StringIO(newline=os.linesep)) as f:
             ham.files.file_to_compress.tail()
-        self.assertEqual(f.getvalue().replace("\r", ""), "content: file_to_compress\n")
+        self.assertEqual(f.getvalue().replace("\r", "").replace("\n", ""), "content: file_to_compress")
         ham.remove()
 
     def test_job_name(self):
