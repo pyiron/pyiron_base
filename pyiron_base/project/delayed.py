@@ -259,10 +259,19 @@ class DelayedObject:
         draw(node_dict=node_dict, edge_lst=edge_lst)
 
     def get_python_result(self):
-        if isinstance(self._result, dict):
-            return self._result[self._output_key]
-        else:
+        if isinstance(self._result, dict) and self._output_key is not None:
+            return self._result[str(self._output_key)]
+        elif isinstance(self._result, list):
+            if self._list_index is not None:
+                return self._result[self._list_index]
+            elif self._output_key is not None:
+                return self._result[int(self._output_key)]
+            else:
+                return self._result
+        elif self._output_key is not None:
             return getattr(self._result.output, self._output_key)
+        else:
+            return self._result
 
     def get_file_result(self):
         return getattr(self._result.files, self._output_file)
@@ -277,8 +286,10 @@ class DelayedObject:
             return self.get_python_result()
         elif self._output_file is not None:
             return self.get_file_result()
-        elif self._list_index is not None:
+        elif isinstance(self._result, list) and self._list_index is not None:
             return self._result[self._list_index]
+        elif isinstance(self._result, dict) and self._list_index is not None:
+            return self._result[str(self._list_index)]
         else:
             return self._result
 
