@@ -33,7 +33,7 @@ class TestJobTypeChoice(PyironTestCase):
                 getattr(self.jobtypechoice, k)
         except AttributeError:
             self.fail(
-                "job class {} in JOB_CLASS_DICT, but not on " "JobTypeChoice".format(k)
+                "job class {} in JOB_CLASS_DICT, but not on JobTypeChoice".format(k)
             )
 
     def test_extend_job_class_dict(self):
@@ -44,14 +44,13 @@ class TestJobTypeChoice(PyironTestCase):
         JOB_CLASS_DICT["TestClass"] = "my.own.test.module"
         self.assertTrue(
             "TestClass" in dir(self.jobtypechoice),
-            "new job class added to JOB_CLASS_DICT, but not " "returned in dir()",
+            "new job class added to JOB_CLASS_DICT, but not returned in dir()",
         )
         try:
             getattr(self.jobtypechoice, "TestClass")
         except AttributeError:
             self.fail(
-                "new job class added to JOB_CLASS_DICT, but not defined "
-                "JobTypeChoice"
+                "new job class added to JOB_CLASS_DICT, but not defined JobTypeChoice"
             )
 
 
@@ -81,5 +80,5 @@ class TestJobCreator(PyironTestCase):
                 getattr(self.job_factory, k)
         except AttributeError:
             self.fail(
-                "job class {} in JOB_CLASS_DICT, but not on " "JobTypeChoice".format(k)
+                "job class {} in JOB_CLASS_DICT, but not on JobTypeChoice".format(k)
             )

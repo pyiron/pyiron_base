@@ -308,7 +308,7 @@ class ParallelMaster(GenericMaster):
         Internal helper function the run if refresh function is called when the job status is 'refresh'. If the job was
         suspended previously, the job is going to be started again, to be continued.
         """
-        log_str = "{}, status: {}, finished: {} parallel master " "refresh".format(
+        log_str = "{}, status: {}, finished: {} parallel master refresh".format(
             self.job_info_str, self.status, self.is_finished()
         )
         self._logger.info(log_str)

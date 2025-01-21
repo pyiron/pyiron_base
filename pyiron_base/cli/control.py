@@ -54,7 +54,7 @@ def main() -> None:
             mod.register(sub_parser)
         except AttributeError:
             warnings.warn(
-                "module '{}' does not define main or register " "function, ignoring"
+                "module '{}' does not define main or register function, ignoring"
             )
 
     args = parser.parse_args()
