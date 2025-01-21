@@ -28,7 +28,7 @@ dependencies = [
     "h5io_browser==0.1.6",
     "h5py==3.12.1",
     "numpy==2.2.2",
-    "monty==2024.12.10",
+    "monty==2025.1.9",
     "pandas==2.2.3",
     "psutil==6.1.1",
     "pyfileindex==0.0.33",
