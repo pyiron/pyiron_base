@@ -265,7 +265,9 @@ class Project(ProjectPath, HasGroups):
             if "_hdf5" not in sub_project_name:
                 sub_project = self.open(sub_project_name)
                 destination_sub_project = destination.open(sub_project_name)
-                sub_project.copy_to(destination_sub_project, delete_original_data=delete_original_data)
+                sub_project.copy_to(
+                    destination_sub_project, delete_original_data=delete_original_data
+                )
         for job_id in tqdm(self.get_job_ids(recursive=False), desc="Copying jobs"):
             ham = self.load(job_id)
             if delete_original_data:
