@@ -351,9 +351,6 @@ class InteractiveBase(GenericJob):
         """
         self.interactive_cache[key] = value
 
-    # def __del__(self):
-    #     self.interactive_close()
-
     def run_if_interactive(self) -> None:
         raise NotImplementedError("run_if_interactive() is not implemented!")
 

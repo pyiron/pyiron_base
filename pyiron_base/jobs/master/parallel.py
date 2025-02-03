@@ -314,7 +314,7 @@ class ParallelMaster(GenericMaster):
         self._logger.info(log_str)
         if self.is_finished():
             self.status.collect = True
-            self.run()  # self.run_if_collect()
+            self.run()
         elif (
             self.server.run_mode.non_modal or self.server.run_mode.queue
         ) and not self.submission_status.finished:
@@ -353,7 +353,6 @@ class ParallelMaster(GenericMaster):
             "{}, status: {}, parallel master".format(self.job_info_str, self.status)
         )
         self.update_master()
-        # self.send_to_database()
 
     def _run_if_new(self, debug=False):
         """
@@ -522,7 +521,7 @@ class ParallelMaster(GenericMaster):
         if state.database.database_is_disabled:
             self.project.db.update()
         self.status.collect = True
-        self.run()  # self.run_if_collect()
+        self.run()
 
     def run_static(self):
         """

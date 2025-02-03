@@ -749,7 +749,7 @@ class JobCore(HasGroups):
         if job_specifier is not None:
             return self.project.get_job_id(
                 job_specifier
-            )  # , sub_job_name=self.project_hdf5.h5_path)
+            )
         where_dict = {
             "job": str(self._name),
             "project": str(self.project_hdf5.project_path),
