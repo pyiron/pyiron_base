@@ -56,7 +56,7 @@ def _download_resources(
     with tarfile.open(temp_zip_file, "r:gz") as tar:
         safe_extract(tar, temp_directory)
     copytree(temp_extract_folder, user_directory)
-    if os.name != "nt":  #
+    if os.name != "nt":
         for root, dirs, files in os.walk(user_directory):
             for file in files:
                 if ".sh" in file:

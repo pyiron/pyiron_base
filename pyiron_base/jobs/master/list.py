@@ -139,7 +139,6 @@ class ListMaster(GenericMaster):
         """
         if self.status.finished:
             return True
-        # self.status.busy = True
         self.submission_status.refresh()
         if not self.submission_status.finished:
             return False
@@ -150,7 +149,6 @@ class ListMaster(GenericMaster):
                     for child_id in self.child_ids
                 ]
             )
-            # status_set = set([job.get_status() for job in self.iter_jobs(convert_to_object=False)])
             if "finished" in status_set:
                 return len(status_set) == 1
             else:

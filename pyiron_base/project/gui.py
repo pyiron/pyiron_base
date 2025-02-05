@@ -68,7 +68,6 @@ class ProjectGUI:
         self.w_tab = None
         self.w_path = None
         self.w_type = None
-        #         self.fig, self.ax = plt.subplots()
 
         self.create_widgets()
         self.connect_widgets()
@@ -86,16 +85,11 @@ class ProjectGUI:
         self.w_node = select(description="Nodes:")
         self.w_file = select(description="Files:")
         self.w_text = widgets.HTML()
-        # self.w_text = widgets.Textarea()
         self.w_text.layout.height = "330px"
         self.w_text.layout.width = "580px"
         self.w_text.disabled = True
-        #         self.w_plot = self.fig
         w_list = widgets.VBox([self.w_group, self.w_node, self.w_file])
         self.w_tab = widgets.HBox([w_list, self.w_text])
-        #         tab = widgets.Tab(children=[self.w_group, self.w_node, self.w_file, self.w_text])
-        #         [tab.set_title(num, name) for num, name in enumerate(['groups', 'nodes', 'files', 'text'])]
-        #         self.w_tab = tab
 
         self.w_path = widgets.Text(name="Path: ")
         self.w_path.layout.width = "680px"
@@ -145,7 +139,6 @@ class ProjectGUI:
         else:
             self.ax.clear()
 
-        # self.ax.set_title(self.name)
         if val.ndim == 1:
             self.ax.plot(val)
         elif val.ndim == 2:
@@ -246,15 +239,12 @@ class ProjectGUI:
         if isinstance(self.project, str):
             self.w_text.value = html.escape(self.project)
             self._move_up()
-            # self.w_path.value = self.get_rel_path(self.parent.path + '/' + self.name)
         elif isinstance(self.project, dict):
             self.w_text.value = self.dict_to_str(self.project)
             self._move_up()
-            # self.w_path.value = self.get_rel_path(self.parent.path + '/' + self.name)
         elif isinstance(self.project, (int, float)):
             self.w_text.value = html.escape(str(self.project))
             self._move_up()
-            # self.w_path.value = self.get_rel_path(self.parent.path + '/' + self.name)
         elif isinstance(self.project, list):
             max_length = 2000  # performance of widget above is extremely poor
             if len(self.project) < max_length:
@@ -268,15 +258,12 @@ class ProjectGUI:
 
             self.w_type.value = "list: {} lines".format(len(self.project))
             self._move_up()
-            # self.w_path.value = self.get_rel_path(self.parent.path + '/' + self.name)
         elif isinstance(self.project, np.ndarray):
             self.plot_array(self.project)
             self._move_up()
-            # self.w_path.value = self.get_rel_path(self.parent.path + '/' + self.name)
         elif "data_dict" in self.project.list_nodes():
             self.w_text.value = pandas.DataFrame(self.project["data_dict"]).to_html()
             self._move_up()
-            # self.w_path.value = self.get_rel_path(self.parent.path + '/' + self.name)
         elif self.project is None:
             raise ValueError(
                 "project is None: {}".format(type(self.project)), self.parent

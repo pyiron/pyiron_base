@@ -419,7 +419,6 @@ class GenericParameters(HasDict):
                                           - default=False
             **modify_dict (dict): dictionary of parameter names and values
         """
-        # print ("modify: ", modify_dict)
         if separator is not None:
             modify_dict = {k + separator: v for k, v in modify_dict.items()}
 

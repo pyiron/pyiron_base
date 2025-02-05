@@ -6,7 +6,7 @@ intercepted_signals = [
     signal.SIGINT,
     signal.SIGTERM,
     signal.SIGABRT,
-]  # , signal.SIGQUIT]
+]
 
 
 @contextlib.contextmanager

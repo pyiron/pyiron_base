@@ -362,7 +362,6 @@ class FileTable(IsDatabase, metaclass=FileTableSingleton):
             for key in columns:
                 dictionary[key] = list()
             return dictionary
-            # return {key: list() for key in columns}
         dictionary = {}
         for key in df.keys():
             dictionary[key] = df[
