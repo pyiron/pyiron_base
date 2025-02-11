@@ -1,6 +1,6 @@
 # pyiron_base
 
-[![Coverage Status](https://coveralls.io/repos/github/pyiron/pyiron_base/badge.svg?branch=main)](https://coveralls.io/github/pyiron/pyiron_base?branch=main)
+[![codecov](https://codecov.io/gh/pyiron/pyiron_base/graph/badge.svg?token=qjRvhGVij2)](https://codecov.io/gh/pyiron/pyiron_base)
 [![Release_Date](https://anaconda.org/conda-forge/pyiron_base/badges/latest_release_date.svg)](https://anaconda.org/conda-forge/pyiron_base/)
 [![Pipeline](https://github.com/pyiron/pyiron_base/actions/workflows/pipeline.yml/badge.svg)](https://github.com/pyiron/pyiron_base/actions/workflows/pipeline.yml)
 [![Downloads](https://anaconda.org/conda-forge/pyiron_base/badges/downloads.svg)](https://anaconda.org/conda-forge/pyiron_base/)
