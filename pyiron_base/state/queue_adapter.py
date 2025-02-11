@@ -9,6 +9,7 @@ multiple adapters.
 """
 
 import os
+from itertools import groupby
 
 from pyiron_snippets.resources import ResourceResolver
 from pyiron_snippets.singleton import Singleton
@@ -46,18 +47,14 @@ class QueueAdapters(metaclass=Singleton):
 
     def construct_adapters(self) -> None:
         """Read through the resources and construct queue adapters for all the queue configuration files found."""
-        queue_folders = set(
-            map(
-                os.path.dirname,
-                ResourceResolver(
-                    settings.resource_paths,
-                    "queues",
-                ).search(["queue.yaml", "clusters.yaml"]),
-            )
-        )
-        self._adapters = [
-            PySQAAdpter(directory=queue_folder) for queue_folder in queue_folders
-        ]
+        queue_search = ResourceResolver(
+            settings.resource_paths,
+            "queues",
+        ).search(["queue.yaml", "clusters.yaml"])
+        # in case a resource folder defines both queue.yaml and clusters.yaml
+        # use the groupby to only pick up unique folders in the same order as
+        # found by the resolver
+        self._adapters = [PySQAAdpter(directory=group[0]) for group in groupby(map(os.path.dirname, queue_search))]
 
     @property
     def adapter(self) -> PySQAAdpter:
