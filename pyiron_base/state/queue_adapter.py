@@ -54,7 +54,10 @@ class QueueAdapters(metaclass=Singleton):
         # in case a resource folder defines both queue.yaml and clusters.yaml
         # use the groupby to only pick up unique folders in the same order as
         # found by the resolver
-        self._adapters = [PySQAAdpter(directory=group[0]) for group in groupby(map(os.path.dirname, queue_search))]
+        self._adapters = [
+            PySQAAdpter(directory=group[0])
+            for group in groupby(map(os.path.dirname, queue_search))
+        ]
 
     @property
     def adapter(self) -> PySQAAdpter:
