@@ -335,7 +335,7 @@ class DatabaseAccess(IsDatabase):
         dict_clause = {}
         # FOR GET_ITEMS_SQL: clause = []
         if user is not None:
-            dict_clause["username"] = escape(str(user))
+            dict_clause["username"] = str(user)
             # FOR GET_ITEMS_SQL: clause.append("username = '" + self.user + "'")
         if sql_query is not None:
             # FOR GET_ITEMS_SQL: clause.append(self.sql_query)
@@ -349,18 +349,18 @@ class DatabaseAccess(IsDatabase):
                 {str(element.split()[0]): element.split()[2] for element in cl_split}
             )
         if job is not None:
-            dict_clause["job"] = escape(str(job))
+            dict_clause["job"] = str(job)
 
         if project_path == "./":
             project_path = ""
         if recursive:
             dict_clause["project"] = escape(str(project_path)) + "%"
         else:
-            dict_clause["project"] = escape(str(project_path))
+            dict_clause["project"] = str(project_path)
         if sub_job_name is None:
             dict_clause["subjob"] = None
         elif sub_job_name != "%":
-            dict_clause["subjob"] = escape(str(sub_job_name))
+            dict_clause["subjob"] = str(sub_job_name)
         if element_lst is not None:
             dict_clause["element_lst"] = element_lst
 
@@ -878,7 +878,7 @@ class DatabaseAccess(IsDatabase):
                 # here we wrap the given values in an sqlalchemy-type or_statement
                 part_of_statement = [or_(*or_statement)]
             else:
-                if "%" not in str(value):
+                if '%' not in value:
                     part_of_statement = [self.simulation_table.c[str(key)] == value]
                 else:
                     part_of_statement = [self.simulation_table.c[str(key)].like(value)]
