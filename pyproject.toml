@@ -27,7 +27,7 @@ dependencies = [
     "executorlib==0.2.1",
     "h5io_browser==0.1.6",
     "h5py==3.12.1",
-    "numpy==2.2.2",
+    "numpy==2.2.3",
     "monty==2025.1.9",
     "pandas==2.2.3",
     "psutil==6.1.1",
