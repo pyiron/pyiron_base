@@ -28,7 +28,7 @@ from sqlalchemy import (
     text,
 )
 from sqlalchemy.engine import Engine
-from sqlalchemy.exc import DatabaseError, OperationalError
+from sqlalchemy.exc import DatabaseError, OperationalError, PendingRollbackError
 from sqlalchemy.pool import NullPool
 from sqlalchemy.sql import select
 
@@ -151,7 +151,11 @@ class AutorestoredConnection:
                     self._watchdog.start()
             if self._timeout > 0:
                 self._watchdog.kick()
-            return self._conn.execute(*args, **kwargs)
+            try:
+                return self._conn.execute(*args, **kwargs)
+            except PendingRollbackError:
+                self._conn.rollback()
+                self.execute_once(*args, **kwargs)
 
     def execute(self, *args, **kwargs):
         return retry(
