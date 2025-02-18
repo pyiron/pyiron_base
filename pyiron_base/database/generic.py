@@ -878,7 +878,7 @@ class DatabaseAccess(IsDatabase):
                 # here we wrap the given values in an sqlalchemy-type or_statement
                 part_of_statement = [or_(*or_statement)]
             else:
-                if "%" not in value:
+                if "%" not in str(value):
                     part_of_statement = [self.simulation_table.c[str(key)] == value]
                 else:
                     part_of_statement = [self.simulation_table.c[str(key)].like(value)]
