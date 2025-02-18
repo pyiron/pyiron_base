@@ -1086,6 +1086,7 @@ def execute_job_with_calculate_function(
                     job.compress()
                 job.status.finished = True
         job._hdf5["status"] = job.status.string
+        job.update_master()
 
 
 def _generate_flux_execute_string(
