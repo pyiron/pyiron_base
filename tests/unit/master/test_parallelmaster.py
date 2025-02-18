@@ -80,5 +80,25 @@ class TestParallelMaster(TestWithProject):
         self.assertTrue(self.master_toy.status.not_converged)
 
 
+class TestParallelMasterRunModes(TestWithProject):
+    def test_master_modal_ref_modal(self):
+        master_toy = self.project.create_job(TestMaster, "master_toy")
+        master_toy.ref_job = self.project.create_job(ToyJob, "ref")
+        master_toy.server.run_mode.modal = True
+        master_toy.run()
+        self.project.wait_for_job(master_toy, interval_in_s=6, max_iterations=10)
+        self.assertTrue(master_toy.status.finished)
+        self.project.remove_jobs(recursive=True, silently=True)
+
+    def test_master_modal_ref_non_modal(self):
+        master_toy = self.project.create_job(TestMaster, "master_toy")
+        master_toy.ref_job = self.project.create_job(ToyJob, "ref")
+        master_toy.server.run_mode.modal = True
+        master_toy.run()
+        self.project.wait_for_job(master_toy, interval_in_s=6, max_iterations=10)
+        self.assertTrue(master_toy.status.finished)
+        self.project.remove_jobs(recursive=True, silently=True)
+
+
 if __name__ == "__main__":
     unittest.main()
