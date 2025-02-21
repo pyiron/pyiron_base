@@ -282,7 +282,9 @@ class Project(ProjectPath, HasGroups):
                 if ".h5" not in file:
                     shutil.copy(os.path.join(self.path, file), destination.path)
                 if self._data is not None:
-                    pass  # ToDo copy the project data
+                    shutil.copy(
+                        os.path.join(self.path, "project_data.h5"), destination.path
+                    )
         return destination
 
     def create_from_job(self, job_old: "GenericJob", new_job_name: str) -> "GenericJob":
