@@ -119,20 +119,14 @@ class TestProjectMove(TestWithFilledProject):
             self.assertEqual(reference_pr.list_groups(), destination_pr.list_groups())
             self.assertEqual(reference_pr.list_nodes(), destination_pr.list_nodes())
             self.assertEqual(reference_pr.list_files(), destination_pr.list_files())
-            self.assertEqual(len(self.project.list_groups()), 0)
-            self.assertEqual(len(self.project.list_nodes()), 0)
-            self.assertEqual(len(self.project.list_files()), 0)
-            self.assertEqual(os.listdir(self.project_path), [])
+            self.assertFalse(os.path.exists(self.project_path))
         with self.subTest("destination2 move_to old project"):
             destination_pr.move_to(self.project)
             self.assertEqual(self.project.list_groups(), reference_pr.list_groups())
             self.assertEqual(self.project.list_nodes(), reference_pr.list_nodes())
             self.assertEqual(self.project.list_files(), reference_pr.list_files())
-            self.assertEqual(len(destination_pr.list_groups()), 0)
-            self.assertEqual(len(destination_pr.list_nodes()), 0)
-            self.assertEqual(len(destination_pr.list_files()), 0)
             self.assertEqual(os.listdir(destination_pr.path), [])
-            destination_pr.remove(enable=True)
+            self.assertFalse(os.path.exists(destination_pr.path))
         with self.subTest("copy_to with project data"):
             destination_pr = self.project.parent_group.open("destination3")
             self.project.data["foo"] = 42
@@ -164,11 +158,11 @@ class TestProjectOperations(TestWithFilledProject):
             0: (0, "byte"),
             50: (50, "byte"),
             2000: (1.953125, "kibibyte"),
-            2**20: (1.0, "mebibyte"),
-            2**30: (1.0, "gibibyte"),
-            2**40: (1.0, "tebibyte"),
-            2**50: (1.0, "pebibyte"),
-            2**60: (1024.0, "pebibyte"),
+            2 ** 20: (1.0, "mebibyte"),
+            2 ** 30: (1.0, "gibibyte"),
+            2 ** 40: (1.0, "tebibyte"),
+            2 ** 50: (1.0, "pebibyte"),
+            2 ** 60: (1024.0, "pebibyte"),
         }
 
         byte = pint.UnitRegistry().byte
