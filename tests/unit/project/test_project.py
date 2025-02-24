@@ -164,11 +164,11 @@ class TestProjectOperations(TestWithFilledProject):
             0: (0, "byte"),
             50: (50, "byte"),
             2000: (1.953125, "kibibyte"),
-            2 ** 20: (1.0, "mebibyte"),
-            2 ** 30: (1.0, "gibibyte"),
-            2 ** 40: (1.0, "tebibyte"),
-            2 ** 50: (1.0, "pebibyte"),
-            2 ** 60: (1024.0, "pebibyte"),
+            2**20: (1.0, "mebibyte"),
+            2**30: (1.0, "gibibyte"),
+            2**40: (1.0, "tebibyte"),
+            2**50: (1.0, "pebibyte"),
+            2**60: (1024.0, "pebibyte"),
         }
 
         byte = pint.UnitRegistry().byte
