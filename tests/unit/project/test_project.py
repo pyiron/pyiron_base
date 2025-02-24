@@ -125,7 +125,6 @@ class TestProjectMove(TestWithFilledProject):
             self.assertEqual(self.project.list_groups(), reference_pr.list_groups())
             self.assertEqual(self.project.list_nodes(), reference_pr.list_nodes())
             self.assertEqual(self.project.list_files(), reference_pr.list_files())
-            self.assertEqual(os.listdir(destination_pr.path), [])
             self.assertFalse(os.path.exists(destination_pr.path))
         with self.subTest("copy_to with project data"):
             destination_pr = self.project.parent_group.open("destination3")
