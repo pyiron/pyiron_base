@@ -97,6 +97,55 @@ class TestProjectData(PyironTestCase):
         )
 
 
+class TestProjectMove(TestWithFilledProject):
+    def test_copy_to(self):
+        with self.subTest("copy_to destination project"):
+            # cp project  destination creating a reference_pr
+            destination_pr = self.project.parent_group.open("destination")
+            self.assertEqual(len(destination_pr.list_groups()), 0)
+            self.assertEqual(len(destination_pr.list_nodes()), 0)
+            self.assertEqual(len(destination_pr.list_files()), 0)
+            self.project.copy_to(destination_pr)
+            self.assertEqual(self.project.list_groups(), destination_pr.list_groups())
+            self.assertEqual(self.project.list_nodes(), destination_pr.list_nodes())
+            self.assertEqual(self.project.list_files(), destination_pr.list_files())
+            reference_pr = destination_pr
+        with self.subTest("copy_to with delete_original_data"):
+            destination_pr = self.project.parent_group.open("destination2")
+            self.assertEqual(len(destination_pr.list_groups()), 0)
+            self.assertEqual(len(destination_pr.list_nodes()), 0)
+            self.assertEqual(len(destination_pr.list_files()), 0)
+            self.project.copy_to(destination_pr, delete_original_data=True)
+            self.assertEqual(reference_pr.list_groups, destination_pr.list_groups())
+            self.assertEqual(reference_pr.list_nodes, destination_pr.list_nodes())
+            self.assertEqual(reference_pr.list_files, destination_pr.list_files())
+            self.assertEqual(len(self.project.list_groups()), 0)
+            self.assertEqual(len(self.project.list_nodes()), 0)
+            self.assertEqual(len(self.project.list_files()), 0)
+            self.assertEqual(os.listdir(self.project_path), [])
+        with self.subTest("destination2 move_to old project"):
+            destination_pr.move_to(self.project)
+            self.assertEqual(self.project.list_groups(), reference_pr.list_groups())
+            self.assertEqual(self.project.list_nodes(), reference_pr.list_nodes())
+            self.assertEqual(self.project.list_files(), reference_pr.list_files())
+            self.assertEqual(len(destination_pr.list_groups()), 0)
+            self.assertEqual(len(destination_pr.list_nodes()), 0)
+            self.assertEqual(len(destination_pr.list_files()), 0)
+            self.assertEqual(os.listdir(destination_pr.path), [])
+            destination_pr.remove(enable=True)
+        with self.subTest("copy_to with project data"):
+            destination_pr = self.project.parent_group.open("destination3")
+            self.project.data["foo"] = 42
+            self.project.data.write()
+            self.project.copy_to(destination_pr)
+            self.assertEqual(self.project.list_groups(), destination_pr.list_groups())
+            self.assertEqual(self.project.list_nodes(), destination_pr.list_nodes())
+            self.assertEqual(self.project.list_files(), destination_pr.list_files())
+            destination_pr.data.read()
+            self.assertEqual(destination_pr.data["foo"], 42)
+            destination_pr.remove(enable=True)
+
+
 class TestProjectOperations(TestWithFilledProject):
     @unittest.skipIf(
         pint_not_available,
@@ -115,11 +164,11 @@ class TestProjectOperations(TestWithFilledProject):
             0: (0, "byte"),
             50: (50, "byte"),
             2000: (1.953125, "kibibyte"),
-            2**20: (1.0, "mebibyte"),
-            2**30: (1.0, "gibibyte"),
-            2**40: (1.0, "tebibyte"),
-            2**50: (1.0, "pebibyte"),
-            2**60: (1024.0, "pebibyte"),
+            2 ** 20: (1.0, "mebibyte"),
+            2 ** 30: (1.0, "gibibyte"),
+            2 ** 40: (1.0, "tebibyte"),
+            2 ** 50: (1.0, "pebibyte"),
+            2 ** 60: (1024.0, "pebibyte"),
         }
 
         byte = pint.UnitRegistry().byte
