@@ -277,6 +277,7 @@ class Project(ProjectPath, HasGroups):
         if delete_original_data:
             for file in tqdm(self.list_files(), desc="Moving files"):
                 shutil.move(os.path.join(self.path, file), destination.path)
+            self.removedirs()
         else:
             for file in tqdm(self.list_files(), desc="Copying files"):
                 if ".h5" not in file:
