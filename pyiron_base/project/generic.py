@@ -265,7 +265,9 @@ class Project(ProjectPath, HasGroups):
             if "_hdf5" not in sub_project_name:
                 sub_project = self.open(sub_project_name)
                 destination_sub_project = destination.open(sub_project_name)
-                sub_project.copy_to(destination_sub_project)
+                sub_project.copy_to(
+                    destination_sub_project, delete_original_data=delete_original_data
+                )
         for job_id in tqdm(self.get_job_ids(recursive=False), desc="Copying jobs"):
             ham = self.load(job_id)
             if delete_original_data:
@@ -275,11 +277,15 @@ class Project(ProjectPath, HasGroups):
         if delete_original_data:
             for file in tqdm(self.list_files(), desc="Moving files"):
                 shutil.move(os.path.join(self.path, file), destination.path)
-
+            self.removedirs()
         else:
             for file in tqdm(self.list_files(), desc="Copying files"):
                 if ".h5" not in file:
                     shutil.copy(os.path.join(self.path, file), destination.path)
+                if self._data is not None:
+                    shutil.copy(
+                        os.path.join(self.path, "project_data.h5"), destination.path
+                    )
         return destination
 
     def create_from_job(self, job_old: "GenericJob", new_job_name: str) -> "GenericJob":
