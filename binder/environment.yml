@@ -13,7 +13,7 @@ dependencies:
 - numpy =2.2.3
 - pandas =2.2.3
 - pint =0.24.4
-- psutil =6.1.1
+- psutil =7.0.0
 - pyfileindex =0.0.34
 - pyiron_dataclasses =0.0.1
 - pyiron_snippets =0.1.4
