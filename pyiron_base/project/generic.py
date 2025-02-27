@@ -99,7 +99,6 @@ class Project(ProjectPath, HasGroups):
         db (): Connection to the SQL database.
         job_type (): Job Type object with all the available job types: ['ExampleJob', 'ParallelMaster',
                         'ScriptJob', 'ListMaster'].
-        view_mode (): If viewer_mode is enable pyiron has read only access to the database.
         data (pyiron_base.project.data.ProjectData): A storage container for project-level data.
 
     Examples:
@@ -173,22 +172,6 @@ class Project(ProjectPath, HasGroups):
         return self.create_group("..")
 
     @property
-    @deprecate("use db.view_mode")
-    def view_mode(self) -> bool:
-        """
-        Get viewer_mode - if viewer_mode is enable pyiron has read only access to the database.
-
-        Change it via
-        `Project('my_project').switch_to_viewer_mode()`
-        and
-        `Project('my_project').switch_to_user_mode()`
-
-        Returns:
-            bool: returns TRUE when viewer_mode is enabled
-        """
-        return self.db.view_mode
-
-    @property
     def name(self) -> str:
         """
         The name of the current project folder
@@ -257,8 +240,6 @@ class Project(ProjectPath, HasGroups):
         Returns:
             Project: pointing to the new project path
         """
-        if self.view_mode:
-            raise EnvironmentError("copy_to is not available in Viewermode !")
         if not isinstance(destination, Project):
             raise TypeError("A project can only be copied to another project.")
         for sub_project_name in tqdm(self.list_groups(), desc="Copying sub-projects"):
@@ -1428,10 +1409,7 @@ class Project(ProjectPath, HasGroups):
         Args:
             file_name (str): name of the file
         """
-        if not self.view_mode:
-            os.remove(posixpath.join(self.path, file_name))
-        else:
-            raise EnvironmentError("copy_to: is not available in Viewermode !")
+        os.remove(posixpath.join(self.path, file_name))
 
     def remove_job(
         self, job_specifier: Union[str, int], _unprotect: bool = False
@@ -1448,8 +1426,6 @@ class Project(ProjectPath, HasGroups):
             for job_id in job_specifier:
                 self.remove_job(job_specifier=job_id, _unprotect=_unprotect)
             return
-        if self.db.view_mode:
-            raise EnvironmentError("copy_to: is not available in Viewermode !")
         job = self.inspect(job_specifier=job_specifier)
         if job is None:
             state.logger.warning(
@@ -1554,27 +1530,24 @@ class Project(ProjectPath, HasGroups):
             raise ValueError(
                 "To prevent users from accidentally deleting files - enable has to be set to True."
             )
-        if not self.db.view_mode:
-            self._remove_jobs_helper(recursive=True)
-            for file in self.list_files():
-                os.remove(os.path.join(self.path, file))
-            if enforce:
-                print("remove directory: {}".format(self.path))
-                shutil.rmtree(self.path, ignore_errors=True)
-            else:
-                for root, *_ in os.walk(self.path, topdown=False):
-                    # dirs and files return values of the iterator are not updated when removing files, so we need to
-                    # manually call listdir
-                    if len(os.listdir(root)) == 0:
-                        root = root.rstrip(os.sep)
-                        # the project was symlinked before being deleted
-                        if os.path.islink(root):
-                            os.rmdir(os.readlink(root))
-                            os.remove(root)
-                        else:
-                            os.rmdir(root)
+        self._remove_jobs_helper(recursive=True)
+        for file in self.list_files():
+            os.remove(os.path.join(self.path, file))
+        if enforce:
+            print("remove directory: {}".format(self.path))
+            shutil.rmtree(self.path, ignore_errors=True)
         else:
-            raise EnvironmentError("remove() is not available in view_mode!")
+            for root, *_ in os.walk(self.path, topdown=False):
+                # dirs and files return values of the iterator are not updated when removing files, so we need to
+                # manually call listdir
+                if len(os.listdir(root)) == 0:
+                    root = root.rstrip(os.sep)
+                    # the project was symlinked before being deleted
+                    if os.path.islink(root):
+                        os.rmdir(os.readlink(root))
+                        os.remove(root)
+                    else:
+                        os.rmdir(root)
 
     def set_job_status(
         self, job_specifier: Union[str, int], status: str, project: "Project" = None
@@ -1608,19 +1581,21 @@ class Project(ProjectPath, HasGroups):
         """
         return [self[key] for key in self.keys()]
 
+    @deprecate(
+        "The viewer mode is not used any longer. The functionality is already present in user mode. Doing nothing"
+    )
     def switch_to_viewer_mode(self) -> None:
         """
         Switch from user mode to viewer mode - if viewer_mode is enable pyiron has read only access to the database.
         """
-        if not isinstance(self.db, FileTable):
-            state.database.switch_to_viewer_mode()
+        pass
 
+    @deprecate("Not doing anything any more (always in user mode).")
     def switch_to_user_mode(self) -> None:
         """
         Switch from viewer mode to user mode - if viewer_mode is enable pyiron has read only access to the database.
         """
-        if not isinstance(self.db, FileTable):
-            state.database.switch_to_user_mode()
+        pass
 
     def switch_to_local_database(
         self, file_name: str = "pyiron.db", cwd: Optional[str] = None
@@ -1651,10 +1626,7 @@ class Project(ProjectPath, HasGroups):
         Returns:
             str: Output from the queuing system as string - optimized for the Sun grid engine
         """
-        if not self.view_mode:
-            return queue_delete_job(item)
-        else:
-            raise EnvironmentError("copy_to: is not available in Viewermode !")
+        return queue_delete_job(item)
 
     @staticmethod
     def create_hdf(path, job_name: str) -> ProjectHDFio:
@@ -1977,8 +1949,6 @@ class Project(ProjectPath, HasGroups):
         """
         if not isinstance(recursive, bool):
             raise ValueError("recursive must be a boolean")
-        if self.db.view_mode:
-            raise EnvironmentError("copy_to: is not available in Viewermode !")
         job_id_lst = self.get_job_ids(recursive=recursive)
         job_id_progress = tqdm(job_id_lst) if progress else job_id_lst
         for job_id in job_id_progress:
@@ -1995,15 +1965,12 @@ class Project(ProjectPath, HasGroups):
         Args:
             pattern (str): glob pattern - default="*"
         """
-        if not self.view_mode:
-            import glob
+        import glob
 
-            pattern = posixpath.join(self.path, pattern)
-            for f in glob.glob(pattern):
-                state.logger.info("remove file {}".format(posixpath.basename(f)))
-                os.remove(f)
-        else:
-            raise EnvironmentError("copy_to: is not available in Viewermode !")
+        pattern = posixpath.join(self.path, pattern)
+        for f in glob.glob(pattern):
+            state.logger.info("remove file {}".format(posixpath.basename(f)))
+            os.remove(f)
 
     def _update_jobs_in_old_database_format(self, job_name: str) -> None:
         """

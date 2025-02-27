@@ -34,10 +34,6 @@ class IsDatabase(ABC):
     Captures common interface for all database types in pyiron, e.g. SQL/SQLite/FileTable.
     """
 
-    @abstractmethod
-    def _get_view_mode(self) -> bool:
-        pass
-
     @property
     def view_mode(self) -> bool:
         """
@@ -48,14 +44,7 @@ class IsDatabase(ABC):
         Returns:
             bool: True when view_mode is enabled
         """
-        return self._get_view_mode()
-
-    @property
-    @deprecate("use view_mode")
-    def viewer_mode(self) -> bool:
-        return self.view_mode
-
-    viewer_mode.__doc__ = view_mode.__doc__
+        return False
 
     @abstractmethod
     def _get_job_table(
