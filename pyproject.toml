@@ -56,7 +56,7 @@ devel = [
     "gitpython==3.1.44",
 ]
 flux = [
-    "jinja2==3.1.5",
+    "jinja2==3.1.6",
 ]
 stats = [
     "pint==0.24.4",
