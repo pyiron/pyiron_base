@@ -21,6 +21,6 @@ dependencies:
 - executorlib =0.4.2
 - pysqa =0.2.4
 - pytables =3.10.2
-- sqlalchemy =2.0.38
+- sqlalchemy =2.0.39
 - tqdm =4.67.1
 - traitlets =5.14.3
