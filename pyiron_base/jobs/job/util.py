@@ -15,12 +15,11 @@ from typing import Optional, Tuple, Union
 
 import monty.io
 import psutil
+from pyiron_snippets.logger import logger
 
 from pyiron_base.database.sqlcolumnlength import JOB_STR_LENGTH
 from pyiron_base.utils.instance import static_isinstance
 from pyiron_base.utils.safetar import safe_extract
-
-from pyiron_snippets.logger import logger
 
 __author__ = "Jan Janssen"
 __copyright__ = (
