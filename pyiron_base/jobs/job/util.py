@@ -20,6 +20,8 @@ from pyiron_base.database.sqlcolumnlength import JOB_STR_LENGTH
 from pyiron_base.utils.instance import static_isinstance
 from pyiron_base.utils.safetar import safe_extract
 
+from pyiron_snippets.logger import logger
+
 __author__ = "Jan Janssen"
 __copyright__ = (
     "Copyright 2020, Max-Planck-Institut für Eisenforschung GmbH - "
@@ -355,7 +357,7 @@ def _job_compress(
         finally:
             os.chdir(cwd)
     else:
-        job.logger.info("The files are already compressed!")
+        logger.info("The files are already compressed!")
 
 
 def _job_decompress(job: "pyiron_base.jobs.job.core.JobCore") -> None:
