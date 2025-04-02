@@ -1210,6 +1210,7 @@ class GenericJob(JobCore, HasDict):
             "restart_file_dict": self._restart_file_dict,
             "exclude_nodes_hdf": self._exclude_nodes_hdf,
             "exclude_groups_hdf": self._exclude_groups_hdf,
+            "compress_by_default": self._compress_by_default,
         }
         data_dict["server"] = self._server.to_dict()
         self._executable_activate_mpi()
@@ -1247,6 +1248,8 @@ class GenericJob(JobCore, HasDict):
             self._restart_file_dict = generic_dict["restart_file_dict"]
             self._exclude_nodes_hdf = generic_dict["exclude_nodes_hdf"]
             self._exclude_groups_hdf = generic_dict["exclude_groups_hdf"]
+            if "compress_by_default" in generic_dict:
+                self._compress_by_default = generic_dict["compress_by_default"]
         # Backwards compatbility
         if "restart_file_list" in input_dict.keys():
             self._restart_file_list = input_dict["restart_file_list"]
