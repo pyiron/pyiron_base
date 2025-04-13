@@ -56,6 +56,7 @@ class TestPythonFunctionContainer(TestWithProject):
             python_function=my_function_str,
             delayed=True,
         )
+        self.assertEqual(delayed_obj.input, {})
         self.assertEqual(delayed_obj.pull(), "hello")
 
     def test_as_function(self):
