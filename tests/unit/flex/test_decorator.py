@@ -18,9 +18,9 @@ class TestPythonFunctionDecorator(TestWithProject):
 
         c = my_function_a(a=1, b=2, pyiron_project=self.project)
         d = my_function_b(a=c, b=3, pyiron_project=self.project)
-        self.assertEqual(c.input, {'a': 1, 'b': 2})
-        c.input['a'] = 3
-        self.assertEqual(c.input, {'a': 3, 'b': 2})
+        self.assertEqual(c.input, {"a": 1, "b": 2})
+        c.input["a"] = 3
+        self.assertEqual(c.input, {"a": 3, "b": 2})
         self.assertEqual(d.pull(), 8)
         nodes_dict, edges_lst = d.get_graph()
         self.assertEqual(len(nodes_dict), 6)
@@ -39,9 +39,9 @@ class TestPythonFunctionDecorator(TestWithProject):
         d = my_function_b(
             a=c, b=3, pyiron_project=self.project, pyiron_resource_dict={"cores": 2}
         )
-        self.assertEqual(c.input, {'a': 1, 'b': 2})
-        c.input['a'] = 3
-        self.assertEqual(c.input, {'a': 3, 'b': 2})
+        self.assertEqual(c.input, {"a": 1, "b": 2})
+        c.input["a"] = 3
+        self.assertEqual(c.input, {"a": 3, "b": 2})
         self.assertEqual(d.pull(), 8)
         nodes_dict, edges_lst = d.get_graph()
         self.assertEqual(len(nodes_dict), 6)
@@ -59,9 +59,9 @@ class TestPythonFunctionDecorator(TestWithProject):
         c = my_function_a(a=1, b=2, pyiron_project=self.project, list_length=1)
         for a in c:
             d = my_function_b(a=a, b=3, pyiron_project=self.project)
-        self.assertEqual(c.input, {'a': 1, 'b': 2})
-        c.input['a'] = 3
-        self.assertEqual(c.input, {'a': 3, 'b': 2})
+        self.assertEqual(c.input, {"a": 1, "b": 2})
+        c.input["a"] = 3
+        self.assertEqual(c.input, {"a": 3, "b": 2})
         self.assertEqual(d.pull(), [8])
         self.assertEqual(c.pull(), [5])
         nodes_dict, edges_lst = d.get_graph()
