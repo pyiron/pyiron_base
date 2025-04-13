@@ -229,6 +229,7 @@ class DelayedObject:
         output_key_lst: list = [],
         list_length: Optional[int] = None,
         list_index: Optional[int] = None,
+        input_prefix_key: Optional[str] = None,
         **kwargs,
     ):
         self._input = {}
@@ -249,6 +250,14 @@ class DelayedObject:
         self._output_file_lst = output_file_lst
         self._list_length = list_length
         self._list_index = list_index
+        self._input_prefix_key = input_prefix_key
+
+    @property
+    def input(self):
+        if self._input_prefix_key is not None and self._input_prefix_key in self._input:
+            return self._input[self._input_prefix_key]
+        else:
+            return self._input
 
     @property
     def server(self):
@@ -305,6 +314,7 @@ class DelayedObject:
             output_key_lst=self._output_key_lst,
             list_length=self._list_length,
             list_index=self._list_index,
+            input_prefix_key=self._input_prefix_key,
         )
         obj_copy._python_function = self._python_function
         obj_copy._input = self._input
