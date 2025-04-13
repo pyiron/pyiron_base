@@ -670,6 +670,7 @@ class Project(ProjectPath, HasGroups):
                 output_file=None,
                 output_file_lst=output_file_lst,
                 output_key_lst=output_key_lst,
+                input_prefix_key="kwargs",
                 **kwargs,
             )
         else:
