@@ -11,7 +11,7 @@ authors = [
 readme = "README.md"
 license = { file = "LICENSE" }
 keywords = ["pyiron"]
-requires-python = ">=3.9, <3.13"
+requires-python = ">=3.9, <3.14"
 classifiers = [
     "Development Status :: 5 - Production/Stable",
     "Topic :: Scientific/Engineering :: Physics",
@@ -21,6 +21,7 @@ classifiers = [
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
 ]
 dependencies = [
     "cloudpickle==3.1.1",
@@ -33,7 +34,7 @@ dependencies = [
     "psutil==7.0.0",
     "pyfileindex==0.0.35",
     "pyiron_dataclasses==0.0.1",
-    "pyiron_snippets==0.1.4",
+    "pyiron_snippets==0.2.0",
     "pysqa==0.2.4",
     "sqlalchemy==2.0.40",
     "tables==3.10.2",
