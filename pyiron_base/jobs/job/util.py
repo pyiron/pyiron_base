@@ -15,6 +15,7 @@ from typing import Optional, Tuple, Union
 
 import monty.io
 import psutil
+from pyiron_snippets.logger import logger
 
 from pyiron_base.database.sqlcolumnlength import JOB_STR_LENGTH
 from pyiron_base.utils.instance import static_isinstance
@@ -355,7 +356,7 @@ def _job_compress(
         finally:
             os.chdir(cwd)
     else:
-        job.logger.info("The files are already compressed!")
+        logger.info("The files are already compressed!")
 
 
 def _job_decompress(job: "pyiron_base.jobs.job.core.JobCore") -> None:

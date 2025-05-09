@@ -5,25 +5,25 @@ dependencies:
 - sphinx
 - sphinx_rtd_theme
 - myst-parser
-- conda =25.1.1
-- conda_subprocess =0.0.6
+- conda =25.3.1
+- conda_subprocess =0.0.7
 - cloudpickle =3.1.1
 - gitpython =3.1.44
-- h5io_browser =0.1.8
+- h5io_browser =0.1.10
 - h5py =3.13.0
 - jinja2 =3.1.6
 - monty =2025.3.3
-- numpy =2.2.3
+- numpy =2.2.4
 - pandas =2.2.3
 - pint =0.24.4
 - psutil =7.0.0
-- pyfileindex =0.0.34
+- pyfileindex =0.0.35
 - pyiron_dataclasses =0.0.1
 - pyiron_snippets =0.2.0
-- executorlib =0.4.2
+- executorlib =1.2.0
 - pysqa =0.2.4
 - pytables =3.10.2
-- sqlalchemy =2.0.39
+- sqlalchemy =2.0.40
 - tqdm =4.67.1
 - traitlets =5.14.3
 - jupyter-book =1.0.0
