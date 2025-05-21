@@ -1154,6 +1154,8 @@ class Project(ProjectPath, HasGroups):
     def load(self) -> JobLoader:
         return self._loader
 
+    load.__doc__ = JobLoader.__doc__
+
     def load_from_jobpath(
         self,
         job_id: Optional[int] = None,
