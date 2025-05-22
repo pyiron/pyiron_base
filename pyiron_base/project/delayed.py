@@ -36,6 +36,7 @@ class JobFuture(Future):
 
     def __setstate__(self, state):
         from pyiron_base.jobs.job.wrapper import JobWrapper
+
         self._job = JobWrapper(**state).job
 
 

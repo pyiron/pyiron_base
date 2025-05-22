@@ -5,13 +5,13 @@ import cloudpickle
 import numpy as np
 
 from pyiron_base.jobs.job.template import PythonTemplateJob
-from pyiron_base.project.delayed import get_function_parameter_dict, get_hash, JobFuture
+from pyiron_base.project.delayed import JobFuture, get_function_parameter_dict, get_hash
 
 
 def check_for_future(input_dict):
     result_dict = {}
     found_future = False
-    for k,v in input_dict.items():
+    for k, v in input_dict.items():
         if isinstance(v, JobFuture):
             if v.done():
                 result_dict[k] = v.result()
@@ -19,7 +19,9 @@ def check_for_future(input_dict):
                 result_dict[k] = v
                 found_future = True
         elif isinstance(v, list):
-            v_lst_dict, status = check_for_future(input_dict={i: l for i, l in enumerate(v)})
+            v_lst_dict, status = check_for_future(
+                input_dict={i: l for i, l in enumerate(v)}
+            )
             if status:
                 found_future = True
             result_dict[k] = list(v_lst_dict.values())
