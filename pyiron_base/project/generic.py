@@ -652,7 +652,7 @@ class Project(ProjectPath, HasGroups):
 
         """
 
-        def create_function_job(*args, server_obj=None, **kwargs):
+        def create_function_job(*args, server_obj=None, return_job_object=False, **kwargs):
             job = self.create.job.PythonFunctionContainerJob(
                 job_name=python_function.__name__ if job_name is None else job_name
             )
@@ -660,7 +660,10 @@ class Project(ProjectPath, HasGroups):
             job.python_function = python_function
             if server_obj is not None:
                 job.server = server_obj
-            return job(*args, **kwargs)
+            if return_job_object:
+                return job, job(*args, **kwargs)
+            else:
+                return job(*args, **kwargs)
 
         if delayed:
             return DelayedObject(

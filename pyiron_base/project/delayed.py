@@ -243,6 +243,7 @@ class DelayedObject:
         self.__name__ = "DelayedObject"
         self._result = None
         self._python_function = None
+        self._job = None
         self._server = Server()
         self._output_key = output_key
         self._output_file = output_file
@@ -287,8 +288,8 @@ class DelayedObject:
 
     def pull(self):
         if self._result is None:
-            self._input.update({"server_obj": self.server})
-            self._result = evaluate_function(
+            self._input.update({"server_obj": self.server, "return_job_object": True})
+            self._job, self._result = evaluate_function(
                 funct=self._function, input_dict=self._input
             )
         if self._output_key is not None:
