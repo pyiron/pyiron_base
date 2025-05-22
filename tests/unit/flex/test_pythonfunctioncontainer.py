@@ -247,10 +247,11 @@ class TestPythonFunctionContainer(TestWithProject):
 
     def test_delayed_non_modal(self):
         c = self.project.wrap_python_function(
-            python_function=my_function, a=1, b=2, delayed=True
+            python_function=my_sleep_funct, a=1, b=2, delayed=True
         )
         c.server.run_mode.non_modal = True
         future = c.pull()
+        self.assertFalse(future.done())
         self.project.wait_for_job(future._job)
         self.assertTrue(future.done())
         self.assertEqual(future.result(), 3)
