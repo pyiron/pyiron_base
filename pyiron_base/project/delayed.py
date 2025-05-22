@@ -15,6 +15,10 @@ class JobFuture(Future):
         super().__init__()
         self._job = job
 
+    @property
+    def job(self):
+        return self._job
+
     def done(self):
         return self._job.status.finished
 
@@ -278,10 +282,6 @@ class DelayedObject:
     @property
     def server(self):
         return self._server
-
-    @property
-    def job(self):
-        return self._job
 
     def draw(self):
         node_dict, edge_lst = self.get_graph()
