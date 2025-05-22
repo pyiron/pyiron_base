@@ -4,6 +4,7 @@ from concurrent.futures import ProcessPoolExecutor
 import sys
 from time import sleep
 from pyiron_base._tests import TestWithProject
+from pyiron_base.project.delayed import JobFuture
 
 
 def my_function(a, b=8):
@@ -243,6 +244,20 @@ class TestPythonFunctionContainer(TestWithProject):
         nodes_dict, edges_lst = d.get_graph()
         self.assertEqual(len(nodes_dict), 7)
         self.assertEqual(len(edges_lst), 8)
+
+    def test_delayed_non_modal(self):
+        c = self.project.wrap_python_function(
+            python_function=my_function, a=1, b=2, delayed=True
+        )
+        c.server.run_mode.non_modal = True
+        future = c.pull()
+        self.assertFalse(future.done())
+        self.project.wait_for_job(future._job)
+        self.assertTrue(future.done())
+        self.assertEqual(future.result(), 3)
+        nodes_dict, edges_lst = c.get_graph()
+        self.assertEqual(len(nodes_dict), 5)
+        self.assertEqual(len(edges_lst), 4)
 
     def test_delayed_dict(self):
         job_1 = self.project.wrap_python_function(
