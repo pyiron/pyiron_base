@@ -2,8 +2,8 @@ import hashlib
 import inspect
 import re
 import time
-from typing import Dict, List, Optional, Tuple
 from concurrent.futures import Future
+from typing import Dict, List, Optional, Tuple
 
 import cloudpickle
 
@@ -305,13 +305,16 @@ class DelayedObject:
 
     def pull(self):
         if self._result is None:
-            if "_return_job_object" in inspect.signature(self._function).parameters.keys():
-                self._input.update({"_server_obj": self.server, "_return_job_object": True})
+            if (
+                "_return_job_object"
+                in inspect.signature(self._function).parameters.keys()
+            ):
+                self._input.update(
+                    {"_server_obj": self.server, "_return_job_object": True}
+                )
             else:
                 self._input.update({"_server_obj": self.server})
-            self._job = evaluate_function(
-                funct=self._function, input_dict=self._input
-            )
+            self._job = evaluate_function(funct=self._function, input_dict=self._input)
             self._job.run()
         if self._job.status.finished:
             self._result = self._job.output["result"]
