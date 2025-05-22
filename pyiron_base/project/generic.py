@@ -652,7 +652,9 @@ class Project(ProjectPath, HasGroups):
 
         """
 
-        def create_function_job(*args, _server_obj=None, _return_job_object=False, **kwargs):
+        def create_function_job(
+            *args, _server_obj=None, _return_job_object=False, **kwargs
+        ):
             job = self.create.job.PythonFunctionContainerJob(
                 job_name=python_function.__name__ if job_name is None else job_name
             )
