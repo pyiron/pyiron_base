@@ -251,7 +251,7 @@ class TestPythonFunctionContainer(TestWithProject):
         c.server.run_mode.non_modal = True
         future = c.pull()
         self.assertFalse(future.done())
-        self.project.wait_for_job(future._job)
+        self.project.wait_for_job(future.job)
         self.assertTrue(future.done())
         self.assertEqual(future.result(), 3)
         nodes_dict, edges_lst = c.get_graph()
