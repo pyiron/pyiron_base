@@ -11,25 +11,26 @@ from pyiron_base.project.delayed import get_function_parameter_dict, get_hash, J
 def check_for_future(input_dict):
     result_dict = {}
     found_future = False
-    for k,v in input_dict.items():
-        if isinstance(v, JobFuture):
-            if v.done():
-                result_dict[k] = v.result()
+    if len(input_dict) > 0:
+        for k,v in input_dict.items():
+            if isinstance(v, JobFuture):
+                if v.done():
+                    result_dict[k] = v.result()
+                else:
+                    result_dict[k] = v
+                    found_future = True
+            elif isinstance(v, list):
+                v_lst_dict, status = check_for_future(input_dict={i: l for i, l in enumerate(v)})
+                if status:
+                    found_future = True
+                result_dict[k] = list(v_lst_dict.values())
+            elif isinstance(v, dict):
+                v_dict, status = check_for_future(input_dict=v)
+                if status:
+                    found_future = True
+                result_dict[k] = v_dict
             else:
                 result_dict[k] = v
-                found_future = True
-        elif isinstance(v, list):
-            v_lst_dict, status = check_for_future(input_dict={i: l for i, l in enumerate(v)})
-            if status:
-                found_future = True
-            result_dict[k] = list(v_lst_dict.values())
-        elif isinstance(v, dict):
-            v_dict, status = check_for_future(input_dict=v)
-            if status:
-                found_future = True
-            result_dict[k] = v_dict
-        else:
-            result_dict[k] = v
     return result_dict, found_future
 
 
