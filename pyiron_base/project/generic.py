@@ -468,7 +468,7 @@ class Project(ProjectPath, HasGroups):
             internal_job_name: Optional[str] = None,
             internal_execute_job: bool = True,
             internal_auto_rename: bool = False,
-            server_obj: Server = None,
+            _server_obj: Server = None,
         ) -> Project:
             """
             Create an executable job.
@@ -481,7 +481,7 @@ class Project(ProjectPath, HasGroups):
                 internal_job_name (str, optional): The name of the job. Defaults to None.
                 internal_execute_job (bool, optional): Whether to execute the job. Defaults to True.
                 internal_auto_rename (bool, optional): Whether to automatically rename the job. Defaults to False.
-                server_obj (Server): Server object to define the resource requirements for the executable
+                _server_obj (Server): Server object to define the resource requirements for the executable
 
             Returns:
                 Project: The project object.
@@ -514,8 +514,8 @@ class Project(ProjectPath, HasGroups):
                 )(project=project, job_name=internal_job_name)
             else:
                 return project.load(job_specifier=job_id)
-            if server_obj is not None:
-                job.server = server_obj
+            if _server_obj is not None:
+                job.server = _server_obj
             if conda_environment_path is not None:
                 job.server.conda_environment_path = conda_environment_path
             elif conda_environment_name is not None:
@@ -652,16 +652,17 @@ class Project(ProjectPath, HasGroups):
 
         """
 
-        def create_function_job(*args, server_obj=None, return_job_object=False, **kwargs):
+        def create_function_job(*args, _server_obj=None, _return_job_object=False, **kwargs):
             job = self.create.job.PythonFunctionContainerJob(
                 job_name=python_function.__name__ if job_name is None else job_name
             )
             job._automatically_rename_on_save_using_input = automatically_rename
             job.python_function = python_function
-            if server_obj is not None:
-                job.server = server_obj
-            if return_job_object:
-                return job, job(*args, **kwargs)
+            if _server_obj is not None:
+                job.server = _server_obj
+            if _return_job_object:
+                job.set_input(*args, **kwargs)
+                return job
             else:
                 return job(*args, **kwargs)
 

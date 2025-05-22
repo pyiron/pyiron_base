@@ -241,8 +241,8 @@ class TestPythonFunctionContainer(TestWithProject):
         )
         self.assertEqual(d.pull(), 6)
         nodes_dict, edges_lst = d.get_graph()
-        self.assertEqual(len(nodes_dict), 6)
-        self.assertEqual(len(edges_lst), 6)
+        self.assertEqual(len(nodes_dict), 7)
+        self.assertEqual(len(edges_lst), 8)
 
     def test_delayed_dict(self):
         job_1 = self.project.wrap_python_function(
