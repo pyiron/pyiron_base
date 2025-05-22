@@ -1,11 +1,30 @@
 import hashlib
 import inspect
 import re
+import time
+from concurrent.futures import Future
 from typing import Dict, List, Optional, Tuple
 
 import cloudpickle
 
 from pyiron_base.jobs.job.extension.server.generic import Server
+
+
+class JobFuture(Future):
+    def __init__(self, job):
+        super().__init__()
+        self._job = job
+
+    @property
+    def job(self):
+        return self._job
+
+    def done(self):
+        return self._job.status.finished
+
+    def result(self):
+        self._job.storage.from_hdf(hdf=self._job.project_hdf5)
+        return self._job.output["result"]
 
 
 def draw(node_dict: Dict[str, object], edge_lst: List[List[str]]) -> None:
@@ -243,6 +262,7 @@ class DelayedObject:
         self.__name__ = "DelayedObject"
         self._result = None
         self._python_function = None
+        self._job = None
         self._server = Server()
         self._output_key = output_key
         self._output_file = output_file
@@ -287,10 +307,26 @@ class DelayedObject:
 
     def pull(self):
         if self._result is None:
-            self._input.update({"server_obj": self.server})
-            self._result = evaluate_function(
-                funct=self._function, input_dict=self._input
-            )
+            if (
+                "_return_job_object"
+                in inspect.signature(self._function).parameters.keys()
+            ):
+                self._input.update(
+                    {"_server_obj": self.server, "_return_job_object": True}
+                )
+                self._job = evaluate_function(
+                    funct=self._function, input_dict=self._input
+                )
+                self._job.run()
+                if self._job.status.finished:
+                    self._result = self._job.output["result"]
+                else:
+                    return JobFuture(job=self._job)
+            else:
+                self._input.update({"_server_obj": self.server})
+                self._result = evaluate_function(
+                    funct=self._function, input_dict=self._input
+                )
         if self._output_key is not None:
             return self.get_python_result()
         elif self._output_file is not None:

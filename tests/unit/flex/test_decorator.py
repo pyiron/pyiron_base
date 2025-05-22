@@ -23,8 +23,8 @@ class TestPythonFunctionDecorator(TestWithProject):
         self.assertEqual(c.input, {"a": 3, "b": 2})
         self.assertEqual(d.pull(), 8)
         nodes_dict, edges_lst = d.get_graph()
-        self.assertEqual(len(nodes_dict), 6)
-        self.assertEqual(len(edges_lst), 6)
+        self.assertEqual(len(nodes_dict), 7)
+        self.assertEqual(len(edges_lst), 8)
 
     def test_delayed_simple(self):
         @job
@@ -44,8 +44,8 @@ class TestPythonFunctionDecorator(TestWithProject):
         self.assertEqual(c.input, {"a": 3, "b": 2})
         self.assertEqual(d.pull(), 8)
         nodes_dict, edges_lst = d.get_graph()
-        self.assertEqual(len(nodes_dict), 6)
-        self.assertEqual(len(edges_lst), 6)
+        self.assertEqual(len(nodes_dict), 7)
+        self.assertEqual(len(edges_lst), 8)
 
     def test_delayed_return_types(self):
         @job
@@ -65,8 +65,8 @@ class TestPythonFunctionDecorator(TestWithProject):
         self.assertEqual(d.pull(), [8])
         self.assertEqual(c.pull(), [5])
         nodes_dict, edges_lst = d.get_graph()
-        self.assertEqual(len(nodes_dict), 7)
-        self.assertEqual(len(edges_lst), 6)
+        self.assertEqual(len(nodes_dict), 8)
+        self.assertEqual(len(edges_lst), 8)
 
 
 if __name__ == "__main__":
