@@ -316,7 +316,10 @@ class DelayedObject:
                     funct=self._function, input_dict=self._input
                 )
                 self._job.run()
-                self._result = self._job.output["result"]
+                if self._job.status.finished:
+                    self._result = self._job.output["result"]
+                else:
+                    return JobFuture(job=self._job)
             else:
                 self._input.update({"_server_obj": self.server})
                 self._result = evaluate_function(
