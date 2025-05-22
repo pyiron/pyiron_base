@@ -19,8 +19,6 @@ class JobFuture(Future):
         return self._job.status.finished
 
     def result(self):
-        while not self.done():
-            time.sleep(0.1)
         self._job.storage.from_hdf(hdf=self._job.project_hdf5)
         return self._job.output["result"]
 

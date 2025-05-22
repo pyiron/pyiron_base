@@ -4,7 +4,6 @@ from concurrent.futures import ProcessPoolExecutor
 import sys
 from time import sleep
 from pyiron_base._tests import TestWithProject
-from pyiron_base.project.delayed import JobFuture
 
 
 def my_function(a, b=8):
