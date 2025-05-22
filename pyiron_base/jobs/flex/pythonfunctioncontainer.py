@@ -5,7 +5,32 @@ import cloudpickle
 import numpy as np
 
 from pyiron_base.jobs.job.template import PythonTemplateJob
-from pyiron_base.project.delayed import get_function_parameter_dict, get_hash
+from pyiron_base.project.delayed import get_function_parameter_dict, get_hash, JobFuture
+
+
+def check_for_future(input_dict):
+    result_dict = {}
+    found_future = False
+    for k,v in input_dict.items():
+        if isinstance(v, JobFuture):
+            if v.done():
+                result_dict[k] = v.result()
+            else:
+                result_dict[k] = v
+                found_future = True
+        elif isinstance(v, list):
+            v_lst_dict, status = check_for_future(input_dict={i: l for i, l in enumerate(v)})
+            if status:
+                found_future = True
+            result_dict[k] = list(v_lst_dict.values())
+        elif isinstance(v, dict):
+            v_dict, status = check_for_future(input_dict=v)
+            if status:
+                found_future = True
+            result_dict[k] = v_dict
+        else:
+            result_dict[k] = v
+    return result_dict, found_future
 
 
 class PythonFunctionContainerJob(PythonTemplateJob):
@@ -138,16 +163,19 @@ class PythonFunctionContainerJob(PythonTemplateJob):
         without an executor.
         """
         self.status.running = True
-        if (
-            self._executor_type is not None
-            and "executor" in inspect.signature(self._function).parameters.keys()
-        ):
-            input_dict = self.input.to_builtin()
-            del input_dict["executor"]
-            with self._get_executor(max_workers=self.server.cores) as exe:
-                output = self._function(**input_dict, executor=exe)
+        result_dict, found_future = check_for_future(input_dict=self.input.to_builtin())
+        if not found_future:
+            if (
+                self._executor_type is not None
+                and "executor" in inspect.signature(self._function).parameters.keys()
+            ):
+                del result_dict["executor"]
+                with self._get_executor(max_workers=self.server.cores) as exe:
+                    output = self._function(**result_dict, executor=exe)
+            else:
+                output = self._function(**result_dict)
+            self.output.update({"result": output})
+            self.to_hdf()
+            self.status.finished = True
         else:
-            output = self._function(**self.input)
-        self.output.update({"result": output})
-        self.to_hdf()
-        self.status.finished = True
+            self.status.submitted = True

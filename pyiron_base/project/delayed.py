@@ -26,6 +26,18 @@ class JobFuture(Future):
         self._job.storage.from_hdf(hdf=self._job.project_hdf5)
         return self._job.output["result"]
 
+    def __getstate__(self):
+        return {
+            "working_directory": self._job.working_directory,
+            "job_id": self._job.job_id,
+            "hdf5_file": self._job.project_hdf5.file_name,
+            "h5_path": self._job.project_hdf5.h5_path,
+        }
+
+    def __setstate__(self, state):
+        from pyiron_base.jobs.job.wrapper import JobWrapper
+        self._job = JobWrapper(**state).job
+
 
 def draw(node_dict: Dict[str, object], edge_lst: List[List[str]]) -> None:
     """
