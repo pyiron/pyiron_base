@@ -312,24 +312,22 @@ class DelayedObject:
                 self._input.update(
                     {"_server_obj": self.server, "_return_job_object": True}
                 )
+                self._result = evaluate_function(funct=self._function, input_dict=self._input)
+                self._job.run()
+                self._result = self._job.output["result"]
             else:
                 self._input.update({"_server_obj": self.server})
-            self._job = evaluate_function(funct=self._function, input_dict=self._input)
-            self._job.run()
-        if self._job.status.finished:
-            self._result = self._job.output["result"]
-            if self._output_key is not None:
-                return self.get_python_result()
-            elif self._output_file is not None:
-                return self.get_file_result()
-            elif isinstance(self._result, list) and self._list_index is not None:
-                return self._result[self._list_index]
-            elif isinstance(self._result, dict) and self._list_index is not None:
-                return self._result[str(self._list_index)]
-            else:
-                return self._result
+                self._result = evaluate_function(funct=self._function, input_dict=self._input)
+        if self._output_key is not None:
+            return self.get_python_result()
+        elif self._output_file is not None:
+            return self.get_file_result()
+        elif isinstance(self._result, list) and self._list_index is not None:
+            return self._result[self._list_index]
+        elif isinstance(self._result, dict) and self._list_index is not None:
+            return self._result[str(self._list_index)]
         else:
-            return JobFuture(self._job)
+            return self._result
 
     def get_graph(self):
         return get_graph(obj=self, nodes_dict={}, edges_lst=[], link_node=None)
