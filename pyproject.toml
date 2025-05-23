@@ -51,7 +51,7 @@ Repository = "https://github.com/pyiron/pyiron_base"
 [project.optional-dependencies]
 conda = [
     "conda==25.3.1",
-    "conda_subprocess==0.0.7",
+    "conda_subprocess==0.0.8",
 ]
 devel = [
     "gitpython==3.1.44",
