@@ -51,7 +51,7 @@ class TestWorker(TestWithCleanProject):
         job.run()
         t = Thread(
             target=close_worker_after_sleep,
-            kwargs={"worker_id": self.worker.job_id, "sleep_time": 10}
+            kwargs={"worker_id": self.worker.job_id, "sleep_time": 10},
         )
         t.start()
         self.worker.run_static()
