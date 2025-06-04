@@ -19,7 +19,10 @@ class TestFlexibleMaster(TestWithProject):
         self.master_toy.function_lst.append(transfer_output_to_input)
         self.master_toy.run()
         self.assertEqual(len(self.project.job_table()), 3)
-        self.assertEqual(self.project.load("toy_1").output.data_out, self.project.load("toy_2").input.data_in)
+        self.assertEqual(
+            self.project.load("toy_1").output.data_out,
+            self.project.load("toy_2").input.data_in,
+        )
 
 
 if __name__ == "__main__":
