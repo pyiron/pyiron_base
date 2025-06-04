@@ -41,5 +41,10 @@ class TestWorker(TestWithCleanProject):
         toy_job.server.run_mode.worker = True
         toy_job.run()
         self.assertFalse(toy_job.status.finished)
-        worker_function((toy_job.working_directory, toy_job.project_hdf5.file_name + "/" + toy_job.job_name))
+        worker_function(
+            (
+                toy_job.working_directory,
+                toy_job.project_hdf5.file_name + "/" + toy_job.job_name,
+            )
+        )
         self.assertTrue(toy_job.status.finished)
