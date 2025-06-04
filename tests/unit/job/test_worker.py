@@ -33,8 +33,7 @@ class TestWorker(TestWithCleanProject):
         job.server.run_mode.worker = True
         job.master_id = self.worker.job_id
         job.run()
-        self.sub_project.wait_for_jobs()
-        self.worker.status.collect = True
+        self.worker.wait_for_worker(interval_in_s=1, max_iterations=10)
         df = self.sub_project.job_table()
         self.assertEqual(len(df[df.status == "finished"]), 1)
         time.sleep(10)  # Wait for the worker process to finish
