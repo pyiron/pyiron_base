@@ -1,7 +1,16 @@
 import os
 import time
+from threading import Thread
 from pyiron_base._tests import TestWithCleanProject, ToyJob
 from pyiron_base.jobs.worker import worker_function
+
+
+def close_worker_after_sleep(worker_id, sleep_time):
+    import time
+    from pyiron_base import state
+
+    time.sleep(sleep_time)
+    state.database.database.set_job_status(job_id=worker_id, status="collect")
 
 
 class TestWorker(TestWithCleanProject):
@@ -29,6 +38,25 @@ class TestWorker(TestWithCleanProject):
         df = self.sub_project.job_table()
         self.assertEqual(len(df[df.status == "finished"]), 1)
         time.sleep(10)  # Wait for the worker process to finish
+
+    def test_worker_thread(self):
+        self.worker = self.project.create.job.WorkerJob("runner")
+        self.worker.project_to_watch = self.sub_project
+        self.worker.server.run_mode.manual = True
+        self.worker.run()
+        job = self.sub_project.create.job.ScriptJob("script")
+        job.script_path = self.script_path
+        job.server.run_mode.worker = True
+        job.master_id = self.worker.job_id
+        job.run()
+        t = Thread(
+            target=close_worker_after_sleep,
+            kwargs={"worker_id": self.worker.job_id, "sleep_time": 10}
+        )
+        t.start()
+        self.worker.run_static()
+        df = self.sub_project.job_table()
+        self.assertEqual(len(df[df.status == "finished"]), 1)
 
     def test_worker_function(self):
         toy_job = self.project.create_job(ToyJob, "toy_job_1")
