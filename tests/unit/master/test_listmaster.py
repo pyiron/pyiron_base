@@ -18,8 +18,14 @@ class TestListMaster(TestWithProject):
         self.master_toy.append(self.project.create_job(ToyJob, "toy_2"))
         self.master_toy.run()
         self.assertEqual(len(self.project.job_table()), 3)
-        self.assertEqual(self.project.load("toy_1").input.data_in, self.project.load("toy_2").input.data_in)
-        self.assertEqual(self.project.load("toy_1").output.data_out, self.project.load("toy_2").output.data_out)
+        self.assertEqual(
+            self.project.load("toy_1").input.data_in,
+            self.project.load("toy_2").input.data_in,
+        )
+        self.assertEqual(
+            self.project.load("toy_1").output.data_out,
+            self.project.load("toy_2").output.data_out,
+        )
 
 
 if __name__ == "__main__":
