@@ -1,4 +1,4 @@
-import pyiron_base.project.maintenance
+import pyiron_base.maintenance.generic
 
 from pyiron_base import DataContainer
 from pyiron_base._tests import TestWithProject, ToyJob
@@ -9,11 +9,11 @@ class TestModulePath(TestWithProject):
         """module paths should only be able to be added once!"""
 
         # need to add real modules here, because they need to be importable.
-        pyiron_base.project.maintenance.add_module_conversion("foo.bar", "os.path")
+        pyiron_base.maintenance.generic.add_module_conversion("foo.bar", "os.path")
         with self.assertRaises(
             ValueError, msg="Adding paths twice should raise an error!"
         ):
-            pyiron_base.project.maintenance.add_module_conversion("foo.bar", "os")
+            pyiron_base.maintenance.generic.add_module_conversion("foo.bar", "os")
 
     def test_maintenance(self):
         """Objects should be loaded correctly after maintenance is run."""
@@ -37,10 +37,10 @@ class TestModulePath(TestWithProject):
         old_path_job = "job.module"
         job.project_hdf5["TYPE"] = f"<class '{old_path_job}.ToyJob'>"
 
-        pyiron_base.project.maintenance.add_module_conversion(
+        pyiron_base.maintainance.maintenance.add_module_conversion(
             old_path_project_data, DataContainer.__module__
         )
-        pyiron_base.project.maintenance.add_module_conversion(
+        pyiron_base.maintainance.maintenance.add_module_conversion(
             old_path_job, ToyJob.__module__
         )
 

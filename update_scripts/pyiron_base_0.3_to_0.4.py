@@ -9,7 +9,7 @@ the correct dtype, this then writes this correct dtype.
 import sys
 from pyiron_base import Project
 
-from pyiron_base.project.update.pyiron_base_03x_to_04x import pyiron_base_03x_to_04x
+from pyiron_base.maintenance.update.pyiron_base_03x_to_04x import pyiron_base_03x_to_04x
 
 if __name__ == "__main__":
     pr = Project(sys.argv[1])
