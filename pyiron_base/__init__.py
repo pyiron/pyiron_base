@@ -38,6 +38,7 @@ from pyiron_base.state.install import install_dialog
 from pyiron_base.state.settings import Settings
 from pyiron_base.storage.datacontainer import DataContainer
 from pyiron_base.storage.flattenedstorage import FlattenedStorage
+from pyiron_base.storage.filedata import load_file, FileDataTemplate, FileData
 from pyiron_base.storage.has_stored_traits import HasStoredTraits
 from pyiron_base.storage.hdfio import FileHDFio, ProjectHDFio
 from pyiron_base.storage.inputlist import InputList
@@ -109,4 +110,7 @@ __all__ = [
     add_module_conversion,
     LocalMaintenance,
     Maintenance,
+    load_file,
+    FileDataTemplate,
+    FileData,
 ]
