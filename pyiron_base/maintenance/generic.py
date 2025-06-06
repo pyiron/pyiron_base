@@ -8,8 +8,8 @@ import pandas
 
 import pyiron_base.storage.hdfio
 from pyiron_base import state
-from pyiron_base.maintainance.databaseperformance import get_database_statistics
-from pyiron_base.maintainance.update.pyiron_base_03x_to_04x import (
+from pyiron_base.maintenance.databaseperformance import get_database_statistics
+from pyiron_base.maintenance.update.pyiron_base_03x_to_04x import (
     pyiron_base_03x_to_04x,
 )
 
