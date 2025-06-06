@@ -10,7 +10,6 @@ from pyiron_base.interfaces.object import HasDatabase, HasStorage, PyironObject
 from pyiron_base.jobs.datamining import PyironTable, TableJob
 from pyiron_base.jobs.dynamic import warn_dynamic_job_classes
 from pyiron_base.jobs.flex.factory import create_job_factory
-from pyiron_base.maintenance.generic import LocalMaintenance, Maintenance
 from pyiron_base.jobs.job.extension.executable import Executable
 from pyiron_base.jobs.job.extension.jobstatus import (
     JobStatus,
@@ -30,6 +29,7 @@ from pyiron_base.jobs.master.generic import GenericMaster, get_function_from_str
 from pyiron_base.jobs.master.interactivewrapper import InteractiveWrapper
 from pyiron_base.jobs.master.list import ListMaster
 from pyiron_base.jobs.master.parallel import JobGenerator, ParallelMaster
+from pyiron_base.maintenance.generic import LocalMaintenance, Maintenance
 from pyiron_base.project.decorator import job
 from pyiron_base.project.external import Notebook, dump, load
 from pyiron_base.project.generic import Creator, Project
