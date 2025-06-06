@@ -8,8 +8,10 @@ import pandas
 
 import pyiron_base.storage.hdfio
 from pyiron_base import state
-from pyiron_base.database.performance import get_database_statistics
-from pyiron_base.project.update.pyiron_base_03x_to_04x import pyiron_base_03x_to_04x
+from pyiron_base.maintenance.databaseperformance import get_database_statistics
+from pyiron_base.maintenance.update.pyiron_base_03x_to_04x import (
+    pyiron_base_03x_to_04x,
+)
 
 # we sometimes move classes between modules; this would break HDF storage,
 # since objects save there the module path from which their classes can be

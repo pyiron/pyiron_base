@@ -156,7 +156,7 @@ class Project(ProjectPath, HasGroups):
     @property
     def maintenance(self) -> "Maintenance":
         if self._maintenance is None:
-            from pyiron_base.project.maintenance import Maintenance
+            from pyiron_base.maintenance.generic import Maintenance
 
             self._maintenance = Maintenance(self)
         return self._maintenance
