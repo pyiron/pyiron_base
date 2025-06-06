@@ -29,7 +29,11 @@ from pyiron_base.jobs.master.generic import GenericMaster, get_function_from_str
 from pyiron_base.jobs.master.interactivewrapper import InteractiveWrapper
 from pyiron_base.jobs.master.list import ListMaster
 from pyiron_base.jobs.master.parallel import JobGenerator, ParallelMaster
-from pyiron_base.maintenance.generic import LocalMaintenance, Maintenance
+from pyiron_base.maintenance.generic import (
+    LocalMaintenance,
+    Maintenance,
+    add_module_conversion,
+)
 from pyiron_base.project.decorator import job
 from pyiron_base.project.external import Notebook, dump, load
 from pyiron_base.project.generic import Creator, Project
@@ -37,6 +41,7 @@ from pyiron_base.state import state
 from pyiron_base.state.install import install_dialog
 from pyiron_base.state.settings import Settings
 from pyiron_base.storage.datacontainer import DataContainer
+from pyiron_base.storage.filedata import FileData, FileDataTemplate, load_file
 from pyiron_base.storage.flattenedstorage import FlattenedStorage
 from pyiron_base.storage.has_stored_traits import HasStoredTraits
 from pyiron_base.storage.hdfio import FileHDFio, ProjectHDFio
@@ -106,6 +111,10 @@ __all__ = [
     HasGroups,
     HasHDF,
     Toolkit,
+    add_module_conversion,
     LocalMaintenance,
     Maintenance,
+    load_file,
+    FileDataTemplate,
+    FileData,
 ]
