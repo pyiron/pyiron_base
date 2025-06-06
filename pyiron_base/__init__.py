@@ -10,6 +10,7 @@ from pyiron_base.interfaces.object import HasDatabase, HasStorage, PyironObject
 from pyiron_base.jobs.datamining import PyironTable, TableJob
 from pyiron_base.jobs.dynamic import warn_dynamic_job_classes
 from pyiron_base.jobs.flex.factory import create_job_factory
+from pyiron_base.maintenance.generic import LocalMaintenance, Maintenance
 from pyiron_base.jobs.job.extension.executable import Executable
 from pyiron_base.jobs.job.extension.jobstatus import (
     JobStatus,
