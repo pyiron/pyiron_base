@@ -105,4 +105,6 @@ __all__ = [
     HasGroups,
     HasHDF,
     Toolkit,
+    LocalMaintenance,
+    Maintenance,
 ]
