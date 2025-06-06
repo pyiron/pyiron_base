@@ -29,7 +29,7 @@ from pyiron_base.jobs.master.generic import GenericMaster, get_function_from_str
 from pyiron_base.jobs.master.interactivewrapper import InteractiveWrapper
 from pyiron_base.jobs.master.list import ListMaster
 from pyiron_base.jobs.master.parallel import JobGenerator, ParallelMaster
-from pyiron_base.maintenance.generic import LocalMaintenance, Maintenance
+from pyiron_base.maintenance.generic import add_module_conversion, LocalMaintenance, Maintenance
 from pyiron_base.project.decorator import job
 from pyiron_base.project.external import Notebook, dump, load
 from pyiron_base.project.generic import Creator, Project
@@ -106,6 +106,7 @@ __all__ = [
     HasGroups,
     HasHDF,
     Toolkit,
+    add_module_conversion,
     LocalMaintenance,
     Maintenance,
 ]
