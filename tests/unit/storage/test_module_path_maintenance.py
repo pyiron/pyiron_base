@@ -37,10 +37,10 @@ class TestModulePath(TestWithProject):
         old_path_job = "job.module"
         job.project_hdf5["TYPE"] = f"<class '{old_path_job}.ToyJob'>"
 
-        pyiron_base.maintainance.maintenance.add_module_conversion(
+        pyiron_base.maintenance.generic.add_module_conversion(
             old_path_project_data, DataContainer.__module__
         )
-        pyiron_base.maintainance.maintenance.add_module_conversion(
+        pyiron_base.maintenance.generic.add_module_conversion(
             old_path_job, ToyJob.__module__
         )
 
