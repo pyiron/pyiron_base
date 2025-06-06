@@ -41,7 +41,6 @@ from pyiron_base.storage.has_stored_traits import HasStoredTraits
 from pyiron_base.storage.hdfio import FileHDFio, ProjectHDFio
 from pyiron_base.storage.inputlist import InputList
 from pyiron_base.storage.parameters import GenericParameters
-from pyiron_base.utils.jedi import fix_ipython_autocomplete
 from pyiron_base.utils.parser import Logstatus, extract_data_from_file
 
 # Internal init
@@ -51,9 +50,6 @@ Project.register_tools("base", BaseTools)
 
 # Set version of pyiron_base
 __version__ = get_versions()["version"]
-
-# Jedi fix
-fix_ipython_autocomplete()
 
 # Dynamic job class definition is no longer supported in pyiron_base >=0.7.0
 warn_dynamic_job_classes(
