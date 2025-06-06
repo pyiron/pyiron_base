@@ -76,6 +76,7 @@ __all__ = [
     GenericJob,
     InteractiveBase,
     JobStatus,
+    job,
     job_status_successful_lst,
     job_status_finished_lst,
     job_status_lst,
