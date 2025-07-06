@@ -73,6 +73,7 @@ datecode 220603
       <element type="qes:ekin_functionalType" name="ekin_functional" minOccurs="0" />
       <element type="qes:matrixType" name="external_atomic_forces" minOccurs="0" />
       <element type="qes:integerMatrixType" name="free_positions" minOccurs="0" />
+      <element type="qes:twochemType" name="twoch_" minOccurs="0" />
       <element type="qes:matrixType" name="starting_atomic_velocities" minOccurs="0" />
       <element type="qes:electric_fieldType" name="electric_field" minOccurs="0" />
       <element type="qes:atomic_constraintsType" name="atomic_constraints" minOccurs="0" />
@@ -235,6 +236,7 @@ datecode 220603
       <element type="qes:cellType" name="cell"/>
     </sequence>
     <attribute type="positiveInteger" name="nat" />
+    <attribute type="positiveInteger" name="num_of_atomic_wfc" />
     <attribute type="double" name="alat" use="optional"/>
     <attribute type="positiveInteger" name="bravais_index" use="optional"/>
       <attribute type="string" name="alternative_axes" use="optional" />
@@ -908,6 +910,15 @@ datecode 220603
      </simpleContent>
   </complexType>
 
+  <complexType name="twochemType">
+    <sequence>
+      <element type="boolean" name="twochem" minOccurs="0"/>
+      <element type="integer" name="nbnd_cond" minOccurs="0"/>
+      <element type="double" name="degauss_cond" minOccurs="0"/>
+      <element type="double" name="nelec_cond" minOccurs="0"/>
+    </sequence>  
+  </complexType>
+
   <!-- OUTPUT TYPE -->
 
   <complexType name="outputElectricFieldType">
@@ -997,6 +1008,7 @@ datecode 220603
     <sequence>
       <element type="qes:scf_convType" name="scf_conv"/>
       <element type="qes:opt_convType" name="opt_conv" minOccurs="0"/>
+      <element type="boolean" name="wf_collected" minOccurs="0"/>
     </sequence>
   </complexType>
   <complexType name="scf_convType">
@@ -1024,6 +1036,7 @@ datecode 220603
   <complexType name="symmetriesType">
     <sequence>
       <element type="unsignedByte" name="nsym"/>
+      <element type="unsignedByte" name="colin_mag"/>
       <element type="unsignedByte" name="nrot"/>
       <element type="unsignedByte" name="space_group"/>
       <element type="qes:symmetryType" name="symmetry" maxOccurs="48" minOccurs="1"/>
@@ -1101,8 +1114,9 @@ datecode 220603
       <element type="nonNegativeInteger" name="nbnd_up" minOccurs="0" />
       <element type="nonNegativeInteger" name="nbnd_dw" minOccurs="0" />
       <element type="double" name="nelec"/>
+      <element type="double" name="fermi_energy"/>
       <element type="integer" name = "num_of_atomic_wfc" minOccurs = "0"/>
-      <element type="boolean" name = "wf_collected" />
+      <element type="boolean" name = "wf_collected" minOccurs = "0"/>
       <element type="double" name="fermi_energy" minOccurs="0" />
       <element type="double" name="highestOccupiedLevel" minOccurs ="0"/>
       <element type="double" name="lowestUnoccupiedLevel" minOccurs="0"/>
