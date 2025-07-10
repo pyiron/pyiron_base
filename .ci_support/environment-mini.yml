@@ -6,7 +6,7 @@ dependencies:
 - h5py =3.13.0
 - monty =2025.3.3
 - numpy =2.2.4
-- pandas =2.3.0
+- pandas =2.3.1
 - psutil =7.0.0
 - pyfileindex =0.0.38
 - pyiron_dataclasses =0.0.1
