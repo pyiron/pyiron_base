@@ -54,7 +54,7 @@ conda = [
     "conda_subprocess==0.0.8",
 ]
 devel = [
-    "gitpython==3.1.44",
+    "gitpython==3.1.45",
 ]
 flux = [
     "jinja2==3.1.6",
