@@ -78,3 +78,7 @@ style = "pep440-pre"
 versionfile_source = "pyiron_base/_version.py"
 parentdir_prefix = "pyiron_base"
 tag_prefix = "pyiron_base-"
+
+[tool.coverage.run]
+omit = ["pyiron_base/_version.py", "tests/*"]
+command_line = "-m unittest discover tests"
