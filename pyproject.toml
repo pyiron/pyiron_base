@@ -68,7 +68,7 @@ pyiron = "pyiron_base.cli:main"
 
 [tool.hatch.build]
 include = [
-    "pyiron_base/**/*.py"
+    "pyiron_base"
 ]
 
 [tool.hatch.build.hooks.vcs]
@@ -81,7 +81,7 @@ include = [
 
 [tool.hatch.build.targets.wheel]
 packages = [
-    "pyiron_base/**/*.py"
+    "pyiron_base"
 ]
 
 [tool.hatch.version]
