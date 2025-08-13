@@ -68,7 +68,7 @@ pyiron = "pyiron_base.cli:main"
 
 [tool.hatch.build]
 include = [
-    "pyiron_base"
+    "pyiron_base/**/*.py"
 ]
 
 [tool.hatch.build.hooks.vcs]
