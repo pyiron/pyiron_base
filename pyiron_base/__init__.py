@@ -3,6 +3,8 @@
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
 # API of the pyiron_base module - in alphabetical order
+# Internal init
+import pyiron_base._version
 from pyiron_base.interfaces.factory import PyironFactory
 from pyiron_base.interfaces.has_groups import HasGroups
 from pyiron_base.interfaces.has_hdf import HasHDF
@@ -48,9 +50,6 @@ from pyiron_base.storage.hdfio import FileHDFio, ProjectHDFio
 from pyiron_base.storage.inputlist import InputList
 from pyiron_base.storage.parameters import GenericParameters
 from pyiron_base.utils.parser import Logstatus, extract_data_from_file
-
-# Internal init
-import pyiron_base._version
 
 Project.register_tools("base", BaseTools)
 
