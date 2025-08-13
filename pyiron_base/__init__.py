@@ -50,12 +50,12 @@ from pyiron_base.storage.parameters import GenericParameters
 from pyiron_base.utils.parser import Logstatus, extract_data_from_file
 
 # Internal init
-from ._version import get_versions
+import pyiron_base._version
 
 Project.register_tools("base", BaseTools)
 
 # Set version of pyiron_base
-__version__ = get_versions()["version"]
+__version__ = pyiron_base._version.__version__
 
 # Dynamic job class definition is no longer supported in pyiron_base >=0.7.0
 warn_dynamic_job_classes(

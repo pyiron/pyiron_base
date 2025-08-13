@@ -20,3 +20,5 @@ dependencies:
 - sqlalchemy =2.0.22
 - tqdm =4.44.0
 - traitlets =5.1.1
+- hatchling =1.27.0
+- hatch-vcs =0.5.0

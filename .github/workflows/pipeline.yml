@@ -73,7 +73,7 @@ jobs:
       timeout-minutes: 30
       run: |
         python .ci_support/pyironconfig.py
-        bash .ci_support/pip_install.sh
+        pip install . --no-deps --no-build-isolation
         python -m unittest discover tests/benchmarks
 
   minimal:
@@ -95,7 +95,7 @@ jobs:
       timeout-minutes: 10
       run: |
         python .ci_support/pyironconfig.py
-        bash .ci_support/pip_install.sh
+        pip install . --no-deps --no-build-isolation
         python -m unittest discover tests/unit
 
   notebooks:
@@ -117,8 +117,8 @@ jobs:
     - name: Test
       shell: bash -l {0}
       run: |
-        bash .ci_support/pip_install.sh
-        ./.ci_support/build_notebooks.sh
+        pip install . --no-deps --no-build-isolation
+        bash ./.ci_support/build_notebooks.sh
 
   pip_check:
     needs: [black]
@@ -137,7 +137,7 @@ jobs:
     - name: Pip check
       shell: bash -l {0}
       run: |
-        pip install versioneer[toml]==0.29 tomlkit
+        pip install tomlkit
         python .ci_support/check.py
         cat pyproject.toml
         pip install . --no-deps --no-build-isolation
@@ -186,7 +186,7 @@ jobs:
       timeout-minutes: 10
       run: |
         python .ci_support/pyironconfig.py
-        bash .ci_support/pip_install.sh
+        pip install . --no-deps --no-build-isolation
         coverage run
         coverage xml
     - name: Upload coverage reports to Codecov
@@ -213,7 +213,7 @@ jobs:
       shell: bash -l {0}
       timeout-minutes: 30
       run: |
-        bash .ci_support/pip_install.sh
+        pip install . --no-deps --no-build-isolation
         python -m unittest discover tests/unit
 
   unittest_adis:
@@ -235,7 +235,7 @@ jobs:
     - name: Tests
       shell: bash -l {0}
       run: |
-        bash .ci_support/pip_install.sh
+        pip install . --no-deps --no-build-isolation
         cd tests/usecases/ADIS
         export ESPRESSO_PSEUDO=$(pwd)/espresso/pseudo
         papermill notebook.ipynb notebook-out.ipynb -k "python3"
@@ -261,7 +261,7 @@ jobs:
       shell: bash -l {0}
       timeout-minutes: 60
       run: |
-        bash .ci_support/pip_install.sh
+        pip install . --no-deps --no-build-isolation
         sudo apt-get install -y $(cat tests/usecases/NFDI4ING/apt.txt)
         cd tests/usecases/NFDI4ING
         papermill notebook.ipynb notebook.ipynb -k "python3"
