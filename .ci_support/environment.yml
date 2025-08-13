@@ -8,7 +8,7 @@ dependencies:
 - cloudpickle =3.1.1
 - executorlib =1.6.1
 - gitpython =3.1.45
-- h5io_browser =0.1.13
+- h5io_browser =0.1.14
 - h5py =3.13.0
 - jinja2 =3.1.6
 - monty =2025.3.3
@@ -16,7 +16,7 @@ dependencies:
 - pandas =2.3.1
 - pint =0.24.4
 - psutil =7.0.0
-- pyfileindex =0.0.38
+- pyfileindex =0.0.39
 - pyiron_dataclasses =0.0.1
 - pyiron_snippets =0.2.0
 - pysqa =0.3.0
