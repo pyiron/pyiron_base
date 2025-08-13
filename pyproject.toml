@@ -76,7 +76,7 @@ version-file = "pyiron_base/_version.py"
 
 [tool.hatch.build.targets.sdist]
 include = [
-    "pyiron_base/**/*.py"
+    "pyiron_base"
 ]
 
 [tool.hatch.build.targets.wheel]
