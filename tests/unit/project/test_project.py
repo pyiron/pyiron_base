@@ -449,6 +449,7 @@ class TestProjectExtended(TestWithProject):
         # and Notebook.get_custom_dict() returns a project_dir
         try:
             from pyiron_base.project.external import Notebook
+
             original_get_custom_dict = Notebook.get_custom_dict
 
             class MockNotebook:
@@ -467,6 +468,7 @@ class TestProjectExtended(TestWithProject):
         # and Notebook.get_custom_dict() returns None
         try:
             from pyiron_base.project.external import Notebook
+
             original_get_custom_dict = Notebook.get_custom_dict
 
             class MockNotebook:
