@@ -98,6 +98,57 @@ class TestGenericParameters(PyironTestCase):
             str(data_frame_all_entries.get_pandas()),
         )
 
+    def test_init_with_input_file(self):
+        # Create a dummy input file
+        with open("test_input.txt", "w") as f:
+            f.write("param1 1\n")
+            f.write("param2 True\n")
+        
+        gp = GenericParameters(input_file_name="test_input.txt")
+        self.assertEqual(gp.get("param1"), 1)
+        self.assertEqual(gp.get("param2"), True)
+        
+        os.remove("test_input.txt")
+
+    def test_file_name_property(self):
+        gp = GenericParameters()
+        gp.file_name = "new_name"
+        self.assertEqual(gp.file_name, "new_name")
+
+    def test_table_name_property(self):
+        gp = GenericParameters()
+        gp.table_name = "new_table"
+        self.assertEqual(gp.table_name, "new_table")
+
+    def test_val_only_property(self):
+        gp = GenericParameters()
+        gp.val_only = True
+        self.assertTrue(gp.val_only)
+
+    def test_comment_char_property(self):
+        gp = GenericParameters()
+        gp.comment_char = ";"
+        self.assertEqual(gp.comment_char, ";")
+
+    def test_separator_char_property(self):
+        gp = GenericParameters()
+        gp.separator_char = "="
+        self.assertEqual(gp.separator_char, "=")
+
+    def test_multi_word_separator_property(self):
+        gp = GenericParameters()
+        gp.multi_word_separator = "-"
+        self.assertEqual(gp.multi_word_separator, "-")
+
+    def test_end_value_char_property(self):
+        gp = GenericParameters()
+        gp.end_value_char = "!"
+        self.assertEqual(gp.end_value_char, "!")
+
+    def test_replace_char_dict_property(self):
+        gp = GenericParameters()
+        gp.replace_char_dict = {"a": "b"}
+        self.assertEqual(gp.replace_char_dict, {"a": "b"})
 
 if __name__ == "__main__":
     unittest.main()
