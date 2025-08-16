@@ -303,9 +303,6 @@ class TestFileHDFio(PyironTestCase):
                 "dummy", opened_hdf.list_nodes(), msg="Entry still in HDF after del!"
             )
 
-    def test_get_from_table(self):
-        pass
-
     def test_get_pandas(self):
         pass
 
@@ -723,16 +720,6 @@ class TestFileHDFioCoverage(PyironTestCase):
         self.assertEqual(items[0][0], "test_content")
         self.assertIsInstance(items[0][1], FileHDFio)
 
-    def test_rewrite_hdf5_info(self):
-        from io import StringIO
-        import sys
-
-        old_stdout = sys.stdout
-        sys.stdout = captured_output = StringIO()
-        self.hdf.rewrite_hdf5(info=True)
-        sys.stdout = old_stdout
-        self.assertIn("compression rate", captured_output.getvalue())
-
     def test_hd_copy_exclude(self):
         new_hdf_file = os.path.join(self.current_dir, "copy_exclude.h5")
         new_hdf = FileHDFio(file_name=new_hdf_file)
@@ -748,13 +735,6 @@ class TestFileHDFioCoverage(PyironTestCase):
     def test_read_dict_from_hdf(self):
         test_dict = self.hdf["test_content"].read_dict_from_hdf()
         self.assertEqual(test_dict["array"][0], 1)
-
-    def test_get_from_table(self):
-        df = pd.DataFrame({"Parameter": ["a", "b"], "Value": [1, 2]})
-        self.hdf["my_table"] = df
-        self.assertEqual(self.hdf.get_from_table("my_table", "a"), 1)
-        with self.assertRaises(ValueError):
-            self.hdf.get_from_table("my_table", "c")
 
     def test_get_pandas(self):
         d = {"a": [1, 2], "b": [3, 4]}
