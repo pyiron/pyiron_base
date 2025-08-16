@@ -703,6 +703,7 @@ class TestGenericJob(TestWithFilledProject):
         j.refresh_job_status()
         self.assertTrue(j.status.aborted)
 
+    @unittest.skipIf(os.name == "nt", "ProcessPoolExecutor not available on Windows")
     def test_job_executor_wait(self):
         j = self.project.create_job(ReturnCodeJob, "job_with_executor_wait")
         j.input["accepted_codes"] = [1]

@@ -34,7 +34,7 @@ jobs:
       run: |
         cd ../pyiron_contrib
         python ../pyiron_base/.ci_support/pyironconfig.py
-        pip install versioneer[toml]==0.29
+        pip install versioneer[toml]==0.29 hatchling hatch-vcs
         pip install . --no-deps --no-build-isolation
         cd ../pyiron_base
         pip install . --no-deps --no-build-isolation
