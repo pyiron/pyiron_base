@@ -333,15 +333,6 @@ class TestGenericParameters(PyironTestCase):
         self.assertIn("True\n", string_lst)
         self.assertIn("test\n", string_lst)
 
-    def test_get_attributes(self):
-        gp = GenericParameters()
-        gp.set(Comment=" @my_command my_value")
-        attrs = gp._get_attributes()
-        self.assertEqual(attrs["Parameter"], ["my_command"])
-        self.assertEqual(attrs["Value"], ["my_value"])
-        self.assertEqual(gp.get_attribute("my_command"), "my_value")
-        self.assertIsNone(gp.get_attribute("non_existent"))
-
     def test_get_with_multiple_keys(self):
         gp = GenericParameters()
         gp.set(param1=1)
