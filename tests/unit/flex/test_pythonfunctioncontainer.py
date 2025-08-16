@@ -253,7 +253,7 @@ class TestPythonFunctionContainer(TestWithProject):
         )
         delayed_obj.server.run_mode.non_modal = True
         future = delayed_obj.pull()
-        self.project.wait_for_job(delayed_obj, interval_in_s=0.1, max_iterations=100)
+        self.project.wait_for_job(delayed_obj, interval_in_s=1, max_iterations=10)
         with self.assertRaises(ValueError):
             future.result()
         self.assertTrue(delayed_obj._job.status.aborted)
