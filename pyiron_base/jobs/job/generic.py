@@ -19,7 +19,7 @@ from pyiron_snippets.deprecate import deprecate
 
 from pyiron_base.database.filetable import FileTable
 from pyiron_base.interfaces.has_dict import HasDict
-from pyiron_base.jobs.job.core import (
+from pyiron_base.jobs.job.base import (
     JobCore,
     _doc_str_job_core_args,
     _doc_str_job_core_attr,

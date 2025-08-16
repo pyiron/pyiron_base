@@ -3,6 +3,8 @@
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
 # API of the pyiron_base module - in alphabetical order
+# Internal init
+import pyiron_base._version
 from pyiron_base.interfaces.factory import PyironFactory
 from pyiron_base.interfaces.has_groups import HasGroups
 from pyiron_base.interfaces.has_hdf import HasHDF
@@ -49,13 +51,10 @@ from pyiron_base.storage.inputlist import InputList
 from pyiron_base.storage.parameters import GenericParameters
 from pyiron_base.utils.parser import Logstatus, extract_data_from_file
 
-# Internal init
-from ._version import get_versions
-
 Project.register_tools("base", BaseTools)
 
 # Set version of pyiron_base
-__version__ = get_versions()["version"]
+__version__ = pyiron_base._version.__version__
 
 # Dynamic job class definition is no longer supported in pyiron_base >=0.7.0
 warn_dynamic_job_classes(

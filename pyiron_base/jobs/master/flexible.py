@@ -7,7 +7,7 @@ The Flexible master uses a list of functions to connect multiple jobs in a serie
 
 import inspect
 
-from pyiron_base.jobs.job.core import _doc_str_job_core_args
+from pyiron_base.jobs.job.base import _doc_str_job_core_args
 from pyiron_base.jobs.job.extension.jobstatus import job_status_finished_lst
 from pyiron_base.jobs.master.generic import GenericMaster, _doc_str_generic_master_attr
 

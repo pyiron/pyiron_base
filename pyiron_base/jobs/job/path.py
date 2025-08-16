@@ -8,7 +8,7 @@ The JobPath class enables quick access to the HDF5 data file without loading the
 import os
 from typing import Any, Tuple
 
-from pyiron_base.jobs.job.core import JobCore
+from pyiron_base.jobs.job.base import JobCore
 from pyiron_base.project.generic import Project
 from pyiron_base.storage.hdfio import ProjectHDFio
 

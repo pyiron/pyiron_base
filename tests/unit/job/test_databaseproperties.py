@@ -6,7 +6,7 @@ import unittest
 import datetime
 import os
 from pyiron_base.project.generic import Project
-from pyiron_base.jobs.job.core import DatabaseProperties
+from pyiron_base.jobs.job.base import DatabaseProperties
 from pyiron_base._tests import PyironTestCase
 
 

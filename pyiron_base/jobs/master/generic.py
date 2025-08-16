@@ -13,7 +13,7 @@ from typing import Union
 from pyiron_snippets.deprecate import deprecate
 
 from pyiron_base.interfaces.object import HasStorage
-from pyiron_base.jobs.job.core import _doc_str_job_core_args
+from pyiron_base.jobs.job.base import _doc_str_job_core_args
 from pyiron_base.jobs.job.extension.jobstatus import job_status_finished_lst
 from pyiron_base.jobs.job.generic import GenericJob, _doc_str_generic_job_attr
 from pyiron_base.storage.datacontainer import DataContainer

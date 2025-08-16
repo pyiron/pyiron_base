@@ -15,7 +15,7 @@ import numpy as np
 import pandas
 from pyiron_snippets.deprecate import deprecate
 
-from pyiron_base.jobs.job.core import _doc_str_job_core_args
+from pyiron_base.jobs.job.base import _doc_str_job_core_args
 from pyiron_base.jobs.job.extension.jobstatus import JobStatus
 from pyiron_base.jobs.job.generic import GenericJob
 from pyiron_base.jobs.job.util import _get_safe_job_name
