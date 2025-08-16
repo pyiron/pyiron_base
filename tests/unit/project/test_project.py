@@ -483,6 +483,121 @@ class TestProjectExtended(TestWithProject):
         finally:
             Notebook.get_custom_dict = original_get_custom_dict
 
+    def test_maintenance_property(self):
+        from pyiron_base.maintenance.generic import Maintenance
+        self.assertIsInstance(self.project.maintenance, Maintenance)
+
+    def test_conda_environment_property(self):
+        # Test case where conda is available
+        try:
+            from pyiron_base.project.condaenv import CondaEnvironment
+            self.assertIsInstance(self.project.conda_environment, CondaEnvironment)
+        except ImportError:
+            self.skipTest("conda is not available.")
+
+        # Test case where conda is not available
+        import sys
+        
+        # To properly test the ImportError, we need to ensure that 
+        # 'pyiron_base.project.condaenv' is not in sys.modules, so that the import statement 
+        # in the property fails. We store it to restore it later.
+        original_condaenv = sys.modules.pop("pyiron_base.project.condaenv", None)
+        
+        with self.assertRaises(ImportError):
+            _ = self.project.conda_environment
+
+        # Restore original module
+        if original_condaenv:
+            sys.modules["pyiron_base.project.condaenv"] = original_condaenv
+
+    def test_wrap_python_function(self):
+        def test_function(a, b=8):
+            return a + b
+
+        # Test immediate execution
+        job = self.project.wrap_python_function(test_function)
+        job.input["a"] = 4
+        job.input["b"] = 5
+        job.run()
+        self.assertEqual(job.output["result"], 9)
+
+        # Test immediate execution with arguments
+        result = self.project.wrap_python_function(test_function, 4, b=6, execute_job=True)
+        self.assertEqual(result, 10)
+
+        # Test delayed execution
+        delayed_job = self.project.wrap_python_function(test_function, delayed=True)
+        from pyiron_base.project.delayed import DelayedObject
+        self.assertIsInstance(delayed_job, DelayedObject)
+
+    def test_create_job_class(self):
+        def write_input(input_dict, working_directory="."):
+            with open(os.path.join(working_directory, "input_file"), "w") as f:
+                f.write(str(input_dict["energy"]))
+
+        def collect_output(working_directory="."):
+            with open(os.path.join(working_directory, "output_file"), "r") as f:
+                return {"energy": float(f.readline())}
+
+        self.project.create_job_class(
+            class_name="CatJob",
+            write_input_funct=write_input,
+            collect_output_funct=collect_output,
+            default_input_dict={"energy": 1.0},
+            executable_str="cat input_file > output_file",
+        )
+        job = self.project.create.job.CatJob(job_name="job_test")
+        job.input["energy"] = 2.0
+        job.run()
+        self.assertEqual(job.output["energy"], 2.0)
+
+    def test_wrap_executable(self):
+        def write_input(input_dict, working_directory="."):
+            with open(os.path.join(working_directory, "input_file"), "w") as f:
+                f.write(str(input_dict["energy"]))
+
+        def collect_output(working_directory="."):
+            with open(os.path.join(working_directory, "output_file"), "r") as f:
+                return {"energy": float(f.readline())}
+
+        job = self.project.wrap_executable(
+            job_name="Cat_Job_energy_1_0",
+            write_input_funct=write_input,
+            collect_output_funct=collect_output,
+            input_dict={"energy": 1.0},
+            executable_str="cat input_file > output_file",
+            execute_job=True,
+        )
+        self.assertEqual(job.output["energy"], 1.0)
+
+        delayed_job = self.project.wrap_executable(
+            job_name="Cat_Job_delayed",
+            write_input_funct=write_input,
+            collect_output_funct=collect_output,
+            input_dict={"energy": 3.0},
+            executable_str="cat input_file > output_file",
+            delayed=True,
+        )
+        from pyiron_base.project.delayed import DelayedObject
+        self.assertIsInstance(delayed_job, DelayedObject)
+        # self.assertEqual(delayed_job.to_object().output["energy"], 3.0)
+
+    def test_create_from_job(self):
+        from pyiron_base._tests import ToyJob
+        from pyiron_base.jobs.job.jobtype import JOB_CLASS_DICT
+        JOB_CLASS_DICT["ToyJob"] = ToyJob
+        job_old = self.project.create.job.ToyJob("job_old")
+        job_old.run()
+        
+        new_job = self.project.create_from_job(job_old, "job_new")
+        self.assertIsNotNone(new_job)
+        self.assertEqual(new_job.job_name, "job_new")
+        self.assertTrue(os.path.exists(new_job.working_directory))
+
+        # Test creating a job that already exists
+        existing_job = self.project.create_from_job(job_old, "job_new")
+        self.assertIsNone(existing_job)
+
 
 if __name__ == "__main__":
     unittest.main()
