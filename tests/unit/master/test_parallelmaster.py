@@ -2,7 +2,9 @@
 # Copyright (c) Max-Planck-Institut für Eisenforschung GmbH - Computational Materials Design (CM) Department
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
+import pandas as pd
 import unittest
+from unittest.mock import patch, MagicMock
 from pyiron_base import JobGenerator, ParallelMaster
 from pyiron_base._tests import TestWithProject, ToyJob
 
