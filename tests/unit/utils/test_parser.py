@@ -39,3 +39,24 @@ class TestParser(TestCase):
         lf.extract_file(file_name=self.file_name, tag_dict=tag_dict)
         self.assertEqual(lf.status_dict["alat"], [[[0], 3.2]])
         self.assertEqual(lf.status_dict["count"], [[[0], 10]])
+
+    def test_log_status_iter(self):
+        lf = Logstatus(iter_levels=2)
+        self.assertEqual(lf.iter, [0, 0])
+        lf.raise_iter()
+        self.assertEqual(lf.iter, [1, 0])
+        lf.raise_iter(dim=1)
+        self.assertEqual(lf.iter, [1, 1])
+        lf.reset_iter(dim=1)
+        self.assertEqual(lf.iter, [1, 0])
+        lf.reset_iter()
+        self.assertEqual(lf.iter, [0, 0])
+
+    def test_log_status_append(self):
+        lf = Logstatus()
+        lf.append("test", [1, 2, 3])
+        self.assertEqual(lf.status_dict["test"], [[[0], [1, 2, 3]]])
+        lf.append("test", [4, 5, 6])
+        self.assertEqual(lf.status_dict["test"], [[[0], [1, 2, 3]], [[0], [4, 5, 6]]])
+        with self.assertRaises(ValueError):
+            lf.append("test", [7, 8, 9], vec=True)
