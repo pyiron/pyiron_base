@@ -4,7 +4,11 @@ from threading import Lock
 import time
 from queue import Queue
 
-from pyiron_base.database.generic import ConnectionWatchDog, AutorestoredConnection, DatabaseAccess
+from pyiron_base.database.generic import (
+    ConnectionWatchDog,
+    AutorestoredConnection,
+    DatabaseAccess,
+)
 
 
 class TestConnectionWatchDog(unittest.TestCase):
@@ -79,7 +83,9 @@ class TestAutorestoredConnection(unittest.TestCase):
 
 class TestDatabaseAccess(unittest.TestCase):
     def setUp(self):
-        self.db = DatabaseAccess(connection_string="sqlite:///:memory:", table_name="jobs")
+        self.db = DatabaseAccess(
+            connection_string="sqlite:///:memory:", table_name="jobs"
+        )
 
     def test_add_and_get_item(self):
         # Test adding an item
@@ -103,15 +109,38 @@ class TestDatabaseAccess(unittest.TestCase):
             self.assertIsNone(self.db.add_item_dict(item, check_duplicates=True))
 
     def test_update_item(self):
-        item_id = self.db.add_item_dict({"job": "update_test", "project": "proj", "projectpath": "/dev/null"})
+        item_id = self.db.add_item_dict(
+            {"job": "update_test", "project": "proj", "projectpath": "/dev/null"}
+        )
         self.db._item_update({"status": "finished"}, item_id)
         retrieved_item = self.db.get_item_by_id(item_id)
         self.assertEqual(retrieved_item["status"], "finished")
 
     def test_get_items_dict(self):
-        self.db.add_item_dict({"job": "item1", "project": "proj1", "hamilton": "VASP", "projectpath": "/dev/null"})
-        self.db.add_item_dict({"job": "item2", "project": "proj1", "hamilton": "LAMMPS", "projectpath": "/dev/null"})
-        self.db.add_item_dict({"job": "item3", "project": "proj2", "hamilton": "VASP", "projectpath": "/dev/null"})
+        self.db.add_item_dict(
+            {
+                "job": "item1",
+                "project": "proj1",
+                "hamilton": "VASP",
+                "projectpath": "/dev/null",
+            }
+        )
+        self.db.add_item_dict(
+            {
+                "job": "item2",
+                "project": "proj1",
+                "hamilton": "LAMMPS",
+                "projectpath": "/dev/null",
+            }
+        )
+        self.db.add_item_dict(
+            {
+                "job": "item3",
+                "project": "proj2",
+                "hamilton": "VASP",
+                "projectpath": "/dev/null",
+            }
+        )
 
         # Test simple query
         items = self.db.get_items_dict({"hamilton": "VASP"})
@@ -145,6 +174,7 @@ class TestDatabaseAccess(unittest.TestCase):
         # SQLite does not robustly support ALTER COLUMN TYPE, so this test is minimal
         # It checks that the command doesn't raise an error.
         from sqlalchemy.exc import OperationalError
+
         with self.assertRaises(OperationalError):
             self.db.change_column_type("job", "TEXT")
 
@@ -201,8 +231,12 @@ class TestDatabaseAccess(unittest.TestCase):
         self.assertEqual(len(items), 1)
 
     def test_del(self):
-        db = DatabaseAccess(connection_string="sqlite:///:memory:", table_name="jobs", timeout=-1)
-        db.add_item_dict({"job": "del_test", "project": "proj", "projectpath": "/dev/null"})
+        db = DatabaseAccess(
+            connection_string="sqlite:///:memory:", table_name="jobs", timeout=-1
+        )
+        db.add_item_dict(
+            {"job": "del_test", "project": "proj", "projectpath": "/dev/null"}
+        )
         del db
 
 
