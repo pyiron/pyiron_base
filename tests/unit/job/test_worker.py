@@ -1,5 +1,7 @@
 import os
 import time
+import unittest
+import sys
 from threading import Thread
 from pyiron_base._tests import TestWithCleanProject, ToyJob
 from pyiron_base.jobs.worker import worker_function
@@ -23,6 +25,7 @@ class TestWorker(TestWithCleanProject):
         cls.project.remove_jobs(recursive=True, silently=True)
         cls.sub_project = cls.project.open("sub")
 
+    @unittest.skipIf(sys.platform != "linux", "Worker jobs are only supported on Linux")
     def test_worker_job(self):
         self.worker = self.project.create.job.WorkerJob("runner")
         self.worker.project_to_watch = self.sub_project
@@ -33,7 +36,7 @@ class TestWorker(TestWithCleanProject):
         job.server.run_mode.worker = True
         job.master_id = self.worker.job_id
         job.run()
-        self.sub_project.wait_for_jobs(interval_in_s=1.00, max_iterations=20)
+        self.sub_project.wait_for_jobs(interval_in_s=1.00, max_iterations=10)
         self.worker.status.collect = True
         df = self.sub_project.job_table()
         self.assertEqual(len(df[df.status == "finished"]), 1)
