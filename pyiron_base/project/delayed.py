@@ -24,6 +24,8 @@ class JobFuture(Future):
 
     def result(self):
         self._job.storage.from_hdf(hdf=self._job.project_hdf5)
+        if "error" in self._job.output:
+            raise self._job.output["error"]
         return self._job.output["result"]
 
 

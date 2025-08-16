@@ -28,6 +28,10 @@ def function_with_dict(a, b=1, c=3):
     return {"a": a, "b": b, "c": c}
 
 
+def function_with_error(a, b):
+    raise ValueError()
+
+
 class TestPythonFunctionContainer(TestWithProject):
     def test_as_job(self):
         job = self.project.wrap_python_function(my_function)
@@ -231,6 +235,15 @@ class TestPythonFunctionContainer(TestWithProject):
             python_function=my_function, a=c, b=3, execute_job=True
         )
         self.assertEqual(d, 6)
+
+    def test_function_with_error(self):
+        delayed_obj = self.project.wrap_python_function(
+            python_function=function_with_error, a=1, b=2, delayed=True
+        )
+        future = delayed_obj.pull()
+        with self.assertRaises(ValueError):
+            future.result()
+        self.assertTrue(delayed_obj._job.status.aborted)
 
     def test_delayed(self):
         c = self.project.wrap_python_function(

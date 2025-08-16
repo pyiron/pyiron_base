@@ -4,6 +4,7 @@ from typing import Optional
 import cloudpickle
 import numpy as np
 
+from pyiron_base.state import state
 from pyiron_base.jobs.job.template import PythonTemplateJob
 from pyiron_base.project.delayed import get_function_parameter_dict, get_hash
 
@@ -138,16 +139,27 @@ class PythonFunctionContainerJob(PythonTemplateJob):
         without an executor.
         """
         self.status.running = True
-        if (
-            self._executor_type is not None
-            and "executor" in inspect.signature(self._function).parameters.keys()
-        ):
-            input_dict = self.input.to_builtin()
-            del input_dict["executor"]
-            with self._get_executor(max_workers=self.server.cores) as exe:
-                output = self._function(**input_dict, executor=exe)
+        try:
+            if (
+                self._executor_type is not None
+                and "executor" in inspect.signature(self._function).parameters.keys()
+            ):
+                input_dict = self.input.to_builtin()
+                del input_dict["executor"]
+                with self._get_executor(max_workers=self.server.cores) as exe:
+                    output = self._function(**input_dict, executor=exe)
+            else:
+                output = self._function(**self.input)
+        except Exception as e:
+            self._logger.warning("Job aborted")
+            self.status.aborted = True
+            self._hdf5["status"] = self.status.string
+            self.run_time_to_db()
+            if self.server.run_mode.non_modal:
+                state.database.close_connection()
+            self.output.update({"error": e})
+            self.to_hdf()
         else:
-            output = self._function(**self.input)
-        self.output.update({"result": output})
-        self.to_hdf()
-        self.status.finished = True
+            self.output.update({"result": output})
+            self.to_hdf()
+            self.status.finished = True
