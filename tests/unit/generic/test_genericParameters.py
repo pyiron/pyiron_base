@@ -176,7 +176,7 @@ class TestGenericParameters(PyironTestCase):
         gp = GenericParameters()
         with self.assertRaises(ValueError):
             gp.read_input("non_existent_file.txt")
-        
+
         with open("test_input.txt", "w") as f:
             f.write("param1 1\n")
             f.write("!ignore this line\n")
@@ -188,7 +188,7 @@ class TestGenericParameters(PyironTestCase):
         self.assertNotIn("!ignore", "".join(gp.get_string_lst()))
 
         os.remove("test_input.txt")
-    
+
     def test_lines_to_dict(self):
         gp = GenericParameters()
         lines = ["param1 1 # comment", "param2 2"]
@@ -203,7 +203,7 @@ class TestGenericParameters(PyironTestCase):
         self.assertEqual(data_dict["Parameter"], ["", ""])
         self.assertEqual(data_dict["Value"], ["value1", "value2"])
         self.assertEqual(data_dict["Comment"], ["comment", ""])
-        
+
         gp_replace = GenericParameters()
         gp_replace.replace_char_dict = {"a": "b"}
         lines = ["parbm1 ab"]
@@ -219,10 +219,10 @@ class TestGenericParameters(PyironTestCase):
         self.assertTrue(gp.get("param3"))
         self.assertEqual(gp["param1"], 1)
         self.assertEqual(gp[1], "test")
-        
+
         gp["param1"] = 2
         self.assertEqual(gp.get("param1"), 2)
-        
+
         del gp["param2"]
         with self.assertRaises(NameError):
             gp.get("param2")
@@ -243,7 +243,7 @@ class TestGenericParameters(PyironTestCase):
 
         with self.assertRaises(ValueError):
             gp.modify(non_existent=1)
-            
+
         gp.modify(non_existent=1, append_if_not_present=True)
         self.assertEqual(gp.get("non_existent"), 1)
 
@@ -251,10 +251,10 @@ class TestGenericParameters(PyironTestCase):
         gp = GenericParameters()
         gp.set_value(0, "test")
         self.assertEqual(gp[0], "test")
-        
+
         gp.set_value(1, "test2")
         self.assertEqual(gp[1], "test2")
-        
+
     def test_remove_keys(self):
         gp = GenericParameters()
         gp.set(param1=1, param2=2)
@@ -270,13 +270,14 @@ class TestGenericParameters(PyironTestCase):
             block1_param2=2,
             block2_param1=3,
             block2_param2=4,
-            other_param=5
+            other_param=5,
         )
         block_dict = {
             "block1": ["block1_param1", "block1_param2"],
             "block2": ["block2_param1", "block2_param2"],
         }
         from collections import OrderedDict
+
         gp.define_blocks(OrderedDict(block_dict))
 
         block1 = gp._get_block("block1")
@@ -287,19 +288,21 @@ class TestGenericParameters(PyironTestCase):
         self.assertNotIn("block1_param1", gp.keys())
         self.assertNotIn("block1_param2", gp.keys())
 
-        insert_block_dict = {
-            "Parameter": ["new_param"], "Value": [6], "Comment": [""]
-        }
+        insert_block_dict = {"Parameter": ["new_param"], "Value": [6], "Comment": [""]}
         gp._insert_block(insert_block_dict, next_block="block2")
         self.assertIn("new_param", gp.keys())
-        
-        update_block_dict = {"Parameter": ["block2_param1"], "Value": [10], "Comment": [""]}
+
+        update_block_dict = {
+            "Parameter": ["block2_param1"],
+            "Value": [10],
+            "Comment": [""],
+        }
         gp._update_block(update_block_dict)
         self.assertEqual(gp.get("block2_param1"), 10)
 
         with self.assertRaises(ValueError):
             gp._get_block("non_existent_block")
-            
+
         with self.assertRaises(ValueError):
             gp._remove_block("non_existent_block")
 
@@ -349,6 +352,7 @@ class TestGenericParameters(PyironTestCase):
         gp.set(param1=1)
         gp.clear_all()
         self.assertEqual(len(gp.keys()), 0)
+
 
 if __name__ == "__main__":
     unittest.main()
