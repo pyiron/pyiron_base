@@ -4,9 +4,9 @@ from typing import Optional
 import cloudpickle
 import numpy as np
 
-from pyiron_base.state import state
 from pyiron_base.jobs.job.template import PythonTemplateJob
 from pyiron_base.project.delayed import get_function_parameter_dict, get_hash
+from pyiron_base.state import state
 
 
 class PythonFunctionContainerJob(PythonTemplateJob):
