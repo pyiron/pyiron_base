@@ -23,6 +23,15 @@ class TestGenerator(JobGenerator):
         return job
 
 
+class SimpleMaster(ParallelMaster):
+    def __init__(self, project, job_name):
+        super().__init__(project, job_name)
+        # no job generator
+
+    def collect_output(self):
+        pass
+
+
 class TestMaster(ParallelMaster):
     def __init__(self, job_name, project):
         super().__init__(job_name, project)
@@ -78,6 +87,38 @@ class TestParallelMaster(TestWithProject):
         self.master_toy.run()
         self.assertFalse(self.master_toy.convergence_check())
         self.assertTrue(self.master_toy.status.not_converged)
+
+
+class TestParallelMasterExtendedProperties(TestWithProject):
+    def setUp(self):
+        super().setUp()
+        self.master = self.project.create_job(SimpleMaster, "master_props")
+
+    def test_ref_job(self):
+        # Test setter
+        self.assertIsNone(self.master.ref_job, "ref_job should be None initially")
+        toy_job = self.project.create_job(ToyJob, "toy")
+        self.master.ref_job = toy_job
+
+        # After setting, the getter should return the job
+        # The getter also modifies the job to be a template
+        ref_job = self.master.ref_job
+        self.assertIsNotNone(ref_job)
+        self.assertEqual(ref_job.job_name, toy_job.job_name)
+        self.assertIsNone(ref_job.job_id)  # job_id is reset
+        self.assertEqual(ref_job.status.string, 'initialized')  # status is reset
+
+        # Test getter when _ref_job is already set
+        self.assertIs(self.master.ref_job, ref_job)
+
+        # Test getter when there are no children and _ref_job is not set
+        master_empty = self.project.create_job(SimpleMaster, "master_empty")
+        self.assertIsNone(master_empty.ref_job)
+
+    def test_number_jobs_total(self):
+        self.assertIsNone(self.master.number_jobs_total)
+        self.master.number_jobs_total = 10
+        self.assertEqual(self.master.number_jobs_total, 10)
 
 
 if __name__ == "__main__":
