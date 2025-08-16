@@ -103,11 +103,11 @@ class TestGenericParameters(PyironTestCase):
         with open("test_input.txt", "w") as f:
             f.write("param1 1\n")
             f.write("param2 True\n")
-        
+
         gp = GenericParameters(input_file_name="test_input.txt")
         self.assertEqual(gp.get("param1"), 1)
         self.assertEqual(gp.get("param2"), True)
-        
+
         os.remove("test_input.txt")
 
     def test_file_name_property(self):
@@ -149,6 +149,7 @@ class TestGenericParameters(PyironTestCase):
         gp = GenericParameters()
         gp.replace_char_dict = {"a": "b"}
         self.assertEqual(gp.replace_char_dict, {"a": "b"})
+
 
 if __name__ == "__main__":
     unittest.main()
