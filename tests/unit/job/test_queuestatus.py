@@ -37,7 +37,9 @@ class TestQueueStatus(PyironTestCase):
         self.job.server.queue_id = 123
 
     def test_queue_table(self):
-        with patch("pyiron_base.state.state.queue_adapter", new_callable=Mock) as mock_adapter:
+        with patch(
+            "pyiron_base.state.state.queue_adapter", new_callable=Mock
+        ) as mock_adapter:
             mock_adapter.get_status_of_my_jobs.return_value = pd.DataFrame(
                 {"jobname": ["pi_1", "pi_2"], "status": ["running", "pending"]}
             )
@@ -45,7 +47,9 @@ class TestQueueStatus(PyironTestCase):
             self.assertEqual(len(df), 2)
 
     def test_queue_check_job_is_waiting_or_running(self):
-        with patch("pyiron_base.state.state.queue_adapter", new_callable=Mock) as mock_adapter:
+        with patch(
+            "pyiron_base.state.state.queue_adapter", new_callable=Mock
+        ) as mock_adapter:
             mock_adapter.get_status_of_job.return_value = "running"
             self.assertTrue(queue_check_job_is_waiting_or_running(self.job))
             mock_adapter.get_status_of_job.return_value = "pending"
@@ -54,13 +58,17 @@ class TestQueueStatus(PyironTestCase):
             self.assertFalse(queue_check_job_is_waiting_or_running(self.job))
 
     def test_queue_info_by_job_id(self):
-        with patch("pyiron_base.state.state.queue_adapter", new_callable=Mock) as mock_adapter:
+        with patch(
+            "pyiron_base.state.state.queue_adapter", new_callable=Mock
+        ) as mock_adapter:
             mock_adapter.get_status_of_job.return_value = {"status": "running"}
             info = queue_info_by_job_id(123)
             self.assertEqual(info, {"status": "running"})
 
     def test_queue_is_empty(self):
-        with patch("pyiron_base.state.state.queue_adapter", new_callable=Mock) as mock_adapter:
+        with patch(
+            "pyiron_base.state.state.queue_adapter", new_callable=Mock
+        ) as mock_adapter:
             mock_adapter.get_status_of_my_jobs.return_value = pd.DataFrame()
             self.assertTrue(queue_is_empty())
             mock_adapter.get_status_of_my_jobs.return_value = pd.DataFrame(
@@ -69,34 +77,49 @@ class TestQueueStatus(PyironTestCase):
             self.assertFalse(queue_is_empty())
 
     def test_queue_delete_job(self):
-        with patch("pyiron_base.state.state.queue_adapter", new_callable=Mock) as mock_adapter:
+        with patch(
+            "pyiron_base.state.state.queue_adapter", new_callable=Mock
+        ) as mock_adapter:
             queue_delete_job(self.job)
             mock_adapter.delete_job.assert_called_with(process_id=123)
 
     def test_queue_enable_reservation(self):
-        with patch("pyiron_base.state.state.queue_adapter", new_callable=Mock) as mock_adapter:
+        with patch(
+            "pyiron_base.state.state.queue_adapter", new_callable=Mock
+        ) as mock_adapter:
             queue_enable_reservation(self.job)
             mock_adapter.enable_reservation.assert_called_with(process_id=123)
 
     def test_wait_for_job(self):
         self.job.status.created = True
-        with patch("pyiron_base.jobs.job.extension.server.queuestatus.queue_check_job_is_waiting_or_running", return_value=False):
+        with patch(
+            "pyiron_base.jobs.job.extension.server.queuestatus.queue_check_job_is_waiting_or_running",
+            return_value=False,
+        ):
             with patch("pyiron_base.state.state.queue_adapter", new_callable=Mock):
                 wait_for_job(self.job, interval_in_s=0.01, max_iterations=1)
                 self.assertEqual(self.job.status.string, "finished")
 
     def test_wait_for_jobs(self):
         self.job.status.created = True
-        with patch("pyiron_base.jobs.job.extension.server.queuestatus.update_from_remote") as mock_update:
+        with patch(
+            "pyiron_base.jobs.job.extension.server.queuestatus.update_from_remote"
+        ) as mock_update:
             with patch("pyiron_base.state.state.queue_adapter", new_callable=Mock):
                 wait_for_jobs(self.project, interval_in_s=0.01, max_iterations=1)
                 mock_update.assert_called()
 
     def test_update_from_remote(self):
-        with patch("pyiron_base.state.state.queue_adapter", new_callable=Mock) as mock_adapter:
+        with patch(
+            "pyiron_base.state.state.queue_adapter", new_callable=Mock
+        ) as mock_adapter:
             mock_adapter.remote_flag = True
             mock_adapter.get_status_of_my_jobs.return_value = pd.DataFrame(
-                {"jobname": ["pi_" + str(self.job.job_id)], "status": ["running"], "pyiron_id": [self.job.job_id]}
+                {
+                    "jobname": ["pi_" + str(self.job.job_id)],
+                    "status": ["running"],
+                    "pyiron_id": [self.job.job_id],
+                }
             )
             self.job.status.submitted = True
             update_from_remote(self.project)
