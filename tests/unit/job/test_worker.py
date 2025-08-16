@@ -75,4 +75,5 @@ class TestWorker(TestWithCleanProject):
                 toy_job.project_hdf5.file_name + "/" + toy_job.job_name,
             )
         )
+        self.project.wait_for_job(toy_job)
         self.assertTrue(toy_job.status.finished)
