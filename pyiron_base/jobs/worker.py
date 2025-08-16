@@ -69,18 +69,15 @@ def worker_function(args: list) -> None:
             "-f",
             job_link,
         ]
-    try:
-        _ = subprocess.run(
-            executable,
-            cwd=working_directory,
-            shell=False,
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
-            universal_newlines=True,
-            env=os.environ.copy(),
-        )
-    except subprocess.CalledProcessError:
-        pass
+    _ = subprocess.run(
+        executable,
+        cwd=working_directory,
+        shell=False,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+        universal_newlines=True,
+        env=os.environ.copy(),
+    )
 
 
 class WorkerJob(PythonTemplateJob):
