@@ -5,7 +5,6 @@ from pyiron_base.storage.parameters import GenericParameters
 
 
 class TestGenericParameters(unittest.TestCase):
-
     def test_load_default(self):
         gp = GenericParameters(input_file_name=None)
         self.assertEqual(gp.keys(), [])
