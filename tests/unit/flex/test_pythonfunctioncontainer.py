@@ -246,6 +246,18 @@ class TestPythonFunctionContainer(TestWithProject):
             future.result()
         self.assertTrue(delayed_obj._job.status.aborted)
 
+    @unittest.skipIf(sys.version_info < (3, 11), reason="requires python3.11 or higher")
+    def test_function_with_error_non_modal(self):
+        delayed_obj = self.project.wrap_python_function(
+            python_function=function_with_error, a=1, b=2, delayed=True
+        )
+        delayed_obj.server.run_mode.non_modal = True
+        future = delayed_obj.pull()
+        self.project.wait_for_job(delayed_obj)
+        with self.assertRaises(ValueError):
+            future.result()
+        self.assertTrue(delayed_obj._job.status.aborted)
+
     def test_delayed(self):
         c = self.project.wrap_python_function(
             python_function=my_function, a=1, b=2, delayed=True
