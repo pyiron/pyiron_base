@@ -236,6 +236,7 @@ class TestPythonFunctionContainer(TestWithProject):
         )
         self.assertEqual(d, 6)
 
+    @unittest.skipIf(sys.version_info < (3, 11), reason="requires python3.11 or higher")
     def test_function_with_error(self):
         delayed_obj = self.project.wrap_python_function(
             python_function=function_with_error, a=1, b=2, delayed=True
