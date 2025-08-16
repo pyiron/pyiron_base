@@ -6,6 +6,7 @@ import sys
 import warnings
 from io import StringIO
 import numpy as np
+import pandas as pd
 from pyiron_base.storage.hdfio import (
     FileHDFio,
     _is_ragged_in_1st_dim_only,
@@ -683,6 +684,164 @@ class TestProjectHDFio(TestWithProject):
                 )
         finally:
             JobType.unregister(ToyJob)
+
+
+class TestFileHDFioCoverage(PyironTestCase):
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls.current_dir = os.path.dirname(os.path.abspath(__file__)).replace("\\", "/")
+        cls.hdf5_file = os.path.join(cls.current_dir, "test_coverage.h5")
+
+    def setUp(self):
+        super().setUp()
+        self.hdf = FileHDFio(file_name=self.hdf5_file)
+        _write_full_hdf_content(self.hdf.create_group("test_content"))
+
+    def tearDown(self):
+        super().tearDown()
+        if os.path.exists(self.hdf5_file):
+            os.remove(self.hdf5_file)
+        copy_exclude_file = os.path.join(self.current_dir, "copy_exclude.h5")
+        if os.path.exists(copy_exclude_file):
+            os.remove(copy_exclude_file)
+
+    def test_getitem_slice(self):
+        with self.assertRaises(NotImplementedError):
+            _ = self.hdf[1:]
+
+    def test_getitem_unknown(self):
+        with self.assertRaises(ValueError):
+            _ = self.hdf["unknown_item"]
+
+    def test_repr(self):
+        self.assertEqual(
+            repr(self.hdf),
+            str(self.hdf.list_all())
+        )
+
+    def test_items(self):
+        items = self.hdf.items()
+        self.assertEqual(len(items), 1)
+        self.assertEqual(items[0][0], "test_content")
+        self.assertIsInstance(items[0][1], FileHDFio)
+
+    def test_rewrite_hdf5_info(self):
+        from io import StringIO
+        import sys
+
+        old_stdout = sys.stdout
+        sys.stdout = captured_output = StringIO()
+        self.hdf.rewrite_hdf5(info=True)
+        sys.stdout = old_stdout
+        self.assertIn("compression rate", captured_output.getvalue())
+
+    def test_hd_copy_exclude(self):
+        new_hdf_file = os.path.join(self.current_dir, "copy_exclude.h5")
+        new_hdf = FileHDFio(file_name=new_hdf_file)
+        self.hdf.hd_copy(self.hdf, new_hdf, exclude_groups=["test_content"])
+        self.assertEqual(len(new_hdf.list_groups()), 0)
+        new_hdf.remove_file()
+
+        new_hdf = FileHDFio(file_name=new_hdf_file)
+        self.hdf.hd_copy(self.hdf['test_content'], new_hdf, exclude_nodes=["array"])
+        self.assertNotIn("array", new_hdf.list_nodes())
+        new_hdf.remove_file()
+
+    def test_read_dict_from_hdf(self):
+        test_dict = self.hdf['test_content'].read_dict_from_hdf()
+        self.assertEqual(test_dict['array'][0], 1)
+
+    def test_get_from_table(self):
+        df = pd.DataFrame({"Parameter": ["a", "b"], "Value": [1, 2]})
+        self.hdf["my_table"] = df
+        self.assertEqual(self.hdf.get_from_table("my_table", "a"), 1)
+        with self.assertRaises(ValueError):
+            self.hdf.get_from_table("my_table", "c")
+
+    def test_get_pandas(self):
+        d = {"a": [1, 2], "b": [3, 4]}
+        self.hdf["my_dict"] = d
+        df = self.hdf.get_pandas("my_dict")
+        self.assertIsInstance(df, pd.DataFrame)
+        self.assertEqual(df["a"][0], 1)
+        self.assertIsNone(self.hdf.get_pandas("test_content/array"))
+
+    def test_values(self):
+        values = self.hdf.values()
+        self.assertEqual(len(values), 1)
+        self.assertIsInstance(values[0], FileHDFio)
+
+    def test_nodes_filter(self):
+        nodes_hdf = self.hdf.nodes()
+        self.assertIn("_filter", nodes_hdf.__dict__.keys())
+
+    def test_groups_filter(self):
+        groups_hdf = self.hdf.groups()
+        self.assertIn("_filter", groups_hdf.__dict__.keys())
+
+    def test_list_all_non_existent(self):
+        hdf = self.hdf.open('non_existent')
+        self.assertEqual(hdf.list_all(), {'groups': [], 'nodes': []})
+
+    def test_import_class_error(self):
+        with self.assertRaises(ImportError):
+            _import_class("non_existent_module", "NonExistentClass")
+
+    def test_create_group_value_error(self):
+        self.hdf.create_group("my_group")
+        # Creating the same group again should not raise an error
+        self.hdf.create_group("my_group")
+
+    def test_exit(self):
+        with self.hdf.open('test_content') as hdf:
+            self.assertEqual(hdf.h5_path, '/test_content')
+        self.assertEqual(self.hdf.h5_path, '/')
+
+
+class FHA(object):
+    def __init__(self, a=None, b=None):
+        self.a = a
+        self.b = b
+
+    @staticmethod
+    def from_hdf_args(hdf):
+        return {"a": hdf["a"], "b": hdf["b"]}
+
+    def to_hdf(self, hdf, group_name):
+        with hdf.open(group_name) as hdf_group:
+            hdf_group["a"] = self.a
+            hdf_group["b"] = self.b
+            hdf_group["TYPE"] = str(type(self))
+
+    def from_hdf(self, hdf, group_name):
+        pass
+
+
+class TestProjectHDFioCoverage(TestWithProject):
+
+    def test_to_object_no_type(self):
+        hdf = self.project.create_hdf(self.project.path, "no_type.h5")
+        hdf.create_group("no_type_group")
+        with self.assertRaises(ValueError):
+            hdf['no_type_group'].to_object()
+        hdf.remove_file()
+
+    def test_to_object_with_from_hdf_args(self):
+        obj = FHA(a=1, b=2)
+        hdf = self.project.create_hdf(self.project.path, 'fha_test.h5')
+        obj.to_hdf(hdf, "fha_test")
+        reloaded_obj = hdf['fha_test'].to_object()
+        self.assertEqual(obj.a, reloaded_obj.a)
+        self.assertEqual(obj.b, reloaded_obj.b)
+        hdf.remove_file()
+
+    def test_to_object_generic_job(self):
+        job = self.project.create_job(BaseToyJob, "toy_job")
+        job.run()
+        reloaded_job = job.project_hdf5.to_object()
+        self.assertEqual(job.job_name, reloaded_job.job_name)
+        job.remove()
 
 
 if __name__ == "__main__":
