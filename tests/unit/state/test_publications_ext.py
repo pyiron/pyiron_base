@@ -6,6 +6,7 @@ from unittest import TestCase
 from pyiron_base.state.publications import publications
 import pandas as pd
 
+
 class TestPublicationsExt(TestCase):
     def setUp(self):
         publications.reset()
@@ -57,7 +58,10 @@ class TestPublicationsExt(TestCase):
         publications.add(self.publication_with_all_fields)
         apa_str = publications.show(bib_format="apa")
         self.assertIsInstance(apa_str, str)
-        self.assertIn("Doe, John & Doe, Jane (2024). A fancy title. Journal of Fancy Things, 1, 123-456. doi: 10.fancy/doi", apa_str)
+        self.assertIn(
+            "Doe, John & Doe, Jane (2024). A fancy title. Journal of Fancy Things, 1, 123-456. doi: 10.fancy/doi",
+            apa_str,
+        )
 
     def test_show_invalid_format(self):
         with self.assertRaises(ValueError):
@@ -67,7 +71,7 @@ class TestPublicationsExt(TestCase):
         list_pub = {
             "another_code": [
                 {"pub1": {"title": "pub1", "author": ["Ano Nymous"]}},
-                {"pub2": {"title": "pub2", "author": ["Ano Nymous"]}}
+                {"pub2": {"title": "pub2", "author": ["Ano Nymous"]}},
             ]
         }
         publications.add(list_pub)
@@ -79,7 +83,9 @@ class TestPublicationsExt(TestCase):
         self.assertEqual(len(publications.list()), 2)
         publications.reset()
         self.assertEqual(len(publications.list()), 1)
-        self.assertEqual(publications.list(), [publications.pyiron_publication['pyiron']])
+        self.assertEqual(
+            publications.list(), [publications.pyiron_publication["pyiron"]]
+        )
 
     def test_show_pandas(self):
         df = publications.show(bib_format="pandas")
@@ -87,6 +93,8 @@ class TestPublicationsExt(TestCase):
         self.assertEqual(len(df), 1)
 
     def test_apa_without_all_fields(self):
-        publications.add({"some_code": {"some_pub": {"author": ["A", "B"], "title": "T"}}})
+        publications.add(
+            {"some_code": {"some_pub": {"author": ["A", "B"], "title": "T"}}}
+        )
         apa_str = publications.show(bib_format="apa")
         self.assertIn("A & BT. ", apa_str)
