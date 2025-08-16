@@ -150,6 +150,214 @@ class TestGenericParameters(PyironTestCase):
         gp.replace_char_dict = {"a": "b"}
         self.assertEqual(gp.replace_char_dict, {"a": "b"})
 
+    def test_read_only(self):
+        gp = GenericParameters()
+        gp.read_only = True
+        with self.assertWarns(Warning):
+            gp.load_string("param1 1")
+        with self.assertWarns(Warning):
+            gp.load_default()
+        with self.assertWarns(Warning):
+            gp.set_value(0, "1")
+        gp.set(param1=1)
+        with self.assertWarns(Warning):
+            gp.remove_keys(["param1"])
+        with self.assertWarns(Warning):
+            gp["param1"] = 1
+        gp = GenericParameters()
+        gp.set(param1=1)
+        gp.read_only = True
+        with self.assertWarns(Warning):
+            gp.modify(param1=2)
+        with self.assertWarns(Warning):
+            gp.modify(param1=(2, "a comment"))
+
+    def test_read_input(self):
+        gp = GenericParameters()
+        with self.assertRaises(ValueError):
+            gp.read_input("non_existent_file.txt")
+        
+        with open("test_input.txt", "w") as f:
+            f.write("param1 1\n")
+            f.write("!ignore this line\n")
+            f.write("param2 2\n")
+
+        gp.read_input("test_input.txt", ignore_trigger="!")
+        self.assertEqual(gp.get("param1"), 1)
+        self.assertEqual(gp.get("param2"), 2)
+        self.assertNotIn("!ignore", "".join(gp.get_string_lst()))
+
+        os.remove("test_input.txt")
+    
+    def test_lines_to_dict(self):
+        gp = GenericParameters()
+        lines = ["param1 1 # comment", "param2 2"]
+        data_dict = gp._lines_to_dict(lines)
+        self.assertEqual(data_dict["Parameter"], ["param1", "param2"])
+        self.assertEqual(data_dict["Value"], ["1", "2"])
+        self.assertEqual(data_dict["Comment"], ["comment", ""])
+
+        gp_val_only = GenericParameters(val_only=True)
+        lines = ["value1 # comment", "value2"]
+        data_dict = gp_val_only._lines_to_dict(lines)
+        self.assertEqual(data_dict["Parameter"], ["", ""])
+        self.assertEqual(data_dict["Value"], ["value1", "value2"])
+        self.assertEqual(data_dict["Comment"], ["comment", ""])
+        
+        gp_replace = GenericParameters()
+        gp_replace.replace_char_dict = {"a": "b"}
+        lines = ["parbm1 ab"]
+        data_dict = gp_replace._lines_to_dict(lines)
+        self.assertEqual(data_dict["Parameter"], ["pbrbm1"])
+        self.assertEqual(data_dict["Value"], ["bb"])
+
+    def test_get_set_del(self):
+        gp = GenericParameters()
+        gp.set(param1=1, param2="test", param3=True)
+        self.assertEqual(gp.get("param1"), 1)
+        self.assertEqual(gp.get("param2"), "test")
+        self.assertTrue(gp.get("param3"))
+        self.assertEqual(gp["param1"], 1)
+        self.assertEqual(gp[1], "test")
+        
+        gp["param1"] = 2
+        self.assertEqual(gp.get("param1"), 2)
+        
+        del gp["param2"]
+        with self.assertRaises(NameError):
+            gp.get("param2")
+
+        self.assertEqual(gp.get("non_existent", default_value="default"), "default")
+        with self.assertRaises(NameError):
+            gp.get("non_existent")
+
+    def test_modify(self):
+        gp = GenericParameters()
+        gp.set(param1=1)
+        gp.modify(param1=2)
+        self.assertEqual(gp.get("param1"), 2)
+
+        gp.modify(param1=(3, "a comment"))
+        self.assertEqual(gp.get("param1"), 3)
+        self.assertEqual(gp._dataset["Comment"][0], "a comment")
+
+        with self.assertRaises(ValueError):
+            gp.modify(non_existent=1)
+            
+        gp.modify(non_existent=1, append_if_not_present=True)
+        self.assertEqual(gp.get("non_existent"), 1)
+
+    def test_set_value(self):
+        gp = GenericParameters()
+        gp.set_value(0, "test")
+        self.assertEqual(gp[0], "test")
+        
+        gp.set_value(1, "test2")
+        self.assertEqual(gp[1], "test2")
+        
+    def test_remove_keys(self):
+        gp = GenericParameters()
+        gp.set(param1=1, param2=2)
+        gp.remove_keys(["param1"])
+        self.assertNotIn("param1", gp.keys())
+        # test that removing non-existent key does not raise error
+        gp.remove_keys(["non_existent"])
+
+    def test_block_operations(self):
+        gp = GenericParameters()
+        gp.set(
+            block1_param1=1,
+            block1_param2=2,
+            block2_param1=3,
+            block2_param2=4,
+            other_param=5
+        )
+        block_dict = {
+            "block1": ["block1_param1", "block1_param2"],
+            "block2": ["block2_param1", "block2_param2"],
+        }
+        from collections import OrderedDict
+        gp.define_blocks(OrderedDict(block_dict))
+
+        block1 = gp._get_block("block1")
+        self.assertEqual(block1["Parameter"], ["block1_param1", "block1_param2"])
+        self.assertEqual(block1["Value"], [1, 2])
+
+        gp._remove_block("block1")
+        self.assertNotIn("block1_param1", gp.keys())
+        self.assertNotIn("block1_param2", gp.keys())
+
+        insert_block_dict = {
+            "Parameter": ["new_param"], "Value": [6], "Comment": [""]
+        }
+        gp._insert_block(insert_block_dict, next_block="block2")
+        self.assertIn("new_param", gp.keys())
+        
+        update_block_dict = {"Parameter": ["block2_param1"], "Value": [10], "Comment": [""]}
+        gp._update_block(update_block_dict)
+        self.assertEqual(gp.get("block2_param1"), 10)
+
+        with self.assertRaises(ValueError):
+            gp._get_block("non_existent_block")
+            
+        with self.assertRaises(ValueError):
+            gp._remove_block("non_existent_block")
+
+        with self.assertRaises(AssertionError):
+            gp.define_blocks(block_dict)
+
+    def test_hdf_from_dict(self):
+        pr = Project(self.file_location)
+        file_name = os.path.join(self.file_location, "genericpara.h5")
+        hdf = ProjectHDFio(project=pr, file_name=file_name, h5_path="/test", mode="a")
+        self.generic_parameters_str.to_hdf(hdf=hdf)
+
+        # Create a new GenericParameters object and load from HDF
+        gp_reload = GenericParameters(table_name="str")
+        gp_reload.from_hdf(hdf=hdf)
+
+        self.assertEqual(gp_reload.get("par___1"), 1)
+        os.remove(file_name)
+
+    def test_get_string_lst(self):
+        gp = GenericParameters()
+        gp.set(param1=1, param2=True, param3="test")
+        string_lst = gp.get_string_lst()
+        self.assertIn("param1 1\n", string_lst)
+        self.assertIn("param2 True\n", string_lst)
+        self.assertIn("param3 test\n", string_lst)
+
+        gp.val_only = True
+        string_lst = gp.get_string_lst()
+        self.assertIn("1\n", string_lst)
+        self.assertIn("True\n", string_lst)
+        self.assertIn("test\n", string_lst)
+
+    def test_get_attributes(self):
+        gp = GenericParameters()
+        gp.set(Comment=" @my_command my_value")
+        attrs = gp._get_attributes()
+        self.assertEqual(attrs["Parameter"], ["my_command"])
+        self.assertEqual(attrs["Value"], ["my_value"])
+        self.assertEqual(gp.get_attribute("my_command"), "my_value")
+        self.assertIsNone(gp.get_attribute("non_existent"))
+
+    def test_get_with_multiple_keys(self):
+        gp = GenericParameters()
+        gp.set(param1=1)
+        gp.set(param2=2)
+        # Manually add a duplicate key to test the error handling
+        gp._dataset["Parameter"].append("param1")
+        gp._dataset["Value"].append(3)
+        gp._dataset["Comment"].append("")
+        with self.assertRaises(ValueError):
+            gp.get("param1")
+
+    def test_clear_all(self):
+        gp = GenericParameters()
+        gp.set(param1=1)
+        gp.clear_all()
+        self.assertEqual(len(gp.keys()), 0)
 
 if __name__ == "__main__":
     unittest.main()
