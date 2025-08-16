@@ -3,6 +3,7 @@
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
 import importlib
+import io
 import pandas as pd
 import unittest
 from unittest.mock import patch, MagicMock
