@@ -7,6 +7,7 @@ from os.path import dirname, join, abspath, exists, islink
 import os
 import tempfile
 import pickle
+import shutil
 from pyiron_base.project.generic import Project
 from pyiron_base._tests import (
     PyironTestCase,
@@ -15,6 +16,9 @@ from pyiron_base._tests import (
     ToyJob,
 )
 from pyiron_base.jobs.job.toolkit import BaseTools
+from pyiron_base.project.external import Notebook
+from pyiron_base.project.delayed import DelayedObject
+from pyiron_base.maintenance.generic import Maintenance
 
 
 try:
@@ -424,6 +428,133 @@ class TestToolRegistration(TestWithProject):
             self.project.register_tools("foo", self.tools)  # Name taken
         with self.assertRaises(AttributeError):
             self.project.register_tools("load", self.tools)  # Already another method
+
+
+class TestProjectExtended(TestWithProject):
+    @classmethod
+    def setUpClass(cls):
+        cls.file_location = dirname(abspath(__file__)).replace("\\", "/")
+        cls.project_name = join(cls.file_location, "test_project_extended")
+        if os.path.exists(cls.project_name):
+            shutil.rmtree(cls.project_name)
+        super().setUpClass()
+
+    @classmethod
+    def tearDownClass(cls):
+        try:
+            os.remove(join(cls.file_location, "pyiron.log"))
+        except FileNotFoundError:
+            pass
+        super().tearDownClass()
+
+    def test_init_with_default_working_directory(self):
+        # Test case where path is empty and default_working_directory is True
+        # and Notebook.get_custom_dict() returns a project_dir
+        try:
+            original_get_custom_dict = Notebook.get_custom_dict
+
+            class MockNotebook:
+                @staticmethod
+                def get_custom_dict():
+                    return {"project_dir": self.project_path}
+
+            Notebook.get_custom_dict = MockNotebook.get_custom_dict
+
+            pr = Project(default_working_directory=True)
+            self.assertEqual(pr.path, self.project_path + "/")
+        finally:
+            Notebook.get_custom_dict = original_get_custom_dict
+
+        # Test case where path is empty and default_working_directory is True
+        # and Notebook.get_custom_dict() returns None
+        try:
+            original_get_custom_dict = Notebook.get_custom_dict
+
+            class MockNotebook:
+                @staticmethod
+                def get_custom_dict():
+                    return None
+
+            Notebook.get_custom_dict = MockNotebook.get_custom_dict
+
+            pr = Project(default_working_directory=True)
+            self.assertEqual(os.path.abspath(pr.path), os.path.abspath("."))
+        finally:
+            Notebook.get_custom_dict = original_get_custom_dict
+
+    def test_maintenance_property(self):
+        self.assertIsInstance(self.project.maintenance, Maintenance)
+
+    def test_wrap_python_function(self):
+        def test_function(a, b=8):
+            return a + b
+
+        # Test immediate execution
+        job = self.project.wrap_python_function(test_function)
+        job.input["a"] = 4
+        job.input["b"] = 5
+        job.run()
+        self.assertEqual(job.output["result"], 9)
+
+        # Test immediate execution with arguments
+        result = self.project.wrap_python_function(
+            test_function, 4, b=6, execute_job=True
+        )
+        self.assertEqual(result, 10)
+
+        # Test delayed execution
+        delayed_job = self.project.wrap_python_function(test_function, delayed=True)
+        self.assertIsInstance(delayed_job, DelayedObject)
+
+    def test_create_job_class(self):
+        def write_input(input_dict, working_directory="."):
+            with open(os.path.join(working_directory, "input_file"), "w") as f:
+                f.write(str(input_dict["energy"]))
+
+        def collect_output(working_directory="."):
+            with open(os.path.join(working_directory, "output_file"), "r") as f:
+                return {"energy": float(f.readline())}
+
+        self.project.create_job_class(
+            class_name="CatJob",
+            write_input_funct=write_input,
+            collect_output_funct=collect_output,
+            default_input_dict={"energy": 1.0},
+            executable_str="cat input_file > output_file",
+        )
+        job = self.project.create.job.CatJob(job_name="job_test")
+        job.input["energy"] = 2.0
+        job.run()
+        self.assertEqual(job.output["energy"], 2.0)
+
+    def test_wrap_executable(self):
+        def write_input(input_dict, working_directory="."):
+            with open(os.path.join(working_directory, "input_file"), "w") as f:
+                f.write(str(input_dict["energy"]))
+
+        def collect_output(working_directory="."):
+            with open(os.path.join(working_directory, "output_file"), "r") as f:
+                return {"energy": float(f.readline())}
+
+        job = self.project.wrap_executable(
+            job_name="Cat_Job_energy_1_0",
+            write_input_funct=write_input,
+            collect_output_funct=collect_output,
+            input_dict={"energy": 1.0},
+            executable_str="cat input_file > output_file",
+            execute_job=True,
+        )
+        self.assertEqual(job.output["energy"], 1.0)
+
+        delayed_job = self.project.wrap_executable(
+            job_name="Cat_Job_delayed",
+            write_input_funct=write_input,
+            collect_output_funct=collect_output,
+            input_dict={"energy": 3.0},
+            executable_str="cat input_file > output_file",
+            delayed=True,
+        )
+        self.assertIsInstance(delayed_job, DelayedObject)
 
 
 if __name__ == "__main__":
