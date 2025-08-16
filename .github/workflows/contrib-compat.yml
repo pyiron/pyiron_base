@@ -33,6 +33,7 @@ jobs:
       timeout-minutes: 30
       run: |
         cd ../pyiron_contrib
+        python ../pyiron_base/.ci_support/pyironconfig.py
         pip install versioneer[toml]==0.29
         pip install . --no-deps --no-build-isolation
         cd ../pyiron_base
