@@ -4,6 +4,7 @@
 
 import importlib
 import io
+import os
 import pandas as pd
 import unittest
 from unittest.mock import patch, MagicMock
@@ -155,6 +156,7 @@ class TestParallelMasterExtendedMethods(TestWithProject):
         master2_copy = master2.copy()
         self.assertIsNone(master2_copy.ref_job)
 
+    @unittest.skipIf(os.name == "nt", "Not implemented for Windows")
     def test_after_generic_copy_to(self):
         self.master.save()
         pr2 = self.project.copy()
