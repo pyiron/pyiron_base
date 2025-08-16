@@ -1759,9 +1759,15 @@ class Project(ProjectPath, HasGroups):
         Raises:
             ValueError: max_iterations reached, job still running
         """
-        wait_for_job(
-            job=job, interval_in_s=interval_in_s, max_iterations=max_iterations
-        )
+        if isinstance(job, DelayedObject):
+            wait_for_job(
+                job=job._job, interval_in_s=interval_in_s, max_iterations=max_iterations
+            )
+
+        else:
+            wait_for_job(
+                job=job, interval_in_s=interval_in_s, max_iterations=max_iterations
+            )
 
     def wait_for_jobs(
         self,

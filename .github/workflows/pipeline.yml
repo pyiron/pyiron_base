@@ -70,9 +70,8 @@ jobs:
         environment-file: .ci_support/environment.yml
     - name: Tests
       shell: bash -l {0}
-      timeout-minutes: 30
+      timeout-minutes: 5
       run: |
-        python .ci_support/pyironconfig.py
         pip install . --no-deps --no-build-isolation
         python -m unittest discover tests/benchmarks
 
@@ -92,9 +91,8 @@ jobs:
         environment-file: .ci_support/environment-mini.yml
     - name: Test
       shell: bash -l {0}
-      timeout-minutes: 10
+      timeout-minutes: 5
       run: |
-        python .ci_support/pyironconfig.py
         pip install . --no-deps --no-build-isolation
         python -m unittest discover tests/unit
 
@@ -116,6 +114,7 @@ jobs:
         environment-file: environment.yml
     - name: Test
       shell: bash -l {0}
+      timeout-minutes: 5
       run: |
         pip install . --no-deps --no-build-isolation
         bash ./.ci_support/build_notebooks.sh
@@ -183,11 +182,11 @@ jobs:
         environment-file: .ci_support/environment.yml
     - name: Test
       shell: bash -l {0}
-      timeout-minutes: 10
+      timeout-minutes: 5
       run: |
-        python .ci_support/pyironconfig.py
         pip install . --no-deps --no-build-isolation
         coverage run
+        coverage report
         coverage xml
     - name: Upload coverage reports to Codecov
       if: matrix.label == 'linux-64-py-3-13'
@@ -211,7 +210,7 @@ jobs:
         environment-file: .ci_support/environment-old.yml
     - name: Test
       shell: bash -l {0}
-      timeout-minutes: 30
+      timeout-minutes: 5
       run: |
         pip install . --no-deps --no-build-isolation
         python -m unittest discover tests/unit
@@ -234,6 +233,7 @@ jobs:
         environment-file: environment.yml
     - name: Tests
       shell: bash -l {0}
+      timeout-minutes: 5
       run: |
         pip install . --no-deps --no-build-isolation
         cd tests/usecases/ADIS
@@ -259,7 +259,7 @@ jobs:
         environment-file: environment.yml
     - name: Test
       shell: bash -l {0}
-      timeout-minutes: 60
+      timeout-minutes: 5
       run: |
         pip install . --no-deps --no-build-isolation
         sudo apt-get install -y $(cat tests/usecases/NFDI4ING/apt.txt)

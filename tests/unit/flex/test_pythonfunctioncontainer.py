@@ -28,6 +28,10 @@ def function_with_dict(a, b=1, c=3):
     return {"a": a, "b": b, "c": c}
 
 
+def function_with_error(a, b):
+    raise ValueError()
+
+
 class TestPythonFunctionContainer(TestWithProject):
     def test_as_job(self):
         job = self.project.wrap_python_function(my_function)
@@ -232,6 +236,28 @@ class TestPythonFunctionContainer(TestWithProject):
         )
         self.assertEqual(d, 6)
 
+    @unittest.skipIf(sys.version_info < (3, 11), reason="requires python3.11 or higher")
+    def test_function_with_error(self):
+        delayed_obj = self.project.wrap_python_function(
+            python_function=function_with_error, a=1, b=2, delayed=True
+        )
+        future = delayed_obj.pull()
+        with self.assertRaises(ValueError):
+            future.result()
+        self.assertTrue(delayed_obj._job.status.aborted)
+
+    @unittest.skipIf(sys.version_info < (3, 11), reason="requires python3.11 or higher")
+    def test_function_with_error_non_modal(self):
+        delayed_obj = self.project.wrap_python_function(
+            python_function=function_with_error, a=2, b=3, delayed=True
+        )
+        delayed_obj.server.run_mode.non_modal = True
+        future = delayed_obj.pull()
+        self.project.wait_for_job(delayed_obj, interval_in_s=1, max_iterations=10)
+        with self.assertRaises(ValueError):
+            future.result()
+        self.assertTrue(delayed_obj._job.status.aborted)
+
     def test_delayed(self):
         c = self.project.wrap_python_function(
             python_function=my_function, a=1, b=2, delayed=True
@@ -251,7 +277,7 @@ class TestPythonFunctionContainer(TestWithProject):
         c.server.run_mode.non_modal = True
         future = c.pull()
         self.assertFalse(future.done())
-        self.project.wait_for_job(future.job)
+        self.project.wait_for_job(future.job, interval_in_s=0.01, max_iterations=1000)
         self.assertTrue(future.done())
         self.assertEqual(future.result(), 3)
         nodes_dict, edges_lst = c.get_graph()
