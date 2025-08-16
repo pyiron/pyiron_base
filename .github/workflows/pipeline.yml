@@ -186,6 +186,7 @@ jobs:
       run: |
         bash .ci_support/pip_install.sh
         coverage run
+        coverage report
         coverage xml
     - name: Upload coverage reports to Codecov
       if: matrix.label == 'linux-64-py-3-13'
