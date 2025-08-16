@@ -247,7 +247,7 @@ class TestPythonFunctionContainer(TestWithProject):
         self.assertTrue(delayed_obj._job.status.aborted)
 
     @unittest.skipIf(
-        sys.version_info < (3, 11) or os.name == "win",
+        sys.version_info < (3, 11) or os.name == "nt",
         reason="requires python3.11 or higher and not windows",
     )
     def test_function_with_error_non_modal(self):
