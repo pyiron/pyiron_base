@@ -51,5 +51,4 @@ jobs:
         cd ../pyiron_base
         pip install . --no-deps --no-build-isolation
         cd ../pyiron_atomistics
-        python .ci_support/pyironconfig.py
         python -m unittest discover tests/
