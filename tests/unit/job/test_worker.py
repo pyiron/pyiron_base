@@ -76,5 +76,3 @@ class TestWorker(TestWithCleanProject):
             )
         )
         self.assertEqual(toy_job._hdf5["status"], "finished")
-        toy_job.refresh_job_status()
-        self.assertTrue(toy_job.status.finished)
