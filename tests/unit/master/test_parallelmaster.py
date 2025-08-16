@@ -106,7 +106,7 @@ class TestParallelMasterExtendedProperties(TestWithProject):
         self.assertIsNotNone(ref_job)
         self.assertEqual(ref_job.job_name, toy_job.job_name)
         self.assertIsNone(ref_job.job_id)  # job_id is reset
-        self.assertEqual(ref_job.status.string, 'initialized')  # status is reset
+        self.assertEqual(ref_job.status.string, "initialized")  # status is reset
 
         # Test getter when _ref_job is already set
         self.assertIs(self.master.ref_job, ref_job)
