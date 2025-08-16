@@ -1,6 +1,8 @@
 import unittest
 import os
 import tempfile
+from collections import OrderedDict
+
 from pyiron_base.storage.parameters import GenericParameters
 
 
@@ -59,6 +61,61 @@ class TestGenericParameters(unittest.TestCase):
         self.assertEqual(gp.get("missing", default_value="fallback"), "fallback")
         with self.assertRaises(NameError):
             gp.get("missing")
+
+    def test_write_and_read_input(self):
+        gp = GenericParameters(input_file_name=None)
+        gp.set(A=1, B=2)
+        # write to a temp file
+        with tempfile.TemporaryDirectory() as d:
+            fname = os.path.join(d, "input.txt")
+            gp.write_file(fname)
+            gp2 = GenericParameters(input_file_name=None)
+            gp2.read_input(fname)
+            self.assertEqual(gp2.get("A"), 1)
+            self.assertEqual(gp2.get("B"), 2)
+
+    def test_get_string_lst_and_bool_conversion(self):
+        gp = GenericParameters(input_file_name=None)
+        gp.set(FLAG=True)
+        lines = gp.get_string_lst()
+        # should contain "True"
+        self.assertIn("True", lines[0])
+        # check bool conversion backwards
+        val = gp._bool_str_to_bool("True")
+        self.assertTrue(val)
+        # value untouched if not boolean
+        self.assertEqual(gp._bool_str_to_bool("abc"), "abc")
+
+    def test_block_insert_update_delete(self):
+        gp = GenericParameters(input_file_name=None)
+        # define block and append parameters
+        block = OrderedDict()
+        block["Parameter"] = ["A", "B"]
+        block["Value"] = ["1", "2"]
+        block["Comment"] = ["", ""]
+        # define dictionary for block name -> parameter names
+        gp.define_blocks(OrderedDict([("myblock", ["A", "B"])]))
+        gp._insert_block(block)
+
+        # now update the block
+        block_update = {"Parameter": ["A"], "Value": ["3"]}
+        gp._update_block(block_update)
+        self.assertEqual(gp.get("A"), "3")
+
+        # removing the block
+        gp._remove_block("myblock")
+        self.assertEqual(gp.keys(), [])
+
+    def test_multiple_occurrences_findline(self):
+        gp = GenericParameters(input_file_name=None)
+        gp.set(A=1)
+        gp.set(B=2)
+        # inject duplicate key into internal structure to test ValueError path
+        gp._dataset["Parameter"].append("A")
+        gp._dataset["Value"].append("3")
+        gp._dataset["Comment"].append("")
+        with self.assertRaises(ValueError):
+            gp._find_line("A")
 
 
 if __name__ == "__main__":
