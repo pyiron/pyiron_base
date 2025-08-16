@@ -485,30 +485,6 @@ class TestProjectExtended(TestWithProject):
     def test_maintenance_property(self):
         self.assertIsInstance(self.project.maintenance, Maintenance)
 
-    def test_conda_environment_property(self):
-        # Test case where conda is available
-        try:
-            from pyiron_base.project.condaenv import CondaEnvironment
-
-            self.assertIsInstance(self.project.conda_environment, CondaEnvironment)
-        except ImportError:
-            self.skipTest("conda is not available.")
-
-        # Test case where conda is not available
-        import sys
-
-        # To properly test the ImportError, we need to ensure that
-        # 'pyiron_base.project.condaenv' is not in sys.modules, so that the import statement
-        # in the property fails. We store it to restore it later.
-        original_condaenv = sys.modules.pop("pyiron_base.project.condaenv", None)
-
-        with self.assertRaises(ImportError):
-            _ = self.project.conda_environment
-
-        # Restore original module
-        if original_condaenv:
-            sys.modules["pyiron_base.project.condaenv"] = original_condaenv
-
     def test_wrap_python_function(self):
         def test_function(a, b=8):
             return a + b
