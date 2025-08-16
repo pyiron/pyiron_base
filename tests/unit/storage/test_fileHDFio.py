@@ -715,10 +715,7 @@ class TestFileHDFioCoverage(PyironTestCase):
             _ = self.hdf["unknown_item"]
 
     def test_repr(self):
-        self.assertEqual(
-            repr(self.hdf),
-            str(self.hdf.list_all())
-        )
+        self.assertEqual(repr(self.hdf), str(self.hdf.list_all()))
 
     def test_items(self):
         items = self.hdf.items()
@@ -744,13 +741,13 @@ class TestFileHDFioCoverage(PyironTestCase):
         new_hdf.remove_file()
 
         new_hdf = FileHDFio(file_name=new_hdf_file)
-        self.hdf.hd_copy(self.hdf['test_content'], new_hdf, exclude_nodes=["array"])
+        self.hdf.hd_copy(self.hdf["test_content"], new_hdf, exclude_nodes=["array"])
         self.assertNotIn("array", new_hdf.list_nodes())
         new_hdf.remove_file()
 
     def test_read_dict_from_hdf(self):
-        test_dict = self.hdf['test_content'].read_dict_from_hdf()
-        self.assertEqual(test_dict['array'][0], 1)
+        test_dict = self.hdf["test_content"].read_dict_from_hdf()
+        self.assertEqual(test_dict["array"][0], 1)
 
     def test_get_from_table(self):
         df = pd.DataFrame({"Parameter": ["a", "b"], "Value": [1, 2]})
@@ -781,8 +778,8 @@ class TestFileHDFioCoverage(PyironTestCase):
         self.assertIn("_filter", groups_hdf.__dict__.keys())
 
     def test_list_all_non_existent(self):
-        hdf = self.hdf.open('non_existent')
-        self.assertEqual(hdf.list_all(), {'groups': [], 'nodes': []})
+        hdf = self.hdf.open("non_existent")
+        self.assertEqual(hdf.list_all(), {"groups": [], "nodes": []})
 
     def test_import_class_error(self):
         with self.assertRaises(ImportError):
@@ -794,9 +791,9 @@ class TestFileHDFioCoverage(PyironTestCase):
         self.hdf.create_group("my_group")
 
     def test_exit(self):
-        with self.hdf.open('test_content') as hdf:
-            self.assertEqual(hdf.h5_path, '/test_content')
-        self.assertEqual(self.hdf.h5_path, '/')
+        with self.hdf.open("test_content") as hdf:
+            self.assertEqual(hdf.h5_path, "/test_content")
+        self.assertEqual(self.hdf.h5_path, "/")
 
 
 class FHA(object):
@@ -819,19 +816,18 @@ class FHA(object):
 
 
 class TestProjectHDFioCoverage(TestWithProject):
-
     def test_to_object_no_type(self):
         hdf = self.project.create_hdf(self.project.path, "no_type.h5")
         hdf.create_group("no_type_group")
         with self.assertRaises(ValueError):
-            hdf['no_type_group'].to_object()
+            hdf["no_type_group"].to_object()
         hdf.remove_file()
 
     def test_to_object_with_from_hdf_args(self):
         obj = FHA(a=1, b=2)
-        hdf = self.project.create_hdf(self.project.path, 'fha_test.h5')
+        hdf = self.project.create_hdf(self.project.path, "fha_test.h5")
         obj.to_hdf(hdf, "fha_test")
-        reloaded_obj = hdf['fha_test'].to_object()
+        reloaded_obj = hdf["fha_test"].to_object()
         self.assertEqual(obj.a, reloaded_obj.a)
         self.assertEqual(obj.b, reloaded_obj.b)
         hdf.remove_file()
