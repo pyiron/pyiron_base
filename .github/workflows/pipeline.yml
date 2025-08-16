@@ -70,7 +70,7 @@ jobs:
         environment-file: .ci_support/environment.yml
     - name: Tests
       shell: bash -l {0}
-      timeout-minutes: 30
+      timeout-minutes: 5
       run: |
         bash .ci_support/pip_install.sh
         python -m unittest discover tests/benchmarks
@@ -91,7 +91,7 @@ jobs:
         environment-file: .ci_support/environment-mini.yml
     - name: Test
       shell: bash -l {0}
-      timeout-minutes: 10
+      timeout-minutes: 5
       run: |
         bash .ci_support/pip_install.sh
         python -m unittest discover tests/unit
@@ -114,6 +114,7 @@ jobs:
         environment-file: environment.yml
     - name: Test
       shell: bash -l {0}
+      timeout-minutes: 5
       run: |
         bash .ci_support/pip_install.sh
         ./.ci_support/build_notebooks.sh
@@ -181,7 +182,7 @@ jobs:
         environment-file: .ci_support/environment.yml
     - name: Test
       shell: bash -l {0}
-      timeout-minutes: 10
+      timeout-minutes: 5
       run: |
         bash .ci_support/pip_install.sh
         coverage run
@@ -208,7 +209,7 @@ jobs:
         environment-file: .ci_support/environment-old.yml
     - name: Test
       shell: bash -l {0}
-      timeout-minutes: 30
+      timeout-minutes: 5
       run: |
         bash .ci_support/pip_install.sh
         python -m unittest discover tests/unit
@@ -231,6 +232,7 @@ jobs:
         environment-file: environment.yml
     - name: Tests
       shell: bash -l {0}
+      timeout-minutes: 5
       run: |
         bash .ci_support/pip_install.sh
         cd tests/usecases/ADIS
@@ -256,7 +258,7 @@ jobs:
         environment-file: environment.yml
     - name: Test
       shell: bash -l {0}
-      timeout-minutes: 60
+      timeout-minutes: 5
       run: |
         bash .ci_support/pip_install.sh
         sudo apt-get install -y $(cat tests/usecases/NFDI4ING/apt.txt)
