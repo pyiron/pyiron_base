@@ -485,24 +485,26 @@ class TestProjectExtended(TestWithProject):
 
     def test_maintenance_property(self):
         from pyiron_base.maintenance.generic import Maintenance
+
         self.assertIsInstance(self.project.maintenance, Maintenance)
 
     def test_conda_environment_property(self):
         # Test case where conda is available
         try:
             from pyiron_base.project.condaenv import CondaEnvironment
+
             self.assertIsInstance(self.project.conda_environment, CondaEnvironment)
         except ImportError:
             self.skipTest("conda is not available.")
 
         # Test case where conda is not available
         import sys
-        
-        # To properly test the ImportError, we need to ensure that 
-        # 'pyiron_base.project.condaenv' is not in sys.modules, so that the import statement 
+
+        # To properly test the ImportError, we need to ensure that
+        # 'pyiron_base.project.condaenv' is not in sys.modules, so that the import statement
         # in the property fails. We store it to restore it later.
         original_condaenv = sys.modules.pop("pyiron_base.project.condaenv", None)
-        
+
         with self.assertRaises(ImportError):
             _ = self.project.conda_environment
 
@@ -522,12 +524,15 @@ class TestProjectExtended(TestWithProject):
         self.assertEqual(job.output["result"], 9)
 
         # Test immediate execution with arguments
-        result = self.project.wrap_python_function(test_function, 4, b=6, execute_job=True)
+        result = self.project.wrap_python_function(
+            test_function, 4, b=6, execute_job=True
+        )
         self.assertEqual(result, 10)
 
         # Test delayed execution
         delayed_job = self.project.wrap_python_function(test_function, delayed=True)
         from pyiron_base.project.delayed import DelayedObject
+
         self.assertIsInstance(delayed_job, DelayedObject)
 
     def test_create_job_class(self):
@@ -579,16 +584,18 @@ class TestProjectExtended(TestWithProject):
             delayed=True,
         )
         from pyiron_base.project.delayed import DelayedObject
+
         self.assertIsInstance(delayed_job, DelayedObject)
         # self.assertEqual(delayed_job.to_object().output["energy"], 3.0)
 
     def test_create_from_job(self):
         from pyiron_base._tests import ToyJob
         from pyiron_base.jobs.job.jobtype import JOB_CLASS_DICT
+
         JOB_CLASS_DICT["ToyJob"] = ToyJob
         job_old = self.project.create.job.ToyJob("job_old")
         job_old.run()
-        
+
         new_job = self.project.create_from_job(job_old, "job_new")
         self.assertIsNotNone(new_job)
         self.assertEqual(new_job.job_name, "job_new")
