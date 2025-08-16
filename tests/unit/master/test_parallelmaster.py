@@ -366,11 +366,13 @@ class TestJobGenerator(TestWithProject):
 class TestParallelMasterRunMethods(TestWithProject):
     def setUp(self):
         super().setUp()
-        job_name = "master_run_" + self.id().split('.')[-1]
+        job_name = "master_run_" + self.id().split(".")[-1]
         self.master = self.project.create_job(TestMaster, job_name)
 
     def test_run_if_new(self):
-        with patch('pyiron_base.jobs.master.parallel.GenericMaster._run_if_new') as mock_super_run_if_new:
+        with patch(
+            "pyiron_base.jobs.master.parallel.GenericMaster._run_if_new"
+        ) as mock_super_run_if_new:
             self.master._run_if_new(debug=False)
             mock_super_run_if_new.assert_called_once()
             self.assertEqual(self.master.submission_status.submitted_jobs, 0)
@@ -378,15 +380,15 @@ class TestParallelMasterRunMethods(TestWithProject):
     def test_run_if_collect(self):
         self.master.save()
         self.master.status.collect = True
-        with patch.object(self.master, 'collect_output') as mock_collect:
-            with patch.object(self.master, 'convergence_check', return_value=True):
+        with patch.object(self.master, "collect_output") as mock_collect:
+            with patch.object(self.master, "convergence_check", return_value=True):
                 self.master._run_if_collect()
                 mock_collect.assert_called_once()
                 self.assertTrue(self.master.status.finished)
 
         self.master.status.collect = True
-        with patch.object(self.master, 'collect_output'):
-            with patch.object(self.master, 'convergence_check', return_value=False):
+        with patch.object(self.master, "collect_output"):
+            with patch.object(self.master, "convergence_check", return_value=False):
                 self.master._run_if_collect()
                 self.assertTrue(self.master.status.not_converged)
 
@@ -396,38 +398,40 @@ class TestParallelMasterRunMethods(TestWithProject):
         job_list = list(self.master.iter_jobs())
         self.assertEqual(len(job_list), len(self.master._job_generator))
         self.assertEqual(job_list[0].job_name, "test_0")
-        
+
         # Test _get_jobs_sorted indirectly
         child_to_remove = self.project.load(self.master.child_ids[5])
         child_to_remove.remove()
-        
+
         job_list_after_remove = list(self.master.iter_jobs())
-        self.assertEqual(len(job_list_after_remove), len(self.master._job_generator) - 1)
+        self.assertEqual(
+            len(job_list_after_remove), len(self.master._job_generator) - 1
+        )
         self.assertNotIn("test_5", [j.job_name for j in job_list_after_remove])
 
     def test_run_if_refresh(self):
         self.master.status.refresh = True
-        
+
         # is_finished() is True
-        with patch.object(self.master, 'is_finished', return_value=True):
-            with patch.object(self.master, 'run') as mock_run:
+        with patch.object(self.master, "is_finished", return_value=True):
+            with patch.object(self.master, "run") as mock_run:
                 self.master.run_if_refresh()
                 self.assertTrue(self.master.status.collect)
                 mock_run.assert_called_once()
-        
-        self.master.status.refresh = True # Reset status
-        
+
+        self.master.status.refresh = True  # Reset status
+
         # is_finished() is False, non_modal run mode
         self.master.server.run_mode.non_modal = True
-        with patch.object(self.master, 'is_finished', return_value=False):
-            with patch.object(self.master, 'run_static') as mock_run_static:
+        with patch.object(self.master, "is_finished", return_value=False):
+            with patch.object(self.master, "run_static") as mock_run_static:
                 self.master.run_if_refresh()
                 mock_run_static.assert_called_once()
-        
+
         # is_finished() is False, modal run mode
         self.master.server.run_mode.modal = True
-        with patch.object(self.master, 'is_finished', return_value=False):
-            with patch.object(self.master, 'refresh_job_status') as mock_refresh_status:
+        with patch.object(self.master, "is_finished", return_value=False):
+            with patch.object(self.master, "refresh_job_status") as mock_refresh_status:
                 self.master.run_if_refresh()
                 self.assertTrue(self.master.status.suspended)
                 mock_refresh_status.assert_called()
