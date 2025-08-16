@@ -198,7 +198,7 @@ class TestParserExtended(unittest.TestCase):
         lt.tag_dict = tag_dict.copy()
         lt.key_dict = key_dict
         lt.dyn_tags = lt.tag_dict
-        lt._tag_name = "DYN_TAG" # Manually set the tag name without '$'
+        lt._tag_name = "DYN_TAG"  # Manually set the tag name without '$'
         lt.resolve_dynamic_variable(["dyn_key"])
         self.assertIn("dyn_val", lt.tag_dict)
         self.assertNotIn("$DYN_TAG", lt.tag_dict)
@@ -275,8 +275,15 @@ class TestParserExtended(unittest.TestCase):
         ls.combine_mat("xx", "xy", "xz", "yy", "yz", "zz", "matrix")
         self.assertNotIn("xx", ls.status_dict)
         self.assertIn("matrix", ls.status_dict)
-        expected = [[[0], [[[1, 3, 5], [3, 7, 9], [5, 9, 11]],
-                             [[2, 4, 6], [4, 8, 10], [6, 10, 12]]]]]
+        expected = [
+            [
+                [0],
+                [
+                    [[1, 3, 5], [3, 7, 9], [5, 9, 11]],
+                    [[2, 4, 6], [4, 8, 10], [6, 10, 12]],
+                ],
+            ]
+        ]
         self.assertEqual(ls.status_dict["matrix"], expected)
 
         ls = Logstatus()
@@ -361,9 +368,7 @@ class TestParserExtended(unittest.TestCase):
         np.testing.assert_array_almost_equal(
             ls.status_dict["forces"][0][1], expected_forces
         )
-        expected_stress = np.array(
-            [[1.0, 2.0, 3.0], [2.0, 4.0, 5.0], [3.0, 5.0, 6.0]]
-        )
+        expected_stress = np.array([[1.0, 2.0, 3.0], [2.0, 4.0, 5.0], [3.0, 5.0, 6.0]])
         np.testing.assert_array_almost_equal(
             ls.status_dict["stress"][0][1], expected_stress
         )
