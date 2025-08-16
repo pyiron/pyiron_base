@@ -7,6 +7,7 @@ from os.path import dirname, join, abspath, exists, islink
 import os
 import tempfile
 import pickle
+import shutil
 from pyiron_base.project.generic import Project
 from pyiron_base._tests import (
     PyironTestCase,
@@ -424,6 +425,61 @@ class TestToolRegistration(TestWithProject):
             self.project.register_tools("foo", self.tools)  # Name taken
         with self.assertRaises(AttributeError):
             self.project.register_tools("load", self.tools)  # Already another method
+
+
+class TestProjectExtended(TestWithProject):
+    @classmethod
+    def setUpClass(cls):
+        cls.file_location = dirname(abspath(__file__)).replace("\\", "/")
+        cls.project_name = join(cls.file_location, "test_project_extended")
+        if os.path.exists(cls.project_name):
+            shutil.rmtree(cls.project_name)
+        super().setUpClass()
+
+    @classmethod
+    def tearDownClass(cls):
+        try:
+            os.remove(join(cls.file_location, "pyiron.log"))
+        except FileNotFoundError:
+            pass
+        super().tearDownClass()
+
+    def test_init_with_default_working_directory(self):
+        # Test case where path is empty and default_working_directory is True
+        # and Notebook.get_custom_dict() returns a project_dir
+        try:
+            from pyiron_base.project.external import Notebook
+            original_get_custom_dict = Notebook.get_custom_dict
+
+            class MockNotebook:
+                @staticmethod
+                def get_custom_dict():
+                    return {"project_dir": self.project_path}
+
+            Notebook.get_custom_dict = MockNotebook.get_custom_dict
+
+            pr = Project(default_working_directory=True)
+            self.assertEqual(pr.path, self.project_path + "/")
+        finally:
+            Notebook.get_custom_dict = original_get_custom_dict
+
+        # Test case where path is empty and default_working_directory is True
+        # and Notebook.get_custom_dict() returns None
+        try:
+            from pyiron_base.project.external import Notebook
+            original_get_custom_dict = Notebook.get_custom_dict
+
+            class MockNotebook:
+                @staticmethod
+                def get_custom_dict():
+                    return None
+
+            Notebook.get_custom_dict = MockNotebook.get_custom_dict
+
+            pr = Project(default_working_directory=True)
+            self.assertEqual(os.path.abspath(pr.path), os.path.abspath("."))
+        finally:
+            Notebook.get_custom_dict = original_get_custom_dict
 
 
 if __name__ == "__main__":
