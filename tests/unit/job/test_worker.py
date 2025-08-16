@@ -75,5 +75,6 @@ class TestWorker(TestWithCleanProject):
                 toy_job.project_hdf5.file_name + "/" + toy_job.job_name,
             )
         )
-        self.project.wait_for_job(toy_job)
+        toy_job.from_hdf()
+        print(toy_job.status.string)
         self.assertTrue(toy_job.status.finished)
