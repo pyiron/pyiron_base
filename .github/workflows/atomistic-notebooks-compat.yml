@@ -35,7 +35,6 @@ jobs:
       shell: bash -l {0}
       timeout-minutes: 30
       run: |
-        pip install versioneer[toml]==0.29 hatchling hatch-vcs
         cd ../pyiron_atomistics
         pip install . --no-deps --no-build-isolation
         cd ../pyiron_base
