@@ -18,7 +18,7 @@ simulation in `pyiron_atomistics`.
   can be wrapped in `pyiron_base` to enable parameter studies with thousands or millions of calculation.
 * The calculation can either be executed locally on the same computer or on high performance computing (HPC) resources.
   The python simple queuing system adapter [pysqa](https://pysqa.readthedocs.io) is used to interface with the HPC 
-  queuing systems directly from python and the [pympipool](https://executorlib.readthedocs.io) package is employed to 
+  queuing systems directly from python and the [executorlib](https://executorlib.readthedocs.io) package is employed to 
   assign dedicated resources like multiple CPU cores and GPUs to individual python functions.
 * Scientific data is efficiently stored using the [hierarchical data format (HDF)](https://www.hdfgroup.org) via the 
   [h5py](https://www.h5py.org) python library and more specifically the [h5io](https://github.com/h5io) packages to 
