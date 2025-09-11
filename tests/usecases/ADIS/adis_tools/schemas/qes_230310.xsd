@@ -1036,7 +1036,7 @@ datecode 220603
   <complexType name="symmetriesType">
     <sequence>
       <element type="unsignedByte" name="nsym"/>
-      <element type="unsignedByte" name="colin_mag"/>
+      <element type="integer" name="colin_mag"/>
       <element type="unsignedByte" name="nrot"/>
       <element type="unsignedByte" name="space_group"/>
       <element type="qes:symmetryType" name="symmetry" maxOccurs="48" minOccurs="1"/>
