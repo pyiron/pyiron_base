@@ -6,7 +6,7 @@ dependencies:
 - conda =25.7.0
 - conda_subprocess =0.0.9
 - cloudpickle =3.1.1
-- executorlib =1.7.0
+- executorlib =1.7.1
 - gitpython =3.1.45
 - h5io_browser =0.2.0
 - h5py =3.13.0
