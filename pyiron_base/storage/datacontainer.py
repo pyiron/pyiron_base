@@ -909,10 +909,10 @@ class DataContainer(DataContainerBase, HasHDF, HasDict):
                 # that h5py knows how to
                 try:
                     hdf[k] = v
-                except TypeError:
+                except TypeError as error:
                     raise TypeError(
                         "Error saving {} (key {}): DataContainer doesn't support saving elements "
-                        'of type "{}" to HDF!'.format(v, k, type(v))
+                        'of type "{}" to HDF! Previous, error message {}.'.format(v, k, type(v), error)
                     ) from None
         for n in hdf.list_nodes() + hdf.list_groups():
             if n not in written_keys:
