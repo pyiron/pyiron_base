@@ -81,7 +81,11 @@ class TemplateJob(GenericJob, HasStorage):
 
     @property
     def output(self) -> DataContainer:
-        return self.storage.output
+        output = self.storage.output
+        if not isinstance(output, DataContainer):
+            return output.to_builtin()
+        else:
+            return output
 
     def _to_dict(self) -> dict:
         """
