@@ -26,6 +26,16 @@ class TestPythonFunctionDecorator(TestWithProject):
         self.assertEqual(len(nodes_dict), 7)
         self.assertEqual(len(edges_lst), 8)
 
+    def test_return_dict(self):
+        my_dict =  {1: 33, 2: 151, 3: 6}
+
+        @job
+        def return_dict():
+            return my_dict
+        
+        with self.assertRaises(ValueError):
+            d = return_dict(pyiron_project=self.project)
+
     def test_delayed_simple(self):
         @job
         def my_function_a(a, b=8):
