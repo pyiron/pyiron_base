@@ -68,7 +68,7 @@ class PythonFunctionContainerJob(PythonTemplateJob):
         self.input.update(
             DataContainer(
                 inspect.signature(self._function).bind(*args, **kwargs).arguments
-            )
+            ).to_builtin()
         )
 
     def __call__(self, *args, **kwargs):
@@ -163,6 +163,6 @@ class PythonFunctionContainerJob(PythonTemplateJob):
             self.output.update({"error": e})
             self.to_hdf()
         else:
-            self.output.update(DataContainer({"result": output}))
+            self.output.update(DataContainer({"result": output}).to_builtin())
             self.to_hdf()
             self.status.finished = True
