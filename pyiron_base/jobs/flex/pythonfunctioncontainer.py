@@ -4,6 +4,7 @@ from typing import Optional
 import cloudpickle
 import numpy as np
 
+from pyiron_base.storage.datacontainer import DataContainer
 from pyiron_base.jobs.job.template import PythonTemplateJob
 from pyiron_base.project.delayed import get_function_parameter_dict, get_hash
 from pyiron_base.state import state
@@ -64,9 +65,7 @@ class PythonFunctionContainerJob(PythonTemplateJob):
             *args: Positional arguments to be passed to the function.
             **kwargs: Keyword arguments to be passed to the function.
         """
-        self.input.update(
-            inspect.signature(self._function).bind(*args, **kwargs).arguments
-        )
+        self.input.update(DataContainer(inspect.signature(self._function).bind(*args, **kwargs).arguments))
 
     def __call__(self, *args, **kwargs):
         self.set_input(*args, **kwargs)
@@ -160,6 +159,6 @@ class PythonFunctionContainerJob(PythonTemplateJob):
             self.output.update({"error": e})
             self.to_hdf()
         else:
-            self.output.update({"result": output})
+            self.output.update(DataContainer({"result": output}))
             self.to_hdf()
             self.status.finished = True
