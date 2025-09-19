@@ -33,8 +33,9 @@ class TestPythonFunctionDecorator(TestWithProject):
         def return_dict():
             return my_dict
 
+        d = return_dict(pyiron_project=self.project)
         with self.assertRaises(ValueError):
-            d = return_dict(pyiron_project=self.project)
+            d.pull()
 
     def test_delayed_simple(self):
         @job
