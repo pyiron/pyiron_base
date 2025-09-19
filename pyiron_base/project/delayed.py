@@ -331,9 +331,7 @@ class DelayedObject:
                     return JobFuture(job=self._job)
             else:
                 self._input.update({"_server_obj": self.server})
-                output = evaluate_function(
-                    funct=self._function, input_dict=self._input
-                )
+                output = evaluate_function(funct=self._function, input_dict=self._input)
                 if isinstance(output, DataContainer):
                     self._result = output.to_builtin()
                 else:
