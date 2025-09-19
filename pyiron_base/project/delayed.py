@@ -8,7 +8,6 @@ from typing import Dict, List, Optional, Tuple
 import cloudpickle
 
 from pyiron_base.jobs.job.extension.server.generic import Server
-from pyiron_base.storage.datacontainer import DataContainer
 
 
 class JobFuture(Future):
