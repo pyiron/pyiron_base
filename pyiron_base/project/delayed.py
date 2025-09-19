@@ -7,6 +7,7 @@ from typing import Dict, List, Optional, Tuple
 
 import cloudpickle
 
+from pyiron_base.storage.datacontainer import DataContainer
 from pyiron_base.jobs.job.extension.server.generic import Server
 
 
@@ -321,7 +322,11 @@ class DelayedObject:
                 )
                 self._job.run()
                 if self._job.status.finished:
-                    self._result = self._job.output["result"]
+                    output = self._job.output["result"]
+                    if isinstance(output, DataContainer):
+                        self._result = output["result"].to_builtin()
+                    else:
+                        self._result = output["result"]
                 else:
                     return JobFuture(job=self._job)
             else:
