@@ -327,7 +327,9 @@ class DelayedObject:
                     return JobFuture(job=self._job)
             else:
                 self._input.update({"_server_obj": self.server})
-                self._result = evaluate_function(funct=self._function, input_dict=self._input)
+                self._result = evaluate_function(
+                    funct=self._function, input_dict=self._input
+                )
         if self._output_key is not None:
             return self.get_python_result()
         elif self._output_file is not None:
