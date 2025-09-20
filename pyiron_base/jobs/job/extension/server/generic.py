@@ -12,7 +12,7 @@ from dataclasses import asdict, fields
 from typing import Optional, Union
 
 import pandas
-from pyiron_dataclasses.v1.job import Server as ServerDataClass
+from pyiron_dataclasses.v1.jobs.generic import Server as ServerDataClass
 from pyiron_snippets.deprecate import deprecate
 
 from pyiron_base.interfaces.has_dict import HasDict
