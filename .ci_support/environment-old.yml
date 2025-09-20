@@ -1,7 +1,7 @@
 channels:
 - conda-forge
 dependencies:
-- cloudpickle =2.0.0
+- cloudpickle =2.2.1
 - gitpython =3.1.23
 - h5io_browser =0.0.14
 - h5py =3.11.0
