@@ -18,7 +18,6 @@ classifiers = [
     "License :: OSI Approved :: BSD License",
     "Intended Audience :: Science/Research",
     "Operating System :: OS Independent",
-    "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
@@ -60,7 +59,7 @@ flux = [
     "jinja2==3.1.6",
 ]
 stats = [
-    "pint==0.24.4",
+    "pint==0.25",
 ]
 
 [project.scripts]
