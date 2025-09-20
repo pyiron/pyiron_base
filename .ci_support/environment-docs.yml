@@ -16,7 +16,7 @@ dependencies:
 - monty =2025.3.3
 - numpy =2.3.2
 - pandas =2.3.2
-- pint =0.24.4
+- pint =0.25
 - psutil =7.1.0
 - pyfileindex =0.0.40
 - pyiron_dataclasses =0.0.4

@@ -194,12 +194,12 @@ class UnitConverter:
     `pint` quantity:
 
     >>> print(unit_converter.code_to_base_pint("energy"))
-    0.04336410424180094 electron_volt
+    0.043364104241800934 electron_volt
 
     or as a scalar:
 
     >>> print(unit_converter.code_to_base_value("energy"))
-    0.04336410424180094
+    0.043364104241800934
 
     Alternatively, the unit converter can also be used as decorators for functions that return an array scaled into
     appropriate units:
