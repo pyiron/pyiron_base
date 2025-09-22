@@ -7,6 +7,7 @@ import numpy as np
 from pyiron_base.jobs.job.template import PythonTemplateJob
 from pyiron_base.project.delayed import get_function_parameter_dict, get_hash
 from pyiron_base.state import state
+from pyiron_base.storage.datacontainer import DataContainer
 
 
 class PythonFunctionContainerJob(PythonTemplateJob):
@@ -65,7 +66,9 @@ class PythonFunctionContainerJob(PythonTemplateJob):
             **kwargs: Keyword arguments to be passed to the function.
         """
         self.input.update(
-            inspect.signature(self._function).bind(*args, **kwargs).arguments
+            DataContainer(
+                inspect.signature(self._function).bind(*args, **kwargs).arguments
+            ).to_builtin()
         )
 
     def __call__(self, *args, **kwargs):
@@ -160,6 +163,6 @@ class PythonFunctionContainerJob(PythonTemplateJob):
             self.output.update({"error": e})
             self.to_hdf()
         else:
-            self.output.update({"result": output})
+            self.output.update(DataContainer({"result": output}).to_builtin())
             self.to_hdf()
             self.status.finished = True
