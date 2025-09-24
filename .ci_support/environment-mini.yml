@@ -4,7 +4,7 @@ dependencies:
 - cloudpickle =3.1.1
 - executorlib =1.7.1
 - h5io_browser =0.2.1
-- h5py =3.13.0
+- h5py =3.14.0
 - monty =2025.3.3
 - numpy =2.3.2
 - pandas =2.3.2
