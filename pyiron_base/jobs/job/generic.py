@@ -663,9 +663,7 @@ class GenericJob(JobCore, HasDict):
             return new_job_core, file_project, hdf5_project, reloaded
 
         # Reload object from HDF5 file
-        if not static_isinstance(
-            obj=project.__class__, obj_type=str(JobCore)
-        ):
+        if not static_isinstance(obj=project.__class__, obj_type=str(JobCore)):
             _job_reload_after_copy(
                 job=new_job_core, delete_file_after_copy=delete_file_after_copy
             )
