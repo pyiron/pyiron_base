@@ -11,7 +11,7 @@ import shutil
 import stat
 import tarfile
 from itertools import islice
-from typing import Optional, Tuple, Union, TypeVar
+from typing import Optional, Tuple, TypeVar, Union
 
 import monty.io
 import psutil
@@ -112,9 +112,7 @@ def _get_project_for_copy(
         ]
     ],
     new_job_name: str,
-) -> Tuple[
-    _Project, _ProjectHDFio
-]:
+) -> Tuple[_Project, _ProjectHDFio]:
     """
     Internal helper function to generate a project and hdf5 project for copying
 
@@ -129,9 +127,7 @@ def _get_project_for_copy(
     Returns:
         Project, ProjectHDFio
     """
-    if static_isinstance(
-        obj=project.__class__, obj_type=_job_core_class_str
-    ):
+    if static_isinstance(obj=project.__class__, obj_type=_job_core_class_str):
         file_project = project.project
         hdf5_project = project.project_hdf5.open(new_job_name)
     elif isinstance(job.project, project.__class__):
@@ -198,9 +194,7 @@ _get_safe_job_name.__doc__ = _get_safe_job_name.__doc__.replace(
 
 
 def _rename_job(
-    job: Union[
-        _GenericJob, _JobCore
-    ],
+    job: Union[_GenericJob, _JobCore],
     new_job_name: str,
 ) -> None:
     """ """
@@ -520,9 +514,7 @@ def _working_directory_read_file(
             return lines
 
 
-def _job_read_file(
-    job: _JobCore, file_name: str, tail: Optional[int] = None
-) -> list:
+def _job_read_file(job: _JobCore, file_name: str, tail: Optional[int] = None) -> list:
     """
     Return list of lines of the given file.
 
@@ -659,9 +651,7 @@ def _job_store_before_copy(job: "pyiron_base.jobs.job.core.JobCore") -> bool:
     return delete_file_after_copy
 
 
-def _job_reload_after_copy(
-    job: _JobCore, delete_file_after_copy: bool
-) -> None:
+def _job_reload_after_copy(job: _JobCore, delete_file_after_copy: bool) -> None:
     """
     Reload job from HDF5 file after copying
 
