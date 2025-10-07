@@ -322,6 +322,8 @@ class DelayedObject:
                 self._job.run()
                 if self._job.status.finished:
                     self._result = self._job.output["result"]
+                elif self._job.status.aborted:
+                    raise self._job.output.error
                 else:
                     return JobFuture(job=self._job)
             else:
