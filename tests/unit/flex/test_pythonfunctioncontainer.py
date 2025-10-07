@@ -241,9 +241,8 @@ class TestPythonFunctionContainer(TestWithProject):
         delayed_obj = self.project.wrap_python_function(
             python_function=function_with_error, a=1, b=2, delayed=True
         )
-        future = delayed_obj.pull()
         with self.assertRaises(ValueError):
-            future.result()
+            delayed_obj.pull()
         self.assertTrue(delayed_obj._job.status.aborted)
 
     @unittest.skipIf(
