@@ -1,5 +1,8 @@
+import os
 import inspect
 from typing import Optional
+from contextlib import contextmanager
+from pathlib import Path
 
 import cloudpickle
 import numpy as np
@@ -8,6 +11,25 @@ from pyiron_base.jobs.job.template import PythonTemplateJob
 from pyiron_base.project.delayed import get_function_parameter_dict, get_hash
 from pyiron_base.state import state
 from pyiron_base.storage.datacontainer import DataContainer
+
+
+@contextmanager
+def set_directory(path: Path):
+    """Sets the cwd within the context
+
+    Args:
+        path (Path): The path to the cwd
+
+    Yields:
+        None
+    """
+
+    origin = Path().absolute()
+    try:
+        os.chdir(path)
+        yield
+    finally:
+        os.chdir(origin)
 
 
 class PythonFunctionContainerJob(PythonTemplateJob):
@@ -35,6 +57,7 @@ class PythonFunctionContainerJob(PythonTemplateJob):
         super().__init__(project, job_name)
         self._function = None
         self._executor_type = None
+        self._execute_in_working_directory = False
         self._automatically_rename_on_save_using_input = False
         # Automatically rename job using function and input values at save time
         # This is useful for the edge case where these jobs are created from a wrapper
@@ -56,6 +79,14 @@ class PythonFunctionContainerJob(PythonTemplateJob):
         """
         self.input.update(get_function_parameter_dict(funct=funct))
         self._function = funct
+
+    @property
+    def execute_in_working_directory(self) -> bool:
+        return self._execute_in_working_directory
+    
+    @execute_in_working_directory.setter
+    def execute_in_working_directory(self, val: bool) -> None:
+        self._execute_in_working_directory = bool(val)
 
     def set_input(self, *args, **kwargs):
         """
@@ -85,6 +116,7 @@ class PythonFunctionContainerJob(PythonTemplateJob):
         """
         job_dict = super()._to_dict()
         job_dict["function"] = np.void(cloudpickle.dumps(self._function))
+        job_dict["exxcute_in_working_directory"] = self._execute_in_working_directory
         job_dict["_automatically_rename_on_save_using_input"] = (
             self._automatically_rename_on_save_using_input
         )
@@ -103,6 +135,10 @@ class PythonFunctionContainerJob(PythonTemplateJob):
         self._automatically_rename_on_save_using_input = bool(
             obj_dict["_automatically_rename_on_save_using_input"]
         )
+        if "execute_in_working_directory" in obj_dict:
+            self._execute_in_working_directory = bool(
+                obj_dict["execute_in_working_directory"]
+            )
 
     def save(self) -> None:
         """
@@ -152,7 +188,12 @@ class PythonFunctionContainerJob(PythonTemplateJob):
                 with self._get_executor(max_workers=self.server.cores) as exe:
                     output = self._function(**input_dict, executor=exe)
             else:
-                output = self._function(**self.input)
+                if self._execute_in_working_directory:
+                    self._create_working_directory()
+                    with set_directory(Path(self.working_directory)):
+                        output = self._function(**self.input)
+                else:
+                    output = self._function(**self.input)
         except Exception as e:
             self._logger.warning("Job aborted")
             self.status.aborted = True
