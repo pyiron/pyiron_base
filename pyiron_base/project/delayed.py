@@ -251,6 +251,7 @@ class DelayedObject:
         list_length: Optional[int] = None,
         list_index: Optional[int] = None,
         input_prefix_key: Optional[str] = None,
+        execute_in_working_directory: bool = False,
         **kwargs,
     ):
         self._input = {}
@@ -273,6 +274,7 @@ class DelayedObject:
         self._list_length = list_length
         self._list_index = list_index
         self._input_prefix_key = input_prefix_key
+        self._execute_in_working_directory = execute_in_working_directory
 
     @property
     def input(self):
@@ -284,6 +286,14 @@ class DelayedObject:
     @property
     def server(self):
         return self._server
+
+    @property
+    def execute_in_working_directory(self) -> bool:
+        return self._execute_in_working_directory
+
+    @execute_in_working_directory.setter
+    def execute_in_working_directory(self, val: bool) -> None:
+        self._execute_in_working_directory = bool(val)
 
     def draw(self):
         node_dict, edge_lst = self.get_graph()
@@ -318,6 +328,9 @@ class DelayedObject:
                 )
                 self._job = evaluate_function(
                     funct=self._function, input_dict=self._input
+                )
+                self._job.execute_in_working_directory = (
+                    self._execute_in_working_directory
                 )
                 self._job.run()
                 if self._job.status.finished:
@@ -359,6 +372,7 @@ class DelayedObject:
         obj_copy._python_function = self._python_function
         obj_copy._input = self._input
         obj_copy._result = self._result
+        obj_copy._execute_in_working_directory = self._execute_in_working_directory
         obj_copy._server.from_dict(self._server.to_dict())
         return obj_copy
 

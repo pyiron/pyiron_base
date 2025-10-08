@@ -32,6 +32,10 @@ def function_with_error(a, b):
     raise ValueError()
 
 
+def get_working_directory():
+    return os.getcwd()
+
+
 class TestPythonFunctionContainer(TestWithProject):
     def test_as_job(self):
         job = self.project.wrap_python_function(my_function)
@@ -259,6 +263,15 @@ class TestPythonFunctionContainer(TestWithProject):
         with self.assertRaises(ValueError):
             future.result()
         self.assertTrue(delayed_obj._job.status.aborted)
+
+    def test_get_working_dir(self):
+        f1 = self.project.wrap_python_function(
+            python_function=get_working_directory, delayed=True
+        )
+        self.assertFalse(f1.execute_in_working_directory)
+        f1.execute_in_working_directory = True
+        self.assertTrue(f1.execute_in_working_directory)
+        self.assertEqual(f1.pull().replace("\\", "/"), f1._job.working_directory)
 
     def test_delayed(self):
         c = self.project.wrap_python_function(
