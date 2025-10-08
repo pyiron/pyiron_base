@@ -264,19 +264,21 @@ class TestPythonFunctionContainer(TestWithProject):
             future.result()
         self.assertTrue(delayed_obj._job.status.aborted)
 
-    def test_get_working_dir(self):
+    def test_get_working_dir_current_dir(self):
         f1 = self.project.wrap_python_function(
             python_function=get_working_directory, delayed=True
         )
         self.assertFalse(f1.execute_in_working_directory)
         self.assertEqual(f1.pull(), os.getcwd())
-        f2 = self.project.wrap_python_function(
+
+    def test_get_working_dir(self):
+        f1 = self.project.wrap_python_function(
             python_function=get_working_directory, delayed=True
         )
-        self.assertFalse(f2.execute_in_working_directory)
-        f2.execute_in_working_directory = True
-        self.assertTrue(f2.execute_in_working_directory)
-        self.assertEqual(f2.pull(), f2._job.working_directory)
+        self.assertFalse(f1.execute_in_working_directory)
+        f1.execute_in_working_directory = True
+        self.assertTrue(f1.execute_in_working_directory)
+        self.assertEqual(f1.pull(), f1._job.working_directory)
 
     def test_delayed(self):
         c = self.project.wrap_python_function(
