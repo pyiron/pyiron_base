@@ -116,7 +116,7 @@ class PythonFunctionContainerJob(PythonTemplateJob):
         """
         job_dict = super()._to_dict()
         job_dict["function"] = np.void(cloudpickle.dumps(self._function))
-        job_dict["exxcute_in_working_directory"] = self._execute_in_working_directory
+        job_dict["execute_in_working_directory"] = self._execute_in_working_directory
         job_dict["_automatically_rename_on_save_using_input"] = (
             self._automatically_rename_on_save_using_input
         )
