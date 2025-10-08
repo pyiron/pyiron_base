@@ -276,7 +276,7 @@ class TestPythonFunctionContainer(TestWithProject):
         self.assertFalse(f2.execute_in_working_directory)
         f2.execute_in_working_directory = True
         self.assertTrue(f2.execute_in_working_directory)
-        self.assertEqual(f2.pull(), f2._job.working_dir)
+        self.assertEqual(f2.pull(), f2._job.working_directory)
 
     def test_delayed(self):
         c = self.project.wrap_python_function(
