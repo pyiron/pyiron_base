@@ -290,7 +290,7 @@ class DelayedObject:
     @property
     def execute_in_working_directory(self) -> bool:
         return self._execute_in_working_directory
-    
+
     @execute_in_working_directory.setter
     def execute_in_working_directory(self, val: bool) -> None:
         self._execute_in_working_directory = bool(val)
@@ -329,7 +329,9 @@ class DelayedObject:
                 self._job = evaluate_function(
                     funct=self._function, input_dict=self._input
                 )
-                self._job.execute_in_working_directory = self._execute_in_working_directory
+                self._job.execute_in_working_directory = (
+                    self._execute_in_working_directory
+                )
                 self._job.run()
                 if self._job.status.finished:
                     self._result = self._job.output["result"]

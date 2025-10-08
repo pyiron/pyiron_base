@@ -1,8 +1,8 @@
-import os
 import inspect
-from typing import Optional
+import os
 from contextlib import contextmanager
 from pathlib import Path
+from typing import Optional
 
 import cloudpickle
 import numpy as np
@@ -83,7 +83,7 @@ class PythonFunctionContainerJob(PythonTemplateJob):
     @property
     def execute_in_working_directory(self) -> bool:
         return self._execute_in_working_directory
-    
+
     @execute_in_working_directory.setter
     def execute_in_working_directory(self, val: bool) -> None:
         self._execute_in_working_directory = bool(val)
