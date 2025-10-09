@@ -20,7 +20,7 @@ dependencies:
 - psutil =7.1.0
 - pyfileindex =0.0.42
 - pyiron_dataclasses =0.0.4
-- pyiron_snippets =1.0.1
+- pyiron_snippets =1.0.2
 - pysqa =0.3.2
 - pytables =3.10.2
 - sqlalchemy =2.0.43
