@@ -15,7 +15,7 @@ dependencies:
 - pandas =2.3.3
 - pint =0.25
 - psutil =7.1.1
-- pyfileindex =0.0.42
+- pyfileindex =0.0.44
 - pyiron_dataclasses =0.0.4
 - pyiron_snippets =1.0.2
 - pysqa =0.3.2
