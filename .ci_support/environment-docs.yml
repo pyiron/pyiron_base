@@ -10,8 +10,8 @@ dependencies:
 - cloudpickle =3.1.1
 - executorlib =1.7.2
 - gitpython =3.1.45
-- h5io_browser =0.2.4
-- h5py =3.15.0
+- h5io_browser =0.2.5
+- h5py =3.15.1
 - jinja2 =3.1.6
 - monty =2025.3.3
 - numpy =2.3.3
