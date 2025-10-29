@@ -11,11 +11,11 @@ dependencies:
 - h5py =3.15.1
 - jinja2 =3.1.6
 - monty =2025.3.3
-- numpy =2.3.3
+- numpy =2.3.4
 - pandas =2.3.3
 - pint =0.25
 - psutil =7.1.2
-- pyfileindex =0.0.44
+- pyfileindex =0.1.0
 - pyiron_dataclasses =0.0.4
 - pyiron_snippets =1.0.2
 - pysqa =0.3.3
