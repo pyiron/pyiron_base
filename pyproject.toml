@@ -59,7 +59,7 @@ flux = [
     "jinja2==3.1.6",
 ]
 stats = [
-    "pint==0.25",
+    "pint==0.25.1",
 ]
 
 [project.scripts]
