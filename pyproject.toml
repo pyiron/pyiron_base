@@ -32,7 +32,7 @@ dependencies = [
     "pandas==2.3.3",
     "psutil==7.1.3",
     "pyfileindex==0.1.0",
-    "pyiron_dataclasses==0.0.5",
+    "pyiron_dataclasses==0.0.6",
     "pyiron_snippets==1.0.2",
     "pysqa==0.3.3",
     "sqlalchemy==2.0.44",
@@ -59,7 +59,7 @@ flux = [
     "jinja2==3.1.6",
 ]
 stats = [
-    "pint==0.25",
+    "pint==0.25.1",
 ]
 
 [project.scripts]
