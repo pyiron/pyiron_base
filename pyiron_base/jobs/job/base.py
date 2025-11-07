@@ -858,6 +858,7 @@ class JobCore(HasGroups):
         new_job_core = self.copy()
         new_job_core._name = new_job_name
         new_job_core._hdf5 = hdf5_project
+        new_job_core._hdf5_content = HDF5Content(project_hdf5=hdf5_project)
         new_job_core._master_id = self._master_id
         new_job_core._parent_id = self._parent_id
         new_job_core._master_id = self._master_id
