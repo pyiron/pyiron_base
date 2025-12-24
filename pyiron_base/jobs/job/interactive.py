@@ -234,11 +234,7 @@ class InteractiveBase(GenericJob):
             else:
                 entry = current_hdf.tolist() + data.tolist()
             data = np.array(entry)
-
-        try:
-            h5[path + "/" + key] = data
-        except TypeError:
-            h5[path + "/" + key] = str(data)
+        h5[path + "/" + key] = data
 
     @staticmethod
     def _include_last_step(
@@ -304,7 +300,7 @@ class InteractiveBase(GenericJob):
                         self._extend_hdf(h5=h5, path=path, key=key, data=data)
                     else:
                         self._extend_hdf(h5=h5, path=path, key=key, data=np.array(data))
-                except (ValueError, TypeError):
+                except ValueError:
                     self._extend_hdf(
                         h5=h5, path=path, key=key, data=np.array(data, dtype="object")
                     )
