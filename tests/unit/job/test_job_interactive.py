@@ -22,7 +22,9 @@ class TestJobInteractive(TestWithProject):
         self.assertTrue(job.server.run_mode.interactive)
 
     def test_interactive_flush_frequency_setter(self):
-        job = self.project.create_job(InteractiveBase, "job_interactive_flush_frequency")
+        job = self.project.create_job(
+            InteractiveBase, "job_interactive_flush_frequency"
+        )
         with self.assertRaises(AssertionError):
             job.interactive_flush_frequency = 0
         with self.assertRaises(AssertionError):
@@ -34,7 +36,9 @@ class TestJobInteractive(TestWithProject):
         self.assertEqual(job.interactive_flush_frequency, 10)
 
     def test_interactive_write_frequency_setter(self):
-        job = self.project.create_job(InteractiveBase, "job_interactive_write_frequency")
+        job = self.project.create_job(
+            InteractiveBase, "job_interactive_write_frequency"
+        )
         with self.assertRaises(AssertionError):
             job.interactive_write_frequency = 0
         with self.assertRaises(AssertionError):
@@ -64,7 +68,9 @@ class TestJobInteractive(TestWithProject):
             job.run_if_interactive()
 
     def test_run_if_interactive_non_modal(self):
-        job = self.project.create_job(InteractiveBase, "job_run_if_interactive_non_modal")
+        job = self.project.create_job(
+            InteractiveBase, "job_run_if_interactive_non_modal"
+        )
         with self.assertRaises(NotImplementedError):
             job.run_if_interactive_non_modal()
 
@@ -90,14 +96,18 @@ class TestJobInteractive(TestWithProject):
         job = self.project.create_job(InteractiveBase, "job_interactive_flush")
         job.interactive_cache["test_key"] = ["test_value"]
         job.interactive_flush(path="test_path")
-        self.assertEqual(job.project_hdf5["output/test_path/test_key"], "['test_value']")
+        self.assertEqual(
+            job.project_hdf5["output/test_path/test_key"], "['test_value']"
+        )
 
     def test_interactive_close(self):
         job = self.project.create_job(InteractiveBase, "job_interactive_close")
         job.interactive_cache["test_key"] = ["test_value"]
         job.interactive_close()
         self.assertEqual(job.status.string, "finished")
-        self.assertEqual(job.project_hdf5["output/interactive/test_key"], "['test_value']")
+        self.assertEqual(
+            job.project_hdf5["output/interactive/test_key"], "['test_value']"
+        )
 
     def test_interactive_store_in_cache(self):
         job = self.project.create_job(InteractiveBase, "job_interactive_store_in_cache")
@@ -105,7 +115,9 @@ class TestJobInteractive(TestWithProject):
         self.assertEqual(job.interactive_cache["test_key"], "test_value")
 
     def test_check_if_input_should_be_written(self):
-        job = self.project.create_job(InteractiveBase, "job_check_if_input_should_be_written")
+        job = self.project.create_job(
+            InteractiveBase, "job_check_if_input_should_be_written"
+        )
         job.status.created = True
         self.assertTrue(job._check_if_input_should_be_written())
         job._interactive_write_input_files = True
