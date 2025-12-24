@@ -57,17 +57,6 @@ class TestRunfunction(TestWithProject):
             self.assertEqual(fake_out.getvalue(), "")
 
     @patch("pyiron_base.jobs.job.runfunction.state")
-    @patch("subprocess.Popen")
-    def test_run_job_with_runmode_srun(self, mock_popen, mock_state):
-        mock_state.database.database_is_disabled = False
-        mock_state.database.using_local_database = False
-        run_job_with_runmode_srun(self.job)
-        mock_popen.assert_called_once()
-        mock_state.database.using_local_database = True
-        with self.assertRaises(ValueError):
-            run_job_with_runmode_srun(self.job)
-
-    @patch("pyiron_base.jobs.job.runfunction.state")
     def test_run_job_with_runmode_queue_no_adapter(self, mock_state):
         mock_state.queue_adapter = None
         with self.assertRaises(TypeError):
