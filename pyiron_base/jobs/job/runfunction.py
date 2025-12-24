@@ -568,7 +568,7 @@ def run_job_with_runmode_srun(job: "pyiron_base.jobs.job.generic.GenericJob") ->
                 "srun python -m pyiron_base.cli wrapper -p "
                 + working_directory
                 + "- j "
-                + job.job_id
+                    + str(job.job_id)
             )
         else:
             raise ValueError(
