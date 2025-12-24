@@ -8,7 +8,7 @@ dependencies:
 - monty =2025.3.3
 - numpy =2.3.5
 - pandas =2.3.3
-- psutil =7.1.3
+- psutil =7.2.0
 - pyfileindex =0.1.1
 - pyiron_dataclasses =0.0.8
 - pyiron_snippets =1.0.2
