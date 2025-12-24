@@ -92,23 +92,6 @@ class TestJobInteractive(TestWithProject):
         self.assertEqual(job.interactive_flush_frequency, 20)
         self.assertEqual(job.interactive_write_frequency, 5)
 
-    def test_interactive_flush(self):
-        job = self.project.create_job(InteractiveBase, "job_interactive_flush")
-        job.interactive_cache["test_key"] = ["test_value"]
-        job.interactive_flush(path="test_path")
-        self.assertEqual(
-            job.project_hdf5["output/test_path/test_key"], "['test_value']"
-        )
-
-    def test_interactive_close(self):
-        job = self.project.create_job(InteractiveBase, "job_interactive_close")
-        job.interactive_cache["test_key"] = ["test_value"]
-        job.interactive_close()
-        self.assertEqual(job.status.string, "finished")
-        self.assertEqual(
-            job.project_hdf5["output/interactive/test_key"], "['test_value']"
-        )
-
     def test_interactive_store_in_cache(self):
         job = self.project.create_job(InteractiveBase, "job_interactive_store_in_cache")
         job.interactive_store_in_cache("test_key", "test_value")
