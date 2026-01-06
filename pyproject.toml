@@ -1,5 +1,5 @@
 [build-system]
-requires = ["cloudpickle", "executorlib", "h5io_browser", "h5py", "numpy", "monty", "pandas", "psutil", "pyfileindex", "pyiron_dataclasses", "pyiron_snippets", "pysqa", "sqlalchemy", "tables", "tqdm", "traitlets", "hatchling==1.27.0", "hatch-vcs==0.5.0"]
+requires = ["cloudpickle", "executorlib", "h5io_browser", "h5py", "numpy", "monty", "pandas", "psutil", "pyfileindex", "pyiron_dataclasses", "pyiron_snippets", "pysqa", "sqlalchemy", "tables", "tqdm", "traitlets", "hatchling==1.28.0", "hatch-vcs==0.5.0"]
 build-backend = "hatchling.build"
 
 [project]
