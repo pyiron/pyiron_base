@@ -75,7 +75,7 @@ class Settings(metaclass=Singleton):
         resource_paths / RESOURCE_PATHS / PYIRONRESOURCEPATHS (list):
         project_paths / PROJECT_PATHS / PYIRONPROJECTPATHS (list):
         connection_timeout / CONNECTION_TIMEOUT / PYIRONCONNECTIONTIMEOUT (int):
-        sql_connection_string / CONNECTION / PYIRONSQLCONNECTIONSTRING (str|None): If set, this is used to connect to the 
+        sql_connection_string / CONNECTION / PYIRONSQLCONNECTIONSTRING (str|None): If set, this is used to connect to the
            database, potentially ignoring other configurations related to the connection to the database.
         sql_table_name / JOB_TABLE / PYIRONSQLTABLENAME (str):
         sql_file / FILE / PYIRONSQLFILE (str):
@@ -303,7 +303,7 @@ class Settings(metaclass=Singleton):
                 raise ValueError(
                     f"sql_type {sql_type} not recognized, please choose among {self._valid_sql_types}"
                 )
-            
+
             if "sql_connection_string" not in config.keys():
                 if sql_type in ["Postgres", "MySQL"]:
                     required_keys = ["user", "sql_user_key", "sql_host", "sql_database"]
@@ -325,7 +325,17 @@ class Settings(metaclass=Singleton):
                         "sql_type was SQLalchemy but did not find a sql_connection_string setting."
                     )
             elif sql_type != "SQLalchemy":
-                if any([k in config.keys() for k in ["sql_user_key", "sql_host", "sql_database", "sql_file"]]):
+                if any(
+                    [
+                        k in config.keys()
+                        for k in [
+                            "sql_user_key",
+                            "sql_host",
+                            "sql_database",
+                            "sql_file",
+                        ]
+                    ]
+                ):
                     logger.warning(
                         "Found sql settings in the config, which may be ignored due to the sql_connection_string='{sql_connection_string}'."
                     )
