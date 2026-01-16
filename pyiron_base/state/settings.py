@@ -325,7 +325,7 @@ class Settings(metaclass=Singleton):
                         "sql_type was SQLalchemy but did not find a sql_connection_string setting."
                     )
             elif sql_type != "SQLalchemy":
-                if any([k in config.keys() for k in ["sql_user_key", "sql_host", "sql_database", "sql_file"])
+                if any([k in config.keys() for k in ["sql_user_key", "sql_host", "sql_database", "sql_file"]])
                     logger.warning(
                         "Found sql settings in the config, which may be ignored due to the sql_connection_string='{sql_connection_string}'."
                     )
