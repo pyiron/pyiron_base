@@ -37,10 +37,7 @@ __date__ = "Sep 1, 2017"
 
 
 # Modular Docstrings
-_doc_str_parallel_master_attr = (
-    _doc_str_generic_master_attr
-    + "\n"
-    + """\
+_doc_str_parallel_master_attr_extra = """\
         .. attribute:: ref_job
 
             Reference job template from which all jobs within the ParallelMaster are generated.
@@ -49,18 +46,21 @@ _doc_str_parallel_master_attr = (
 
             Total number of jobs
 """
-)
-
-
-class ParallelMaster(GenericMaster):
-    __doc__ = (
-        """
+_doc_str_parallel_master_class = """\
     MasterJob that handles the creation and analysis of several parallel jobs (including master and
     continuation jobs), Examples are Murnaghan or Phonon calculations.
 
     Subclasses *must* implement :meth:`.collect_output()`.  Additionally :attr:`._job_generator` must be
     initialized with an instance of :class:`.JobGenerator` in the subclasses' `__init__`.
 """
+_doc_str_parallel_master_attr = (
+    _doc_str_generic_master_attr + "\n" + _doc_str_parallel_master_attr_extra
+)
+
+
+class ParallelMaster(GenericMaster):
+    __doc__ = (
+        _doc_str_parallel_master_class
         + "\n"
         + _doc_str_job_core_args
         + "\n"

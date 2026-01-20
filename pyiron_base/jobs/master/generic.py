@@ -32,24 +32,23 @@ __date__ = "Sep 1, 2017"
 
 
 # Modular Docstrings
-_doc_str_generic_master_attr = (
-    _doc_str_generic_job_attr
-    + "\n"
-    + """\
+_doc_str_generic_master_attr_extra = """\
         .. attribute:: child_names
 
             Dictionary matching the child ID to the child job name.
 """
+_doc_str_generic_master_class = """\
+    The GenericMaster is the template class for all meta jobs - meaning all jobs which contain multiple other jobs. It
+    defines the shared functionality of the different kind of job series.
+"""
+_doc_str_generic_master_attr = (
+    _doc_str_generic_job_attr + "\n" + _doc_str_generic_master_attr_extra
 )
 
 
 class GenericMaster(GenericJob):
     __doc__ = (
-        """
-    The GenericMaster is the template class for all meta jobs - meaning all jobs which contain multiple other jobs. It
-    defines the shared functionality of the different kind of job series.
-
-"""
+        _doc_str_generic_master_class
         + "\n"
         + _doc_str_job_core_args
         + "\n"

@@ -23,25 +23,25 @@ __date__ = "Sep 1, 2017"
 
 
 # Modular Docstrings
-_doc_str_list_master_attr = (
-    _doc_str_generic_master_attr
-    + "\n"
-    + """\
+_doc_str_list_master_attr_extra = """\
         .. attribute:: submission_status
 
             Monitors how many jobs have been submitted and how many have to be submitted in future
 """
-)
-
-
-class ListMaster(GenericMaster):
-    __doc__ = (
-        """
+_doc_str_list_master_class = """\
     The ListMaster is the most simple MetaJob derived from the GenericMaster. It behaves like a Python list object. Jobs
     can be append to the ListMaster just like elements are added to a list and then all jobs can be executed together.
     This also works for already executed jobs, unless they are already linked to a different MetaJob - meaning they
     already have a master ID assigned to them.
 """
+_doc_str_list_master_attr = (
+    _doc_str_generic_master_attr + "\n" + _doc_str_list_master_attr_extra
+)
+
+
+class ListMaster(GenericMaster):
+    __doc__ = (
+        _doc_str_list_master_class
         + "\n"
         + _doc_str_job_core_args
         + "\n"

@@ -23,11 +23,14 @@ __status__ = "development"
 __date__ = "Mar 24, 2019"
 
 
-class FlexibleMaster(GenericMaster):
-    __doc__ = (
-        """
+_doc_str_flixble_master_class = """\
     The FlexibleMaster uses a list of functions to connect multiple jobs in a series.
 """
+
+
+class FlexibleMaster(GenericMaster):
+    __doc__ = (
+        _doc_str_flixble_master_class
         + "\n"
         + _doc_str_job_core_args
         + "\n"

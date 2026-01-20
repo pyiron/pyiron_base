@@ -290,9 +290,7 @@ class GlobalMaintenance:
         connection_string = state.database.sql_connection_string
         if "postgresql" not in connection_string:
             warnings.warn(
-                """
-                The database statistics is only available for a Postgresql database
-                """
+                "The database statistics is only available for a Postgresql database"
             )
             self._check_postgres = False
         else:
@@ -303,7 +301,5 @@ class GlobalMaintenance:
             return get_database_statistics()
         else:
             raise RuntimeError(
-                """
-                The detabase statistics is only available for a Postgresql database
-                """
+                "The detabase statistics is only available for a Postgresql database"
             )

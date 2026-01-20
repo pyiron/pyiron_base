@@ -167,8 +167,7 @@ if _has_imported["nbformat"]:
             """
             html_exporter = nbconvert.HTMLExporter()
             html_exporter.template_name = "classic"
-            (html_output, _) = html_exporter.from_notebook_node(self)
-            return html_output
+            return html_exporter.from_notebook_node(self)[0]
 
     def _load_ipynb(file):
         return OwnNotebookNode(nbformat.read(file, as_version=4))
