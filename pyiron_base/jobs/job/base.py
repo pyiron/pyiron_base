@@ -108,6 +108,14 @@ _doc_str_job_core_attr = """\
             path to the job as a combination of absolute file system path and path within the HDF5 file.
 """
 
+_doc_str_job_core_class = """\
+    The JobCore the most fundamental pyiron job class. From this class the GenericJob as well as the reduced 
+    JobPath class are derived. While JobPath only provides access to the HDF5 file it is about one order faster.
+
+    Implements :class:`.HasGroups`.  Groups are HDF groups in the HDF file associated with the job and any 
+    child jobs, nodes are HDF dataset in the HDF file.
+"""
+
 
 def recursive_load_from_hdf(project_hdf5: ProjectHDFio, item: str):
     """
@@ -241,19 +249,7 @@ class HDF5Content(object):
 
 
 class JobCore(HasGroups):
-    __doc__ = (
-        """
-    The JobCore the most fundamental pyiron job class. From this class the GenericJob as well as the reduced 
-    JobPath class are derived. While JobPath only provides access to the HDF5 file it is about one order faster.
-    
-    Implements :class:`.HasGroups`.  Groups are HDF groups in the HDF file associated with the job and any 
-    child jobs, nodes are HDF dataset in the HDF file.
-"""
-        + "\n"
-        + _doc_str_job_core_args
-        + "\n"
-        + _doc_str_job_core_attr
-    )
+    __doc__ = _doc_str_job_core_class + "\n" + _doc_str_job_core_args + "\n" + _doc_str_job_core_attr
 
     def __init__(self, project: ProjectHDFio, job_name: str):
         job_name = _get_safe_job_name(job_name)

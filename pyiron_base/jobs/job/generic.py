@@ -69,10 +69,16 @@ __status__ = "production"
 __date__ = "Sep 1, 2017"
 
 # Modular Docstrings
-_doc_str_generic_job_attr = (
-    _doc_str_job_core_attr
-    + "\n"
-    + """\
+_doc_str_generic_class = """\
+    Generic Job class extends the JobCore class with all the functionality to run the job object. From this class
+    all specific job types are derived. Therefore it should contain the properties/routines common to all jobs.
+    The functions in this module should be as generic as possible.
+
+    Sub classes that need to add special behavior after :method:`.copy_to()` can override
+    :method:`._after_generic_copy_to()`.
+"""
+
+_doc_str_generic_job_attr_extra = """\
         .. attribute:: version
 
             Version of the hamiltonian, which is also the version of the executable unless a custom executable is used.
@@ -115,24 +121,12 @@ _doc_str_generic_job_attr = (
             Job type object with all the available job types: ['ExampleJob', 'ParallelMaster',
                                                                'ScriptJob', 'ListMaster']
 """
-)
+
+_doc_str_generic_job_attr = _doc_str_job_core_attr + "\n" + _doc_str_generic_job_attr_extra
 
 
 class GenericJob(JobCore, HasDict):
-    __doc__ = (
-        """
-    Generic Job class extends the JobCore class with all the functionality to run the job object. From this class
-    all specific job types are derived. Therefore it should contain the properties/routines common to all jobs.
-    The functions in this module should be as generic as possible.
-
-    Sub classes that need to add special behavior after :method:`.copy_to()` can override
-    :method:`._after_generic_copy_to()`.
-"""
-        + "\n"
-        + _doc_str_job_core_args
-        + "\n"
-        + _doc_str_generic_job_attr
-    )
+    __doc__ = _doc_str_generic_class + "\n" + _doc_str_job_core_args + "\n" + _doc_str_generic_job_attr
 
     def __init__(self, project: ProjectHDFio, job_name: str):
         super(GenericJob, self).__init__(project=project, job_name=job_name)
