@@ -41,12 +41,19 @@ _doc_str_generic_master_class = """\
     The GenericMaster is the template class for all meta jobs - meaning all jobs which contain multiple other jobs. It
     defines the shared functionality of the different kind of job series.
 """
-_doc_str_generic_master_attr = _doc_str_generic_job_attr + "\n" + _doc_str_generic_master_attr_extra
-
+_doc_str_generic_master_attr = (
+    _doc_str_generic_job_attr + "\n" + _doc_str_generic_master_attr_extra
+)
 
 
 class GenericMaster(GenericJob):
-    __doc__ = _doc_str_generic_master_class + "\n" + _doc_str_job_core_args + "\n" + _doc_str_generic_master_attr
+    __doc__ = (
+        _doc_str_generic_master_class
+        + "\n"
+        + _doc_str_job_core_args
+        + "\n"
+        + _doc_str_generic_master_attr
+    )
 
     def __init__(self, project, job_name):
         super(GenericMaster, self).__init__(project, job_name=job_name)

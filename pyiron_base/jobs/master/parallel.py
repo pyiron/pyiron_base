@@ -53,11 +53,19 @@ _doc_str_parallel_master_class = """\
     Subclasses *must* implement :meth:`.collect_output()`.  Additionally :attr:`._job_generator` must be
     initialized with an instance of :class:`.JobGenerator` in the subclasses' `__init__`.
 """
-_doc_str_parallel_master_attr = _doc_str_generic_master_attr + "\n" + _doc_str_parallel_master_attr_extra
+_doc_str_parallel_master_attr = (
+    _doc_str_generic_master_attr + "\n" + _doc_str_parallel_master_attr_extra
+)
 
 
 class ParallelMaster(GenericMaster):
-    __doc__ = _doc_str_parallel_master_class + "\n" + _doc_str_job_core_args + "\n" + _doc_str_parallel_master_attr
+    __doc__ = (
+        _doc_str_parallel_master_class
+        + "\n"
+        + _doc_str_job_core_args
+        + "\n"
+        + _doc_str_parallel_master_attr
+    )
 
     def __init__(self, project, job_name):
         super(ParallelMaster, self).__init__(project, job_name=job_name)

@@ -122,11 +122,19 @@ _doc_str_generic_job_attr_extra = """\
                                                                'ScriptJob', 'ListMaster']
 """
 
-_doc_str_generic_job_attr = _doc_str_job_core_attr + "\n" + _doc_str_generic_job_attr_extra
+_doc_str_generic_job_attr = (
+    _doc_str_job_core_attr + "\n" + _doc_str_generic_job_attr_extra
+)
 
 
 class GenericJob(JobCore, HasDict):
-    __doc__ = _doc_str_generic_class + "\n" + _doc_str_job_core_args + "\n" + _doc_str_generic_job_attr
+    __doc__ = (
+        _doc_str_generic_class
+        + "\n"
+        + _doc_str_job_core_args
+        + "\n"
+        + _doc_str_generic_job_attr
+    )
 
     def __init__(self, project: ProjectHDFio, job_name: str):
         super(GenericJob, self).__init__(project=project, job_name=job_name)

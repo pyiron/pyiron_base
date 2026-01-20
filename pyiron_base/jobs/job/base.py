@@ -249,7 +249,13 @@ class HDF5Content(object):
 
 
 class JobCore(HasGroups):
-    __doc__ = _doc_str_job_core_class + "\n" + _doc_str_job_core_args + "\n" + _doc_str_job_core_attr
+    __doc__ = (
+        _doc_str_job_core_class
+        + "\n"
+        + _doc_str_job_core_args
+        + "\n"
+        + _doc_str_job_core_attr
+    )
 
     def __init__(self, project: ProjectHDFio, job_name: str):
         job_name = _get_safe_job_name(job_name)

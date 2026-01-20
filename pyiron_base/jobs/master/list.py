@@ -34,11 +34,19 @@ _doc_str_list_master_class = """\
     This also works for already executed jobs, unless they are already linked to a different MetaJob - meaning they
     already have a master ID assigned to them.
 """
-_doc_str_list_master_attr = _doc_str_generic_master_attr + "\n" + _doc_str_list_master_attr_extra
+_doc_str_list_master_attr = (
+    _doc_str_generic_master_attr + "\n" + _doc_str_list_master_attr_extra
+)
 
 
 class ListMaster(GenericMaster):
-    __doc__ = _doc_str_list_master_class + "\n" + _doc_str_job_core_args + "\n" + _doc_str_list_master_attr
+    __doc__ = (
+        _doc_str_list_master_class
+        + "\n"
+        + _doc_str_job_core_args
+        + "\n"
+        + _doc_str_list_master_attr
+    )
 
     def __init__(self, project, job_name):
         super(ListMaster, self).__init__(project, job_name=job_name)

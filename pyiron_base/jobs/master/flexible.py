@@ -27,8 +27,15 @@ _doc_str_flixble_master_class = """\
     The FlexibleMaster uses a list of functions to connect multiple jobs in a series.
 """
 
+
 class FlexibleMaster(GenericMaster):
-    __doc__ = _doc_str_flixble_master_class + "\n" + _doc_str_job_core_args + "\n" + _doc_str_generic_master_attr
+    __doc__ = (
+        _doc_str_flixble_master_class
+        + "\n"
+        + _doc_str_job_core_args
+        + "\n"
+        + _doc_str_generic_master_attr
+    )
 
     def __init__(self, project, job_name):
         super(FlexibleMaster, self).__init__(project, job_name=job_name)
