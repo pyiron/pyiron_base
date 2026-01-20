@@ -87,11 +87,7 @@ class DatabaseStatistics:
         connection_string = state.database.sql_connection_string
         self._job_table = state.database.sql_view_table_name
         if "postgresql" not in connection_string:
-            raise RuntimeError(
-                """
-                The detabase statistics is only available for a Postgresql database
-                """
-            )
+            raise RuntimeError("The detabase statistics is only available for a Postgresql database")
         self._engine = create_engine(connection_string)
         self._performance_dict = {}
         metadata = MetaData()
