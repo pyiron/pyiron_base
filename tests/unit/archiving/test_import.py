@@ -61,8 +61,8 @@ class TestUnpacking(PyironTestCase):
         df_original.drop("project", inplace=True, axis=1)
         df_import.drop("id", inplace=True, axis=1)
         df_original.drop("id", inplace=True, axis=1)
-        df_import["hamversion"] = float(df_import["hamversion"])
-        df_original["hamversion"] = float(df_original["hamversion"])
+        df_import["hamversion"] = df_import["hamversion"].astype(float)
+        df_original["hamversion"] = df_original["hamversion"].astype(float)
         pd._testing.assert_frame_equal(df_original, df_import)
 
     def test_import_compressed(self):
