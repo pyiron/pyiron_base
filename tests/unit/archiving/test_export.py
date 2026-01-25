@@ -45,7 +45,7 @@ class TestPack(PyironTestCase):
         # and is compared with the return dataframe from export_database
         directory_to_transfer = os.path.basename(self.pr.path[:-1])
         df_exp = export_database(self.pr.job_table()).dropna(axis=1)
-        df_exp["hamversion"] = float(df_exp["hamversion"])
+        df_exp["hamversion"] = df_exp["hamversion"].astype(float)
         self.assertEqual(df_exp["job"].unique()[0], "toy")
         self.assertEqual(df_exp["id"].unique()[0], 0)
 
