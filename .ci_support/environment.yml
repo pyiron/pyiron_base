@@ -3,7 +3,7 @@ channels:
 dependencies:
 - coverage
 - codacy-coverage
-- conda =25.9.1
+- conda =26.1.0
 - conda_subprocess =0.0.10
 - cloudpickle =3.1.2
 - executorlib =1.8.0
