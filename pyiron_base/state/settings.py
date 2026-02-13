@@ -75,7 +75,8 @@ class Settings(metaclass=Singleton):
         resource_paths / RESOURCE_PATHS / PYIRONRESOURCEPATHS (list):
         project_paths / PROJECT_PATHS / PYIRONPROJECTPATHS (list):
         connection_timeout / CONNECTION_TIMEOUT / PYIRONCONNECTIONTIMEOUT (int):
-        sql_connection_string / CONNECTION / PYIRONSQLCONNECTIONSTRING (str):
+        sql_connection_string / CONNECTION / PYIRONSQLCONNECTIONSTRING (str|None): If set, this is used to connect to the
+           database, potentially ignoring other configurations related to the connection to the database.
         sql_table_name / JOB_TABLE / PYIRONSQLTABLENAME (str):
         sql_file / FILE / PYIRONSQLFILE (str):
         sql_host / HOST / PYIRONSQHOST (str):
@@ -298,32 +299,47 @@ class Settings(metaclass=Singleton):
     def _validate_sql_configuration(self, config: Dict) -> None:
         try:
             sql_type = config["sql_type"]
-            if sql_type in ["Postgres", "MySQL"]:
-                required_keys = ["user", "sql_user_key", "sql_host", "sql_database"]
-                if not all([k in config.keys() for k in required_keys]):
-                    raise ValueError(
-                        f"For SQL type {sql_type}, {required_keys} are all required but got {config.keys()}"
-                    )
-            elif sql_type == "SQLite":
-                sql_file = config["sql_file"]
-                if sql_file is None:
-                    # SQLite is raising ugly error messages when the database directory does not exist.
-                    raise ValueError(
-                        "For sql_type SQLite, the sql_file must not be None"
-                    )
-                elif os.path.dirname(sql_file) != "":
-                    os.makedirs(os.path.dirname(sql_file), exist_ok=True)
-            elif (
-                sql_type == "SQLalchemy"
-                and "sql_connection_string" not in config.keys()
-            ):
-                raise ValueError(
-                    "sql_type was SQLalchemy but did not find a sql_connection_string setting."
-                )
-            elif sql_type not in self._valid_sql_types:
+            if sql_type not in self._valid_sql_types:
                 raise ValueError(
                     f"sql_type {sql_type} not recognized, please choose among {self._valid_sql_types}"
                 )
+
+            if "sql_connection_string" not in config.keys():
+                if sql_type in ["Postgres", "MySQL"]:
+                    required_keys = ["user", "sql_user_key", "sql_host", "sql_database"]
+                    if not all([k in config.keys() for k in required_keys]):
+                        raise ValueError(
+                            f"For SQL type {sql_type}, {required_keys} are all required but got {config.keys()}"
+                        )
+                elif sql_type == "SQLite":
+                    sql_file = config["sql_file"]
+                    if sql_file is None:
+                        # SQLite is raising ugly error messages when the database directory does not exist.
+                        raise ValueError(
+                            "For sql_type SQLite, the sql_file must not be None"
+                        )
+                    elif os.path.dirname(sql_file) != "":
+                        os.makedirs(os.path.dirname(sql_file), exist_ok=True)
+                elif sql_type == "SQLalchemy":
+                    raise ValueError(
+                        "sql_type was SQLalchemy but did not find a sql_connection_string setting."
+                    )
+            elif sql_type != "SQLalchemy":
+                if any(
+                    [
+                        k in config.keys()
+                        for k in [
+                            "sql_user_key",
+                            "sql_host",
+                            "sql_database",
+                            "sql_file",
+                        ]
+                    ]
+                ):
+                    logger.warning(
+                        "Found sql settings in the config, which may be ignored due to the sql_connection_string='{sql_connection_string}'."
+                    )
+
         except KeyError:
             pass
 
