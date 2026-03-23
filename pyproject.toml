@@ -32,7 +32,7 @@ dependencies = [
     "pandas==3.0.1",
     "psutil==7.2.2",
     "pyfileindex==0.1.4",
-    "pyiron_dataclasses==0.0.11",
+    "pyiron_dataclasses==0.0.12",
     "pyiron_snippets==1.2.1",
     "pysqa==0.3.5",
     "sqlalchemy==2.0.48",
