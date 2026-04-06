@@ -23,7 +23,7 @@ dependencies:
 - pyiron_snippets =1.2.1
 - pysqa =0.3.5
 - pytables =3.10.2
-- sqlalchemy =2.0.48
+- sqlalchemy =2.0.49
 - tqdm =4.67.3
 - traitlets =5.14.3
 - jupyter-book =1.0.0
