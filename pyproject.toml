@@ -26,7 +26,7 @@ dependencies = [
     "cloudpickle==3.1.2",
     "executorlib==1.9.2",
     "h5io_browser==0.2.14",
-    "h5py==3.15.1",
+    "h5py==3.16.0",
     "numpy==2.4.3",
     "monty==2026.2.18",
     "pandas==3.0.2",
