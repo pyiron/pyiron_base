@@ -19,7 +19,7 @@ dependencies:
 - pyfileindex =0.1.5
 - pyiron_dataclasses =0.0.12
 - pyiron_snippets =1.2.1
-- pysqa =0.4.0
+- pysqa =0.4.1
 - pytables =3.10.2
 - sqlalchemy =2.0.49
 - tqdm =4.67.3
