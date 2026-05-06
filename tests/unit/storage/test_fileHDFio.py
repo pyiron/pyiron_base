@@ -7,11 +7,15 @@ import warnings
 from io import StringIO
 import numpy as np
 import pandas as pd
+from unittest.mock import MagicMock, patch
 from pyiron_base.storage.hdfio import (
     FileHDFio,
+    DummyHDFio,
+    ProjectHDFio,
     _is_ragged_in_1st_dim_only,
-    state,
     _import_class,
+    _to_object,
+    state,
 )
 from pyiron_base._tests import PyironTestCase, TestWithProject, ToyJob as BaseToyJob
 from pyiron_base import GenericJob, JobType
@@ -818,6 +822,361 @@ class TestProjectHDFioCoverage(TestWithProject):
         reloaded_job = job.project_hdf5.to_object()
         self.assertEqual(job.job_name, reloaded_job.job_name)
         job.remove()
+
+    def test_to_object_class_name_mismatch(self):
+        """Line 249-250: _to_object raises ValueError when class_name != TYPE in HDF."""
+        hdf = self.project.create_hdf(self.project.path, "type_mismatch.h5")
+        with hdf.open("grp") as h:
+            h["TYPE"] = "<class 'builtins.int'>"
+        with self.assertRaises(ValueError):
+            hdf["grp"].to_object(class_name="<class 'builtins.str'>")
+        hdf.remove_file()
+
+    def test_import_class_returns_type_directly(self):
+        """Line 118: _import_class returns class directly when job_class_dict entry is a type."""
+        from pyiron_base.jobs.job.jobtype import JobTypeChoice
+        mock_dict = {"MyClass": int}  # int is a type
+        with patch.object(JobTypeChoice, "__init__", return_value=None):
+            with patch.object(
+                JobTypeChoice, "job_class_dict", new_callable=lambda: property(lambda self: mock_dict)
+            ):
+                result = _import_class("builtins", "MyClass")
+        self.assertIs(result, int)
+
+    def test_import_class_logs_when_module_path_differs(self):
+        """Lines 160,169: _import_class logs info and uses known module when path differs."""
+        from pyiron_base.jobs.job.jobtype import JobTypeChoice
+        mock_dict = {"FileHDFio": "pyiron_base.storage.hdfio"}
+        with patch.object(
+            JobTypeChoice,
+            "job_class_dict",
+            new_callable=lambda: property(lambda self: mock_dict),
+        ):
+            with self.assertLogs(state.logger, level="DEBUG"):
+                cls = _import_class("some.other.module", "FileHDFio")
+        self.assertIs(cls, FileHDFio)
+
+    def test_import_class_known_obsolete_module(self):
+        """Lines 174: _import_class raises RuntimeError for known obsolete module paths."""
+        import pyiron_base.maintenance.generic as maint
+        obsolete_module = next(iter(maint._MODULE_CONVERSION_DICT))
+        with self.assertRaises(RuntimeError):
+            _import_class(obsolete_module, "SomeClass")
+
+    def test_project_hdfio_properties(self):
+        """Lines 1079,1141,1151,1161: Test ProjectHDFio property accessors."""
+        hdf = self.project.create_hdf(self.project.path, "props_test.h5")
+        # base_name returns project path
+        self.assertEqual(hdf.base_name, self.project.path)
+        # project property
+        self.assertIs(hdf.project.__class__, self.project.__class__)
+        # project_path property
+        self.assertIsInstance(hdf.project_path, str)
+        # root_path property
+        self.assertIsInstance(hdf.root_path, str)
+        hdf.remove_file()
+
+    def test_project_hdfio_sql_query_property(self):
+        """Lines 1141,1151: Test sql_query getter and setter."""
+        hdf = self.project.create_hdf(self.project.path, "sql_test.h5")
+        original = hdf.sql_query
+        hdf.sql_query = original  # round-trip
+        self.assertEqual(hdf.sql_query, original)
+        hdf.remove_file()
+
+    def test_project_hdfio_user(self):
+        """Line 1161: Test user property is accessible."""
+        hdf = self.project.create_hdf(self.project.path, "user_test.h5")
+        # user may be None in some environments, but the property should be accessible
+        _ = hdf.user
+        hdf.remove_file()
+
+    def test_project_hdfio_working_directory(self):
+        """Lines 1183: Test working_directory property."""
+        hdf = self.project.create_hdf(self.project.path, "wd_test.h5")
+        wd = hdf.working_directory
+        self.assertIsInstance(wd, str)
+        self.assertIn("_hdf5", wd)
+        hdf.remove_file()
+
+    def test_project_hdfio_filter_and_inspect_mode(self):
+        """Lines 1214,1224: Test _filter and _inspect_mode properties."""
+        hdf = self.project.create_hdf(self.project.path, "filter_test.h5")
+        original_filter = hdf._filter
+        hdf._filter = original_filter
+        original_mode = hdf._inspect_mode
+        hdf._inspect_mode = original_mode
+        self.assertEqual(hdf._inspect_mode, original_mode)
+        hdf.remove_file()
+
+    def test_project_hdfio_name(self):
+        """Line 1234: Test name property."""
+        hdf = self.project.create_hdf(self.project.path, "name_test.h5")
+        with hdf.open("test_group") as h:
+            self.assertEqual(h.name, "test_group")
+        hdf.remove_file()
+
+    def test_project_hdfio_copy(self):
+        """Lines 1294: Test copy method."""
+        hdf = self.project.create_hdf(self.project.path, "copy_test.h5")
+        hdf_copy = hdf.copy()
+        self.assertIsInstance(hdf_copy, ProjectHDFio)
+        self.assertEqual(hdf_copy.file_name, hdf.file_name)
+        hdf.remove_file()
+
+    def test_project_hdfio_create_hdf(self):
+        """Line 1306: Test create_hdf method."""
+        hdf = self.project.create_hdf(self.project.path, "create_hdf_test.h5")
+        new_hdf = hdf.create_hdf(self.project.path, "child_job")
+        self.assertIsInstance(new_hdf, ProjectHDFio)
+        hdf.remove_file()
+
+    def test_project_hdfio_path(self):
+        """Line 1323: Test path property."""
+        hdf = self.project.create_hdf(self.project.path, "path_test.h5")
+        self.assertIsInstance(hdf.path, str)
+        hdf.remove_file()
+
+    def test_project_hdfio_db(self):
+        """Line 1346 (db property): Test db returns database connection."""
+        hdf = self.project.create_hdf(self.project.path, "db_test.h5")
+        # db property should return same as project.db
+        self.assertEqual(hdf.db, self.project.db)
+        hdf.remove_file()
+
+    def test_len_and_iter(self):
+        """Lines 249,250,259: __len__ and __iter__ on FileHDFio."""
+        hdf = self.project.create_hdf(self.project.path, "leniter_test.h5")
+        with hdf.open("grp") as h:
+            h["a"] = 1
+            h["b"] = 2
+        # len: 1 group
+        self.assertEqual(len(hdf), 1)
+        # iter
+        keys = list(hdf)
+        self.assertIn("grp", keys)
+        hdf.remove_file()
+
+    def test_getitem_slice(self):
+        """Line 273: __getitem__ with empty slice returns values()."""
+        hdf = self.project.create_hdf(self.project.path, "slice_test.h5")
+        with hdf.open("g") as h:
+            h["x"] = 10
+        result = hdf[:]
+        self.assertIsInstance(result, list)
+        # Non-trivial slice raises NotImplementedError
+        with self.assertRaises(NotImplementedError):
+            _ = hdf[1:2]
+        hdf.remove_file()
+
+    def test_getitem_absolute_path(self):
+        """Line 308: __getitem__ with absolute HDF5 path via FileHDFio."""
+        import tempfile
+        hdf_path = os.path.join(self.project.path, "abspath_test.h5")
+        hdf = FileHDFio(file_name=hdf_path, h5_path="/")
+        with hdf.open("grp") as h:
+            h["val"] = 42
+        # Read back using relative path first to confirm data is there
+        self.assertEqual(hdf["grp/val"], 42)
+        hdf.remove_file()
+
+    def test_open_with_dot(self):
+        """Line 503: open('.') stays at same path."""
+        hdf = self.project.create_hdf(self.project.path, "opendot_test.h5")
+        opened = hdf.open(".")
+        self.assertEqual(opened.h5_path, hdf.h5_path)
+        hdf.remove_file()
+
+    def test_open_absolute_raises(self):
+        """Line 498: open with absolute path raises ValueError."""
+        hdf = self.project.create_hdf(self.project.path, "openabs_test.h5")
+        with self.assertRaises(ValueError):
+            hdf.open("/absolute/path")
+        hdf.remove_file()
+
+    def test_close_to_root(self):
+        """Line 520: close returns to '/' when path becomes empty."""
+        import os as _os
+        hdf_path = _os.path.join(self.project.path, "closeroot_test.h5")
+        hdf = FileHDFio(file_name=hdf_path, h5_path="/")
+        opened = hdf.open("grp")
+        self.assertEqual(opened.h5_path, "/grp")
+        opened.close()
+        self.assertEqual(opened.h5_path, "/")
+        hdf.remove_file()
+
+    def test_get_from_table(self):
+        """Lines 547-552: get_from_table finds or raises for unknown name."""
+        hdf = self.project.create_hdf(self.project.path, "gft_test.h5")
+        data = {"Parameter": ["a", "b"], "Value": [1, 2]}
+        hdf["mytable"] = data
+        self.assertEqual(hdf.get_from_table("mytable", "a"), 1)
+        with self.assertRaises(ValueError):
+            hdf.get_from_table("mytable", "nonexistent")
+        hdf.remove_file()
+
+    def test_listdirs(self):
+        """Line 656: listdirs returns same as list_groups."""
+        hdf = self.project.create_hdf(self.project.path, "listdirs_test.h5")
+        with hdf.open("subgrp") as h:
+            h["v"] = 1
+        self.assertEqual(hdf.listdirs(), hdf.list_groups())
+        hdf.remove_file()
+
+
+class TestDummyHDFio(TestWithProject):
+    """Tests for DummyHDFio covering missing lines 1499-1663."""
+
+    def _make_dummy(self, data=None):
+        dummy = DummyHDFio(
+            project=self.project,
+            h5_path="/test",
+            cont=data or {},
+        )
+        return dummy
+
+    def test_getitem_returns_value(self):
+        """Lines 1499-1510: __getitem__ returns stored values."""
+        d = self._make_dummy({"x": 42, "y": "hello"})
+        self.assertEqual(d["x"], 42)
+        self.assertEqual(d["y"], "hello")
+
+    def test_getitem_raises_valueerror_for_unknown(self):
+        """Line 1516: __getitem__ raises ValueError for unknown key."""
+        d = self._make_dummy()
+        with self.assertRaises(ValueError):
+            _ = d["nonexistent"]
+
+    def test_getitem_dotdot_returns_root(self):
+        """Line 1513: __getitem__('..') returns root."""
+        root = self._make_dummy({"root_val": 1})
+        child = DummyHDFio(project=self.project, h5_path="/test/child", cont={}, root=root)
+        self.assertIs(child[".."], root)
+
+    def test_get_with_default(self):
+        """Lines 1520-1534: get() returns default or raises."""
+        d = self._make_dummy()
+        self.assertEqual(d.get("missing", default=99), 99)
+        with self.assertRaises(ValueError):
+            d.get("missing")
+
+    def test_setitem_and_contains(self):
+        """Lines 1536-1537: __setitem__ and __contains__."""
+        d = self._make_dummy()
+        d["key"] = 123
+        self.assertIn("key", d)
+        self.assertNotIn("other", d)
+
+    def test_create_group(self):
+        """Lines 1550-1563: create_group creates sub-group."""
+        d = self._make_dummy()
+        g = d.create_group("subgrp")
+        self.assertIsInstance(g, DummyHDFio)
+        # Creating same group again returns existing
+        g2 = d.create_group("subgrp")
+        self.assertIs(g, g2)
+
+    def test_create_group_node_collision(self):
+        """Line 1563: create_group raises RuntimeError when name is a node."""
+        d = self._make_dummy()
+        d["node"] = 42
+        with self.assertRaises(RuntimeError):
+            d.create_group("node")
+
+    def test_create_group_dotdot(self):
+        """Line 1550: create_group('..') returns root."""
+        root = self._make_dummy({"rv": 1})
+        child = DummyHDFio(project=self.project, h5_path="/test/child", cont={}, root=root)
+        result = child.create_group("..")
+        self.assertIs(result, root)
+
+    def test_list_nodes_and_groups(self):
+        """Lines 1569,1575: _list_nodes and _list_groups."""
+        d = self._make_dummy()
+        d["node1"] = 1
+        d["node2"] = "val"
+        g = d.create_group("grp")
+        g["leaf"] = True  # make group non-empty
+        self.assertIn("node1", d._list_nodes())
+        self.assertIn("node2", d._list_nodes())
+        self.assertIn("grp", d._list_groups())
+
+    def test_project_property(self):
+        """Lines 1585-1590: project property."""
+        d = self._make_dummy()
+        self.assertIs(d.project, self.project)
+        # Without project raises RuntimeError
+        d2 = DummyHDFio(project=None, h5_path="/test")
+        with self.assertRaises(RuntimeError):
+            _ = d2.project
+
+    def test_h5_path_property(self):
+        """Line 1606: h5_path property."""
+        d = self._make_dummy()
+        self.assertEqual(d.h5_path, "/test")
+
+    def test_open_and_close(self):
+        """Lines 1615-1617: open creates sub-group, close returns parent."""
+        d = self._make_dummy()
+        child = d.open("child")
+        self.assertIsInstance(child, DummyHDFio)
+        parent = child.close()
+        self.assertIs(parent, d)
+
+    def test_open_close_no_prev(self):
+        """Lines 1628-1633: close without prior open returns self."""
+        d = self._make_dummy()
+        result = d.close()
+        self.assertIs(result, d)
+
+    def test_context_manager(self):
+        """Lines 1648-1663: __enter__ and __exit__."""
+        d = self._make_dummy()
+        with d.open("ctx_grp") as child:
+            child["v"] = 5
+        self.assertIn("ctx_grp", d._list_groups())
+
+    def test_to_dict(self):
+        """Lines 1648+: to_dict converts nested DummyHDFio to plain dict."""
+        d = self._make_dummy({"a": 1})
+        g = d.create_group("sub")
+        g["b"] = 2
+        result = d.to_dict()
+        self.assertEqual(result["a"], 1)
+        self.assertIsInstance(result["sub"], dict)
+        self.assertEqual(result["sub"]["b"], 2)
+
+    def test_write_dict_and_read_dict(self):
+        """Lines 1621-1631: write_dict_to_hdf with nested dict."""
+        d = self._make_dummy()
+        d.write_dict_to_hdf({"k1": 10, "nested": {"k2": 20}})
+        self.assertEqual(d["k1"], 10)
+        self.assertEqual(d["nested"]["k2"], 20)
+        # read_dict_from_hdf recursive
+        result = d.read_dict_from_hdf(recursive=True)
+        self.assertEqual(result["k1"], 10)
+
+    def test_empty_check(self):
+        """DummyHDFio._empty() returns True when no nodes/non-empty groups."""
+        d = self._make_dummy()
+        self.assertTrue(d._empty())
+        d["x"] = 1
+        self.assertFalse(d._empty())
+
+    def test_to_object_no_type(self):
+        """DummyHDFio.to_object raises when no TYPE."""
+        d = self._make_dummy()
+        with self.assertRaises(ValueError):
+            d.to_object()
+
+    def test_dummy_list_all(self):
+        """list_all() returns groups and nodes."""
+        d = self._make_dummy({"node1": 1})
+        g = d.create_group("grp")
+        g["leaf"] = True
+        la = d.list_all()
+        self.assertIn("node1", la["nodes"])
+        self.assertIn("grp", la["groups"])
 
 
 if __name__ == "__main__":

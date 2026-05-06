@@ -1,7 +1,8 @@
+import warnings
 import numpy as np
 
 from pyiron_base._tests import TestWithProject
-from pyiron_base.storage.flattenedstorage import FlattenedStorage
+from pyiron_base.storage.flattenedstorage import FlattenedStorage, get_dtype_and_fill
 
 
 class TestFlattenedStorage(TestWithProject):
@@ -997,3 +998,189 @@ class TestFlattenedStorage(TestWithProject):
                         store[a].dtype,
                         "dtype not conserved with explode=True!",
                     )
+
+
+class TestFlattenedStorageMissingCoverage(TestWithProject):
+    """Additional tests to cover missing lines in flattenedstorage.py."""
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+
+    def test_add_array_deprecated_per_structure(self):
+        """add_array with per='structure' should warn and use 'chunk'."""
+        store = FlattenedStorage()
+        store.add_chunk(2, identifier="a")
+        with self.assertWarns(DeprecationWarning):
+            store.add_array("legacy_chunk", dtype=float, per="structure")
+        self.assertIn("legacy_chunk", store._per_chunk_arrays, "per='structure' should add to per_chunk_arrays")
+
+    def test_add_array_deprecated_per_atom(self):
+        """add_array with per='atom' should warn and use 'element'."""
+        store = FlattenedStorage()
+        store.add_chunk(2, identifier="a")
+        with self.assertWarns(DeprecationWarning):
+            store.add_array("legacy_elem", dtype=float, per="atom")
+        self.assertIn("legacy_elem", store._per_element_arrays, "per='atom' should add to per_element_arrays")
+
+    def test_get_array_missing_raises(self):
+        """get_array with a non-existing name should raise KeyError."""
+        store = FlattenedStorage()
+        store.add_chunk(2, identifier="a")
+        with self.assertRaises(KeyError):
+            store.get_array("nonexistent_array")
+
+    def test_get_array_ragged_uses_default_fill(self):
+        """get_array_ragged should use default fill when no custom fill value is set."""
+        store = FlattenedStorage()
+        store.add_array("vals", dtype=float, per="element")
+        store.add_chunk(2, identifier="a", vals=[1.0, 2.0])
+        store.add_chunk(3, identifier="b", vals=[4.0, 5.0, 6.0])
+        # No custom fill set, should use default zero fill
+        ragged = store.get_array_ragged("vals")
+        self.assertEqual(ragged.shape[0], 2, "ragged array should have 2 rows")
+
+    def test_set_array_string_frame_name(self):
+        """set_array should accept a string frame identifier."""
+        store = FlattenedStorage()
+        store.add_array("val", dtype=float, per="chunk")
+        store.add_chunk(2, identifier="first", val=1.0)
+        store.add_chunk(2, identifier="second", val=2.0)
+        store.set_array("val", "first", 99.0)
+        self.assertEqual(store.get_array("val", 0), 99.0, "set_array with string frame should work")
+
+    def test_set_array_string_dtype_per_chunk_scalar(self):
+        """set_array with string dtype per chunk should handle string value resizing."""
+        store = FlattenedStorage()
+        store.add_array("name", dtype=str, per="chunk")
+        store.add_chunk(2, identifier="a", name="hi")
+        store.add_chunk(2, identifier="b", name="there")
+        # Set a longer string - should resize the array
+        store.set_array("name", 0, "a_very_long_string_value")
+        self.assertEqual(store.get_array("name", 0), "a_very_long_string_value")
+
+    def test_set_array_missing_raises(self):
+        """set_array with a non-existing name should raise KeyError."""
+        store = FlattenedStorage()
+        store.add_chunk(2, identifier="a")
+        with self.assertRaises(KeyError):
+            store.set_array("nonexistent_array", 0, 42)
+
+    def test_split_missing_array_raises(self):
+        """split with a non-existing array name should raise ValueError."""
+        store = FlattenedStorage()
+        store.add_chunk(2, identifier="a", val=[1.0, 2.0])
+        with self.assertRaises(ValueError):
+            store.split(["nonexistent"])
+
+    def test_join_different_num_chunks_raises(self):
+        """join should raise ValueError if storages have different number of chunks."""
+        s1 = FlattenedStorage()
+        s1.add_chunk(2, identifier="a")
+        s1.add_chunk(2, identifier="b")
+        s2 = FlattenedStorage()
+        s2.add_chunk(2, identifier="c")
+        with self.assertRaises(ValueError):
+            s1.join(s2)
+
+    def test_join_different_chunk_lengths_raises(self):
+        """join should raise ValueError if chunks have different lengths."""
+        s1 = FlattenedStorage()
+        s1.add_chunk(2, identifier="a")
+        s2 = FlattenedStorage()
+        s2.add_chunk(3, identifier="a")
+        with self.assertRaises(ValueError):
+            s1.join(s2)
+
+    def test_join_equal_suffixes_raises(self):
+        """join should raise ValueError if lsuffix == rsuffix != ''."""
+        s1 = FlattenedStorage()
+        s1.add_chunk(2, identifier="a")
+        s2 = FlattenedStorage()
+        s2.add_chunk(2, identifier="a")
+        with self.assertRaises(ValueError):
+            s1.join(s2, lsuffix="_x", rsuffix="_x")
+
+    def test_extend_with_string_element_array(self):
+        """extend should handle per-element string arrays correctly."""
+        s1 = FlattenedStorage()
+        s1.add_array("label", dtype=str, per="element")
+        s1.add_chunk(2, identifier="a", label=["hello", "world"])
+        s2 = FlattenedStorage()
+        s2.add_array("label", dtype=str, per="element")
+        s2.add_chunk(3, identifier="b", label=["foo", "bar_longer", "baz"])
+        s1.extend(s2)
+        labels = s1.get_array("label")
+        self.assertEqual(len(labels), 5, "extend should merge element arrays")
+        self.assertEqual(labels[2], "foo")
+
+    def test_check_compatible_fill_values_incompatible_raises(self):
+        """_check_compatible_fill_values should raise for differing non-nan fills."""
+        s1 = FlattenedStorage()
+        s1.add_array("foo", fill=1.0, per="chunk")
+        s1.add_chunk(2, identifier="a")
+        s2 = FlattenedStorage()
+        s2.add_array("foo", fill=2.0, per="chunk")
+        s2.add_chunk(2, identifier="b")
+        with self.assertRaises(ValueError):
+            s1._check_compatible_fill_values(s2)
+
+    def test_check_compatible_fill_values_nan_both_ok(self):
+        """_check_compatible_fill_values should not raise when both fills are NaN."""
+        s1 = FlattenedStorage()
+        s1.add_array("foo", fill=float("nan"), per="chunk")
+        s1.add_chunk(2, identifier="a")
+        s2 = FlattenedStorage()
+        s2.add_array("foo", fill=float("nan"), per="chunk")
+        s2.add_chunk(2, identifier="b")
+        s1._check_compatible_fill_values(s2)  # should not raise
+
+    def test_from_hdf_legacy_num_structures_num_atoms(self):
+        """_from_hdf should fall back to num_structures/num_atoms if num_chunks/num_elements missing."""
+        store = FlattenedStorage()
+        store.add_chunk(3, identifier="a", val=[1.0, 2.0, 3.0])
+        hdf = self.project.create_hdf(self.project.path, "legacy_test")
+        store.to_hdf(hdf, "legacy")
+        # Simulate old-format HDF: rename keys
+        with hdf.open("legacy") as h:
+            num_chunks = h["num_chunks"]
+            num_elements = h["num_elements"]
+            del h["num_chunks"]
+            del h["num_elements"]
+            h["num_structures"] = num_chunks
+            h["num_atoms"] = num_elements
+        store2 = FlattenedStorage()
+        store2.from_hdf(hdf, "legacy")
+        self.assertEqual(store2.num_chunks, store.num_chunks)
+        self.assertEqual(store2.num_elements, store.num_elements)
+        hdf.remove_file()
+
+    def test_get_dtype_and_fill_string_array(self):
+        """get_dtype_and_fill should return str type for string arrays."""
+        store = FlattenedStorage()
+        store.add_chunk(2, identifier="a", name=["hello", "world"])
+        dtype, fill = get_dtype_and_fill(store, "name")
+        self.assertEqual(dtype, str, "dtype should be str for string array")
+
+    def test_get_dtype_and_fill_numeric_array(self):
+        """get_dtype_and_fill should return numeric dtype for numeric arrays."""
+        store = FlattenedStorage()
+        store.add_chunk(2, identifier="a", val=[1, 2])
+        dtype, fill = get_dtype_and_fill(store, "val")
+        self.assertIsNotNone(dtype, "dtype should not be None for numeric array")
+
+    def test_get_dtype_and_fill_with_fill_value(self):
+        """get_dtype_and_fill should return the stored fill value when present."""
+        store = FlattenedStorage()
+        store.add_array("foo", fill=99.0, per="chunk")
+        store.add_chunk(2, identifier="a")
+        dtype, fill = get_dtype_and_fill(store, "foo")
+        self.assertEqual(fill, 99.0, "fill should be the stored fill value")
+
+    def test_get_dtype_and_fill_unknown_dtype_raises(self):
+        """get_dtype_and_fill should raise ValueError for unknown dtype without fill."""
+        store = FlattenedStorage()
+        store.add_array("bar", dtype=complex, per="chunk")
+        store.add_chunk(1, identifier="a")
+        with self.assertRaises(ValueError):
+            get_dtype_and_fill(store, "bar")
