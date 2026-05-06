@@ -993,6 +993,7 @@ class TestProjectHDFioCoverage(TestWithProject):
         self.assertEqual(opened.h5_path, hdf.h5_path)
         hdf.remove_file()
 
+    @unittest.skipIf(os.name == "nt", "Windows does not raise ValueError for absolute paths in HDF5")
     def test_open_absolute_raises(self):
         """Line 498: open with absolute path raises ValueError."""
         hdf = self.project.create_hdf(self.project.path, "openabs_test.h5")
