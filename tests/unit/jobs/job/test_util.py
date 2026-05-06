@@ -52,7 +52,7 @@ class TestGetSafeJobName(unittest.TestCase):
 
     def test_special_symbols_replaced(self):
         result = _get_safe_job_name("my.job")
-        self.assertEqual(result, "mydjobd")  # '.' -> 'd'... wait let me check
+        self.assertEqual(result, "mydjob")  # '.' -> 'd'... wait let me check
         # '.' -> 'd', so 'my.job' -> 'mydjobd'? No: 'my' + 'd' + 'job' = 'mydjobd'
         self.assertNotIn(".", result)
 
@@ -63,11 +63,11 @@ class TestGetSafeJobName(unittest.TestCase):
 
     def test_float_rounding(self):
         result = _get_safe_job_name(("job", 1.123456789))
-        self.assertIn("1.12345679", result)
+        self.assertIn("1d12345679", result)
 
     def test_no_rounding_when_ndigits_none(self):
         result = _get_safe_job_name(("job", 1.123456789), ndigits=None)
-        self.assertIn("1.123456789", result)
+        self.assertIn("1d123456789", result)
 
     def test_custom_special_symbols(self):
         result = _get_safe_job_name("my_job", special_symbols={})
