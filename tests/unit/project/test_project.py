@@ -111,11 +111,9 @@ class TestProjectData(PyironTestCase):
 
 class TestProjectMove(TestWithFilledProject):
     def test_copy_to(self):
-        reference_pr = None
         with self.subTest("copy_to destination project"):
             # cp project  destination creating a reference_pr
             destination_pr = self.project.parent_group.open("destination")
-            destination_pr.remove_jobs(recursive=True, silently=True)
             self.assertEqual(len(destination_pr.list_groups()), 0)
             self.assertEqual(len(destination_pr.list_nodes()), 0)
             self.assertEqual(len(destination_pr.list_files()), 0)
@@ -126,7 +124,6 @@ class TestProjectMove(TestWithFilledProject):
             reference_pr = destination_pr
         with self.subTest("copy_to with delete_original_data"):
             destination_pr = self.project.parent_group.open("destination2")
-            destination_pr.remove_jobs(recursive=True, silently=True)
             self.assertEqual(len(destination_pr.list_groups()), 0)
             self.assertEqual(len(destination_pr.list_nodes()), 0)
             self.assertEqual(len(destination_pr.list_files()), 0)
