@@ -8,6 +8,7 @@ import os
 import tempfile
 import pickle
 import shutil
+import pandas
 from pyiron_base.project.generic import Project
 from pyiron_base._tests import (
     PyironTestCase,
@@ -37,6 +38,13 @@ try:
     git_not_available = False
 except ImportError:
     git_not_available = True
+
+try:
+    from conda.core.envs_manager import list_all_known_prefixes
+
+    conda_not_available = False
+except ImportError:
+    conda_not_available = True
 
 
 class TestProjectData(PyironTestCase):
@@ -103,9 +111,11 @@ class TestProjectData(PyironTestCase):
 
 class TestProjectMove(TestWithFilledProject):
     def test_copy_to(self):
+        reference_pr = None
         with self.subTest("copy_to destination project"):
             # cp project  destination creating a reference_pr
             destination_pr = self.project.parent_group.open("destination")
+            destination_pr.remove_jobs(recursive=True, silently=True)
             self.assertEqual(len(destination_pr.list_groups()), 0)
             self.assertEqual(len(destination_pr.list_nodes()), 0)
             self.assertEqual(len(destination_pr.list_files()), 0)
@@ -116,6 +126,7 @@ class TestProjectMove(TestWithFilledProject):
             reference_pr = destination_pr
         with self.subTest("copy_to with delete_original_data"):
             destination_pr = self.project.parent_group.open("destination2")
+            destination_pr.remove_jobs(recursive=True, silently=True)
             self.assertEqual(len(destination_pr.list_groups()), 0)
             self.assertEqual(len(destination_pr.list_nodes()), 0)
             self.assertEqual(len(destination_pr.list_files()), 0)
@@ -555,6 +566,73 @@ class TestProjectExtended(TestWithProject):
             delayed=True,
         )
         self.assertIsInstance(delayed_job, DelayedObject)
+
+    @unittest.skipIf(conda_not_available, "conda is not available")
+    def test_conda_environment(self):
+        from pyiron_base.project.condaenv import CondaEnvironment
+
+        ce = self.project.conda_environment
+        self.assertIsInstance(ce, CondaEnvironment)
+
+    def test_create_from_job(self):
+        job = self.project.create_job(ToyJob, "toy_original")
+        job.run()
+        new_name = "toy_copy_unique"
+        job_new = self.project.create_from_job(job, new_name)
+        self.assertEqual(job_new.job_name, new_name)
+        # create_from_job seems to copy the status
+        self.assertEqual(job_new.status.string, "finished")
+
+        # Test already existing
+        job_new.save()
+        job_none = self.project.create_from_job(job, new_name)
+        self.assertIsNone(job_none)
+
+    def test_create_table(self):
+        table = self.project.create_table("test_table")
+        self.assertEqual(table.job_name, "test_table")
+        self.assertEqual(table.analysis_project, self.project)
+
+    def test_job_table_auto_refresh(self):
+        df = self.project.job_table(auto_refresh_job_status=True)
+        self.assertIsInstance(df, pandas.DataFrame)
+
+    def test_remove_job_list(self):
+        job1 = self.project.create_job(ToyJob, "toy_rem_1")
+        job1.save()
+        job2 = self.project.create_job(ToyJob, "toy_rem_2")
+        job2.save()
+        self.project.remove_job(["toy_rem_1", "toy_rem_2"])
+        self.assertIsNone(self.project.get_job_id("toy_rem_1"))
+        self.assertIsNone(self.project.get_job_id("toy_rem_2"))
+
+    def test_inspect_job(self):
+        job = self.project.create_job(ToyJob, "toy_inspect")
+        job.run()
+        job_id = job.job_id
+        inspect = self.project.inspect(job_id)
+        self.assertEqual(inspect.job_name, "toy_inspect")
+
+    def test_queue_tables(self):
+        from unittest.mock import MagicMock, patch, PropertyMock
+
+        with patch(
+            "pyiron_base.state.State.queue_adapter", new_callable=PropertyMock
+        ) as mock_qa_prop:
+            mock_qa = MagicMock()
+            mock_qa_prop.return_value = mock_qa
+            mock_qa.get_status_of_my_jobs.return_value = pandas.DataFrame(
+                {"jobname": ["pi_1"], "working_directory": [self.project.path]}
+            )
+
+            df = self.project.queue_table()
+            self.assertIsNotNone(df)
+
+            with patch.object(
+                self.project.db, "get_item_by_id", return_value={"id": 1, "job": "toy"}
+            ):
+                df_global = self.project.queue_table_global()
+                self.assertIsNotNone(df_global)
 
 
 if __name__ == "__main__":
