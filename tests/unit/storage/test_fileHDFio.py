@@ -835,10 +835,13 @@ class TestProjectHDFioCoverage(TestWithProject):
     def test_import_class_returns_type_directly(self):
         """Line 118: _import_class returns class directly when job_class_dict entry is a type."""
         from pyiron_base.jobs.job.jobtype import JobTypeChoice
+
         mock_dict = {"MyClass": int}  # int is a type
         with patch.object(JobTypeChoice, "__init__", return_value=None):
             with patch.object(
-                JobTypeChoice, "job_class_dict", new_callable=lambda: property(lambda self: mock_dict)
+                JobTypeChoice,
+                "job_class_dict",
+                new_callable=lambda: property(lambda self: mock_dict),
             ):
                 result = _import_class("builtins", "MyClass")
         self.assertIs(result, int)
@@ -846,6 +849,7 @@ class TestProjectHDFioCoverage(TestWithProject):
     def test_import_class_logs_when_module_path_differs(self):
         """Lines 160,169: _import_class logs info and uses known module when path differs."""
         from pyiron_base.jobs.job.jobtype import JobTypeChoice
+
         mock_dict = {"FileHDFio": "pyiron_base.storage.hdfio"}
         with patch.object(
             JobTypeChoice,
@@ -859,6 +863,7 @@ class TestProjectHDFioCoverage(TestWithProject):
     def test_import_class_known_obsolete_module(self):
         """Lines 174: _import_class raises RuntimeError for known obsolete module paths."""
         import pyiron_base.maintenance.generic as maint
+
         obsolete_module = next(iter(maint._MODULE_CONVERSION_DICT))
         with self.assertRaises(RuntimeError):
             _import_class(obsolete_module, "SomeClass")
@@ -972,6 +977,7 @@ class TestProjectHDFioCoverage(TestWithProject):
     def test_getitem_absolute_path(self):
         """Line 308: __getitem__ with absolute HDF5 path via FileHDFio."""
         import tempfile
+
         hdf_path = os.path.join(self.project.path, "abspath_test.h5")
         hdf = FileHDFio(file_name=hdf_path, h5_path="/")
         with hdf.open("grp") as h:
@@ -997,6 +1003,7 @@ class TestProjectHDFioCoverage(TestWithProject):
     def test_close_to_root(self):
         """Line 520: close returns to '/' when path becomes empty."""
         import os as _os
+
         hdf_path = _os.path.join(self.project.path, "closeroot_test.h5")
         hdf = FileHDFio(file_name=hdf_path, h5_path="/")
         opened = hdf.open("grp")
@@ -1050,7 +1057,9 @@ class TestDummyHDFio(TestWithProject):
     def test_getitem_dotdot_returns_root(self):
         """Line 1513: __getitem__('..') returns root."""
         root = self._make_dummy({"root_val": 1})
-        child = DummyHDFio(project=self.project, h5_path="/test/child", cont={}, root=root)
+        child = DummyHDFio(
+            project=self.project, h5_path="/test/child", cont={}, root=root
+        )
         self.assertIs(child[".."], root)
 
     def test_get_with_default(self):
@@ -1086,7 +1095,9 @@ class TestDummyHDFio(TestWithProject):
     def test_create_group_dotdot(self):
         """Line 1550: create_group('..') returns root."""
         root = self._make_dummy({"rv": 1})
-        child = DummyHDFio(project=self.project, h5_path="/test/child", cont={}, root=root)
+        child = DummyHDFio(
+            project=self.project, h5_path="/test/child", cont={}, root=root
+        )
         result = child.create_group("..")
         self.assertIs(result, root)
 

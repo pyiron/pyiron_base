@@ -1013,7 +1013,11 @@ class TestFlattenedStorageMissingCoverage(TestWithProject):
         store.add_chunk(2, identifier="a")
         with self.assertWarns(DeprecationWarning):
             store.add_array("legacy_chunk", dtype=float, per="structure")
-        self.assertIn("legacy_chunk", store._per_chunk_arrays, "per='structure' should add to per_chunk_arrays")
+        self.assertIn(
+            "legacy_chunk",
+            store._per_chunk_arrays,
+            "per='structure' should add to per_chunk_arrays",
+        )
 
     def test_add_array_deprecated_per_atom(self):
         """add_array with per='atom' should warn and use 'element'."""
@@ -1021,7 +1025,11 @@ class TestFlattenedStorageMissingCoverage(TestWithProject):
         store.add_chunk(2, identifier="a")
         with self.assertWarns(DeprecationWarning):
             store.add_array("legacy_elem", dtype=float, per="atom")
-        self.assertIn("legacy_elem", store._per_element_arrays, "per='atom' should add to per_element_arrays")
+        self.assertIn(
+            "legacy_elem",
+            store._per_element_arrays,
+            "per='atom' should add to per_element_arrays",
+        )
 
     def test_get_array_missing_raises(self):
         """get_array with a non-existing name should raise KeyError."""
@@ -1047,7 +1055,9 @@ class TestFlattenedStorageMissingCoverage(TestWithProject):
         store.add_chunk(2, identifier="first", val=1.0)
         store.add_chunk(2, identifier="second", val=2.0)
         store.set_array("val", "first", 99.0)
-        self.assertEqual(store.get_array("val", 0), 99.0, "set_array with string frame should work")
+        self.assertEqual(
+            store.get_array("val", 0), 99.0, "set_array with string frame should work"
+        )
 
     def test_set_array_string_dtype_per_chunk_scalar(self):
         """set_array with string dtype per chunk should handle string value resizing."""
