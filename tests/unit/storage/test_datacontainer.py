@@ -980,5 +980,202 @@ class TestInputList(PyironTestCase):
             InputList([1, 2, 3])
 
 
+class TestDataContainerMissingCoverage(TestWithCleanProject):
+    """Additional tests to cover missing lines in datacontainer.py."""
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+
+    def setUp(self):
+        super().setUp()
+        self.hdf = self.project.create_hdf(self.project.path, "test_missing")
+
+    def tearDown(self):
+        self.hdf.remove_file()
+        self.hdf = None
+
+    def test_dir_includes_keys(self):
+        """__dir__ should include container keys."""
+        dc = DataContainer({"foo": 1, "bar": 2})
+        d = dir(dc)
+        self.assertIn("foo", d, "__dir__ should contain container keys")
+        self.assertIn("bar", d, "__dir__ should contain container keys")
+
+    def test_repr_html(self):
+        """_repr_html_ should return an HTML string wrapping the container content."""
+        dc = DataContainer({"a": 1, "b": [2, 3]})
+        html = dc._repr_html_()
+        self.assertIsInstance(html, str, "_repr_html_ should return a string")
+        self.assertIn("<pre>", html, "_repr_html_ output should contain <pre>")
+        self.assertIn(
+            "DataContainer", html, "_repr_html_ output should contain class name"
+        )
+
+    def test_repr_with_keys(self):
+        """__repr__ with keys should show key-value pairs."""
+        dc = DataContainer({"x": 10, "y": 20})
+        r = repr(dc)
+        self.assertIn("x", r, "__repr__ should show keys")
+        self.assertIn("10", r, "__repr__ should show values")
+
+    def test_get_create_true_missing_key(self):
+        """get with create=True and missing key should create an empty subcontainer."""
+        dc = DataContainer()
+        sub = dc.get("new_group", create=True)
+        self.assertIsInstance(
+            sub, DataContainer, "get(create=True) should return DataContainer"
+        )
+        self.assertIn("new_group", dc, "new group should be stored in the container")
+
+    def test_get_create_false_existing_key(self):
+        """get with create=False and existing key should return the value."""
+        dc = DataContainer({"existing": 42})
+        val = dc.get("existing", create=False)
+        self.assertEqual(val, 42, "get should return existing value")
+
+    def test_get_default(self):
+        """get with default should return default when key is absent."""
+        dc = DataContainer()
+        val = dc.get("missing_key", default="default_val")
+        self.assertEqual(
+            val, "default_val", "get should return default when key missing"
+        )
+
+    def test_mark_overwrites_existing_index_key(self):
+        """mark should overwrite an existing key at the same index."""
+        dc = DataContainerBase([42, 99])
+        dc.mark(0, "first")
+        self.assertEqual(dc.first, 42)
+        # Now mark index 0 with a different key - should remove old key
+        dc.mark(0, "new_key")
+        self.assertNotIn(
+            "first", dc._indices, "old key should be removed after re-marking"
+        )
+        self.assertEqual(dc.new_key, 42, "new key should point to the same value")
+
+    def test_on_unlock_warning(self):
+        """Setting read_only back to False should emit a warning."""
+        dc = DataContainer({"a": 1})
+        dc.read_only = True
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            dc.read_only = False
+            self.assertGreater(len(w), 0, "Unlocking read-only container should warn")
+
+    def test_to_hdf_unsupported_type_raises(self):
+        """Saving an unsupported type to HDF should raise TypeError."""
+        dc = DataContainer(table_name="bad_type")
+        dc["x"] = complex(1, 2)
+        with self.assertRaises(TypeError):
+            dc.to_hdf(self.hdf)
+
+    def test_to_hdf_cleanup_removes_stale_keys(self):
+        """Writing a shorter container to HDF should remove extra stale keys."""
+        dc = DataContainer({"a": 1, "b": 2, "c": 3}, table_name="cleanup_test")
+        dc.to_hdf(self.hdf)
+        dc_short = DataContainer({"a": 1}, table_name="cleanup_test")
+        dc_short.to_hdf(self.hdf)
+        # Only "a" should remain in HDF
+        hdf_group = self.hdf["cleanup_test"]
+        nodes = hdf_group.list_nodes()
+        b_keys = [n for n in nodes if "b__index" in n]
+        c_keys = [n for n in nodes if "c__index" in n]
+        self.assertEqual(len(b_keys), 0, "stale 'b' key should be removed")
+        self.assertEqual(len(c_keys), 0, "stale 'c' key should be removed")
+
+    def test_from_hdf_version_0_1_0(self):
+        """DataContainer should be able to load HDF written in version 0.1.0 format."""
+        with self.hdf.open("old_format") as h:
+            h["HDF_VERSION"] = "0.1.0"
+            h["data"] = {"key1": 1, "key2": 2}
+            h["read_only"] = False
+        dc = DataContainer(table_name="old_format")
+        dc.from_hdf(self.hdf)
+        self.assertEqual(dc["key1"], 1)
+        self.assertEqual(dc["key2"], 2)
+
+    def test_from_hdf_normalize_key_no_index_suffix(self):
+        """Keys without __index_ suffix should use the key name directly."""
+        dc = DataContainer({"foo": 1}, table_name="norm_key_test")
+        dc.to_hdf(self.hdf)
+        dc2 = DataContainer(table_name="norm_key_test")
+        dc2.from_hdf(self.hdf)
+        self.assertEqual(dc2["foo"], 1)
+
+    def test_force_load_not_lazy_not_recursive_returns_early(self):
+        """_force_load should return early when not lazy and not recursive."""
+        dc = DataContainer({"a": 1, "b": DataContainer({"c": 3})})
+        self.assertFalse(dc._lazy, "DataContainer should not be lazy by default")
+        # Should not raise or iterate children
+        dc._force_load(recursive=False)
+
+    def test_to_builtin_with_has_dict_child(self):
+        """to_builtin should call to_dict() on HasDict children."""
+        from pyiron_base.interfaces.has_dict import HasDict
+
+        class MyHasDict(HasDict):
+            __dict_version__ = "0.1.0"
+
+            def __init__(self):
+                self.value = 42
+
+            def _to_dict(self):
+                return {"value": self.value}
+
+            def _from_dict(self, d, version):
+                self.value = d["value"]
+
+        dc = DataContainer({"child": MyHasDict()})
+        result = dc.to_builtin()
+        self.assertIsInstance(result, dict)
+        self.assertIn("value", result["child"])
+
+    def test_to_builtin_list_with_has_dict_child(self):
+        """to_builtin on a list-like DataContainer should convert HasDict elements."""
+        from pyiron_base.interfaces.has_dict import HasDict
+
+        class MyHasDict(HasDict):
+            __dict_version__ = "0.1.0"
+
+            def __init__(self):
+                self.value = 7
+
+            def _to_dict(self):
+                return {"value": self.value}
+
+            def _from_dict(self, d, version):
+                self.value = d["value"]
+
+        dc = DataContainer([MyHasDict(), 1])
+        result = dc.to_builtin()
+        self.assertIsInstance(result, list)
+        self.assertIn("value", result[0])
+
+    def test_from_dict_old_version_no_key_order(self):
+        """_from_dict without version '0.2.0' should use dict order (no KEY_ORDER)."""
+        dc = DataContainer({"a": 1, "b": 2})
+        d = dc._to_dict()
+        # Remove KEY_ORDER to simulate old version
+        d.pop("KEY_ORDER")
+        dc2 = DataContainer()
+        dc2._from_dict(d, version="0.1.0")
+        self.assertEqual(dc2["a"], 1)
+        self.assertEqual(dc2["b"], 2)
+
+    def test_update_with_kwargs_and_wrap(self):
+        """update with wrap=True and kwargs should wrap kwargs values."""
+        dc = DataContainerBase()
+        dc.update({"foo": 1}, wrap=True, bar={"nested": 2})
+        self.assertIn("bar", dc._indices, "kwargs key should be in container")
+
+    def test_repr_dict_like(self):
+        """__repr__ of a dict-like DataContainerBase should show key-value pairs."""
+        dc = DataContainerBase({"alpha": 1, "beta": 2})
+        r = repr(dc)
+        self.assertIn("alpha", r)
+        self.assertIn("beta", r)
+
+
 if __name__ == "__main__":
     unittest.main()
