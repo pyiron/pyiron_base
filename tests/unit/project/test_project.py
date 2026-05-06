@@ -41,6 +41,7 @@ except ImportError:
 
 try:
     from conda.core.envs_manager import list_all_known_prefixes
+
     conda_not_available = False
 except ImportError:
     conda_not_available = True
@@ -569,6 +570,7 @@ class TestProjectExtended(TestWithProject):
     @unittest.skipIf(conda_not_available, "conda is not available")
     def test_conda_environment(self):
         from pyiron_base.project.condaenv import CondaEnvironment
+
         ce = self.project.conda_environment
         self.assertIsInstance(ce, CondaEnvironment)
 
@@ -613,18 +615,22 @@ class TestProjectExtended(TestWithProject):
 
     def test_queue_tables(self):
         from unittest.mock import MagicMock, patch, PropertyMock
-        with patch("pyiron_base.state.State.queue_adapter", new_callable=PropertyMock) as mock_qa_prop:
+
+        with patch(
+            "pyiron_base.state.State.queue_adapter", new_callable=PropertyMock
+        ) as mock_qa_prop:
             mock_qa = MagicMock()
             mock_qa_prop.return_value = mock_qa
-            mock_qa.get_status_of_my_jobs.return_value = pandas.DataFrame({
-                "jobname": ["pi_1"],
-                "working_directory": [self.project.path]
-            })
+            mock_qa.get_status_of_my_jobs.return_value = pandas.DataFrame(
+                {"jobname": ["pi_1"], "working_directory": [self.project.path]}
+            )
 
             df = self.project.queue_table()
             self.assertIsNotNone(df)
 
-            with patch.object(self.project.db, "get_item_by_id", return_value={"id": 1, "job": "toy"}):
+            with patch.object(
+                self.project.db, "get_item_by_id", return_value={"id": 1, "job": "toy"}
+            ):
                 df_global = self.project.queue_table_global()
                 self.assertIsNotNone(df_global)
 
