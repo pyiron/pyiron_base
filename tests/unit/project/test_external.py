@@ -39,11 +39,14 @@ class TestNotebook(PyironTestCase):
     @property
     def docstring_module(self):
         import pyiron_base.project.external
+
         return pyiron_base.project.external
 
     def test_notebook_get_custom_dict_delegates_to_load(self):
         sentinel = object()
-        with patch("pyiron_base.project.external.load", return_value=sentinel) as mock_load:
+        with patch(
+            "pyiron_base.project.external.load", return_value=sentinel
+        ) as mock_load:
             result = Notebook.get_custom_dict()
         mock_load.assert_called_once()
         self.assertIs(result, sentinel)
@@ -88,6 +91,7 @@ class TestLoadPaths(PyironTestCase):
     @property
     def docstring_module(self):
         import pyiron_base.project.external
+
         return pyiron_base.project.external
 
     def _make_hdf_mock(self, include_custom_dict=True):
@@ -114,8 +118,10 @@ class TestLoadPaths(PyironTestCase):
             obj_mock = MagicMock()
             obj_mock.__getitem__ = MagicMock(return_value=1)
 
-            with patch.object(ext_mod, "FileHDFio", return_value=hdf_mock), \
-                 patch.object(ext_mod, "DataContainer", return_value=obj_mock):
+            with (
+                patch.object(ext_mod, "FileHDFio", return_value=hdf_mock),
+                patch.object(ext_mod, "DataContainer", return_value=obj_mock),
+            ):
                 result = ext_mod.load()
 
             obj_mock.from_hdf.assert_called_once()
@@ -138,8 +144,10 @@ class TestLoadPaths(PyironTestCase):
         ext_mod.Path = FakePath
         try:
             json_data = {"key": "value"}
-            with patch("builtins.open", mock_open(read_data=json.dumps(json_data))), \
-                 patch.object(ext_mod.json, "load", return_value=json_data):
+            with (
+                patch("builtins.open", mock_open(read_data=json.dumps(json_data))),
+                patch.object(ext_mod.json, "load", return_value=json_data),
+            ):
                 result = ext_mod.load()
             self.assertEqual(result, json_data)
         finally:

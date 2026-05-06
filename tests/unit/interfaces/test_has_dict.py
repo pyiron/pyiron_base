@@ -20,6 +20,7 @@ from pyiron_base._tests import PyironTestCase
 # Concrete test helpers
 # ---------------------------------------------------------------------------
 
+
 class SimpleHasDict(HasDict):
     """Minimal concrete HasDict implementation for testing."""
 
@@ -67,6 +68,7 @@ class SimplePureHasHDF(HasHDF):
     def _to_dict(self):
         # Required so HasDictfromHDF.to_dict(self) works (line 147 path)
         from pyiron_base.storage.hdfio import DummyHDFio
+
         hdf = DummyHDFio(None, "/")
         self.to_hdf(hdf)
         return hdf.to_dict()
@@ -120,6 +122,7 @@ class SimpleHasHDFfromDict(HasHDFfromDict):
 # ---------------------------------------------------------------------------
 # Tests
 # ---------------------------------------------------------------------------
+
 
 class TestCreateFromDict(PyironTestCase):
     """Tests for the create_from_dict function."""
@@ -201,6 +204,7 @@ class TestHasHDFfromDict(PyironTestCase):
     def test_from_hdf_roundtrip(self):
         """Line 282: _from_hdf delegates to from_dict."""
         from pyiron_base.storage.hdfio import DummyHDFio
+
         obj = SimpleHasHDFfromDict(value=11)
         hdf = DummyHDFio(None, "/")
         obj.to_hdf(hdf)
@@ -212,6 +216,7 @@ class TestHasHDFfromDict(PyironTestCase):
     def test_to_hdf_writes_dict(self):
         """Line 285: _to_hdf delegates to to_dict."""
         from pyiron_base.storage.hdfio import DummyHDFio
+
         obj = SimpleHasHDFfromDict(value=22)
         hdf = DummyHDFio(None, "/")
         obj.to_hdf(hdf)

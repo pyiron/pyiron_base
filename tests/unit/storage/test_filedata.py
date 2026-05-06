@@ -153,6 +153,7 @@ class TestFileLoaderRegister(PyironTestCase):
     def test_register_new_file_type(self):
         """FileLoader.register should add a new file type handler."""
         from pyiron_base.storage.filedata import FileLoader
+
         FileLoader.register(".xyz_test", lambda f: "xyz_content")
         loader = FileLoader()
         result = loader.load(".xyz_test", "dummy_file")
@@ -168,7 +169,9 @@ class TestFileLoaderRegister(PyironTestCase):
             with open(filepath, "w") as f:
                 f.write("hello default")
             result = load_file(filepath, filetype=".unknown_xyz")
-            self.assertEqual(result, ["hello default"], "default load should read as text")
+            self.assertEqual(
+                result, ["hello default"], "default load should read as text"
+            )
         finally:
             if os.path.exists(filepath):
                 os.remove(filepath)
@@ -176,8 +179,10 @@ class TestFileLoaderRegister(PyironTestCase):
     def test_load_default_raises_ioerror_on_failure(self):
         """Loading a file that fails should raise IOError."""
         from pyiron_base.storage.filedata import FileLoader
+
         # Use a file object so filetype is None and we go through default loading
         import io
+
         # A binary stream will fail to readlines() as text
         loader = FileLoader()
         with self.assertRaises(IOError):
@@ -186,6 +191,7 @@ class TestFileLoaderRegister(PyironTestCase):
     def test_load_file_no_filetype_no_extension(self):
         """load_file with a file-like object with no name attribute should return None filetype."""
         import io
+
         stream = io.StringIO("some content")
         # stream has no .name, filetype=None, so _resolve_filetype returns None
         result = load_file(stream)
@@ -198,7 +204,9 @@ class TestFileDataMissingCoverage(PyironTestCase):
     @classmethod
     def setUpClass(cls):
         cls.current_dir = os.path.dirname(os.path.abspath(__file__)).replace("\\", "/")
-        cls.filepath = os.path.join(cls.current_dir, "test_fd_missing.txt").replace("\\", "/")
+        cls.filepath = os.path.join(cls.current_dir, "test_fd_missing.txt").replace(
+            "\\", "/"
+        )
         with open(cls.filepath, "w") as f:
             f.write("filedata test content")
 
@@ -210,7 +218,9 @@ class TestFileDataMissingCoverage(PyironTestCase):
     def test_filedata_data_property_loads_from_source(self):
         """FileData.data should load from source when _data is None."""
         fd = FileData(file=self.filepath)
-        self.assertFalse(fd._hasdata, "FileData with file path should not have data yet")
+        self.assertFalse(
+            fd._hasdata, "FileData with file path should not have data yet"
+        )
         data = fd.data
         self.assertIsNotNone(data, "data should be loaded from source")
 
@@ -218,7 +228,9 @@ class TestFileDataMissingCoverage(PyironTestCase):
         """FileData.data should return _data when it is already set."""
         fd = FileData(file="test.txt", data=b"preloaded")
         self.assertTrue(fd._hasdata, "FileData with data should have _hasdata=True")
-        self.assertEqual(fd.data, b"preloaded", "data property should return stored data")
+        self.assertEqual(
+            fd.data, b"preloaded", "data property should return stored data"
+        )
 
 
 class TestPILImportMocking(PyironTestCase):
@@ -267,6 +279,7 @@ class TestPILImportMocking(PyironTestCase):
     def test_has_imported_dict_structure(self):
         """_has_imported should have 'PIL' and 'nbformat' keys."""
         from pyiron_base.storage.filedata import _has_imported
+
         self.assertIn("PIL", _has_imported, "_has_imported should track PIL")
         self.assertIn("nbformat", _has_imported, "_has_imported should track nbformat")
         self.assertIsInstance(_has_imported["PIL"], bool)

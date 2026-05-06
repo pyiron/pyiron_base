@@ -70,13 +70,15 @@ class TestDownloadResources(PyironTestCase):
             mock_tar.__enter__ = MagicMock(return_value=mock_tar)
             mock_tar.__exit__ = MagicMock(return_value=False)
 
-            with patch("pyiron_base.state.install.urllib2.urlretrieve") as mock_retrieve, \
-                 patch("pyiron_base.state.install.tarfile.open", return_value=mock_tar), \
-                 patch("pyiron_base.state.install.safe_extract") as mock_extract, \
-                 patch("pyiron_base.state.install.copytree") as mock_copy, \
-                 patch("pyiron_base.state.install.os.remove") as mock_remove, \
-                 patch("pyiron_base.state.install.rmtree") as mock_rmtree, \
-                 patch("pyiron_base.state.install.os.walk", return_value=[]):
+            with (
+                patch("pyiron_base.state.install.urllib2.urlretrieve") as mock_retrieve,
+                patch("pyiron_base.state.install.tarfile.open", return_value=mock_tar),
+                patch("pyiron_base.state.install.safe_extract") as mock_extract,
+                patch("pyiron_base.state.install.copytree") as mock_copy,
+                patch("pyiron_base.state.install.os.remove") as mock_remove,
+                patch("pyiron_base.state.install.rmtree") as mock_rmtree,
+                patch("pyiron_base.state.install.os.walk", return_value=[]),
+            ):
                 _download_resources(
                     zip_file=zip_file,
                     resource_directory=resource_dir,
@@ -98,8 +100,10 @@ class TestDownloadResources(PyironTestCase):
             # Put a file in so it's not empty (empty dirs get removed first)
             open(os.path.join(resource_dir, "dummy.txt"), "w").close()
 
-            with patch("pyiron_base.state.install.urllib2.urlretrieve"), \
-                 self.assertRaises(ValueError):
+            with (
+                patch("pyiron_base.state.install.urllib2.urlretrieve"),
+                self.assertRaises(ValueError),
+            ):
                 _download_resources(
                     zip_file="x.tar.gz",
                     resource_directory=resource_dir,
@@ -118,13 +122,15 @@ class TestDownloadResources(PyironTestCase):
             mock_tar.__enter__ = MagicMock(return_value=mock_tar)
             mock_tar.__exit__ = MagicMock(return_value=False)
 
-            with patch("pyiron_base.state.install.urllib2.urlretrieve"), \
-                 patch("pyiron_base.state.install.tarfile.open", return_value=mock_tar), \
-                 patch("pyiron_base.state.install.safe_extract"), \
-                 patch("pyiron_base.state.install.copytree"), \
-                 patch("pyiron_base.state.install.os.remove"), \
-                 patch("pyiron_base.state.install.rmtree"), \
-                 patch("pyiron_base.state.install.os.walk", return_value=[]):
+            with (
+                patch("pyiron_base.state.install.urllib2.urlretrieve"),
+                patch("pyiron_base.state.install.tarfile.open", return_value=mock_tar),
+                patch("pyiron_base.state.install.safe_extract"),
+                patch("pyiron_base.state.install.copytree"),
+                patch("pyiron_base.state.install.os.remove"),
+                patch("pyiron_base.state.install.rmtree"),
+                patch("pyiron_base.state.install.os.walk", return_value=[]),
+            ):
                 _download_resources(
                     zip_file="r.tar.gz",
                     resource_directory=resource_dir,
@@ -146,17 +152,19 @@ class TestDownloadResources(PyironTestCase):
 
             walk_result = [(resource_dir, [], [sh_file])]
 
-            with patch("pyiron_base.state.install.urllib2.urlretrieve"), \
-                 patch("pyiron_base.state.install.tarfile.open", return_value=mock_tar), \
-                 patch("pyiron_base.state.install.safe_extract"), \
-                 patch("pyiron_base.state.install.copytree"), \
-                 patch("pyiron_base.state.install.os.remove"), \
-                 patch("pyiron_base.state.install.rmtree"), \
-                 patch("pyiron_base.state.install.os.walk", return_value=walk_result), \
-                 patch("pyiron_base.state.install.os.name", "posix"), \
-                 patch("pyiron_base.state.install.os.path.exists", return_value=False), \
-                 patch("pyiron_base.state.install.os.stat") as mock_stat, \
-                 patch("pyiron_base.state.install.os.chmod") as mock_chmod:
+            with (
+                patch("pyiron_base.state.install.urllib2.urlretrieve"),
+                patch("pyiron_base.state.install.tarfile.open", return_value=mock_tar),
+                patch("pyiron_base.state.install.safe_extract"),
+                patch("pyiron_base.state.install.copytree"),
+                patch("pyiron_base.state.install.os.remove"),
+                patch("pyiron_base.state.install.rmtree"),
+                patch("pyiron_base.state.install.os.walk", return_value=walk_result),
+                patch("pyiron_base.state.install.os.name", "posix"),
+                patch("pyiron_base.state.install.os.path.exists", return_value=False),
+                patch("pyiron_base.state.install.os.stat") as mock_stat,
+                patch("pyiron_base.state.install.os.chmod") as mock_chmod,
+            ):
                 mock_stat.return_value.st_mode = 0o644
                 _download_resources(
                     zip_file="r.tar.gz",
@@ -178,8 +186,10 @@ class TestInstallDialog(PyironTestCase):
             open(config_file, "w").close()
 
             env = {"PYIRONCONFIG": config_file}
-            with patch.dict(os.environ, env, clear=False), \
-                 patch("builtins.print") as mock_print:
+            with (
+                patch.dict(os.environ, env, clear=False),
+                patch("builtins.print") as mock_print,
+            ):
                 install_dialog(silently=True)
             mock_print.assert_called_once()
             self.assertIn("already installed", mock_print.call_args[0][0])
@@ -190,9 +200,11 @@ class TestInstallDialog(PyironTestCase):
             config_file = os.path.join(tmpdir, ".pyiron_nonexistent")
             env = {"PYIRONCONFIG": config_file}
 
-            with patch.dict(os.environ, env, clear=False), \
-                 patch("pyiron_base.state.install.install_pyiron") as mock_install, \
-                 patch("builtins.print") as mock_print:
+            with (
+                patch.dict(os.environ, env, clear=False),
+                patch("pyiron_base.state.install.install_pyiron") as mock_install,
+                patch("builtins.print") as mock_print,
+            ):
                 install_dialog(silently=True)
 
             mock_install.assert_called_once()
@@ -205,9 +217,11 @@ class TestInstallDialog(PyironTestCase):
             config_file = os.path.join(tmpdir, ".pyiron_nonexistent")
             env = {"PYIRONCONFIG": config_file}
 
-            with patch.dict(os.environ, env, clear=False), \
-                 patch("builtins.input", return_value="no"), \
-                 self.assertRaises(ValueError):
+            with (
+                patch.dict(os.environ, env, clear=False),
+                patch("builtins.input", return_value="no"),
+                self.assertRaises(ValueError),
+            ):
                 install_dialog(silently=False)
 
     def test_interactive_yes_installs(self):
@@ -216,10 +230,12 @@ class TestInstallDialog(PyironTestCase):
             config_file = os.path.join(tmpdir, ".pyiron_nonexistent")
             env = {"PYIRONCONFIG": config_file}
 
-            with patch.dict(os.environ, env, clear=False), \
-                 patch("builtins.input", return_value="yes"), \
-                 patch("pyiron_base.state.install.install_pyiron") as mock_install, \
-                 patch("builtins.print"):
+            with (
+                patch.dict(os.environ, env, clear=False),
+                patch("builtins.input", return_value="yes"),
+                patch("pyiron_base.state.install.install_pyiron") as mock_install,
+                patch("builtins.print"),
+            ):
                 install_dialog(silently=False)
 
             mock_install.assert_called_once()
@@ -233,15 +249,19 @@ class TestInstallDialog(PyironTestCase):
         exists_before = os.path.exists(home_pyiron)
 
         if exists_before:
-            with patch.dict(os.environ, env_without_pyironconfig, clear=True), \
-                 patch("builtins.print") as mock_print:
+            with (
+                patch.dict(os.environ, env_without_pyironconfig, clear=True),
+                patch("builtins.print") as mock_print,
+            ):
                 install_dialog(silently=True)
             mock_print.assert_called_once()
         else:
             # Don't actually install; just verify it attempts to
-            with patch.dict(os.environ, env_without_pyironconfig, clear=True), \
-                 patch("pyiron_base.state.install.install_pyiron") as mock_install, \
-                 patch("builtins.print"):
+            with (
+                patch.dict(os.environ, env_without_pyironconfig, clear=True),
+                patch("pyiron_base.state.install.install_pyiron") as mock_install,
+                patch("builtins.print"),
+            ):
                 install_dialog(silently=True)
             mock_install.assert_called_once()
 
@@ -256,8 +276,10 @@ class TestInstallPyironWithGiturl(PyironTestCase):
             resource_dir = os.path.join(tmpdir, "resources")
             project_dir = os.path.join(tmpdir, "project")
 
-            with patch("pyiron_base.state.install._download_resources") as mock_dl, \
-                 patch("pyiron_base.state.install._write_config_file"):
+            with (
+                patch("pyiron_base.state.install._download_resources") as mock_dl,
+                patch("pyiron_base.state.install._write_config_file"),
+            ):
                 install_pyiron(
                     config_file_name=config_file,
                     resource_directory=resource_dir,

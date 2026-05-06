@@ -435,6 +435,7 @@ class TestGenericParameters(PyironTestCase):
     def test_setitem_int_key_read_only(self):
         """Lines 659-660: __setitem__ with int key raises warning when read_only and value changes."""
         import warnings
+
         gp = GenericParameters()
         gp.set(p=5)
         gp.read_only = True
@@ -481,7 +482,9 @@ class TestGenericParameters(PyironTestCase):
         gp._dataset["Value"].append("myval")
         gp._dataset["Comment"].append("my inline comment")
         lst = gp.get_string_lst()
-        self.assertTrue(any("myparam" in line and "my inline comment" in line for line in lst))
+        self.assertTrue(
+            any("myparam" in line and "my inline comment" in line for line in lst)
+        )
 
     def test_get_string_lst_val_only_with_comment(self):
         """Lines 567,580,588-589: get_string_lst for val_only with comments."""
@@ -495,6 +498,7 @@ class TestGenericParameters(PyironTestCase):
     def test_insert_block_no_next_block(self):
         """Line 817: _insert_block with next_block=None appends."""
         from collections import OrderedDict
+
         gp = GenericParameters()
         gp.set(existing=1)
         block_dict = {"block1": ["new_param"]}
@@ -506,6 +510,7 @@ class TestGenericParameters(PyironTestCase):
     def test_append_unknown_block_param_warns(self):
         """Lines 894-896: _append logs warning when param not in block_dict."""
         from collections import OrderedDict
+
         gp = GenericParameters()
         gp.set(bp=1)
         gp.define_blocks(OrderedDict({"myblock": ["bp"]}))

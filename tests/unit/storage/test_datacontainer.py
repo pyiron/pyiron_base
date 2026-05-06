@@ -1008,7 +1008,9 @@ class TestDataContainerMissingCoverage(TestWithCleanProject):
         html = dc._repr_html_()
         self.assertIsInstance(html, str, "_repr_html_ should return a string")
         self.assertIn("<pre>", html, "_repr_html_ output should contain <pre>")
-        self.assertIn("DataContainer", html, "_repr_html_ output should contain class name")
+        self.assertIn(
+            "DataContainer", html, "_repr_html_ output should contain class name"
+        )
 
     def test_repr_with_keys(self):
         """__repr__ with keys should show key-value pairs."""
@@ -1021,7 +1023,9 @@ class TestDataContainerMissingCoverage(TestWithCleanProject):
         """get with create=True and missing key should create an empty subcontainer."""
         dc = DataContainer()
         sub = dc.get("new_group", create=True)
-        self.assertIsInstance(sub, DataContainer, "get(create=True) should return DataContainer")
+        self.assertIsInstance(
+            sub, DataContainer, "get(create=True) should return DataContainer"
+        )
         self.assertIn("new_group", dc, "new group should be stored in the container")
 
     def test_get_create_false_existing_key(self):
@@ -1034,7 +1038,9 @@ class TestDataContainerMissingCoverage(TestWithCleanProject):
         """get with default should return default when key is absent."""
         dc = DataContainer()
         val = dc.get("missing_key", default="default_val")
-        self.assertEqual(val, "default_val", "get should return default when key missing")
+        self.assertEqual(
+            val, "default_val", "get should return default when key missing"
+        )
 
     def test_mark_overwrites_existing_index_key(self):
         """mark should overwrite an existing key at the same index."""
@@ -1043,7 +1049,9 @@ class TestDataContainerMissingCoverage(TestWithCleanProject):
         self.assertEqual(dc.first, 42)
         # Now mark index 0 with a different key - should remove old key
         dc.mark(0, "new_key")
-        self.assertNotIn("first", dc._indices, "old key should be removed after re-marking")
+        self.assertNotIn(
+            "first", dc._indices, "old key should be removed after re-marking"
+        )
         self.assertEqual(dc.new_key, 42, "new key should point to the same value")
 
     def test_on_unlock_warning(self):

@@ -43,6 +43,7 @@ class TestCatchSignals(unittest.TestCase):
 
     def test_cleanup_called_before_raise(self):
         call_order = []
+
         def cleanup(sig):
             call_order.append("cleanup")
 
