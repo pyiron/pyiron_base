@@ -188,7 +188,7 @@ class TestWorkingDirectoryReadFile(unittest.TestCase):
                 tar.add(fpath, arcname=fname)
             os.remove(fpath)
             result = _working_directory_read_file(tmpdir, fname)
-            self.assertIn("hello\n", result)
+            self.assertIn("hello", result[0])
 
     def test_tail_from_compressed(self):
         with tempfile.TemporaryDirectory() as tmpdir:
