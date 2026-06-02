@@ -27,5 +27,5 @@ dependencies:
 - tqdm =4.67.3
 - traitlets =5.15.0
 - jupyter-book =1.0.0
-- hatchling =1.29.0
+- hatchling =1.30.1
 - hatch-vcs =0.5.0
