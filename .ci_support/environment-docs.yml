@@ -5,7 +5,7 @@ dependencies:
 - sphinx
 - sphinx_rtd_theme
 - myst-parser
-- conda =26.1.0
+- conda =26.5.2
 - conda_subprocess =0.0.12
 - cloudpickle =3.1.2
 - executorlib =1.9.3
