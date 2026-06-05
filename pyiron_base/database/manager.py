@@ -82,20 +82,21 @@ class DatabaseManager(metaclass=Singleton):
 
     @property
     def sql_connection_string(self) -> str:
-        sql_type = s.configuration["sql_type"]
-        if sql_type == "Postgres":
-            return self._credentialed_sqalchemy_string("postgresql")
-        elif sql_type == "MySQL":
-            return self._credentialed_sqalchemy_string("mysql+pymysql")
-        elif sql_type == "SQLalchemy":
-            return s.configuration["sql_connection_string"]
-        elif sql_type == "SQLite":
-            return "sqlite:///" + s.configuration["sql_file"].replace("\\", "/")
+        if s.configuration["sql_connection_string"] is None:
+            sql_type = s.configuration["sql_type"]
+            if sql_type == "Postgres":
+                return self._credentialed_sqalchemy_string("postgresql")
+            elif sql_type == "MySQL":
+                return self._credentialed_sqalchemy_string("mysql+pymysql")
+            elif sql_type == "SQLite":
+                return "sqlite:///" + s.configuration["sql_file"].replace("\\", "/")
+            else:
+                raise ValueError(
+                    f"Invalid SQL type {sql_type} or SQLalchemy with sql_connection_string=None -- This should have been caught at input processing, please contact the "
+                    f"developers"
+                )
         else:
-            raise ValueError(
-                f"Invalid SQL type {sql_type} -- This should have been caught at input processing, please contact the "
-                f"developers"
-            )
+            return s.configuration["sql_connection_string"]
 
     @property
     def sql_view_connection_string(self) -> Union[str, None]:
