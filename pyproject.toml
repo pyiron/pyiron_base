@@ -37,7 +37,7 @@ dependencies = [
     "pysqa==0.4.1",
     "sqlalchemy==2.0.50",
     "tables==3.10.2",
-    "tqdm==4.67.3",
+    "tqdm==4.68.0",
     "traitlets==5.15.1",
 ]
 dynamic = ["version"]
