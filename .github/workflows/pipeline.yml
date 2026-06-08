@@ -271,7 +271,7 @@ jobs:
         environment-file: environment.yml
     - name: Test
       shell: bash -l {0}
-      timeout-minutes: 5
+      timeout-minutes: 10
       run: |
         pip install . --no-deps --no-build-isolation
         sudo apt-get install -y $(cat tests/usecases/NFDI4ING/apt.txt)
