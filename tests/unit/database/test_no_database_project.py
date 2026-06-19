@@ -34,6 +34,8 @@ class TestNoDatabaseProject(TestWithProject):
             if len(df) == 1:
                 break
             time.sleep(0.1)
+        else:
+            self.fail(f"Expected one job entry after creation, got {len(df)}")
         self.assertEqual(len(df), 1)
         self.assertEqual(df.status.values[0], "initialized")
         os.remove(job.project_hdf5.file_name)
