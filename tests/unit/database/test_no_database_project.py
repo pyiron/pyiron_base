@@ -3,6 +3,7 @@
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
 import os
+import time
 import unittest
 from pyiron_base._tests import TestWithProject
 from pyiron_base import state
@@ -28,7 +29,11 @@ class TestNoDatabaseProject(TestWithProject):
         job.script_path = __file__
         job.server.run_mode.manual = True
         job.run()
-        df = self.project.job_table()
+        for _ in range(20):
+            df = self.project.job_table()
+            if len(df) == 1:
+                break
+            time.sleep(0.1)
         self.assertEqual(len(df), 1)
         self.assertEqual(df.status.values[0], "initialized")
         os.remove(job.project_hdf5.file_name)
