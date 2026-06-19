@@ -18,6 +18,12 @@ from pyfileindex import PyFileIndex
 
 from pyiron_base.database.interface import IsDatabase
 
+try:
+    import watchfiles  # type: ignore
+    watchfiles_available = True
+except ImportError:
+    watchfiles_available = False
+
 __author__ = "Jan Janssen"
 __copyright__ = (
     "Copyright 2020, Max-Planck-Institut für Eisenforschung GmbH"
@@ -171,7 +177,7 @@ class FileTable(IsDatabase, metaclass=FileTableSingleton):
             self._fileindex = fileindex
         else:
             self._fileindex = PyFileIndex(
-                path=self._path, filter_function=filter_function
+                path=self._path, filter_function=filter_function, watch=watchfiles_available,
             )
         df = pandas.DataFrame(self.init_table(fileindex=self._fileindex.dataframe))
         if len(df) != 0:
