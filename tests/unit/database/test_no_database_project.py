@@ -29,15 +29,18 @@ class TestNoDatabaseProject(TestWithProject):
         job.script_path = __file__
         job.server.run_mode.manual = True
         job.run()
-        df = None
-        for _ in range(20):
+        max_attempts = 20
+        retry_delay = 0.1
+        for _ in range(max_attempts):
             df = self.project.job_table()
             if len(df) == 1:
                 break
-            time.sleep(0.1)
+            time.sleep(retry_delay)
         else:
-            n_entries = 0 if df is None else len(df)
-            self.fail(f"Expected one job entry after creation, got {n_entries}")
+            self.fail(
+                "Expected one job entry after creation "
+                f"within {max_attempts * retry_delay:.1f}s, got {len(df)}"
+            )
         self.assertEqual(df.status.values[0], "initialized")
         os.remove(job.project_hdf5.file_name)
         self.project.db.force_reset()
