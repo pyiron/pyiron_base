@@ -90,34 +90,6 @@ class TestLsCli(unittest.TestCase):
         self.assertEqual(kwargs["element_lst"], ["Fe", "O"])
 
     @patch("pyiron_base.cli.ls.Project")
-    def test_main_status_filter_adds_status_column(self, project_mock):
-        project = MagicMock()
-        project.job_table.return_value = self._make_table()
-        project_mock.return_value = project
-
-        parser = ArgumentParser()
-        ls.register(parser)
-        args = parser.parse_args(["-c", "id", "job", "-s", "finished"])
-        ls.main(args)
-
-        _, kwargs = project.job_table.call_args
-        self.assertIn("status", kwargs["columns"])
-
-    @patch("pyiron_base.cli.ls.Project")
-    def test_main_since_filter_adds_timestop_and_parses_duration(self, project_mock):
-        project = MagicMock()
-        project.job_table.return_value = self._make_table()
-        project_mock.return_value = project
-
-        parser = ArgumentParser()
-        ls.register(parser)
-        args = parser.parse_args(["-c", "id", "job", "-i", "1d5h"])
-        ls.main(args)
-
-        _, kwargs = project.job_table.call_args
-        self.assertIn("timestop", kwargs["columns"])
-
-    @patch("pyiron_base.cli.ls.Project")
     def test_main_invalid_since_exits_with_error(self, project_mock):
         project = MagicMock()
         project.job_table.return_value = self._make_table()

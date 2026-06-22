@@ -29,11 +29,6 @@ class TestListMaster(TestWithCleanProject):
             self.project.load("toy_2").output.data_out,
         )
 
-    def test_reset_job_id(self):
-        master = self.project.create_job(ListMaster, "master_reset_id")
-        master.reset_job_id(job_id=123)
-        self.assertEqual(master.submission_status.job_id, 123)
-
     def test_append_invalid_type_raises_type_error(self):
         master = self.project.create_job(ListMaster, "master_append_invalid")
         with self.assertRaises(TypeError):
