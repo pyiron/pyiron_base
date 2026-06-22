@@ -24,7 +24,8 @@ class TestLsCli(unittest.TestCase):
         self.assertIsNone(args.status)
         self.assertIsNone(args.since)
         self.assertEqual(
-            args.columns, ["id", "status", "job", "timestart", "timestop", "totalcputime"]
+            args.columns,
+            ["id", "status", "job", "timestart", "timestop", "totalcputime"],
         )
         self.assertFalse(args.all)
 

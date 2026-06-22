@@ -59,9 +59,7 @@ class TestRmCli(unittest.TestCase):
 
     @patch("pyiron_base.cli.rm.os")
     @patch("pyiron_base.cli.rm.Project")
-    def test_main_remove_project_nonempty_dir_not_removed(
-        self, project_mock, os_mock
-    ):
+    def test_main_remove_project_nonempty_dir_not_removed(self, project_mock, os_mock):
         project = MagicMock()
         project_mock.return_value = project
         os_mock.path.exists.return_value = True
