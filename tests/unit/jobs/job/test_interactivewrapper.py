@@ -52,9 +52,7 @@ class TestInteractiveWrapper(PyironTestCase):
 
     def test_validate_ready_to_run_delegates_to_ref_job(self):
         wrapper = self.project.create_job(InteractiveWrapper, "wrapper_validate")
-        wrapper.append(
-            self.project.create_job(GenericJob, "ref_job_validate")
-        )
+        wrapper.append(self.project.create_job(GenericJob, "ref_job_validate"))
         wrapper.ref_job.validate_ready_to_run = MagicMock()
         wrapper.validate_ready_to_run()
         wrapper.ref_job.validate_ready_to_run.assert_called_once()
