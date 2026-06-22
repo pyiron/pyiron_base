@@ -61,6 +61,9 @@ flux = [
 stats = [
     "pint==0.25.3",
 ]
+watchfiles = [
+    "watchfiles==1.2.0",
+]
 
 [project.scripts]
 pyiron = "pyiron_base.cli:main"

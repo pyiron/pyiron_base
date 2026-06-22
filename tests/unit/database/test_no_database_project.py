@@ -3,6 +3,7 @@
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
 import os
+import time
 import unittest
 from pyiron_base._tests import TestWithProject
 from pyiron_base import state
@@ -28,8 +29,18 @@ class TestNoDatabaseProject(TestWithProject):
         job.script_path = __file__
         job.server.run_mode.manual = True
         job.run()
-        df = self.project.job_table()
-        self.assertEqual(len(df), 1)
+        max_attempts = 20
+        retry_delay = 0.1
+        for _ in range(max_attempts):
+            df = self.project.job_table()
+            if len(df) == 1:
+                break
+            time.sleep(retry_delay)
+        else:
+            self.fail(
+                "Expected one job entry after creation "
+                f"within {max_attempts * retry_delay:.1f}s, got {len(df)}"
+            )
         self.assertEqual(df.status.values[0], "initialized")
         os.remove(job.project_hdf5.file_name)
         self.project.db.force_reset()

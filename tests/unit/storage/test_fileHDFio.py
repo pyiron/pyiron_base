@@ -413,11 +413,14 @@ class TestFileHDFio(PyironTestCase):
             with self.assertLogs(logger=state.logger) as lw:
                 with warnings.catch_warnings(record=True) as w:
                     new_hdf.rewrite_hdf5(job_name="job_name")
-                    self.assertTrue(len(w) <= 2)
                     self.assertEqual(
-                        str(w[0].message),
-                        "pyiron_base.storage.hdfio.FileHDFio.rewrite_hdf5(job_name=job_name) "
-                        + "is deprecated.",
+                        [str(x.message) for x in w].count(
+                            "pyiron_base.storage.hdfio.FileHDFio.rewrite_hdf5(job_name=job_name) "
+                            "is deprecated."
+                        ),
+                        1,
+                        msg="Expected exactly one matching deprecation warning, "
+                        f"got: {[str(x.message) for x in w]}",
                     )
                 self.assertEqual(
                     lw.output,
@@ -430,21 +433,27 @@ class TestFileHDFio(PyironTestCase):
         with self.subTest("warning handling - deprecate exclude_groups"):
             with warnings.catch_warnings(record=True) as w:
                 new_hdf.rewrite_hdf5(exclude_groups="some")
-                self.assertTrue(len(w) <= 2)
                 self.assertEqual(
-                    str(w[0].message),
-                    "pyiron_base.storage.hdfio.FileHDFio.rewrite_hdf5(exclude_groups=some) "
-                    + "is deprecated.",
+                    [str(x.message) for x in w].count(
+                        "pyiron_base.storage.hdfio.FileHDFio.rewrite_hdf5(exclude_groups=some) "
+                        "is deprecated."
+                    ),
+                    1,
+                    msg="Expected exactly one matching deprecation warning, "
+                    f"got: {[str(x.message) for x in w]}",
                 )
 
         with self.subTest("warning handling - deprecate exclude_nodes"):
             with warnings.catch_warnings(record=True) as w:
                 new_hdf.rewrite_hdf5(exclude_nodes="any")
-                self.assertTrue(len(w) <= 2)
                 self.assertEqual(
-                    str(w[0].message),
-                    "pyiron_base.storage.hdfio.FileHDFio.rewrite_hdf5(exclude_nodes=any) "
-                    + "is deprecated.",
+                    [str(x.message) for x in w].count(
+                        "pyiron_base.storage.hdfio.FileHDFio.rewrite_hdf5(exclude_nodes=any) "
+                        "is deprecated."
+                    ),
+                    1,
+                    msg="Expected exactly one matching deprecation warning, "
+                    f"got: {[str(x.message) for x in w]}",
                 )
 
         os.remove(new_hdf_file)

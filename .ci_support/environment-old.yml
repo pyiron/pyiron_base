@@ -11,7 +11,7 @@ dependencies:
 - pandas =2.0.0
 - pint =0.25
 - psutil =5.9.3
-- pyfileindex =0.0.16
+- pyfileindex =0.2.0
 - pyiron_dataclasses =0.0.4
 - pyiron_snippets =1.0.1
 - executorlib =0.1.0
@@ -22,3 +22,4 @@ dependencies:
 - traitlets =5.1.1
 - hatchling =1.27.0
 - hatch-vcs =0.5.0
+- watchfiles =1.0.4
