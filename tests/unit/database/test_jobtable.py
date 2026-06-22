@@ -157,7 +157,8 @@ class TestJobtable(unittest.TestCase):
             working_directory,
             self.database.get_job_working_directory(entry["id"]),
         )
-        self.assertTrue(working_directory.endswith("workdir_job_hdf5/workdir_job"))
+        expected_suffix = os.path.normpath("workdir_job_hdf5/workdir_job")
+        self.assertTrue(os.path.normpath(working_directory).endswith(expected_suffix))
 
 
 if __name__ == "__main__":
