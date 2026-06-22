@@ -14,9 +14,7 @@ class TestReloadfileCli(unittest.TestCase):
     def test_register(self):
         parser = ArgumentParser()
         reloadfile.register(parser)
-        args = parser.parse_args(
-            ["-i", "input/toy_job.h5", "-o", "output/toy_job.h5"]
-        )
+        args = parser.parse_args(["-i", "input/toy_job.h5", "-o", "output/toy_job.h5"])
         self.assertEqual(args.input_path, os.path.abspath("input/toy_job.h5"))
         self.assertEqual(args.output_path, os.path.abspath("output/toy_job.h5"))
 

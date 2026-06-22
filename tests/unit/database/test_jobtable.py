@@ -58,9 +58,7 @@ class TestJobtable(unittest.TestCase):
     # --- get_job_id ---
 
     def test_get_job_id_int_passthrough(self):
-        self.assertEqual(
-            get_job_id(self.database, None, None, "db.testing/", 42), 42
-        )
+        self.assertEqual(get_job_id(self.database, None, None, "db.testing/", 42), 42)
 
     def test_get_job_id_unique_match(self):
         entry = self.add_item("unique_job", project="db.testing/")
@@ -105,9 +103,7 @@ class TestJobtable(unittest.TestCase):
         child_aborted = self.add_item(
             "child_aborted", masterid=master["id"], status="aborted"
         )
-        result = get_child_ids(
-            self.database, None, None, "db.testing/", "master_job"
-        )
+        result = get_child_ids(self.database, None, None, "db.testing/", "master_job")
         self.assertEqual(
             sorted(result), sorted([child_finished["id"], child_aborted["id"]])
         )
@@ -148,7 +144,9 @@ class TestJobtable(unittest.TestCase):
             get_job_status(self.database, None, None, "db.testing/", "status_job"),
             "finished",
         )
-        self.assertEqual(self.database.get_item_by_id(entry["id"])["status"], "finished")
+        self.assertEqual(
+            self.database.get_item_by_id(entry["id"])["status"], "finished"
+        )
 
     def test_get_job_working_directory(self):
         entry = self.add_item("workdir_job", project="db.testing/")
