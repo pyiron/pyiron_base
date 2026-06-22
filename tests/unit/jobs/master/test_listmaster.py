@@ -81,22 +81,25 @@ class TestListMaster(TestWithCleanProject):
         self.assertIsNone(master.run_if_interactive())
 
     def test_copy_preserves_child_ids(self):
+        standalone = self.project.create_job(ToyJob, "copy_standalone")
+        standalone.run()
         master = self.project.create_job(ListMaster, "master_copy_source")
-        master.append(self.project.create_job(ToyJob, "copy_toy_1"))
-        master.append(self.project.create_job(ToyJob, "copy_toy_2"))
-        master.run()
+        master.append(standalone)
 
         master_copy = master.copy()
         self.assertEqual(master_copy.child_ids, master.child_ids)
 
     def test_iter_jobs_yields_children(self):
+        standalone_1 = self.project.create_job(ToyJob, "iter_standalone_1")
+        standalone_1.run()
+        standalone_2 = self.project.create_job(ToyJob, "iter_standalone_2")
+        standalone_2.run()
         master = self.project.create_job(ListMaster, "master_iter")
-        master.append(self.project.create_job(ToyJob, "iter_toy_1"))
-        master.append(self.project.create_job(ToyJob, "iter_toy_2"))
-        master.run()
+        master.append(standalone_1)
+        master.append(standalone_2)
 
         names = sorted(job.job_name for job in master.iter_jobs())
-        self.assertEqual(names, ["iter_toy_1", "iter_toy_2"])
+        self.assertEqual(names, ["iter_standalone_1", "iter_standalone_2"])
 
     def test_run_if_refresh_non_modal_finished_sets_status(self):
         master = self.project.create_job(ListMaster, "master_refresh_nonmodal")
