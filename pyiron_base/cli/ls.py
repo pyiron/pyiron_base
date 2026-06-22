@@ -133,7 +133,7 @@ def main(args: argparse.Namespace) -> None:
             args.columns = args.columns + ["timestop"]
         try:
             matches = re.fullmatch(
-                "(\d+d)?\w*(\d+h)?\w*(\d+m)?\w*(\d+s)?", args.since
+                r"(\d+d)?\w*(\d+h)?\w*(\d+m)?\w*(\d+s)?", args.since
             ).groups(default="0x")
             since = datetime.datetime.now() - datetime.timedelta(
                 days=int(matches[0][:-1]),
