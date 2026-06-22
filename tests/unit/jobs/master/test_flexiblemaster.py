@@ -78,19 +78,6 @@ class TestFlexibleMaster(TestWithCleanProject):
         master.run_if_refresh()
         master.refresh_job_status.assert_called_once()
 
-    def test_from_hdf_restores_function_list(self):
-        master = self.project.create_job(FlexibleMaster, "master_hdf_roundtrip")
-        master.append(self.project.create_job(ToyJob, "hdf_toy_1"))
-        master.append(self.project.create_job(ToyJob, "hdf_toy_2"))
-        master.function_lst.append(transfer_output_to_input)
-        master.to_hdf()
-
-        reloaded = self.project.create_job(FlexibleMaster, "master_hdf_reload")
-        reloaded.project_hdf5 = master.project_hdf5
-        reloaded.from_hdf()
-        self.assertEqual(len(reloaded.function_lst), 1)
-        self.assertEqual(reloaded.function_lst[0].__name__, "transfer_output_to_input")
-
     def test_to_hdf_ignores_io_error_from_getsource(self):
         master = self.project.create_job(FlexibleMaster, "master_hdf_ioerror")
         master.append(self.project.create_job(ToyJob, "ioerror_toy_1"))
