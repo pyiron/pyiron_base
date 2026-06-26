@@ -1,6 +1,7 @@
 channels:
 - conda-forge
 dependencies:
+- python =3.13
 - nbsphinx
 - sphinx
 - sphinx_rtd_theme
