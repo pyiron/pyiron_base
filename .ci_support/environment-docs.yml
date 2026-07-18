@@ -25,7 +25,7 @@ dependencies:
 - pysqa =0.4.3
 - pytables =3.11.1
 - sqlalchemy =2.0.51
-- tqdm =4.68.4
+- tqdm =4.69.0
 - traitlets =5.15.1
 - jupyter-book =1.0.0
 - hatchling =1.31.0
