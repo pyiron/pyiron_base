@@ -16,10 +16,10 @@ dependencies:
 - pandas =3.0.5
 - pint =0.25.3
 - psutil =7.2.2
-- pyfileindex =0.2.1
+- pyfileindex =0.2.2
 - pyiron_dataclasses =0.0.13
 - pyiron_snippets =1.4.0
-- pysqa =0.4.3
+- pysqa =0.4.4
 - pytables =3.11.1
 - sqlalchemy =2.0.51
 - tqdm =4.70.0
