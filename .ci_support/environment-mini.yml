@@ -14,7 +14,7 @@ dependencies:
 - pyiron_snippets =1.4.0
 - pysqa =0.4.4
 - pytables =3.11.1
-- sqlalchemy =2.0.51
+- sqlalchemy =2.0.52
 - tqdm =4.70.0
 - traitlets =5.16.1
 - hatchling =1.32.0
