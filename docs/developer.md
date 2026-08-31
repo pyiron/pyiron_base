@@ -118,11 +118,11 @@ and submits this into the queue. I.e. the command running will be
 
 ```python
 command = (
-            "python -m pyiron_base.cli wrapper -p "
-            + job.working_directory
-            + " -j "
-            + str(job.job_id)
-        )
+    "python -m pyiron_base.cli wrapper -p "
+    + job.working_directory
+    + " -j "
+    + str(job.job_id)
+)
 ```
 which essentially does a `job.load()` and a `job.run()` on the compute node.
 

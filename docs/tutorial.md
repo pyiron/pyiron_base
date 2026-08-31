@@ -98,7 +98,7 @@ distribution over multiple compute nodes and handling the submission to the queu
 In this example a very simple python function is used: 
 ```python
 def test_function(a, b=8):
-    return a+b
+    return a + b
 ```
 The run time for this function is far below a millisecond so is it not reasonable to submit it to a remote computing cluster.
 This is primarily a demonstration to highlight the capabilities of the `pyiron_base` workflow manager. 
@@ -124,7 +124,7 @@ To submit the function call to a remote HPC cluster the server object of the job
 ```python
 job.server.queue = "slurm"
 job.server.cores = 120
-job.server.run_time = 3600  # in seconds 
+job.server.run_time = 3600  # in seconds
 ```
 In this example the `slurm` queue was selected, a total of 120 CPU cores were selected and a run time of one hour was
 selected. Still it is important to mention, that assigning 120 CPU cores does not enable parallel execution of the python
@@ -142,7 +142,8 @@ components, a `write_input()` function, a `collect_output()` function and finall
 after the input files were written. The `write_input()` function takes a `input_dict` dictionary and a `working_directory`
 as input parameters and writes the input files into the working directory. 
 ```python
-import os 
+import os
+
 
 def write_input(input_dict, working_directory="."):
     with open(os.path.join(working_directory, "input_file"), "w") as f:
@@ -201,10 +202,11 @@ python commands some users prefer to submit a whole Jupyter notebook at once. So
 introduces the `ScriptJob` job type: 
 ```python
 from pyiron_base import Project
+
 pr = Project(path="demo")
 script = pr.create.job.ScriptJob(job_name="script")
 script.script_path = "demo.ipynb"
-script.input['my_variable'] = 5
+script.input["my_variable"] = 5
 script.run()
 ```
 The `ScriptJob` jobs take a jupyter notebook as an input `script.script_path` as well as a series of input parameters
@@ -227,7 +229,7 @@ The pyiron table object takes three kinds of inputs. The first is a filter funct
 the following functions are applied on. The filter function is not mandatory still it is very helpful in particular when
 a large number of jobs are created in a given project. 
 ```python
-def myfilter(job): 
+def myfilter(job):
     return "test_function" in job.job_name
 ```
 The second part are the selection of functions which are applied on all job objects in a given project. Again it takes
