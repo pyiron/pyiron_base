@@ -148,6 +148,7 @@ on the [python simple queuing system documentation](https://pysqa.readthedocs.io
 To test your queuing system configuration use the [python simple queuing system](https://pysqa.readthedocs.io) interface:
 ```python
 from pysqa import QueueAdapter
+
 qa = QueueAdapter(directory="/home/<username>/resources/queues")
 print(qa.queue_list)
 ```
@@ -157,6 +158,7 @@ code above is executed.
 To validate the `~/.pyiron` configuration file, after the `queue.yaml` file is correctly configured you can use: 
 ```python
 from pyiron_base import state
+
 print(state.settings._configuration)
 ```
 The `state` object is commonly used to represent the `~/.pyiron` configuration on the python side. 

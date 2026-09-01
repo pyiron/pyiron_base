@@ -3,9 +3,10 @@
 In pyiron jobs can be very conveniantly be initialized from the `Project` instance:
 ```python
 from pyiron import Project
-pr = Project('test')
 
-job = pr.create.job.MyJob('job_name')
+pr = Project("test")
+
+job = pr.create.job.MyJob("job_name")
 ```
 
 ### Job registration
@@ -15,7 +16,7 @@ To enable this feature without the burden to `import` all available `JobClasses`
 ```python
 from pyiron_base import JobType
 
-JobType.register('pyiron_module.submodule.my_job_class_module', 'MyJobClass')
+JobType.register("pyiron_module.submodule.my_job_class_module", "MyJobClass")
 ```
 
 The register `@classmethod` performs some (minor) sanity checks, in particular raises an error whenever there is already such a `MyJobClass` registered with a different class. To replace an already existing job class, an `overwrite` argument is available.
@@ -38,6 +39,6 @@ class MyBaseJobClass(GenericJob):
 
 It is under consideration to enhance the job registration by providing a scope for the job a la 
 ```python
-JobType.register('module.path', 'JobClass', branch='atomistics', tag='DFT')
+JobType.register("module.path", "JobClass", branch="atomistics", tag="DFT")
 ```
 which would allow to filter the available job types by these extra inforation.
