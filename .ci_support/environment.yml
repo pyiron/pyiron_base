@@ -22,7 +22,7 @@ dependencies:
 - pysqa =1.0.0
 - pytables =3.11.1
 - sqlalchemy =2.0.52
-- tqdm =4.70.0
+- tqdm =4.70.1
 - traitlets =5.16.1
 - hatchling =1.32.0
 - hatch-vcs =0.5.0
