@@ -175,11 +175,7 @@ jobs:
         - operating-system: ubuntu-latest
           python-version: '3.12'
           label: linux-64-py-3-12
-
-        - operating-system: ubuntu-latest
-          python-version: '3.11'
-          label: linux-64-py-3-11
-
+  
     steps:
     - uses: actions/checkout@v4
     - name: Conda config
